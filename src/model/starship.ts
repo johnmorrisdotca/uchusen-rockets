@@ -76,7 +76,7 @@ export const STARSHIP_DRAWS: Readonly<Record<string, StarshipDraw>> = {
     shielded: true,
     ring: ring(2),
     fins: { ...FOUR_FINS, y: 64.8 },
-    chines: { az: [60, -60, 150, -150], from: 3.5, to: 24, out: 0.9 },
+    chines: { az: [60, -60, 150, -150], from: 3, to: 17, out: 0.6 },
     boosterEngines: BOOSTER_ENGINES,
     shipEngines: shipEngineRing(3, 2.95),
     noseStart: 35,
@@ -95,7 +95,7 @@ export const STARSHIP_DRAWS: Readonly<Record<string, StarshipDraw>> = {
     shielded: true,
     ring: { height: 0, struts: 0, integrated: false },
     fins: { ...FOUR_FINS, y: 64.6 },
-    chines: { az: [60, -60, 150, -150], from: 3.5, to: 24, out: 0.9 },
+    chines: { az: [60, -60, 150, -150], from: 3, to: 17, out: 0.6 },
     boosterEngines: BOOSTER_ENGINES,
     shipEngines: shipEngineRing(3, 2.95),
     noseStart: 35,
@@ -114,7 +114,7 @@ export const STARSHIP_DRAWS: Readonly<Record<string, StarshipDraw>> = {
     shielded: true,
     ring: ring(2),
     fins: { ...FOUR_FINS, y: 64.8 },
-    chines: { az: [60, -60, 150, -150], from: 3.5, to: 24, out: 0.9 },
+    chines: { az: [60, -60, 150, -150], from: 3, to: 17, out: 0.6 },
     boosterEngines: BOOSTER_ENGINES,
     shipEngines: shipEngineRing(3, 2.95),
     noseStart: 36.5,
@@ -349,7 +349,15 @@ export function flap(draw: FlapDraw, side: 1 | -1): Plate {
   const frame = radial(az);
   // w must look windward, so the +w face takes the tiles
   const windward: Frame = side > 0 ? frame : { ...frame, w: [-frame.w[0], -frame.w[1], -frame.w[2]] };
-  return { kind: "plate", material: "steel", top: "tile-plain", frame: windward, outline: draw.outline, thickness: draw.thickness };
+  // the seams across it
+  const heights = draw.outline.map(([, y]) => y);
+  const reach = draw.outline.map(([r]) => r);
+  const ribs: [[number, number], [number, number]][] = [];
+  for (let y = Math.min(...heights) + 1.8; y < Math.max(...heights) - 0.4; y += 1.8) {
+    const seam = clip([Math.min(...reach) - 1, y], [Math.max(...reach) + 1, y], draw.outline);
+    if (seam) ribs.push(seam);
+  }
+  return { kind: "plate", material: "steel", top: "tile-plain", frame: windward, outline: draw.outline, thickness: draw.thickness, ribs };
 }
 
 /** A flap's root fairing above it. */
@@ -481,13 +489,13 @@ export function boosterPieces(d: StarshipDraw): Piece[] {
         [r + d.chines.out, d.chines.to - 1],
         [r - 0.1, d.chines.to + 1.2],
       ],
-      thickness: 1.6,
+      thickness: d.shielded ? 2.4 : 1.6,
     });
   }
   // the raceways
   for (const az of [0, 180]) pieces.push(strut("engine-metal", pointOf(radial(deg(az)), r + 0.08, skirt + 3), pointOf(radial(deg(az)), r + 0.08, topOfHull - 8), 0.5, 0.2, { plain: false }));
   // the band of vents round the common dome
-  pieces.push({ kind: "lathe", material: "engine-metal", segs: 64, only: "mesh", profile: [[r + 0.015, topOfHull * 0.62 - 0.12], [r + 0.015, topOfHull * 0.62 + 0.12]] });
+  pieces.push({ kind: "lathe", material: "engine-pale", segs: 64, only: "mesh", profile: [[r + 0.015, topOfHull * 0.62 - 0.12], [r + 0.015, topOfHull * 0.62 + 0.12]] });
   for (const az of d.fins.az) pieces.push(...gridFin(az, d.fins.y, r, d.fins.reach, d.fins.width, d.fins.thick, d.fins.octagon));
   if (d.ring.height > 0) pieces.push(...hotStage(d));
   else pieces.push({ kind: "lathe", material: "soot", segs: 48, profile: [[r, topOfHull], [0, topOfHull]], only: "mesh" });

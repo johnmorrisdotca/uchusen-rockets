@@ -484,7 +484,7 @@ export class RocketViewer {
         gltf.scene.traverse((node) => {
           if (!(node instanceof Mesh)) return;
           const material = node.material as MeshStandardMaterial;
-          if (material.name === "steel") material.roughness = 0.6;
+          if (material.name === "steel") material.roughness = 0.46;
           this.dullTile(material, material.name);
           if (material.name === "tile") material.color.setScalar(0.42);
         });
