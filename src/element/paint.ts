@@ -32,7 +32,7 @@ export function paintSteel(across: number, down: number): HTMLCanvasElement {
     // the courses of panels are staggered
     const shift = (j % 2) * (w / 2);
     for (let i = -1; i < across; i++) {
-      const tone = 214 + Math.round(random() * 38);
+      const tone = 228 + Math.round(random() * 22);
       ctx.fillStyle = `rgb(${tone},${tone},${tone + 2})`;
       ctx.fillRect(i * w + shift, j * h, w + 1, h + 1);
     }
@@ -44,7 +44,7 @@ export function paintSteel(across: number, down: number): HTMLCanvasElement {
     ctx.fillRect(random() * size, random() * size, 1 + random() * 28, 1);
   }
   // weld lines
-  ctx.fillStyle = "rgba(58,60,64,0.62)";
+  ctx.fillStyle = "rgba(58,60,64,0.34)";
   for (let j = 0; j <= down; j++) ctx.fillRect(0, j * h - 1, size, 2);
   for (let j = 0; j < down; j++) for (let i = -1; i <= across; i++) ctx.fillRect(i * w + (j % 2) * (w / 2) - 0.7, j * h, 1.4, h);
   return c;
@@ -95,5 +95,41 @@ export function paintGlow(inner: string, outer: string): HTMLCanvasElement {
   g.addColorStop(1, outer);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, n, n);
+  return c;
+}
+
+/** A day's sky for reflections, wrapped round a sphere: bright to the horizon, a pale ground, and tall dark and bright streaks, which is what gives a steel hull its long vertical sheen. */
+export function paintSky(): HTMLCanvasElement {
+  const w = 1024;
+  const h = 512;
+  const c = canvas(w, h);
+  const ctx = c.getContext("2d");
+  if (!ctx) return c;
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, "#7fa6d6");
+  g.addColorStop(0.42, "#dfe9f2");
+  g.addColorStop(0.5, "#fbfbf8");
+  g.addColorStop(0.53, "#b9b3a6");
+  g.addColorStop(1, "#6d6a63");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  const streaks: [number, number, string][] = [
+    [0.04, 0.05, "rgba(40,48,60,0.62)"],
+    [0.22, 0.03, "rgba(255,255,255,0.95)"],
+    [0.36, 0.09, "rgba(38,46,58,0.5)"],
+    [0.55, 0.04, "rgba(255,255,255,0.8)"],
+    [0.7, 0.07, "rgba(40,48,60,0.58)"],
+    [0.86, 0.03, "rgba(255,255,255,0.9)"],
+  ];
+  for (const [at, width, colour] of streaks) {
+    const x = at * w;
+    const half = (width * w) / 2;
+    const s = ctx.createLinearGradient(x - half, 0, x + half, 0);
+    s.addColorStop(0, colour.replace(/[\d.]+\)$/, "0)"));
+    s.addColorStop(0.5, colour);
+    s.addColorStop(1, colour.replace(/[\d.]+\)$/, "0)"));
+    ctx.fillStyle = s;
+    ctx.fillRect(x - half, h * 0.12, half * 2, h * 0.68);
+  }
   return c;
 }

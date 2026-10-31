@@ -16,7 +16,7 @@ import { dedup, prune, quantize } from "@gltf-transform/functions";
 import { MeshoptSimplifier } from "meshoptimizer";
 import { MODEL_RECIPES, type ModelRecipe, type RecipePart } from "./model-recipes.ts";
 
-const sources = process.env.UCHUSEN_MODEL_SOURCES;
+const sources: string = process.env.UCHUSEN_MODEL_SOURCES ?? "";
 if (!sources) throw new Error("UCHUSEN_MODEL_SOURCES must name the folder that holds the source models. They are kept outside this repository.");
 const outDir = join(process.cwd(), "models");
 mkdirSync(outDir, { recursive: true });
@@ -78,7 +78,7 @@ function take(bucket: Bucket, prim: Primitive, node: GNode, place: (p: number[],
 }
 
 /** Joins vertices that are the same to within a millimetre, so a simplifier sees one surface. */
-function weld(bucket: Bucket): { positions: Float32Array; normals: Float32Array; uvs: Float32Array; indices: Uint32Array } {
+function weld(bucket: Bucket): { positions: Float32Array<ArrayBuffer>; normals: Float32Array<ArrayBuffer>; uvs: Float32Array<ArrayBuffer>; indices: Uint32Array<ArrayBuffer> } {
   const seen = new Map<string, number>();
   const remap = new Uint32Array(bucket.positions.length / 3);
   const positions: number[] = [];
@@ -105,7 +105,7 @@ function weld(bucket: Bucket): { positions: Float32Array; normals: Float32Array;
 }
 
 /** Simplifies to `ratio` of the triangles, with `error` in metres as the most it may move the surface. Normals count, so hard edges stay. */
-function reduce(bucket: Bucket, ratio: number, error: number) {
+function reduce(bucket: Bucket, ratio: number, error: number): { positions: Float32Array<ArrayBuffer>; normals: Float32Array<ArrayBuffer>; uvs: Float32Array<ArrayBuffer>; indices: Uint32Array<ArrayBuffer> } {
   const w = weld(bucket);
   if (ratio >= 1) return w;
   const target = Math.max(3, Math.floor((w.indices.length * ratio) / 3) * 3);

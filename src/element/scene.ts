@@ -24,6 +24,7 @@ import {
   RepeatWrapping,
   Scene,
   ShaderMaterial,
+  SphereGeometry,
   Spherical,
   SRGBColorSpace,
   type Texture,
@@ -33,7 +34,6 @@ import {
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
@@ -42,7 +42,7 @@ import type { Built } from "../build/index.ts";
 import { type Angle, FOV_DEG, frameFor, PICTURE_H, type Vec3 } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { MATERIALS, type MaterialName } from "../model/materials.ts";
-import { paintGlow, paintSteel, paintTiles } from "./paint.ts";
+import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 
 export interface ViewerOptions {
   label: string;
@@ -196,15 +196,23 @@ export class RocketViewer {
     holder.appendChild(this.canvas);
 
     const pmrem = new PMREMGenerator(this.renderer);
-    this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    const skyTexture = new CanvasTexture(paintSky());
+    skyTexture.colorSpace = SRGBColorSpace;
+    const skyScene = new Scene();
+    const sky = new Mesh(new SphereGeometry(50, 48, 24), new MeshBasicMaterial({ map: skyTexture, side: BackSide }));
+    skyScene.add(sky);
+    this.environment = pmrem.fromScene(skyScene, 0.012).texture;
     pmrem.dispose();
+    sky.geometry.dispose();
+    (sky.material as MeshBasicMaterial).dispose();
+    skyTexture.dispose();
     this.scene.environment = this.environment;
-    this.scene.environmentIntensity = 0.9;
-    const key = new DirectionalLight("#fff6e6", 2.1);
+    this.scene.environmentIntensity = 0.95;
+    const key = new DirectionalLight("#fff6e6", 1.6);
     key.position.set(3, 5, 4);
     const rim = new DirectionalLight("#cfe2ff", 1.1);
     rim.position.set(-4, 1, -5);
-    const low = new DirectionalLight("#ffffff", 0.7);
+    const low = new DirectionalLight("#ffffff", 0.35);
     low.position.set(1, -4, 2);
     this.scene.add(key, rim, low, new HemisphereLight("#d7e6ff", "#22252b", 0.35), this.root);
 
@@ -388,8 +396,17 @@ export class RocketViewer {
       made.map = this.tileMap;
       made.color.set("#ffffff");
     }
+    this.dullTile(made, name);
     this.materialCache.set(key, made);
     return made;
+  }
+
+  /** Black tiles are matt: without this a bright sky washes them grey. */
+  private dullTile(material: MeshStandardMaterial, name: string): void {
+    if (name !== "tile" && name !== "tile-plain") return;
+    material.envMap = this.environment;
+    material.envMapIntensity = 0.28;
+    material.roughness = Math.max(material.roughness, 0.72);
   }
 
   private repeating(picture: HTMLCanvasElement, u: number, v: number): CanvasTexture {
@@ -465,7 +482,11 @@ export class RocketViewer {
         part.model = gltf.scene;
         // the same sheen as this package's own steel, whichever author's hull it is
         gltf.scene.traverse((node) => {
-          if (node instanceof Mesh && (node.material as Material).name === "steel") (node.material as MeshStandardMaterial).roughness = 0.62;
+          if (!(node instanceof Mesh)) return;
+          const material = node.material as MeshStandardMaterial;
+          if (material.name === "steel") material.roughness = 0.6;
+          this.dullTile(material, material.name);
+          if (material.name === "tile") material.color.setScalar(0.42);
         });
         part.holder.add(gltf.scene);
         part.modelState = "ready";

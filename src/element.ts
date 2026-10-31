@@ -284,9 +284,12 @@ export class UchusenRocket extends HTMLBase {
     this.redraw();
     if (!this.builtNow) return;
     if (this.viewer) {
-      const { look, show } = this.settings(this.builtNow);
+      const { look, show, viewName, angle } = this.settings(this.builtNow);
       this.viewer.setLabel(this.getAttribute("label") ?? this.builtNow.report.label);
-      await this.viewer.load(this.builtNow, show, look, this.viewer.currentAngle());
+      // a new rocket keeps the angle, unless the same change named another view
+      const from = viewName !== this.lastView ? angle : this.viewer.currentAngle();
+      this.lastView = viewName;
+      await this.viewer.load(this.builtNow, show, look, from);
       this.emit("uchusen-change", { report: this.builtNow.report });
     }
   }

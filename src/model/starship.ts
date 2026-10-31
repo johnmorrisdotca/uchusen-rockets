@@ -2,7 +2,6 @@
 // figure: no source gives a flap's size or a fin's reach. Block 3's come from measuring Clarence365's model after it was scaled to the sourced sizes (CC BY 4.0, see NOTICE.md); Blocks 1 and 2 keep their
 // own documented differences (four fins, flap angles, engine shielding) with sizes judged from photographs.
 import { deg } from "../framing.ts";
-import type { MaterialName } from "./materials.ts";
 import { flat, type Frame, type Lathe, type Piece, type Plate, pointOf, radial, radiusAt, strut, type Vec3 } from "./pieces.ts";
 
 export interface FlapDraw {
@@ -187,7 +186,7 @@ function v3Like(boosterHeight: number, shipHeight: number, vacuum: number): Star
 /** One Raptor from its exit up: the bell, its dark inside and the machinery over it. Its origin is the middle of its exit. */
 export function raptor(at: readonly [number, number], y: number, type: "sea" | "vacuum"): Piece[] {
   const vac = type === "vacuum";
-  const exit = vac ? 1.15 : 0.62;
+  const exit = vac ? 1.15 : 0.6;
   const length = vac ? 4.4 : 3.1;
   const throat = vac ? 0.26 : 0.22;
   const neck = y + length * (vac ? 0.72 : 0.5);
@@ -486,9 +485,9 @@ export function boosterPieces(d: StarshipDraw): Piece[] {
     });
   }
   // the raceways
-  for (const az of [0, 180]) pieces.push(strut("steel", pointOf(radial(deg(az)), r + 0.08, skirt + 3), pointOf(radial(deg(az)), r + 0.08, topOfHull - 8), 0.5, 0.2, { plain: false }));
+  for (const az of [0, 180]) pieces.push(strut("engine-metal", pointOf(radial(deg(az)), r + 0.08, skirt + 3), pointOf(radial(deg(az)), r + 0.08, topOfHull - 8), 0.5, 0.2, { plain: false }));
   // the band of vents round the common dome
-  pieces.push({ kind: "lathe", material: "soot", segs: 64, only: "mesh", profile: [[r + 0.015, topOfHull * 0.62 - 0.25], [r + 0.015, topOfHull * 0.62 + 0.25]] });
+  pieces.push({ kind: "lathe", material: "engine-metal", segs: 64, only: "mesh", profile: [[r + 0.015, topOfHull * 0.62 - 0.12], [r + 0.015, topOfHull * 0.62 + 0.12]] });
   for (const az of d.fins.az) pieces.push(...gridFin(az, d.fins.y, r, d.fins.reach, d.fins.width, d.fins.thick, d.fins.octagon));
   if (d.ring.height > 0) pieces.push(...hotStage(d));
   else pieces.push({ kind: "lathe", material: "soot", segs: 48, profile: [[r, topOfHull], [0, topOfHull]], only: "mesh" });
@@ -523,7 +522,7 @@ export function shipPieces(d: StarshipDraw): Piece[] {
     pieces.push(fairing(d.forward.az * side, fwdBottom + 1, fwdBottom - 2.4, surface, 0.6));
   }
   // leeward raceways
-  for (const az of [165, -165]) pieces.push(strut("soot", pointOf(radial(deg(az)), r + 0.08, 8), pointOf(radial(deg(az)), r + 0.08, Math.max(noseStart - 4, 12)), 0.35, 0.2, { plain: false }));
+  for (const az of [165, -165]) pieces.push(strut("engine-metal", pointOf(radial(deg(az)), r + 0.05, 8), pointOf(radial(deg(az)), r + 0.05, Math.max(noseStart - 4, 12)), 0.3, 0.14, { plain: false }));
   if (d.door) {
     const az = (a: number): Vec3 => [(r + 0.02) * Math.sin(deg(a)), 0, (r + 0.02) * Math.cos(deg(a))];
     const at = (a: number, y: number): Vec3 => [az(a)[0], y, az(a)[2]];
