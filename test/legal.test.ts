@@ -38,7 +38,7 @@ test("no material is named for a product or a mark", () => {
   for (const name of Object.keys(MATERIALS)) assert.ok(!BRANDS.test(name), name);
 });
 
-const OUR_MATERIALS = new Set([...Object.keys(MATERIALS), "atlas"]);
+const OUR_MATERIALS = new Set([...Object.keys(MATERIALS), "atlas", "painted"]);
 const modelFiles = readdirSync("models").filter((name) => name.endsWith(".glb"));
 
 test("a painted model carries no logo: only our materials, only the images chosen, and its credit", () => {
@@ -48,6 +48,8 @@ test("a painted model carries no logo: only our materials, only the images chose
     const json = JSON.parse(glbJson(bytes)) as { asset: { extras: Record<string, string> }; materials: { name: string }[]; images?: unknown[] };
     for (const material of json.materials) assert.ok(OUR_MATERIALS.has(material.name), `${name}: ${material.name}`);
     assert.ok((json.images?.length ?? 0) <= 4, `${name}: ${json.images?.length} images`);
+    // the materials that carried a mark are gone by name too
+    assert.ok(!/logo|serial|wordmark/i.test(JSON.stringify(json.materials)), name);
     assert.match(json.asset.extras.license, /CC-BY-4\.0/, name);
     assert.ok(json.asset.extras.author && json.asset.extras.source && json.asset.extras.title, name);
     assert.ok(json.asset.extras.changes, `${name} says what was changed`);
@@ -61,6 +63,17 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "starship-v1-flight1-booster.glb": [69, 9],
     "starship-v1-flight1-ship.glb": [50.3, 9],
     "starship-2019-ship.glb": [50, Number.NaN],
+    "falcon-9-block-5-first-stage.glb": [47.7, 3.7],
+    "falcon-9-block-5-second-stage.glb": [11.09, 3.7],
+    "falcon-9-block-5-fairing.glb": [13.1, 5.2],
+    "dragon-dragon-2-trunk.glb": [3.94, 3.7],
+    "dragon-dragon-2-capsule.glb": [4.5, 4],
+    "dragon-dragon-1-trunk.glb": [2.3, 3.7],
+    "dragon-dragon-1-capsule.glb": [3.8, 3.7],
+    "falcon-heavy-falcon-heavy-centre.glb": [70, 3.7],
+    "falcon-heavy-falcon-heavy-side-left.glb": [45.57, 3.7],
+    "falcon-heavy-falcon-heavy-side-right.glb": [45.57, 3.7],
+    "grasshopper-grasshopper-vehicle.glb": [32, Number.NaN],
   };
   for (const name of modelFiles) {
     assert.ok(statSync(join("models", name)).size < 8 * 1024 * 1024, name);

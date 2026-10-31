@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { LOOK_NAMES, ROCKETS, VIEW_NAMES, showsOf } from "../src/index.ts";
-import { build, buildPart, lineupSvg } from "../src/build/index.ts";
+import { build, buildPart, drawnPieces, lineupSvg } from "../src/build/index.ts";
 import { partEntry } from "../src/model/registry.ts";
 import type { Lathe, Piece } from "../src/model/pieces.ts";
 import { STARSHIP_DRAWS } from "../src/model/starship.ts";
@@ -128,4 +128,32 @@ test("a part alone is a drawing and a mesh too", () => {
     assert.ok(part.svg().startsWith("<svg "), id);
     assert.ok(part.glb().triangles > 0, id);
   }
+});
+
+test("a nozzle nested in the stage below is not drawn over it in a stack, and is when the part stands alone", () => {
+  const rocket = build({ rocket: "falcon-9", variant: "block-5" });
+  const second = rocket.parts.find((part) => part.slot === "second-stage");
+  assert.ok(second);
+  const bells = (pieces: readonly Piece[]) => pieces.filter((piece) => piece.kind === "lathe" && piece.material === "bell").length;
+  assert.equal(bells(drawnPieces(second, true)), 0);
+  assert.equal(bells(drawnPieces(second, false)), 1);
+  const first = rocket.parts.find((part) => part.slot === "first-stage");
+  assert.ok(first);
+  assert.equal(bells(drawnPieces(first, true)), 9);
+});
+
+test("Falcon 9 has its 9 engines, and a v1.0's stand in a 3 by 3 grid", () => {
+  assert.equal(bellsOf(partEntry("falcon-9-block-5-first-stage")?.pieces() ?? []).length, 9);
+  assert.equal(bellsOf(partEntry("falcon-9-v1.0-first-stage")?.pieces() ?? []).length, 9);
+  for (const id of ["falcon-heavy-falcon-heavy-centre", "falcon-heavy-falcon-heavy-side-left", "falcon-heavy-falcon-heavy-side-right"]) assert.equal(bellsOf(partEntry(id)?.pieces() ?? []).length, 9, id);
+  assert.equal(bellsOf(partEntry("grasshopper-grasshopper-vehicle")?.pieces() ?? []).length, 1);
+});
+
+test("Falcon Heavy stands its side boosters beside the core, apart on the ground, and alone at the middle", () => {
+  const heavy = build({ rocket: "falcon-heavy" });
+  const together = heavy.placesOf("together");
+  assert.deepEqual(together.map((place) => place.at[1]), [0, 0, 0]);
+  assert.ok(together[1].at[0] < 0 && together[2].at[0] > 0);
+  assert.deepEqual(heavy.placesOf("side-left").find((place) => place.slot === "side-left")?.at, [0, 0, 0]);
+  assert.ok(heavy.boundsOf("together").max[1] > 69.9);
 });

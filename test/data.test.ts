@@ -104,9 +104,25 @@ test("the artist's model is labelled as one, ship only, separate from the flown 
 });
 
 test("what is planned carries sourced facts, not shapes", () => {
+  assert.deepEqual(PLANNED_ROCKETS.map((rocket) => rocket.id), ["falcon-1"]);
   for (const rocket of PLANNED_ROCKETS) {
     assert.equal(rocket.status, "planned");
     assert.ok(rocket.height.source && rocket.diameter.source);
     assert.ok(!Object.hasOwn(ROCKETS, rocket.id));
   }
+});
+
+test("Falcon 9's versions are those the sources document, each with its own height, and Block 4 is not listed apart", () => {
+  const ids = ROCKETS["falcon-9"].variants.map((variant) => variant.id);
+  assert.deepEqual(ids, ["v1.0", "v1.1", "ft", "block-5", "block-5-dragon-2"]);
+  assert.deepEqual(ids.slice(0, 4).map((id) => variantOf("falcon-9", id)?.facts.height.value), [54.9, 68.4, 69.8, 70]);
+  assert.match(variantOf("falcon-9", "ft")?.note ?? "", /Block 4/);
+});
+
+test("Dragon 1 is labelled as what the model shows, not as the later Cargo Dragon", () => {
+  const d1 = variantOf("dragon", "dragon-1");
+  assert.match(d1?.note ?? "", /not the later Cargo Dragon 2/);
+  assert.equal(d1?.facts.height.value, 6.1);
+  assert.equal(variantOf("dragon", "dragon-2")?.facts.height.value, 8.1);
+  assert.equal(figureWords(variantOf("grasshopper", "grasshopper")?.firstFlight), "2012-09-21, a 1.8 m hop");
 });

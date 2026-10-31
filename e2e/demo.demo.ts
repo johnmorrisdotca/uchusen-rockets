@@ -162,8 +162,10 @@ test("together to apart is an animated move, and a cut under reduced motion", as
   await page.locator('[data-testid="spin"]').uncheck();
   await reach3d(page);
   await press(page, "show-apart");
-  await expect.poll(() => canvasData(page, "moving"), { timeout: 5000 }).toBe("true");
+  await expect.poll(() => canvasData(page, "moves"), { timeout: 5000 }).toBe("1");
   await expect.poll(() => canvasData(page, "moving"), { timeout: 30_000 }).toBe("false");
+  // and it reached its place: the parts stand apart
+  await expect(hero(page)).toHaveAttribute("data-show", "apart");
   await context.close();
 
   const still = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
@@ -174,6 +176,8 @@ test("together to apart is an animated move, and a cut under reduced motion", as
   await expect(hero(page2)).toHaveAttribute("data-show", "apart");
   await page2.waitForTimeout(200);
   expect(await canvasData(page2, "moving")).not.toBe("true");
+  // a cut: no move was started at all
+  expect(await canvasData(page2, "moves")).toBe("");
   // and no slow spin
   expect(await hero(page2).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.spin)).toBeTruthy();
   const a = (await angle(page2)).az;
@@ -235,10 +239,14 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
   await expect(table).toContainText("2023-04-20, Starship's first flight");
   await expect(table).toContainText("2023-11-18, first with the ring");
   await expect(table).toContainText("Not flown");
-  await press(page, "compare-v4");
+  await press(page, "compare-starship:v4");
   await expect(lineup).toHaveAttribute("data-count", "6");
   await expect(table).not.toContainText("142 m");
-  await press(page, "compare-2019");
+  await press(page, "compare-falcon-9:block-5");
+  await expect(lineup).toHaveAttribute("data-count", "7");
+  await expect(table).toContainText("70 m");
+  await press(page, "compare-falcon-9:block-5");
+  await press(page, "compare-starship:2019");
   await expect(lineup).toHaveAttribute("data-count", "7");
   await expect(table).toContainText("No source");
   await expect(table).toContainText("Never flew");
@@ -261,9 +269,69 @@ test("the sources and the credits are on the page, and the page says no one endo
   await page.goto(URL);
   await expect(page.locator('[data-testid="sources"]')).toContainText("Wikipedia");
   const credits = page.locator('[data-testid="credits"]');
-  for (const name of ["Clarence365", "clarence365", "MartianDays"]) await expect(credits).toContainText(name);
+  for (const name of ["Clarence365", "clarence365", "MartianDays", "Stanley Creative", "KUBAHA", "ProgressTH", "Antonio_Adams", "Echo_3"]) await expect(credits).toContainText(name);
   await expect(page.locator("footer")).toContainText("not affiliated with or endorsed by SpaceX");
-  await expect(page.locator('[data-testid="planned"]')).toContainText("Falcon 9");
+  await expect(page.locator('[data-testid="planned"]')).toContainText("Falcon 1");
+  await expect(page.locator('[data-testid="planned"]')).not.toContainText("Falcon 9");
+});
+
+test("every rocket is on the main view, with its own variants and parts, and a variant only lists parts it has", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  await press(page, "rocket-falcon-9");
+  await expect(hero(page)).toHaveAttribute("data-variant", "block-5");
+  for (const id of ["variant-v1.0", "variant-v1.1", "variant-ft", "variant-block-5", "variant-block-5-dragon-2", "show-first-stage", "show-second-stage", "show-fairing"]) await expect(page.locator(`[data-testid="${id}"]`)).toBeVisible();
+  await expect(page.locator('[data-testid="facts"]')).toContainText("70 m");
+  await press(page, "variant-block-5-dragon-2");
+  await expect(page.locator('[data-testid="show-capsule"]')).toBeVisible();
+  await expect(page.locator('[data-testid="show-fairing"]')).toHaveCount(0);
+  await expect(page.locator('[data-testid="facts"]')).toContainText("as stated; the parts add to 65 m");
+  await press(page, "rocket-falcon-heavy");
+  await expect(page.locator('[data-testid="show-side-left"]')).toBeVisible();
+  await expect(page.locator('[data-testid="facts"]')).toContainText("12.2 m");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("nothing is cut to fake a separation");
+  await press(page, "rocket-dragon");
+  await expect(hero(page)).toHaveAttribute("data-variant", "dragon-2");
+  await press(page, "variant-dragon-1");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("not the later Cargo Dragon 2");
+  await press(page, "rocket-grasshopper");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("32 m");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("test vehicle");
+  await expect(page.locator('[data-testid="show-apart"]')).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test("each rocket's painted look fetches only its own models, and credits their authors", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+  test.setTimeout(240_000);
+  const problems = watch(page);
+  const models: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/assets/models/")) models.push(request.url().split("/").pop() as string);
+  });
+  await page.goto(URL);
+  await page.locator('[data-testid="spin"]').uncheck();
+  await reach3d(page);
+  await press(page, "look-painted");
+  await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
+  const credit = page.locator('[data-testid="credit"]');
+  for (const [rocket, creator, count] of [
+    ["falcon-9", "Stanley Creative", 3],
+    ["falcon-heavy", "Antonio_Adams", 3],
+    ["dragon", "KUBAHA", 2],
+    ["grasshopper", "Echo_3", 1],
+  ] as const) {
+    models.length = 0;
+    await press(page, `rocket-${rocket}`);
+    await expect(credit).toContainText(creator);
+    await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
+    expect(models.length).toBe(count);
+  }
+  await press(page, "rocket-falcon-9");
+  await press(page, "variant-v1.0");
+  await expect(credit).toContainText("own code");
+  await expect(hero(page)).toHaveAttribute("data-painted", "code", { timeout: 60_000 });
+  expect(problems).toEqual([]);
 });
 
 test("no sideways scroll at a phone's width, and controls big enough for a finger", async ({ page }, info) => {

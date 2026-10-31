@@ -50,7 +50,7 @@ test("every part has the one record: size, origin's joints and where its shape c
     assert.ok(record.height > 0 && record.diameter > 0, record.id);
     assert.ok(record.drawnFrom.length > 5, record.id);
     if (record.joints.top) assert.equal(record.joints.top.y, record.height, record.id);
-    if (record.joints.bottom) assert.equal(record.joints.bottom.y, 0, record.id);
+    if (record.joints.bottom) assert.ok(record.joints.bottom.y >= 0 && record.joints.bottom.y < record.height, record.id);
     if (record.sourced.height.value !== null && record.trueTo.length) assert.equal(record.height, record.sourced.height.value, `${record.id}: drawn to its source`);
     if (record.sourced.diameter.value !== null && record.trueTo.length) assert.equal(record.diameter, record.sourced.diameter.value, `${record.id}: drawn to its source`);
   }
@@ -71,6 +71,43 @@ test("a labelled real version uses only parts true for it", () => {
     if (!record.trueTo.length) continue;
     const painted = record.painted;
     if (!painted) continue;
-    assert.equal(record.trueTo.length, 1, `${record.id}: a model is true to its one version`);
+    assert.ok(record.trueTo.length <= 2, `${record.id}: a model is true to the version it shows`);
   }
+});
+
+test("each Falcon's parts add up to its sourced height, joint to joint, its nozzle nested in the stage below", () => {
+  for (const [id, height] of [["v1.0", 54.9], ["v1.1", 68.4], ["ft", 69.8], ["block-5", 70]] as const) {
+    const report = check({ rocket: "falcon-9", variant: id });
+    assert.equal(report.ok, true);
+    assert.ok(Math.abs((report.size?.height ?? 0) - height) < 0.01, `${id}: ${report.size?.height}`);
+  }
+});
+
+test("a part goes on another rocket when its joints fit: Falcon 9 with Dragon 2 uses both rockets' own parts, and its credits are both authors'", () => {
+  const report = check({ rocket: "falcon-9", variant: "block-5-dragon-2" });
+  assert.equal(report.ok, true);
+  assert.equal(report.custom, false);
+  assert.deepEqual(report.parts.map(({ part }) => part.id), ["falcon-9-block-5-first-stage", "falcon-9-block-5-second-stage", "dragon-dragon-2-trunk", "dragon-dragon-2-capsule"]);
+  assert.deepEqual(report.credits.map((credit) => credit.creator).sort(), ["KUBAHA", "Stanley Creative"]);
+  assert.ok(Math.abs((report.size?.height ?? 0) - 65) < 0.05);
+});
+
+test("a stage with the wrong joint is refused by its diameter, whichever rocket it came from", () => {
+  const report = check({ rocket: "starship", variant: "v3", parts: { ship: "falcon-9-block-5-fairing" } });
+  assert.equal(report.ok, false);
+  assert.ok(report.issues.some((issue) => issue.code === "wrong-kind"));
+  const wide = check({ rocket: "falcon-9", variant: "block-5", parts: { "second-stage": "falcon-9-v1.0-second-stage" } });
+  assert.equal(wide.ok, true);
+  assert.equal(wide.custom, true);
+});
+
+test("Falcon Heavy's boosters stand beside its core; Dragon's versions are different spacecraft; Grasshopper is a test vehicle", () => {
+  const heavy = check({ rocket: "falcon-heavy" });
+  assert.equal(heavy.ok, true);
+  assert.equal(heavy.size?.height, 70);
+  assert.deepEqual(heavy.parts.map(({ slot }) => slot), ["centre", "side-left", "side-right"]);
+  assert.ok(Math.abs((check({ rocket: "dragon", variant: "dragon-2" }).size?.height ?? 0) - 8.1) < 0.01);
+  assert.ok(Math.abs((check({ rocket: "dragon", variant: "dragon-1" }).size?.height ?? 0) - 6.1) < 0.01);
+  assert.equal(check({ rocket: "grasshopper" }).variant?.status, "test-vehicle");
+  assert.equal(check({ rocket: "grasshopper" }).size?.height, 32);
 });
