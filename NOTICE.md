@@ -18,9 +18,15 @@ All trademarks belong to their owners, and this project is not affiliated with o
 | `starship-v1-flight1-booster.glb`, `starship-v1-flight1-ship.glb` | Spacex Starship Ship 24 & Booster 7 V4 | [clarence365](https://sketchfab.com/clarence365) | https://sketchfab.com/3d-models/spacex-starship-ship-24-booster-7-v4-97875d14b63e4b9ca9ed425ef4253306 | Reduced from 870,993 triangles; logo, serial number and engine decals removed; rescaled to sourced sizes; separated into booster and ship; unseen payload bay interior removed; materials merged and renamed. |
 | `starship-2019-ship.glb` | SpaceX Starship | [MartianDays](https://sketchfab.com/MartianDays) | https://sketchfab.com/3d-models/spacex-starship-a8a0b69f776841a1a465cd9fb3762fd2 | Rescaled to the sourced height; turned to this package's axes; material renamed. Its triangles and images are otherwise unchanged. |
 
+| `falcon-9-block-5-first-stage.glb`, `-second-stage.glb`, `-fairing.glb` | Falcon 9 - SpaceX | [Stanley Creative](https://sketchfab.com/Stanley_Creative) | https://sketchfab.com/3d-models/falcon-9-spacex-394f7cf52d124bbd9db69f24d1ff2f08 | Reduced from 157,889 triangles; the wordmark, logos, flags and mission marks removed with the two textures that carried them; rescaled to sourced sizes; separated into first stage, second stage and fairing; materials merged and renamed. |
+| `dragon-dragon-2-capsule.glb`, `dragon-dragon-2-trunk.glb` | SpaceX - Dragon 2 | [KUBAHA](https://sketchfab.com/KUBAHA) | https://sketchfab.com/3d-models/spacex-dragon-2-1b125e30a2cb442288580290536fbe5d | Reduced from 42,974 triangles; rescaled to sourced sizes; separated into capsule and trunk; materials merged and renamed. |
+| `dragon-dragon-1-capsule.glb`, `dragon-dragon-1-trunk.glb` | SpaceX Cargo Dragon | [ProgressTH](https://sketchfab.com/ProgressTH) | https://sketchfab.com/3d-models/spacex-cargo-dragon-0ca8951e47b343dc8a41e23b3e9c55e5 | Merged from 414 meshes; the logo decal and the hidden pressure vessel removed; rescaled to sourced sizes; stood upright; separated into capsule and trunk; materials merged and renamed. |
+| `falcon-heavy-falcon-heavy-centre.glb`, `-side-left.glb`, `-side-right.glb` | SpaceX Falcon Heavy(Low Poly) | [Antonio_Adams](https://sketchfab.com/AAdams3112) | https://sketchfab.com/3d-models/spacex-falcon-heavylow-poly-0dc068a462e34258b3872085a7f592c8 | The wordmark and logos painted out of its colour, roughness and normal maps, which were also resized; rescaled to sourced sizes; separated into its centre core and two side boosters by its own connected pieces. |
+| `grasshopper-grasshopper-vehicle.glb` | SpaceX Grasshopper | [Echo_3](https://sketchfab.com/Echo_3) | https://sketchfab.com/3d-models/spacex-grasshopper-35c07a68cdb246c59bb425610b934bf8 | The wordmark and logo removed with the texture that carried them; rescaled to the sourced height; reduced from 55,455 triangles; materials merged and renamed. |
+
 Licence for all: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The credit line the second model's author asks for: This work is based on "Spacex Starship Ship 24 & Booster 7 V4" (https://sketchfab.com/3d-models/spacex-starship-ship-24-booster-7-v4-97875d14b63e4b9ca9ed425ef4253306) by clarence365 (https://sketchfab.com/clarence365) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/).
 
-The Block 3 model also informed the proportions of this package's own Block 3 line drawings: those measurements were taken after it was scaled to the sourced sizes, and the same goes for MartianDays' model and the 2019 design's drawings. No model stands in for another block.
+These models also informed the proportions of this package's own line drawings of the same vehicles: those measurements were taken after each was scaled to the sourced sizes. No model stands in for another version. A rocket's own parts are credited through `check(description).credits`, generated from which part came from where.
 
 ## Facts
 
@@ -28,13 +34,13 @@ Sizes are plain facts, each with its source in `src/data/sources.ts` and on the 
 
 | Source | What was taken |
 | --- | --- |
-| Wikipedia: SpaceX Starship, SpaceX Super Heavy, SpaceX Starship (spacecraft), SpaceX Raptor, Starship flight test 1, List of Starship launches, Falcon 1, Falcon 9, Falcon Heavy (CC BY-SA 4.0, read 2026-10-31) | Heights, diameters, engine counts, grid fin counts, flap changes, first flight dates in UTC. Facts only: no text is copied |
+| Wikipedia: SpaceX Starship, SpaceX Super Heavy, SpaceX Starship (spacecraft), SpaceX Raptor, Starship flight test 1, List of Starship launches, Falcon 1, Falcon 9, Falcon Heavy, SpaceX Dragon 1, SpaceX Dragon 2, SpaceX Grasshopper (CC BY-SA 4.0, read 2026-10-31) | Heights, diameters, engine counts, grid fin counts, flap changes, first flight dates in UTC. Facts only: no text is copied |
 | SpaceX's Starship page, https://new.spacex.com/vehicles/starship, as a search engine quoted it: the page itself would not load | Rounded heights, kept as a second opinion |
 | SatNews, 2026-05-14 | Grid fins, four to three and about 50% larger; about 1.5 m taller |
 | Gunter's Space Page | Version names, first flights by serial number; one set of sizes per family, not used for sizes |
 | NASASpaceflight, 2025-05-30, and Ars Technica, 2024-04-08 | Known through Wikipedia's citations; not read directly |
 | Space.com, 2019 | The 2019 prototype's height, as a search engine quoted it |
-| [r-spacex/SpaceX-API](https://github.com/r-spacex/SpaceX-API) (Apache-2.0, archived in 2024; its live address gave no JSON, so the repository's docs were read) | Facts on the older rockets, for those still to be built. No code of it is used. Its licence: Copyright r/SpaceX contributors, under the Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0 |
+| [r-spacex/SpaceX-API](https://github.com/r-spacex/SpaceX-API) (Apache-2.0, archived in 2024; its live address gave no JSON, so the repository's docs were read) | Facts on the Falcons: their heights and diameters, as a second source, and the fairing's size. No code of it is used. Its licence: Copyright r/SpaceX contributors, under the Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0 |
 
 ## Looked at, nothing taken
 

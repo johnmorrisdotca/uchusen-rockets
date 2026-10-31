@@ -47,6 +47,27 @@ Where sources disagree, the data keeps the one chosen and `others` says what els
 
 Every part's flaps, fins and chines are drawn from proportions, not from published figures: no source gives them. See `src/model/starship.ts`, whose table says which is which.
 
+## Falcon 9
+
+| Variant | Whole | First stage | Second stage | Fairing | First flew |
+| --- | --- | --- | --- | --- | --- |
+| `v1.0` | 54.9 m, to the fairing's top; 47.8 m with Dragon 1 | 39.6 m, the stage alone | No source | No source | 2010-06-04 |
+| `v1.1` | 68.4 m; 63.4 m with Dragon 1 | 41.2 m, the stage alone | No source | No source | 2013-09-29 |
+| `ft` Full Thrust | 69.8 m; 65.7 m with Dragon 2, 63.7 m with Dragon 1 | 47.7 m with its interstage | 13.8 m | 13.1 m | 2015-12-22 |
+| `block-5` Block 5 | 70 m | 47.7 m with its interstage | 13.8 m | 13.1 m | 2018-05-11 |
+| `block-5-dragon-2` Block 5 with Dragon 2 | 65.7 m as stated; the parts add to 65 m | The same | The same | Trunk, capsule | 2019-03-02 |
+
+All are 3.7 m across. Block 4 first flew on 2017-08-14, and no source read here gives it sizes of its own, so it is not listed apart. `SpaceX-API` (Apache-2.0) was read as a second source for the Falcons: it was archived in 2024.
+
+## Falcon Heavy, Dragon and Grasshopper
+
+| Rocket | Whole | Across | First flew | Note |
+| --- | --- | --- | --- | --- |
+| `falcon-heavy` | 70 m | 12.2 m over its three cores, 3.7 m each | 2018-02-06 | Its painted model is one shell from the centre core to the fairing, so those stay one part. A side booster's height has no source and is drawn from the model |
+| `dragon` `dragon-1` Dragon 1 | 6.1 m | 3.7 m | 2010-12-08 | The original cargo Dragon, with solar wings. Not the later Cargo Dragon 2 |
+| `dragon` `dragon-2` Dragon 2 | 8.1 m; capsule 4.5 m | 4 m | 2019-03-02 | Crew Dragon, with windows |
+| `grasshopper` | 32 m | No source | 2012-09-21, a 1.8 m hop | A test vehicle, retired on 2013-10-07 |
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape.

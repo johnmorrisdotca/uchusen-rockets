@@ -53,6 +53,14 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Block 1 as it first flew | This package's code | Clarence365's Ship 24 and Booster 7 |
 | Block 3 | This package's code, its proportions measured from Clarence365's model | Clarence365's Block 3 |
 | 2019 design | This package's code, its proportions measured from MartianDays' model | MartianDays' model |
+| Falcon 9 v1.0, v1.1 and Full Thrust | This package's code | This package's code. No model shows them |
+| Falcon 9 Block 5 | This package's code, its proportions taken from Stanley Creative's model | Stanley Creative's model |
+| Dragon 2 | This package's code, its proportions taken from KUBAHA's model | KUBAHA's model |
+| Dragon 1 | This package's code, its proportions taken from ProgressTH's model | ProgressTH's model |
+| Falcon Heavy | This package's code, its proportions taken from Antonio_Adams's model | Antonio_Adams's low-poly model |
+| Grasshopper | This package's code, its proportions taken from Echo_3's model | Echo_3's low-poly model |
+
+Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
 
 ## A new rocket
 
