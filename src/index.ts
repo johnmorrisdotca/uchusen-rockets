@@ -1,0 +1,24 @@
+// The pure core: the rockets and their variants with sourced sizes, the parts and how they fit, the camera rule, the looks and the layout. No three.js, no DOM.
+export { PLANNED_ROCKETS, ROCKETS, partIdOf, variantOf } from "./rockets.ts";
+export type { PlannedRocket, RocketEntry, RocketStatus } from "./rockets.ts";
+export { blank } from "./data/types.ts";
+export type { Disagreement, Figure, Variant, VariantFacts, VariantStatus } from "./data/types.ts";
+export { SOURCES } from "./data/sources.ts";
+export type { Source, SourceId } from "./data/sources.ts";
+export { creditLine, MODEL_CREDITS } from "./data/credits.ts";
+export type { CreditId, ModelCredit } from "./data/credits.ts";
+export type { Joint, PartKind, PartRecord } from "./parts.ts";
+export { PART_ENTRIES, partEntry } from "./model/registry.ts";
+export { check } from "./fit.ts";
+export type { Description, FitCode, FitIssue, FitReport, SlotPart } from "./fit.ts";
+export { axesOf, cleanView, DEFAULT_VIEW, directionOf, FOV_DEG, frameFor, PICTURE_H, PICTURE_W, VIEW_NAMES, VIEWS } from "./framing.ts";
+export type { Angle, Framing, Vec3, ViewName } from "./framing.ts";
+export { cleanLook, DEFAULT_LOOK, LOOK_NAMES, LOOKS } from "./looks.ts";
+export type { Look, LookName } from "./looks.ts";
+export { cleanShow, placesFor, showsOf } from "./layout.ts";
+export type { Place, ShowName } from "./layout.ts";
+export { CROSSFADE_MS, DRAWING_HOLD_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
+export { tiltMode, tiltTurn } from "./tilt.ts";
+export type { Reading, TiltMode } from "./tilt.ts";
+export { MATERIALS } from "./model/materials.ts";
+export type { MaterialName, MaterialSpec } from "./model/materials.ts";
