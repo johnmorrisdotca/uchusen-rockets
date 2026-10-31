@@ -28,7 +28,7 @@ Sizes are plain facts, each with its source in `src/data/sources.ts` and on the 
 
 | Source | What was taken |
 | --- | --- |
-| Wikipedia: SpaceX Starship, SpaceX Super Heavy, SpaceX Starship (spacecraft), SpaceX Raptor, Starship flight test 1, Falcon 1, Falcon 9, Falcon Heavy (CC BY-SA 4.0, read 2026-10-31) | Heights, diameters, engine counts, grid fin counts, flap changes, first flight dates. Facts only: no text is copied |
+| Wikipedia: SpaceX Starship, SpaceX Super Heavy, SpaceX Starship (spacecraft), SpaceX Raptor, Starship flight test 1, List of Starship launches, Falcon 1, Falcon 9, Falcon Heavy (CC BY-SA 4.0, read 2026-10-31) | Heights, diameters, engine counts, grid fin counts, flap changes, first flight dates in UTC. Facts only: no text is copied |
 | SpaceX's Starship page, https://new.spacex.com/vehicles/starship, as a search engine quoted it: the page itself would not load | Rounded heights, kept as a second opinion |
 | SatNews, 2026-05-14 | Grid fins, four to three and about 50% larger; about 1.5 m taller |
 | Gunter's Space Page | Version names, first flights by serial number; one set of sizes per family, not used for sizes |

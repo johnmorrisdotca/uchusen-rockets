@@ -4,6 +4,7 @@ import { blank, type Figure, type Variant } from "./types.ts";
 
 const WP = "wikipedia-starship" as const;
 const SH = "wikipedia-super-heavy" as const;
+const LAUNCHES = "wikipedia-launches" as const;
 const m = (value: number, source: Figure["source"], extra: Partial<Figure> = {}): Figure => ({ value, source, ...extra });
 const said = (value: string, source: Figure<string>["source"], extra: Partial<Figure<string>> = {}): Figure<string> => ({ value, source, ...extra });
 const num = (value: number, source: Figure<number | string>["source"], extra: Partial<Figure<number | string>> = {}): Figure<number | string> => ({ value, source, ...extra });
@@ -12,11 +13,36 @@ const GUNTER_NOTE = "Gunter's Space Page gives one set of figures for every vers
 
 export const STARSHIP_VARIANTS: readonly Variant[] = [
   {
+    id: "v1-flight1",
+    rocket: "starship",
+    name: "Block 1, first flight (Ship 24, Booster 7)",
+    status: "flown",
+    firstFlight: said("2023-04-20", LAUNCHES, { brief: "Starship's first flight", note: "Flight test 1, Booster 7 and Ship 24. Gunter's Space Page calls this version v1.1 and the ringed one v1.2." }),
+    slots: ["booster", "ship"],
+    note: "The one vehicle of flight test 1, with no vented ring: that came with the next flight. Its stated height and its parts do not add up, by 1.7 m: the parts are drawn to the parts' figures, so it is drawn 119.3 m tall.",
+    facts: {
+      height: m(121, "wikipedia-flight-1", { date: "2023-04-20", brief: "as stated; its parts add to 119.3 m", note: "The flight's article says 121 m. Its parts' own figures add to 119.3 m, and the drawing follows the parts." }),
+      diameter: m(9, WP),
+      parts: {
+        booster: m(69, SH, { note: "Wikipedia's infobox: 69 m without the vented interstage. It gives no reference for that figure." }),
+        ship: m(50.3, WP),
+      },
+      engines: {
+        booster: said("33 Raptor 2", SH),
+        ship: said("3 sea-level and 3 vacuum Raptor 2", WP),
+      },
+      more: {
+        gridFins: num(4, "satnews-v3"),
+        forwardFlaps: said("Both at 180 degrees", "wikipedia-ship"),
+      },
+    },
+  },
+  {
     id: "v1",
     rocket: "starship",
-    name: "Block 1 (V1)",
+    name: "Block 1 with the vented ring (V1)",
     status: "flown",
-    firstFlight: said("2023-11-18", "gunter", { note: "With the vented ring, flight test 2, Ship 25. Block 1 itself first flew on 2023-04-20 without it: see the next variant." }),
+    firstFlight: said("2023-11-18", LAUNCHES, { brief: "first with the ring", note: "Flight test 2, Booster 9 and Ship 25. Block 1 itself first flew on 2023-04-20, without the ring: that is the variant before this one." }),
     slots: ["booster", "ship"],
     facts: {
       height: m(121.3, WP, { date: "2023", others: [{ value: 118, source: "gunter", note: GUNTER_NOTE }] }),
@@ -41,36 +67,11 @@ export const STARSHIP_VARIANTS: readonly Variant[] = [
     },
   },
   {
-    id: "v1-flight1",
-    rocket: "starship",
-    name: "Block 1, first flight (Ship 24, Booster 7)",
-    status: "flown",
-    firstFlight: said("2023-04-20", "wikipedia-flight-1", { note: "Flight test 1. Gunter's Space Page calls this version v1.1 and the ringed one v1.2." }),
-    slots: ["booster", "ship"],
-    note: "The one vehicle of flight test 1, with no vented ring: that came with the next flight. Its stated height and its parts do not add up, by 1.7 m: the parts are drawn to the parts' figures, so it is drawn 119.3 m tall.",
-    facts: {
-      height: m(121, "wikipedia-flight-1", { date: "2023-04-20", note: "The flight's article says 121 m. Its parts' own figures add to 119.3 m, and the drawing follows the parts." }),
-      diameter: m(9, WP),
-      parts: {
-        booster: m(69, SH, { note: "Wikipedia's infobox: 69 m without the vented interstage. It gives no reference for that figure." }),
-        ship: m(50.3, WP),
-      },
-      engines: {
-        booster: said("33 Raptor 2", SH),
-        ship: said("3 sea-level and 3 vacuum Raptor 2", WP),
-      },
-      more: {
-        gridFins: num(4, "satnews-v3"),
-        forwardFlaps: said("Both at 180 degrees", "wikipedia-ship"),
-      },
-    },
-  },
-  {
     id: "v2",
     rocket: "starship",
     name: "Block 2 (V2)",
     status: "flown",
-    firstFlight: said("2025-01-16", "gunter", { note: "Flight test 7, Ship 33." }),
+    firstFlight: said("2025-01-16", LAUNCHES, { note: "Flight test 7, Booster 14 and Ship 33." }),
     slots: ["booster", "ship"],
     facts: {
       height: m(123.1, WP, { date: "2025", others: [{ value: 123.3, source: WP, note: "The same article's table says 123.3 m; its infobox says 123.1 m, which is also 71 m plus 52.1 m." }] }),
@@ -99,7 +100,7 @@ export const STARSHIP_VARIANTS: readonly Variant[] = [
     rocket: "starship",
     name: "Block 3 (V3)",
     status: "flown",
-    firstFlight: said("2026-05-22", WP, { note: "Flight test 12, Booster 19 and Ship 39." }),
+    firstFlight: said("2026-05-22", LAUNCHES, { note: "Flight test 12, Booster 19 and Ship 39." }),
     slots: ["booster", "ship"],
     facts: {
       height: m(124.4, WP, {
@@ -142,19 +143,19 @@ export const STARSHIP_VARIANTS: readonly Variant[] = [
     rocket: "starship",
     name: "Block 4 (V4), announced",
     status: "announced",
-    firstFlight: blank("Not flown."),
+    firstFlight: blank("Announced, not built, so it has not flown.", "Not flown"),
     slots: ["booster", "ship"],
-    note: "Announced, not built. Its sizes are stated targets marked as estimates at the source. Its drawing is Block 3's details on Block 4's sizes, which is thin evidence: no source shows its parts.",
+    note: "Announced, not built: every figure here is a plan, not a measurement. Its height is marked an estimate at the source, and may change. Its drawing is Block 3's details on Block 4's sizes, which is thin evidence: no source shows its parts.",
     facts: {
-      height: m(142, WP, { note: "Marked an estimate at the source." }),
-      diameter: m(9, WP),
+      height: m(142, WP, { brief: "announced, an estimate", note: "Marked an estimate at the source." }),
+      diameter: m(9, WP, { brief: "announced" }),
       parts: {
-        booster: m(81, WP, { note: "Marked with the block table's estimates. SpaceX's planned high bay is also quoted as clearing vehicles up to 81 m." }),
-        ship: m(61, WP),
+        booster: m(81, WP, { brief: "announced", note: "From the block table, which adds it up to the 142 m it marks an estimate elsewhere. SpaceX's planned high bay is also quoted as clearing vehicles up to 81 m." }),
+        ship: m(61, WP, { brief: "announced", note: "From the block table, which adds it up to the 142 m it marks an estimate elsewhere." }),
       },
       engines: {
-        booster: said("33 Raptor 3", "gunter"),
-        ship: said("3 sea-level and 6 vacuum", WP, { note: "Three more vacuum engines, from a public statement by Elon Musk." }),
+        booster: said("33 Raptor 3", "gunter", { brief: "announced" }),
+        ship: said("3 sea-level and 6 vacuum", WP, { brief: "announced", note: "Three more vacuum engines, from a public statement by Elon Musk." }),
       },
       more: {
         gridFins: blank("No source gives it."),
@@ -171,7 +172,7 @@ export const STARSHIP_VARIANTS: readonly Variant[] = [
     rocket: "starship",
     name: "2019 design (artist's model)",
     status: "artist-model",
-    firstFlight: blank("It never flew: this is a design, drawn when it was shown."),
+    firstFlight: blank("It never flew: this is a design, drawn when it was shown.", "Never flew"),
     slots: ["ship"],
     note: "An artist's model of the upper stage shown in September 2019, published on 2019-09-30, not a flown block. It has no booster. The height is the Mk1 prototype's, which was built to that design.",
     facts: {

@@ -1,5 +1,5 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { check, type Description, type Figure, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { check, type Description, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -39,11 +39,12 @@ const metres = (value: number) => `${value} m`;
 function figureCell(figure: Figure<number | string> | undefined, unit: (v: number) => string = metres): HTMLElement {
   const cell = el("td");
   if (!figure || figure.value === null) {
-    cell.append(el("span", { className: "blank", textContent: "No source" }));
+    cell.append(el("span", { className: "blank", textContent: figureWords(figure) }));
     if (figure?.note) cell.append(el("span", { className: "src", textContent: figure.note }));
     return cell;
   }
   cell.append(el("span", { className: "value", textContent: typeof figure.value === "number" ? unit(figure.value) : figure.value }));
+  if (figure.brief) cell.append(el("span", { className: "brief", textContent: `, ${figure.brief}` }));
   if (figure.source) {
     const source = SOURCES[figure.source];
     const link = el("a", { href: source.url, textContent: `${source.publisher}${figure.date ? `, ${figure.date}` : source.date ? `, read ${source.date}` : ""}`, rel: "noopener" });
@@ -64,7 +65,7 @@ function factsFor(variant: Variant): HTMLElement[] {
   } else rows.push([`${name(show)} height`, variant.facts.parts[show]]);
   rows.push(["Diameter", variant.facts.diameter]);
   for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) rows.push([`${name(slot)} engines`, variant.facts.engines[slot]]);
-  rows.push(["First flight", variant.firstFlight]);
+  rows.push(["First flew", variant.firstFlight]);
   const table = el("table", { className: "sizes" });
   for (const [label, figure] of rows) {
     const row = el("tr");
@@ -129,7 +130,7 @@ renderMain();
 
 // ------------------------------------------------------------- compare
 const lineup = byId<UchusenLineup>("lineup");
-const compared = new Set(["v1", "v2", "v3", "v4"]);
+const compared = new Set(["v1-flight1", "v1", "v2", "v3", "v4"]);
 const comparePicks = byId("compare-picks");
 function renderCompare() {
   for (const button of comparePicks.querySelectorAll("button")) button.setAttribute("aria-pressed", String(compared.has((button.dataset.testid as string).slice(8))));
@@ -143,7 +144,7 @@ function renderCompare() {
     ["Super Heavy", (variant) => variant.facts.parts.booster],
     ["Ship", (variant) => variant.facts.parts.ship],
     ["Diameter", (variant) => variant.facts.diameter],
-    ["First flight", (variant) => variant.firstFlight],
+    ["First flew", (variant) => variant.firstFlight],
   ];
   const body = rows.map(([label, read]) =>
     el(
@@ -153,8 +154,8 @@ function renderCompare() {
       ...chosen.map((variant) => {
         const figure = read(variant);
         const cell = el("td");
-        if (!figure || figure.value === null) cell.append(el("span", { className: "blank", textContent: "No source" }));
-        else cell.textContent = typeof figure.value === "number" ? `${figure.value} m` : figure.value;
+        if (!figure || figure.value === null) cell.append(el("span", { className: "blank", textContent: figureWords(figure) }));
+        else cell.textContent = figureWords(figure, " m");
         return cell;
       }),
     ),

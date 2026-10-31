@@ -11,7 +11,7 @@ import { chromium } from "@playwright/test";
 
 const out = process.argv[2] ?? "docs/images/check";
 const list = (i: number, all: string[]) => (process.argv[i] ? process.argv[i].split(",") : all);
-const variants = list(3, ["v1", "v1-flight1", "v2", "v3", "v4", "2019"]);
+const variants = list(3, ["v1-flight1", "v1", "v2", "v3", "v4", "2019"]);
 const shows = list(4, ["together", "apart", "booster", "ship"]);
 const looks = list(5, ["line", "thick", "painted"]);
 const views = list(6, ["front", "back", "side", "below"]);

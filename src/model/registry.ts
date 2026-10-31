@@ -24,7 +24,7 @@ const PAINTED: Readonly<Record<string, { file: string; credit: CreditId }>> = {
 };
 
 const DRAWN_FROM: Readonly<Record<string, string>> = {
-  v1: "This package's code, sized from the block table; parts' proportions judged from photographs of Block 1.",
+  v1: "This package's code, sized from the block table; parts' proportions judged from photographs of Block 1 and from Clarence365's Ship 24 and Booster 7.",
   "v1-flight1": "This package's code for the two line looks, Clarence365's Ship 24 and Booster 7 for the painted look, both at the sourced sizes.",
   v2: "This package's code, sized from the block table; parts' proportions judged from photographs and the documented flap changes. No licensed model shows Block 2.",
   v3: "This package's code for the two line looks, proportions measured from Clarence365's Block 3 at the sourced sizes; Clarence365's model for the painted look.",

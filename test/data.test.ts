@@ -1,7 +1,7 @@
 // A figure names its source or is blank; a variant goes in only if a source documents it; a disagreement keeps the choice and says what else was said.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { type Figure, PLANNED_ROCKETS, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
+import { type Figure, figureWords, PLANNED_ROCKETS, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
 
 const figuresOf = (rocket: string, id: string): [string, Figure<number | string>][] => {
   const v = variantOf(rocket, id);
@@ -9,6 +9,10 @@ const figuresOf = (rocket: string, id: string): [string, Figure<number | string>
   const f = v.facts;
   return [["height", f.height], ["diameter", f.diameter], ["first", v.firstFlight], ...Object.entries(f.parts), ...Object.entries(f.engines), ...Object.entries(f.more)] as [string, Figure<number | string>][];
 };
+
+test("no variant's first flight or sizes come from nowhere: the dates are the launch list's", () => {
+  for (const id of ["v1-flight1", "v1", "v2", "v3"]) assert.equal(variantOf("starship", id)?.firstFlight.source, "wikipedia-launches", id);
+});
 
 test("every figure names a known source, or is blank with no value", () => {
   for (const rocket of Object.values(ROCKETS))
@@ -52,6 +56,37 @@ test("the 81 m booster is Block 4's, and Block 3 says why it was not used", () =
   assert.equal(b3?.value, 72.3);
   assert.ok(b3?.others?.some((other) => other.value === 81 && /Block 4/.test(other.note)));
   assert.equal(variantOf("starship", "v4")?.facts.parts.booster.value, 81);
+});
+
+test("a date cannot be misread: Starship's first flight is Block 1's, without the ring; the ring's first is its own", () => {
+  const flight1 = variantOf("starship", "v1-flight1")?.firstFlight;
+  const v1 = variantOf("starship", "v1")?.firstFlight;
+  assert.equal(flight1?.value, "2023-04-20");
+  assert.equal(figureWords(flight1), "2023-04-20, Starship's first flight");
+  assert.equal(v1?.value, "2023-11-18");
+  assert.equal(figureWords(v1), "2023-11-18, first with the ring");
+  assert.match(v1?.note ?? "", /2023-04-20/);
+  assert.match(variantOf("starship", "v1")?.name ?? "", /vented ring/);
+  assert.equal(variantOf("starship", "v2")?.firstFlight.value, "2025-01-16");
+  assert.equal(variantOf("starship", "v3")?.firstFlight.value, "2026-05-22");
+  // in order of flight
+  const flown = ROCKETS.starship.variants.filter((variant) => variant.status === "flown").map((variant) => variant.firstFlight.value as string);
+  assert.deepEqual(flown, [...flown].sort());
+});
+
+test("an announced figure says so wherever it is shown", () => {
+  const v4 = variantOf("starship", "v4");
+  assert.equal(v4?.status, "announced");
+  assert.equal(figureWords(v4?.facts.height, " m"), "142 m, announced, an estimate");
+  assert.equal(figureWords(v4?.facts.parts.booster, " m"), "81 m, announced");
+  assert.equal(figureWords(v4?.facts.parts.ship, " m"), "61 m, announced");
+  assert.equal(figureWords(v4?.firstFlight), "Not flown");
+  assert.match(v4?.note ?? "", /not a measurement/);
+  for (const flown of ["v1", "v2", "v3"]) assert.ok(!figureWords(variantOf("starship", flown)?.facts.height, " m").includes("announced"), flown);
+});
+
+test("a stated height its parts do not add to says so beside the number", () => {
+  assert.equal(figureWords(variantOf("starship", "v1-flight1")?.facts.height, " m"), "121 m, as stated; its parts add to 119.3 m");
 });
 
 test("blanks stay blank", () => {

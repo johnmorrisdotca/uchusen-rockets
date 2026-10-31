@@ -70,8 +70,14 @@ test("each variant lists its own sizes with their sources, and a blank says so",
   await expect(facts).toContainText("72.3 m");
   await expect(facts).toContainText("81 m is Block 4's cell");
   await expect(facts.locator('a[href*="wikipedia"]').first()).toBeVisible();
+  await press(page, "variant-v1-flight1");
+  await expect(facts).toContainText("Starship's first flight");
+  await press(page, "variant-v4");
+  await expect(facts).toContainText("announced, an estimate");
+  await expect(facts).toContainText("Not flown");
   await press(page, "variant-v1");
   await expect(facts).toContainText("121.3 m");
+  await expect(facts).toContainText("first with the ring");
   await press(page, "show-ship");
   await expect(facts).toContainText("50.3 m");
   await expect(facts).not.toContainText("121.3 m");
@@ -131,7 +137,7 @@ test("a variant change keeps the angle; every look draws every variant in a real
   await reach3d(page);
   await press(page, "view-back");
   await expect.poll(async () => Math.abs(Math.round((await angle(page)).az))).toBe(180);
-  for (const variant of ["v1", "v1-flight1", "v2", "v3", "v4", "2019"]) {
+  for (const variant of ["v1-flight1", "v1", "v2", "v3", "v4", "2019"]) {
     await press(page, `variant-${variant}`);
     await expect.poll(() => canvasData(page, "parts")).toBe(variant === "2019" ? "ship" : "booster ship");
     for (const look of ["line", "thick", "painted"]) {
@@ -221,16 +227,21 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
   const problems = watch(page);
   await page.goto(URL);
   const lineup = page.locator('[data-testid="lineup"]');
-  await expect(lineup).toHaveAttribute("data-count", "6");
+  await expect(lineup).toHaveAttribute("data-count", "7");
   const table = page.locator('[data-testid="compare-table"]');
   await expect(table).toContainText("121.3 m");
-  await expect(table).toContainText("142 m");
+  await expect(table).toContainText("142 m, announced, an estimate");
+  await expect(table).toContainText("81 m, announced");
+  await expect(table).toContainText("2023-04-20, Starship's first flight");
+  await expect(table).toContainText("2023-11-18, first with the ring");
+  await expect(table).toContainText("Not flown");
   await press(page, "compare-v4");
-  await expect(lineup).toHaveAttribute("data-count", "5");
+  await expect(lineup).toHaveAttribute("data-count", "6");
   await expect(table).not.toContainText("142 m");
   await press(page, "compare-2019");
-  await expect(lineup).toHaveAttribute("data-count", "6");
+  await expect(lineup).toHaveAttribute("data-count", "7");
   await expect(table).toContainText("No source");
+  await expect(table).toContainText("Never flew");
   expect(problems).toEqual([]);
 });
 

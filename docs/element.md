@@ -11,7 +11,7 @@
 | Attribute | What | Values |
 | --- | --- | --- |
 | `rocket` | Which rocket | `starship` |
-| `variant` | Which version | `v1`, `v1-flight1`, `v2`, `v3`, `v4`, `2019` |
+| `variant` | Which version | `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019` |
 | `show` | Which parts | `together`, `apart`, `booster`, `ship` |
 | `look` | How it is drawn | `line`, `thick`, `painted` |
 | `view` | Where from | `three-quarter`, `front`, `back`, `side`, `below` |

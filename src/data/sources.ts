@@ -16,6 +16,7 @@ export const SOURCES = {
   "wikipedia-super-heavy": { title: "SpaceX Super Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Super_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-ship": { title: "SpaceX Starship (spacecraft)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Starship_(spacecraft)", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-flight-1": { title: "Starship flight test 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Starship_flight_test_1", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-launches": { title: "List of Starship launches (dates in UTC)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/List_of_Starship_launches", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-raptor": { title: "SpaceX Raptor", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Raptor", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "spacex-starship": { title: "Starship (vehicle page)", publisher: "SpaceX", url: "https://new.spacex.com/vehicles/starship", date: "2026-10-31", read: "search" },
   "nsf-block3": { title: "The Future of the Starship Program, Block 3 and Mars", publisher: "NASASpaceflight", url: "https://www.nasaspaceflight.com/2025/05/future-starship-block-3-mars/", date: "2025-05-30", read: "cited" },

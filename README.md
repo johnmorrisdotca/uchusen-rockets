@@ -41,7 +41,7 @@ That is all a page needs with a bundler. The drawing shows at once; when the ele
 
 | Attribute | Values |
 | --- | --- |
-| `variant` | `v1`, `v1-flight1`, `v2`, `v3`, `v4`, `2019` |
+| `variant` | `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019` |
 | `show` | `together`, `apart`, `booster`, `ship` |
 | `look` | `line`, `thick`, `painted` |
 | `view` | `three-quarter`, `front`, `back`, `side`, `below` |
@@ -62,14 +62,14 @@ SOURCES[v3.facts.parts.booster.source].publisher; // "Wikipedia"
 v3.facts.parts.booster.others.some((other) => other.value === 81); // true
 ```
 
-| Variant | Whole | Super Heavy | Ship | First flight |
+| Variant | Whole | Super Heavy | Ship | First flew |
 | --- | --- | --- | --- | --- |
-| `v1` Block 1 | 121.3 m | 71 m | 50.3 m | 2023-11-18, with the ring |
-| `v1-flight1` Block 1 as it first flew: Ship 24, Booster 7 | 121 m stated, 119.3 m drawn | 69 m | 50.3 m | 2023-04-20 |
+| `v1-flight1` Block 1 as it first flew: Ship 24, Booster 7, no ring | 121 m as stated; its parts add to 119.3 m, and it is drawn to them | 69 m | 50.3 m | 2023-04-20, Starship's first flight |
+| `v1` Block 1 with the vented ring | 121.3 m | 71 m | 50.3 m | 2023-11-18, the first with the ring |
 | `v2` Block 2 | 123.1 m | 71 m | 52.1 m | 2025-01-16 |
 | `v3` Block 3 | 124.4 m | 72.3 m | 52.1 m | 2026-05-22 |
-| `v4` Block 4, announced | 142 m | 81 m | 61 m | Not flown |
-| `2019` 2019 design (an artist's model, ship only) | 50 m | | 50 m | It never flew |
+| `v4` Block 4, **announced, not built** | 142 m, an estimate | 81 m, announced | 61 m, announced | Not flown |
+| `2019` 2019 design (an artist's model, ship only) | 50 m | | 50 m | Never flew |
 
 All are 9 m across, except the 2019 design, for which no source read here gives one. [docs/variants.md](docs/variants.md) has the sources and what they disagree on.
 

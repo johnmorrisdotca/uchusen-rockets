@@ -13,10 +13,19 @@ export interface Figure<T = number> {
   /** The date the figure is from, where it has one. */
   date?: string;
   note?: string;
+  /** A few words that must stay beside the value wherever it is shown, so it cannot be misread: "announced", "in this form". For a blank, what to say in place of a value. */
+  brief?: string;
   others?: readonly Disagreement<T>[];
 }
 
-export const blank = <T = number>(note?: string): Figure<T> => ({ value: null, source: null, ...(note ? { note } : {}) });
+export const blank = <T = number>(note?: string, brief?: string): Figure<T> => ({ value: null, source: null, ...(note ? { note } : {}), ...(brief ? { brief } : {}) });
+
+/** A figure as words for a table: its value and whatever must stay beside it; a blank says why, or that no source gives it. */
+export function figureWords(figure: Figure<number | string> | undefined, unit = ""): string {
+  if (!figure || figure.value === null) return figure?.brief ?? "No source";
+  const value = typeof figure.value === "number" ? `${figure.value}${unit}` : figure.value;
+  return figure.brief ? `${value}, ${figure.brief}` : value;
+}
 
 export type VariantStatus = "flown" | "announced" | "artist-model" | "test-vehicle";
 
@@ -39,6 +48,7 @@ export interface Variant {
   /** What it is called, in a line: "Block 3 (V3)". */
   name: string;
   status: VariantStatus;
+  /** When this variant, in this form, first flew. Its `brief` says so when the form is not the block's first. */
   firstFlight: Figure<string>;
   /** The parts this variant has, in stacking order from the bottom. */
   slots: readonly string[];
