@@ -1,5 +1,5 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { check, type Description, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { check, type Description, embedCode, EMBED_KINDS, type EmbedKind, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
@@ -128,6 +128,7 @@ function renderMain() {
       ]),
     );
   } else credit.textContent = "Painted by this package's own code, from sourced sizes. No licensed model shows this variant.";
+  drawEmbed();
 }
 
 function pick(change: Partial<typeof state>) {
@@ -139,6 +140,40 @@ function pick(change: Partial<typeof state>) {
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
 byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));
+// ------------------------------------------------------------- copy the rocket that is on screen
+let embedKind: EmbedKind = "element";
+let embedFull = "";
+const embedTabs = byId("embed-tabs");
+const embedCodeNode = byId("embed-code");
+const embedStatus = byId("embed-status");
+for (const kind of EMBED_KINDS) {
+  const button = el("button", { type: "button", className: "chip", textContent: kind });
+  button.dataset.testid = `tab-${kind}`;
+  button.setAttribute("role", "tab");
+  button.addEventListener("click", () => {
+    embedKind = kind;
+    drawEmbed();
+  });
+  embedTabs.append(button);
+}
+function drawEmbed() {
+  embedFull = embedCode({ rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view }, embedKind);
+  embedCodeNode.textContent = embedFull.length > 1400 ? `${embedFull.slice(0, 1400)}…` : embedFull;
+  for (const button of embedTabs.querySelectorAll("button")) button.setAttribute("aria-selected", String(button.dataset.testid === `tab-${embedKind}`));
+}
+byId("embed-copy").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(embedFull);
+  } catch {
+    const area = el("textarea");
+    area.value = embedFull;
+    document.body.append(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+  }
+  embedStatus.textContent = "Copied";
+});
 renderMain();
 
 // ------------------------------------------------------------- compare

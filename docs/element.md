@@ -60,6 +60,8 @@ Read from a script: `element.report` (the label, parts, credits and fit), `eleme
 
 `setAssetBase(url)` says where the models are for every element on a page. By default they are beside the module, in `./assets/`.
 
+The same attributes are the query of [the embed page](embed.md), for a site that cannot run script. `embedCode` writes the snippet, and a painted rocket's credit goes with it.
+
 ## To scale
 
 `<uchusen-lineup>` stands rockets on one baseline at one scale, with a ruler, a person and a building.

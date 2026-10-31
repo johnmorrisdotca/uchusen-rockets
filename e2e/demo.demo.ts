@@ -485,6 +485,33 @@ test("the drawing mode never loads three.js, and follows look, show and view", a
   expect(problems).toEqual([]);
 });
 
+test("the copy panel matches the rocket on screen, and the embed page draws its address", async ({ page, context, browserName }) => {
+  if (browserName === "chromium") await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const problems = watch(page);
+  await page.goto(URL);
+  const code = page.locator('[data-testid="embed-code"]');
+  await expect(code).toContainText("uchusen-rocket");
+  await expect(code).toContainText('rocket="starship"');
+  await expect(code).not.toContainText("Clarence365");
+  await press(page, "look-painted");
+  await expect(code).toContainText("Clarence365");
+  await expect(code).toContainText("creativecommons.org/licenses/by/4.0");
+  await press(page, "tab-svg");
+  await expect(code).toContainText("<svg");
+  await page.locator('[data-testid="embed-copy"]').click();
+  await expect(page.locator("#embed-status")).toHaveText("Copied");
+  await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&look=line&show=apart`);
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-look", "line");
+  await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-show", "apart");
+  await expect(page.locator('[data-testid="embed-credit"]')).toBeHidden();
+  await page.goto(`${URL}embed.html?rocket=starship&variant=v3&look=painted&show=ship`);
+  await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Clarence365");
+  await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Ship");
+  await expect(page.locator('[data-testid="embed-credit"]')).not.toContainText("Super Heavy");
+  expect(problems).toEqual([]);
+});
+
 test("the React wrapper draws the element", async ({ page }) => {
   const problems = watch(page);
   await page.goto(`${URL}react-check.html`);

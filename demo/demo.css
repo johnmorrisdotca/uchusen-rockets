@@ -69,6 +69,11 @@ select { display: block; width: 100%; min-height: 44px; margin-top: 0.2rem; padd
 #planned-list, .sources { padding-left: 1.1rem; color: var(--muted); font-size: 0.9rem; }
 #planned-list li, .sources li { margin-bottom: 0.35rem; }
 #planned-list strong, .sources strong { color: var(--ink); font-weight: 600; }
+.embed-actions { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.6rem; }
+#embed-status { color: var(--muted); font-size: 0.85rem; }
+body.embed { margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; background: var(--ground); overflow: hidden; }
+body.embed uchusen-rocket { flex: 1; min-height: 0; width: min(100%, calc((100vh - 6.5rem) * 0.75)); }
+body.embed .embed-credit { flex: none; width: 100%; box-sizing: border-box; margin: 0; padding: 0.45rem 0.75rem 0.55rem; color: var(--muted); font-size: 0.78rem; line-height: 1.35; max-height: 6.2rem; overflow: auto; }
 .foot { max-width: 1240px; margin: 0 auto; padding: 1rem 1rem 3rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--line); }
 @media (max-width: 820px) {
   .stage-row, .builder { grid-template-columns: minmax(0, 1fr); }

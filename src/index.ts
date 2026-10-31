@@ -23,3 +23,7 @@ export { tiltMode, tiltTurn } from "./tilt.ts";
 export type { Reading, TiltMode } from "./tilt.ts";
 export { MATERIALS } from "./model/materials.ts";
 export type { MaterialName, MaterialSpec } from "./model/materials.ts";
+export { OPTION_ATTRIBUTES, attributesFromOptions, optionsFromAttributes, rocketFromParams, rocketToParams } from "./attrs.ts";
+export type { RocketOptions } from "./attrs.ts";
+export { CDN, EMBED_KINDS, SITE, embedCode, paintedCredit } from "./embed.ts";
+export type { EmbedKind, EmbedSettings } from "./embed.ts";

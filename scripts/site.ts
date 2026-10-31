@@ -9,10 +9,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const site = join(root, "site");
 rmSync(site, { recursive: true, force: true });
 mkdirSync(site, { recursive: true });
-for (const file of ["demo.css", "index.html", "react-check.html", "element-check.html"]) cpSync(join(root, "demo", file), join(site, file));
+for (const file of ["index.html", "demo.css", "react-check.html", "element-check.html", "embed.html"]) cpSync(join(root, "demo", file), join(site, file));
 cpSync(join(root, "dist", "assets"), join(site, "assets"), { recursive: true });
 await build({
-  entryPoints: { demo: join(root, "demo", "demo.ts"), "react-check": join(root, "demo", "react-check.ts"), "element-check": join(root, "demo", "element-check.ts") },
+  entryPoints: { demo: join(root, "demo", "demo.ts"), embed: join(root, "demo", "embed.ts"), "react-check": join(root, "demo", "react-check.ts"), "element-check": join(root, "demo", "element-check.ts") },
   outdir: join(site, "js"),
   bundle: true,
   splitting: true,

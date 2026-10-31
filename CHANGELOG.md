@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Embeds: an embed page for a site that cannot run script, and `embedCode` for the element, an iframe, a module, the SVG and a data address. A painted embed carries the CC BY credit of the parts it shows.
+
 ## [0.2.2]
 
 - Demo: kazoku-ui 0.7 (a dev dependency, used only by the demo). The demo's strict Content-Security-Policy is now plain `style-src 'self'`: the controls adopt their styles as a constructable stylesheet since kazoku-ui 0.3.1, so the build no longer writes the controls' style text's hash into the page (the `%KAZOKU_STYLE%` step of `scripts/site.ts` is gone). The introduction's own pause (a one-minute timer and a scroll observer in `demo/demo.ts`) is replaced by the controls' `autoplay-for="60"` and their idle-out-of-sight, from kazoku-ui 0.7.1; `docs/element.md` says so.
