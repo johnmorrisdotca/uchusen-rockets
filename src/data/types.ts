@@ -53,6 +53,8 @@ export interface Variant {
   /** The parts this variant has, in stacking order from the bottom. */
   slots: readonly string[];
   facts: VariantFacts;
+  /** A slot's part when it is not this variant's own: a part shared with another rocket. */
+  partIds?: Readonly<Record<string, string>>;
   /** What a reader should be told about it. */
   note?: string;
 }

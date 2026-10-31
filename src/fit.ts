@@ -46,6 +46,22 @@ export interface FitReport {
 
 const TOLERANCE = 0.1;
 
+/** The whole height, joint to joint up the stack, and the widest part. */
+function sizeOf(parts: readonly SlotPart[]): { height: number; diameter: number } {
+  let y = 0;
+  let top = 0;
+  for (const { part } of parts) {
+    if (part.strapOn) {
+      top = Math.max(top, part.height);
+      continue;
+    }
+    const base = y - (part.joints.bottom?.y ?? 0);
+    top = Math.max(top, base + part.height);
+    y = base + (part.joints.top ? part.joints.top.y : part.height);
+  }
+  return { height: Math.round(top * 1000) / 1000, diameter: Math.max(...parts.map(({ part }) => part.diameter)) };
+}
+
 export function check(description: Description): FitReport {
   const issues: FitIssue[] = [];
   const fail = (code: FitCode, message: string) => issues.push({ code, level: "error", message });
@@ -64,7 +80,7 @@ export function check(description: Description): FitReport {
       parts,
       custom,
       label: custom ? `Custom build, not a vehicle that flew: ${parts.map(({ part }) => part.name).join(" with ")}` : (variant?.name ?? ""),
-      size: ok ? { height: parts.reduce((sum, { part }) => sum + part.height, 0), diameter: Math.max(...parts.map(({ part }) => part.diameter)) } : null,
+      size: ok ? sizeOf(parts) : null,
       credits: [...used].map(([id, usedFor]) => ({ ...MODEL_CREDITS[id], id, usedFor })),
     };
   };
@@ -93,9 +109,11 @@ export function check(description: Description): FitReport {
     if (!entry.record.trueTo.includes(variant.id)) custom = true;
     parts.push({ slot, part: entry.record });
   }
-  for (let i = 0; i + 1 < parts.length; i++) {
-    const below = parts[i].part;
-    const above = parts[i + 1].part;
+  // a side booster stands beside the stack, so the joints that must meet are those of the rest
+  const stacked = parts.filter(({ part }) => !part.strapOn);
+  for (let i = 0; i + 1 < stacked.length; i++) {
+    const below = stacked[i].part;
+    const above = stacked[i + 1].part;
     const top = below.joints.top;
     const bottom = above.joints.bottom;
     if (!top || !bottom) {

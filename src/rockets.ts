@@ -1,4 +1,7 @@
 // The catalogue: which rockets there are, their variants with sourced sizes, and which are still to be built. All data, all typed. Pure.
+import { DRAGON_VARIANTS } from "./data/dragon.ts";
+import { FALCON_HEAVY_VARIANTS, FALCON_9_VARIANTS } from "./data/falcon.ts";
+import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -26,14 +29,16 @@ export interface PlannedRocket {
 
 export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   starship: { id: "starship", name: "Starship", status: "built", variants: STARSHIP_VARIANTS, defaultVariant: "v3" },
+  "falcon-9": { id: "falcon-9", name: "Falcon 9", status: "built", variants: FALCON_9_VARIANTS, defaultVariant: "block-5" },
+  "falcon-heavy": { id: "falcon-heavy", name: "Falcon Heavy", status: "built", variants: FALCON_HEAVY_VARIANTS, defaultVariant: "falcon-heavy" },
+  dragon: { id: "dragon", name: "Dragon", status: "built", variants: DRAGON_VARIANTS, defaultVariant: "dragon-2" },
+  grasshopper: { id: "grasshopper", name: "Grasshopper", status: "built", variants: GRASSHOPPER_VARIANTS, defaultVariant: "grasshopper" },
 };
 
 const fig = (value: number, source: SourceId, note?: string): Figure => ({ value, source, ...(note ? { note } : {}) });
 
 export const PLANNED_ROCKETS: readonly PlannedRocket[] = [
   { id: "falcon-1", name: "Falcon 1", status: "planned", height: fig(21, "wikipedia-falcon-1"), diameter: fig(1.7, "wikipedia-falcon-1"), firstFlight: { value: "2006-03-24", source: "wikipedia-falcon-1" }, source: "wikipedia-falcon-1" },
-  { id: "falcon-9", name: "Falcon 9", status: "planned", height: fig(70, "wikipedia-falcon-9", "Block 5."), diameter: fig(3.7, "wikipedia-falcon-9"), firstFlight: { value: "2010-06-04", source: "wikipedia-falcon-9" }, source: "wikipedia-falcon-9" },
-  { id: "falcon-heavy", name: "Falcon Heavy", status: "planned", height: fig(70, "r-spacex"), diameter: fig(12.2, "r-spacex", "Across the three cores."), firstFlight: { value: "2018-02-06", source: "r-spacex" }, source: "r-spacex" },
 ];
 
 export function variantOf(rocket: string, id?: string | null): Variant | undefined {
@@ -42,4 +47,19 @@ export function variantOf(rocket: string, id?: string | null): Variant | undefin
 }
 
 /** A part's name for a rocket's slot in a variant. */
-export const partIdOf = (rocket: string, variant: string, slot: string): string => `${rocket}-${variant}-${slot}`;
+export const partIdOf = (rocket: string, variant: string, slot: string): string => variantOf(rocket, variant)?.partIds?.[slot] ?? `${rocket}-${variant}-${slot}`;
+
+/** What to call a slot. */
+export const SLOT_NAMES: Readonly<Record<string, string>> = {
+  booster: "Super Heavy",
+  ship: "Ship",
+  "first-stage": "First stage",
+  "second-stage": "Second stage",
+  fairing: "Fairing",
+  capsule: "Capsule",
+  trunk: "Trunk",
+  centre: "Centre core with its upper stage",
+  "side-left": "Side booster, left",
+  "side-right": "Side booster, right",
+  vehicle: "Whole vehicle",
+};

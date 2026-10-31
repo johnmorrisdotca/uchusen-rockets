@@ -1,5 +1,5 @@
 // Rockets and what to compare them with, side by side on one baseline at one scale, as one drawing with a ruler. Orthographic, so a metre is the same on every one. Pure.
-import { build, type Built } from "./index.ts";
+import { build, type Built, drawnPieces } from "./index.ts";
 import { check } from "../fit.ts";
 import { axesOf, cleanView, directionOf, VIEWS, type ViewName } from "../framing.ts";
 import { DEFAULT_LOOK, LOOKS, type LookName } from "../looks.ts";
@@ -93,7 +93,7 @@ export function lineupSvg(options: LineupOptions): { svg: string; items: LineupI
       void right;
       for (const place of places.sort((a, b) => b.at[0] * forward[0] + b.at[2] * forward[2] - a.at[0] * forward[0] - a.at[2] * forward[2])) {
         const part = item.built.parts.find((p) => p.slot === place.slot);
-        if (part) body.push(drawPart(part.pieces, place.at, cam, look, 0.7));
+        if (part) body.push(drawPart(drawnPieces(part, show === "together"), place.at, cam, look, 0.7));
       }
     }
     if (labels) {

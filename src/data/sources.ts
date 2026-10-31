@@ -28,6 +28,9 @@ export const SOURCES = {
   "r-spacex": { title: "SpaceX-API, docs/rockets/v4", publisher: "r/SpaceX (Apache-2.0, archived 2024)", url: "https://github.com/r-spacex/SpaceX-API/tree/master/docs/rockets/v4", date: "2024-08-17", read: "direct", licence: "Apache-2.0" },
   "wikipedia-falcon-1": { title: "Falcon 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_1", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-9": { title: "Falcon 9", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_9", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-dragon-1": { title: "SpaceX Dragon 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Dragon_1", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-dragon-2": { title: "SpaceX Dragon 2", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Dragon_2", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-grasshopper": { title: "SpaceX Grasshopper", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Grasshopper", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 

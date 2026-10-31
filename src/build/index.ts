@@ -112,9 +112,17 @@ function assembled(report: FitReport): Built {
           return { place, part, depth: cam.depth(middle) };
         })
         .sort((a, b) => b.depth - a.depth);
-      return wrap(ordered.map(({ place, part }) => drawPart(part.pieces, place.at, cam, look)).join(""), look, PICTURE_W, PICTURE_H, report.label);
+      const together = !show || show === "together";
+      return wrap(ordered.map(({ place, part }) => drawPart(drawnPieces(part, together), place.at, cam, look)).join(""), look, PICTURE_W, PICTURE_H, report.label);
     },
   };
+}
+
+/** What a drawing draws of a part: in a stack, what nests inside the part below is out of sight. */
+export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[] }, together: boolean): readonly Piece[] {
+  const joint = part.record.joints.bottom?.y ?? 0;
+  if (!together || joint <= 0) return part.pieces;
+  return part.pieces.filter((piece) => !(piece.kind === "lathe" && piece.under && Math.max(...piece.profile.map(([, y]) => y)) <= joint + 0.01));
 }
 
 /** A rocket from a description. Throws FitError when it does not go together. */

@@ -22,6 +22,12 @@ export const MATERIALS = {
   "engine-pale": { color: "#b9bcc0", metal: 0.6, rough: 0.5, fill: "metal" },
   fin: { color: "#6b6e73", metal: 0.85, rough: 0.5, fill: "metal" },
   "fin-dark": { color: "#2a2b2f", metal: 0.4, rough: 0.55, fill: "dark" },
+  white: { color: "#cfcfca", metal: 0, rough: 0.5, fill: "white" },
+  black: { color: "#141518", metal: 0, rough: 0.45, fill: "dark" },
+  gold: { color: "#c8a24c", metal: 1, rough: 0.28, fill: "metal" },
+  solar: { color: "#10163a", metal: 0.4, rough: 0.22, fill: "dark" },
+  glass: { color: "#141c26", metal: 0.1, rough: 0.08, fill: "dark" },
+  blue: { color: "#1d4f96", metal: 0.25, rough: 0.5, fill: "metal" },
 } as const satisfies Record<string, MaterialSpec>;
 
 export type MaterialName = keyof typeof MATERIALS;

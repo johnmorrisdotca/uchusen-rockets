@@ -37,10 +37,14 @@ export function placesFor(parts: readonly { slot: string; part: PartRecord }[], 
       return { slot, at, shown: true };
     });
   }
+  // up the stack, joint to joint; a side booster stands on the ground beside it
   let y = 0;
   return parts.map(({ slot, part }) => {
-    const at: Vec3 = [0, show === "together" ? y : 0, 0];
-    y += part.joints.top ? part.joints.top.y : part.height;
-    return { slot, at, shown: show === "together" || show === slot };
+    const together = show === "together";
+    if (part.strapOn) return { slot, at: [together ? part.strapOn.x : 0, 0, together ? part.strapOn.z : 0] as Vec3, shown: together || show === slot };
+    const base = y - (part.joints.bottom?.y ?? 0);
+    const at: Vec3 = [0, together ? base : 0, 0];
+    y = base + (part.joints.top ? part.joints.top.y : part.height);
+    return { slot, at, shown: together || show === slot };
   });
 }
