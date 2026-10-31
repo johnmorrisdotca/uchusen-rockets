@@ -1,0 +1,131 @@
+// One description, one mesh and one drawing: the same bytes every time, real sizes, and the counts the sources give.
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { LOOK_NAMES, ROCKETS, VIEW_NAMES, showsOf } from "../src/index.ts";
+import { build, buildPart, lineupSvg } from "../src/build/index.ts";
+import { partEntry } from "../src/model/registry.ts";
+import type { Lathe, Piece } from "../src/model/pieces.ts";
+import { STARSHIP_DRAWS } from "../src/model/starship.ts";
+import { readMetrics } from "./metrics.ts";
+
+const MESH_LIMIT = 600 * 1024;
+const DRAWING_LIMIT = 80 * 1024;
+
+const bellsOf = (pieces: readonly Piece[]) => pieces.filter((piece) => piece.kind === "lathe" && piece.material === "bell");
+
+test("the same description gives the same bytes", () => {
+  const a = build({ rocket: "starship", variant: "v3" });
+  const b = build({ rocket: "starship", variant: "v3" });
+  assert.deepEqual(a.glb().bytes, b.glb().bytes);
+  assert.equal(a.svg({ look: "thick", view: "below", show: "apart" }), b.svg({ look: "thick", view: "below", show: "apart" }));
+});
+
+test("every variant, in every look, from every side, in every choice of parts: within the limits", () => {
+  for (const rocket of Object.values(ROCKETS))
+    for (const variant of rocket.variants) {
+      const built = build({ rocket: rocket.id, variant: variant.id });
+      assert.deepEqual(built.shows, showsOf(variant.slots));
+      const glb = built.glb();
+      assert.ok(glb.bytes.byteLength < MESH_LIMIT, `${variant.id}: ${glb.bytes.byteLength}`);
+      for (const show of built.shows)
+        for (const look of LOOK_NAMES)
+          for (const view of VIEW_NAMES) {
+            const svg = built.svg({ look, view, show });
+            assert.ok(svg.length < DRAWING_LIMIT, `${variant.id} ${show} ${look} ${view}: ${svg.length}`);
+            assert.ok(svg.startsWith("<svg "));
+            assert.ok(!/NaN|Infinity/.test(svg), `${variant.id} ${show} ${look} ${view}`);
+          }
+    }
+});
+
+test("each part is its real size", () => {
+  for (const [id, height] of [
+    ["starship-v1-booster", 71],
+    ["starship-v1-ship", 50.3],
+    ["starship-v2-ship", 52.1],
+    ["starship-v3-booster", 72.3],
+    ["starship-v3-ship", 52.1],
+    ["starship-v4-booster", 81],
+    ["starship-v4-ship", 61],
+  ] as const) {
+    const { bounds } = buildPart(id);
+    assert.ok(Math.abs(bounds.max[1] - height) < 0.01, `${id} top ${bounds.max[1]}`);
+    assert.ok(Math.abs(bounds.min[1]) < 0.01, `${id} bottom ${bounds.min[1]}`);
+  }
+  const b = build({ rocket: "starship", variant: "v3" }).boundsOf("together");
+  assert.ok(Math.abs(b.max[1] - 124.4) < 0.01);
+  // the hull itself is 9 m across
+  const hull = partEntry("starship-v3-booster")?.pieces().find((piece): piece is Lathe => piece.kind === "lathe" && piece.material === "steel" && piece.body === true);
+  assert.ok(hull);
+  assert.equal(Math.max(...hull.profile.map(([r]) => r)) * 2, 9);
+});
+
+test("engines: 33 on every booster, and the ship's by version", () => {
+  for (const id of ["v1", "v2", "v3", "v4"]) {
+    const entry = partEntry(`starship-${id}-booster`);
+    assert.equal(bellsOf(entry?.pieces() ?? []).length, 33, id);
+  }
+  assert.equal(bellsOf(partEntry("starship-v3-ship")?.pieces() ?? []).length, 6);
+  assert.equal(bellsOf(partEntry("starship-v4-ship")?.pieces() ?? []).length, 9);
+  const rings = STARSHIP_DRAWS.v3.boosterEngines.map((ring) => ring.count);
+  assert.deepEqual(rings, [3, 10, 20]);
+});
+
+test("grid fins: four on Blocks 1 and 2, three on Block 3 at 90, 90 and 180 degrees", () => {
+  assert.equal(STARSHIP_DRAWS.v1.fins.az.length, 4);
+  assert.equal(STARSHIP_DRAWS.v2.fins.az.length, 4);
+  assert.deepEqual([...STARSHIP_DRAWS.v3.fins.az], [0, 90, -90]);
+});
+
+test("apart stands the parts clear of each other from the front, the side and the back; one part alone fills its own bounds", () => {
+  const built = build({ rocket: "starship", variant: "v3" });
+  const apart = built.placesOf("apart");
+  assert.ok(apart.every((place) => place.shown));
+  assert.ok(apart.every((place) => place.at[1] === 0), "both stand on the ground");
+  const [a, b] = apart;
+  const across = Math.abs(a.at[0] - b.at[0]);
+  const deep = Math.abs(a.at[2] - b.at[2]);
+  // the widest reach is 8.7 + 8.1 m: seen along either axis the two must still clear
+  assert.ok(across > 16.8 && deep > 16.8, `${across} ${deep}`);
+  const ship = built.placesOf("ship");
+  assert.deepEqual(ship.map((place) => place.shown), [false, true]);
+  assert.deepEqual(ship[1].at, [0, 0, 0]);
+  assert.ok(Math.abs(built.boundsOf("ship").max[1] - 52.1) < 0.01);
+  assert.ok(Math.abs(built.boundsOf("booster").max[1] - 72.3) < 0.01);
+  assert.deepEqual(built.placesOf("together")[1].at, [0, 72.3, 0]);
+});
+
+test("a variant with one part offers that part only", () => {
+  const built = build({ rocket: "starship", variant: "2019" });
+  assert.deepEqual(built.shows, ["ship"]);
+  assert.equal(built.parts.length, 1);
+  assert.equal(built.report.parts[0].part.joints.top, undefined);
+});
+
+test("the drawing is seen from the camera it names", () => {
+  const built = build({ rocket: "starship", variant: "v3" });
+  assert.notEqual(built.svg({ view: "front" }), built.svg({ view: "back" }));
+  assert.notEqual(built.svg({ view: "front" }), built.svg({ view: { az: 10, el: 3 } }));
+  assert.notEqual(built.svg({ look: "line" }), built.svg({ look: "thick" }));
+  assert.notEqual(built.svg({ look: "line" }), built.svg({ look: "painted" }));
+  // from below the engines are drawn, from the front they are mostly behind the hull's own end
+  assert.ok(built.svg({ view: "below" }).length > 2000);
+});
+
+test("the lineup is to one scale: its picture's height is the tallest rocket's", () => {
+  const { svg, items, height } = lineupSvg({ items: ["starship:v1", "starship:v3", "starship:v4", "person", "building", "<script>", "nothing:v1"], unit: 2, ruler: true, labels: true });
+  assert.deepEqual(items.map((item) => item.key), ["starship:v1", "starship:v3", "starship:v4", "person", "building"]);
+  assert.ok(Math.abs(height - (26 + 142 * 2 + 44 + 10)) < 0.01);
+  assert.ok(!svg.includes("<script"));
+  assert.ok(svg.includes("A person, 1.8 m"));
+  readMetrics(svg);
+});
+
+test("a part alone is a drawing and a mesh too", () => {
+  for (const id of ["raptor-sea-level", "raptor-vacuum", "grid-fin-three", "grid-fin-four", "flap-aft", "flap-forward"]) {
+    const part = buildPart(id);
+    assert.ok(part.glb().bytes.byteLength > 100, id);
+    assert.ok(part.svg().startsWith("<svg "), id);
+    assert.ok(part.glb().triangles > 0, id);
+  }
+});
