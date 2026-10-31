@@ -51,13 +51,13 @@ Every part's flaps, fins and chines are drawn from proportions, not from publish
 
 | Variant | Whole | First stage | Second stage | Fairing | First flew |
 | --- | --- | --- | --- | --- | --- |
-| `v1.0` | 54.9 m, to the fairing's top; 47.8 m with Dragon 1 | 39.6 m, the stage alone | No source | No source | 2010-06-04 |
+| `v1.0` | 54.9 m, to the fairing's top; 47.8 m with Dragon 1. One table says 53 m | 39.6 m, the stage alone | No source | No source | 2010-06-04 |
 | `v1.1` | 68.4 m; 63.4 m with Dragon 1 | 41.2 m, the stage alone | No source | No source | 2013-09-29 |
-| `ft` Full Thrust | 69.8 m; 65.7 m with Dragon 2, 63.7 m with Dragon 1 | 47.7 m with its interstage | 13.8 m | 13.1 m | 2015-12-22 |
-| `block-5` Block 5 | 70 m | 47.7 m with its interstage | 13.8 m | 13.1 m | 2018-05-11 |
-| `block-5-dragon-2` Block 5 with Dragon 2 | 65.7 m as stated; the parts add to 65 m | The same | The same | Trunk, capsule | 2019-03-02 |
+| `ft` Full Thrust | 69.8 m; one table rounds to 70 m | 47.7 m with its interstage | 13.8 m | 13.1 m | 2015-12-22 |
+| `block-5` Block 5 | 69.8 m; 65.7 m with Dragon 2, 63.7 m with Dragon 1. One table and SpaceX-API say 70 m | 47.7 m with its interstage | 13.8 m | 13.1 m | 2018-05-11 |
+| `block-5-dragon-2` Block 5 with Dragon 2 | 65.7 m as stated; the parts add to 64.8 m | The same | The same | Trunk, capsule | 2019-03-02 |
 
-All are 3.7 m across. Block 4 first flew on 2017-08-14, and no source read here gives it sizes of its own, so it is not listed apart. `SpaceX-API` (Apache-2.0) was read as a second source for the Falcons: it was archived in 2024.
+All are 3.7 m across. Block 4 first flew on 2017-08-14, and no source read here gives it sizes of its own, so it is not listed apart. `SpaceX-API` (Apache-2.0, archived in 2024) has one row for Falcon 9 and one for Falcon Heavy, not one per version, read from its repository's docs. It gives the fairing's 13.1 m; the Falcon 9 article rounds that to 13 m.
 
 ## Falcon Heavy, Dragon and Grasshopper
 

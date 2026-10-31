@@ -46,7 +46,7 @@ export const FALCON_DRAWS: Readonly<Record<string, FalconDraw>> = {
   // 68.4 m in all: 41.2 m of stage
   "v1.1": falconOf(46, 4.8, 13.8, 4.5, 13.1, 2.6, "octaweb", true, false),
   ft: falconOf(47.7, 6.5, 13.8, 4.8, 13.1, 2.6, "octaweb", true, true),
-  "block-5": falconOf(47.7, 6.5, 13.8, 4.6, 13.1, 2.6, "octaweb", true, true),
+  "block-5": falconOf(47.7, 6.5, 13.8, 4.8, 13.1, 2.6, "octaweb", true, true),
 };
 
 function firstStage(d: FirstStageDraw, withTop: boolean): Piece[] {

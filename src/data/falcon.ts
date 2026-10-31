@@ -1,8 +1,9 @@
-// Falcon 9 and Falcon Heavy as the sources give them. Facts on the older rockets also come from r/SpaceX's SpaceX-API (Apache-2.0), read from its repository's docs. A blank stays blank.
+// Falcon 9 and Falcon Heavy as the sources give them. r/SpaceX's SpaceX-API (Apache-2.0, archived in 2024) has one row per rocket, not per version, read from its repository's docs. A blank stays blank.
 import { blank, type Figure, type Variant } from "./types.ts";
 
 const F9 = "wikipedia-falcon-9" as const;
 const FH = "wikipedia-falcon-heavy" as const;
+const B5 = "wikipedia-falcon-9-block-5" as const;
 const API = "r-spacex" as const;
 const m = (value: number, source: Figure["source"], extra: Partial<Figure> = {}): Figure => ({ value, source, ...extra });
 const said = (value: string, source: Figure<string>["source"], extra: Partial<Figure<string>> = {}): Figure<string> => ({ value, source, ...extra });
@@ -11,7 +12,7 @@ const num = (value: number, source: Figure<number | string>["source"], extra: Pa
 const FAIRING_NOTE = "The article's height is measured to the top of the payload fairing.";
 const FIRST_STAGE_WITH_INTERSTAGE = m(47.7, F9, { note: "With the interstage. The stage alone is 41.2 m." });
 const SECOND_STAGE = m(13.8, F9);
-const FAIRING = m(13.1, API, { note: "From SpaceX-API's Falcon rows, 5.2 m across." });
+const FAIRING = m(13.1, API, { note: "SpaceX-API's Falcon 9 row, which gives one row for every version, 5.2 m across.", others: [{ value: 13, source: F9, note: "The Falcon 9 article rounds: 13 m long and 5.2 m in diameter." }] });
 
 export const FALCON_9_VARIANTS: readonly Variant[] = [
   {
@@ -23,7 +24,7 @@ export const FALCON_9_VARIANTS: readonly Variant[] = [
     slots: ["first-stage", "second-stage", "fairing"],
     note: "Its nine Merlin 1C engines stood in a 3 by 3 grid. Stated with a fairing, though its height with Dragon 1 was 47.8 m. No source read here gives its parts with the interstage, so they are drawn in proportion to the whole.",
     facts: {
-      height: m(54.9, F9, { note: FAIRING_NOTE }),
+      height: m(54.9, F9, { note: FAIRING_NOTE, others: [{ value: 53, source: F9, note: "The same article's table of versions says 53 m; its infobox, with a note on how it is measured, says 54.9 m." }] }),
       diameter: m(3.7, F9),
       parts: {
         "first-stage": m(39.6, F9, { brief: "the stage alone, without its interstage" }),
@@ -63,7 +64,7 @@ export const FALCON_9_VARIANTS: readonly Variant[] = [
     slots: ["first-stage", "second-stage", "fairing"],
     note: "Blocks 3 and 4 are part of Full Thrust; Block 4 first flew on 2017-08-14, and no source read here gives it sizes of its own. So it is not listed apart.",
     facts: {
-      height: m(69.8, F9, { note: FAIRING_NOTE }),
+      height: m(69.8, F9, { note: FAIRING_NOTE, others: [{ value: 70, source: F9, note: "The same article's table of versions rounds to 70 m." }] }),
       diameter: m(3.7, F9),
       parts: { "first-stage": FIRST_STAGE_WITH_INTERSTAGE, "second-stage": SECOND_STAGE, fairing: FAIRING },
       engines: { "first-stage": said("9 Merlin 1D+", F9), "second-stage": said("1 Merlin 1D Vacuum", F9) },
@@ -78,8 +79,8 @@ export const FALCON_9_VARIANTS: readonly Variant[] = [
     firstFlight: said("2018-05-11", F9, { note: "Bangabandhu Satellite-1." }),
     slots: ["first-stage", "second-stage", "fairing"],
     facts: {
-      height: m(70, F9, { others: [{ value: 69.8, source: F9, note: "The article's infobox gives 69.8 m for the Full Thrust family; its performance table gives 70 m for Block 5." }, { value: 70, source: API, note: "SpaceX-API's Falcon rows also say 70 m." }] }),
-      diameter: m(3.7, F9, { others: [{ value: 3.66, source: F9, note: "The performance table rounds to 3.66 m; the infobox and SpaceX-API say 3.7 m." }] }),
+      height: m(69.8, B5, { note: "With the payload fairing, from Block 5's own article.", others: [{ value: 70, source: F9, note: "The Falcon 9 article's table of versions rounds to 70 m." }, { value: 70, source: API, note: "SpaceX-API's Falcon 9 row says 70 m, for every version." }] }),
+      diameter: m(3.7, B5, { others: [{ value: 3.66, source: F9, note: "The Falcon 9 article's table of versions says 3.66 m; the infoboxes and SpaceX-API say 3.7 m." }] }),
       parts: { "first-stage": FIRST_STAGE_WITH_INTERSTAGE, "second-stage": SECOND_STAGE, fairing: FAIRING },
       engines: { "first-stage": said("9 Merlin 1D, upgraded", F9), "second-stage": said("1 Merlin 1D Vacuum, upgraded", F9) },
       more: { landingLegs: num(4, F9) },
@@ -95,7 +96,7 @@ export const FALCON_9_VARIANTS: readonly Variant[] = [
     partIds: { "first-stage": "falcon-9-block-5-first-stage", "second-stage": "falcon-9-block-5-second-stage", trunk: "dragon-dragon-2-trunk", capsule: "dragon-dragon-2-capsule" },
     note: "The same parts as Falcon 9 Block 5 and Dragon 2, joined at their joints.",
     facts: {
-      height: m(65.7, F9, { brief: "as stated; the parts add to 65 m", note: "The Full Thrust family's height with Dragon 2. The parts' own figures add to 65 m, and it is drawn to them." }),
+      height: m(65.7, B5, { brief: "as stated; the parts add to 64.8 m", note: "Block 5's height with Dragon 2. The parts' own figures add to 64.8 m, and it is drawn to them." }),
       diameter: m(3.7, F9),
       parts: { "first-stage": FIRST_STAGE_WITH_INTERSTAGE, "second-stage": SECOND_STAGE, trunk: blank("No source read here gives the trunk alone."), capsule: m(4.5, "wikipedia-dragon-2") },
       engines: { "first-stage": said("9 Merlin 1D, upgraded", F9), "second-stage": said("1 Merlin 1D Vacuum, upgraded", F9), capsule: said("16 Draco and 8 SuperDraco thrusters", "wikipedia-dragon-2") },

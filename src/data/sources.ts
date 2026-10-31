@@ -25,12 +25,13 @@ export const SOURCES = {
   "gunter": { title: "Starship (Super Heavy Starship, BFR, Big Falcon Rocket)", publisher: "Gunter's Space Page", url: "https://space.skyrocket.de/doc_lau/super-heavy-starship.htm", date: "2026-10-31", read: "direct" },
   "newspace-v1-v4": { title: "SpaceX Starship from V1 to V4", publisher: "New Space Economy", url: "https://newspaceeconomy.ca/2026/05/28/spacex-starship-from-v1-to-v4/", date: "2026-05-28", read: "direct" },
   "spacecom-mk1": { title: "SpaceX Finishes Assembling New Starship Prototype", publisher: "Space.com", url: "https://www.space.com/spacex-assembles-starship-mk1-photo.html", date: "2019-09", read: "search" },
-  "r-spacex": { title: "SpaceX-API, docs/rockets/v4", publisher: "r/SpaceX (Apache-2.0, archived 2024)", url: "https://github.com/r-spacex/SpaceX-API/tree/master/docs/rockets/v4", date: "2024-08-17", read: "direct", licence: "Apache-2.0" },
+  "r-spacex": { title: "SpaceX-API, docs/rockets/v4: its Falcon 9 row in query.md and its Falcon Heavy row in all.md", publisher: "r/SpaceX (Apache-2.0, archived 2024)", url: "https://github.com/r-spacex/SpaceX-API/tree/master/docs/rockets/v4", date: "2024-08-17", read: "direct", licence: "Apache-2.0" },
   "wikipedia-falcon-1": { title: "Falcon 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_1", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-9": { title: "Falcon 9", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_9", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-dragon-1": { title: "SpaceX Dragon 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Dragon_1", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-dragon-2": { title: "SpaceX Dragon 2", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Dragon_2", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-grasshopper": { title: "SpaceX Grasshopper", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Grasshopper", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-falcon-9-block-5": { title: "Falcon 9 Block 5", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_9_Block_5", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 

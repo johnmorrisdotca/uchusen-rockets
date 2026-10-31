@@ -277,9 +277,9 @@ const F9_TOP_OF_FIRST = 4865;
 const F9_FAIRING_BASE = 5794.25;
 const F9_R = 3.7 / 366;
 const F9_FIRST: RecipePart = { id: "first-stage", place: placer([0, 0.64, 0], 47.7 / (F9_TOP_OF_FIRST - 0.64), F9_R, 0) };
-const F9_JOINT_SCALE = 9.2 / (F9_FAIRING_BASE - F9_TOP_OF_FIRST);
-// its origin is where the nozzle would end, 4.6 m under its joint with the interstage, the same as this package's own second stage. The model has no nozzle: it hides in the interstage.
-const F9_SECOND_BOTTOM = F9_TOP_OF_FIRST - 4.6 / F9_JOINT_SCALE;
+const F9_JOINT_SCALE = 9 / (F9_FAIRING_BASE - F9_TOP_OF_FIRST);
+// its origin is where the nozzle would end, 4.8 m under its joint with the interstage, the same as this package's own second stage. The model has no nozzle: it hides in the interstage.
+const F9_SECOND_BOTTOM = F9_TOP_OF_FIRST - 4.8 / F9_JOINT_SCALE;
 const F9_SECOND: RecipePart = { id: "second-stage", place: placer([0, F9_SECOND_BOTTOM, 0], F9_JOINT_SCALE, F9_R, 0) };
 const F9_FAIRING: RecipePart = { id: "fairing", place: placer([0, F9_FAIRING_BASE, 0], 13.1 / (7100 - F9_FAIRING_BASE), F9_R, 0) };
 /** Which part of the Falcon 9 a node belongs to: the second stage's nodes run down inside the interstage. */

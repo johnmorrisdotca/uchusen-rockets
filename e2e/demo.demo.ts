@@ -244,7 +244,7 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
   await expect(table).not.toContainText("142 m");
   await press(page, "compare-falcon-9:block-5");
   await expect(lineup).toHaveAttribute("data-count", "7");
-  await expect(table).toContainText("70 m");
+  await expect(table).toContainText("69.8 m");
   await press(page, "compare-falcon-9:block-5");
   await press(page, "compare-starship:2019");
   await expect(lineup).toHaveAttribute("data-count", "7");
@@ -281,11 +281,11 @@ test("every rocket is on the main view, with its own variants and parts, and a v
   await press(page, "rocket-falcon-9");
   await expect(hero(page)).toHaveAttribute("data-variant", "block-5");
   for (const id of ["variant-v1.0", "variant-v1.1", "variant-ft", "variant-block-5", "variant-block-5-dragon-2", "show-first-stage", "show-second-stage", "show-fairing"]) await expect(page.locator(`[data-testid="${id}"]`)).toBeVisible();
-  await expect(page.locator('[data-testid="facts"]')).toContainText("70 m");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("69.8 m");
   await press(page, "variant-block-5-dragon-2");
   await expect(page.locator('[data-testid="show-capsule"]')).toBeVisible();
   await expect(page.locator('[data-testid="show-fairing"]')).toHaveCount(0);
-  await expect(page.locator('[data-testid="facts"]')).toContainText("as stated; the parts add to 65 m");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("as stated; the parts add to 64.8 m");
   await press(page, "rocket-falcon-heavy");
   await expect(page.locator('[data-testid="show-side-left"]')).toBeVisible();
   await expect(page.locator('[data-testid="facts"]')).toContainText("12.2 m");

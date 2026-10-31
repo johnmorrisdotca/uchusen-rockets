@@ -34,17 +34,17 @@ Sizes are plain facts, each with its source in `src/data/sources.ts` and on the 
 
 | Source | What was taken |
 | --- | --- |
-| Wikipedia: SpaceX Starship, SpaceX Super Heavy, SpaceX Starship (spacecraft), SpaceX Raptor, Starship flight test 1, List of Starship launches, Falcon 1, Falcon 9, Falcon Heavy, SpaceX Dragon 1, SpaceX Dragon 2, SpaceX Grasshopper (CC BY-SA 4.0, read 2026-10-31) | Heights, diameters, engine counts, grid fin counts, flap changes, first flight dates in UTC. Facts only: no text is copied |
+| Wikipedia: SpaceX Starship, SpaceX Super Heavy, SpaceX Starship (spacecraft), SpaceX Raptor, Starship flight test 1, List of Starship launches, Falcon 1, Falcon 9, Falcon 9 Block 5, Falcon Heavy, SpaceX Dragon 1, SpaceX Dragon 2, SpaceX Grasshopper (CC BY-SA 4.0, read 2026-10-31) | Heights, diameters, engine counts, grid fin counts, flap changes, first flight dates in UTC. Facts only: no text is copied |
 | SpaceX's Starship page, https://new.spacex.com/vehicles/starship, as a search engine quoted it: the page itself would not load | Rounded heights, kept as a second opinion |
 | SatNews, 2026-05-14 | Grid fins, four to three and about 50% larger; about 1.5 m taller |
 | Gunter's Space Page | Version names, first flights by serial number; one set of sizes per family, not used for sizes |
 | NASASpaceflight, 2025-05-30, and Ars Technica, 2024-04-08 | Known through Wikipedia's citations; not read directly |
 | Space.com, 2019 | The 2019 prototype's height, as a search engine quoted it |
-| [r-spacex/SpaceX-API](https://github.com/r-spacex/SpaceX-API) (Apache-2.0, archived in 2024; its live address gave no JSON, so the repository's docs were read) | Facts on the Falcons: their heights and diameters, as a second source, and the fairing's size. No code of it is used. Its licence: Copyright r/SpaceX contributors, under the Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0 |
+| [r-spacex/SpaceX-API](https://github.com/r-spacex/SpaceX-API) (Apache-2.0, archived in 2024; its live address gave no JSON, so the repository's docs were read) | Its Falcon 9 row (the fairing's size; 70 m, as a second opinion) and its Falcon Heavy row (70 m, 12.2 m across). One row per rocket, not per version. No code of it is used. Its licence: Copyright r/SpaceX contributors, under the Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0 |
 
-## Looked at, nothing taken
+## Not used
 
-These were looked at for where parts sit; nothing from them is used, converted, traced or adapted: a CC BY-SA 1:600 Thingiverse model by RocketWorks, and pictures in the README of github.com/Spiri0/SpaceX-Starship (no licence). The Wikimedia Commons photographs and diagrams looked at are not shipped.
+Nothing from these is used, converted, traced or adapted, and their shapes and pictures were not looked at for this package: a CC BY-SA 1:600 model by RocketWorks on Thingiverse, and github.com/Spiri0/SpaceX-Starship, which has no licence. Photographs from Wikimedia Commons were looked at for where parts sit, and to compare the results with; none is shipped or traced.
 
 ## What it uses
 

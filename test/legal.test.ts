@@ -64,7 +64,7 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "starship-v1-flight1-ship.glb": [50.3, 9],
     "starship-2019-ship.glb": [50, Number.NaN],
     "falcon-9-block-5-first-stage.glb": [47.7, 3.7],
-    "falcon-9-block-5-second-stage.glb": [11.09, 3.7],
+    "falcon-9-block-5-second-stage.glb": [10.85, 3.7],
     "falcon-9-block-5-fairing.glb": [13.1, 5.2],
     "dragon-dragon-2-trunk.glb": [3.94, 3.7],
     "dragon-dragon-2-capsule.glb": [4.5, 4],
