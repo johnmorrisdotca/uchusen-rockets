@@ -5,6 +5,7 @@
 // material or texture carries one is dropped, and only the images named here are carried over.
 //
 //   UCHUSEN_MODEL_SOURCES=<folder> node scripts/reduce-models.ts [only]
+import { Buffer } from "node:buffer";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,7 +15,8 @@ import { Document, type Material as GMaterial, type Node as GNode, NodeIO, type 
 import { KHRONOS_EXTENSIONS } from "@gltf-transform/extensions";
 import { dedup, prune, quantize } from "@gltf-transform/functions";
 import { MeshoptSimplifier } from "meshoptimizer";
-import { MODEL_RECIPES, type ModelRecipe, type RecipePart } from "./model-recipes.ts";
+import { chromium } from "@playwright/test";
+import { MODEL_RECIPES, type ModelRecipe, type Patch, type Piece, type RecipePart } from "./model-recipes.ts";
 
 const sources: string = process.env.UCHUSEN_MODEL_SOURCES ?? "";
 if (!sources) throw new Error("UCHUSEN_MODEL_SOURCES must name the folder that holds the source models. They are kept outside this repository.");
@@ -35,7 +37,7 @@ interface Bucket {
 const newBucket = (): Bucket => ({ positions: [], normals: [], uvs: [], indices: [], hasUv: false });
 
 /** Reads one primitive's triangles into a bucket, moved by the node's matrix then by `place`. */
-function take(bucket: Bucket, prim: Primitive, node: GNode, place: (p: number[], n: number[]) => void, keepUv: boolean): void {
+function take(bucket: Bucket, prim: Primitive, node: GNode, place: (p: number[], n: number[]) => void, keepUv: boolean, only?: readonly number[]): void {
   const pos = prim.getAttribute("POSITION");
   const nor = prim.getAttribute("NORMAL");
   const uv = prim.getAttribute("TEXCOORD_0");
@@ -66,7 +68,9 @@ function take(bucket: Bucket, prim: Primitive, node: GNode, place: (p: number[],
   const at = (i: number) => base + (idx ? idx.getScalar(i) : i);
   const P = bucket.positions;
   const N = bucket.normals;
-  for (let i = 0; i + 2 < count; i += 3) {
+  const triangles = only ?? Array.from({ length: Math.floor(count / 3) }, (_, k) => k);
+  for (const k of triangles) {
+    const i = k * 3;
     const [a0, b0, c0] = [at(i), at(i + 1), at(i + 2)];
     const u = [P[b0 * 3] - P[a0 * 3], P[b0 * 3 + 1] - P[a0 * 3 + 1], P[b0 * 3 + 2] - P[a0 * 3 + 2]];
     const v = [P[c0 * 3] - P[a0 * 3], P[c0 * 3 + 1] - P[a0 * 3 + 1], P[c0 * 3 + 2] - P[a0 * 3 + 2]];
@@ -75,6 +79,57 @@ function take(bucket: Bucket, prim: Primitive, node: GNode, place: (p: number[],
     if (g[0] * mean[0] + g[1] * mean[1] + g[2] * mean[2] < 0) bucket.indices.push(a0, c0, b0);
     else bucket.indices.push(a0, b0, c0);
   }
+}
+
+/** A merged mesh's connected pieces: which triangles touch, at the same point in space, and the box each fills in the file's own units. */
+function connectedPieces(prim: Primitive, node: GNode): Piece[] {
+  const pos = prim.getAttribute("POSITION");
+  const idx = prim.getIndices();
+  if (!pos || !idx) return [];
+  const m = node.getWorldMatrix();
+  const points: number[][] = [];
+  const el = [0, 0, 0];
+  for (let i = 0; i < pos.getCount(); i++) {
+    pos.getElement(i, el);
+    points.push([0, 1, 2].map((k) => m[k] * el[0] + m[4 + k] * el[1] + m[8 + k] * el[2] + m[12 + k]));
+  }
+  const same = new Map<string, number>();
+  const ids = points.map((p) => {
+    const key = p.map((v) => Math.round(v * 1000)).join();
+    if (!same.has(key)) same.set(key, same.size);
+    return same.get(key) as number;
+  });
+  const parent = Array.from({ length: same.size }, (_, i) => i);
+  const find = (x: number): number => {
+    while (parent[x] !== x) {
+      parent[x] = parent[parent[x]];
+      x = parent[x];
+    }
+    return x;
+  };
+  const triangleCount = idx.getCount() / 3;
+  for (let t = 0; t < triangleCount; t++) {
+    const a = ids[idx.getScalar(t * 3)];
+    parent[find(a)] = find(ids[idx.getScalar(t * 3 + 1)]);
+    parent[find(a)] = find(ids[idx.getScalar(t * 3 + 2)]);
+  }
+  const pieces = new Map<number, Piece>();
+  for (let t = 0; t < triangleCount; t++) {
+    const first = idx.getScalar(t * 3);
+    const root = find(ids[first]);
+    let piece = pieces.get(root);
+    if (!piece) {
+      piece = { triangles: [], min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
+      pieces.set(root, piece);
+    }
+    piece.triangles.push(t);
+    for (const v of [first, idx.getScalar(t * 3 + 1), idx.getScalar(t * 3 + 2)])
+      for (let c = 0; c < 3; c++) {
+        piece.min[c] = Math.min(piece.min[c], points[v][c]);
+        piece.max[c] = Math.max(piece.max[c], points[v][c]);
+      }
+  }
+  return [...pieces.values()];
 }
 
 /** Joins vertices that are the same to within a millimetre, so a simplifier sees one surface. */
@@ -107,9 +162,11 @@ function weld(bucket: Bucket): { positions: Float32Array<ArrayBuffer>; normals: 
 /** Simplifies to `ratio` of the triangles, with `error` in metres as the most it may move the surface. Normals count, so hard edges stay. */
 function reduce(bucket: Bucket, ratio: number, error: number): { positions: Float32Array<ArrayBuffer>; normals: Float32Array<ArrayBuffer>; uvs: Float32Array<ArrayBuffer>; indices: Uint32Array<ArrayBuffer> } {
   const w = weld(bucket);
-  if (ratio >= 1) return w;
-  const target = Math.max(3, Math.floor((w.indices.length * ratio) / 3) * 3);
-  const [indices] = MeshoptSimplifier.simplifyWithAttributes(w.indices, w.positions, 3, w.normals, 3, [0.4, 0.4, 0.4], null, target, error, ["ErrorAbsolute"]);
+  let indices: Uint32Array = w.indices;
+  if (ratio < 1 && w.indices.length > 3) {
+    const target = Math.max(3, Math.floor((w.indices.length * ratio) / 3) * 3);
+    [indices] = MeshoptSimplifier.simplifyWithAttributes(w.indices, w.positions, 3, w.normals, 3, [0.4, 0.4, 0.4], null, target, error, ["ErrorAbsolute"]);
+  }
   // only the vertices still used
   const map = new Map<number, number>();
   const out = new Uint32Array(indices.length);
@@ -152,6 +209,12 @@ async function runRecipe(recipe: ModelRecipe): Promise<void> {
   for (const scene of doc.getRoot().listScenes()) scene.listChildren().forEach(walk);
 
   const parts = new Map<string, Map<string, Bucket>>();
+  const putInto = (part: RecipePart, material: string): Bucket => {
+    if (!parts.has(part.id)) parts.set(part.id, new Map());
+    const buckets = parts.get(part.id) as Map<string, Bucket>;
+    if (!buckets.has(material)) buckets.set(material, newBucket());
+    return buckets.get(material) as Bucket;
+  };
   let inTris = 0;
   const dropped = new Map<string, number>();
   for (const node of nodes) {
@@ -174,11 +237,33 @@ async function runRecipe(recipe: ModelRecipe): Promise<void> {
         pos.getElement(i, el);
         sum += m[1] * el[0] + m[5] * el[1] + m[9] * el[2] + m[13];
       }
-      const part: RecipePart = recipe.partAt(sum / pos.getCount(), node.getName());
-      if (!parts.has(part.id)) parts.set(part.id, new Map());
-      const buckets = parts.get(part.id) as Map<string, Bucket>;
-      if (!buckets.has(material)) buckets.set(material, newBucket());
-      take(buckets.get(material) as Bucket, prim, node, part.place, Boolean(recipe.textures?.[material]));
+      if (recipe.pieces) {
+        // one merged mesh: its connected pieces, each to the part its place says
+        for (const piece of connectedPieces(prim, node)) {
+          const part = recipe.pieces(piece);
+          take(putInto(part, material), prim, node, part.place, Boolean(recipe.textures?.[material]), piece.triangles);
+        }
+        continue;
+      }
+      let part: RecipePart = recipe.partAt(sum / pos.getCount(), node.getName());
+      if (recipe.wholeNodes || recipe.hidden) {
+        const lo = [Infinity, Infinity, Infinity];
+        const hi = [-Infinity, -Infinity, -Infinity];
+        for (let i = 0; i < pos.getCount(); i++) {
+          pos.getElement(i, el);
+          for (let c = 0; c < 3; c++) {
+            const v = m[c] * el[0] + m[4 + c] * el[1] + m[8 + c] * el[2] + m[12 + c];
+            lo[c] = Math.min(lo[c], v);
+            hi[c] = Math.max(hi[c], v);
+          }
+        }
+        if (recipe.hidden?.(from, lo, hi)) {
+          dropped.set(`${from} (hidden)`, (dropped.get(`${from} (hidden)`) ?? 0) + tris);
+          continue;
+        }
+        if (recipe.wholeNodes) part = recipe.wholeNodes(lo, hi);
+      }
+      take(putInto(part, material), prim, node, part.place, Boolean(recipe.textures?.[material]));
     }
   }
 
@@ -209,9 +294,10 @@ async function runRecipe(recipe: ModelRecipe): Promise<void> {
       material.setDoubleSided(true);
       const tex = recipe.textures?.[name];
       if (tex) {
+        patchesReady = tex.patches ? await prepare(doc, tex.from, tex.size, tex.patches) : patchesReady;
         const source = doc.getRoot().listMaterials().find((m) => m.getName() === tex.from);
         if (!source) throw new Error(`${recipe.id}: no material ${tex.from}`);
-        const copy = (texture: Texture | null) => (texture ? textureOf(out, texture, tex.size) : null);
+        const copy = (texture: Texture | null) => (texture ? textureOf(out, texture, tex.size, tex.patches) : null);
         if (tex.maps.includes("base")) material.setBaseColorTexture(copy(source.getBaseColorTexture()));
         if (tex.maps.includes("metalRough")) material.setMetallicRoughnessTexture(copy(source.getMetallicRoughnessTexture()));
         if (tex.maps.includes("normal")) material.setNormalTexture(copy(source.getNormalTexture()));
@@ -238,11 +324,57 @@ async function runRecipe(recipe: ModelRecipe): Promise<void> {
   console.log(`${recipe.id}: ${inTris} triangles in; dropped ${[...dropped].map(([k, v]) => `${k} (${v})`).join(", ") || "nothing"}`);
 }
 
-/** Copies one of a model's own images into a part's file; `size` shrinks it to a JPEG, none keeps its bytes. */
-function textureOf(doc: Document, texture: Texture, size?: number): Texture {
+let patchesReady = new Map<Texture, Uint8Array>();
+
+/** Paints logos out of a material's images, in a real browser's canvas: each patch is drawn over from clean pixels of the same picture, the same in every map, since they share their coordinates. */
+async function prepare(doc: Document, from: string, size: number | undefined, patches: readonly Patch[]): Promise<Map<Texture, Uint8Array>> {
+  const material = doc.getRoot().listMaterials().find((m) => m.getName() === from);
+  if (!material) throw new Error(`no material ${from}`);
+  const browser = await chromium.launch();
+  const done = new Map<Texture, Uint8Array>();
+  try {
+    const page = await browser.newPage();
+    for (const texture of [material.getBaseColorTexture(), material.getMetallicRoughnessTexture(), material.getNormalTexture()]) {
+      const image = texture?.getImage();
+      if (!texture || !image) continue;
+      const data = `data:${texture.getMimeType()};base64,${Buffer.from(image).toString("base64")}`;
+      const out = await page.evaluate(
+        async ({ data, patches, size }) => {
+          const img = new Image();
+          img.src = data;
+          await img.decode();
+          const n = img.naturalWidth;
+          const k = n / 1024;
+          const whole = document.createElement("canvas");
+          whole.width = whole.height = n;
+          const w = whole.getContext("2d") as CanvasRenderingContext2D;
+          w.drawImage(img, 0, 0);
+          for (const { to, from: source } of patches) w.drawImage(whole, source[0] * k, source[1] * k, source[2] * k, source[3] * k, to[0] * k, to[1] * k, to[2] * k, to[3] * k);
+          const small = document.createElement("canvas");
+          small.width = small.height = size ?? n;
+          (small.getContext("2d") as CanvasRenderingContext2D).drawImage(whole, 0, 0, small.width, small.height);
+          return small.toDataURL("image/jpeg", 0.82).split(",")[1];
+        },
+        { data, patches, size },
+      );
+      done.set(texture, new Uint8Array(Buffer.from(out, "base64")));
+    }
+  } finally {
+    await browser.close();
+  }
+  return done;
+}
+
+/** Copies one of a model's own images into a part's file; `size` shrinks it to a JPEG, none keeps its bytes; patches have been painted out first. */
+function textureOf(doc: Document, texture: Texture, size?: number, patches?: readonly Patch[]): Texture {
   const image = texture.getImage();
   if (!image) throw new Error("a texture with no image");
   const made = doc.createTexture(texture.getName());
+  if (patches) {
+    const patched = patchesReady.get(texture);
+    if (!patched) throw new Error("a patched image was not prepared");
+    return made.setImage(patched).setMimeType("image/jpeg");
+  }
   return size ? made.setImage(jpegOf(image, size)).setMimeType("image/jpeg") : made.setImage(image).setMimeType(texture.getMimeType());
 }
 
