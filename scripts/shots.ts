@@ -1,20 +1,23 @@
 // Pictures of every look of every variant from every side, in a real headless browser with swiftshader, for checking by eye. Takes the viewing matrix as words:
 //
-//   node scripts/shots.ts <folder> [variants] [shows] [looks] [views]
+//   node scripts/shots.ts <folder> <rocket> [variants] [shows] [looks] [views]
 //
-// Each comma list falls back to all. It starts the site's own server on 7902, takes the shots and stops it, by the process it started.
+// Each comma list falls back to all of the rocket's. It starts the site's own server on 7902, takes the shots and stops it, by the process it started.
 import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { chromium } from "@playwright/test";
+import { ROCKETS, showsOf } from "../src/index.ts";
 
 const out = process.argv[2] ?? "docs/images/check";
+const rocketId = process.argv[3] ?? "starship";
 const list = (i: number, all: string[]) => (process.argv[i] ? process.argv[i].split(",") : all);
-const variants = list(3, ["v1-flight1", "v1", "v2", "v3", "v4", "2019"]);
-const shows = list(4, ["together", "apart", "booster", "ship"]);
-const looks = list(5, ["line", "thick", "painted"]);
-const views = list(6, ["front", "back", "side", "below"]);
+const variantsAll = ROCKETS[rocketId].variants;
+const variants = list(4, variantsAll.map((variant) => variant.id));
+const onlyShows = process.argv[5] ? process.argv[5].split(",") : null;
+const looks = list(6, ["line", "thick", "painted"]);
+const views = list(7, ["front", "back", "side", "below"]);
 mkdirSync(out, { recursive: true });
 const port = 7902;
 const server = spawn("node", ["scripts/dev.ts"], { env: { ...process.env, PORT: String(port) }, stdio: "ignore" });
@@ -34,12 +37,12 @@ try {
     const r = document.createElement("uchusen-rocket");
     r.id = "r";
     r.setAttribute("spin", "off");
-    r.setAttribute("rocket", "starship");
     document.body.append(r);
   });
+  await page.evaluate((rocket) => document.getElementById("r")?.setAttribute("rocket", rocket), rocketId);
   for (const variant of variants)
-    for (const show of shows) {
-      if (variant === "2019" && show !== "ship") continue;
+    for (const show of showsOf(variantsAll.find((one) => one.id === variant)?.slots ?? [])) {
+      if (onlyShows && !onlyShows.includes(show)) continue;
       for (const look of looks)
         for (const view of views) {
           await page.evaluate(

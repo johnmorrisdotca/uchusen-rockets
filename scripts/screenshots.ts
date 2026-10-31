@@ -53,6 +53,21 @@ try {
   await page.locator("#compare").scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
   await page.locator("#compare").screenshot({ path: join(out, "compare.jpg"), type: "jpeg", quality: 84 });
+  // every rocket at one scale
+  for (const key of ["starship:v1-flight1", "starship:v1", "starship:v2", "starship:v4", "falcon-9:block-5", "falcon-9:block-5-dragon-2", "falcon-heavy:falcon-heavy", "grasshopper:grasshopper", "dragon:dragon-2"]) await press(page, `compare-${key}`);
+  await page.waitForTimeout(300);
+  await page.locator('[data-testid="lineup"]').screenshot({ path: join(out, "family.jpg"), type: "jpeg", quality: 84 });
+  await page.locator("#main-view").scrollIntoViewIfNeeded();
+  await press(page, "rocket-falcon-heavy");
+  await press(page, "look-painted");
+  await press(page, "view-three-quarter");
+  await settled(page);
+  await hero("falcon-heavy-painted.jpg");
+  await press(page, "rocket-falcon-9");
+  await press(page, "variant-block-5-dragon-2");
+  await press(page, "show-apart");
+  await settled(page);
+  await hero("falcon-9-apart.jpg");
   await page.close();
   const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true, reducedMotion: "reduce" });
   await phone.goto(url);

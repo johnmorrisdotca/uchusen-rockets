@@ -1,5 +1,5 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { check, type Description, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { check, type Description, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -16,13 +16,12 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLEl
   return node;
 };
 
-const ROCKET = ROCKETS.starship;
 const LOOK_WORDS: Record<LookName, string> = { line: "Line drawing", thick: "Thick lines", painted: "Painted" };
 const VIEW_WORDS: Record<ViewName, string> = { "three-quarter": "Three-quarter", front: "Front", back: "Back", side: "Side", below: "Below" };
-const SHOW_WORDS: Record<string, string> = { together: "Together", apart: "Apart", booster: "Super Heavy", ship: "Ship" };
+const SHOW_WORDS: Record<string, string> = { together: "Together", apart: "Apart", ...SLOT_NAMES };
 
 const hero = byId<UchusenRocket>("hero");
-const state = { variant: "v3", show: "together", look: "line" as LookName, view: "three-quarter" as ViewName };
+const state = { rocket: "starship", variant: "v3", show: "together", look: "line" as LookName, view: "three-quarter" as ViewName };
 
 function chip(label: string, testid: string, on: () => void): HTMLButtonElement {
   const button = el("button", { type: "button", className: "chip", textContent: label });
@@ -64,7 +63,8 @@ function factsFor(variant: Variant): HTMLElement[] {
     for (const slot of variant.slots) rows.push([`${name(slot)} height`, variant.facts.parts[slot]]);
   } else rows.push([`${name(show)} height`, variant.facts.parts[show]]);
   rows.push(["Diameter", variant.facts.diameter]);
-  for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) rows.push([`${name(slot)} engines`, variant.facts.engines[slot]]);
+  // a part with no engines of its own has no row for them
+  for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) if (variant.facts.engines[slot]) rows.push([`${name(slot)} engines`, variant.facts.engines[slot]]);
   rows.push(["First flew", variant.firstFlight]);
   const table = el("table", { className: "sizes" });
   for (const [label, figure] of rows) {
@@ -80,13 +80,15 @@ function factsFor(variant: Variant): HTMLElement[] {
 }
 
 const credit = byId("credit");
-const creditFor = (variant: Variant): CreditId | null => {
-  const report = check({ rocket: variant.rocket, variant: variant.id });
-  return (report.credits[0]?.id as CreditId | undefined) ?? null;
-};
+const creditsFor = (variant: Variant) => check({ rocket: variant.rocket, variant: variant.id }).credits;
 
 function renderMain() {
-  const variant = variantOf("starship", state.variant) as Variant;
+  const rocket = ROCKETS[state.rocket];
+  if (!rocket.variants.some((one) => one.id === state.variant)) state.variant = rocket.defaultVariant;
+  const variant = variantOf(state.rocket, state.variant) as Variant;
+  const variantBox = byId("variants");
+  variantBox.replaceChildren(...rocket.variants.map((one) => chip(one.name, `variant-${one.id}`, () => pick({ variant: one.id }))));
+  press(byId("rockets"), `rocket-${state.rocket}`);
   const shows = showsOf(variant.slots);
   if (!shows.includes(state.show)) state.show = shows[0];
   const showBox = byId("shows");
@@ -95,23 +97,29 @@ function renderMain() {
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
   press(byId("views"), `view-${state.view}`);
+  hero.setAttribute("rocket", state.rocket);
   hero.setAttribute("variant", state.variant);
   hero.setAttribute("show", state.show);
   hero.setAttribute("look", state.look);
   hero.setAttribute("view", state.view);
   byId("facts").replaceChildren(...factsFor(variant));
-  const id = creditFor(variant);
-  credit.hidden = !(state.look === "painted");
-  if (id) {
-    const c = MODEL_CREDITS[id];
+  credit.hidden = state.look !== "painted";
+  const credits = creditsFor(variant);
+  if (credits.length) {
     credit.replaceChildren(
-      "Painted from ",
-      el("a", { href: c.sourceUrl, textContent: c.title, rel: "noopener" }),
-      ` by `,
-      el("a", { href: c.creatorUrl, textContent: c.creator, rel: "noopener" }),
-      ", ",
-      el("a", { href: c.licenceUrl, textContent: c.licence, rel: "noopener" }),
-      `. ${c.changes}`,
+      ...credits.flatMap((c) => [
+        el(
+          "span",
+          { className: "one-credit" },
+          `${c.usedFor.length > 1 ? "Painted" : "Part painted"} from `,
+          el("a", { href: c.sourceUrl, textContent: c.title, rel: "noopener" }),
+          " by ",
+          el("a", { href: c.creatorUrl, textContent: c.creator, rel: "noopener" }),
+          ", ",
+          el("a", { href: c.licenceUrl, textContent: c.licence, rel: "noopener" }),
+          `. ${c.changes}`,
+        ),
+      ]),
     );
   } else credit.textContent = "Painted by this package's own code, from sourced sizes. No licensed model shows this variant.";
 }
@@ -121,7 +129,7 @@ function pick(change: Partial<typeof state>) {
   renderMain();
 }
 
-byId("variants").append(...ROCKET.variants.map((variant) => chip(variant.name, `variant-${variant.id}`, () => pick({ variant: variant.id }))));
+byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
 byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));
 byId<HTMLInputElement>("spin").addEventListener("change", (event) => hero.setAttribute("spin", (event.target as HTMLInputElement).checked ? "slow" : "off"));
@@ -130,19 +138,21 @@ renderMain();
 
 // ------------------------------------------------------------- compare
 const lineup = byId<UchusenLineup>("lineup");
-const compared = new Set(["v1-flight1", "v1", "v2", "v3", "v4"]);
+const every = Object.values(ROCKETS).flatMap((rocket) => rocket.variants);
+const keyOf = (variant: Variant) => `${variant.rocket}:${variant.id}`;
+const compared = new Set(["starship:v1-flight1", "starship:v1", "starship:v2", "starship:v3", "starship:v4"]);
 const comparePicks = byId("compare-picks");
 function renderCompare() {
   for (const button of comparePicks.querySelectorAll("button")) button.setAttribute("aria-pressed", String(compared.has((button.dataset.testid as string).slice(8))));
-  const chosen = ROCKET.variants.filter((variant) => compared.has(variant.id));
-  lineup.setAttribute("items", [...chosen.map((variant) => `starship:${variant.id}`), "building", "person"].join(","));
+  const chosen = every.filter((variant) => compared.has(keyOf(variant)));
+  lineup.setAttribute("items", [...chosen.map(keyOf), "building", "person"].join(","));
   lineup.setAttribute("look", state.look === "painted" ? "painted" : "line");
   const table = byId("compare-table");
   const head = el("tr", {}, el("th", { textContent: "" }), ...chosen.map((variant) => el("th", { scope: "col", textContent: variant.name })));
+  const slots = [...new Set(chosen.flatMap((variant) => variant.slots))];
   const rows: [string, (variant: Variant) => Figure<number | string> | undefined][] = [
     ["Whole height", (variant) => variant.facts.height],
-    ["Super Heavy", (variant) => variant.facts.parts.booster],
-    ["Ship", (variant) => variant.facts.parts.ship],
+    ...slots.map((slot): [string, (variant: Variant) => Figure<number | string> | undefined] => [SLOT_NAMES[slot] ?? slot, (variant) => (variant.slots.includes(slot) ? variant.facts.parts[slot] : { value: null, source: null, brief: "None" })]),
     ["Diameter", (variant) => variant.facts.diameter],
     ["First flew", (variant) => variant.firstFlight],
   ];
@@ -163,10 +173,10 @@ function renderCompare() {
   table.replaceChildren(el("thead", {}, head), el("tbody", {}, ...body));
 }
 comparePicks.append(
-  ...ROCKET.variants.map((variant) =>
-    chip(variant.name, `compare-${variant.id}`, () => {
-      if (compared.has(variant.id)) compared.delete(variant.id);
-      else compared.add(variant.id);
+  ...every.map((variant) =>
+    chip(variant.name, `compare-${keyOf(variant)}`, () => {
+      if (compared.has(keyOf(variant))) compared.delete(keyOf(variant));
+      else compared.add(keyOf(variant));
       renderCompare();
     }),
   ),

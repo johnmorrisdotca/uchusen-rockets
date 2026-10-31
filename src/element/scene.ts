@@ -556,6 +556,7 @@ export class RocketViewer {
   }
 
   private limits(distance: number): void {
+    this.fitGlow();
     this.camera.near = Math.max(0.2, distance / 40);
     this.camera.far = distance * 8;
     this.camera.updateProjectionMatrix();
@@ -573,6 +574,9 @@ export class RocketViewer {
   }
 
   private startPose(framing: ReturnType<RocketViewer["framingFor"]>, ms: number, moveParts: boolean): void {
+    // said when it starts, not when a frame happens to be drawn: a slow machine may draw none in the middle of a move
+    this.canvas.dataset.moving = "true";
+    if (moveParts) this.canvas.dataset.moves = String(Number(this.canvas.dataset.moves ?? 0) + 1);
     this.pose = {
       from: { target: this.controls.target.clone(), offset: this.camera.position.clone().sub(this.controls.target) },
       to: { target: new Vector3(...framing.target), offset: new Vector3(...framing.position).sub(new Vector3(...framing.target)) },
@@ -674,10 +678,20 @@ export class RocketViewer {
     this.textures.push(texture);
     const plane = new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }));
     plane.rotation.x = -Math.PI / 2;
-    plane.position.y = -0.2;
-    plane.scale.setScalar(60);
+    plane.position.y = -0.02;
     this.glow = plane;
     this.scene.add(plane);
+    this.fitGlow();
+  }
+
+  /** The pool of light is as wide as what stands in it. */
+  private fitGlow(): void {
+    if (!this.built || !this.glow) return;
+    const { min, max } = this.built.boundsOf(this.show);
+    const span = Math.max(max[0] - min[0], max[2] - min[2]);
+    this.glow.scale.setScalar(span * 3);
+    this.glow.position.x = (min[0] + max[0]) / 2;
+    this.glow.position.z = (min[2] + max[2]) / 2;
   }
 
   private onVisibility = () => {
