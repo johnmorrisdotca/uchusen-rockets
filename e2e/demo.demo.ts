@@ -334,6 +334,27 @@ test("each rocket's painted look fetches only its own models, and credits their 
   expect(problems).toEqual([]);
 });
 
+test("the painted Falcon 9 second stage shows this package's own nozzle when it stands apart or alone, and not nested in the stack", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+  test.setTimeout(240_000);
+  await page.goto(URL);
+  await page.locator('[data-testid="spin"]').uncheck();
+  await reach3d(page);
+  await press(page, "rocket-falcon-9");
+  await press(page, "look-painted");
+  await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
+  expect(await canvasData(page, "nozzle")).toBe("");
+  await press(page, "show-apart");
+  await expect.poll(() => canvasData(page, "nozzle")).toBe("own");
+  await press(page, "show-second-stage");
+  await expect.poll(() => canvasData(page, "nozzle")).toBe("own");
+  await press(page, "show-together");
+  await expect.poll(() => canvasData(page, "nozzle")).toBe("");
+  await press(page, "look-line");
+  await press(page, "show-second-stage");
+  expect(await canvasData(page, "nozzle")).toBe("");
+});
+
 test("no sideways scroll at a phone's width, and controls big enough for a finger", async ({ page }, info) => {
   test.skip(info.project.name === "chromium-desk", "A phone's width");
   await page.goto(URL);

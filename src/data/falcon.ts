@@ -14,6 +14,9 @@ const FIRST_STAGE_WITH_INTERSTAGE = m(47.7, F9, { note: "With the interstage. Th
 const SECOND_STAGE = m(13.8, F9);
 const FAIRING = m(13.1, API, { note: "SpaceX-API's Falcon 9 row, which gives one row for every version, 5.2 m across.", others: [{ value: 13, source: F9, note: "The Falcon 9 article rounds: 13 m long and 5.2 m in diameter." }] });
 
+/** How wide the second stage's vacuum engine is at the end of its nozzle extension. */
+export const MVAC_EXIT_DIAMETER = m(3.3, "wikipedia-merlin", { note: "The vacuum Merlin 1D's diameter in the infobox (0.92 m at sea level). The same article says the first Merlin Vacuum's niobium nozzle was 9 ft (about 2.7 m) long, and that a shorter extension flew from the Transporter-7 mission." });
+
 export const FALCON_9_VARIANTS: readonly Variant[] = [
   {
     id: "v1.0",

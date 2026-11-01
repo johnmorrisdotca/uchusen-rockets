@@ -130,7 +130,10 @@ interface PartView {
   code: Group;
   model: Group | null;
   modelFile: string | null;
+  /** The licensed model has no nozzle: this package's own is drawn with it. */
+  ownNozzle: boolean;
   modelState: "none" | "loading" | "ready" | "failed";
+  nozzleShown: boolean;
   faces: { mesh: Mesh; name: string; hasUv: boolean }[];
   outlines: Mesh[];
   feature: LineSegments2[];
@@ -140,6 +143,8 @@ interface PartView {
   hideAtEnd: boolean;
 }
 
+/** The materials of an engine's bell, in this package's own meshes. */
+const NOZZLE_MATERIALS: ReadonlySet<string> = new Set(["bell", "bell-inside", "engine-metal"]);
 const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
 
 export class RocketViewer {
@@ -277,7 +282,9 @@ export class RocketViewer {
         code,
         model: null,
         modelFile: part.record.painted?.file ?? null,
+        ownNozzle: Boolean(part.record.painted?.ownNozzle),
         modelState: "none",
+        nozzleShown: false,
         faces: [],
         outlines: [],
         feature: [],
@@ -468,7 +475,7 @@ export class RocketViewer {
     if (!part.modelFile) return;
     if (part.model) {
       part.model.visible = painted;
-      part.code.visible = !painted;
+      this.showCode(part, painted);
       return;
     }
     part.code.visible = true;
@@ -500,10 +507,22 @@ export class RocketViewer {
       });
   }
 
+  /** Behind a licensed model this package's code shows nothing, except the nozzle the model lacks, and not while the stage is nested in the one below. */
+  private showCode(part: PartView, painted: boolean): void {
+    const nozzleOnly = painted && part.ownNozzle;
+    part.code.visible = !painted || nozzleOnly;
+    const nozzle = nozzleOnly && this.show !== "together";
+    for (const { mesh, name } of part.faces) mesh.visible = !nozzleOnly || (nozzle && NOZZLE_MATERIALS.has(name));
+    for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
+    part.nozzleShown = nozzle;
+    this.canvas.dataset.nozzle = this.parts.some((one) => one.nozzleShown) ? "own" : "";
+  }
+
   /** Together, apart, or one part alone: an animated move, or a cut under reduced motion. */
   setShow(show: string): void {
     if (!this.built || show === this.show) return;
     this.show = show;
+    for (const part of this.parts) if (part.model) this.showCode(part, this.look === "painted");
     const places = this.built.placesOf(show);
     const fromAngle = this.currentAngle();
     const framing = this.framingFor(fromAngle);

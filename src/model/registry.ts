@@ -18,14 +18,14 @@ const blankFigure: Figure = { value: null, source: null, note: "No source gives 
 const STAGE = "stage" as const;
 
 /** Which licensed model paints which part. */
-const PAINTED: Readonly<Record<string, { file: string; credit: CreditId }>> = {
+const PAINTED: Readonly<Record<string, { file: string; credit: CreditId; ownNozzle?: true }>> = {
   "starship-v3-booster": { file: "starship-v3-booster.glb", credit: "clarence365-block3" },
   "starship-v3-ship": { file: "starship-v3-ship.glb", credit: "clarence365-block3" },
   "starship-v1-flight1-booster": { file: "starship-v1-flight1-booster.glb", credit: "clarence365-s24b7" },
   "starship-v1-flight1-ship": { file: "starship-v1-flight1-ship.glb", credit: "clarence365-s24b7" },
   "starship-2019-ship": { file: "starship-2019-ship.glb", credit: "martiandays-2019" },
   "falcon-9-block-5-first-stage": { file: "falcon-9-block-5-first-stage.glb", credit: "stanley-falcon-9" },
-  "falcon-9-block-5-second-stage": { file: "falcon-9-block-5-second-stage.glb", credit: "stanley-falcon-9" },
+  "falcon-9-block-5-second-stage": { file: "falcon-9-block-5-second-stage.glb", credit: "stanley-falcon-9", ownNozzle: true },
   "falcon-9-block-5-fairing": { file: "falcon-9-block-5-fairing.glb", credit: "stanley-falcon-9" },
   "dragon-dragon-2-capsule": { file: "dragon-dragon-2-capsule.glb", credit: "kubaha-dragon-2" },
   "dragon-dragon-2-trunk": { file: "dragon-dragon-2-trunk.glb", credit: "kubaha-dragon-2" },

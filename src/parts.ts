@@ -30,8 +30,8 @@ export interface PartRecord {
   joints: { readonly top?: Joint; readonly bottom?: Joint };
   /** It stands beside the part below it rather than on top, this far from the rocket's axis: a side booster. */
   strapOn?: { x: number; z: number };
-  /** The painted look's mesh, when a licensed model gives one: its file under assets/models/ and whose it is. Otherwise this package's own code paints it. */
-  painted: { file: string; credit: CreditId } | null;
+  /** The painted look's mesh, when a licensed model gives one: its file under assets/models/ and whose it is. Otherwise this package's own code paints it. `ownNozzle`: the model has none, so this package's own shows with it unless the part is nested in the stage below. */
+  painted: { file: string; credit: CreditId; ownNozzle?: true } | null;
   /** What a reader should be told about where its shape came from. */
   drawnFrom: string;
 }

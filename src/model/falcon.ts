@@ -1,5 +1,6 @@
 // Falcon 9, Falcon Heavy, Dragon and Grasshopper from tables of numbers. Heights and diameters are the sourced figures where there are any. How a part is drawn is not a published figure: Block 5, Dragon 2, Dragon 1, Falcon Heavy
 // and Grasshopper take their proportions from their licensed models at the sourced sizes (see NOTICE.md), and the older Falcons from the sourced totals and the documented differences.
+import { MVAC_EXIT_DIAMETER } from "../data/falcon.ts";
 import { deg } from "../framing.ts";
 import { type Lathe, type Piece, pointOf, radial, strut, type Vec3 } from "./pieces.ts";
 import { gridFin } from "./starship.ts";
@@ -27,7 +28,7 @@ export interface FirstStageDraw {
 
 export interface FalconDraw {
   first: FirstStageDraw;
-  second: { height: number; joint: number; radius: number; nozzle: number };
+  second: { height: number; joint: number; radius: number; nozzle: number; exit: number };
   fairing: { height: number; radius: number };
 }
 
@@ -36,7 +37,8 @@ const R = 1.85;
 /** Each part's height is the sourced figure where there is one; the others share out what the sourced whole leaves, so the parts add up to it. */
 const falconOf = (first: number, interstage: number, secondHeight: number, joint: number, fairing: number, fairingRadius: number, engines: "octaweb" | "grid", legs: boolean, fins: boolean): FalconDraw => ({
   first: { height: first, interstage, radius: R, engines, legs, fins },
-  second: { height: secondHeight, joint, radius: R, nozzle: joint * 0.9 },
+  // the v1.0's Merlin 1C Vacuum has no sourced width, so its nozzle keeps its drawn proportion
+  second: { height: secondHeight, joint, radius: R, nozzle: joint * 0.9, exit: engines === "grid" ? R * 0.62 : (MVAC_EXIT_DIAMETER.value ?? 0) / 2 },
   fairing: { height: fairing, radius: fairingRadius },
 });
 
@@ -79,11 +81,11 @@ function firstStage(d: FirstStageDraw, withTop: boolean): Piece[] {
 }
 
 function secondStage(d: FalconDraw["second"]): Piece[] {
-  const { height, joint, radius: r, nozzle } = d;
+  const { height, joint, radius: r, nozzle, exit } = d;
   const pieces: Piece[] = [];
   pieces.push({ kind: "lathe", material: "white", segs: 48, body: true, outline: true, profile: [[r * 0.6, joint - 0.5], [r, joint], [r, height]], rings: [joint + 0.5, height - 0.05], welds: [(joint + height) / 2] });
   pieces.push({ kind: "lathe", material: "soot", segs: 36, under: true, only: "mesh", profile: [[0, joint - 0.5], [r * 0.6, joint - 0.5]] });
-  pieces.push(...merlin([0, 0], 0, r * 0.62, nozzle * 1.06));
+  pieces.push(...merlin([0, 0], 0, exit, nozzle * 1.06));
   return pieces;
 }
 

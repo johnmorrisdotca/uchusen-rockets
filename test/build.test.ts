@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { LOOK_NAMES, ROCKETS, VIEW_NAMES, showsOf } from "../src/index.ts";
 import { build, buildPart, drawnPieces, lineupSvg } from "../src/build/index.ts";
-import { partEntry } from "../src/model/registry.ts";
+import { PART_ENTRIES, partEntry } from "../src/model/registry.ts";
 import type { Lathe, Piece } from "../src/model/pieces.ts";
 import { STARSHIP_DRAWS } from "../src/model/starship.ts";
 import { readMetrics } from "./metrics.ts";
@@ -140,6 +140,17 @@ test("a nozzle nested in the stage below is not drawn over it in a stack, and is
   const first = rocket.parts.find((part) => part.slot === "first-stage");
   assert.ok(first);
   assert.equal(bells(drawnPieces(first, true)), 9);
+});
+
+test("the painted Falcon 9 second stage is told to draw this package's own nozzle at the sourced exit width, and no other painted part is", () => {
+  const exit = (id: string) => (bellsOf(partEntry(id)?.pieces() ?? [])[0] as Lathe).profile[0][0];
+  assert.equal(partEntry("falcon-9-block-5-second-stage")?.record.painted?.ownNozzle, true);
+  assert.ok(Math.abs(exit("falcon-9-block-5-second-stage") - 1.65) < 1e-9, "3.3 m across, from the Merlin article's infobox");
+  assert.ok(Math.abs(exit("falcon-9-ft-second-stage") - 1.65) < 1e-9);
+  assert.ok(exit("falcon-9-v1.0-second-stage") < 1.65, "no sourced width for the v1.0's vacuum engine");
+  assert.ok(exit("falcon-9-block-5-second-stage") < 1.85, "it fits within the stage");
+  const owners = PART_ENTRIES.filter(({ record }) => record.painted?.ownNozzle).map(({ record }) => record.id);
+  assert.deepEqual(owners, ["falcon-9-block-5-second-stage"]);
 });
 
 test("Falcon 9 has its 9 engines, and a v1.0's stand in a 3 by 3 grid", () => {

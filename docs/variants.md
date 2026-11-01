@@ -57,7 +57,7 @@ Every part's flaps, fins and chines are drawn from proportions, not from publish
 | `block-5` Block 5 | 69.8 m; 65.7 m with Dragon 2, 63.7 m with Dragon 1. One table and SpaceX-API say 70 m | 47.7 m with its interstage | 13.8 m | 13.1 m | 2018-05-11 |
 | `block-5-dragon-2` Block 5 with Dragon 2 | 65.7 m as stated; the parts add to 64.8 m | The same | The same | Trunk, capsule | 2019-03-02 |
 
-All are 3.7 m across. Block 4 first flew on 2017-08-14, and no source read here gives it sizes of its own, so it is not listed apart. `SpaceX-API` (Apache-2.0, archived in 2024) has one row for Falcon 9 and one for Falcon Heavy, not one per version, read from its repository's docs. It gives the fairing's 13.1 m; the Falcon 9 article rounds that to 13 m.
+All are 3.7 m across. The second stage's vacuum engine is drawn 3.3 m across at the end of its nozzle, the diameter Wikipedia's Merlin infobox gives for the vacuum engine (0.92 m at sea level); the v1.0's Merlin 1C Vacuum has no source here and keeps a narrower drawn bell. Block 4 first flew on 2017-08-14, and no source read here gives it sizes of its own, so it is not listed apart. `SpaceX-API` (Apache-2.0, archived in 2024) has one row for Falcon 9 and one for Falcon Heavy, not one per version, read from its repository's docs. It gives the fairing's 13.1 m; the Falcon 9 article rounds that to 13 m.
 
 ## Falcon Heavy, Dragon and Grasshopper
 
