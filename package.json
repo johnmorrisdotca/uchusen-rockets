@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/uchusen-rockets",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Uchusen Rockets 宇宙船: line drawings and 3D views of rockets, as a web component. Every variant with its own sourced sizes, a typed way to assemble a rocket from parts, stack and separate. No logos. three.js is a peer dependency.",
   "keywords": ["rocket", "rockets", "spaceship", "starship", "super-heavy", "falcon-9", "dragon", "spaceflight", "line-drawing", "svg", "3d", "3d-models", "glb", "gltf", "three", "threejs", "webgl", "web-component", "custom-element", "react", "typescript", "data"],
   "homepage": "https://johnmorrisdotca.github.io/uchusen-rockets/",
