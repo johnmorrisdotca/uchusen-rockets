@@ -110,6 +110,27 @@ test("a landing stands on each ship and pad, and only the sourced sizes carry a 
   assert.equal(bells("droneship-ocisly-landed"), 9);
 });
 
+test("the launch tower is the FAA's height, the stack stands on the mount, and its arms can be swapped like any part", () => {
+  const tower = partEntry("launch-tower-stack-tower")?.record;
+  assert.equal(tower?.height, 146.3);
+  assert.equal(figureWords(variantOf("launch-tower", "stack")?.facts.height, " m"), "146.3 m, approximately");
+  assert.ok(variantOf("launch-tower", "stack")?.facts.height.others?.some((other) => other.value === 146));
+  assert.ok(buildPart("launch-tower-stack-tower").bounds.max[1] > 149, "with its lightning rod");
+  const stack = build({ rocket: "launch-tower", variant: "stack" });
+  const place = (built: typeof stack, slot: string) => built.placesOf("together").find((one) => one.slot === slot)?.at[1] ?? 0;
+  assert.equal(place(stack, "booster"), partEntry("launch-tower-stack-mount")?.record.height);
+  assert.equal(place(stack, "ship"), place(stack, "booster") + 72.3);
+  const caught = build({ rocket: "launch-tower", variant: "catch" });
+  assert.ok(place(caught, "booster") > 40);
+  assert.ok(place(caught, "arms") > place(caught, "booster") + 60, "the arms close near its top");
+  const swapped = check({ rocket: "launch-tower", variant: "stack", parts: { arms: "launch-tower-catch-arms" } });
+  assert.ok(swapped.ok);
+  assert.equal(swapped.custom, true);
+  const wrong = check({ rocket: "launch-tower", variant: "stack", parts: { arms: "launch-tower-stack-mount" } });
+  assert.equal(wrong.ok, false);
+  assert.equal(wrong.issues[0].code, "wrong-kind");
+});
+
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {

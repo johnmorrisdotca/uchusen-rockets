@@ -140,6 +140,16 @@ Each is drawn with a Falcon 9 Block 5 first stage standing on it, legs out, as i
 
 No name, target mark or logo is drawn: each deck and pad has a plain ring.
 
+## Launch tower
+
+| Variant | Tower | What is on it | First |
+| --- | --- | --- | --- |
+| `tower` | About 146.3 m (480 feet) with a 10-foot lightning rod, from the FAA's 2022 assessment; Wikipedia gives 479 feet | The mount and the arms | 2021-07, first tower fully stacked |
+| `stack` | The same | Block 3 stacked on the mount | |
+| `catch` | The same | The arms closed under Block 3's booster's grid fins, as on Flight 5 | 2024-10-13, first catch |
+
+No source read here gives the tower's width, the arms' length or the mount's size, so those are judged from photographs. Its nine sections are Wikipedia's. The arms are a part: `check({ rocket: "launch-tower", variant: "stack", parts: { arms: "launch-tower-catch-arms" } })` is a custom build, and it says so.
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Vulcan Centaur and Ariane 6.

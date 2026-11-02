@@ -56,6 +56,8 @@ export const SOURCES = {
   "wikipedia-asds": { title: "Autonomous spaceport drone ship", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Autonomous_spaceport_drone_ship", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-lz": { title: "Landing Zones 1 and 2", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Landing_Zones_1_and_2", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-slc-4": { title: "Vandenberg Space Launch Complex 4", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Vandenberg_Space_Launch_Complex_4", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "faa-pea-2022": { title: "Final Programmatic Environmental Assessment for the SpaceX Starship/Super Heavy Launch Vehicle Program at the Boca Chica Launch Site", publisher: "Federal Aviation Administration", url: "https://www.faa.gov/sites/faa.gov/files/2022-06/PEA_for_SpaceX_Starship_Super_Heavy_at_Boca_Chica_FINAL.pdf", date: "2022-06", read: "direct" },
+  "wikipedia-starbase": { title: "SpaceX Starbase", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Starbase", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 

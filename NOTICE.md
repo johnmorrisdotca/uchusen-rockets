@@ -43,6 +43,7 @@ Sizes are plain facts, each with its source in `src/data/sources.ts` and on the 
 | Wikipedia: New Glenn, Rocket Lab Electron (CC BY-SA 4.0, read 2026-11-02) | Their sizes. Facts only: no text is copied |
 | Wikipedia: Soyuz-2 (CC BY-SA 4.0, read 2026-11-02); Vulcan Centaur and Ariane 6 for the planned list | Their sizes and first flights. Facts only: no text is copied |
 | Wikipedia: Autonomous spaceport drone ship, Landing Zones 1 and 2, Vandenberg Space Launch Complex 4 (CC BY-SA 4.0, read 2026-11-02) | Deck and pad sizes and first dates. Facts only: no text is copied, and the marks on the real decks and pads are not drawn |
+| Federal Aviation Administration, Final Programmatic Environmental Assessment for Starship/Super Heavy at Boca Chica, June 2022, and Wikipedia: SpaceX Starbase (CC BY-SA 4.0, read 2026-11-02) | The tower's height and lightning rod, its nine sections, and first dates. Facts only |
 | SatNews, 2026-05-14 | Grid fins, four to three and about 50% larger; about 1.5 m taller |
 | Gunter's Space Page | Version names, first flights by serial number; one set of sizes per family, not used for sizes |
 | NASASpaceflight, 2025-05-30, and Ars Technica, 2024-04-08 | Known through Wikipedia's citations; not read directly |
