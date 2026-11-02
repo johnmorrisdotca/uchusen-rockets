@@ -1,8 +1,10 @@
 // The demo must never ask a lot of the machine. Played in headless Chromium with the controls turning it, these fail on a draw loop that runs when nothing moves or more than once a frame, on WebGL contexts or
 // graphics memory (buffers, vertex arrays, textures) that grow with each change, on a canvas past its pixel budget at any zoom on a 5K screen, and on a lost context that is not let go.
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect as plainExpect, type Locator, type Page, test } from "@playwright/test";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
 
+// these draw in software, and a page building a painted material can be busy for many seconds
+const expect = plainExpect.configure({ timeout: 30_000 });
 const URL = "/uchusen-rockets/";
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
@@ -261,8 +263,12 @@ test.describe("with the engines lit", () => {
     await press(page, "engines-on");
     await expect.poll(() => canvasData(page, "plumes")).toBe("33");
     const before = await usage(page);
-    const { drew, frames } = await measure(page, 12);
+    const mark = await drawn(page);
+    // for a set time, not a set number of frames: a flame settles, and a slow machine may have drawn few by then
+    await settle(page, 10_000);
     const after = await usage(page);
+    const drew = (await drawn(page)) - mark;
+    const frames = after.pageFrames - before.pageFrames;
     // it does flicker
     expect(drew).toBeGreaterThan(0);
     expect(drew).toBeLessThanOrEqual(frames + 3);
@@ -541,8 +547,11 @@ test.describe("the embed page", () => {
     await page.goto(LIT);
     await expect(rocket(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
     await expect.poll(() => rocket(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.plumes)).toBe("33");
+    // for a set time, not a set number of frames: a flame settles, and a slow machine may have drawn few by then
+    await rocket(page).evaluate((node) => node.setAttribute("engines", "off"));
+    await rocket(page).evaluate((node) => node.setAttribute("engines", "on"));
     const start = { drew: await drew(page), page: (await usage(page)).pageFrames };
-    await expect.poll(async () => (await usage(page)).pageFrames - start.page, { timeout: 90_000 }).toBeGreaterThanOrEqual(12);
+    await settle(page, 10_000);
     const frames = (await usage(page)).pageFrames - start.page;
     const count = (await drew(page)) - start.drew;
     expect(count).toBeGreaterThan(0);
