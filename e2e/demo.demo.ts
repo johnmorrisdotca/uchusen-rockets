@@ -429,6 +429,33 @@ test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited 
   expect(problems).toEqual([]);
 });
 
+test("NASA's models load only when chosen, and are credited to NASA as public domain", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+  test.setTimeout(240_000);
+  const problems = watch(page);
+  const models: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/assets/models/")) models.push(request.url());
+  });
+  await page.goto(URL);
+  await stopTurn(page);
+  await reach3d(page);
+  const nasaFile = /(lunar-module|apollo-soyuz|gemini|mercury|jupiter-c|iss|hubble|space-shuttle-stack)-/;
+  expect(models.filter((url) => nasaFile.test(url))).toEqual([]);
+  await press(page, "rocket-lunar-module");
+  await reach3d(page);
+  // the line look asks for none of them
+  expect(models.filter((url) => nasaFile.test(url))).toEqual([]);
+  await press(page, "look-painted");
+  await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
+  expect(models.filter((url) => nasaFile.test(url)).map((url) => url.split("/").pop())).toEqual(expect.arrayContaining(["lunar-module-descent.glb", "lunar-module-ascent.glb"]));
+  const credit = page.locator('[data-testid="credit"]');
+  await expect(credit).toContainText("NASA");
+  await expect(credit).toContainText("Public domain (NASA)");
+  for (const id of ["apollo-soyuz", "gemini", "mercury", "jupiter-c", "iss", "hubble"]) await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
 test("the painted Falcon 9 second stage shows this package's own nozzle when it stands apart or alone, and not nested in the stack", async ({ page, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
   test.setTimeout(240_000);

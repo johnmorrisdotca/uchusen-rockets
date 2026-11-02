@@ -45,7 +45,7 @@ That is all a page needs with a bundler. The drawing shows at once; when the ele
 | --- | --- |
 | `rocket` | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper`, `falcon-1`, `saturn-v`, `space-shuttle`, `sls`, `new-glenn`, `electron`, `soyuz`, `droneship`, `landing-zone`, `launch-tower`, `starbase`, `lunar-module`, `apollo-soyuz`, `gemini`, `mercury`, `jupiter-c`, `iss`, `hubble` |
 | `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2`, `cargo-dragon-2`, `crew-dragon-inside`. Falcon 1: `falcon-1`, `falcon-1e`. Saturn V: `saturn-v`. Space Shuttle: `stack`, `discovery`. Space Launch System: `block-1`. New Glenn: `7x2`. Electron: `electron`. Soyuz: `soyuz-2`. Drone ships: `ocisly`, `jrti`, `asog`. Landing zones: `lz-1`, `lz-4`. Launch tower: `tower`, `stack`, `catch`. Starbase: `launch-site`, `build-site`, `city`. Apollo lunar module: `lunar-module`. Apollo and Soyuz: `apollo-soyuz`. Gemini: `gemini`. Mercury: `friendship-7`. Jupiter-C: `jupiter-c`. International Space Station: `iss`. Hubble Space Telescope: `hubble` |
-| `show` | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right` |
+| `show` | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right`, and each rocket's own: `descent`, `ascent`, `csm`, `docking-module`, `soyuz`, `adapter`, `station`, `telescope` and the rest |
 | `look` | `line`, `thick`, `painted` |
 | `view` | `three-quarter`, `front`, `back`, `side`, `below` |
 

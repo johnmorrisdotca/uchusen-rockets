@@ -10,7 +10,8 @@ Ready files, under `@johnmorrisdotca/uchusen-rockets/assets/`:
 | `starship-v3-apart.svg`, `starship-v3-booster.svg`, `starship-v3-ship.svg` | Apart and each part, in each look |
 | `parts/raptor-vacuum.glb`, `parts/raptor-vacuum.svg` | A small part |
 | `models/starship-v3-booster.glb` | A painted model, under **CC BY 4.0**: see [NOTICE.md](../NOTICE.md) |
+| `models/lunar-module-descent.glb` | One of NASA's, public domain, its marks removed |
 
 Everything is in metres, Y up, the base of a part on its axis, the windward side towards +Z. Positions and normals are packed with `KHR_mesh_quantization`, which three.js and other viewers read with no decoder.
 
-A code-made mesh is under 600 KB and a drawing under 80 KB. A painted model is under 8 MB.
+A code-made mesh is under 600 KB and a drawing under 80 KB. A painted model is under 8 MB. NASA's models are `models/<rocket>-<part>.glb` too, each with one picture, public domain and credited: see [NOTICE.md](../NOTICE.md).
