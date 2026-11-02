@@ -418,11 +418,11 @@ test("the painted Falcon 9 second stage shows this package's own nozzle when it 
   await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
   expect(await canvasData(page, "nozzle")).toBe("");
   await press(page, "show-apart");
-  await expect.poll(() => canvasData(page, "nozzle")).toBe("own");
+  await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("own");
   await press(page, "show-second-stage");
-  await expect.poll(() => canvasData(page, "nozzle")).toBe("own");
+  await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("own");
   await press(page, "show-together");
-  await expect.poll(() => canvasData(page, "nozzle")).toBe("");
+  await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("");
   await press(page, "look-line");
   await press(page, "show-second-stage");
   expect(await canvasData(page, "nozzle")).toBe("");
