@@ -1,6 +1,6 @@
 // The demo must never ask a lot of the machine. Played in headless Chromium with the controls turning it, these fail on a draw loop that runs when nothing moves or more than once a frame, on WebGL contexts or
 // graphics memory (buffers, vertex arrays, textures) that grow with each change, on a canvas past its pixel budget at any zoom on a 5K screen, and on a lost context that is not let go.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
 
 const URL = "/uchusen-rockets/";
@@ -402,6 +402,128 @@ test.describe("with the engines lit", () => {
     await reach3d(page);
     await expect.poll(() => canvasData(page, "plumes")).toBe("33");
     expect((await usage(page)).contexts).toBe(1);
+  });
+});
+
+test.describe("a played timeline", () => {
+  const rocket = (page: Page) => hero(page) as Locator;
+  const state = (page: Page) => rocket(page).evaluate((node) => (node as HTMLElement & { flightState: { playing: boolean; ended: boolean; position: number; active: boolean } }).flightState);
+  const flightButton = (page: Page, id: string) => page.locator('[data-testid="flight"]').locator(`[data-testid="${id}"]`);
+
+  test("draws at most once a frame, asks for one frame at a time, ends by itself, and then nothing draws", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await flightButton(page, "flight-play").click();
+    await expect.poll(async () => (await state(page)).playing).toBe(true);
+    const before = await usage(page);
+    const { drew, frames } = await measure(page, 20);
+    const after = await usage(page);
+    expect(drew).toBeGreaterThan(0);
+    expect(drew).toBeLessThanOrEqual(frames + 3);
+    expect(after.asked - before.asked).toBeLessThanOrEqual(after.pageFrames - before.pageFrames + 3);
+    await expect.poll(async () => (await state(page)).ended, { timeout: 180_000 }).toBe(true);
+    expect((await state(page)).playing).toBe(false);
+    await expectIdle(page);
+  });
+
+  test("paused it settles to nothing; out of sight and on a hidden tab it stands still and draws nothing", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await flightButton(page, "flight-play").click();
+    await expect.poll(async () => (await state(page)).position, { timeout: 60_000 }).toBeGreaterThan(0.5);
+    await page.evaluate(() => {
+      const spacer = document.createElement("div");
+      spacer.style.height = "6000px";
+      document.body.append(spacer);
+      window.scrollTo(0, 5000);
+    });
+    await settle(page, 1000);
+    const away = { at: (await state(page)).position, drew: await drawn(page) };
+    await settle(page, 2000);
+    expect((await state(page)).position).toBe(away.at);
+    expect(await drawn(page)).toBe(away.drew);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(async () => (await state(page)).position, { timeout: 60_000 }).toBeGreaterThan(away.at);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await settle(page, 500);
+    const hidden = { at: (await state(page)).position, drew: await drawn(page), asked: (await usage(page)).asked };
+    await settle(page, 2000);
+    expect((await state(page)).position).toBe(hidden.at);
+    expect(await drawn(page)).toBe(hidden.drew);
+    expect((await usage(page)).asked - hidden.asked).toBeLessThanOrEqual(1);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => false });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect.poll(async () => (await state(page)).position, { timeout: 60_000 }).toBeGreaterThan(hidden.at);
+    await flightButton(page, "flight-play").click();
+    expect((await state(page)).playing).toBe(false);
+    await expectIdle(page);
+  });
+
+  test("forty rounds in and out of a flight, scrubbing all the way, make nothing on the graphics card", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    const seek = (position: number) => rocket(page).evaluate((node, at) => (node as HTMLElement & { seek(p: number): void }).seek(at), position);
+    const leave = () => rocket(page).evaluate((node) => (node as HTMLElement & { endFlight(): void }).endFlight());
+    const round = async () => {
+      for (const at of [0, 3, 5.5, 8, 11, 14]) await seek(at);
+      await page.waitForTimeout(40);
+      await leave();
+      await page.waitForTimeout(40);
+    };
+    // the first rounds make the ground and each part's flames, which are kept on purpose, and which of them is drawn yet depends on the frames that came
+    for (let i = 0; i < 5; i++) await round();
+    await settle(page, 300);
+    const first = await usage(page);
+    for (let i = 0; i < 40; i++) await round();
+    await settle(page, 300);
+    const last = await usage(page);
+    expect(last.contexts).toBe(1);
+    expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+    expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+    expect(last.textures).toBeLessThanOrEqual(first.textures);
+    expect(last.programs).toBeLessThanOrEqual(first.programs);
+  });
+
+  test("changing variant in the middle of a flight ends it and gives back its flames", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    const round = async () => {
+      await rocket(page).evaluate((node) => (node as HTMLElement & { seek(p: number): void }).seek(5));
+      await expect.poll(() => canvasData(page, "phase")).toBe("boostback");
+      await press(page, "variant-v2");
+      await expect.poll(async () => (await state(page)).active).toBe(false);
+      await expect.poll(() => canvasData(page, "plumes")).toBe("0");
+      await press(page, "variant-v3");
+      await expect.poll(() => rocket(page).getAttribute("data-flight")).toBe("starship-flight-12");
+      await settle(page, 200);
+    };
+    const peak = { buffers: 0, arrays: 0 };
+    for (let i = 0; i < 2; i++) {
+      await round();
+      const now = await usage(page);
+      peak.buffers = Math.max(peak.buffers, now.buffers);
+      peak.arrays = Math.max(peak.arrays, now.arrays);
+    }
+    for (let i = 0; i < 4; i++) {
+      await round();
+      const now = await usage(page);
+      expect(now.contexts).toBe(1);
+      expect(now.buffers).toBeLessThanOrEqual(peak.buffers);
+      expect(now.arrays).toBeLessThanOrEqual(peak.arrays);
+    }
   });
 });
 

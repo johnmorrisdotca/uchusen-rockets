@@ -571,3 +571,112 @@ test("the React wrapper draws the element", async ({ page }) => {
   await expect(node).toHaveAttribute("data-look", "thick");
   expect(problems).toEqual([]);
 });
+test.describe("the flight", () => {
+  test.use({ reducedMotion: "no-preference" });
+  const flight = (page: Page) => page.locator('[data-testid="flight"]');
+  const part = (page: Page, id: string) => flight(page).locator(`[data-testid="${id}"]`);
+  const chart = (page: Page, slot: string) => flight(page).locator(`figure[data-slot="${slot}"]`);
+
+  test("steps through the published engines, plays, and goes back to the rocket", async ({ page, browserName }) => {
+    const problems = watch(page);
+    await page.goto(URL);
+    await stopTurn(page);
+    await expect(part(page, "flight-now")).toContainText("T-0:03, Ignition");
+    await expect(chart(page, "booster")).toHaveAttribute("data-burning", "33");
+    await expect(chart(page, "ship")).toHaveAttribute("data-burning", "0");
+    await expect(part(page, "flight-about")).toContainText("illustrative");
+    await expect(part(page, "flight-about").locator("a")).toHaveAttribute("href", /Starship_flight_test_12/);
+    for (let i = 0; i < 4; i++) await part(page, "flight-next").click();
+    await expect(part(page, "flight-now")).toContainText("T+2:24, Hot staging");
+    await expect(hero(page)).toHaveAttribute("data-phase", "hot-staging");
+    await expect(chart(page, "booster")).toHaveAttribute("data-burning", "5");
+    await expect(chart(page, "ship")).toHaveAttribute("data-burning", "6");
+    // the chart shows which: lit dots
+    expect(await chart(page, "booster").locator("circle[data-lit]").count()).toBe(5);
+    if (is3d(browserName)) {
+      await reach3d(page);
+      await expect.poll(() => canvasData(page, "phase")).toBe("hot-staging");
+      await expect.poll(() => canvasData(page, "plumes")).toBe("11");
+    } else await page.waitForTimeout(300);
+    // the slider moves it too
+    await part(page, "flight-range").evaluate((node) => {
+      (node as HTMLInputElement).value = "0.5";
+      node.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(part(page, "flight-now")).toContainText("Ignition");
+    await part(page, "flight-play").click();
+    await expect(part(page, "flight-play")).toHaveText("Pause");
+    await expect(flight(page)).toHaveAttribute("data-playing", "true");
+    await expect.poll(() => part(page, "flight-range").evaluate((node) => Number((node as HTMLInputElement).value)), { timeout: 60_000 }).toBeGreaterThan(0.6);
+    await part(page, "flight-play").click();
+    await expect(flight(page)).toHaveAttribute("data-playing", "false");
+    await part(page, "flight-leave").click();
+    await expect(hero(page)).toHaveAttribute("data-phase", "");
+    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes")).toBe("0");
+    expect(problems).toEqual([]);
+  });
+
+  test("each version has its own flight or says it has none, and choosing parts leaves the flight", async ({ page }) => {
+    await page.goto(URL);
+    await stopTurn(page);
+    await press(page, "variant-v4");
+    await expect(part(page, "flight-none")).toBeVisible();
+    await expect(part(page, "flight-play")).toBeHidden();
+    await press(page, "variant-v2");
+    await expect(part(page, "flight-about").locator("a")).toHaveAttribute("href", /Starship_flight_test_7/);
+    await press(page, "rocket-falcon-9");
+    await expect(part(page, "flight-about").locator("a")).toHaveAttribute("href", /timeline-for-falcon-9-launch-of-starlink/);
+    await expect(chart(page, "first-stage")).toHaveAttribute("data-burning", "9");
+    await part(page, "flight-next").click();
+    await expect(hero(page)).toHaveAttribute("data-phase", "liftoff");
+    await press(page, "show-apart");
+    await expect(hero(page)).toHaveAttribute("data-phase", "");
+    await press(page, "rocket-falcon-heavy");
+    await expect(chart(page, "centre")).toHaveAttribute("data-burning", "0");
+    await expect(chart(page, "side-left")).toHaveAttribute("data-burning", "9");
+    await press(page, "rocket-dragon");
+    await expect(part(page, "flight-none")).toBeVisible();
+  });
+
+  test("the drawing with no WebGL follows the flight too, and draws only the engines that burn", async ({ page }) => {
+    await page.goto(`${URL}element-check.html`);
+    const rocket = page.locator("uchusen-rocket").first();
+    await rocket.evaluate((node) => {
+      node.setAttribute("mode", "drawing");
+      node.setAttribute("rocket", "falcon-9");
+      node.setAttribute("variant", "block-5");
+    });
+    await expect(rocket).toHaveAttribute("data-flight", "falcon-9-starlink-2019");
+    const plumes = () => rocket.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
+    await rocket.evaluate((node) => node.setAttribute("phase", "liftoff"));
+    await expect.poll(plumes).toBe(9);
+    await rocket.evaluate((node) => node.setAttribute("phase", "landing-burn"));
+    await expect.poll(plumes).toBe(2);
+    await rocket.evaluate((node) => node.removeAttribute("phase"));
+    await expect.poll(plumes).toBe(0);
+    await rocket.evaluate((node) => (node as HTMLElement & { play(): void }).play());
+    await expect.poll(() => rocket.getAttribute("data-phase"), { timeout: 30_000 }).toBe("max-q");
+    await rocket.evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  });
+});
+
+test("under reduced motion the flight does not play and shows no flame, and the slider and the charts still work", async ({ page, browserName }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  const flight = page.locator('[data-testid="flight"]');
+  const part = (id: string) => flight.locator(`[data-testid="${id}"]`);
+  await expect(part("flight-play")).toBeDisabled();
+  await expect(part("flight-about")).toContainText("reduced motion");
+  await part("flight-next").click();
+  await expect(hero(page)).toHaveAttribute("data-phase", "liftoff");
+  await expect(flight.locator('figure[data-slot="booster"]')).toHaveAttribute("data-burning", "33");
+  await hero(page).evaluate((node) => (node as HTMLElement & { play(): void }).play());
+  expect(await hero(page).evaluate((node) => (node as HTMLElement & { flightState: { playing: boolean } }).flightState.playing)).toBe(false);
+  if (is3d(browserName)) {
+    await reach3d(page);
+    await expect.poll(() => canvasData(page, "phase")).toBe("liftoff");
+    expect(await canvasData(page, "plumes")).toBe("0");
+  }
+  expect(problems).toEqual([]);
+});
+

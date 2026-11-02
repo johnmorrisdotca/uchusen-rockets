@@ -1,6 +1,6 @@
 // A rocket's options as text: the attributes of `<uchusen-rocket>` and the query of `embed.html` are the same words, read by one function and written by another.
 
-export const OPTION_ATTRIBUTES = ["rocket", "variant", "show", "look", "view", "build", "mode", "spin", "way", "label", "assets", "engines"] as const;
+export const OPTION_ATTRIBUTES = ["rocket", "variant", "show", "look", "view", "build", "mode", "spin", "way", "label", "assets", "engines", "phase"] as const;
 
 export interface RocketOptions {
   rocket?: string;
@@ -17,6 +17,8 @@ export interface RocketOptions {
   assets?: string;
   /** `on` lights every engine that is showing. `off` leaves them dark. Left out, the element follows reduced motion. */
   engines?: string;
+  /** A phase of the rocket's flight, by its id: the engines that burn there. */
+  phase?: string;
 }
 
 const text = (value: unknown): string | undefined => (typeof value === "string" && value !== "" ? value : undefined);

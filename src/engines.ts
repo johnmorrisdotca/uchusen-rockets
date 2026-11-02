@@ -1,8 +1,9 @@
 // Which engines are alight. The bells are the ones the drawing already has; nothing here adds an engine or a size. The flame's length and its diamonds are a picture, not a measured flame. Pure.
 import type { Piece } from "./model/pieces.ts";
 
-/** How many exit-radii a drawn flame reaches. A picture, not a measured length. */
-export const PLUME_EXITS = 18;
+/** How many exit-radii a drawn flame reaches, and the most any reaches in metres. A picture, not a measured length. */
+export const PLUME_EXITS = 34;
+export const PLUME_MOST_M = 26;
 /** How many shock diamonds a flame shows near the ground. A picture. */
 export const PLUME_DIAMONDS = 6;
 /** With no one touching anything, a flame stops moving after this long and nothing draws: a lit rocket at rest costs the same as a dark one. */
@@ -11,7 +12,7 @@ export const FLAME_SETTLE_MS = 15_000;
 export const FLAME_GAP_MS = 33;
 
 export function plumeLength(exit: number): number {
-  return exit * PLUME_EXITS;
+  return Math.min(exit * PLUME_EXITS, PLUME_MOST_M);
 }
 
 /** `on` asks for them, and a reader who asked for reduced motion has them off whatever the page says. Anything else, or nothing, is off. */

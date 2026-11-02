@@ -12,6 +12,7 @@ uniform float uMoving;
 uniform float uAir;
 varying float vT;
 varying float vFace;
+varying float vHeight;
 void main() {
   float t = -position.y;
   float seed = float(gl_InstanceID) * 1.7;
@@ -21,6 +22,7 @@ void main() {
   float pinch = 1.0 - 0.16 * pow(0.5 + 0.5 * cos(t * 6.2832 * ${DIAMONDS}), 2.0);
   p.xz *= mix(pinch, 1.0 + 2.6 * t, uAir);
   p.y *= 1.0 + jitter;
+  vHeight = (modelMatrix * instanceMatrix * vec4(p, 1.0)).y;
   vec4 view = modelViewMatrix * instanceMatrix * vec4(p, 1.0);
   vec3 n = normalize(normalMatrix * mat3(instanceMatrix) * normal);
   vFace = abs(dot(n, normalize(-view.xyz)));
@@ -33,9 +35,13 @@ uniform vec3 uHot;
 uniform vec3 uCool;
 uniform float uAir;
 uniform float uLine;
+uniform float uFloor;
 varying float vT;
 varying float vFace;
+varying float vHeight;
 void main() {
+  // a flame stops at the ground
+  if (vHeight < uFloor) discard;
   float fade = 1.0 - smoothstep(0.5, 1.0, vT);
   float bands = pow(0.5 + 0.5 * cos(vT * 6.2832 * ${DIAMONDS}), 6.0) * (1.0 - vT) * (1.0 - uAir);
   float core = pow(vFace, 1.6);
@@ -59,10 +65,11 @@ void main() {
 const GLOW_FRAGMENT = /* glsl */ `
 uniform float uLine;
 uniform vec3 uHot;
+uniform float uGlow;
 varying vec2 vCorner;
 void main() {
   float d = length(vCorner);
-  float soft = smoothstep(1.0, 0.1, d) * 0.75;
+  float soft = smoothstep(1.0, 0.1, d) * uGlow;
   float ring = smoothstep(0.62, 0.7, d) * (1.0 - smoothstep(0.7, 0.78, d)) * 0.9;
   gl_FragColor = vec4(mix(uHot, vec3(0.91, 0.62, 0.26), uLine), mix(soft, ring, uLine));
 }`;
@@ -142,7 +149,7 @@ export class PartPlumes {
     this.key = key;
     burning.forEach((bell, i) => {
       this.flames.setMatrixAt(i, place.compose(at.set(bell.x, bell.y, bell.z), still, size.set(bell.exit, plumeLength(bell.exit), bell.exit)));
-      this.glows.setMatrixAt(i, place.compose(at.set(bell.x, bell.y, bell.z), still, size.setScalar(bell.exit * 2.6)));
+      this.glows.setMatrixAt(i, place.compose(at.set(bell.x, bell.y, bell.z), still, size.setScalar(bell.exit * 2.2)));
     });
     this.flames.count = burning.length;
     this.glows.count = burning.length;
@@ -170,6 +177,8 @@ export class PlumeKit {
     uMoving: { value: 0 },
     uAir: { value: 0 },
     uLine: { value: 1 },
+    uFloor: { value: -1e6 },
+    uGlow: { value: 0.75 },
     uHot: { value: new Color(FUEL_COLOURS.kerosene.hot) },
     uCool: { value: new Color(FUEL_COLOURS.kerosene.cool) },
   };
@@ -192,6 +201,16 @@ export class PlumeKit {
   /** 0 near the ground, 1 high up where a flame fans out. */
   setAir(air: number): void {
     this.uniforms.uAir.value = air;
+  }
+
+  /** Where the ground stands, for a flame to stop at. */
+  setFloor(y: number): void {
+    this.uniforms.uFloor.value = y;
+  }
+
+  /** Many glows overlap: together they add up to about one bright ring, not a white disc. */
+  setBurning(count: number): void {
+    this.uniforms.uGlow.value = 0.75 * Math.min(1, 5 / Math.max(1, count));
   }
 
   /** The flame's clock, in seconds, or `null` to hold it still. */

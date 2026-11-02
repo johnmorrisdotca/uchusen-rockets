@@ -79,4 +79,6 @@ body.embed .embed-credit { flex: none; width: 100%; box-sizing: border-box; marg
 @media (max-width: 820px) {
   .stage-row, .builder { grid-template-columns: minmax(0, 1fr); }
   .stage-box { position: static; }
+uchusen-flight { --uchusen-accent: var(--accent); }
 }
+  .flight-field { order: -1; }

@@ -45,6 +45,8 @@ import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
+import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
+import { GroundKit } from "./ground.ts";
 import { type Fuel, PartPlumes, PlumeKit } from "./plumes.ts";
 
 export interface ViewerOptions {
@@ -55,6 +57,8 @@ export interface ViewerOptions {
   assets: string;
   /** Tells the page which painted parts have come in. */
   onPainted: (state: string) => void;
+  /** Tells the page a timeline moved. */
+  onFlight?: () => void;
 }
 
 export interface Spin {
@@ -172,11 +176,18 @@ export class RocketViewer {
   private show = "together";
   private plumes: PlumeKit;
   private lit: { readonly [slot: string]: number } | "full" | null = null;
+  /** What was lit before a flight took over the engines. */
+  private litOutside: { readonly [slot: string]: number } | "full" | null = null;
   private burningNow = 0;
   /** A flame moves until then. */
   private flameUntil = 0;
   private flameDrawn = 0;
   private inTick = false;
+  private clockNow: FlightClock | null = null;
+  private flightOn = false;
+  private ground: GroundKit | null = null;
+  private flightKey = "";
+  private burnSlots: { view: PartView; y: number } | null = null;
   private generation = 0;
   private materialCache = new Map<string, Material>();
   private outlineMaterial: ShaderMaterial;
@@ -325,6 +336,11 @@ export class RocketViewer {
     this.setLook(look);
     this.plumes.setFuel(fuelOf(built));
     this.frameTo(angle ?? this.currentAngle(), false);
+    if (this.clockNow) {
+      this.flightKey = "";
+      this.flightOn = false;
+      this.setFlight(this.clockNow);
+    }
     this.canvas.dataset.ready = "true";
     this.canvas.dataset.parts = this.parts.map((part) => part.slot).join(" ");
     this.drivenDirty = this.driven !== null;
@@ -485,8 +501,18 @@ export class RocketViewer {
 
   /** Which engines burn: at full thrust every one that shows, a count for each part, or none. Nothing is made or freed by this after a part's first flame: only which of its flames are drawn changes. */
   setEngines(lit: { readonly [slot: string]: number } | "full" | null): void {
+    // a flight keeps its own, and what was asked for comes back after it
+    if (this.clockNow) {
+      this.litOutside = lit;
+      this.flightKey = "";
+      this.applyFlight();
+      this.wake();
+      return;
+    }
+    const framed = this.lit === "full";
     this.lit = lit;
     this.relight();
+    if (framed !== (lit === "full") && this.built && !this.pose) this.reframe();
     this.wake();
   }
 
@@ -510,7 +536,7 @@ export class RocketViewer {
       for (const bell of bells) counts.set(bell.slot, (counts.get(bell.slot) ?? 0) + 1);
     } else if (this.lit) for (const [slot, count] of Object.entries(this.lit)) counts.set(slot, count);
     let burning = 0;
-    let glowAt: Vector3 | null = null;
+    let lowest: { view: PartView; y: number } | null = null;
     for (const view of this.parts) {
       const count = counts.get(view.slot) ?? 0;
       if (count > 0 && !view.plumes) {
@@ -523,13 +549,127 @@ export class RocketViewer {
       const fired = pickBells(view.plumes.bells, count);
       view.plumes.light(fired);
       burning += fired.length;
-      if (fired.length > 0 && !glowAt) glowAt = new Vector3(0, fired[0].y - 1, 0).add(view.holder.position);
+      if (fired.length > 0 && !lowest) lowest = { view, y: fired[0].y - 1 };
     }
     this.burningNow = burning;
+    this.burnSlots = lowest;
+    this.plumes.setBurning(burning);
     this.plumes.light.intensity = burning === 0 || this.look !== "painted" ? 0 : Math.min(900, 120 + burning * 40);
-    if (glowAt) this.plumes.light.position.copy(glowAt);
+    this.placeGlow();
     this.canvas.dataset.engines = burning > 0 ? "on" : "off";
     this.canvas.dataset.plumes = String(burning);
+  }
+
+  /** The hull's glow stands under the lowest part that burns, wherever that part has got to. */
+  private placeGlow(): void {
+    const lowest = this.burnSlots;
+    if (!lowest) return;
+    lowest.view.holder.updateMatrix();
+    this.plumes.light.position.set(0, lowest.y, 0).applyMatrix4(lowest.view.holder.matrix);
+  }
+
+  /** Starts, moves or ends a flight. While one is on, the parts stand where its timeline says, the engines are its own and the camera holds all of it. Under reduced motion it is the same, with no flames. */
+  setFlight(clock: FlightClock | null): void {
+    this.clockNow = clock;
+    if (!this.built) return;
+    const before = this.flightOn;
+    this.flightOn = clock !== null;
+    if (!clock) {
+      if (!before) return;
+      this.flightKey = "";
+      if (this.ground) this.ground.group.visible = false;
+      const places = this.built.placesOf(this.show);
+      for (const part of this.parts) {
+        const place = places.find((one) => one.slot === part.slot);
+        part.holder.position.set(...(place?.at ?? [0, 0, 0]));
+        part.holder.rotation.set(0, 0, 0);
+        part.holder.visible = place?.shown ?? false;
+      }
+      this.plumes.setAir(0);
+      this.plumes.setFloor(-1e6);
+      this.reframe();
+      this.lit = this.litOutside;
+      this.relight();
+      this.wake();
+      return;
+    }
+    if (!before) {
+      this.litOutside = this.lit;
+      this.pose = null;
+      if (!this.ground) {
+        this.ground = new GroundKit();
+        this.scene.add(this.ground.group);
+      }
+      this.ground.fit(this.built.boundsOf("together").max[0] * 2.4 + 4);
+      this.ground.group.visible = true;
+      this.reframe();
+    }
+    this.applyFlight();
+    this.wake();
+  }
+
+  /** After a flight starts or ends the camera holds the new bounds, keeping its angle. */
+  private reframe(): void {
+    if (this.driven) this.applyDriven();
+    else this.applyFraming(this.framingFor(this.currentAngle()));
+  }
+
+  /** What is showing, with the flames when they are lit, so a flame is never cut off at the foot of the picture. */
+  private litBounds() {
+    const built = this.built as Built;
+    return this.lit === "full" ? built.boundsOf(this.show, true) : built.boundsOf(this.show);
+  }
+
+  /** What the picture must hold: all of a flight while one is on. */
+  private boundsNow() {
+    if (!this.built) throw new Error("nothing is loaded");
+    if (!this.clockNow) return this.litBounds();
+    const { height, parts } = this.flightParts();
+    const { min, max } = flightBounds(this.clockNow.flight, parts, height);
+    return { min, max };
+  }
+
+  private flightParts() {
+    const built = this.built as Built;
+    const places = built.placesOf("together");
+    const height = built.boundsOf("together").max[1];
+    return {
+      height,
+      parts: built.parts.map((part) => {
+        const at = places.find((place) => place.slot === part.slot)?.at ?? [0, 0, 0];
+        return { slot: part.slot, baseY: at[1], height: part.record.height, radius: Math.max(part.record.diameter / 2, Math.abs(at[0]) + part.record.diameter / 2) };
+      }),
+    };
+  }
+
+  /** Puts everything where the timeline says now. */
+  private applyFlight(): void {
+    const clock = this.clockNow;
+    if (!clock || !this.built) return;
+    const { height, parts } = this.flightParts();
+    const frame: FlightFrame = frameAt(clock.flight, clock.position, parts, height);
+    const places = this.built.placesOf("together");
+    for (const part of this.parts) {
+      const pose = frame.poses[part.slot];
+      const place = places.find((one) => one.slot === part.slot);
+      if (!pose || !place) continue;
+      const turn = MathUtils.degToRad(pose.pitch);
+      const middle = (parts.find((one) => one.slot === part.slot)?.height ?? 0) / 2;
+      part.holder.visible = !pose.gone;
+      part.holder.rotation.set(0, 0, turn);
+      part.holder.position.set(place.at[0] + pose.dx + Math.sin(turn) * middle, place.at[1] + pose.dy + middle - Math.cos(turn) * middle, place.at[2]);
+    }
+    this.plumes.setAir(frame.air);
+    this.plumes.setFloor(frame.groundY);
+    this.ground?.set(frame.groundY, this.options.reducedMotion ? 0 : frame.smoke, performance.now() / 1000);
+    const key = `${clock.flight.id}/${frame.index}/${this.options.reducedMotion}`;
+    if (key !== this.flightKey) {
+      this.flightKey = key;
+      this.lit = this.options.reducedMotion ? null : frame.burns;
+      this.relight();
+      this.canvas.dataset.phase = frame.phase.id;
+    } else this.placeGlow();
+    this.needsDraw = true;
   }
 
   private freePlumes(): void {
@@ -601,7 +741,7 @@ export class RocketViewer {
 
   /** Together, apart, or one part alone: an animated move, or a cut under reduced motion. */
   setShow(show: string): void {
-    if (!this.built || show === this.show) return;
+    if (!this.built || show === this.show || this.clockNow) return;
     this.show = show;
     for (const part of this.parts) if (part.model) this.showCode(part, this.look === "painted");
     const places = this.built.placesOf(show);
@@ -646,7 +786,7 @@ export class RocketViewer {
 
   private framingFor(angle: Angle) {
     if (!this.built) throw new Error("nothing is loaded");
-    const { min, max } = this.built.boundsOf(this.show);
+    const { min, max } = this.boundsNow();
     return frameFor(min, max, angle, this.camera.aspect);
   }
 
@@ -816,6 +956,7 @@ export class RocketViewer {
     this.controls.dispose();
     this.disposeParts();
     this.plumes.dispose();
+    this.ground?.dispose();
     this.glow?.geometry.dispose();
     (this.glow?.material as Material | undefined)?.dispose();
     for (const material of this.materialCache.values()) material.dispose();
@@ -941,7 +1082,13 @@ export class RocketViewer {
       }
     }
     if (!ambient) this.controls.autoRotate = false;
-    const flaming = this.burningNow > 0 && !this.options.reducedMotion && performance.now() < this.flameUntil;
+    const flying = this.clockNow?.playing ?? false;
+    if (flying && this.clockNow) {
+      this.clockNow.advance(dt);
+      this.applyFlight();
+      this.options.onFlight?.();
+    }
+    const flaming = this.burningNow > 0 && !this.options.reducedMotion && (flying || performance.now() < this.flameUntil);
     if (flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
       this.flameDrawn = now;
       this.plumes.setTime(now / 1000);
@@ -962,10 +1109,10 @@ export class RocketViewer {
         this.canvas.dataset.zoom = this.driven.zoom.toFixed(2);
         this.canvas.dataset.pan = `${Math.round(this.driven.panX)},${Math.round(this.driven.panY)}`;
       }
-      if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0;
+      if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 

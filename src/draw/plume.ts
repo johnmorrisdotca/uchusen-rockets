@@ -1,12 +1,12 @@
 // A flame on a drawing: a few strokes in the line looks, a filled cone in the painted look, and a glow at the mouth. The same bells as the mesh. No three.js.
 import type { Camera } from "./svg.ts";
 import type { Vec3 } from "../framing.ts";
-import { plumeLength, type Bell } from "../engines.ts";
+import { PLUME_DIAMONDS, plumeLength, type Bell } from "../engines.ts";
 import type { LookName } from "../looks.ts";
 
 type Point = [number, number];
 
-const n = (v: number) => (Math.round(v * 10) / 10).toString();
+const n = (v: number) => (Math.round(v * 100) / 100).toString();
 
 function hull(points: Point[]): Point[] {
   const p = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
@@ -56,7 +56,23 @@ export function plumeMarkup(bells: readonly Bell[], at: Vec3, cam: Camera, look:
       : "";
     const flame = shape.length >= 3 ? (painted ? `<path data-plume="1" d="${pathOf(shape)}" fill="url(#${id})" stroke="none"/>` : `<path data-plume="1" d="${pathOf(shape)}" fill="none" stroke="#e7a24a" stroke-width="${stroke}"/><path d="M${n(mouthPoint[0])} ${n(mouthPoint[1])}L${n(tipPoint[0])} ${n(tipPoint[1])}" fill="none" stroke="#ffd7a1" stroke-width="${stroke * 0.6}"/>`) : "";
     const ring = painted ? `<ellipse data-glow="1" cx="${n(cx)}" cy="${n(cy)}" rx="${n(rx * 1.35)}" ry="${n(ry * 1.35)}" fill="url(#${glow})"/>` : `<ellipse data-glow="1" cx="${n(cx)}" cy="${n(cy)}" rx="${n(rx * 1.2)}" ry="${n(ry * 1.2)}" fill="none" stroke="#e7a24a" stroke-width="${stroke}"/>`;
-    if (flame !== "") parts.push(`<g>${defs}${ring}${flame}</g>`);
+    // the first few shock diamonds, as small rings down the flame: a picture
+    let diamonds = "";
+    for (let k = 1; k <= 3; k++) {
+      const along = k / PLUME_DIAMONDS;
+      const [dx, dy] = cam.project([mouth[0], mouth[1] - plumeLength(bell.exit) * along, mouth[2]]);
+      const size = n(Math.max(0.9, rx * 0.5 * (1 - along)));
+      diamonds += painted ? `<ellipse data-diamond="1" cx="${n(dx)}" cy="${n(dy)}" rx="${size}" ry="${size}" fill="#fff4d2" fill-opacity="0.7"/>` : `<ellipse data-diamond="1" cx="${n(dx)}" cy="${n(dy)}" rx="${size}" ry="${size}" fill="none" stroke="#e7a24a" stroke-width="${stroke * 0.6}"/>`;
+    }
+    if (flame !== "") parts.push(`<g>${defs}${ring}${flame}${diamonds}</g>`);
   });
   return parts.join("");
+}
+
+/** The engines of a part seen from below, each in its own place, the burning ones filled: `engine by engine`. Its words are for a screen reader. */
+export function engineChart(bells: readonly Bell[], burning: readonly Bell[], label: string): string {
+  const reach = Math.max(1, ...bells.map((bell) => Math.hypot(bell.x, bell.z) + bell.exit)) * 1.06;
+  const lit = new Set(burning);
+  const dots = bells.map((bell) => `<circle cx="${n(bell.x)}" cy="${n(-bell.z)}" r="${n(bell.exit)}" ${lit.has(bell) ? 'data-lit="1" fill="#ffb25c" stroke="#fff1c4"' : 'fill="none" stroke="currentColor"'} stroke-width="${n(reach * 0.03)}"/>`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${n(-reach)} ${n(-reach)} ${n(reach * 2)} ${n(reach * 2)}" role="img" aria-label="${label.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")}">${dots.join("")}</svg>`;
 }
