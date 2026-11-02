@@ -10,7 +10,7 @@ Uchūsen means "spaceship". Each rocket comes in every variant a source document
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
 </p>
 
-<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/embed.md">Use one on your site</a> · <a href="./docs/assets.md">Assets</a></p>
+<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/flight.md">Lit engines and flights</a> · <a href="./docs/embed.md">Use one on your site</a> · <a href="./docs/assets.md">Assets</a></p>
 
 <p align="center"><img alt="Block 3 of the rocket as a painted 3D view, stainless steel with black tiles, beside its controls and its sizes, each with a source." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg" width="820"></p>
 
@@ -144,9 +144,9 @@ rocket.svg({ look: "thick", view: "below", show: "booster" }).startsWith("<svg")
 
 | Entry | What | Needs |
 | --- | --- | --- |
-| `@johnmorrisdotca/uchusen-rockets` | The rockets and variants (`ROCKETS`, `variantOf`, `SOURCES`), the parts (`PART_ENTRIES`), the fit check (`check`), the camera rule, the looks, the credits (`MODEL_CREDITS`), and `embedCode` | Nothing |
+| `@johnmorrisdotca/uchusen-rockets` | The rockets and variants (`ROCKETS`, `variantOf`, `SOURCES`), the parts (`PART_ENTRIES`), the fit check (`check`), the builder's rows (`builderState`), flights (`flightOf`, `FLIGHTS`) and which engines burn (`pickBells`), the camera rule, the looks, the credits (`MODEL_CREDITS`), and `embedCode` | Nothing |
 | `.../build` | `build(description)`, `buildPart(id)`, `lineupSvg`: one mesh and one drawing, in Node or a browser | Nothing |
-| `.../element` | `<uchusen-rocket>` and `<uchusen-lineup>`: load `three` only when a 3D view is wanted, and a painted model only when the painted look is | `three` for 3D |
+| `.../element` | `<uchusen-rocket>`, `<uchusen-lineup>` and `<uchusen-flight>`: load `three` only when a 3D view is wanted, and a painted model only when the painted look is | `three` for 3D |
 | `.../react` | A thin `<UchusenRocket>` wrapper | `react` |
 | `.../assets/*` | Ready files: `starship-v3.glb`, `starship-v3.svg`, `starship-v3-booster.thick.svg`, `parts/raptor-vacuum.glb`, `models/starship-v3-ship.glb` | Nothing |
 
