@@ -6,6 +6,8 @@ import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
 import { SATURN_V_VARIANTS } from "./data/saturn.ts";
 import { SHUTTLE_VARIANTS } from "./data/shuttle.ts";
 import { SLS_VARIANTS } from "./data/sls.ts";
+import { NEW_GLENN_VARIANTS } from "./data/newglenn.ts";
+import { ELECTRON_VARIANTS } from "./data/electron.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -41,6 +43,8 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "saturn-v": { id: "saturn-v", name: "Saturn V", status: "built", variants: SATURN_V_VARIANTS, defaultVariant: "saturn-v" },
   "space-shuttle": { id: "space-shuttle", name: "Space Shuttle", status: "built", variants: SHUTTLE_VARIANTS, defaultVariant: "stack" },
   "sls": { id: "sls", name: "Space Launch System", status: "built", variants: SLS_VARIANTS, defaultVariant: "block-1" },
+  "new-glenn": { id: "new-glenn", name: "New Glenn", status: "built", variants: NEW_GLENN_VARIANTS, defaultVariant: "7x2" },
+  "electron": { id: "electron", name: "Electron", status: "built", variants: ELECTRON_VARIANTS, defaultVariant: "electron" },
 };
 
 export const PLANNED_ROCKETS: readonly PlannedRocket[] = [];

@@ -71,6 +71,8 @@ test("the Space Shuttle stands as sourced: the tank's top at the stack's height,
 
 const WHOLE_HEIGHTS: readonly (readonly [string, string, number])[] = [
   ["sls", "block-1", 98.15],
+  ["new-glenn", "7x2", 98],
+  ["electron", "electron", 18],
 ];
 
 test("each rocket's parts add up to its sourced whole, and its engines are the sourced count", () => {
@@ -81,6 +83,9 @@ test("each rocket's parts add up to its sourced whole, and its engines are the s
   assert.equal(bells("sls-block-1-first-stage"), 4);
   assert.equal(partEntry("sls-block-1-first-stage")?.record.height, 64.6);
   assert.equal(partEntry("sls-block-1-srb-left")?.record.height, 53.95);
+  assert.equal(bells("new-glenn-7x2-first-stage"), 7);
+  assert.equal(bells("electron-electron-first-stage"), 9);
+  assert.equal(bells("electron-electron-second-stage"), 1);
 });
 
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {

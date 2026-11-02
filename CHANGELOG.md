@@ -7,6 +7,8 @@
 - Saturn V with the Apollo spacecraft, drawn by this package's code from sourced lengths and widths: 7 parts, 4,658 triangles and 143 KB, well under the largest code-made mesh (Starship Block 4, 17,220 triangles and 508 KB).
 - The Space Shuttle, stacked with its external tank and two boosters, drawn by this package's code from each part's own article: 5,554 triangles and 156 KB.
 - The Space Launch System, Block 1 with Orion, drawn by this package's code: 5,172 triangles and 155 KB.
+- New Glenn 7×2 (2,732 triangles, 84 KB) and Electron (2,812 triangles, 81 KB), drawn by this package's code.
+- Other makers' rockets share one scale in `<uchusen-lineup>`, and each lists its own sources.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 
 ## [0.2.2]

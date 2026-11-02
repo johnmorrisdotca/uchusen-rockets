@@ -102,6 +102,22 @@ No source read here says where the parts stand against each other, so the gaps a
 
 No source read here gives the upper stage or the abort tower a length, so they share what the whole leaves.
 
+## New Glenn
+
+| Variant | Whole | First stage | Second stage | Across | First flew |
+| --- | --- | --- | --- | --- | --- |
+| `7x2` | 98 m | 57.5 m | 23.4 m | 7 m | 2025-01-16 |
+
+The fairing has no length in a source read here, so it is what the whole leaves. The 9×4 is not listed: its article gives it only as about 400 feet, with no parts.
+
+## Electron
+
+| Variant | Whole | First stage | Second stage | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `electron` | 18 m | 12.1 m | 2.4 m | 2.5 m | 1.2 m | 2017-05-25 |
+
+The parts add to 17 m, and no source read here says what the other metre is: it is drawn as an interstage, with no size of its own.
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape.
