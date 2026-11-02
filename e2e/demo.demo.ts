@@ -485,21 +485,38 @@ test("the drawing mode never loads three.js, and follows look, show and view", a
   expect(problems).toEqual([]);
 });
 
-test("the copy panel matches the rocket on screen, and the embed page draws its address", async ({ page, context, browserName }) => {
+test("the copy panel matches the rocket on screen, in every form, and the embed page draws its address", async ({ page, context, browserName }) => {
   if (browserName === "chromium") await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const problems = watch(page);
   await page.goto(URL);
   const code = page.locator('[data-testid="embed-code"]');
   await expect(code).toContainText("uchusen-rocket");
   await expect(code).toContainText('rocket="starship"');
+  await expect(code).toContainText("importmap");
   await expect(code).not.toContainText("Clarence365");
+  await expect(page.locator('[data-testid="embed-credit"]')).toBeHidden();
   await press(page, "look-painted");
   await expect(code).toContainText("Clarence365");
   await expect(code).toContainText("creativecommons.org/licenses/by/4.0");
+  await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Clarence365");
   await press(page, "tab-svg");
   await expect(code).toContainText("<svg");
   await page.locator('[data-testid="embed-copy"]').click();
   await expect(page.locator("#embed-status")).toHaveText("Copied");
+  await press(page, "tab-iframe");
+  await expect(code).toContainText("embed.html?");
+  await press(page, "look-line");
+  await press(page, "tab-link");
+  await expect(code).toContainText("dist/assets/starship-v3.svg");
+  // the link's file is one the site has too
+  const response = await page.request.get(`${URL}assets/starship-v3.svg`);
+  expect(response.status()).toBe(200);
+  // a phase of the flight goes along
+  await page.locator('[data-testid="flight"]').locator('[data-testid="flight-next"]').click();
+  await press(page, "tab-iframe");
+  await expect(code).toContainText("phase=liftoff");
+  await expect(page.locator('[data-testid="embed-open"]')).toHaveAttribute("href", /embed\.html\?.*phase=liftoff/);
+  // and the embed page draws what an address says
   await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&look=line&show=apart`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-look", "line");
@@ -509,6 +526,58 @@ test("the copy panel matches the rocket on screen, and the embed page draws its 
   await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Clarence365");
   await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Ship");
   await expect(page.locator('[data-testid="embed-credit"]')).not.toContainText("Super Heavy");
+  await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&flight=1&phase=liftoff`);
+  await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-phase", "liftoff");
+  await expect(page.locator('[data-testid="flight"]').locator('[data-testid="flight-now"]')).toContainText("Liftoff");
+  expect(problems).toEqual([]);
+});
+
+test("Save SVG and Save PNG give files of what is on the screen", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "One browser's downloads are enough");
+  const problems = watch(page);
+  await page.goto(URL);
+  const save = async (id: string) => {
+    const [download] = await Promise.all([page.waitForEvent("download"), press(page, id)]);
+    return download;
+  };
+  const svg = await save("embed-svg");
+  expect(svg.suggestedFilename()).toBe("uchusen-starship-v3-line.svg");
+  const png = await save("embed-png");
+  expect(png.suggestedFilename()).toBe("uchusen-starship-v3-line.png");
+  const path = await png.path();
+  const { readFileSync } = await import("node:fs");
+  const bytes = readFileSync(path);
+  // a real PNG, at twice the picture's size
+  expect(bytes.subarray(1, 4).toString()).toBe("PNG");
+  expect(bytes.readUInt32BE(16)).toBe(960);
+  expect(problems).toEqual([]);
+});
+
+test("the CDN snippet alone works on a stranger's page, with the 3D view, a painted model and its credit", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+  test.setTimeout(180_000);
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { embedCode } = await import("../src/embed.ts");
+  const snippet = embedCode({ rocket: "falcon-9", variant: "block-5", look: "painted", spin: "off" }, "element");
+  const problems = watch(page);
+  const TYPES: Record<string, string> = { js: "text/javascript", glb: "model/gltf-binary", svg: "image/svg+xml" };
+  // jsDelivr, answered from this checkout: the package's dist and three.js at the version the snippet names
+  await page.route("https://cdn.jsdelivr.net/npm/**", (route) => {
+    const path = new globalThis.URL(route.request().url()).pathname.replace(/^\/npm\//, "");
+    const file = path.startsWith("three@") ? join("node_modules/three", path.slice(path.indexOf("/") + 1)) : join(".", path.slice(path.indexOf("/", path.indexOf("/") + 1) + 1));
+    try {
+      return route.fulfill({ body: readFileSync(file), headers: { "content-type": TYPES[file.split(".").pop() ?? ""] ?? "application/octet-stream", "access-control-allow-origin": "*" } });
+    } catch {
+      return route.fulfill({ status: 404, body: `no ${file}`, headers: { "access-control-allow-origin": "*" } });
+    }
+  });
+  await page.route("https://stranger.example/**", (route) => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><body style="background:#123">${snippet}</body></html>` }));
+  await page.goto("https://stranger.example/page.html");
+  const rocket = page.locator("uchusen-rocket");
+  await expect(rocket).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await expect(rocket).toHaveAttribute("data-painted", /^(model|mixed)$/, { timeout: 90_000 });
+  await expect(page.locator("body")).toContainText("Stanley Creative");
   expect(problems).toEqual([]);
 });
 
@@ -548,29 +617,6 @@ test.describe("the engines", () => {
   });
 });
 
-test("under reduced motion the engines stay off, and the page says why", async ({ page, browserName }) => {
-  const problems = watch(page);
-  await page.goto(URL);
-  await press(page, "engines-on");
-  await expect(hero(page)).toHaveAttribute("data-engines", "off");
-  await expect(page.locator('[data-testid="engines-note"]')).toContainText("reduced motion");
-  const plumes = await hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
-  expect(plumes).toBe(0);
-  if (is3d(browserName)) {
-    await reach3d(page);
-    await expect.poll(() => canvasData(page, "plumes")).toBe("0");
-  }
-  expect(problems).toEqual([]);
-});
-
-test("the React wrapper draws the element", async ({ page }) => {
-  const problems = watch(page);
-  await page.goto(`${URL}react-check.html`);
-  const node = page.locator("#react-rocket");
-  await expect(node).toHaveAttribute("data-show", "ship");
-  await expect(node).toHaveAttribute("data-look", "thick");
-  expect(problems).toEqual([]);
-});
 test.describe("the flight", () => {
   test.use({ reducedMotion: "no-preference" });
   const flight = (page: Page) => page.locator('[data-testid="flight"]');
@@ -680,3 +726,26 @@ test("under reduced motion the flight does not play and shows no flame, and the 
   expect(problems).toEqual([]);
 });
 
+test("under reduced motion the engines stay off, and the page says why", async ({ page, browserName }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  await press(page, "engines-on");
+  await expect(hero(page)).toHaveAttribute("data-engines", "off");
+  await expect(page.locator('[data-testid="engines-note"]')).toContainText("reduced motion");
+  const plumes = await hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
+  expect(plumes).toBe(0);
+  if (is3d(browserName)) {
+    await reach3d(page);
+    await expect.poll(() => canvasData(page, "plumes")).toBe("0");
+  }
+  expect(problems).toEqual([]);
+});
+
+test("the React wrapper draws the element", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(`${URL}react-check.html`);
+  const node = page.locator("#react-rocket");
+  await expect(node).toHaveAttribute("data-show", "ship");
+  await expect(node).toHaveAttribute("data-look", "thick");
+  expect(problems).toEqual([]);
+});

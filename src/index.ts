@@ -30,5 +30,5 @@ export { bellsOf, enginesWanted, FLAME_SETTLE_MS, pickBells, plumeLength, ringsO
 export type { Bell } from "./engines.ts";
 export { OPTION_ATTRIBUTES, attributesFromOptions, optionsFromAttributes, rocketFromParams, rocketToParams } from "./attrs.ts";
 export type { RocketOptions } from "./attrs.ts";
-export { CDN, EMBED_KINDS, SITE, embedCode, paintedCredit } from "./embed.ts";
+export { assetPathOf, CDN, EMBED_KINDS, SITE, THREE_VERSION, embedCode, embedNote, paintedCredit } from "./embed.ts";
 export type { EmbedKind, EmbedSettings } from "./embed.ts";

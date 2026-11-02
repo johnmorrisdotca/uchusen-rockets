@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { attributesFromOptions, embedCode, EMBED_KINDS, optionsFromAttributes, paintedCredit, rocketFromParams, rocketToParams } from "../src/index.ts";
+import { assetPathOf, attributesFromOptions, embedCode, EMBED_KINDS, embedNote, optionsFromAttributes, paintedCredit, rocketFromParams, ROCKETS, rocketToParams, THREE_VERSION } from "../src/index.ts";
+import { readFileSync } from "node:fs";
+import { LOOK_NAMES } from "../src/looks.ts";
 import { build } from "../src/build/index.ts";
 
 const OPTIONS = { rocket: "falcon-9", variant: "block-5", show: "apart", look: "thick", view: "below", spin: "off", label: "A Falcon 9" };
@@ -18,7 +20,7 @@ test("options written as a query and read back draw the same rocket", () => {
 });
 
 test("every way of putting a rocket in a page gives text that holds it", () => {
-  assert.deepEqual([...EMBED_KINDS], ["element", "iframe", "module", "svg", "data"]);
+  assert.deepEqual([...EMBED_KINDS], ["element", "iframe", "module", "svg", "data", "link"]);
   const element = embedCode(OPTIONS, "element");
   assert.match(element, /<script type="module" src="[^"]*element\.js"><\/script>/);
   assert.match(element, /<uchusen-rocket\n {2}rocket="falcon-9"/);
@@ -72,4 +74,41 @@ test("an attribute value that holds markup is escaped, and a bad rocket does not
   const svg = embedCode({ rocket: "no-such-rocket", look: "painted" }, "svg");
   assert.match(svg, /^<svg /);
   assert.equal(paintedCredit({ rocket: "no-such-rocket", look: "painted" }), "");
+});
+
+test("the CDN snippet names three.js at the version this package is tested with", () => {
+  const code = embedCode({ rocket: "starship", variant: "v3" }, "element");
+  const scripts = code.indexOf('type="importmap"');
+  assert.ok(scripts >= 0 && scripts < code.indexOf('type="module"'), "the import map comes first");
+  const { devDependencies } = JSON.parse(readFileSync("package.json", "utf8")) as { devDependencies: Record<string, string> };
+  assert.equal(THREE_VERSION, devDependencies.three);
+  assert.ok(code.includes(`three@${THREE_VERSION}/build/three.module.js`));
+  assert.match(code, /"three\/addons\/"/);
+});
+
+test("the image link names a file make-assets writes, for every variant, part and look", () => {
+  for (const rocket of Object.values(ROCKETS))
+    for (const variant of rocket.variants) {
+      const built = build({ rocket: rocket.id, variant: variant.id });
+      for (const show of built.shows)
+        for (const look of LOOK_NAMES) {
+          const stem = `${rocket.id}-${variant.id}${show === built.shows[0] ? "" : `-${show}`}${look === "line" ? "" : `.${look}`}.svg`;
+          assert.equal(assetPathOf({ rocket: rocket.id, variant: variant.id, show, look }), stem);
+        }
+    }
+  assert.equal(assetPathOf({ rocket: "no-such-rocket" }), null);
+  assert.equal(assetPathOf({ build: JSON.stringify({ rocket: "starship", variant: "v3", parts: { ship: "starship-v2-ship" } }) }), null);
+  // a custom build has no file: the link still gives a picture
+  assert.match(embedCode({ build: JSON.stringify({ rocket: "starship", variant: "v3", parts: { ship: "starship-v2-ship" } }) }, "link"), /src="data:image\/svg\+xml/);
+  assert.match(embedCode({ rocket: "starship", variant: "v3", look: "painted" }, "link"), /Clarence365/);
+  assert.match(embedNote("link", { view: "side" }), /three-quarter/);
+  // a hostile label is only text
+  assert.doesNotMatch(embedCode({ rocket: "starship", label: '"><img onerror=1>' }, "link"), /<img onerror/);
+});
+
+test("a phase goes into the iframe's address and the element's attributes, and the drawing shows its engines", () => {
+  const options = { rocket: "starship", variant: "v3", phase: "hot-staging" };
+  assert.match(embedCode(options, "iframe"), /phase=hot-staging/);
+  assert.match(embedCode(options, "element"), /phase="hot-staging"/);
+  assert.equal(rocketFromParams(rocketToParams(options)).phase, "hot-staging");
 });

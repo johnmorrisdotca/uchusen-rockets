@@ -481,9 +481,14 @@ test.describe("a played timeline", () => {
       await leave();
       await page.waitForTimeout(40);
     };
-    // the first rounds make the ground and each part's flames, which are kept on purpose, and which of them is drawn yet depends on the frames that came
-    for (let i = 0; i < 5; i++) await round();
-    await settle(page, 300);
+    // the first round, drawn at every step, makes the ground and each part's flames, which are kept on purpose
+    for (const at of [0, 3, 5.5, 8, 11, 14]) {
+      const mark = await drawn(page);
+      await seek(at);
+      await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(mark);
+    }
+    await leave();
+    await settle(page, 500);
     const first = await usage(page);
     for (let i = 0; i < 40; i++) await round();
     await settle(page, 300);
@@ -574,6 +579,30 @@ test.describe("the embed page", () => {
     expect(last.buffers).toBeLessThanOrEqual(first.buffers);
     expect(last.arrays).toBeLessThanOrEqual(first.arrays);
     expect(last.textures).toBeLessThanOrEqual(first.textures);
+  });
+
+  test("with its flight's controls it plays once a frame, ends, and then nothing draws", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&look=line&flight=1`);
+    await expect(rocket(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+    const before = await usage(page);
+    const start = await drew(page);
+    await page.locator('[data-testid="flight"]').locator('[data-testid="flight-play"]').click();
+    await expect.poll(async () => (await usage(page)).pageFrames - before.pageFrames, { timeout: 90_000 }).toBeGreaterThanOrEqual(20);
+    const after = await usage(page);
+    const count = (await drew(page)) - start;
+    expect(count).toBeGreaterThan(0);
+    expect(count).toBeLessThanOrEqual(after.pageFrames - before.pageFrames + 3);
+    expect(after.asked - before.asked).toBeLessThanOrEqual(after.pageFrames - before.pageFrames + 3);
+    await expect(page.locator('[data-testid="flight"]')).toHaveAttribute("data-playing", "false", { timeout: 180_000 });
+    await expect
+      .poll(async () => {
+        const mark = await drew(page);
+        await settle(page, 1000);
+        return (await drew(page)) - mark;
+      }, { timeout: 90_000 })
+      .toBe(0);
+    expect((await usage(page)).contexts).toBe(1);
   });
 
   test("in a page that scrolls it away it draws nothing", async ({ page }) => {

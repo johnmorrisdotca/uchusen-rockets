@@ -43,7 +43,7 @@ That is all a page needs with a bundler. The drawing shows at once; when the ele
 
 ## Put one on your own site
 
-The drawings are there to be used. The demo copies the code for the rocket on the screen, in five ways: the element, an iframe of the embed page (for a site that cannot run script), a module, the SVG, and a data address for an image. [docs/embed.md](docs/embed.md) has each one.
+The drawings are there to be used. The demo copies the code for the rocket on the screen, in six ways: a CDN script and the element, an iframe of the embed page (for a site that cannot run script), a module, the SVG, a data address, and a link to the picture in the package. It saves an SVG or a PNG too. [docs/embed.md](docs/embed.md) has each one.
 
 A painted rocket's CC BY credit is written into every one of those, from the parts that are showing. A line drawing does not carry it, and neither does a variant this package paints itself.
 

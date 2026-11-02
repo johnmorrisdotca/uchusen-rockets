@@ -1,6 +1,8 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { check, type Description, embedCode, EMBED_KINDS, type EmbedKind, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { check, type Description, embedCode, EMBED_KINDS, embedNote, type EmbedKind, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
+import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 
@@ -156,13 +158,14 @@ enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false)), chip("
 press(enginesBox, "engines-off");
 
 // ------------------------------------------------------------- copy the rocket that is on screen
+const EMBED_WORDS: Readonly<Record<EmbedKind, string>> = { element: "CDN script", iframe: "Iframe", module: "Module", svg: "SVG", data: "Data address", link: "Image link" };
 let embedKind: EmbedKind = "element";
 let embedFull = "";
 const embedTabs = byId("embed-tabs");
 const embedCodeNode = byId("embed-code");
 const embedStatus = byId("embed-status");
 for (const kind of EMBED_KINDS) {
-  const button = el("button", { type: "button", className: "chip", textContent: kind });
+  const button = el("button", { type: "button", className: "chip", textContent: EMBED_WORDS[kind] });
   button.dataset.testid = `tab-${kind}`;
   button.setAttribute("role", "tab");
   button.addEventListener("click", () => {
@@ -171,9 +174,21 @@ for (const kind of EMBED_KINDS) {
   });
   embedTabs.append(button);
 }
-function drawEmbed() {
+function embedOptions(): RocketOptions {
+  const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
-  embedFull = embedCode({ rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...(engines ? { engines } : {}) }, embedKind);
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...(engines === "on" ? { engines } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+}
+function drawEmbed() {
+  const options = embedOptions();
+  embedFull = embedCode(options, embedKind);
+  byId("embed-note").textContent = embedNote(embedKind, options);
+  const credit = paintedCredit(options);
+  const creditNode = byId("embed-credit");
+  creditNode.hidden = credit === "";
+  creditNode.textContent = credit === "" ? "" : `Keep this credit with a painted rocket, however you use it. ${credit}`;
+  byId<HTMLAnchorElement>("embed-open").href = `embed.html?${rocketToParams(options).toString()}`;
+  embedStatus.textContent = "";
   embedCodeNode.textContent = embedFull.length > 1400 ? `${embedFull.slice(0, 1400)}…` : embedFull;
   for (const button of embedTabs.querySelectorAll("button")) button.setAttribute("aria-selected", String(button.dataset.testid === `tab-${embedKind}`));
 }
@@ -189,6 +204,29 @@ byId("embed-copy").addEventListener("click", async () => {
     area.remove();
   }
   embedStatus.textContent = "Copied";
+});
+const fileName = () => ["uchusen", state.rocket, state.variant, state.show === "together" ? "" : state.show, state.look].filter(Boolean).join("-");
+const drawingText = () => embedCode(embedOptions(), "svg");
+byId("embed-svg").addEventListener("click", () => {
+  downloadBlob(new Blob([drawingText()], { type: "image/svg+xml" }), `${fileName()}.svg`);
+  embedStatus.textContent = "Saved";
+});
+byId("embed-png").addEventListener("click", async () => {
+  try {
+    downloadBlob((await svgToPng(drawingText(), PICTURE_W, PICTURE_H, 2)).blob, `${fileName()}.png`);
+    embedStatus.textContent = "Saved";
+  } catch {
+    embedStatus.textContent = "This browser could not make a PNG. Save SVG still works.";
+  }
+});
+// a phase of flight is part of what is copied: it is said when it changes, not on every step of the slider
+let embedPhase = "";
+hero.addEventListener("uchusen-flight", () => {
+  const { active, phase } = hero.flightState;
+  const now = active ? phase : "";
+  if (now === embedPhase) return;
+  embedPhase = now;
+  drawEmbed();
 });
 renderMain();
 
