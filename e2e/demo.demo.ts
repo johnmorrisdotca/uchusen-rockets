@@ -303,6 +303,7 @@ test("a painted model that cannot be fetched leaves this package's own paint, an
 test("the comparison draws the variants at one scale, and lets a reader choose them", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await press(page, "more-compare");
   const lineup = page.locator('[data-testid="lineup"]');
   await expect(lineup).toHaveAttribute("data-count", "7");
   const table = page.locator('[data-testid="compare-table"]');
@@ -329,6 +330,7 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
 test("the builder offers parts from every rocket, labels a mix as what it is, and never reaches one that does not fit", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await press(page, "more-builder");
   const report = page.locator('[data-testid="builder-report"]');
   const pick = (index: number) => page.locator(`[data-testid="pick-${index}"]`);
   const rocket = page.locator('[data-testid="builder-rocket"]');
@@ -371,12 +373,30 @@ test("the builder offers parts from every rocket, labels a mix as what it is, an
   expect(problems).toEqual([]);
 });
 
+test("the sections under the rocket are one at a time, in a row of tabs, and the address keeps the choice", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  const shown = () => page.locator("main > section:not(#main-view):visible").evaluateAll((nodes) => nodes.map((node) => node.id));
+  expect(await shown()).toEqual(["embed"]);
+  await press(page, "more-builder");
+  expect(await shown()).toEqual(["builder"]);
+  await expect(page.locator('[data-testid="more-builder"]')).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator('[data-testid="more-embed"]')).toHaveAttribute("aria-selected", "false");
+  expect(new globalThis.URL(page.url()).hash).toBe("#builder");
+  await page.goto(`${URL}#sources`);
+  await page.reload();
+  expect(await shown()).toEqual(["sources"]);
+  expect(problems).toEqual([]);
+});
+
 test("the sources and the credits are on the page, and the page says no one endorsed it", async ({ page }) => {
   await page.goto(URL);
+  await press(page, "more-sources");
   await expect(page.locator('[data-testid="sources"]')).toContainText("Wikipedia");
   const credits = page.locator('[data-testid="credits"]');
   for (const name of ["Clarence365", "clarence365", "MartianDays", "Stanley Creative", "KUBAHA", "ProgressTH", "Antonio_Adams", "Echo_3"]) await expect(credits).toContainText(name);
   await expect(page.locator("footer")).toContainText("not affiliated with or endorsed by SpaceX");
+  await press(page, "more-planned");
   await expect(page.locator('[data-testid="planned"]')).toContainText("Falcon 1");
   await expect(page.locator('[data-testid="planned"]')).not.toContainText("Falcon 9");
 });
@@ -640,12 +660,13 @@ test.describe("the engines", () => {
     await press(page, "look-painted");
     await expect.poll(plumes).toBe(33);
     if (is3d(browserName)) {
-      await expect.poll(() => canvasData(page, "look")).toBe("painted");
-      await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+      // software draws slowly: a page busy building a material can miss the default five seconds
+      await expect.poll(() => canvasData(page, "look"), { timeout: 60_000 }).toBe("painted");
+      await expect.poll(() => canvasData(page, "plumes"), { timeout: 60_000 }).toBe("33");
     }
     await press(page, "show-ship");
-    await expect.poll(plumes).toBe(6);
-    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes")).toBe("6");
+    await expect.poll(plumes, { timeout: 60_000 }).toBe(6);
+    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes"), { timeout: 60_000 }).toBe("6");
     expect(problems).toEqual([]);
   });
 });

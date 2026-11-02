@@ -381,3 +381,24 @@ byId("source-list").append(
   }),
 );
 byId("credit-list").append(...(Object.keys(MODEL_CREDITS) as CreditId[]).map((id) => el("li", { textContent: creditLine(id) })));
+
+// ------------------------------------------------------------- one section at a time, chosen in a row, and kept in the address
+const MORE: readonly (readonly [string, string])[] = [["embed", "Put it on your site"], ["compare", "Compare to scale"], ["builder", "Build from parts"], ["details", "The parts"], ["planned", "Still to come"], ["sources", "Sources"]];
+const moreTabs = byId("more-tabs");
+function showMore(chosen: string) {
+  for (const [id] of MORE) {
+    byId(id).hidden = id !== chosen;
+    moreTabs.querySelector(`[data-testid="more-${id}"]`)?.setAttribute("aria-selected", String(id === chosen));
+  }
+}
+for (const [id, words] of MORE) {
+  const tab = chip(words, `more-${id}`, () => {
+    showMore(id);
+    history.replaceState(history.state, "", `${location.pathname}${location.search}#${id}`);
+  });
+  tab.setAttribute("role", "tab");
+  tab.setAttribute("aria-controls", id);
+  moreTabs.append(tab);
+}
+const askedTab = location.hash.slice(1);
+showMore(MORE.some(([id]) => id === askedTab) ? askedTab : MORE[0][0]);
