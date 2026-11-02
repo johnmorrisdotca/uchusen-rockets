@@ -162,23 +162,23 @@ test("a drawing follows the view controls too: turn, tip, zoom and move, and a h
   await expect(drawn).toHaveAttribute("data-state", "picture");
   type Driven = HTMLElement & { drive(choice: unknown): void };
   const svg = () => drawn.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("svg")?.outerHTML ?? "");
-  const transform = () => drawn.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector<HTMLElement>(".drawing")?.style.transform ?? "");
+  const transform = () => drawn.evaluate((node) => { const d = (node as HTMLElement).shadowRoot?.querySelector<HTMLElement>(".drawing"); return `${d?.dataset.zoom} ${d?.dataset.pan} ${d?.style.transform ?? ""}`; });
   const one = await svg();
   await drawn.evaluate((node) => (node as Driven).drive({ yaw: 40, tilt: 10, zoom: 2, panX: 12, panY: -8 }));
   await expect.poll(svg).not.toBe(one);
-  await expect.poll(transform).toBe("translate(12px, -8px) scale(2)");
+  await expect.poll(transform).toBe("2.00 12,-8 ");
   await expect(drawn).toHaveAttribute("data-driven", "true");
   const two = await svg();
   // numbers only: anything else leaves what was, and a number out of range is held to the range
   await drawn.evaluate((node) => (node as Driven).drive({ yaw: "<img src=x onerror=alert(1)>", zoom: Number.POSITIVE_INFINITY, panX: Number.NaN }));
-  await expect.poll(transform).toBe("translate(12px, -8px) scale(2)");
-  await drawn.evaluate((node) => (node as Driven).drive({ zoom: 1000 }));
-  await expect.poll(transform).toBe("translate(12px, -8px) scale(8)");
+  await expect.poll(transform).toBe("2.00 12,-8 ");
   expect(await svg()).not.toContain("onerror");
   expect(await svg()).toBe(two);
+  await drawn.evaluate((node) => (node as Driven).drive({ zoom: 1000 }));
+  await expect.poll(transform).toBe("8.00 12,-8 ");
   // and it can be handed back
   await drawn.evaluate((node) => (node as Driven).drive(null));
-  await expect.poll(transform).toBe("");
+  await expect.poll(transform).toBe("1.00 0,0 ");
   await expect(drawn).not.toHaveAttribute("data-driven", /.*/);
   expect(problems).toEqual([]);
 });
@@ -194,7 +194,7 @@ test("a view in the address opens the same view, and what is chosen is kept in t
   if ((await hero(page).getAttribute("data-state")) === "3d") {
     await expect.poll(() => canvasData(page, "zoom")).toBe("2.00");
     await expect.poll(async () => Math.abs(32 - 40 - (await angle(page)).az) < 0.5).toBe(true);
-  } else await expect.poll(() => hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector<HTMLElement>(".drawing")?.style.transform ?? "")).toContain("scale(2)");
+  } else await expect.poll(() => hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector<HTMLElement>(".drawing")?.dataset.zoom ?? "")).toBe("2.00");
   await bar(page).locator('[data-b="fit"]').click();
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("zoom")).toBeNull();
   expect(new globalThis.URL(page.url()).searchParams.get("yaw")).toBe("40");

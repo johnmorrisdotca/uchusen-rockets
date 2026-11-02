@@ -41,6 +41,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
+import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 
@@ -146,6 +147,8 @@ interface PartView {
 /** The materials of an engine's bell, in this package's own meshes. */
 const NOZZLE_MATERIALS: ReadonlySet<string> = new Set(["bell", "bell-inside", "engine-metal"]);
 const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
+/** The pictures a licensed model's material may hold (the shared sky it reflects is not one of them). */
+const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
 export class RocketViewer {
   readonly canvas: HTMLCanvasElement;
@@ -186,7 +189,6 @@ export class RocketViewer {
     this.holder = holder;
     this.options = options;
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
@@ -267,8 +269,7 @@ export class RocketViewer {
     const bytes = built.glb().bytes;
     const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, "");
     if (this.disposed || generation !== this.generation) return;
-    for (const part of this.parts) part.holder.removeFromParent();
-    this.disposeTree(this.root);
+    this.disposeParts();
     this.root.clear();
     this.parts = [];
     this.built = built;
@@ -674,6 +675,8 @@ export class RocketViewer {
 
   /** Hands the turn, tip, zoom and pan to the page, as the family's view controls report them: this view's own hands (drag, wheel, keys, spin) stand down, and the camera is the chosen view's angle turned and tipped by them. `null` takes them back. */
   drive(choice: ViewChoice | null): void {
+    const same = choice !== null && this.driven !== null && (Object.keys(choice) as (keyof ViewChoice)[]).every((key) => choice[key] === this.driven?.[key]);
+    if (same) return;
     this.driven = choice;
     this.controls.enabled = choice === null;
     if (choice) this.controls.autoRotate = false;
@@ -735,7 +738,9 @@ export class RocketViewer {
     document.removeEventListener("visibilitychange", this.onVisibility);
     this.resize.disconnect();
     this.controls.dispose();
-    this.disposeTree(this.root);
+    this.disposeParts();
+    this.glow?.geometry.dispose();
+    (this.glow?.material as Material | undefined)?.dispose();
     for (const material of this.materialCache.values()) material.dispose();
     this.outlineMaterial.dispose();
     for (const texture of this.textures) texture.dispose();
@@ -745,12 +750,22 @@ export class RocketViewer {
     this.canvas.remove();
   }
 
-  private disposeTree(tree: Object3D): void {
-    tree.traverse((node) => {
-      const geometry = (node as Mesh).geometry;
-      geometry?.dispose();
-      if (node instanceof LineSegments2) (node.material as Material).dispose();
-    });
+  /** Lets the graphics card have back what the parts took: geometries, the thick lines' materials and a licensed model's own materials and pictures. */
+  private disposeParts(): void {
+    for (const part of this.parts) {
+      part.holder.traverse((node) => {
+        (node as Mesh).geometry?.dispose();
+        if (node instanceof LineSegments2) (node.material as Material).dispose();
+      });
+      part.model?.traverse((node) => {
+        if (!(node instanceof Mesh)) return;
+        for (const material of Array.isArray(node.material) ? node.material : [node.material]) {
+          for (const slot of MODEL_PICTURES) (material[slot] as Texture | null | undefined)?.dispose();
+          material.dispose();
+        }
+      });
+      part.holder.removeFromParent();
+    }
   }
 
   private addGlow(): void {
@@ -860,7 +875,8 @@ export class RocketViewer {
       }
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0;
     }
-    if ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5) this.frame = requestAnimationFrame(this.tick);
+    // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5)) this.frame = requestAnimationFrame(this.tick);
   };
 
   private syncSizes(): void {
@@ -871,7 +887,9 @@ export class RocketViewer {
   private fit(): void {
     const w = Math.max(1, this.holder.clientWidth);
     const h = Math.max(1, this.holder.clientHeight);
+    this.renderer.setPixelRatio(pixelRatioFor(w, h, window.devicePixelRatio));
     this.renderer.setSize(w, h, false);
+    this.outlineMaterial.uniforms.width.value = LOOKS[this.look].outlinePx * this.renderer.getPixelRatio();
     this.camera.aspect = w / h;
     this.lens();
     this.syncSizes();

@@ -29,6 +29,7 @@
 - **Changing `show` is an animated move**, a cut under reduced motion. A part alone fills the frame.
 - Turn it by dragging, by touch, with the arrow keys, or leave it to its slow spin. `+` and `-` zoom, Home or a double-click puts it back. Under reduced motion it does not spin. These are the element's own hands, for a page that adds none; [the family's view controls](#the-familys-view-controls) can take them over.
 - A licensed model is fetched only when the painted look asks for it. Until it is in, or if it fails, this package's own paint shows.
+- It asks little of the machine. The 3D view draws once a frame while something moves and not at all when it is still, out of sight or in a hidden tab. One WebGL context for each element, given back after 30 seconds out of sight and on any change. The canvas is the element's size times the screen's pixel ratio, held to a ratio of 2, to 4096 pixels a side and to 6 million pixels in all, so a view as wide as a 5K screen is drawn a little less sharp, never at a size that can hang the graphics card. If the browser takes the context away, the drawing takes over. The drawing, with no WebGL, is made again at most 20 times a second and only while it is on screen.
 
 Read from a script: `element.report` (the label, parts, credits and fit), `element.state` (`picture`, `loading`, `3d`, `fallback`, `error`), `element.angle` (`{ az, el }`), and `element.description` to set a rocket from parts. Events: `uchusen-ready`, `uchusen-change`, `uchusen-painted`, `uchusen-fallback`, `uchusen-error`.
 
@@ -54,6 +55,8 @@ Read from a script: `element.report` (the label, parts, credits and fit), `eleme
 - The turn and tip are from the angle `view` names: yaw 0 and tilt 0 is that view. Dragging right makes `yaw` larger, which carries the camera to the left; a larger `tilt` lowers it. To go to another view, set `view` and give the controls `set({ yaw: 0, tilt: 0 })`.
 - Zoom is the camera's, so a zoomed 3D view stays sharp. The camera keeps the distance that holds the whole rocket, so turning never makes it breathe.
 - Tilt to turn on a phone still works, added to the chosen view.
+- The drawing is zoomed and moved by its `viewBox`, so it is as sharp as its box at any zoom and never grows past it.
+- `autoplay` never stops by itself and the controls keep sending changes while the element is out of sight (the element then draws nothing). A page that wants a gentle introduction can call `controls.pause()` after a while and when the element leaves the screen, as the demo does.
 
 `setAssetBase(url)` says where the models are for every element on a page. By default they are beside the module, in `./assets/`.
 

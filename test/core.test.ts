@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cleanLook, cleanShow, cleanView, CROSSFADE_MS, DEFAULT_LOOK, DEFAULT_VIEW, directionOf, DRAWING_HOLD_MS, frameFor, placesFor, REDUCED_FADE_MS, revealDelay, showsOf, tiltMode, tiltTurn, turnedBy, VIEWS } from "../src/index.ts";
+import { cleanLook, cleanShow, cleanView, CROSSFADE_MS, DEFAULT_LOOK, DEFAULT_VIEW, directionOf, DRAWING_HOLD_MS, frameFor, MAX_PIXELS, MAX_SIDE, pixelRatioFor, placesFor, REDUCED_FADE_MS, revealDelay, showsOf, tiltMode, tiltTurn, turnedBy, VIEWS } from "../src/index.ts";
 
 test("a hostile look, view or show falls back to the default", () => {
   assert.equal(cleanLook("<b>"), DEFAULT_LOOK);
@@ -44,6 +44,21 @@ test("tilt: asked for only where it must be, off under reduced motion or a mouse
   assert.equal(tiltMode({ ...base, needsPermission: true }), "ask");
   assert.equal(tiltMode({ ...base, reducedMotion: true }), "off");
   assert.equal(tiltTurn({ beta: null, gamma: 0 }, { beta: 0, gamma: 0 }), null);
+});
+
+test("the canvas is held to a pixel budget, whatever the screen", () => {
+  assert.equal(pixelRatioFor(620, 827, 2), 2);
+  assert.equal(pixelRatioFor(620, 827, 1), 1);
+  assert.equal(pixelRatioFor(620, 827, 3), 2);
+  for (const [w, h, ratio] of [[2560, 1440, 2], [5120, 2880, 2], [1, 10000, 2], [10000, 10000, 2], [800, 600, Number.NaN], [800, 600, 0], [0, 0, 2], [-5, 20, 2]] as const) {
+    const r = pixelRatioFor(w, h, ratio);
+    assert.ok(r >= 0.25 && r <= 2, `${w}x${h} at ${ratio}: ${r}`);
+    if (w > 0 && h > 0 && r > 0.25) {
+      assert.ok(w * r * (h * r) <= MAX_PIXELS * 1.0001, `${w}x${h} at ${ratio}: ${r}`);
+      assert.ok(Math.max(w, h) * r <= MAX_SIDE * 1.0001, `${w}x${h} at ${ratio}: ${r}`);
+    }
+  }
+  assert.equal(pixelRatioFor(800, 600, Number.NaN), 1);
 });
 
 test("a stack is placed by its joints", () => {

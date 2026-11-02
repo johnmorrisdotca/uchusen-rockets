@@ -19,6 +19,8 @@ const HTMLBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class
 /** A view out of sight keeps its WebGL canvas this long before letting it go (a browser allows only a few at a time). */
 const RELEASE_MS = 30_000;
 const DEFAULT_SPIN: Spin = { seconds: 180, way: "cw" };
+/** The drawing, followed along a turn, is made again at most this often. */
+const PLACE_MS = 50;
 
 let assetBase: string | null = null;
 /** Where the licensed models are, for every element with no `assets` attribute of its own. Left unset: beside this module, in ./assets/. */
@@ -97,7 +99,6 @@ export class UchusenRocket extends HTMLBase {
   private drawing: HTMLElement | null = null;
   private viewer: RocketViewer | null = null;
   private watch: IntersectionObserver | null = null;
-  private cleanups: (() => void)[] = [];
   private releaseTimer = 0;
   private revealTimer = 0;
   private generation = 0;
@@ -109,6 +110,11 @@ export class UchusenRocket extends HTMLBase {
   private key = "";
   private driven: ViewChoice | null = null;
   private placeFrame = 0;
+  private placedAt = 0;
+  private stale = false;
+  private onScreen = true;
+  private drawn = { key: "", box: [0, 0, 1, 1] as [number, number, number, number] };
+  private tiltCleanups: (() => void)[] = [];
 
   /** What is showing now. */
   get state(): RocketState {
@@ -136,6 +142,7 @@ export class UchusenRocket extends HTMLBase {
 
   /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
   drive(choice: Partial<ViewChoice> | null): void {
+    const before = this.driven;
     if (choice === null) {
       this.driven = null;
       delete this.dataset.driven;
@@ -150,23 +157,44 @@ export class UchusenRocket extends HTMLBase {
       };
       this.dataset.driven = "true";
     }
+    const now = this.driven;
+    if (before && now && (Object.keys(now) as (keyof ViewChoice)[]).every((key) => before[key] === now[key])) return;
     this.viewer?.drive(this.driven);
     this.place();
   }
 
-  /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. */
+  /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. It is drawn at most about 20 times a second and never while out of sight: it is made again when it comes back. */
   private place(): void {
     if (this.stateNow === "3d" && this.viewer) return;
+    if (!this.onScreen || document.hidden) {
+      this.stale = true;
+      return;
+    }
     window.cancelAnimationFrame(this.placeFrame);
-    this.placeFrame = window.requestAnimationFrame(() => this.redraw());
+    const frame = (time: number) => {
+      if (time - this.placedAt < PLACE_MS) {
+        this.placeFrame = window.requestAnimationFrame(frame);
+        return;
+      }
+      this.placedAt = time;
+      this.stale = false;
+      this.redraw();
+    };
+    this.placeFrame = window.requestAnimationFrame(frame);
   }
+
+  private seen = () => {
+    if (!document.hidden && this.stale) this.place();
+  };
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), CSS, rocketSheet);
+    document.addEventListener("visibilitychange", this.seen);
     this.queue();
   }
 
   disconnectedCallback(): void {
+    document.removeEventListener("visibilitychange", this.seen);
     this.teardown();
     this.key = "";
   }
@@ -217,7 +245,7 @@ export class UchusenRocket extends HTMLBase {
     window.clearTimeout(this.releaseTimer);
     window.clearTimeout(this.revealTimer);
     window.cancelAnimationFrame(this.placeFrame);
-    for (const clean of this.cleanups.splice(0)) clean();
+    this.stopTilt();
     this.viewer?.dispose();
     this.viewer = null;
   }
@@ -285,21 +313,33 @@ export class UchusenRocket extends HTMLBase {
     this.startWatching();
   }
 
-  /** The drawing for what the attributes say now. It is made from code, so it needs no file. */
+  /** The drawing for what the attributes say now. It is made from code, so it needs no file. A zoom or a move only changes which part of it the box shows (its viewBox), so the drawing is as sharp as the box and never grows past it. */
   private redraw(): void {
     if (!this.builtNow || !this.drawing) return;
     const { look, show, angle } = this.settings(this.builtNow);
     // when a 3D view is showing, a drawing of the same angle is ready behind it
     const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
-    const svg = this.builtNow.svg({ look, show, view: from });
-    const template = document.createElement("template");
-    template.innerHTML = svg;
-    const node = template.content.firstElementChild;
-    if (!node) return;
-    node.setAttribute("aria-label", this.getAttribute("label") ?? this.builtNow.report.label);
-    this.drawing.replaceChildren(node);
+    const label = this.getAttribute("label") ?? this.builtNow.report.label;
+    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}`;
+    let node = this.drawing.firstElementChild;
+    if (key !== this.drawn.key || !node) {
+      const template = document.createElement("template");
+      template.innerHTML = this.builtNow.svg({ look, show, view: from });
+      node = template.content.firstElementChild;
+      if (!node) return;
+      node.setAttribute("aria-label", label);
+      this.drawing.replaceChildren(node);
+      const [x = 0, y = 0, w = 1, h = 1] = (node.getAttribute("viewBox") ?? "").split(/[\s,]+/).map(Number);
+      this.drawn = { key, box: [x, y, w, h] };
+    }
     const { zoom = 1, panX = 0, panY = 0 } = this.driven ?? {};
-    this.drawing.style.transform = zoom !== 1 || panX !== 0 || panY !== 0 ? `translate(${panX}px, ${panY}px) scale(${zoom})` : "";
+    const [x, y, w, h] = this.drawn.box;
+    // the picture fits the box (meet), so a user unit is `unit` pixels; the zoom is about the box's middle and the move is in pixels
+    const unit = Math.min(this.drawing.clientWidth / w, this.drawing.clientHeight / h) || 1;
+    const view = zoom === 1 && panX === 0 && panY === 0 ? [x, y, w, h] : [x + w / 2 - w / (2 * zoom) - panX / (unit * zoom), y + h / 2 - h / (2 * zoom) - panY / (unit * zoom), w / zoom, h / zoom];
+    node.setAttribute("viewBox", view.map((n) => +n.toFixed(3)).join(" "));
+    this.drawing.dataset.zoom = zoom.toFixed(2);
+    this.drawing.dataset.pan = `${Math.round(panX)},${Math.round(panY)}`;
   }
 
   private mark(): void {
@@ -348,11 +388,12 @@ export class UchusenRocket extends HTMLBase {
     if (reason) {
       this.setState(reason === "off" ? "picture" : "fallback", reason);
       if (reason !== "off") this.emit("uchusen-fallback", { reason });
-      return;
-    }
-    this.setState("picture");
+    } else this.setState("picture");
     this.watch = new IntersectionObserver(
       ([seen]) => {
+        this.onScreen = seen.isIntersecting;
+        if (seen.isIntersecting && this.stale) this.place();
+        if (reason) return;
         if (seen.isIntersecting) {
           this.shownAt ||= performance.now();
           window.clearTimeout(this.releaseTimer);
@@ -364,6 +405,7 @@ export class UchusenRocket extends HTMLBase {
           this.releaseTimer = window.setTimeout(() => {
             this.viewer?.dispose();
             this.viewer = null;
+            this.stopTilt();
             if (generation === this.generation) {
               this.setState("picture");
               if (this.driven) this.place();
@@ -376,7 +418,12 @@ export class UchusenRocket extends HTMLBase {
     this.watch.observe(this);
   }
 
+  private stopTilt(): void {
+    for (const clean of this.tiltCleanups.splice(0)) clean();
+  }
+
   private fallBack(why: string): void {
+    this.stopTilt();
     this.viewer?.dispose();
     this.viewer = null;
     this.setState("fallback", why);
@@ -432,6 +479,7 @@ export class UchusenRocket extends HTMLBase {
   }
 
   private startTilt(): void {
+    this.stopTilt();
     const Orientation = (typeof DeviceOrientationEvent === "undefined" ? undefined : DeviceOrientationEvent) as OrientationCtor | undefined;
     const mode = tiltMode({
       reducedMotion: media("(prefers-reduced-motion: reduce)"),
@@ -442,13 +490,14 @@ export class UchusenRocket extends HTMLBase {
     const listen = () => {
       let rest: Reading | null = null;
       const onTilt = (event: DeviceOrientationEvent) => {
+        if (!this.onScreen || document.hidden) return;
         const reading = { beta: event.beta, gamma: event.gamma };
         rest ??= reading;
         const turn = tiltTurn(reading, rest, window.screen.orientation?.angle ?? 0);
         if (turn) this.viewer?.setTilt(turn.azimuth, turn.polar);
       };
       window.addEventListener("deviceorientation", onTilt);
-      this.cleanups.push(() => window.removeEventListener("deviceorientation", onTilt));
+      this.tiltCleanups.push(() => window.removeEventListener("deviceorientation", onTilt));
     };
     if (mode === "on") listen();
     if (mode === "ask" && this.picture) {
@@ -466,7 +515,7 @@ export class UchusenRocket extends HTMLBase {
         }
       });
       this.picture.appendChild(button);
-      this.cleanups.push(() => button.remove());
+      this.tiltCleanups.push(() => button.remove());
     }
   }
 }
