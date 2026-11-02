@@ -23,7 +23,7 @@ export const JUPITER_C_BUILDS: readonly StackBuild[] = [
   {
     rocket: "jupiter-c",
     variant: "jupiter-c",
-    drawnFrom: "NASA's model for the painted look, its lettering painted out. This package's plain shapes for the two line looks, from the sourced height and width. No lettering is drawn.",
+    drawnFrom: "NASA's model for the painted look, its lettering removed. This package's plain shapes for the two line looks, from the sourced height and width. No lettering is drawn.",
     parts: [{ slot: "vehicle", kind: "first-stage", name: "Jupiter-C", height: H, diameter: R * 2, sourcedDiameter: JUPITER_C_WIDE, painted: { file: "jupiter-c-vehicle.glb", credit: "nasa-jupiter-c" }, pieces: vehicle }],
   },
 ];

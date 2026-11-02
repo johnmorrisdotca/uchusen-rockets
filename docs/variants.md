@@ -185,7 +185,7 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 ## Jupiter-C
 
-`jupiter-c`: 21.3 m tall and 1.8 m across, first flown on 1956-09-20. Painted, it is NASA's model with its lettering painted out; its line looks are this package's own plain shapes.
+`jupiter-c`: 21.3 m tall and 1.8 m across, first flown on 1956-09-20. Painted, it is NASA's model with its lettering removed; its line looks are this package's own plain shapes.
 
 ## International Space Station
 

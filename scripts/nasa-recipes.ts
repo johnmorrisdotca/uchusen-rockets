@@ -241,22 +241,12 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     files: [`${FOLDER}/jupiter-c.glb`],
     title: "Jupiter-C",
     source: page("nasa-3d-models-jupiter-c"),
-    changes: "the lettering painted out of its pictures; rescaled to the sourced height; its materials made into one picture",
+    changes: "the lettering removed with the two pictures that carried it, which are plain white here; rescaled to the sourced height; its materials made into one picture",
     parts: [JUPITER_C],
     partOf: () => JUPITER_C,
-    patches: {
-      jupiterc_blinn6S: [
-        { to: [0.34, 0.37, 0.07, 0.12], fill: "#ffffff" },
-        { to: [0.59, 0.37, 0.07, 0.12], fill: "#ffffff" },
-        { to: [0.46, 0.39, 0.09, 0.06], fill: "#ffffff" },
-        { to: [0.42, 0.45, 0.17, 0.06], fill: "#ffffff" },
-      ],
-      jupiterc_blinn7S: [
-        { to: [0.33, 0.48, 0.07, 0.09], fill: "#ffffff" },
-        { to: [0.6, 0.48, 0.07, 0.09], fill: "#ffffff" },
-      ],
-    },
-    atlas: 1024,
+    // its two pictures are lettering and stray lines on white: plain white is what is left once the marks are gone
+    colours: { jupiterc_blinn6S: [1, 1, 1], jupiterc_blinn7S: [1, 1, 1] },
+    atlas: 256,
   },
   {
     id: "iss",

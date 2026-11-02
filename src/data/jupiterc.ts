@@ -12,7 +12,7 @@ export const JUPITER_C_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstFlight: { value: "1956-09-20", source: S },
     slots: ["vehicle"],
-    note: "NASA's model, its lettering painted out, in the painted look; this package's own plain shape in the line looks.",
+    note: "NASA's model, its lettering removed with the two pictures that carried it, in the painted look; this package's own plain shape in the line looks.",
     facts: {
       height: { value: 21.3, source: S, note: "69.9 feet." },
       diameter: JUPITER_C_WIDE,
