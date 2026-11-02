@@ -46,16 +46,16 @@ export interface LitBell extends Bell {
 }
 
 /**
- * The engines that are alight at full thrust. Stacked, only the parts that stand on the ground: a ship's engines are buried in the booster.
- * Apart, or one part on its own, every bell that part draws.
+ * The engines that are alight at full thrust. Stacked, only the parts on the ground or beside the stack, as an orbiter is: a ship's engines are buried in the booster.
+ * Apart, or one part on its own, every bell that part draws. A part whose engines no source tells of (`dark`, a stage that has landed) draws no flame.
  */
-export function litBells(parts: readonly { slot: string; atY: number; shown: boolean; pieces: readonly Piece[] }[], together: boolean): LitBell[] {
+export function litBells(parts: readonly { slot: string; atY: number; shown: boolean; pieces: readonly Piece[]; beside?: boolean; dark?: boolean }[], together: boolean): LitBell[] {
   const shown = parts.filter((part) => part.shown);
   if (shown.length === 0) return [];
   const floor = Math.min(...shown.map((part) => part.atY));
   const bells: LitBell[] = [];
   for (const part of shown) {
-    if (together && part.atY > floor + 0.5) continue;
+    if (part.dark || (together && part.atY > floor + 0.5 && !part.beside)) continue;
     for (const bell of bellsOf(part.pieces)) bells.push({ ...bell, slot: part.slot });
   }
   return bells;

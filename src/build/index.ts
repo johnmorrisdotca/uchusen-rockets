@@ -46,6 +46,8 @@ export interface Built {
   boundsOf(show?: string, lit?: boolean): Bounds;
   /** Where each part stands for a choice of what to show. */
   placesOf(show?: string): { slot: string; at: Vec3; shown: boolean }[];
+  /** The engines alight at full thrust for a choice of what to show: those the drawing has, of the parts whose engines a source tells of. */
+  flamesOf(show?: string): LitBell[];
   /** The .glb file's bytes: every part stacked, each its own node to move. */
   glb(): Glb;
   /** The drawing, in a look, from an angle. */
@@ -90,7 +92,8 @@ function assembled(report: FitReport): Built {
     return litBells(
       places.map((place) => {
         const part = parts.find((p) => p.slot === place.slot) as BuiltPart;
-        return { slot: part.slot, atY: place.at[1], shown: place.shown, pieces: part.pieces };
+        const told = report.variant?.facts.engines[part.slot]?.value;
+        return { slot: part.slot, atY: place.at[1], shown: place.shown, pieces: part.pieces, beside: place.at[0] !== 0 || place.at[2] !== 0, dark: told === null || told === undefined };
       }),
       !show || show === "together",
     );
@@ -119,6 +122,7 @@ function assembled(report: FitReport): Built {
     shows: showsOf(slots),
     boundsOf: boundsOfShow,
     placesOf,
+    flamesOf,
     glb: () => toGlb(parts.map((part) => ({ name: part.slot, mesh: part.mesh, at: placesOf("together").find((place) => place.slot === part.slot)?.at ?? [0, 0, 0] }))),
     svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false } = {}) => {
       const angle = typeof view === "string" ? VIEWS[cleanView(view)] : view;

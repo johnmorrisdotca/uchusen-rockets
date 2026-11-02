@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { build } from "../src/build/index.ts";
 import { embedCode } from "../src/embed.ts";
+import { ROCKETS } from "../src/rockets.ts";
 import { bellsOf, enginesWanted, litBells, pickBells, ringsOf } from "../src/engines.ts";
 
 test("engines are off unless asked for, and off under reduced motion whatever the page says", () => {
@@ -91,4 +92,29 @@ test("an embed asked to light the engines carries the flames and, when painted, 
   assert.match(painted, /data-plume=/);
   assert.match(painted, /creativecommons\.org/);
   assert.equal(embedCode({ rocket: "starship", variant: "v2", engines: "on", look: "line" }, "svg").includes("data-plume"), true);
+});
+
+test("every variant lights what a source says it has and the drawing shows, and never an error; a blank stays dark", () => {
+  // at full thrust, stacked. A landed stage, a tower's stack and a part with no bell in its drawing have no flame.
+  const stacked: Readonly<Record<string, number>> = {
+    "saturn-v/saturn-v": 5, "space-shuttle/stack": 5, "space-shuttle/discovery": 3, "sls/block-1": 6, "new-glenn/7x2": 7, "electron/electron": 9, "soyuz/soyuz-2": 20, "falcon-1/falcon-1": 1, "falcon-1/falcon-1e": 1, "lunar-module/lunar-module": 1,
+    "falcon-heavy/falcon-heavy": 27, "grasshopper/grasshopper": 1, "starship/v3": 33, "falcon-9/block-5": 9,
+    "droneship/ocisly": 0, "landing-zone/lz-1": 0, "landing-zone/lz-4": 0, "launch-tower/stack": 0, "launch-tower/catch": 0, "starbase/city": 0, "iss/iss": 0, "hubble/hubble": 0, "gemini/gemini": 0, "mercury/friendship-7": 0, "apollo-soyuz/apollo-soyuz": 0, "jupiter-c/jupiter-c": 0, "dragon/dragon-2": 0,
+  };
+  for (const [key, count] of Object.entries(stacked)) {
+    const [rocket, variant] = key.split("/");
+    assert.equal(build({ rocket, variant }).flamesOf("together").length, count, key);
+  }
+  for (const rocket of Object.values(ROCKETS))
+    for (const variant of rocket.variants) {
+      const built = build({ rocket: rocket.id, variant: variant.id });
+      for (const look of ["line", "thick", "painted"] as const)
+        for (const show of ["together", "apart"]) {
+          const lit = built.svg({ look, show, engines: true });
+          assert.ok(lit.startsWith("<svg"), `${rocket.id} ${variant.id} ${look} ${show}`);
+          if (show === "together") assert.equal(lit.match(/data-plume=/g)?.length ?? 0, built.flamesOf("together").length, `${rocket.id} ${variant.id} ${look}`);
+        }
+      // only a part whose engines a source tells of ever burns
+      for (const bell of built.flamesOf("apart")) assert.notEqual(variant.facts.engines[bell.slot]?.value ?? null, null, `${rocket.id} ${variant.id} ${bell.slot}`);
+    }
 });

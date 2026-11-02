@@ -39,7 +39,7 @@ import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
-import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, litBells, pickBells } from "../engines.ts";
+import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
 import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
@@ -520,15 +520,7 @@ export class RocketViewer {
     if (!this.built) return;
     const counts = new Map<string, number>();
     if (this.lit === "full") {
-      const places = this.built.placesOf(this.show);
-      const bells = litBells(
-        this.built.parts.map((part) => {
-          const place = places.find((one) => one.slot === part.slot);
-          return { slot: part.slot, atY: place?.at[1] ?? 0, shown: place?.shown ?? false, pieces: part.pieces };
-        }),
-        this.show === "together",
-      );
-      for (const bell of bells) counts.set(bell.slot, (counts.get(bell.slot) ?? 0) + 1);
+      for (const bell of this.built.flamesOf(this.show)) counts.set(bell.slot, (counts.get(bell.slot) ?? 0) + 1);
     } else if (this.lit) for (const [slot, count] of Object.entries(this.lit)) counts.set(slot, count);
     let burning = 0;
     let lowest: { view: PartView; y: number } | null = null;

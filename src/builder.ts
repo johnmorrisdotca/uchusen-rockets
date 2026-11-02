@@ -26,9 +26,9 @@ function framesOf(): Frame[] {
 const sameShape = (part: PartRecord, home: PartRecord): boolean =>
   part.kind === home.kind && Boolean(part.joints.top) === Boolean(home.joints.top) && Boolean(part.joints.bottom) === Boolean(home.joints.bottom) && part.strapOn?.x === home.strapOn?.x && part.strapOn?.z === home.strapOn?.z;
 
-/** It sits on what is below it, or beside it, for a side booster. */
+/** It sits on what is below it. */
 const fitsOn = (part: PartRecord, below: PartRecord | undefined): boolean => {
-  if (part.strapOn || !below) return true;
+  if (!below) return true;
   const { top } = below.joints;
   const { bottom } = part.joints;
   return Boolean(top && bottom && top.kind === bottom.kind && Math.abs(top.diameter - bottom.diameter) <= JOINT_TOLERANCE);
@@ -66,15 +66,33 @@ export function builderState(picks: readonly string[] = []): BuilderState {
   const parts = REAL_PARTS();
   const rows: BuilderRow[] = [];
   const chosen: PartRecord[] = [];
+  // Only what can still be finished is offered: nothing on any row leads to a rocket with a part missing.
+  const known = new Map<string, boolean>();
+  const finishes = (frame: Frame, row: number, below: PartRecord | undefined, foot: PartRecord): boolean => {
+    if (row >= frame.slots.length) return true;
+    const key = `${frame.rocket}/${frame.variant}/${row}/${below?.id}/${foot.id}`;
+    let answer = known.get(key);
+    if (answer === undefined) {
+      answer = fitting(frame, row, below, foot).length > 0;
+      known.set(key, answer);
+    }
+    return answer;
+  };
+  const fitting = (frame: Frame, row: number, below: PartRecord | undefined, foot: PartRecord): readonly PartRecord[] => {
+    const home = frame.homes[row];
+    // a part placed rather than stacked has no joint to mix at: it stands where its own variant puts it, by its own foot
+    if (home.strapOn) return frame.homes[0].id === foot.id && finishes(frame, row + 1, below, foot) ? [home] : [];
+    return parts.filter((part) => sameShape(part, home) && fitsOn(part, below) && finishes(frame, row + 1, part, foot));
+  };
   let alive = every;
   for (let row = 0; alive.some((frame) => frame.slots.length > row); row++) {
-    const below = chosen[row - 1];
+    // what a part sits on is the last one stacked: one placed beside the stack, a side booster or an orbiter, holds nothing up
+    const below = chosen.findLast((part) => !part.strapOn);
     const candidates = (frame: Frame): readonly PartRecord[] => {
       if (row >= frame.slots.length) return [];
-      const home = frame.homes[row];
       // the bottom row offers each rocket's own foot: what stands on it is what mixes
-      if (row === 0) return [home];
-      return parts.filter((part) => sameShape(part, home) && fitsOn(part, below));
+      if (row === 0) return [frame.homes[0]];
+      return fitting(frame, row, below, chosen[0]);
     };
     const offered = new Map<string, PartRecord>();
     for (const frame of alive) for (const part of candidates(frame)) offered.set(part.id, part);
@@ -83,6 +101,8 @@ export function builderState(picks: readonly string[] = []): BuilderState {
     const asked = picks[row];
     const pick =
       (asked !== undefined && offered.get(asked)) ||
+      // the next part of the real vehicle that everything so far belongs to, when there is one
+      alive.flatMap((frame) => (frame.slots.length > row && chosen.every((part, i) => frame.homes[i].id === part.id) ? [frame.homes[row]] : [])).find((part) => offered.has(part.id)) ||
       // the part that flew with what is below it, when there is one
       (below && options.find((part) => part.rocket === below.rocket && part.trueTo.some((id) => below.trueTo.includes(id)))) ||
       options[0];
@@ -91,6 +111,8 @@ export function builderState(picks: readonly string[] = []): BuilderState {
     alive = row === 0 ? every.filter((frame) => sameShape(pick, frame.homes[0])) : alive.filter((frame) => candidates(frame).some((part) => part.id === pick.id));
     const slots = [...new Set(alive.filter((frame) => row < frame.slots.length).map((frame) => frame.slots[row]))];
     rows.push({ label: slots.map((slot) => SLOT_NAMES[slot] ?? slot).join(" or "), options: options.map(optionOf), chosen: pick.id, auto: options.length === 1 });
+    // a real vehicle whole: nothing goes on top of it, even where a longer one shares its shape so far
+    if (alive.some((frame) => frame.slots.length === chosen.length && frame.homes.every((home, i) => home.id === chosen[i].id))) break;
   }
   const whole = alive.filter((frame) => frame.slots.length === chosen.length);
   const chosenSlot = (description: Description) => whole.find((frame) => frame.rocket === description.rocket && frame.variant === description.variant)?.slots[0] ?? "";

@@ -88,7 +88,7 @@ Its variants go in `src/data/`, its parts in `src/model/registry.ts` with pieces
 
 ## The demo's builder
 
-`builderState(picks)` is what the demo's builder offers: rows from the bottom up, for parts of every rocket. Each row holds only what fits on the row below, so nothing it offers can fail. A row with one answer, like a Falcon Heavy's side boosters, is answered for the reader. A change lower down keeps what still fits and picks what belongs with it for the rest. A real set of parts takes its real name, and anything else says it is a custom build. It reads only `ROCKETS` and `PART_ENTRIES`, so a new rocket is offered with no change.
+`builderState(picks)` is what the demo's builder offers: rows from the bottom up, for parts of every rocket. Each row holds only what fits on the row below, so nothing it offers can fail. A row with one answer, like a Falcon Heavy's side boosters, is answered for the reader; a part placed beside the stack stands only by its own foot, and a row offers only what can still be finished. A change lower down keeps what still fits and picks what belongs with it for the rest. A real set of parts takes its real name, and anything else says it is a custom build. It reads only `ROCKETS` and `PART_ENTRIES`, so a new rocket is offered with no change.
 
 ```ts
 import { builderState } from "@johnmorrisdotca/uchusen-rockets";

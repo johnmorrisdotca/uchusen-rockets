@@ -992,3 +992,32 @@ test("the Earth behind the rocket: off by default, kept in the address, behind t
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("background")).toBeNull();
   expect(problems).toEqual([]);
 });
+
+test("every variant's painted look names whose models it is, and the sources list every one", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+  test.setTimeout(300_000);
+  const { check, creditLine, MODEL_CREDITS, ROCKETS } = await import("../src/index.ts");
+  const problems = watch(page);
+  await page.goto(URL);
+  await stopTurn(page);
+  await reach3d(page);
+  const credit = page.locator('[data-testid="credit"]');
+  // in the line look: the words are there whichever look is on, and no model is asked for on the way
+  for (const rocket of Object.values(ROCKETS))
+    for (const variant of rocket.variants) {
+      await press(page, `rocket-${rocket.id}`);
+      await press(page, `variant-${variant.id}`);
+      const { credits } = check({ rocket: rocket.id, variant: variant.id });
+      if (credits.length === 0) await expect(credit, `${rocket.id} ${variant.id}`).toContainText("this package's own code");
+      for (const one of credits) {
+        await expect(credit, `${rocket.id} ${variant.id}`).toContainText(one.creator);
+        await expect(credit, `${rocket.id} ${variant.id}`).toContainText(one.licence);
+      }
+    }
+  await press(page, "more-sources");
+  const listed = page.locator('[data-testid="credits"]');
+  for (const id of Object.keys(MODEL_CREDITS) as (keyof typeof MODEL_CREDITS)[]) await expect(listed).toContainText(creditLine(id));
+  await expect(page.locator('[data-testid="sources"]')).toContainText("OpenStreetMap contributors");
+  await expect(page.locator("footer")).toContainText("ODbL");
+  expect(problems).toEqual([]);
+});

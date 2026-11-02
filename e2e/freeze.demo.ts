@@ -3,6 +3,7 @@
 // also fail on more than one frame request for it per page frame, on drawing it faster than its own low rate, on anything drawn out of sight or on a hidden tab, on its context or pictures kept after it is turned off, and on growth over 50 rounds of changes.
 import { execSync } from "node:child_process";
 import { chromium, expect as plainExpect, type Locator, type Page, test } from "@playwright/test";
+import { build } from "../src/build/index.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
 import { ROCKETS } from "../src/rockets.ts";
 
@@ -223,7 +224,7 @@ test("changes give back what they took: contexts, buffers, vertex arrays and tex
 });
 
 test("every variant of every rocket: drawn line and painted, then contexts and graphics memory stay flat as they are walked again", async ({ page }) => {
-  test.setTimeout(420_000);
+  test.setTimeout(45 * 60_000);
   await page.goto(URL);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);
@@ -1166,4 +1167,176 @@ test.describe("50 rounds", () => {
     // A debugger's Network agent, which every Playwright page has, keeps response bodies up to 200 MB in the page's process, so this reading climbs by that much here and not for a person (with no debugger attached it stays level): anything well past that is ours.
     expect(lastMB - firstMB).toBeLessThanOrEqual(450);
   });
+});
+
+// ------------------------------------------------------------- all of it at once: every rocket, lit, with the Earth behind
+const everyPicture = (page: Page) => expect.poll(() => earth(page).evaluate((node) => Object.values((node.querySelector("chikyu-earth-realistic") as unknown as { stats: { tiers: Record<string, number> } }).stats.tiers).every((width) => width === 2048)), { timeout: 90_000 }).toBe(true);
+
+// The whole product would be 44 variants by three looks, Earth or none, lit or dark, and together, apart and each part: thousands of views, days in software. What is walked is the corners that ask the most: every variant
+// dark with no Earth in line and painted (above), and every variant lit with the Earth behind in line and painted (here), each walked twice. Thick has the line look's shapes and one more line width, and is walked in its own
+// tests; apart and each part alone are the rounds of the engines' and the changes' tests.
+test("every variant of every rocket lit, with the Earth behind: line and painted, each with its own flames, and contexts and graphics memory stay flat as they are walked again", async ({ page }) => {
+  test.setTimeout(60 * 60_000);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(`${URL}?background=earth`);
+  await pause(page);
+  await reach3d(page);
+  await press(page, "engines-on");
+  const walk = async (look: "line" | "painted") => {
+    await press(page, `look-${look}`);
+    await expect(earth(page)).toHaveAttribute("data-form", look === "line" ? "line" : "realistic", { timeout: 60_000 });
+    for (const rocket of Object.values(ROCKETS))
+      for (const variant of rocket.variants) {
+        const named = `${rocket.id} ${variant.id} ${look}`;
+        await press(page, `rocket-${rocket.id}`);
+        await press(page, `variant-${variant.id}`);
+        await expect(hero(page), named).toHaveAttribute("rocket", rocket.id);
+        await expect(hero(page), named).toHaveAttribute("data-variant", variant.id);
+        await expect(hero(page), named).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+        if (look === "painted") await expect(hero(page), named).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
+        // the flames the package says it has, and none where no source tells of an engine
+        const flames = String(build({ rocket: rocket.id, variant: variant.id }).flamesOf("together").length);
+        await expect.poll(() => canvasData(page, "plumes"), { message: named, timeout: 30_000 }).toBe(flames);
+        await settle(page, 120);
+      }
+  };
+  await walk("line");
+  expect((await usage(page)).contexts).toBe(1);
+  await walk("painted");
+  await expect(earth(page).locator("chikyu-earth-realistic")).toHaveAttribute("data-state", "live", { timeout: 90_000 });
+  await everyPicture(page);
+  const first = await usage(page);
+  expect(first.contexts).toBe(2);
+  await walk("line");
+  await walk("painted");
+  await expect(earth(page).locator("chikyu-earth-realistic")).toHaveAttribute("data-state", "live", { timeout: 90_000 });
+  await everyPicture(page);
+  const last = await usage(page);
+  console.log(`every variant lit with the Earth, first and second walk: buffers ${first.buffers} ${last.buffers}, arrays ${first.arrays} ${last.arrays}, textures ${first.textures} ${last.textures}, programs ${first.programs} ${last.programs}`);
+  expect(last.contexts).toBe(2);
+  expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+  expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+  expect(last.textures).toBeLessThanOrEqual(first.textures);
+  expect(last.programs).toBeLessThanOrEqual(first.programs);
+  // still one draw a frame for the rocket and one request each with all of it behind it
+  await hero(page).evaluate((node) => {
+    (node as HTMLElement & { drive(choice: null): void }).drive(null);
+    node.setAttribute("spin", "fast");
+  });
+  await settle(page, 1500);
+  await page.evaluate(() => ((window as unknown as { __seen: Seen }).__seen.mostInAFrame = 0));
+  const { drew, frames } = await measure(page);
+  expect(drew).toBeGreaterThan(0);
+  expect(drew).toBeLessThanOrEqual(frames + 3);
+  expect((await usage(page)).mostInAFrame).toBeLessThanOrEqual(2);
+  expect(errors).toEqual([]);
+});
+
+for (const { look, form, contexts } of LOOKS.filter((one) => one.look !== "thick")) {
+  test(`lit, with the Earth behind ${look}: out of sight and on a hidden tab nothing draws and no frame is asked for, and both come back`, async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(`${URL}?background=earth`);
+    await pause(page);
+    await reach3d(page);
+    await earthIn(page, look, form);
+    await press(page, "engines-on");
+    await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    expect((await usage(page)).contexts).toBe(contexts);
+    await hero(page).evaluate((node) => {
+      (node as HTMLElement & { drive(choice: null): void }).drive(null);
+      node.setAttribute("spin", "fast");
+    });
+    const quiet = async () => {
+      await expect(earth(page)).toHaveAttribute("data-turning", "false");
+      await settle(page, 2000);
+      const before = { earth: await earthDraws(page), rocket: await drawn(page), frames: (await usage(page)).pageFrames, asked: (await usage(page)).asked };
+      await settle(page, 2500);
+      expect(await earthDraws(page)).toBe(before.earth);
+      expect(await drawn(page)).toBe(before.rocket);
+      const after = await usage(page);
+      expect(after.pageFrames).toBe(before.frames);
+      expect(after.asked - before.asked).toBeLessThanOrEqual(1);
+    };
+    const back = async () => {
+      await expect(earth(page)).toHaveAttribute("data-turning", "true");
+      const mark = { earth: await earthDraws(page), rocket: await drawn(page) };
+      await expect.poll(() => earthDraws(page), { timeout: 30_000 }).toBeGreaterThan(mark.earth);
+      await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(mark.rocket);
+      expect(await canvasData(page, "plumes")).toBe("33");
+    };
+    await hideTab(page, true);
+    await quiet();
+    await hideTab(page, false);
+    await back();
+    await page.evaluate(() => {
+      const spacer = document.createElement("div");
+      spacer.style.height = "6000px";
+      document.body.append(spacer);
+      window.scrollTo(0, 5000);
+    });
+    await quiet();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await back();
+  });
+}
+
+test("the Earth on the page and the embed page: what is copied carries the lit rocket and not the Earth, says so, and the link opens with no error", async ({ page }) => {
+  test.setTimeout(240_000);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(`${URL}?background=earth#embed`);
+  await pause(page);
+  await reach3d(page);
+  await expect(earth(page)).toHaveAttribute("data-form", "line", { timeout: 60_000 });
+  await expect(page.locator("#embed")).toBeVisible();
+  await press(page, "engines-on");
+  await expect(page.locator('[data-testid="embed-note"]')).toContainText("The Earth behind it stays on this page");
+  const open = page.locator('[data-testid="embed-open"]');
+  await expect(open).toHaveAttribute("href", /engines=on/);
+  expect(await open.getAttribute("href")).not.toContain("background");
+  await expect(page.locator('[data-testid="embed-code"]')).not.toContainText(/earth/i);
+  const address = (await open.getAttribute("href")) as string;
+  await page.goto(`${URL}${address}`);
+  const rocket = page.locator('[data-testid="rocket"]');
+  await expect(rocket).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await expect.poll(() => rocket.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.plumes)).toBe("33");
+  expect(errors).toEqual([]);
+});
+
+test("the embed page given background=earth draws the lit rocket, loads nothing of the Earth, holds one context, and stands still out of sight", async ({ page }) => {
+  test.setTimeout(240_000);
+  const errors: string[] = [];
+  const addresses: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("response", (response) => addresses.push(response.url()));
+  const lit = `${URL}embed.html?rocket=saturn-v&variant=saturn-v&look=painted&engines=on&background=earth`;
+  await page.goto(lit);
+  const rocket = page.locator('[data-testid="rocket"]');
+  await expect(rocket).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await expect.poll(() => rocket.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.plumes)).toBe("5");
+  expect(addresses.filter((address) => /textures\//.test(address))).toEqual([]);
+  expect((await usage(page)).contexts).toBe(1);
+  expect(errors).toEqual([]);
+  // inside a page that scrolls it away
+  await page.goto(`${URL}react-check.html`);
+  await page.evaluate((src) => {
+    document.documentElement.innerHTML = "<body></body>";
+    const frame = document.createElement("iframe");
+    frame.src = src;
+    frame.style.cssText = "width:480px;height:640px;border:0;display:block";
+    frame.dataset.testid = "embed";
+    const spacer = document.createElement("div");
+    spacer.style.height = "6000px";
+    document.body.append(frame, spacer);
+  }, lit);
+  const inner = page.frameLocator('[data-testid="embed"]').locator('[data-testid="rocket"]');
+  await expect(inner).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  const count = () => inner.evaluate((node) => Number((node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0));
+  await expect.poll(count, { timeout: 30_000 }).toBeGreaterThan(0);
+  await page.evaluate(() => window.scrollTo(0, 5000));
+  await settle(page, 1200);
+  const from = await count();
+  await settle(page, 1500);
+  expect(await count()).toBe(from);
 });

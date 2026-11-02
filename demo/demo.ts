@@ -252,7 +252,8 @@ function embedOptions(): RocketOptions {
 function drawEmbed() {
   const options = embedOptions();
   embedFull = embedCode(options, embedKind);
-  byId("embed-note").textContent = embedNote(embedKind, options);
+  // the Earth is this page's own and is not in the package: what is copied is the rocket
+  byId("embed-note").textContent = `${embedNote(embedKind, options)}${state.background === "earth" ? " The Earth behind it stays on this page: what you copy is the rocket." : ""}`;
   const credit = paintedCredit(options);
   const creditNode = byId("embed-credit");
   creditNode.hidden = credit === "";

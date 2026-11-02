@@ -1,6 +1,6 @@
 # Lit engines and flights
 
-`engines="on"` lights each engine that shows, at full thrust: a flame with shock diamonds and a glow on the hull in the painted look, and a drawn flame and ring in the line looks. A `phase` or a played flight lights only the engines that burn at that point.
+`engines="on"` lights each engine that shows, at full thrust: a flame with shock diamonds and a glow on the hull in the painted look, and a drawn flame and ring in the line looks. An engine lights where a source tells of it and the drawing has it: a part with neither, or a stage that has landed, has no flame. A `phase` or a played flight lights only the engines that burn at that point.
 
 ```html
 <uchusen-rocket id="rocket" rocket="falcon-9" variant="block-5" look="painted"></uchusen-rocket>
