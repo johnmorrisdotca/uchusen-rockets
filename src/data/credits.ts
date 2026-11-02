@@ -111,6 +111,7 @@ export const MODEL_CREDITS = {
   "nasa-shuttle-parts": nasa("Shuttle Parts (Hi-Res)", "nasa-3d-models-shuttle-parts-hi-res", "Its external tank and solid rocket booster only; rescaled to the sourced lengths; stood upright; its materials made into one picture; its pictures shrunk."),
   "nasa-lunar-module": nasa("Apollo Lunar Module", "nasa-3d-models-apollo-lunar-module", "The flag and the country's name removed with the two plates that carried them; reduced from 97,588 triangles; rescaled to the sourced height; separated into its two stages; its materials made into one picture."),
   "nasa-apollo-soyuz": nasa("Apollo Soyuz", "nasa-3d-models-apollo-soyuz", "The flags and the countries' names painted out of its pictures; reduced from 32,996 triangles; rescaled to the sourced lengths and widths; stood on end; separated into its three craft; its materials made into one picture."),
+  "nasa-gemini": nasa("Gemini", "nasa-3d-models-gemini", "The flag and the country's name painted out of its picture; reduced from 38,840 triangles; rescaled to the sourced length; separated into adapter and capsule; its materials made into one picture."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

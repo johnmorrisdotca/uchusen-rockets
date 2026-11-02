@@ -175,6 +175,10 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 `apollo-soyuz`: Apollo (11 m, 3.9 m across) docked to Soyuz (7.48 m, 2.72 m across) as flown on 1975-07-15, stood on end with Apollo's engine down. No source read here gives the docking module's size or the length of the three docked, so it is drawn at Apollo's scale and the whole is what they add to. Painted, it is NASA's model; its line looks are this package's own plain shapes.
 
+## Gemini
+
+`gemini`: 5.61 m long and 3 m wide, first flown on 1964-04-08, uncrewed, and with a crew on 1965-03-23. No source read here gives where the adapter ends: that is measured from NASA's model. Painted, it is NASA's model; its line looks are this package's own plain shapes.
+
 ## Real flights
 
 `FLIGHTS` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. Nothing plays them yet.

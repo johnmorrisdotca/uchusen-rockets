@@ -16,6 +16,7 @@ interface Row {
 const ROWS: readonly Row[] = [
   { rocket: "lunar-module", variant: "lunar-module", credit: "nasa-lunar-module", files: ["lunar-module-descent.glb", "lunar-module-ascent.glb"] },
   { rocket: "apollo-soyuz", variant: "apollo-soyuz", credit: "nasa-apollo-soyuz", files: ["apollo-soyuz-csm.glb", "apollo-soyuz-docking-module.glb", "apollo-soyuz-soyuz.glb"] },
+  { rocket: "gemini", variant: "gemini", credit: "nasa-gemini", files: ["gemini-adapter.glb", "gemini-capsule.glb"] },
   // more models
 ];
 

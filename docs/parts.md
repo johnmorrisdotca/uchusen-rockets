@@ -73,6 +73,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Launch tower | This package's code; the height and lightning rod from the FAA, the rest judged from photographs | This package's code, with Block 3 painted by this package's code here to keep the scene light. No lettering or mark is drawn |
 | Apollo lunar module | This package's plain shapes, from sourced sizes, where its parts stand measured from NASA's model | NASA's model, its flag and name removed: 59,949 triangles and 972 KB in two files |
 | Apollo and Soyuz | This package's plain shapes, from sourced sizes, where their parts begin measured from NASA's model | NASA's model, flags and names painted out: 29,314 triangles and 497 KB in three files |
+| Gemini | This package's plain shapes, from sourced sizes, where the adapter ends measured from NASA's model | NASA's model, flag and name painted out: 27,007 triangles and 548 KB in two files |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.

@@ -21,6 +21,7 @@
 - The stacked Space Shuttle is painted by NASA's own models: its orbiter (30,000 triangles from 48,376, 842 KB), its external tank (6,326, 153 KB) and its solid rocket booster (4,136, 123 KB), with every mark painted out and the orbiter's bay shut. `pnpm models:nasa` makes NASA's models, by hand; NOTICE.md says what they rest on.
 - The Apollo lunar module, `lunar-module`: NASA's model, its flag and the country's name removed, 97,588 triangles reduced to 59,949 and 972 KB in two files, its stages apart.
 - Apollo docked to Soyuz, `apollo-soyuz`: NASA's model, its flags and the countries' names painted out, 32,996 triangles reduced to 29,314 and 497 KB in three files.
+- The Gemini spacecraft, `gemini`: NASA's model, its flag and the country's name painted out, 38,840 triangles reduced to 27,007 and 548 KB in two files.
 - The demo's credit and source lists break a long address, so it never pushes a phone's page sideways.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 

@@ -82,6 +82,8 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "apollo-soyuz-csm.glb": [11, 3.9],
     "apollo-soyuz-docking-module.glb": [2.21, Number.NaN],
     "apollo-soyuz-soyuz.glb": [7.48, 2.72],
+    "gemini-adapter.glb": [2.39, 3],
+    "gemini-capsule.glb": [3.23, Number.NaN],
     "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
     "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
     "space-shuttle-stack-srb.glb": [45.46, 3.71],
