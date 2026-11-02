@@ -4,13 +4,13 @@ This package holds work under two licences.
 
 **The code, the code-made meshes and the drawings are under the MIT licence** (see [LICENSE](LICENSE) and [LICENSES/MIT.txt](LICENSES/MIT.txt)). Each is made by this package's own code from plain geometry and sourced sizes.
 
-**The painted models in `models/` (shipped as `dist/assets/models/`) are not.** Each stays under the Creative Commons Attribution 4.0 licence of its author (see [LICENSES/CC-BY-4.0.txt](LICENSES/CC-BY-4.0.txt) and https://creativecommons.org/licenses/by/4.0/). Using them means crediting them, as below. The credits are also data: `MODEL_CREDITS` and `creditLine`, and `check(description).credits` says which belong to a given rocket.
+**The painted models in `models/` (shipped as `dist/assets/models/`) are not.** Each stays under the Creative Commons Attribution 4.0 licence of its author, except one under CC0 as its row says (see [LICENSES/CC-BY-4.0.txt](LICENSES/CC-BY-4.0.txt) and https://creativecommons.org/licenses/by/4.0/). Using them means crediting them, as below. The credits are also data: `MODEL_CREDITS` and `creditLine`, and `check(description).credits` says which belong to a given rocket.
 
 No mesh or drawing carries a logo, wordmark or flag. Those were removed from the models below, and no photograph is shipped or traced: photographs were looked at for where parts sit.
 
 All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. "SpaceX", "Starship", "Super Heavy", "Raptor", "Falcon", "Dragon" and the names of other makers' rockets appear only as plain descriptive words.
 
-## Painted models (CC BY 4.0)
+## Painted models (CC BY 4.0, and one CC0)
 
 | Files | Title | Creator | Source | What was changed |
 | --- | --- | --- | --- | --- |
@@ -24,7 +24,9 @@ All trademarks belong to their owners, and this project is not affiliated with o
 | `falcon-heavy-falcon-heavy-centre.glb`, `-side-left.glb`, `-side-right.glb` | SpaceX Falcon Heavy(Low Poly) | [Antonio_Adams](https://sketchfab.com/AAdams3112) | https://sketchfab.com/3d-models/spacex-falcon-heavylow-poly-0dc068a462e34258b3872085a7f592c8 | The wordmark and logos painted out of its colour, roughness and normal maps, which were also resized; rescaled to sourced sizes; separated into its centre core and two side boosters by its own connected pieces. |
 | `grasshopper-grasshopper-vehicle.glb` | SpaceX Grasshopper | [Echo_3](https://sketchfab.com/Echo_3) | https://sketchfab.com/3d-models/spacex-grasshopper-35c07a68cdb246c59bb425610b934bf8 | The wordmark and logo removed with the texture that carried them; rescaled to the sourced height; reduced from 55,455 triangles; materials merged and renamed. |
 
-Licence for all: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The credit line the second model's author asks for: This work is based on "Spacex Starship Ship 24 & Booster 7 V4" (https://sketchfab.com/3d-models/spacex-starship-ship-24-booster-7-v4-97875d14b63e4b9ca9ed425ef4253306) by clarence365 (https://sketchfab.com/clarence365) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/).
+| `space-shuttle-discovery-orbiter.glb` | Orbiter, Space Shuttle, OV-103, Discovery | Smithsonian Institution, National Air and Space Museum; support generously provided by Meredith Siegfried Madden and Dr. Peter Madden | https://3d.si.edu/object/3d/orbiter-space-shuttle-ov-103-discovery:d8c636ce-4ebc-11ea-b77f-2e728ce88125 | **Under CC0 1.0, not CC BY** (https://creativecommons.org/publicdomain/zero/1.0/). The agency mark, the flags, the country's name and the orbiter's name painted out of its picture; reduced from 150,000 triangles; its pictures shrunk; stood upright and scaled to the sourced length; materials renamed. The licence was read from the Smithsonian's record as a search engine quoted it, and from a copy's tag on Wikimedia Commons: the Smithsonian's own pages asked for browser verification. |
+
+Licence for all but the last: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The credit line the second model's author asks for: This work is based on "Spacex Starship Ship 24 & Booster 7 V4" (https://sketchfab.com/3d-models/spacex-starship-ship-24-booster-7-v4-97875d14b63e4b9ca9ed425ef4253306) by clarence365 (https://sketchfab.com/clarence365) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/).
 
 These models also informed the proportions of this package's own line drawings of the same vehicles: those measurements were taken after each was scaled to the sourced sizes. No model stands in for another version. A rocket's own parts are credited through `check(description).credits`, generated from which part came from where.
 

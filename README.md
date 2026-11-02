@@ -44,7 +44,7 @@ That is all a page needs with a bundler. The drawing shows at once; when the ele
 | Attribute | Values |
 | --- | --- |
 | `rocket` | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper`, `falcon-1`, `saturn-v`, `space-shuttle`, `sls`, `new-glenn`, `electron`, `soyuz`, `droneship`, `landing-zone`, `launch-tower`, `starbase` |
-| `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2`, `cargo-dragon-2`, `crew-dragon-inside`. Falcon 1: `falcon-1`, `falcon-1e`. Saturn V: `saturn-v`. Space Shuttle: `stack`. Space Launch System: `block-1`. New Glenn: `7x2`. Electron: `electron`. Soyuz: `soyuz-2`. Drone ships: `ocisly`, `jrti`, `asog`. Landing zones: `lz-1`, `lz-4`. Launch tower: `tower`, `stack`, `catch`. Starbase: `launch-site`, `build-site`, `city` |
+| `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2`, `cargo-dragon-2`, `crew-dragon-inside`. Falcon 1: `falcon-1`, `falcon-1e`. Saturn V: `saturn-v`. Space Shuttle: `stack`, `discovery`. Space Launch System: `block-1`. New Glenn: `7x2`. Electron: `electron`. Soyuz: `soyuz-2`. Drone ships: `ocisly`, `jrti`, `asog`. Landing zones: `lz-1`, `lz-4`. Launch tower: `tower`, `stack`, `catch`. Starbase: `launch-site`, `build-site`, `city` |
 | `show` | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right` |
 | `look` | `line`, `thick`, `painted` |
 | `view` | `three-quarter`, `front`, `back`, `side`, `below` |
@@ -53,7 +53,7 @@ Changing `look` keeps the angle. Changing `show` is an animated move, and a cut 
 
 ## The rockets
 
-Starship; Falcon 9 in v1.0, v1.1, Full Thrust and Block 5, with a fairing or with Dragon 2; Falcon Heavy; Dragon 1, Dragon 2 and Cargo Dragon 2, and Crew Dragon cut open to see inside; Grasshopper, the test vehicle; and Falcon 1, with the Falcon 1e that was announced and never flew. From other makers, to compare at one scale, each drawn by this package's code from its published sizes: Saturn V; the Space Shuttle, stacked with its tank and boosters, each part alone too; the Space Launch System, Block 1 with Orion; New Glenn 7×2; Electron; and Soyuz-2. And where a booster lands: drone ships and landing zones. The Starbase integration tower too, with its mount and arms, a Block 3 stacked on it, or catching its booster. And Starbase, as a scene from the map: `launch-site`, `build-site` and `city`. <!-- more rockets -->
+Starship; Falcon 9 in v1.0, v1.1, Full Thrust and Block 5, with a fairing or with Dragon 2; Falcon Heavy; Dragon 1, Dragon 2 and Cargo Dragon 2, and Crew Dragon cut open to see inside; Grasshopper, the test vehicle; and Falcon 1, with the Falcon 1e that was announced and never flew. From other makers, to compare at one scale, each drawn by this package's code from its published sizes: Saturn V; the Space Shuttle, stacked with its tank and boosters, each part alone too, and Discovery, a real scan; the Space Launch System, Block 1 with Orion; New Glenn 7×2; Electron; and Soyuz-2. And where a booster lands: drone ships and landing zones. The Starbase integration tower too, with its mount and arms, a Block 3 stacked on it, or catching its booster. And Starbase, as a scene from the map: `launch-site`, `build-site` and `city`. <!-- more rockets -->
 
 ```html
 <uchusen-rocket rocket="falcon-9" variant="block-5" show="apart" look="painted"></uchusen-rocket>
@@ -159,7 +159,9 @@ The code, the code-made meshes and the drawings are under the MIT licence. **The
 | Falcon Heavy | SpaceX Falcon Heavy(Low Poly) | [Antonio_Adams](https://sketchfab.com/AAdams3112) | [Sketchfab](https://sketchfab.com/3d-models/spacex-falcon-heavylow-poly-0dc068a462e34258b3872085a7f592c8) | Wordmark and logos painted out, rescaled to sourced sizes, side boosters separated |
 | Grasshopper | SpaceX Grasshopper | [Echo_3](https://sketchfab.com/Echo_3) | [Sketchfab](https://sketchfab.com/3d-models/spacex-grasshopper-35c07a68cdb246c59bb425610b934bf8) | Wordmark and logo removed, rescaled to the sourced height, reduced |
 
-All under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Starship Blocks 1, 2 and 4 and the older Falcon 9s are painted by this package's own code: no model is stretched to stand in for another version.
+| Discovery | Orbiter, Space Shuttle, OV-103, Discovery | [Smithsonian Institution, National Air and Space Museum](https://3d.si.edu/) | [Smithsonian 3D](https://3d.si.edu/object/3d/orbiter-space-shuttle-ov-103-discovery:d8c636ce-4ebc-11ea-b77f-2e728ce88125) | Marks painted out, reduced, stood upright, rescaled to the sourced length. Under CC0 |
+
+All but Discovery are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Starship Blocks 1, 2 and 4 and the older Falcon 9s are painted by this package's own code: no model is stretched to stand in for another version.
 
 **No mesh or drawing carries a logo, a wordmark or a flag.** Rocket names appear only as plain descriptive words. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. [NOTICE.md](NOTICE.md) names each source and what was taken from it.
 

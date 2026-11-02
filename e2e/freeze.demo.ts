@@ -174,20 +174,23 @@ test("changes give back what they took: contexts, buffers, vertex arrays and tex
   expect(last.textures).toBeLessThanOrEqual(first.textures);
 });
 
-test("every rocket in the catalogue: drawn line and painted, then contexts and graphics memory stay flat as they are walked again", async ({ page }) => {
+test("every variant of every rocket: drawn line and painted, then contexts and graphics memory stay flat as they are walked again", async ({ page }) => {
   test.setTimeout(420_000);
   await page.goto(URL);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);
   const walk = async (look: string) => {
     await press(page, `look-${look}`);
-    for (const id of Object.keys(ROCKETS)) {
-      await press(page, `rocket-${id}`);
-      await expect(hero(page)).toHaveAttribute("rocket", id);
-      await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
-      if (look === "painted") await expect(hero(page)).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
-      await settle(page, 150);
-    }
+    for (const rocket of Object.values(ROCKETS))
+      for (const variant of rocket.variants) {
+        await press(page, `rocket-${rocket.id}`);
+        await press(page, `variant-${variant.id}`);
+        await expect(hero(page)).toHaveAttribute("rocket", rocket.id);
+        await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
+        await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+        if (look === "painted") await expect(hero(page)).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
+        await settle(page, 120);
+      }
   };
   await walk("line");
   await walk("painted");

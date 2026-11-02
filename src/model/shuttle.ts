@@ -102,6 +102,12 @@ const FROM = "This package's code, from the sourced lengths and widths. The orbi
 export const SHUTTLE_BUILDS: readonly StackBuild[] = [
   {
     rocket: "space-shuttle",
+    variant: "discovery",
+    drawnFrom: "The Smithsonian's scan for the painted look, its marks painted out; this package's own orbiter for the two line looks, from the same sourced sizes.",
+    parts: [{ slot: "orbiter", kind: "orbiter", name: "Discovery, OV-103", height: ORB, diameter: ORBITER_SPAN.value ?? 0, sourcedDiameter: ORBITER_SPAN, painted: { file: "space-shuttle-discovery-orbiter.glb", credit: "smithsonian-discovery" }, pieces: orbiter }],
+  },
+  {
+    rocket: "space-shuttle",
     variant: "stack",
     drawnFrom: FROM,
     parts: [

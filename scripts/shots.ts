@@ -25,7 +25,7 @@ await new Promise((resolve) => setTimeout(resolve, 700));
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const problems: string[] = [];
 try {
-  const page = await browser.newPage({ viewport: { width: 620, height: 800 }, deviceScaleFactor: 1, reducedMotion: "reduce" });
+  const page = await browser.newPage({ viewport: { width: 620, height: 800 }, deviceScaleFactor: Number(process.env.SHOTS_SCALE ?? 1), reducedMotion: "reduce" });
   page.on("console", (m) => {
     if (m.type() === "error") problems.push(m.text());
   });

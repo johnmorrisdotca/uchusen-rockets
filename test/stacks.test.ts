@@ -1,7 +1,7 @@
 // The rockets drawn wholly by this package's code: each is drawn to its sourced height, its engines are the sourced count, and each part has the record every part has.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { check, figureWords, FLIGHTS, flightsOf, partEntry, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
+import { check, figureWords, FLIGHTS, flightsOf, MODEL_CREDITS, partEntry, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
 import type { Piece } from "../src/model/pieces.ts";
 import { build, buildPart } from "../src/build/index.ts";
 
@@ -174,6 +174,15 @@ test("real flights name a variant there is, a known source, and the source's own
   assert.deepEqual(flightsOf("falcon-1").map((flight) => flight.launch), ["Failure", "Failure", "Failure", "Success", "Success"]);
   const dates = flightsOf("starship").map((flight) => flight.date);
   assert.deepEqual(dates, [...dates].sort());
+});
+
+test("Discovery is a CC0 scan, credited, in its own variant, with its marks painted out", () => {
+  const report = check({ rocket: "space-shuttle", variant: "discovery" });
+  assert.equal(report.credits[0].id, "smithsonian-discovery");
+  assert.equal(report.credits[0].licence, "CC0 1.0");
+  assert.deepEqual(check({ rocket: "space-shuttle", variant: "stack" }).credits, []);
+  assert.match(variantOf("space-shuttle", "discovery")?.note ?? "", /painted out/);
+  assert.match(MODEL_CREDITS["smithsonian-discovery"].changes, /painted out/);
 });
 
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {

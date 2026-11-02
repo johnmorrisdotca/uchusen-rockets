@@ -59,6 +59,7 @@ export const SOURCES = {
   "faa-pea-2022": { title: "Final Programmatic Environmental Assessment for the SpaceX Starship/Super Heavy Launch Vehicle Program at the Boca Chica Launch Site", publisher: "Federal Aviation Administration", url: "https://www.faa.gov/sites/faa.gov/files/2022-06/PEA_for_SpaceX_Starship_Super_Heavy_at_Boca_Chica_FINAL.pdf", date: "2022-06", read: "direct" },
   "wikipedia-starbase": { title: "SpaceX Starbase", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Starbase", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   openstreetmap: { title: "OpenStreetMap: named places at Starbase, read through its Overpass API", publisher: "OpenStreetMap contributors", url: "https://www.openstreetmap.org/copyright", date: "2026-11-02", read: "direct", licence: "ODbL 1.0" },
+  "wikipedia-discovery": { title: "Space Shuttle Discovery (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Shuttle_Discovery", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 

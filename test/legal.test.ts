@@ -50,7 +50,7 @@ test("a painted model carries no logo: only our materials, only the images chose
     assert.ok((json.images?.length ?? 0) <= 4, `${name}: ${json.images?.length} images`);
     // the materials that carried a mark are gone by name too
     assert.ok(!/logo|serial|wordmark/i.test(JSON.stringify(json.materials)), name);
-    assert.match(json.asset.extras.license, /CC-BY-4\.0/, name);
+    assert.match(json.asset.extras.license, /CC-BY-4\.0|CC0-1\.0/, name);
     assert.ok(json.asset.extras.author && json.asset.extras.source && json.asset.extras.title, name);
     assert.ok(json.asset.extras.changes, `${name} says what was changed`);
   }
@@ -74,6 +74,7 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "falcon-heavy-falcon-heavy-side-left.glb": [45.57, 3.7],
     "falcon-heavy-falcon-heavy-side-right.glb": [45.57, 3.7],
     "grasshopper-grasshopper-vehicle.glb": [32, Number.NaN],
+    "space-shuttle-discovery-orbiter.glb": [37.24, 23.79],
   };
   for (const name of modelFiles) {
     assert.ok(statSync(join("models", name)).size < 8 * 1024 * 1024, name);

@@ -34,6 +34,8 @@ export interface ModelRecipe {
   /** For one merged mesh: which part each of its connected pieces belongs to. */
   pieces?: (piece: Piece) => RecipePart;
   budgets: Record<string, Record<string, { ratio: number; error: number }>>;
+  /** Keep each island of a cut-up picture whole: a free edge may not move, or it would sample its neighbour. */
+  lockBorder?: boolean;
   /** For a model of many small meshes: the part by each primitive's own box, in the file's units. */
   wholeNodes?: (lo: number[], hi: number[]) => RecipePart;
   /** Something no outside view reaches, by its box: left out. */
@@ -251,6 +253,18 @@ export const MODEL_RECIPES: ModelRecipe[] = [
     budgets: { vehicle: { "*": { ratio: 0.55, error: 0.008 } } },
   },
   {
+    id: "space-shuttle-discovery",
+    // its marks are painted out first, by scripts/paint-discovery.ts
+    file: "shuttle-discovery-smithsonian/discovery-marks-painted-out.glb",
+    changes: "the agency mark, the flags, the country's name and the orbiter's name painted out of its picture; reduced from 150,000 triangles; its pictures shrunk from 4096 to 1024; stood upright and scaled to the sourced length; materials renamed",
+    materials: { default: "atlas" },
+    materialSpec: { atlas: { base: [1, 1, 1], metal: 0, rough: 0.7 } },
+    textures: { atlas: { from: "default", maps: ["base"], size: 1024 } },
+    partAt: () => DISCOVERY,
+    lockBorder: true,
+    budgets: { orbiter: { "*": { ratio: 0.5, error: 0.02 } } },
+  },
+  {
     id: "starship-2019",
     file: "starship-2019-martiandays/spacex_starship.glb",
     changes: "rescaled to the sourced height, turned to this package's axes, materials renamed",
@@ -261,6 +275,22 @@ export const MODEL_RECIPES: ModelRecipe[] = [
     budgets: { ship: { "*": { ratio: 1, error: 0 } } },
   },
 ];
+
+// The scan: nose towards +z, top towards +y, 37.6 units long. Stood on its tail with its belly towards +Z, as this package's rule has it, scaled to the sourced 37.24 m.
+const DISCOVERY_SCALE = 37.24 / 37.6;
+const DISCOVERY: RecipePart = {
+  id: "orbiter",
+  place: (p, n) => {
+    const [x, y, z] = p;
+    p[0] = x * DISCOVERY_SCALE;
+    p[1] = (z + 18.8) * DISCOVERY_SCALE;
+    p[2] = -(y + 1.45) * DISCOVERY_SCALE;
+    const [nx, ny, nz] = n;
+    n[0] = nx;
+    n[1] = nz;
+    n[2] = -ny;
+  },
+};
 
 const B3_RADIAL_BOOSTER = 9 / B3_DIAMETER;
 const B3_RADIAL_SHIP = 9 / B3_DIAMETER;

@@ -12,6 +12,8 @@ export const SHUTTLE_TANK_DIAMETER = m(8.41, T, { note: "27.6 feet." });
 export const SHUTTLE_SRB_DIAMETER = m(3.71, B, { note: "12.17 feet." });
 export const ORBITER_SPAN = m(23.79, O, { note: "The wingspan." });
 
+const D = "wikipedia-discovery" as const;
+
 export const SHUTTLE_VARIANTS: readonly Variant[] = [
   {
     id: "stack",
@@ -32,6 +34,22 @@ export const SHUTTLE_VARIANTS: readonly Variant[] = [
       },
       engines: { orbiter: said("3 RS-25", S), "srb-left": said("1 solid motor", B), "srb-right": said("1 solid motor", B) },
       more: { span: ORBITER_SPAN as Figure<number | string>, standing: blank("No source read here gives where the parts stand against each other.") as Figure<number | string> },
+    },
+  },
+  {
+    id: "discovery",
+    rocket: "space-shuttle",
+    name: "Discovery, OV-103, as displayed (a scan)",
+    status: "flown",
+    firstFlight: said("1984-08-30", D, { note: "STS-41-D." }),
+    slots: ["orbiter"],
+    note: "A real orbiter: the Smithsonian's scan, painted, with its landing gear down as it stands on display. The agency mark, the flags, the country's name and its own name are painted out, which leaves plain patches on its wings and sides. Its line looks are this package's own orbiter, with no gear. The licence is read from the Smithsonian's record as a search engine quoted it and from a Commons copy, because the Smithsonian's own pages asked for browser verification.",
+    facts: {
+      height: m(37.24, O, { note: "Its length, nose to tail. It stands 17.86 m tall on its gear." }),
+      diameter: m(23.79, O, { note: "The wingspan." }),
+      parts: { orbiter: m(37.24, O, { note: "Its length, nose to tail." }) },
+      engines: { orbiter: said("3 RS-25", S) },
+      more: {},
     },
   },
 ];

@@ -1,4 +1,4 @@
-// Whose models the painted parts are made from. Each is under Creative Commons Attribution 4.0, and each assembled rocket's credits are generated from these rows, so an author is credited exactly for
+// Whose models the painted parts are made from. Each is under Creative Commons Attribution 4.0, or CC0 where the row says so, and each assembled rocket's credits are generated from these rows, so an author is credited exactly for
 // what is used. The package's code is MIT; these assets are not: see NOTICE.md.
 
 export interface ModelCredit {
@@ -6,7 +6,7 @@ export interface ModelCredit {
   creator: string;
   creatorUrl: string;
   sourceUrl: string;
-  licence: "CC BY 4.0";
+  licence: "CC BY 4.0" | "CC0 1.0";
   licenceUrl: string;
   /** What this package changed. */
   changes: string;
@@ -86,6 +86,15 @@ export const MODEL_CREDITS = {
     licence: "CC BY 4.0",
     licenceUrl: LICENCE_URL,
     changes: "The wordmark and logo removed with the texture that carried them; rescaled to the sourced height; reduced from 55,455 triangles; materials merged and renamed.",
+  },
+  "smithsonian-discovery": {
+    title: "Orbiter, Space Shuttle, OV-103, Discovery",
+    creator: "Smithsonian Institution, National Air and Space Museum",
+    creatorUrl: "https://3d.si.edu/",
+    sourceUrl: "https://3d.si.edu/object/3d/orbiter-space-shuttle-ov-103-discovery:d8c636ce-4ebc-11ea-b77f-2e728ce88125",
+    licence: "CC0 1.0",
+    licenceUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+    changes: "The agency mark, the flags, the country's name and the orbiter's name painted out of its picture; reduced from 150,000 triangles; its pictures shrunk; stood upright and scaled to the sourced length; materials renamed.",
   },
 } as const satisfies Record<string, ModelCredit>;
 

@@ -406,6 +406,29 @@ test("each rocket's painted look fetches only its own models, and credits their 
   expect(problems).toEqual([]);
 });
 
+test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited as CC0, with the others' rockets beside it", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+  test.setTimeout(240_000);
+  const problems = watch(page);
+  await page.goto(URL);
+  await stopTurn(page);
+  await reach3d(page);
+  await press(page, "look-painted");
+  await press(page, "rocket-space-shuttle");
+  await press(page, "variant-discovery");
+  await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
+  const credit = page.locator('[data-testid="credit"]');
+  await expect(credit).toContainText("Smithsonian Institution");
+  await expect(credit).toContainText("CC0 1.0");
+  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
+  await press(page, "rocket-droneship");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("Deck length");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("In service");
+  await press(page, "rocket-starbase");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("Tower 1 to tower 2");
+  expect(problems).toEqual([]);
+});
+
 test("the painted Falcon 9 second stage shows this package's own nozzle when it stands apart or alone, and not nested in the stack", async ({ page, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
   test.setTimeout(240_000);

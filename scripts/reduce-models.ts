@@ -160,12 +160,12 @@ function weld(bucket: Bucket): { positions: Float32Array<ArrayBuffer>; normals: 
 }
 
 /** Simplifies to `ratio` of the triangles, with `error` in metres as the most it may move the surface. Normals count, so hard edges stay. */
-function reduce(bucket: Bucket, ratio: number, error: number): { positions: Float32Array<ArrayBuffer>; normals: Float32Array<ArrayBuffer>; uvs: Float32Array<ArrayBuffer>; indices: Uint32Array<ArrayBuffer> } {
+function reduce(bucket: Bucket, ratio: number, error: number, lockBorder = false): { positions: Float32Array<ArrayBuffer>; normals: Float32Array<ArrayBuffer>; uvs: Float32Array<ArrayBuffer>; indices: Uint32Array<ArrayBuffer> } {
   const w = weld(bucket);
   let indices: Uint32Array = w.indices;
   if (ratio < 1 && w.indices.length > 3) {
     const target = Math.max(3, Math.floor((w.indices.length * ratio) / 3) * 3);
-    [indices] = MeshoptSimplifier.simplifyWithAttributes(w.indices, w.positions, 3, w.normals, 3, [0.4, 0.4, 0.4], null, target, error, ["ErrorAbsolute"]);
+    [indices] = MeshoptSimplifier.simplifyWithAttributes(w.indices, w.positions, 3, w.normals, 3, [0.4, 0.4, 0.4], null, target, error, lockBorder ? ["ErrorAbsolute", "LockBorder"] : ["ErrorAbsolute"]);
   }
   // only the vertices still used
   const map = new Map<number, number>();
@@ -281,7 +281,7 @@ async function runRecipe(recipe: ModelRecipe): Promise<void> {
     const hi = [-1e9, -1e9, -1e9];
     for (const [name, bucket] of buckets) {
       const { ratio, error } = budget[name] ?? budget["*"] ?? { ratio: 0.2, error: 0.02 };
-      const r = reduce(bucket, ratio, error);
+      const r = reduce(bucket, ratio, error, recipe.lockBorder);
       if (r.indices.length === 0) continue;
       outTris += r.indices.length / 3;
       for (let i = 0; i < r.positions.length; i += 3)
