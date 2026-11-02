@@ -19,7 +19,7 @@
 | `view` | Where from | `three-quarter`, `front`, `back`, `side`, `below` |
 | `build` | A rocket from parts, as JSON | See [parts.md](parts.md) |
 | `spin` | How it turns by itself | `off`, `slow`, `medium`, `fast` or seconds a turn |
-| `way` | Which way | `cw`, `ccw` |
+| `way` | Which way it turns | `cw` takes the near side to the viewer's left, `ccw` to the right. Anything else is `cw` |
 | `mode` | `drawing` keeps the drawing and never loads three.js | `auto`, `drawing` |
 | `assets` | Where the painted models are | An address |
 | `label` | What a screen reader says | Words |
@@ -57,6 +57,7 @@ A flight, where a page gives one for the variant, plays from a script or from [`
 `element.drive({ yaw, tilt, zoom, panX, panY })` takes what the controls report: `yaw` and `tilt` in degrees, `zoom` (1 is the whole rocket in the picture; held to 0.25 to 8) and the pan in pixels. Each is optional and must be a finite number, or what was stays. The first call hands over: the element's own drag, wheel, keys and spin stand down, `data-driven` is set, and the 3D view and the drawing both follow, so it works with no WebGL too. `drive(null)` takes the hands back.
 
 - The turn and tip are from the angle `view` names: yaw 0 and tilt 0 is that view. Dragging right makes `yaw` larger, which carries the camera to the left; a larger `tilt` lowers it. To go to another view, set `view` and give the controls `set({ yaw: 0, tilt: 0 })`.
+- The auto-turn goes either way: `speed` is degrees a second, positive taking the near side to the right and negative to the left. Set the attribute while it turns and it changes at once, from where it is. The demo's Turn left and Turn right do this.
 - Zoom is the camera's, so a zoomed 3D view stays sharp. The camera keeps the distance that holds the whole rocket, so turning never makes it breathe.
 - Tilt to turn on a phone still works, added to the chosen view.
 - The drawing is zoomed and moved by its `viewBox`, so it is as sharp as its box at any zoom and never grows past it.

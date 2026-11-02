@@ -14,7 +14,8 @@ import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
 import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
-import type { RocketViewer, Spin } from "./element/scene.ts";
+import type { RocketViewer } from "./element/scene.ts";
+import { type Spin, spinOf } from "./spin.ts";
 
 export type RocketState = "picture" | "loading" | "3d" | "fallback" | "error";
 
@@ -22,7 +23,6 @@ const HTMLBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class
 
 /** A view out of sight keeps its WebGL canvas this long before letting it go (a browser allows only a few at a time). */
 const RELEASE_MS = 30_000;
-const DEFAULT_SPIN: Spin = { seconds: 180, way: "cw" };
 /** The drawing, followed along a turn, is made again at most this often. */
 const PLACE_MS = 50;
 
@@ -231,10 +231,7 @@ export class UchusenRocket extends HTMLBase {
   // ---------------------------------------------------------------------------------------------------------------------------------
 
   private spin(): Spin {
-    const raw = this.getAttribute("spin");
-    const named: Record<string, number> = { off: 0, slow: 180, medium: 67, fast: 20 };
-    const seconds = raw === null ? DEFAULT_SPIN.seconds : (named[raw] ?? (Number.isFinite(Number(raw)) ? Math.max(0, Number(raw)) : DEFAULT_SPIN.seconds));
-    return { seconds, way: this.getAttribute("way") === "ccw" ? "ccw" : "cw" };
+    return spinOf(this.getAttribute("spin"), this.getAttribute("way"));
   }
 
   private descriptionNow(): Description {

@@ -617,6 +617,78 @@ test.describe("the engines", () => {
   });
 });
 
+test.describe("the way it turns", () => {
+  test.use({ reducedMotion: "no-preference" });
+  const yaw = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { state: { yaw: number } }).state.yaw);
+  const turning = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { state: { turning: boolean } }).state.turning);
+  const button = (page: Page, way: string) => page.locator(`[data-testid="turn-${way}"]`);
+
+  test("a press changes the way at once, with no jump, starts it if it had stopped, and a change of look or parts keeps it", async ({ page, browserName }) => {
+    const problems = watch(page);
+    await page.goto(URL);
+    if (is3d(browserName)) await reach3d(page);
+    // going right by itself: the angle grows
+    await stopTurn(page);
+    await expect.poll(() => turning(page)).toBe(false);
+    await expect(button(page, "left")).toHaveAttribute("aria-pressed", "false");
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "false");
+    const still = await yaw(page);
+    await press(page, "turn-left");
+    await expect.poll(() => turning(page)).toBe(true);
+    await expect(button(page, "left")).toHaveAttribute("aria-pressed", "true");
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "false");
+    // left is the yaw going down, which the view shows as the near side going left
+    await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeLessThan(still - 1);
+    if (is3d(browserName)) await expect.poll(async () => Number(await canvasData(page, "azimuth")), { timeout: 30_000 }).toBeGreaterThan(32 + 1);
+    const mid = await yaw(page);
+    await press(page, "turn-right");
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "true");
+    // no jump: it goes on from where it was
+    expect(Math.abs((await yaw(page)) - mid)).toBeLessThan(8);
+    const from = await yaw(page);
+    await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeGreaterThan(from + 1);
+    // the choice survives the other controls
+    await press(page, "look-thick");
+    await press(page, "show-apart");
+    await press(page, "variant-v2");
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "true");
+    expect(await bar(page).getAttribute("speed")).toBe("5");
+    const later = await yaw(page);
+    await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeGreaterThan(later + 1);
+    await stopTurn(page);
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "false");
+    expect(problems).toEqual([]);
+  });
+
+  test("the element's own spin goes either way, and a bad value is the default", async ({ page, browserName }) => {
+    test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
+    const problems = watch(page);
+    await page.goto(URL);
+    await stopTurn(page);
+    await reach3d(page);
+    await hero(page).evaluate((node) => {
+      (node as HTMLElement & { drive(choice: null): void }).drive(null);
+      node.setAttribute("spin", "fast");
+      node.setAttribute("way", "ccw");
+    });
+    await expect.poll(() => canvasData(page, "spin")).toBe("20ccw");
+    const a = await angle(page);
+    await expect.poll(async () => (await angle(page)).az, { timeout: 30_000 }).toBeLessThan(a.az - 1);
+    await hero(page).evaluate((node) => node.setAttribute("way", '"><script>'));
+    await expect.poll(() => canvasData(page, "spin")).toBe("20cw");
+    const b = await angle(page);
+    await expect.poll(async () => (await angle(page)).az, { timeout: 30_000 }).toBeGreaterThan(b.az + 1);
+    expect(problems).toEqual([]);
+  });
+});
+
+test("under reduced motion nothing turns by itself, and the buttons are there for a press", async ({ page }) => {
+  await page.goto(URL);
+  expect(await bar(page).evaluate((node) => (node as HTMLElement & { state: { turning: boolean } }).state.turning)).toBe(false);
+  await expect(page.locator('[data-testid="turn-left"]')).toBeVisible();
+  await expect(page.locator('[data-testid="turn-left"]')).toHaveAttribute("aria-pressed", "false");
+});
+
 test.describe("the flight", () => {
   test.use({ reducedMotion: "no-preference" });
   const flight = (page: Page) => page.locator('[data-testid="flight"]');

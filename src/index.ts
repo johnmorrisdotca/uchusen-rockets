@@ -23,6 +23,8 @@ export { tiltMode, tiltTurn } from "./tilt.ts";
 export type { Reading, TiltMode } from "./tilt.ts";
 export { MATERIALS } from "./model/materials.ts";
 export type { MaterialName, MaterialSpec } from "./model/materials.ts";
+export { cleanWay, DEFAULT_SPIN, spinOf } from "./spin.ts";
+export type { Spin, Way } from "./spin.ts";
 export { FLIGHTS } from "./data/flights.ts";
 export { burnsOf, clockWords, FlightClock, flightOf, frameAt, lastPosition, phaseAt, phasePosition, SECONDS_PER_PHASE } from "./flight.ts";
 export type { Flight, FlightBurn, FlightFrame, FlightPhase, PartPose } from "./flight.ts";

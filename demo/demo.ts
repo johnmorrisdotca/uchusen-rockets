@@ -143,6 +143,34 @@ byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.nam
 byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
 byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));
 
+// ------------------------------------------------------------- which way it turns
+// The family's controls turn it at their `speed`: positive takes the near side to the right, negative to the left. A press changes the way at once, from where it is, and starts the turn if it had stopped.
+const TURN_SPEED = 5;
+const turnBox = byId("turn");
+const TURN_FOR_MS = 60_000;
+let turnTimer = 0;
+let turnWay: "left" | "right" = "right";
+function drawTurn() {
+  const turning = bar.state.turning;
+  for (const way of ["left", "right"] as const) {
+    const button = turnBox.querySelector<HTMLButtonElement>(`[data-testid="turn-${way}"]`);
+    const pressed = String(turning && turnWay === way);
+    if (button && button.getAttribute("aria-pressed") !== pressed) button.setAttribute("aria-pressed", pressed);
+  }
+}
+function turnTo(way: "left" | "right") {
+  turnWay = way;
+  bar.setAttribute("speed", String(way === "left" ? -TURN_SPEED : TURN_SPEED));
+  if (!bar.state.turning) bar.play();
+  // a turn someone asked for ends too, as the first one does: a tab left open draws nothing for ever
+  window.clearTimeout(turnTimer);
+  turnTimer = window.setTimeout(() => bar.pause(), TURN_FOR_MS);
+  drawTurn();
+  drawEmbed();
+}
+turnBox.append(chip("Turn left", "turn-left", () => turnTo("left")), chip("Turn right", "turn-right", () => turnTo("right")));
+bar.addEventListener("kazoku-viewchange", drawTurn);
+
 // ------------------------------------------------------------- the engines
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const enginesBox = byId("engines");
@@ -177,7 +205,9 @@ for (const kind of EMBED_KINDS) {
 function embedOptions(): RocketOptions {
   const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
-  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...(engines === "on" ? { engines } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+  // what turns here by the controls turns there by itself: left is `cw`, the near side going left
+  const turning = bar.state.turning ? { spin: "slow", way: turnWay === "left" ? "cw" : "ccw" } : {};
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
 function drawEmbed() {
   const options = embedOptions();

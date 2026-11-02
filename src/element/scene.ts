@@ -46,6 +46,7 @@ import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
+import type { Spin } from "../spin.ts";
 import { GroundKit } from "./ground.ts";
 import { type Fuel, PartPlumes, PlumeKit } from "./plumes.ts";
 
@@ -59,12 +60,6 @@ export interface ViewerOptions {
   onPainted: (state: string) => void;
   /** Tells the page a timeline moved. */
   onFlight?: () => void;
-}
-
-export interface Spin {
-  /** Seconds a turn, 0 for not at all. */
-  seconds: number;
-  way: "cw" | "ccw";
 }
 
 const IDLE_STOP_MS = 90_000;
