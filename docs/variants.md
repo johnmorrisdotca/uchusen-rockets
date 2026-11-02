@@ -195,6 +195,18 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 `hubble`: 13.2 m by 4.2 m, launched on 1990-04-24. Its arrays have no size in a source read here: they are NASA's model's. Painted, it is NASA's model with a lettered plate painted out; its line looks are this package's own plain shapes.
 
+## Whose each one is
+
+Each row of `ROCKETS` has a `maker`, one of the keys of `MAKERS`, and `madeBy`, what its source says, with the companies that built it where the source names them. The demo lists rockets under their maker. A site has the maker `sites` and a blank `madeBy`: its maker has not been read.
+
+```ts
+import { MAKERS, ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
+
+MAKERS[ROCKETS["new-glenn"].maker]; // "Blue Origin"
+ROCKETS["new-glenn"].madeBy.value; // "Blue Origin"
+ROCKETS.starbase.madeBy.value; // null
+```
+
 ## Real flights
 
 `FLIGHT_LOG` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. It is a log, not a timeline: the flights that play are `FLIGHTS`, in [flights](flight.md).

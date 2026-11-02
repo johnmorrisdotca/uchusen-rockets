@@ -41,6 +41,7 @@ section > p { color: var(--muted); margin: 0 0 1rem; max-width: 70ch; }
 @media (hover: hover) { .chip:hover { border-color: var(--accent); } }
 .field-pair { display: flex; flex-wrap: wrap; gap: 0.9rem 1.5rem; }
 .field-pair > p { flex-basis: 100%; margin: 0; }
+.field-pair .note { color: var(--muted); font-size: 0.82rem; }
 .field .note { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.82rem; }
 .switch { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; cursor: pointer; }
 .switch input { width: 1.2rem; height: 1.2rem; }
@@ -95,9 +96,27 @@ uchusen-flight { --uchusen-accent: var(--accent); }
 .more-tabs .chip[aria-selected="true"] { background: #1c3556; border-color: var(--accent); color: #fff; }
 .more-tabs ~ section { margin-top: 1.2rem; }
 .foot { max-width: 1240px; margin: 0 auto; padding: 1rem 1rem 3rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--line); }
+/* At a desk the view is limited by the window's height, so the choices have the width, and a mouse needs no finger's room: the choices stay on one screen. */
+@media (min-width: 1100px) {
+  .top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 1.2rem; padding-top: 0.6rem; padding-bottom: 0.2rem; }
+  h1 { font-size: 1.6rem; }
+  .lede { flex: 1 1 24rem; margin: 0; font-size: 0.85rem; max-width: none; }
+  .stage-row { grid-template-columns: minmax(0, 1fr) minmax(0, 40rem); margin-top: 0.4rem; }
+  .stage-box uchusen-rocket { max-width: min(620px, calc((100vh - 22rem) * 0.75)); }
+  /* the flight's words on the left and its engine charts on the right */
+  uchusen-flight::part(flight-body) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 1rem; align-content: start; }
+  uchusen-flight::part(flight-charts) { grid-column: 2; grid-row: 2 / span 3; margin: 0; align-content: start; }
+  uchusen-flight::part(flight-row) { grid-column: 1 / -1; }
+  uchusen-flight::part(flight-now), uchusen-flight::part(flight-what), uchusen-flight::part(flight-about) { grid-column: 1; }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 821px) {
+  .panel { gap: 0.55rem; }
+  .panel .chip { min-height: 32px; padding: 0.15rem 0.6rem; font-size: 0.85rem; }
+  .panel .chips { gap: 0.3rem; }
+  .panel .field h2 { margin-bottom: 0.2rem; }
+}
 @media (max-width: 820px) {
   .stage-row, .builder { grid-template-columns: minmax(0, 1fr); }
   .stage-box { position: static; }
-  .flight-field { order: -1; }
 }
 #credit-list li, #source-list li { overflow-wrap: anywhere; }

@@ -1,7 +1,7 @@
 // A figure names its source or is blank; a variant goes in only if a source documents it; a disagreement keeps the choice and says what else was said.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { type Figure, figureWords, PLANNED_ROCKETS, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
+import { type Figure, figureWords, MAKERS, PLANNED_ROCKETS, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
 
 const figuresOf = (rocket: string, id: string): [string, Figure<number | string>][] => {
   const v = variantOf(rocket, id);
@@ -128,4 +128,19 @@ test("Dragon 1 is labelled as what the model shows, not as the later Cargo Drago
   assert.equal(d1?.facts.height.value, 6.1);
   assert.equal(variantOf("dragon", "dragon-2")?.facts.height.value, 8.1);
   assert.equal(figureWords(variantOf("grasshopper", "grasshopper")?.firstFlight), "2012-09-21, a 1.8 m hop");
+});
+
+test("every rocket says whose it is, from a known source; a site has a blank, not a guess; every maker has something to show", () => {
+  for (const rocket of Object.values(ROCKETS)) {
+    assert.ok(Object.hasOwn(MAKERS, rocket.maker), rocket.id);
+    if (rocket.maker === "sites") {
+      assert.equal(rocket.madeBy.value, null, rocket.id);
+      assert.equal(rocket.madeBy.source, null, rocket.id);
+    } else {
+      assert.ok(rocket.madeBy.value, rocket.id);
+      assert.ok(rocket.madeBy.source && Object.hasOwn(SOURCES, rocket.madeBy.source), rocket.id);
+    }
+  }
+  for (const maker of Object.keys(MAKERS)) assert.ok(Object.values(ROCKETS).some((rocket) => rocket.maker === maker), maker);
+  assert.deepEqual(Object.values(ROCKETS).filter((rocket) => rocket.maker === "sites").map((rocket) => rocket.id).sort(), ["droneship", "landing-zone", "launch-tower", "starbase"]);
 });

@@ -20,6 +20,7 @@ import { JUPITER_C_VARIANTS } from "./data/jupiterc.ts";
 import { ISS_VARIANTS } from "./data/iss.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
+import { MADE_BY, type MakerId } from "./data/makers.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
 
@@ -31,6 +32,10 @@ export interface RocketEntry {
   status: RocketStatus;
   variants: readonly Variant[];
   defaultVariant: string;
+  /** Which group the demo lists it under. */
+  maker: MakerId;
+  /** Whose it is and who built it, as its source says, or a blank. */
+  madeBy: Figure<string>;
 }
 
 /** A rocket on the list with no mesh yet: its name and the sourced facts to build it from. */
@@ -45,29 +50,29 @@ export interface PlannedRocket {
 }
 
 export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
-  starship: { id: "starship", name: "Starship", status: "built", variants: STARSHIP_VARIANTS, defaultVariant: "v3" },
-  "falcon-9": { id: "falcon-9", name: "Falcon 9", status: "built", variants: FALCON_9_VARIANTS, defaultVariant: "block-5" },
-  "falcon-heavy": { id: "falcon-heavy", name: "Falcon Heavy", status: "built", variants: FALCON_HEAVY_VARIANTS, defaultVariant: "falcon-heavy" },
-  dragon: { id: "dragon", name: "Dragon", status: "built", variants: DRAGON_VARIANTS, defaultVariant: "dragon-2" },
-  grasshopper: { id: "grasshopper", name: "Grasshopper", status: "built", variants: GRASSHOPPER_VARIANTS, defaultVariant: "grasshopper" },
-  "falcon-1": { id: "falcon-1", name: "Falcon 1", status: "built", variants: FALCON_1_VARIANTS, defaultVariant: "falcon-1" },
-  "saturn-v": { id: "saturn-v", name: "Saturn V", status: "built", variants: SATURN_V_VARIANTS, defaultVariant: "saturn-v" },
-  "space-shuttle": { id: "space-shuttle", name: "Space Shuttle", status: "built", variants: SHUTTLE_VARIANTS, defaultVariant: "stack" },
-  "sls": { id: "sls", name: "Space Launch System", status: "built", variants: SLS_VARIANTS, defaultVariant: "block-1" },
-  "new-glenn": { id: "new-glenn", name: "New Glenn", status: "built", variants: NEW_GLENN_VARIANTS, defaultVariant: "7x2" },
-  "electron": { id: "electron", name: "Electron", status: "built", variants: ELECTRON_VARIANTS, defaultVariant: "electron" },
-  "soyuz": { id: "soyuz", name: "Soyuz", status: "built", variants: SOYUZ_VARIANTS, defaultVariant: "soyuz-2" },
-  "lunar-module": { id: "lunar-module", name: "Apollo lunar module", status: "built", variants: LUNAR_MODULE_VARIANTS, defaultVariant: "lunar-module" },
-  "apollo-soyuz": { id: "apollo-soyuz", name: "Apollo and Soyuz", status: "built", variants: APOLLO_SOYUZ_VARIANTS, defaultVariant: "apollo-soyuz" },
-  "gemini": { id: "gemini", name: "Gemini", status: "built", variants: GEMINI_VARIANTS, defaultVariant: "gemini" },
-  "mercury": { id: "mercury", name: "Mercury", status: "built", variants: MERCURY_VARIANTS, defaultVariant: "friendship-7" },
-  "jupiter-c": { id: "jupiter-c", name: "Jupiter-C", status: "built", variants: JUPITER_C_VARIANTS, defaultVariant: "jupiter-c" },
-  "iss": { id: "iss", name: "International Space Station", status: "built", variants: ISS_VARIANTS, defaultVariant: "iss" },
-  "hubble": { id: "hubble", name: "Hubble Space Telescope", status: "built", variants: HUBBLE_VARIANTS, defaultVariant: "hubble" },
-  droneship: { id: "droneship", name: "Drone ships", status: "built", variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
-  "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
-  "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", variants: TOWER_VARIANTS, defaultVariant: "stack" },
-  starbase: { id: "starbase", name: "Starbase", status: "built", variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
+  starship: { id: "starship", name: "Starship", status: "built", ...MADE_BY["starship"], variants: STARSHIP_VARIANTS, defaultVariant: "v3" },
+  "falcon-9": { id: "falcon-9", name: "Falcon 9", status: "built", ...MADE_BY["falcon-9"], variants: FALCON_9_VARIANTS, defaultVariant: "block-5" },
+  "falcon-heavy": { id: "falcon-heavy", name: "Falcon Heavy", status: "built", ...MADE_BY["falcon-heavy"], variants: FALCON_HEAVY_VARIANTS, defaultVariant: "falcon-heavy" },
+  dragon: { id: "dragon", name: "Dragon", status: "built", ...MADE_BY["dragon"], variants: DRAGON_VARIANTS, defaultVariant: "dragon-2" },
+  grasshopper: { id: "grasshopper", name: "Grasshopper", status: "built", ...MADE_BY["grasshopper"], variants: GRASSHOPPER_VARIANTS, defaultVariant: "grasshopper" },
+  "falcon-1": { id: "falcon-1", name: "Falcon 1", status: "built", ...MADE_BY["falcon-1"], variants: FALCON_1_VARIANTS, defaultVariant: "falcon-1" },
+  "saturn-v": { id: "saturn-v", name: "Saturn V", status: "built", ...MADE_BY["saturn-v"], variants: SATURN_V_VARIANTS, defaultVariant: "saturn-v" },
+  "space-shuttle": { id: "space-shuttle", name: "Space Shuttle", status: "built", ...MADE_BY["space-shuttle"], variants: SHUTTLE_VARIANTS, defaultVariant: "stack" },
+  "sls": { id: "sls", name: "Space Launch System", status: "built", ...MADE_BY["sls"], variants: SLS_VARIANTS, defaultVariant: "block-1" },
+  "new-glenn": { id: "new-glenn", name: "New Glenn", status: "built", ...MADE_BY["new-glenn"], variants: NEW_GLENN_VARIANTS, defaultVariant: "7x2" },
+  "electron": { id: "electron", name: "Electron", status: "built", ...MADE_BY["electron"], variants: ELECTRON_VARIANTS, defaultVariant: "electron" },
+  "soyuz": { id: "soyuz", name: "Soyuz", status: "built", ...MADE_BY["soyuz"], variants: SOYUZ_VARIANTS, defaultVariant: "soyuz-2" },
+  "lunar-module": { id: "lunar-module", name: "Apollo lunar module", status: "built", ...MADE_BY["lunar-module"], variants: LUNAR_MODULE_VARIANTS, defaultVariant: "lunar-module" },
+  "apollo-soyuz": { id: "apollo-soyuz", name: "Apollo and Soyuz", status: "built", ...MADE_BY["apollo-soyuz"], variants: APOLLO_SOYUZ_VARIANTS, defaultVariant: "apollo-soyuz" },
+  "gemini": { id: "gemini", name: "Gemini", status: "built", ...MADE_BY["gemini"], variants: GEMINI_VARIANTS, defaultVariant: "gemini" },
+  "mercury": { id: "mercury", name: "Mercury", status: "built", ...MADE_BY["mercury"], variants: MERCURY_VARIANTS, defaultVariant: "friendship-7" },
+  "jupiter-c": { id: "jupiter-c", name: "Jupiter-C", status: "built", ...MADE_BY["jupiter-c"], variants: JUPITER_C_VARIANTS, defaultVariant: "jupiter-c" },
+  "iss": { id: "iss", name: "International Space Station", status: "built", ...MADE_BY["iss"], variants: ISS_VARIANTS, defaultVariant: "iss" },
+  "hubble": { id: "hubble", name: "Hubble Space Telescope", status: "built", ...MADE_BY["hubble"], variants: HUBBLE_VARIANTS, defaultVariant: "hubble" },
+  droneship: { id: "droneship", name: "Drone ships", status: "built", ...MADE_BY["droneship"], variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
+  "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", ...MADE_BY["landing-zone"], variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
+  "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", ...MADE_BY["launch-tower"], variants: TOWER_VARIANTS, defaultVariant: "stack" },
+  starbase: { id: "starbase", name: "Starbase", status: "built", ...MADE_BY["starbase"], variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
 };
 
 const fig = (value: number, source: SourceId): Figure => ({ value, source });

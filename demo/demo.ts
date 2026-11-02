@@ -1,5 +1,5 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { builderState, check, embedCode, EMBED_KINDS, embedNote, type EmbedKind, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { builderState, check, MAKERS, type MakerId, embedCode, EMBED_KINDS, embedNote, type EmbedKind, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
@@ -31,10 +31,13 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none" } });
+const address = createAddressState({ defaults: { background: "none", rocket: "starship", variant: "v3" } });
 const BACKGROUND_WORDS = { none: "None", earth: "Earth" } as const;
 type BackgroundName = keyof typeof BACKGROUND_WORDS;
-const state = { rocket: "starship", variant: "v3", show: "together", look: "line" as LookName, view: "three-quarter" as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName };
+const askedRocket = address.get("rocket") ?? "starship";
+const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
+const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: "together", look: "line" as LookName, view: "three-quarter" as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName };
 
 function chip(label: string, testid: string, on: () => void): HTMLButtonElement {
   const button = el("button", { type: "button", className: "chip", textContent: label });
@@ -80,6 +83,7 @@ function factsFor(variant: Variant): HTMLElement[] {
   // a part with no engines of its own has no row for them
   for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) if (variant.facts.engines[slot]) rows.push([`${name(slot)} engines`, variant.facts.engines[slot]]);
   rows.push([variant.firstWord ?? "First flew", variant.firstFlight]);
+  if (ROCKETS[variant.rocket].madeBy.value !== null) rows.push(["Made by", ROCKETS[variant.rocket].madeBy]);
   const table = el("table", { className: "sizes" });
   for (const [label, figure] of rows) {
     const row = el("tr");
@@ -132,7 +136,7 @@ function renderMain() {
   const variant = variantOf(state.rocket, state.variant) as Variant;
   const variantBox = byId("variants");
   variantBox.replaceChildren(...rocket.variants.map((one) => chip(one.name, `variant-${one.id}`, () => pick({ variant: one.id }))));
-  press(byId("rockets"), `rocket-${state.rocket}`);
+  drawMakers();
   const shows = showsOf(variant.slots);
   if (!shows.includes(state.show)) state.show = shows[0];
   const showBox = byId("shows");
@@ -171,13 +175,37 @@ function renderMain() {
   syncEarth();
 }
 
+/** The maker's row, and in the rocket's row only that maker's rockets. */
+function drawMakers() {
+  press(byId("makers"), `maker-${state.maker}`);
+  press(byId("rockets"), `rocket-${state.rocket}`);
+  for (const button of byId("rockets").querySelectorAll("button")) button.hidden = ROCKETS[(button.dataset.testid ?? "").replace("rocket-", "")]?.maker !== state.maker;
+  // the address has the rocket, and the maker only when it is not that rocket's own
+  address.set("maker", state.maker === ROCKETS[state.rocket].maker ? null : state.maker);
+}
+
 function pick(change: Partial<typeof state>) {
   if (change.view !== undefined && change.view !== state.view) bar.set({ yaw: 0, tilt: 0 });
   Object.assign(state, change);
+  if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
   if (change.background) address.set("background", change.background);
   renderMain();
+  address.set("rocket", state.rocket);
+  address.set("variant", state.variant);
 }
 
+/** A maker with one rocket has one answer, and it is chosen for the reader; otherwise the rocket on screen stays until another is pressed. */
+function pickMaker(maker: MakerId) {
+  const theirs = Object.values(ROCKETS).filter((rocket) => rocket.maker === maker);
+  if (theirs.length === 1) {
+    if (state.rocket !== theirs[0].id) pick({ rocket: theirs[0].id, variant: theirs[0].defaultVariant });
+    return;
+  }
+  state.maker = maker;
+  drawMakers();
+}
+
+byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker))));
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
 byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));

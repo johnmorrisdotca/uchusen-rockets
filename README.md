@@ -144,7 +144,7 @@ rocket.svg({ look: "thick", view: "below", show: "booster" }).startsWith("<svg")
 
 | Entry | What | Needs |
 | --- | --- | --- |
-| `@johnmorrisdotca/uchusen-rockets` | The rockets and variants (`ROCKETS`, `variantOf`, `SOURCES`), the parts (`PART_ENTRIES`), the fit check (`check`), the builder's rows (`builderState`), flights (`flightOf`, `FLIGHTS`) and which engines burn (`pickBells`), the camera rule, the looks, the credits (`MODEL_CREDITS`), and `embedCode` | Nothing |
+| `@johnmorrisdotca/uchusen-rockets` | The rockets and variants (`ROCKETS`, `variantOf`, `SOURCES`, `MAKERS`), the parts (`PART_ENTRIES`), the fit check (`check`), the builder's rows (`builderState`), flights (`flightOf`, `FLIGHTS`) and which engines burn (`pickBells`), the camera rule, the looks, the credits (`MODEL_CREDITS`), and `embedCode` | Nothing |
 | `.../build` | `build(description)`, `buildPart(id)`, `lineupSvg`: one mesh and one drawing, in Node or a browser | Nothing |
 | `.../element` | `<uchusen-rocket>`, `<uchusen-lineup>` and `<uchusen-flight>`: load `three` only when a 3D view is wanted, and a painted model only when the painted look is | `three` for 3D |
 | `.../react` | A thin `<UchusenRocket>` wrapper | `react` |

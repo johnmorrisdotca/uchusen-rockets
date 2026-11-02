@@ -12,7 +12,12 @@ const expect = plainExpect.configure({ timeout: 30_000 });
 const URL = "/uchusen-rockets/";
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
-const press = (page: Page, id: string) => page.locator(`[data-testid="${id}"]`).click();
+/** A rocket's button shows under its maker's, so its maker comes first. */
+const press = async (page: Page, id: string) => {
+  const rocket = /^rocket-(.+)$/.exec(id)?.[1];
+  if (rocket) await page.locator(`[data-testid="maker-${ROCKETS[rocket].maker}"]`).click();
+  await page.locator(`[data-testid="${id}"]`).click();
+};
 
 test.use({ reducedMotion: "no-preference" });
 test.beforeEach(({ browserName }, info) => {

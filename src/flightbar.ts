@@ -8,6 +8,7 @@ const HTMLBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class
 const CSS = `
 :host { display: block; color: inherit; font-size: 0.9rem; line-height: 1.4; }
 :host([hidden]) { display: none; }
+[hidden] { display: none !important; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
 button { min-width: 44px; min-height: 44px; padding: 0.3rem 0.75rem; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 button:disabled { opacity: 0.45; cursor: default; }
@@ -97,6 +98,7 @@ export class UchusenFlight extends HTMLBase {
     range.addEventListener("input", () => this.rocket?.seek(Number(range.value)));
     const row = document.createElement("div");
     row.className = "row";
+    row.setAttribute("part", "flight-row");
     row.append(play, back, range, next, leave);
     const now = make("p", "flight-now");
     now.className = "now";
@@ -108,6 +110,7 @@ export class UchusenFlight extends HTMLBase {
     const about = make("p", "flight-about");
     about.className = "fine";
     const body = document.createElement("div");
+    body.setAttribute("part", "flight-body");
     body.append(row, now, what, charts, about);
     const none = make("p", "flight-none", "No flight timeline for this version yet: no page read here gives one.");
     none.className = "fine";

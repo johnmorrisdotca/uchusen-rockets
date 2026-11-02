@@ -1,6 +1,8 @@
 // The demo in a real browser: no console or policy error, every control on the main view, looks that keep the angle, the move between together and apart, the parts alone, the painted model only when asked for,
 // the credit, the comparison, the builder, the element's own failures and the React wrapper.
 import { expect, type Page, test } from "@playwright/test";
+import { flightOf } from "../src/flight.ts";
+import { ROCKETS } from "../src/rockets.ts";
 
 const URL = "/uchusen-rockets/";
 const is3d = (browserName: string) => browserName === "chromium";
@@ -28,7 +30,12 @@ function watch(page: Page): string[] {
 }
 
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
-const press = (page: Page, id: string) => page.locator(`[data-testid="${id}"]`).click();
+/** A rocket's button shows under its maker's, so its maker comes first. */
+const press = async (page: Page, id: string) => {
+  const rocket = /^rocket-(.+)$/.exec(id)?.[1];
+  if (rocket) await page.locator(`[data-testid="maker-${ROCKETS[rocket].maker}"]`).click();
+  await page.locator(`[data-testid="${id}"]`).click();
+};
 const canvasData = (page: Page, name: string) => hero(page).evaluate((node, key) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset[key] ?? "", name);
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
@@ -474,7 +481,10 @@ test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited 
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toContainText("Smithsonian Institution");
   await expect(credit).toContainText("CC0 1.0");
-  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
+  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
+    await press(page, `maker-${ROCKETS[id].maker}`);
+    await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
+  }
   await press(page, "rocket-droneship");
   await expect(page.locator('[data-testid="facts"]')).toContainText("Deck length");
   await expect(page.locator('[data-testid="facts"]')).toContainText("In service");
@@ -506,7 +516,10 @@ test("NASA's models load only when chosen, and are credited to NASA as public do
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toContainText("NASA");
   await expect(credit).toContainText("Public domain (NASA)");
-  for (const id of ["apollo-soyuz", "gemini", "mercury", "jupiter-c", "iss", "hubble"]) await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
+  for (const id of ["apollo-soyuz", "gemini", "mercury", "jupiter-c", "iss", "hubble"]) {
+    await press(page, `maker-${ROCKETS[id].maker}`);
+    await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
+  }
   expect(problems).toEqual([]);
 });
 
@@ -1020,4 +1033,89 @@ test("every variant's painted look names whose models it is, and the sources lis
   await expect(page.locator('[data-testid="sources"]')).toContainText("OpenStreetMap contributors");
   await expect(page.locator("footer")).toContainText("ODbL");
   expect(problems).toEqual([]);
+});
+
+test("a maker first, then only that maker's rockets, kept in the address; a hostile address gives way", async ({ page, browserName }) => {
+  const problems = watch(page);
+  const rockets = page.locator('[data-testid^="rocket-"]:visible');
+  await page.goto(URL);
+  await stopTurn(page);
+  if (is3d(browserName)) await reach3d(page);
+  await expect(page.locator('[data-testid="maker-spacex"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(rockets).toHaveCount(Object.values(ROCKETS).filter((one) => one.maker === "spacex").length);
+  // a maker with several rockets changes the row, and the rocket on screen stays until another is pressed
+  await press(page, "maker-nasa");
+  await expect(rockets).toHaveCount(Object.values(ROCKETS).filter((one) => one.maker === "nasa").length);
+  await expect(hero(page)).toHaveAttribute("rocket", "starship");
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("maker")).toBe("nasa");
+  await page.reload();
+  await expect(rockets).toHaveCount(Object.values(ROCKETS).filter((one) => one.maker === "nasa").length);
+  await expect(hero(page)).toHaveAttribute("rocket", "starship");
+  // pressed, the rocket and its variant go in the address and come back
+  await press(page, "rocket-saturn-v");
+  await expect(hero(page)).toHaveAttribute("rocket", "saturn-v");
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("rocket")).toBe("saturn-v");
+  expect(new globalThis.URL(page.url()).searchParams.get("maker")).toBeNull();
+  await page.reload();
+  await expect(hero(page)).toHaveAttribute("rocket", "saturn-v");
+  await expect(page.locator('[data-testid="maker-nasa"]')).toHaveAttribute("aria-pressed", "true");
+  // sites are a step of their own, not among the rockets
+  await press(page, "maker-sites");
+  await expect(rockets).toHaveCount(4);
+  await expect(page.locator('[data-testid="rocket-starbase"]')).toBeVisible();
+  await expect(page.locator('[data-testid="rocket-saturn-v"]')).toBeHidden();
+  // one rocket is one answer, and it is chosen for the reader
+  await press(page, "maker-blue-origin");
+  await expect(hero(page)).toHaveAttribute("rocket", "new-glenn");
+  await expect(page.locator('[data-testid="rocket-new-glenn"]')).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("rocket")).toBe("new-glenn");
+  // the facts say whose it is, and a site has no such row
+  await expect(page.locator('[data-row="Made by"]')).toContainText("Blue Origin");
+  await press(page, "rocket-starbase");
+  await expect(page.locator('[data-row="Made by"]')).toHaveCount(0);
+  await page.goto(`${URL}?rocket=__proto__&maker=constructor&variant=%22%3E%3Cscript%3E`);
+  await expect(hero(page)).toHaveAttribute("rocket", "starship");
+  await expect(page.locator('[data-testid="maker-spacex"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(hero(page)).toHaveAttribute("data-variant", ROCKETS.starship.defaultVariant);
+  expect(problems).toEqual([]);
+});
+
+test("the choices fit a 1440 by 900 window for every variant, Earth on and all, and a phone's width never scrolls sideways", async ({ browser, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once");
+  test.setTimeout(300_000);
+  const tallest = async (viewport: { width: number; height: number }, extra: object) => {
+    const context = await browser.newContext({ viewport, reducedMotion: "reduce", ...extra });
+    const page = await context.newPage();
+    await page.goto(`${URL}?background=earth`);
+    await stopTurn(page);
+    // the drawing only: this measures the page's rows, and needs no 3D
+    const reading = () =>
+      page.evaluate(() => {
+        const facts = document.getElementById("facts") as HTMLElement;
+        const panel = document.querySelector(".panel") as HTMLElement;
+        const stage = document.querySelector(".stage-box") as HTMLElement;
+        return { bottom: facts.getBoundingClientRect().top + scrollY, top: panel.getBoundingClientRect().top + scrollY, stage: stage.getBoundingClientRect().bottom + scrollY, sideways: document.documentElement.scrollWidth - innerWidth };
+      });
+    let most = { bottom: 0, top: 0, stage: 0, sideways: 0, at: "" };
+    for (const rocket of Object.values(ROCKETS))
+      for (const variant of rocket.variants) {
+        await press(page, `rocket-${rocket.id}`);
+        await press(page, `variant-${variant.id}`);
+        // the flight's row follows the rocket when it is in, and the height that counts is after it has
+        await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
+        await expect.poll(() => page.locator('[data-testid="flight"]').evaluate((node) => (node as HTMLElement & { rocket?: unknown }).shadowRoot?.querySelector('[data-testid="flight-play"]')?.closest("div")?.parentElement?.hidden), { timeout: 30_000 }).toBe(!flightOf(rocket.id, variant.id));
+        await page.evaluate(() => new Promise(requestAnimationFrame));
+        const now = await reading();
+        expect(now.sideways, `${rocket.id} ${variant.id}`).toBeLessThanOrEqual(0);
+        if (now.bottom > most.bottom) most = { ...now, at: `${rocket.id} ${variant.id}` };
+      }
+    await context.close();
+    return most;
+  };
+  const desk = await tallest({ width: 1440, height: 900 }, {});
+  const phone = await tallest({ width: 390, height: 844 }, { hasTouch: true, isMobile: true });
+  expect(desk.top).toBeLessThan(120);
+  console.log(`choices end at ${desk.bottom} px at 1440x900 (panel from ${desk.top}, ${desk.at}), the view and its controls at ${desk.stage}; on a phone the choices are ${phone.bottom - phone.top} px tall (${phone.at})`);
+  expect(desk.bottom).toBeLessThanOrEqual(900);
+  expect(desk.stage).toBeLessThanOrEqual(900);
 });
