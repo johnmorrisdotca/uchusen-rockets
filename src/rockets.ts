@@ -3,6 +3,7 @@ import { DRAGON_VARIANTS } from "./data/dragon.ts";
 import { FALCON_HEAVY_VARIANTS, FALCON_9_VARIANTS } from "./data/falcon.ts";
 import { FALCON_1_VARIANTS } from "./data/falcon1.ts";
 import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
+import { SATURN_V_VARIANTS } from "./data/saturn.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -35,6 +36,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   dragon: { id: "dragon", name: "Dragon", status: "built", variants: DRAGON_VARIANTS, defaultVariant: "dragon-2" },
   grasshopper: { id: "grasshopper", name: "Grasshopper", status: "built", variants: GRASSHOPPER_VARIANTS, defaultVariant: "grasshopper" },
   "falcon-1": { id: "falcon-1", name: "Falcon 1", status: "built", variants: FALCON_1_VARIANTS, defaultVariant: "falcon-1" },
+  "saturn-v": { id: "saturn-v", name: "Saturn V", status: "built", variants: SATURN_V_VARIANTS, defaultVariant: "saturn-v" },
 };
 
 export const PLANNED_ROCKETS: readonly PlannedRocket[] = [];
@@ -60,4 +62,8 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "side-left": "Side booster, left",
   "side-right": "Side booster, right",
   vehicle: "Whole vehicle",
+  "third-stage": "Third stage",
+  adapter: "Adapter",
+  "service-module": "Service module",
+  "escape-tower": "Escape tower",
 };

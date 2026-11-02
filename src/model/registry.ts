@@ -8,7 +8,9 @@ import type { PartKind, PartRecord } from "../parts.ts";
 import type { Piece } from "./pieces.ts";
 import { capsule, centreCore, DRAGON_DRAWS, falconFairing, falconFirstStage, FALCON_DRAWS, falconSecondStage, grasshopper, merlin, sideBooster, trunk } from "./falcon.ts";
 import { FALCON_1_VARIANTS } from "../data/falcon1.ts";
+import { SATURN_V_VARIANTS } from "../data/saturn.ts";
 import { FALCON_1_BUILDS } from "./falcon1.ts";
+import { SATURN_V_BUILDS } from "./saturn.ts";
 import type { StackBuild } from "./stacks.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
@@ -135,8 +137,8 @@ entries.push(
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...FALCON_1_VARIANTS];
-const stacks: readonly StackBuild[] = [...FALCON_1_BUILDS];
+const stackFacts = [...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS];
+const stacks: readonly StackBuild[] = [...FALCON_1_BUILDS, ...SATURN_V_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);

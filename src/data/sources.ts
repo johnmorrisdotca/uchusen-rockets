@@ -35,6 +35,11 @@ export const SOURCES = {
   "wikipedia-grasshopper": { title: "SpaceX Grasshopper", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Grasshopper", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-9-ft": { title: "Falcon 9 Full Thrust (the infobox and the section on Block 4, read as raw wikitext)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_9_Full_Thrust", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-9-block-5": { title: "Falcon 9 Block 5", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_9_Block_5", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-saturn-v": { title: "Saturn V (the infobox, read as raw wikitext)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Saturn_V", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-apollo-csm": { title: "Apollo command and service module", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Apollo_command_and_service_module", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-apollo-spacecraft": { title: "Apollo (spacecraft), the adapter's panels, and Saturn V instrument unit", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Apollo_(spacecraft)", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-f-1": { title: "Rocketdyne F-1 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Rocketdyne_F-1", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-j-2": { title: "Rocketdyne J-2 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Rocketdyne_J-2", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 

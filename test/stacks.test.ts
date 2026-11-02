@@ -43,6 +43,17 @@ test("Falcon 9 Block 4 has no sizes of its own in any source read, so it is not 
   assert.ok(variantOf("falcon-9", "ft")?.facts.height.others?.some((other) => other.value === 71));
 });
 
+test("Saturn V is its sourced stages, and its parts add to its sourced height", () => {
+  const report = check({ rocket: "saturn-v" });
+  assert.ok(Math.abs((report.size?.height ?? 0) - 110.64) < 0.01, String(report.size?.height));
+  assert.equal(partEntry("saturn-v-saturn-v-first-stage")?.record.height, 42.06);
+  assert.equal(partEntry("saturn-v-saturn-v-third-stage")?.record.diameter, 6.6);
+  assert.equal(bells("saturn-v-saturn-v-first-stage"), 5);
+  assert.equal(bells("saturn-v-saturn-v-second-stage"), 5);
+  assert.equal(bells("saturn-v-saturn-v-third-stage"), 1);
+  assert.equal(variantOf("saturn-v")?.facts.parts["escape-tower"].value, null);
+});
+
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {

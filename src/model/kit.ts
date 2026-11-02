@@ -29,7 +29,7 @@ export const floor = (r: number, y: number, material: MaterialName = "soot"): La
 
 /** Stripes down a hull: `width` degrees wide, each centred on one of `azimuths`, just proud of it. */
 export const stripes = (material: MaterialName, r: number, y0: number, y1: number, azimuths: readonly number[], width: number): Lathe[] =>
-  azimuths.map((az) => ({ kind: "lathe", material, segs: 72, body: true, profile: [[r + 0.012, y0], [r + 0.012, y1]], arc: () => [deg(az - width / 2), deg(az + width / 2)] }));
+  azimuths.map((az) => ({ kind: "lathe", material, segs: 72, body: true, profile: [[r * 1.012, y0], [r * 1.012, y1]], arc: () => [deg(az - width / 2), deg(az + width / 2)] }));
 
 /** Engines in a ring, the first at `start` degrees. */
 export function engineRing(count: number, ringRadius: number, y: number, exit: number, length: number, start = 0): Piece[] {
@@ -56,3 +56,9 @@ export function brace(material: MaterialName, a: readonly [number, number, numbe
   const at = ([r, y, az]: readonly [number, number, number]): Vec3 => [r * Math.sin(deg(az)), y, r * Math.cos(deg(az))];
   return strut(material, at(a), at(b), width, width);
 }
+
+/** An open skirt: a tube seen from outside and from inside, so an engine under it shows from below. */
+export const skirt = (material: MaterialName, r: number, y0: number, y1: number, extra: Extra = {}): Piece[] => [tube(material, r, y0, y1, extra), { kind: "lathe", material: "soot", segs: 32, under: true, only: "mesh", profile: [[r * 0.97, y1], [r * 0.97, y0]] }];
+
+/** A cone over an engine, off the axis: a fairing at the foot of a stage. */
+export const pod = (material: MaterialName, at: readonly [number, number], r0: number, y0: number, r1: number, y1: number, extra: Extra = {}): Lathe => ({ kind: "lathe", material, at, segs: 14, profile: [[r0, y0], [r1, y1]], ...extra });

@@ -78,6 +78,14 @@ All are 3.7 m across. The second stage's vacuum engine is drawn 3.3 m across at 
 
 No source read here gives a stage's own length, so those are blank and drawn in proportion to the whole.
 
+## Saturn V
+
+| Variant | Whole | S-IC | S-II | S-IVB | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `saturn-v` | 110.64 m (363 feet), with the Apollo spacecraft | 42.06 m | 24.87 m | 17.86 m | 10.06 m (33 feet); the third stage 6.6 m | 1967-11-09 |
+
+The figures are the article's feet in metres, and each note keeps the feet. The adapter is added from two articles, the service module's 7.49 m includes its nozzle, and the capsule is 3.48 m. The escape tower has no size in a source read here, so it is what the whole leaves. The lunar module is hidden in the adapter and is not drawn.
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape.
