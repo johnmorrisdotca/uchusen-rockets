@@ -303,6 +303,7 @@ test("a painted model that cannot be fetched leaves this package's own paint, an
 test("the comparison draws the variants at one scale, and lets a reader choose them", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await press(page, "more-compare");
   const lineup = page.locator('[data-testid="lineup"]');
   await expect(lineup).toHaveAttribute("data-count", "7");
   const table = page.locator('[data-testid="compare-table"]');
@@ -326,24 +327,77 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
   expect(problems).toEqual([]);
 });
 
-test("the builder labels a mix as what it is, and credits only what is used", async ({ page }) => {
+test("the builder offers parts from every rocket, labels a mix as what it is, and never reaches one that does not fit", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await press(page, "more-builder");
   const report = page.locator('[data-testid="builder-report"]');
-  await expect(report).toContainText("Block 3 (V3)");
-  await page.locator('[data-testid="pick-ship"]').selectOption("starship-v2-ship");
+  const pick = (index: number) => page.locator(`[data-testid="pick-${index}"]`);
+  const rocket = page.locator('[data-testid="builder-rocket"]');
+  // it starts on a real vehicle
+  await expect(report).toHaveAttribute("data-kind", "real");
+  const bottoms = await pick(0).locator("option").evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+  for (const id of ["starship-v3-booster", "falcon-9-block-5-first-stage", "falcon-heavy-falcon-heavy-centre", "dragon-dragon-2-trunk", "grasshopper-grasshopper-vehicle"]) expect(bottoms).toContain(id);
+  // a mix says so, in no alarming colour
+  const first = await pick(0).inputValue();
+  expect(first).toBe("starship-v1-flight1-booster");
+  await pick(1).selectOption("starship-v2-ship");
   await expect(report).toContainText("Custom build, not a vehicle that flew");
   await expect(report).toHaveAttribute("data-kind", "custom");
-  await expect(page.locator('[data-testid="builder-rocket"]')).toHaveAttribute("data-custom", "true");
+  await expect(rocket).toHaveAttribute("data-custom", "true");
+  // a Falcon 9 stage: the rows change, and what could not fit is not offered
+  await pick(0).selectOption("falcon-9-block-5-first-stage");
+  await expect(report).not.toContainText("Custom build");
+  await expect(report).toContainText("Falcon 9 Block 5");
+  const seconds = await pick(1).locator("option").evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+  expect(seconds.every((id) => id.includes("second-stage"))).toBe(true);
+  // the third row is a fairing or a Dragon, and a Dragon brings its own row
+  const tops = await pick(2).locator("option").evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+  expect(tops).toContain("falcon-9-block-5-fairing");
+  expect(tops).toContain("dragon-dragon-2-trunk");
+  await pick(2).selectOption("dragon-dragon-2-trunk");
+  await expect(report).toContainText("Falcon 9 Block 5 with Dragon 2");
+  await expect(rocket).toHaveAttribute("data-variant", "block-5-dragon-2");
+  await expect(pick(3)).toBeVisible();
+  // Falcon Heavy's side boosters have one answer each: made for the reader, with no question
+  await pick(0).selectOption("falcon-heavy-falcon-heavy-centre");
+  await expect(page.locator('[data-testid="pick-1-only"]')).toContainText("side booster, left");
+  await expect(page.locator('[data-testid="pick-2-only"]')).toContainText("side booster, right");
+  await expect(report).toContainText("Falcon Heavy");
+  await expect(rocket).toHaveAttribute("data-variant", "falcon-heavy");
+  // a thing that stands alone
+  await pick(0).selectOption("grasshopper-grasshopper-vehicle");
+  await expect(report).toContainText("Grasshopper");
+  await expect(pick(1)).toHaveCount(0);
+  await expect(page.locator(".report")).toHaveCSS("border-color", "rgb(39, 52, 76)");
+  expect(problems).toEqual([]);
+});
+
+test("the sections under the rocket are one at a time, in a row of tabs, and the address keeps the choice", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  const shown = () => page.locator("main > section:not(#main-view):visible").evaluateAll((nodes) => nodes.map((node) => node.id));
+  expect(await shown()).toEqual(["embed"]);
+  await press(page, "more-builder");
+  expect(await shown()).toEqual(["builder"]);
+  await expect(page.locator('[data-testid="more-builder"]')).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator('[data-testid="more-embed"]')).toHaveAttribute("aria-selected", "false");
+  expect(new globalThis.URL(page.url()).hash).toBe("#builder");
+  await page.goto(`${URL}#sources`);
+  await page.reload();
+  expect(await shown()).toEqual(["sources"]);
   expect(problems).toEqual([]);
 });
 
 test("the sources and the credits are on the page, and the page says no one endorsed it", async ({ page }) => {
   await page.goto(URL);
+  await press(page, "more-sources");
   await expect(page.locator('[data-testid="sources"]')).toContainText("Wikipedia");
   const credits = page.locator('[data-testid="credits"]');
   for (const name of ["Clarence365", "clarence365", "MartianDays", "Stanley Creative", "KUBAHA", "ProgressTH", "Antonio_Adams", "Echo_3"]) await expect(credits).toContainText(name);
   await expect(page.locator("footer")).toContainText("not affiliated with or endorsed by SpaceX");
+  await press(page, "more-planned");
+  await expect(page.locator('[data-testid="planned"]')).toContainText("Vulcan");
   await expect(page.locator('[data-testid="planned"]')).not.toContainText("Falcon 9");
 });
 
@@ -472,6 +526,11 @@ test("the painted Falcon 9 second stage shows this package's own nozzle when it 
   await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("own");
   await press(page, "show-together");
   await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("");
+  // in a flight the stage leaves the one below, so its nozzle shows, and back in the stack it goes again
+  await hero(page).evaluate((node) => (node as HTMLElement & { seek(position: number): void }).seek(5));
+  await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("own");
+  await hero(page).evaluate((node) => (node as HTMLElement & { endFlight(): void }).endFlight());
+  await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("");
   await press(page, "look-line");
   await press(page, "show-second-stage");
   expect(await canvasData(page, "nozzle")).toBe("");
@@ -531,6 +590,337 @@ test("the drawing mode never loads three.js, and follows look, show and view", a
   await expect(page.locator("#refused")).toHaveAttribute("data-state", "error");
   await expect(page.locator("#refused")).toHaveAttribute("data-why", "unknown-rocket");
   expect(scripts.some((script) => /three/i.test(script))).toBe(false);
+  expect(problems).toEqual([]);
+});
+
+test("the copy panel matches the rocket on screen, in every form, and the embed page draws its address", async ({ page, context, browserName }) => {
+  if (browserName === "chromium") await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const problems = watch(page);
+  await page.goto(URL);
+  const code = page.locator('[data-testid="embed-code"]');
+  await expect(code).toContainText("uchusen-rocket");
+  await expect(code).toContainText('rocket="starship"');
+  await expect(code).toContainText("importmap");
+  await expect(code).not.toContainText("Clarence365");
+  await expect(page.locator('[data-testid="embed-credit"]')).toBeHidden();
+  await press(page, "look-painted");
+  await expect(code).toContainText("Clarence365");
+  await expect(code).toContainText("creativecommons.org/licenses/by/4.0");
+  await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Clarence365");
+  await press(page, "tab-svg");
+  await expect(code).toContainText("<svg");
+  await page.locator('[data-testid="embed-copy"]').click();
+  await expect(page.locator("#embed-status")).toHaveText("Copied");
+  await press(page, "tab-iframe");
+  await expect(code).toContainText("embed.html?");
+  await press(page, "look-line");
+  await press(page, "tab-link");
+  await expect(code).toContainText("dist/assets/starship-v3.svg");
+  // the link's file is one the site has too
+  const response = await page.request.get(`${URL}assets/starship-v3.svg`);
+  expect(response.status()).toBe(200);
+  // a phase of the flight goes along
+  await page.locator('[data-testid="flight"]').locator('[data-testid="flight-next"]').click();
+  await press(page, "tab-iframe");
+  await expect(code).toContainText("phase=liftoff");
+  await expect(page.locator('[data-testid="embed-open"]')).toHaveAttribute("href", /embed\.html\?.*phase=liftoff/);
+  // and the embed page draws what an address says
+  await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&look=line&show=apart`);
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-look", "line");
+  await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-show", "apart");
+  await expect(page.locator('[data-testid="embed-credit"]')).toBeHidden();
+  await page.goto(`${URL}embed.html?rocket=starship&variant=v3&look=painted&show=ship`);
+  await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Clarence365");
+  await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Ship");
+  await expect(page.locator('[data-testid="embed-credit"]')).not.toContainText("Super Heavy");
+  await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&flight=1&phase=liftoff`);
+  await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-phase", "liftoff");
+  await expect(page.locator('[data-testid="flight"]').locator('[data-testid="flight-now"]')).toContainText("Liftoff");
+  expect(problems).toEqual([]);
+});
+
+test("Save SVG and Save PNG give files of what is on the screen", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "One browser's downloads are enough");
+  const problems = watch(page);
+  await page.goto(URL);
+  const save = async (id: string) => {
+    const [download] = await Promise.all([page.waitForEvent("download"), press(page, id)]);
+    return download;
+  };
+  const svg = await save("embed-svg");
+  expect(svg.suggestedFilename()).toBe("uchusen-starship-v3-line.svg");
+  const png = await save("embed-png");
+  expect(png.suggestedFilename()).toBe("uchusen-starship-v3-line.png");
+  const path = await png.path();
+  const { readFileSync } = await import("node:fs");
+  const bytes = readFileSync(path);
+  // a real PNG, at twice the picture's size
+  expect(bytes.subarray(1, 4).toString()).toBe("PNG");
+  expect(bytes.readUInt32BE(16)).toBe(960);
+  expect(problems).toEqual([]);
+});
+
+test("the CDN snippet alone works on a stranger's page, with the 3D view, a painted model and its credit", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+  test.setTimeout(180_000);
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { embedCode } = await import("../src/embed.ts");
+  const snippet = embedCode({ rocket: "falcon-9", variant: "block-5", look: "painted", spin: "off" }, "element");
+  const problems = watch(page);
+  const TYPES: Record<string, string> = { js: "text/javascript", glb: "model/gltf-binary", svg: "image/svg+xml" };
+  // jsDelivr, answered from this checkout: the package's dist and three.js at the version the snippet names
+  await page.route("https://cdn.jsdelivr.net/npm/**", (route) => {
+    const path = new globalThis.URL(route.request().url()).pathname.replace(/^\/npm\//, "");
+    const file = path.startsWith("three@") ? join("node_modules/three", path.slice(path.indexOf("/") + 1)) : join(".", path.slice(path.indexOf("/", path.indexOf("/") + 1) + 1));
+    try {
+      return route.fulfill({ body: readFileSync(file), headers: { "content-type": TYPES[file.split(".").pop() ?? ""] ?? "application/octet-stream", "access-control-allow-origin": "*" } });
+    } catch {
+      return route.fulfill({ status: 404, body: `no ${file}`, headers: { "access-control-allow-origin": "*" } });
+    }
+  });
+  await page.route("https://stranger.example/**", (route) => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><body style="background:#123">${snippet}</body></html>` }));
+  await page.goto("https://stranger.example/page.html");
+  const rocket = page.locator("uchusen-rocket");
+  await expect(rocket).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await expect(rocket).toHaveAttribute("data-painted", /^(model|mixed)$/, { timeout: 90_000 });
+  await expect(page.locator("body")).toContainText("Stanley Creative");
+  expect(problems).toEqual([]);
+});
+
+test.describe("the engines", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("light when asked and go dark when turned off, in the drawing and the 3D view", async ({ page, browserName }) => {
+    const problems = watch(page);
+    await page.goto(URL);
+    await stopTurn(page);
+    await expect(hero(page)).toHaveAttribute("data-engines", "off");
+    const plumes = () => hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
+    await expect.poll(plumes).toBe(0);
+    await press(page, "engines-on");
+    await expect(hero(page)).toHaveAttribute("data-engines", "on");
+    await expect.poll(plumes).toBe(33);
+    if (is3d(browserName)) {
+      await reach3d(page);
+      await expect.poll(() => canvasData(page, "engines")).toBe("on");
+      await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    }
+    await press(page, "engines-off");
+    await expect(hero(page)).toHaveAttribute("data-engines", "off");
+    await expect.poll(plumes).toBe(0);
+    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes")).toBe("0");
+    await press(page, "engines-on");
+    await press(page, "look-painted");
+    await expect.poll(plumes).toBe(33);
+    if (is3d(browserName)) {
+      // software draws slowly: a page busy building a material can miss the default five seconds
+      await expect.poll(() => canvasData(page, "look"), { timeout: 60_000 }).toBe("painted");
+      await expect.poll(() => canvasData(page, "plumes"), { timeout: 60_000 }).toBe("33");
+    }
+    await press(page, "show-ship");
+    await expect.poll(plumes, { timeout: 60_000 }).toBe(6);
+    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes"), { timeout: 60_000 }).toBe("6");
+    expect(problems).toEqual([]);
+  });
+});
+
+test.describe("the way it turns", () => {
+  test.use({ reducedMotion: "no-preference" });
+  const yaw = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { state: { yaw: number } }).state.yaw);
+  const turning = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { state: { turning: boolean } }).state.turning);
+  const button = (page: Page, way: string) => page.locator(`[data-testid="turn-${way}"]`);
+
+  test("a press changes the way at once, with no jump, starts it if it had stopped, and a change of look or parts keeps it", async ({ page, browserName }) => {
+    const problems = watch(page);
+    await page.goto(URL);
+    if (is3d(browserName)) await reach3d(page);
+    // going right by itself: the angle grows
+    await stopTurn(page);
+    await expect.poll(() => turning(page)).toBe(false);
+    await expect(button(page, "left")).toHaveAttribute("aria-pressed", "false");
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "false");
+    const still = await yaw(page);
+    await press(page, "turn-left");
+    await expect.poll(() => turning(page)).toBe(true);
+    await expect(button(page, "left")).toHaveAttribute("aria-pressed", "true");
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "false");
+    // left is the yaw going down, which the view shows as the near side going left
+    await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeLessThan(still - 1);
+    if (is3d(browserName)) await expect.poll(async () => Number(await canvasData(page, "azimuth")), { timeout: 30_000 }).toBeGreaterThan(32 + 1);
+    const mid = await yaw(page);
+    await press(page, "turn-right");
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "true");
+    // no jump: it goes on from where it was
+    expect(Math.abs((await yaw(page)) - mid)).toBeLessThan(8);
+    const from = await yaw(page);
+    await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeGreaterThan(from + 1);
+    // the choice survives the other controls
+    await press(page, "look-thick");
+    await press(page, "show-apart");
+    await press(page, "variant-v2");
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "true");
+    expect(await bar(page).getAttribute("speed")).toBe("5");
+    // on a phone those buttons are below the view, and it does not turn out of sight
+    await hero(page).scrollIntoViewIfNeeded();
+    const later = await yaw(page);
+    await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeGreaterThan(later + 1);
+    await stopTurn(page);
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "false");
+    expect(problems).toEqual([]);
+  });
+
+  test("the element's own spin goes either way, and a bad value is the default", async ({ page, browserName }) => {
+    test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
+    const problems = watch(page);
+    await page.goto(URL);
+    await stopTurn(page);
+    await reach3d(page);
+    await hero(page).evaluate((node) => {
+      (node as HTMLElement & { drive(choice: null): void }).drive(null);
+      node.setAttribute("spin", "fast");
+      node.setAttribute("way", "ccw");
+    });
+    await expect.poll(() => canvasData(page, "spin")).toBe("20ccw");
+    const a = await angle(page);
+    await expect.poll(async () => (await angle(page)).az, { timeout: 30_000 }).toBeLessThan(a.az - 1);
+    await hero(page).evaluate((node) => node.setAttribute("way", '"><script>'));
+    await expect.poll(() => canvasData(page, "spin")).toBe("20cw");
+    const b = await angle(page);
+    await expect.poll(async () => (await angle(page)).az, { timeout: 30_000 }).toBeGreaterThan(b.az + 1);
+    expect(problems).toEqual([]);
+  });
+});
+
+test("under reduced motion nothing turns by itself, and the buttons are there for a press", async ({ page }) => {
+  await page.goto(URL);
+  expect(await bar(page).evaluate((node) => (node as HTMLElement & { state: { turning: boolean } }).state.turning)).toBe(false);
+  await expect(page.locator('[data-testid="turn-left"]')).toBeVisible();
+  await expect(page.locator('[data-testid="turn-left"]')).toHaveAttribute("aria-pressed", "false");
+});
+
+test.describe("the flight", () => {
+  test.use({ reducedMotion: "no-preference" });
+  const flight = (page: Page) => page.locator('[data-testid="flight"]');
+  const part = (page: Page, id: string) => flight(page).locator(`[data-testid="${id}"]`);
+  const chart = (page: Page, slot: string) => flight(page).locator(`figure[data-slot="${slot}"]`);
+
+  test("steps through the published engines, plays, and goes back to the rocket", async ({ page, browserName }) => {
+    const problems = watch(page);
+    await page.goto(URL);
+    await stopTurn(page);
+    await expect(part(page, "flight-now")).toContainText("T-0:03, Ignition");
+    await expect(chart(page, "booster")).toHaveAttribute("data-burning", "33");
+    await expect(chart(page, "ship")).toHaveAttribute("data-burning", "0");
+    await expect(part(page, "flight-about")).toContainText("illustrative");
+    await expect(part(page, "flight-about").locator("a")).toHaveAttribute("href", /Starship_flight_test_12/);
+    for (let i = 0; i < 4; i++) await part(page, "flight-next").click();
+    await expect(part(page, "flight-now")).toContainText("T+2:24, Hot staging");
+    await expect(hero(page)).toHaveAttribute("data-phase", "hot-staging");
+    await expect(chart(page, "booster")).toHaveAttribute("data-burning", "5");
+    await expect(chart(page, "ship")).toHaveAttribute("data-burning", "6");
+    // the chart shows which: lit dots
+    expect(await chart(page, "booster").locator("circle[data-lit]").count()).toBe(5);
+    if (is3d(browserName)) {
+      await reach3d(page);
+      await expect.poll(() => canvasData(page, "phase")).toBe("hot-staging");
+      await expect.poll(() => canvasData(page, "plumes")).toBe("11");
+    } else await page.waitForTimeout(300);
+    // the slider moves it too
+    await part(page, "flight-range").evaluate((node) => {
+      (node as HTMLInputElement).value = "0.5";
+      node.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await expect(part(page, "flight-now")).toContainText("Ignition");
+    await part(page, "flight-play").click();
+    await expect(part(page, "flight-play")).toHaveText("Pause");
+    await expect(flight(page)).toHaveAttribute("data-playing", "true");
+    await expect.poll(() => part(page, "flight-range").evaluate((node) => Number((node as HTMLInputElement).value)), { timeout: 60_000 }).toBeGreaterThan(0.6);
+    await part(page, "flight-play").click();
+    await expect(flight(page)).toHaveAttribute("data-playing", "false");
+    await part(page, "flight-leave").click();
+    await expect(hero(page)).toHaveAttribute("data-phase", "");
+    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes")).toBe("0");
+    expect(problems).toEqual([]);
+  });
+
+  test("each version has its own flight or says it has none, and choosing parts leaves the flight", async ({ page }) => {
+    await page.goto(URL);
+    await stopTurn(page);
+    await press(page, "variant-v4");
+    await expect(part(page, "flight-none")).toBeVisible();
+    await expect(part(page, "flight-play")).toBeHidden();
+    await press(page, "variant-v2");
+    await expect(part(page, "flight-about").locator("a")).toHaveAttribute("href", /Starship_flight_test_7/);
+    await press(page, "rocket-falcon-9");
+    await expect(part(page, "flight-about").locator("a")).toHaveAttribute("href", /timeline-for-falcon-9-launch-of-starlink/);
+    await expect(chart(page, "first-stage")).toHaveAttribute("data-burning", "9");
+    await part(page, "flight-next").click();
+    await expect(hero(page)).toHaveAttribute("data-phase", "liftoff");
+    await press(page, "show-apart");
+    await expect(hero(page)).toHaveAttribute("data-phase", "");
+    await press(page, "rocket-falcon-heavy");
+    await expect(chart(page, "centre")).toHaveAttribute("data-burning", "0");
+    await expect(chart(page, "side-left")).toHaveAttribute("data-burning", "9");
+    await press(page, "rocket-dragon");
+    await expect(part(page, "flight-none")).toBeVisible();
+  });
+
+  test("the drawing with no WebGL follows the flight too, and draws only the engines that burn", async ({ page }) => {
+    await page.goto(`${URL}element-check.html`);
+    const rocket = page.locator("uchusen-rocket").first();
+    await rocket.evaluate((node) => {
+      node.setAttribute("mode", "drawing");
+      node.setAttribute("rocket", "falcon-9");
+      node.setAttribute("variant", "block-5");
+    });
+    await expect(rocket).toHaveAttribute("data-flight", "falcon-9-starlink-2019");
+    const plumes = () => rocket.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
+    await rocket.evaluate((node) => node.setAttribute("phase", "liftoff"));
+    await expect.poll(plumes).toBe(9);
+    await rocket.evaluate((node) => node.setAttribute("phase", "landing-burn"));
+    await expect.poll(plumes).toBe(2);
+    await rocket.evaluate((node) => node.removeAttribute("phase"));
+    await expect.poll(plumes).toBe(0);
+    await rocket.evaluate((node) => (node as HTMLElement & { play(): void }).play());
+    await expect.poll(() => rocket.getAttribute("data-phase"), { timeout: 30_000 }).toBe("max-q");
+    await rocket.evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  });
+});
+
+test("under reduced motion the flight does not play and shows no flame, and the slider and the charts still work", async ({ page, browserName }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  const flight = page.locator('[data-testid="flight"]');
+  const part = (id: string) => flight.locator(`[data-testid="${id}"]`);
+  await expect(part("flight-play")).toBeDisabled();
+  await expect(part("flight-about")).toContainText("reduced motion");
+  await part("flight-next").click();
+  await expect(hero(page)).toHaveAttribute("data-phase", "liftoff");
+  await expect(flight.locator('figure[data-slot="booster"]')).toHaveAttribute("data-burning", "33");
+  await hero(page).evaluate((node) => (node as HTMLElement & { play(): void }).play());
+  expect(await hero(page).evaluate((node) => (node as HTMLElement & { flightState: { playing: boolean } }).flightState.playing)).toBe(false);
+  if (is3d(browserName)) {
+    await reach3d(page);
+    await expect.poll(() => canvasData(page, "phase")).toBe("liftoff");
+    expect(await canvasData(page, "plumes")).toBe("0");
+  }
+  expect(problems).toEqual([]);
+});
+
+test("under reduced motion the engines stay off, and the page says why", async ({ page, browserName }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  await press(page, "engines-on");
+  await expect(hero(page)).toHaveAttribute("data-engines", "off");
+  await expect(page.locator('[data-testid="engines-note"]')).toContainText("reduced motion");
+  const plumes = await hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
+  expect(plumes).toBe(0);
+  if (is3d(browserName)) {
+    await reach3d(page);
+    await expect.poll(() => canvasData(page, "plumes")).toBe("0");
+  }
   expect(problems).toEqual([]);
 });
 

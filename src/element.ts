@@ -2,15 +2,20 @@
 // crossfading in over it; drag to turn, keyboard, tilt on phones, a slow spin, reduced motion; the drawing stays on no WebGL, Save-Data or any failure. Importing this file defines the elements. three.js is
 // loaded only when a 3D view is wanted, and a licensed model only when the painted look asks for one.
 import { build, type Built, FitError } from "./build/index.ts";
+import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
+import { engineChart } from "./draw/plume.ts";
+import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
+import { defineUchusenFlight, UchusenFlight } from "./flightbar.ts";
 import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
-import { ROCKETS } from "./rockets.ts";
+import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
 import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
-import type { RocketViewer, Spin } from "./element/scene.ts";
+import type { RocketViewer } from "./element/scene.ts";
+import { type Spin, spinOf } from "./spin.ts";
 
 export type RocketState = "picture" | "loading" | "3d" | "fallback" | "error";
 
@@ -18,7 +23,6 @@ const HTMLBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class
 
 /** A view out of sight keeps its WebGL canvas this long before letting it go (a browser allows only a few at a time). */
 const RELEASE_MS = 30_000;
-const DEFAULT_SPIN: Spin = { seconds: 180, way: "cw" };
 /** The drawing, followed along a turn, is made again at most this often. */
 const PLACE_MS = 50;
 
@@ -91,7 +95,7 @@ function whyNot(mode: string): string {
 type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () => Promise<string> };
 
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -115,6 +119,13 @@ export class UchusenRocket extends HTMLBase {
   private onScreen = true;
   private drawn = { key: "", box: [0, 0, 1, 1] as [number, number, number, number] };
   private tiltCleanups: (() => void)[] = [];
+  private clock: FlightClock | null = null;
+  private flightFrame = 0;
+  private flightLast = 0;
+  private flightDrawn = -1;
+  private noted = { index: -1, at: 0 };
+  private phaseSeen: string | null = null;
+  private flightSeen: string | null = null;
 
   /** What is showing now. */
   get state(): RocketState {
@@ -185,16 +196,24 @@ export class UchusenRocket extends HTMLBase {
 
   private seen = () => {
     if (!document.hidden && this.stale) this.place();
+    this.kickFlight();
   };
+
+  /** A reader who changes the setting while the page is open is followed at once. */
+  private motionChanged = () => this.queue();
+  private motion: MediaQueryList | null = null;
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), CSS, rocketSheet);
     document.addEventListener("visibilitychange", this.seen);
+    this.motion = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+    this.motion?.addEventListener("change", this.motionChanged);
     this.queue();
   }
 
   disconnectedCallback(): void {
     document.removeEventListener("visibilitychange", this.seen);
+    this.motion?.removeEventListener("change", this.motionChanged);
     this.teardown();
     this.key = "";
   }
@@ -202,16 +221,17 @@ export class UchusenRocket extends HTMLBase {
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
     if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
-    else this.queue();
+    else {
+      // choosing what to show leaves the flight
+      if (name === "show") this.endFlight();
+      this.queue();
+    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------
 
   private spin(): Spin {
-    const raw = this.getAttribute("spin");
-    const named: Record<string, number> = { off: 0, slow: 180, medium: 67, fast: 20 };
-    const seconds = raw === null ? DEFAULT_SPIN.seconds : (named[raw] ?? (Number.isFinite(Number(raw)) ? Math.max(0, Number(raw)) : DEFAULT_SPIN.seconds));
-    return { seconds, way: this.getAttribute("way") === "ccw" ? "ccw" : "cw" };
+    return spinOf(this.getAttribute("spin"), this.getAttribute("way"));
   }
 
   private descriptionNow(): Description {
@@ -245,6 +265,8 @@ export class UchusenRocket extends HTMLBase {
     window.clearTimeout(this.releaseTimer);
     window.clearTimeout(this.revealTimer);
     window.cancelAnimationFrame(this.placeFrame);
+    window.cancelAnimationFrame(this.flightFrame);
+    this.flightFrame = 0;
     this.stopTilt();
     this.viewer?.dispose();
     this.viewer = null;
@@ -270,6 +292,131 @@ export class UchusenRocket extends HTMLBase {
     return { look, show, viewName, angle: VIEWS[viewName] };
   }
 
+  // ---------------------------------------------------------------------------------------------------------------------------------
+  // the flight
+
+  /** The flight a page gives for what is showing, or null: a custom build never has one. */
+  get flight(): Flight | null {
+    const report = this.builtNow?.report;
+    return report && !report.custom && report.variant ? flightOf(report.variant.rocket, report.variant.id) : null;
+  }
+
+  /** Where the timeline is: `active` once it has been started or moved, until `endFlight`. */
+  get flightState(): { active: boolean; playing: boolean; ended: boolean; position: number; phase: string } {
+    const clock = this.clock;
+    const flight = this.flight;
+    return { active: clock !== null, playing: clock?.playing ?? false, ended: clock?.ended ?? false, position: clock?.position ?? 0, phase: clock ? phaseAt(clock.flight, clock.position).phase.id : (flight?.phases[0].id ?? "") };
+  }
+
+  /** Plays the flight from where it is. It stands still out of sight, and does not play at all for a reader who asked for reduced motion: `seek` still moves it, by hand. */
+  play(): void {
+    const flight = this.flight;
+    if (!flight || media("(prefers-reduced-motion: reduce)")) return;
+    this.clock ??= new FlightClock(flight);
+    this.clock.play();
+    this.flightMoved();
+  }
+
+  pause(): void {
+    this.clock?.pause();
+    this.flightMoved();
+  }
+
+  /** Moves the timeline to a place, where 0 is the first phase, 1 the next and so on: `2.5` is half way from the third to the fourth. */
+  seek(position: number): void {
+    const flight = this.flight;
+    if (!flight) return;
+    this.clock ??= new FlightClock(flight);
+    this.clock.seek(position);
+    this.flightMoved();
+  }
+
+  /** Leaves the flight: the rocket as it was. */
+  endFlight(): void {
+    if (!this.clock) return;
+    this.clock = null;
+    this.phaseSeen = null;
+    window.cancelAnimationFrame(this.flightFrame);
+    this.flightFrame = 0;
+    this.viewer?.setFlight(null);
+    this.place();
+    this.mark();
+    this.noteFlight(true);
+  }
+
+  /** For each part with engines, which burn: at a named phase, where the timeline is, or else as the attributes have them. */
+  engineCharts(phaseId: string | null = null): { slot: string; burning: number; total: number; words: string; svg: string }[] {
+    const built = this.builtNow;
+    if (!built) return [];
+    const flight = this.flight;
+    const fromPhase = phaseId && flight ? flight.phases.find((phase) => phase.id === phaseId) : null;
+    const phase = fromPhase ?? (this.clock ? phaseAt(this.clock.flight, this.clock.position).phase : null);
+    const burns = phase ? burnsOf(phase) : null;
+    return built.parts.flatMap((part) => {
+      const bells = bellsOf(part.pieces);
+      if (bells.length === 0) return [];
+      const fired = pickBells(bells, burns ? (burns[part.slot] ?? 0) : this.engineLights() ? bells.length : 0);
+      const name = SLOT_NAMES[part.slot] ?? part.slot;
+      const figure = phase?.burns[part.slot]?.engines;
+      const words = `${name}: ${figure && figure.value === null ? `${fired.length} drawn, no source says how many` : `${fired.length} of ${bells.length}`}`;
+      return [{ slot: part.slot, burning: fired.length, total: bells.length, words, svg: engineChart(bells, fired, words) }];
+    });
+  }
+
+  private flightMoved(): void {
+    if (this.clock) this.viewer?.setFlight(this.clock);
+    if (this.viewer) this.noteFlight(true);
+    else {
+      this.place();
+      this.noteFlight(true);
+      this.kickFlight();
+    }
+    this.mark();
+  }
+
+  /** With no 3D view the drawing follows the timeline, by one frame request at a time, at most 20 drawings a second, never out of sight. */
+  private kickFlight(): void {
+    if (this.viewer || this.flightFrame || !this.clock?.playing || !this.onScreen || document.hidden) return;
+    this.flightLast = 0;
+    this.flightFrame = window.requestAnimationFrame(this.flightStep);
+  }
+
+  private flightStep = (time: number): void => {
+    this.flightFrame = 0;
+    const clock = this.clock;
+    if (!clock?.playing || this.viewer || !this.onScreen || document.hidden) return;
+    if (this.flightLast) clock.advance(Math.min(0.1, (time - this.flightLast) / 1000));
+    this.flightLast = time;
+    if (phaseAt(clock.flight, clock.position).index !== this.flightDrawn) {
+      this.flightDrawn = phaseAt(clock.flight, clock.position).index;
+      this.place();
+    }
+    this.noteFlight(!clock.playing);
+    if (clock.playing) this.flightFrame = window.requestAnimationFrame(this.flightStep);
+  };
+
+  /** Tells the page where the timeline is: at once for a new phase or a stop, otherwise at most 8 times a second. */
+  private noteFlight(now = false): void {
+    const clock = this.clock;
+    const index = clock ? phaseAt(clock.flight, clock.position).index : -1;
+    const time = performance.now();
+    if (!now && index === this.noted.index && time - this.noted.at < 125) return;
+    this.noted = { index, at: time };
+    this.dataset.phase = this.flightState.active ? this.flightState.phase : "";
+    this.emit("uchusen-flight", this.flightState);
+  }
+
+  /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
+  private engineLights(): boolean {
+    return enginesWanted(this.getAttribute("engines"), media("(prefers-reduced-motion: reduce)"));
+  }
+
+  /** Hands the 3D view what the attributes say about the engines, and its reader's motion setting. */
+  private lightViewer(viewer: RocketViewer): void {
+    viewer.setReduced(media("(prefers-reduced-motion: reduce)"));
+    viewer.setEngines(this.engineLights() ? "full" : null);
+  }
+
   private update(): void {
     const description = this.descriptionNow();
     const key = JSON.stringify(description);
@@ -286,9 +433,29 @@ export class UchusenRocket extends HTMLBase {
       }
       if (!this.picture) this.renderShell();
       void this.applyRocket();
+      this.settleFlight();
       return;
     }
     this.applySettings();
+    this.settleFlight();
+  }
+
+  /** After a change: a timeline of another rocket ends, and the `phase` attribute moves it. */
+  private settleFlight(): void {
+    const flight = this.flight;
+    if (this.clock && this.clock.flight.id !== flight?.id) this.endFlight();
+    if ((flight?.id ?? null) !== this.flightSeen) {
+      this.flightSeen = flight?.id ?? null;
+      this.phaseSeen = null;
+      this.noteFlight(true);
+    }
+    const asked = this.getAttribute("phase");
+    if (asked !== this.phaseSeen) {
+      this.phaseSeen = asked;
+      const place = flight ? phasePosition(flight, asked) : null;
+      if (place !== null) this.seek(place);
+      else if (asked === null) this.endFlight();
+    }
   }
 
   private renderShell(): void {
@@ -316,15 +483,18 @@ export class UchusenRocket extends HTMLBase {
   /** The drawing for what the attributes say now. It is made from code, so it needs no file. A zoom or a move only changes which part of it the box shows (its viewBox), so the drawing is as sharp as the box and never grows past it. */
   private redraw(): void {
     if (!this.builtNow || !this.drawing) return;
-    const { look, show, angle } = this.settings(this.builtNow);
+    const { look, show: chosen, angle } = this.settings(this.builtNow);
+    const flying = this.clock ? frameAt(this.clock.flight, this.clock.position, this.builtNow.parts.map((part) => ({ slot: part.slot, baseY: 0 })), 1) : null;
+    const show = flying ? (flying.separated ? "apart" : "together") : chosen;
     // when a 3D view is showing, a drawing of the same angle is ready behind it
     const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
     const label = this.getAttribute("label") ?? this.builtNow.report.label;
-    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}`;
+    const lit = flying ? (media("(prefers-reduced-motion: reduce)") ? false : flying.burns) : this.engineLights();
+    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}|${flying ? flying.index : ""}|${JSON.stringify(lit)}`;
     let node = this.drawing.firstElementChild;
     if (key !== this.drawn.key || !node) {
       const template = document.createElement("template");
-      template.innerHTML = this.builtNow.svg({ look, show, view: from });
+      template.innerHTML = this.builtNow.svg({ look, show, view: from, engines: lit });
       node = template.content.firstElementChild;
       if (!node) return;
       node.setAttribute("aria-label", label);
@@ -346,6 +516,8 @@ export class UchusenRocket extends HTMLBase {
     if (!this.builtNow) return;
     const { look, show, viewName } = this.settings(this.builtNow);
     this.dataset.look = look;
+    this.dataset.engines = this.engineLights() ? "on" : "off";
+    this.dataset.flight = this.flight?.id ?? "";
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
     this.dataset.variant = this.builtNow.report.variant?.id ?? "";
@@ -363,6 +535,7 @@ export class UchusenRocket extends HTMLBase {
       const from = viewName !== this.lastView || this.driven ? angle : this.viewer.currentAngle();
       this.lastView = viewName;
       await this.viewer.load(this.builtNow, show, look, from);
+      if (this.viewer) this.lightViewer(this.viewer);
       this.emit("uchusen-change", { report: this.builtNow.report });
     }
   }
@@ -375,6 +548,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.viewer) {
       this.viewer.setLook(look);
       this.viewer.setShow(show);
+      this.lightViewer(this.viewer);
       if (viewName !== this.lastView) this.viewer.setAngle(angle, true);
       this.viewer.setHome(angle);
     }
@@ -393,6 +567,7 @@ export class UchusenRocket extends HTMLBase {
       ([seen]) => {
         this.onScreen = seen.isIntersecting;
         if (seen.isIntersecting && this.stale) this.place();
+        if (seen.isIntersecting) this.kickFlight();
         if (reason) return;
         if (seen.isIntersecting) {
           this.shownAt ||= performance.now();
@@ -406,6 +581,7 @@ export class UchusenRocket extends HTMLBase {
             this.viewer?.dispose();
             this.viewer = null;
             this.stopTilt();
+            this.kickFlight();
             if (generation === this.generation) {
               this.setState("picture");
               if (this.driven) this.place();
@@ -426,6 +602,7 @@ export class UchusenRocket extends HTMLBase {
     this.stopTilt();
     this.viewer?.dispose();
     this.viewer = null;
+    this.kickFlight();
     this.setState("fallback", why);
     this.emit("uchusen-fallback", { reason: why });
   }
@@ -451,14 +628,21 @@ export class UchusenRocket extends HTMLBase {
           this.dataset.painted = state;
           this.emit("uchusen-painted", { state });
         },
+        onFlight: () => this.noteFlight(!this.clock?.playing),
       });
       this.viewer = made;
+      window.cancelAnimationFrame(this.flightFrame);
+      this.flightFrame = 0;
+      if (this.clock) made.setFlight(this.clock);
       if (this.driven) made.drive(this.driven);
       made.setVisible(true);
       const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
       this.lastView = viewName;
       await made.load(this.builtNow ?? built, show, look, angle);
-      if (generation !== this.generation) return;
+      if (generation !== this.generation || this.viewer !== made) return;
+      const now = this.settings(this.builtNow ?? built);
+      if (now.show !== show) made.setShow(now.show);
+      this.lightViewer(made);
       made.setSpin(this.spin());
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
@@ -568,11 +752,12 @@ export function defineUchusenRocket(): void {
   if (typeof customElements === "undefined") return;
   if (!customElements.get("uchusen-rocket")) customElements.define("uchusen-rocket", UchusenRocket);
   if (!customElements.get("uchusen-lineup")) customElements.define("uchusen-lineup", UchusenLineup);
+  defineUchusenFlight();
 }
 
 defineUchusenRocket();
 
-export { ROCKETS };
+export { ROCKETS, UchusenFlight };
 
 declare global {
   interface HTMLElementTagNameMap {

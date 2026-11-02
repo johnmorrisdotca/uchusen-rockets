@@ -197,12 +197,12 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 ## Real flights
 
-`FLIGHTS` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. Nothing plays them yet.
+`FLIGHT_LOG` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. It is a log, not a timeline: the flights that play are `FLIGHTS`, in [flights](flight.md).
 
 ```ts
-import { flightsOf } from "@johnmorrisdotca/uchusen-rockets";
+import { flightLogOf } from "@johnmorrisdotca/uchusen-rockets";
 
-const flight5 = flightsOf("starship").find((flight) => flight.id === "starship-flight-5");
+const flight5 = flightLogOf("starship").find((flight) => flight.id === "starship-flight-5");
 flight5.date; // "2024-10-13"
 flight5.variant; // "v1"
 ```

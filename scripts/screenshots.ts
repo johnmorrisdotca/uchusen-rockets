@@ -49,6 +49,7 @@ try {
   await press(page, "view-back");
   await settled(page);
   await hero("ship-back-line.jpg");
+  await press(page, "more-compare");
   await page.locator("#compare").scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
   await page.locator("#compare").screenshot({ path: join(out, "compare.jpg"), type: "jpeg", quality: 84 });

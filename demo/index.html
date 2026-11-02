@@ -18,6 +18,7 @@
         <div class="stage-box">
           <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter"></uchusen-rocket>
           <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark"></kazoku-view-controls>
+          <div class="chips turn-row" id="turn" role="group" aria-label="Which way it turns" data-testid="turn"></div>
           <p class="hint">Drag to turn it. The controls tip, zoom and move it; Ctrl or Command with the wheel zooms.</p>
         </div>
         <div class="panel">
@@ -41,9 +42,36 @@
             <h2 id="view-title">From</h2>
             <div class="chips" id="views" role="group" aria-labelledby="view-title"></div>
           </div>
+          <div class="field">
+            <h2 id="engines-title">Engines</h2>
+            <div class="chips" id="engines" role="group" aria-labelledby="engines-title"></div>
+            <p class="note" id="engines-note" data-testid="engines-note" hidden></p>
+          </div>
+          <div class="field flight-field">
+            <h2 id="flight-title">Flight</h2>
+            <uchusen-flight id="flight" data-testid="flight" for="hero" aria-labelledby="flight-title"></uchusen-flight>
+          </div>
           <div class="field" id="facts" data-testid="facts" aria-live="polite"></div>
           <p class="credit" id="credit" data-testid="credit" hidden></p>
         </div>
+      </section>
+
+      <div class="chips more-tabs" id="more-tabs" role="tablist" aria-label="More about this rocket" data-testid="more-tabs"></div>
+
+      <section id="embed" aria-labelledby="embed-title">
+        <h2 id="embed-title">Put this rocket on your site</h2>
+        <p>Copy the code for the rocket on the screen: its variant, parts, look, view, and its engines and phase of flight. A painted rocket's credit is in the code, from the parts that are showing.</p>
+        <div class="chips" id="embed-tabs" role="tablist" aria-label="How to embed it" data-testid="embed-tabs"></div>
+        <p id="embed-note" data-testid="embed-note"></p>
+        <pre class="code"><code id="embed-code" data-testid="embed-code"></code></pre>
+        <div class="embed-actions">
+          <button type="button" class="chip" id="embed-copy" data-testid="embed-copy">Copy</button>
+          <button type="button" class="chip" id="embed-svg" data-testid="embed-svg">Save SVG</button>
+          <button type="button" class="chip" id="embed-png" data-testid="embed-png">Save PNG</button>
+          <a class="chip" id="embed-open" data-testid="embed-open" target="_blank" rel="noopener">Open the embed page</a>
+          <span id="embed-status" role="status" aria-live="polite"></span>
+        </div>
+        <p id="embed-credit" data-testid="embed-credit" hidden></p>
       </section>
 
       <section id="compare" aria-labelledby="compare-title">
@@ -56,11 +84,10 @@
 
       <section id="builder" aria-labelledby="builder-title">
         <h2 id="builder-title">Build one from parts</h2>
-        <p>Every part has the same record: its size, its origin and the joints it mates at, so a part from anywhere can go in a slot. The check says whether the joints fit, and a mix is labelled as what it is: never a vehicle that flew.</p>
+        <p>Parts from every rocket. Each row offers what fits on the row below, and a row with one answer is answered for you. A mix is labelled as what it is: never a vehicle that flew.</p>
         <div class="builder">
           <div class="builder-picks">
-            <label>Booster <select id="pick-booster" data-testid="pick-booster"></select></label>
-            <label>Ship <select id="pick-ship" data-testid="pick-ship"></select></label>
+            <div class="builder-rows" id="builder-rows" data-testid="builder-rows"></div>
             <p id="builder-report" class="report" data-testid="builder-report" role="status"></p>
             <pre class="code"><code id="builder-code"></code></pre>
           </div>

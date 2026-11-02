@@ -10,7 +10,7 @@ Uchūsen means "spaceship". Each rocket comes in every variant a source document
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
 </p>
 
-<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/assets.md">Assets</a></p>
+<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/flight.md">Lit engines and flights</a> · <a href="./docs/embed.md">Use one on your site</a> · <a href="./docs/assets.md">Assets</a></p>
 
 <p align="center"><img alt="Block 3 of the rocket as a painted 3D view, stainless steel with black tiles, beside its controls and its sizes, each with a source." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg" width="820"></p>
 
@@ -39,7 +39,30 @@ npm install @johnmorrisdotca/uchusen-rockets three
 <uchusen-rocket rocket="starship" variant="v2" show="booster" look="thick" view="below"></uchusen-rocket>
 ```
 
-That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin; or hand it to the family's shared view controls (angle, tilt, zoom, move) with `element.drive()`, see [the element](./docs/element.md#the-familys-view-controls). With no WebGL, under Save-Data, or on any failure, the drawing stays.
+That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin. `engines="on"` lights each engine at full thrust, in the painted look and as a drawn flame in the line looks, and a reader who asked for reduced motion has them off. A flame's length and its shock diamonds are a picture, not a measurement. [A flight](docs/flight.md) plays each phase with the engines that burn in it, from published timelines. With no WebGL, under Save-Data, or on any failure, the drawing stays.
+
+## Put one on your own site
+
+The drawings are there to be used. The demo copies the code for the rocket on the screen, in six ways: a CDN script and the element, an iframe of the embed page (for a site that cannot run script), a module, the SVG, a data address, and a link to the picture in the package. It saves an SVG or a PNG too. [docs/embed.md](docs/embed.md) has each one.
+
+A painted rocket's CC BY credit is written into every one of those, from the parts that are showing. A line drawing does not carry it, and neither does a variant this package paints itself.
+
+```ts
+import { attributesFromOptions, embedCode, optionsFromAttributes, rocketFromParams, rocketToParams } from "@johnmorrisdotca/uchusen-rockets";
+
+const options = { rocket: "falcon-9", variant: "block-5", look: "thick", view: "below", show: "apart" };
+const attributes = attributesFromOptions(options);
+function read(name) {
+  return Object.hasOwn(attributes, name) ? attributes[name] : null;
+}
+const back = optionsFromAttributes(read);
+back.rocket; // "falcon-9"
+rocketToParams(options).get("show"); // "apart"
+rocketFromParams(rocketToParams(options)).view; // "below"
+embedCode(options, "iframe").includes("embed.html"); // true
+embedCode({ rocket: "starship", variant: "v3", look: "painted" }, "element").includes("Clarence365"); // true
+embedCode({ rocket: "starship", variant: "v3", look: "line" }, "element").includes("Clarence365"); // false
+```
 
 | Attribute | Values |
 | --- | --- |
@@ -121,9 +144,9 @@ rocket.svg({ look: "thick", view: "below", show: "booster" }).startsWith("<svg")
 
 | Entry | What | Needs |
 | --- | --- | --- |
-| `@johnmorrisdotca/uchusen-rockets` | The rockets and variants (`ROCKETS`, `variantOf`, `SOURCES`), the parts (`PART_ENTRIES`), the fit check (`check`), the camera rule, the looks, the credits (`MODEL_CREDITS`) | Nothing |
+| `@johnmorrisdotca/uchusen-rockets` | The rockets and variants (`ROCKETS`, `variantOf`, `SOURCES`), the parts (`PART_ENTRIES`), the fit check (`check`), the builder's rows (`builderState`), flights (`flightOf`, `FLIGHTS`) and which engines burn (`pickBells`), the camera rule, the looks, the credits (`MODEL_CREDITS`), and `embedCode` | Nothing |
 | `.../build` | `build(description)`, `buildPart(id)`, `lineupSvg`: one mesh and one drawing, in Node or a browser | Nothing |
-| `.../element` | `<uchusen-rocket>` and `<uchusen-lineup>`: load `three` only when a 3D view is wanted, and a painted model only when the painted look is | `three` for 3D |
+| `.../element` | `<uchusen-rocket>`, `<uchusen-lineup>` and `<uchusen-flight>`: load `three` only when a 3D view is wanted, and a painted model only when the painted look is | `three` for 3D |
 | `.../react` | A thin `<UchusenRocket>` wrapper | `react` |
 | `.../assets/*` | Ready files: `starship-v3.glb`, `starship-v3.svg`, `starship-v3-booster.thick.svg`, `parts/raptor-vacuum.glb`, `models/starship-v3-ship.glb` | Nothing |
 

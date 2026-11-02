@@ -85,3 +85,17 @@ Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-
 ## A new rocket
 
 Its variants go in `src/data/`, its parts in `src/model/registry.ts` with pieces of plain geometry, and a row in `ROCKETS`. Nothing else changes. A rocket drawn wholly by this package's code is a table: see `src/model/falcon1.ts`, with the small shapes of `src/model/kit.ts`.
+
+## The demo's builder
+
+`builderState(picks)` is what the demo's builder offers: rows from the bottom up, for parts of every rocket. Each row holds only what fits on the row below, so nothing it offers can fail. A row with one answer, like a Falcon Heavy's side boosters, is answered for the reader. A change lower down keeps what still fits and picks what belongs with it for the rest. A real set of parts takes its real name, and anything else says it is a custom build. It reads only `ROCKETS` and `PART_ENTRIES`, so a new rocket is offered with no change.
+
+```ts
+import { builderState } from "@johnmorrisdotca/uchusen-rockets";
+
+const { rows, report, description } = builderState(["falcon-9-block-5-first-stage"]);
+rows[1].chosen; // "falcon-9-block-5-second-stage"
+report.label; // "Falcon 9 Block 5"
+description.rocket; // "falcon-9"
+builderState(["falcon-heavy-falcon-heavy-centre"]).rows[1].auto; // true
+```

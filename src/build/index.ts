@@ -6,7 +6,9 @@ import { DEFAULT_LOOK, type LookName } from "../looks.ts";
 import { type PartMesh, boundsOf, type Bounds, meshOf, type Piece } from "../model/pieces.ts";
 import { partEntry } from "../model/registry.ts";
 import type { PartRecord } from "../parts.ts";
+import { plumeMarkup } from "../draw/plume.ts";
 import { defsOf, drawPart, perspective } from "../draw/svg.ts";
+import { bellsOf, litBells, type LitBell, pickBells, plumeLength } from "../engines.ts";
 import { type Glb, toGlb } from "./glb.ts";
 
 /** Raised when a description does not fit: its report says why. */
@@ -31,6 +33,8 @@ export interface SvgOptions {
   look?: LookName;
   view?: ViewName | Angle;
   show?: string;
+  /** A flame at each engine that is showing, or as many as a count names for each part. The length is a picture, not a measured flame. Left out, the drawing is unchanged. */
+  engines?: boolean | Readonly<Record<string, number>>;
 }
 
 export interface Built {
@@ -38,8 +42,8 @@ export interface Built {
   parts: readonly BuiltPart[];
   /** What can be shown: together, apart and each part. */
   shows: readonly string[];
-  /** The bounds of a choice of what to show, in metres. */
-  boundsOf(show?: string): Bounds;
+  /** The bounds of a choice of what to show, in metres, and with `lit` the flames of its engines at full thrust. */
+  boundsOf(show?: string, lit?: boolean): Bounds;
   /** Where each part stands for a choice of what to show. */
   placesOf(show?: string): { slot: string; at: Vec3; shown: boolean }[];
   /** The .glb file's bytes: every part stacked, each its own node to move. */
@@ -81,7 +85,17 @@ function assembled(report: FitReport): Built {
   });
   const slots = parts.map((part) => part.slot);
   const placesOf = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id));
-  const boundsOfShow = (show?: string): Bounds => {
+  const flamesOf = (show: string | undefined): LitBell[] => {
+    const places = placesOf(show);
+    return litBells(
+      places.map((place) => {
+        const part = parts.find((p) => p.slot === place.slot) as BuiltPart;
+        return { slot: part.slot, atY: place.at[1], shown: place.shown, pieces: part.pieces };
+      }),
+      !show || show === "together",
+    );
+  };
+  const boundsOfShow = (show?: string, lit = false): Bounds => {
     const min: Vec3 = [Infinity, Infinity, Infinity];
     const max: Vec3 = [-Infinity, -Infinity, -Infinity];
     for (const place of placesOf(show)) {
@@ -92,6 +106,11 @@ function assembled(report: FitReport): Built {
         max[c] = Math.max(max[c], bounds.max[c] + place.at[c]);
       }
     }
+    if (lit)
+      for (const bell of flamesOf(show)) {
+        const place = placesOf(show).find((one) => one.slot === bell.slot);
+        min[1] = Math.min(min[1], (place?.at[1] ?? 0) + bell.y - plumeLength(bell.exit));
+      }
     return { min, max };
   };
   return {
@@ -101,10 +120,11 @@ function assembled(report: FitReport): Built {
     boundsOf: boundsOfShow,
     placesOf,
     glb: () => toGlb(parts.map((part) => ({ name: part.slot, mesh: part.mesh, at: placesOf("together").find((place) => place.slot === part.slot)?.at ?? [0, 0, 0] }))),
-    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show } = {}) => {
+    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false } = {}) => {
       const angle = typeof view === "string" ? VIEWS[cleanView(view)] : view;
       const places = placesOf(show).filter((place) => place.shown);
-      const cam = perspective(boundsOfShow(show), angle);
+      // a flame drawn at full thrust is held in the picture; a count of engines is the timeline's, which has its own room
+      const cam = perspective(boundsOfShow(show, engines === true), angle);
       const ordered = places
         .map((place) => {
           const part = parts.find((p) => p.slot === place.slot) as BuiltPart;
@@ -113,7 +133,20 @@ function assembled(report: FitReport): Built {
         })
         .sort((a, b) => b.depth - a.depth);
       const together = !show || show === "together";
-      return wrap(ordered.map(({ place, part }) => drawPart(drawnPieces(part, together), place.at, cam, look)).join(""), look, PICTURE_W, PICTURE_H, report.label);
+      const flames = typeof engines === "object"
+        ? parts.flatMap((part) => pickBells(bellsOf(part.pieces), engines[part.slot] ?? 0).map((bell) => ({ ...bell, slot: part.slot })))
+        : engines
+        ? flamesOf(show).filter((bell) => places.some((place) => place.slot === bell.slot))
+        : [];
+      return wrap(
+        ordered
+          .map(({ place, part }) => drawPart(drawnPieces(part, together), place.at, cam, look) + plumeMarkup(flames.filter((bell) => bell.slot === place.slot), place.at, cam, look, part.slot))
+          .join(""),
+        look,
+        PICTURE_W,
+        PICTURE_H,
+        report.label,
+      );
     },
   };
 }

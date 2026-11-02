@@ -1,6 +1,8 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { check, type Description, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { builderState, check, embedCode, EMBED_KINDS, embedNote, type EmbedKind, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
+import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 
@@ -129,6 +131,7 @@ function renderMain() {
       ]),
     );
   } else credit.textContent = "Painted by this package's own code, from sourced sizes. No licensed model shows this variant.";
+  drawEmbed();
 }
 
 function pick(change: Partial<typeof state>) {
@@ -140,6 +143,122 @@ function pick(change: Partial<typeof state>) {
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
 byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));
+
+// ------------------------------------------------------------- which way it turns
+// The family's controls turn it at their `speed`: positive takes the near side to the right, negative to the left. A press changes the way at once, from where it is, and starts the turn if it had stopped.
+const TURN_SPEED = 5;
+const turnBox = byId("turn");
+const TURN_FOR_MS = 60_000;
+let turnTimer = 0;
+let turnWay: "left" | "right" = "right";
+function drawTurn() {
+  const turning = bar.state.turning;
+  for (const way of ["left", "right"] as const) {
+    const button = turnBox.querySelector<HTMLButtonElement>(`[data-testid="turn-${way}"]`);
+    const pressed = String(turning && turnWay === way);
+    if (button && button.getAttribute("aria-pressed") !== pressed) button.setAttribute("aria-pressed", pressed);
+  }
+}
+function turnTo(way: "left" | "right") {
+  turnWay = way;
+  bar.setAttribute("speed", String(way === "left" ? -TURN_SPEED : TURN_SPEED));
+  if (!bar.state.turning) bar.play();
+  // a turn someone asked for ends too, as the first one does: a tab left open draws nothing for ever
+  window.clearTimeout(turnTimer);
+  turnTimer = window.setTimeout(() => bar.pause(), TURN_FOR_MS);
+  drawTurn();
+  drawEmbed();
+}
+turnBox.append(chip("Turn left", "turn-left", () => turnTo("left")), chip("Turn right", "turn-right", () => turnTo("right")));
+bar.addEventListener("kazoku-viewchange", drawTurn);
+
+// ------------------------------------------------------------- the engines
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const enginesBox = byId("engines");
+function lightEngines(on: boolean) {
+  hero.setAttribute("engines", on ? "on" : "off");
+  press(enginesBox, `engines-${on ? "on" : "off"}`);
+  const note = byId("engines-note");
+  note.hidden = !(on && reducedMotion);
+  note.textContent = "This device asks for reduced motion, so the flames stay off. The engine chart still says which ones burn.";
+  drawEmbed();
+}
+enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false)), chip("Lit", "engines-on", () => lightEngines(true)));
+press(enginesBox, "engines-off");
+
+// ------------------------------------------------------------- copy the rocket that is on screen
+const EMBED_WORDS: Readonly<Record<EmbedKind, string>> = { element: "CDN script", iframe: "Iframe", module: "Module", svg: "SVG", data: "Data address", link: "Image link" };
+let embedKind: EmbedKind = "element";
+let embedFull = "";
+const embedTabs = byId("embed-tabs");
+const embedCodeNode = byId("embed-code");
+const embedStatus = byId("embed-status");
+for (const kind of EMBED_KINDS) {
+  const button = el("button", { type: "button", className: "chip", textContent: EMBED_WORDS[kind] });
+  button.dataset.testid = `tab-${kind}`;
+  button.setAttribute("role", "tab");
+  button.addEventListener("click", () => {
+    embedKind = kind;
+    drawEmbed();
+  });
+  embedTabs.append(button);
+}
+function embedOptions(): RocketOptions {
+  const flying = hero.flightState;
+  const engines = hero.getAttribute("engines");
+  // what turns here by the controls turns there by itself: left is `cw`, the near side going left
+  const turning = bar.state.turning ? { spin: "slow", way: turnWay === "left" ? "cw" : "ccw" } : {};
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+}
+function drawEmbed() {
+  const options = embedOptions();
+  embedFull = embedCode(options, embedKind);
+  byId("embed-note").textContent = embedNote(embedKind, options);
+  const credit = paintedCredit(options);
+  const creditNode = byId("embed-credit");
+  creditNode.hidden = credit === "";
+  creditNode.textContent = credit === "" ? "" : `Keep this credit with a painted rocket, however you use it. ${credit}`;
+  byId<HTMLAnchorElement>("embed-open").href = `embed.html?${rocketToParams(options).toString()}`;
+  embedStatus.textContent = "";
+  embedCodeNode.textContent = embedFull.length > 1400 ? `${embedFull.slice(0, 1400)}…` : embedFull;
+  for (const button of embedTabs.querySelectorAll("button")) button.setAttribute("aria-selected", String(button.dataset.testid === `tab-${embedKind}`));
+}
+byId("embed-copy").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(embedFull);
+  } catch {
+    const area = el("textarea");
+    area.value = embedFull;
+    document.body.append(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+  }
+  embedStatus.textContent = "Copied";
+});
+const fileName = () => ["uchusen", state.rocket, state.variant, state.show === "together" ? "" : state.show, state.look].filter(Boolean).join("-");
+const drawingText = () => embedCode(embedOptions(), "svg");
+byId("embed-svg").addEventListener("click", () => {
+  downloadBlob(new Blob([drawingText()], { type: "image/svg+xml" }), `${fileName()}.svg`);
+  embedStatus.textContent = "Saved";
+});
+byId("embed-png").addEventListener("click", async () => {
+  try {
+    downloadBlob((await svgToPng(drawingText(), PICTURE_W, PICTURE_H, 2)).blob, `${fileName()}.png`);
+    embedStatus.textContent = "Saved";
+  } catch {
+    embedStatus.textContent = "This browser could not make a PNG. Save SVG still works.";
+  }
+});
+// a phase of flight is part of what is copied: it is said when it changes, not on every step of the slider
+let embedPhase = "";
+hero.addEventListener("uchusen-flight", () => {
+  const { active, phase } = hero.flightState;
+  const now = active ? phase : "";
+  if (now === embedPhase) return;
+  embedPhase = now;
+  drawEmbed();
+});
 renderMain();
 
 // ------------------------------------------------------------- compare
@@ -191,27 +310,43 @@ renderCompare();
 
 // ------------------------------------------------------------- builder
 const builderRocket = byId<UchusenRocket>("builder-rocket");
-const pickBooster = byId<HTMLSelectElement>("pick-booster");
-const pickShip = byId<HTMLSelectElement>("pick-ship");
-const fill = (select: HTMLSelectElement, kind: string) => {
-  for (const { record } of PART_ENTRIES) if (record.kind === kind) select.append(el("option", { value: record.id, textContent: record.name }));
-};
-fill(pickBooster, "booster");
-fill(pickShip, "ship");
-pickBooster.value = "starship-v3-booster";
-pickShip.value = "starship-v3-ship";
+const builderRows = byId("builder-rows");
+let builderPicks: string[] = [];
 function renderBuilder() {
-  const description: Description = { rocket: "starship", variant: "v3", parts: { booster: pickBooster.value, ship: pickShip.value } };
-  const report = check(description);
+  const { rows, description, report } = builderState(builderPicks);
+  // what the builder chose is what stands: a later change starts from here
+  builderPicks = rows.map((row) => row.chosen);
+  builderRows.replaceChildren(
+    ...rows.map((row, index) => {
+      const label = el("label", {}, row.label);
+      if (row.auto) {
+        // one answer: no question to ask
+        label.append(el("output", { className: "builder-only", textContent: row.options[0].name }));
+        label.dataset.testid = `pick-${index}-only`;
+        return label;
+      }
+      const select = el("select");
+      select.dataset.testid = `pick-${index}`;
+      for (const rocket of new Set(row.options.map((option) => option.rocket))) {
+        const group = el("optgroup", { label: rocket });
+        for (const option of row.options) if (option.rocket === rocket) group.append(el("option", { value: option.id, textContent: option.name }));
+        select.append(group);
+      }
+      select.value = row.chosen;
+      select.addEventListener("change", () => {
+        builderPicks[index] = select.value;
+        renderBuilder();
+      });
+      label.append(select);
+      return label;
+    }),
+  );
   const box = byId("builder-report");
-  box.dataset.kind = !report.ok ? "refused" : report.custom ? "custom" : "real";
-  box.textContent = !report.ok ? report.issues.filter((issue) => issue.level === "error").map((issue) => issue.message).join(" ") : `${report.label}. ${report.size?.height.toFixed(1)} m tall as drawn.`;
-  const trim = report.custom ? description : { rocket: "starship", variant: "v3" };
-  byId("builder-code").textContent = `build(${JSON.stringify(trim)})`;
-  if (report.ok) builderRocket.description = trim;
+  box.dataset.kind = report.custom ? "custom" : "real";
+  box.textContent = `${report.label}. ${report.size?.height.toFixed(1)} m tall as drawn.`;
+  byId("builder-code").textContent = `build(${JSON.stringify(description)})`;
+  builderRocket.description = description;
 }
-pickBooster.addEventListener("change", renderBuilder);
-pickShip.addEventListener("change", renderBuilder);
 renderBuilder();
 
 // ------------------------------------------------------------- the parts alone
@@ -248,3 +383,24 @@ byId("source-list").append(
   }),
 );
 byId("credit-list").append(...(Object.keys(MODEL_CREDITS) as CreditId[]).map((id) => el("li", { textContent: creditLine(id) })));
+
+// ------------------------------------------------------------- one section at a time, chosen in a row, and kept in the address
+const MORE: readonly (readonly [string, string])[] = [["embed", "Put it on your site"], ["compare", "Compare to scale"], ["builder", "Build from parts"], ["details", "The parts"], ["planned", "Still to come"], ["sources", "Sources"]];
+const moreTabs = byId("more-tabs");
+function showMore(chosen: string) {
+  for (const [id] of MORE) {
+    byId(id).hidden = id !== chosen;
+    moreTabs.querySelector(`[data-testid="more-${id}"]`)?.setAttribute("aria-selected", String(id === chosen));
+  }
+}
+for (const [id, words] of MORE) {
+  const tab = chip(words, `more-${id}`, () => {
+    showMore(id);
+    history.replaceState(history.state, "", `${location.pathname}${location.search}#${id}`);
+  });
+  tab.setAttribute("role", "tab");
+  tab.setAttribute("aria-controls", id);
+  moreTabs.append(tab);
+}
+const askedTab = location.hash.slice(1);
+showMore(MORE.some(([id]) => id === askedTab) ? askedTab : MORE[0][0]);

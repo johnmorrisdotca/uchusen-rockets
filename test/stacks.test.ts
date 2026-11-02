@@ -1,7 +1,7 @@
 // The rockets drawn wholly by this package's code: each is drawn to its sourced height, its engines are the sourced count, and each part has the record every part has.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { check, figureWords, FLIGHTS, flightsOf, MODEL_CREDITS, partEntry, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
+import { check, figureWords, FLIGHT_LOG, flightLogOf, MODEL_CREDITS, partEntry, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
 import type { Piece } from "../src/model/pieces.ts";
 import { build, buildPart } from "../src/build/index.ts";
 
@@ -162,17 +162,17 @@ test("Starbase is the map's places, what is built only, in few pieces", () => {
 });
 
 test("real flights name a variant there is, a known source, and the source's own words", () => {
-  for (const flight of FLIGHTS) {
+  for (const flight of FLIGHT_LOG) {
     assert.ok(variantOf(flight.rocket, flight.variant), flight.id);
     assert.ok(Object.hasOwn(SOURCES, flight.source), flight.id);
     assert.match(flight.date, /^\d{4}-\d{2}-\d{2}$/);
   }
-  const five = flightsOf("starship").find((flight) => flight.id === "starship-flight-5");
+  const five = flightLogOf("starship").find((flight) => flight.id === "starship-flight-5");
   assert.equal(five?.date, "2024-10-13");
   assert.match(five?.outcome ?? "", /Caught/);
   assert.match(five?.vehicles ?? "", /B12.*S30/);
-  assert.deepEqual(flightsOf("falcon-1").map((flight) => flight.launch), ["Failure", "Failure", "Failure", "Success", "Success"]);
-  const dates = flightsOf("starship").map((flight) => flight.date);
+  assert.deepEqual(flightLogOf("falcon-1").map((flight) => flight.launch), ["Failure", "Failure", "Failure", "Success", "Success"]);
+  const dates = flightLogOf("starship").map((flight) => flight.date);
   assert.deepEqual(dates, [...dates].sort());
 });
 

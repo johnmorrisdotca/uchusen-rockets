@@ -18,6 +18,10 @@ export interface UchusenRocketProps extends Omit<HTMLAttributes<HTMLElement>, "s
   spin?: string | number;
   way?: "cw" | "ccw";
   label?: string;
+  /** "on" lights the engines, and a reader who asked for reduced motion has them off. */
+  engines?: "on" | "off";
+  /** A phase of the rocket's flight, by its id. */
+  phase?: string;
   ref?: Ref<HTMLElement>;
 }
 
