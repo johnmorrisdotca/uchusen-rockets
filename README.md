@@ -6,7 +6,7 @@ Uchūsen means "spaceship". Each rocket comes in every variant a source document
 <p align="center">
   <a href="https://github.com/johnmorrisdotca/uchusen-rockets/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/johnmorrisdotca/uchusen-rockets/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://www.npmjs.com/package/@johnmorrisdotca/uchusen-rockets"><img alt="npm" src="https://img.shields.io/npm/v/@johnmorrisdotca/uchusen-rockets?color=2f5d4a"></a>
-  <a href="./LICENSE"><img alt="MIT licence, CC BY 4.0 models" src="https://img.shields.io/badge/licence-MIT%20%2B%20CC%20BY%204.0-2f5d4a"></a>
+  <a href="./NOTICE.md"><img alt="MIT licence, CC BY 4.0 models, ODbL map data" src="https://img.shields.io/badge/licence-MIT%20%2B%20CC%20BY%204.0%20%2B%20ODbL-2f5d4a"></a>
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
 </p>
 
@@ -145,7 +145,7 @@ import { UchusenRocket } from "@johnmorrisdotca/uchusen-rockets/react";
 
 ## Licences, credits and a word on trademarks
 
-The code, the code-made meshes and the drawings are under the MIT licence. **The painted models are not: they stay under Creative Commons Attribution 4.0, and using them means crediting them.** `check(description).credits` says which belong to a rocket.
+The code, the code-made meshes and the drawings are under the MIT licence. **The painted models are not: they stay under Creative Commons Attribution 4.0, and using them means crediting them.** `check(description).credits` says which belong to a rocket. **Starbase's coordinates and outlines, its map heights and the tower's 13 m footprint are © OpenStreetMap contributors, under ODbL 1.0, not MIT** (https://www.openstreetmap.org/copyright).
 
 | Painted | Title | Creator | Source | Changed |
 | --- | --- | --- | --- | --- |
@@ -171,4 +171,4 @@ All but Discovery are under [CC BY 4.0](https://creativecommons.org/licenses/by/
 
 ## The rest
 
-[CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md) · [NOTICE.md](NOTICE.md) · MIT licence, and CC BY 4.0 for the painted models
+[CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md) · [NOTICE.md](NOTICE.md) · MIT licence, CC BY 4.0 for the painted models, and ODbL 1.0 for the map data

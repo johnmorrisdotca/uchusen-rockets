@@ -1,3 +1,4 @@
+// The coordinates, outlines and map heights in this file are © OpenStreetMap contributors, under the Open Database License (ODbL 1.0, https://www.openstreetmap.org/copyright), not MIT: see NOTICE.md.
 // Starbase from the map: places and outlines from OpenStreetMap (a handful of named places, in metres from tower 1, x to the east and z to the south), the road and the coast too. What stands on them is plain geometry with no lettering or logo. Nothing here is announced or from a concept picture. Few pieces, merged by material in one mesh per part, so a whole town is a few dozen draws.
 import { blank } from "../data/types.ts";
 import { moved, nose, road, slab, tube } from "./kit.ts";

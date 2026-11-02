@@ -45,8 +45,8 @@ console.log(`ok   every file package.json points at is in the tarball (${new Set
 for (const named of pkg.files) if (![...inTarball].some((file) => file === named || file.startsWith(`${named}/`))) fail(`package.json's files names ${named}, which is not in the tarball`);
 if (Object.keys(pkg.dependencies ?? {}).length > 0) fail("the package has runtime dependencies; three.js is a peer");
 console.log("ok   no runtime dependencies");
-if (!inTarball.has("LICENSES/CC-BY-4.0.txt") || !inTarball.has("LICENSES/MIT.txt") || !inTarball.has("NOTICE.md")) fail("a licence is not in the tarball");
-console.log("ok   both licences and the notice are in the tarball");
+if (!inTarball.has("LICENSES/CC-BY-4.0.txt") || !inTarball.has("LICENSES/MIT.txt") || !inTarball.has("LICENSES/ODbL-1.0.txt") || !inTarball.has("NOTICE.md")) fail("a licence is not in the tarball");
+console.log("ok   the three licences and the notice are in the tarball");
 
 // 3. Every asset is there.
 let assets = 0;

@@ -1,3 +1,4 @@
+// The coordinates, outlines and map heights in this file are © OpenStreetMap contributors, under the Open Database License (ODbL 1.0, https://www.openstreetmap.org/copyright), not MIT: see NOTICE.md.
 // Starbase as a scene: where things stand is measured from OpenStreetMap, a handful of named places under its licence. What is built, nothing announced. Its figures are mappers' and not surveys, and each says so.
 import { blank, type Figure, type Variant } from "./types.ts";
 

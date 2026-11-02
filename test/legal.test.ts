@@ -111,10 +111,19 @@ test("the source says what it may not use", () => {
   assert.match(notice, /All trademarks belong to their owners/);
   assert.match(notice, /not affiliated with or endorsed by SpaceX/);
   assert.match(notice, /r-spacex\/SpaceX-API/);
-  assert.ok(existsSync("LICENSES/CC-BY-4.0.txt") && existsSync("LICENSES/MIT.txt"));
+  assert.ok(existsSync("LICENSES/CC-BY-4.0.txt") && existsSync("LICENSES/MIT.txt") && existsSync("LICENSES/ODbL-1.0.txt"));
   const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { license: string; dependencies?: object };
-  assert.equal(pkg.license, "MIT AND CC-BY-4.0");
+  assert.equal(pkg.license, "MIT AND CC-BY-4.0 AND ODbL-1.0");
   assert.equal(pkg.dependencies, undefined);
+});
+
+test("what comes from OpenStreetMap says so, where it is and where the licences are listed: its licence, not MIT", () => {
+  for (const file of ["NOTICE.md", "README.md", "src/data/starbase.ts", "src/model/starbase.ts", "src/data/tower.ts", "src/model/tower.ts"]) {
+    const text = readFileSync(file, "utf8");
+    assert.match(text, /© OpenStreetMap contributors/, file);
+    assert.match(text, /ODbL/, file);
+    assert.match(text, /not MIT/, file);
+  }
 });
 
 test("the README says whose the trademarks are, and credits the models", () => {

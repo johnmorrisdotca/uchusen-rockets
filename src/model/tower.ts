@@ -1,3 +1,4 @@
+// The tower's 13 m footprint in this file is © OpenStreetMap contributors, under the Open Database License (ODbL 1.0, https://www.openstreetmap.org/copyright), not MIT: see NOTICE.md.
 // The integration tower from a table of numbers: its height, its lightning rod and its footprint are sourced; its nine sections are sourced, and their bracing, its arms and the mount are judged from photographs. Plain boxes, few enough that the scene with a whole Starship stays inside a code-made mesh's limit.
 import { STARSHIP_DRAWS, boosterPieces, shipPieces } from "./starship.ts";
 import { blank } from "../data/types.ts";

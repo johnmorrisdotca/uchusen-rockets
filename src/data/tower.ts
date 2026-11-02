@@ -1,3 +1,4 @@
+// The tower's 13 m footprint in this file is © OpenStreetMap contributors, under the Open Database License (ODbL 1.0, https://www.openstreetmap.org/copyright), not MIT: see NOTICE.md.
 // The integration tower at Starbase, with its mount and arms, as sourced: the FAA's assessment gives its height. No source read here gives its width, its arms' length or the mount's size: those are judged from photographs.
 import { STARSHIP_VARIANTS } from "./starship.ts";
 import { blank, type Figure, type Variant } from "./types.ts";

@@ -1,10 +1,12 @@
 # Notice
 
-This package holds work under two licences.
+This package holds work under three licences.
 
-**The code, the code-made meshes and the drawings are under the MIT licence** (see [LICENSE](LICENSE) and [LICENSES/MIT.txt](LICENSES/MIT.txt)). Each is made by this package's own code from plain geometry and sourced sizes.
+**The code, the code-made meshes and the drawings are under the MIT licence** (see [LICENSE](LICENSE) and [LICENSES/MIT.txt](LICENSES/MIT.txt)), except the map data below. Each is made by this package's own code from plain geometry and sourced sizes.
 
 **The painted models in `models/` (shipped as `dist/assets/models/`) are not.** Each stays under the Creative Commons Attribution 4.0 licence of its author, except one under CC0 as its row says (see [LICENSES/CC-BY-4.0.txt](LICENSES/CC-BY-4.0.txt) and https://creativecommons.org/licenses/by/4.0/). Using them means crediting them, as below. The credits are also data: `MODEL_CREDITS` and `creditLine`, and `check(description).credits` says which belong to a given rocket.
+
+**The map data is under the Open Database License, not MIT.** The coordinates, outlines and map heights of Starbase, in `src/data/starbase.ts` and `src/model/starbase.ts`, and the tower's 13 m footprint, in `src/data/tower.ts` and `src/model/tower.ts`, and those figures wherever they are built into `dist/`, are © OpenStreetMap contributors, https://www.openstreetmap.org/copyright, under ODbL 1.0 (see [LICENSES/ODbL-1.0.txt](LICENSES/ODbL-1.0.txt)). Each such figure names this source in the data (`SOURCES.openstreetmap`). The plain shapes standing on those places, and the rest of the package, stay MIT.
 
 No mesh or drawing carries a logo, wordmark or flag. Those were removed from the models below, and no photograph is shipped or traced: photographs were looked at for where parts sit.
 
