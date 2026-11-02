@@ -130,6 +130,8 @@ export const DRAGON_DRAWS: Readonly<Record<string, DragonDraw>> = {
   "dragon-1": { capsule: 3.8, nest: 0, trunk: 2.3, baseRadius: 1.85, trunkRadius: 1.8, windows: false, wings: true, fins: false },
   // the capsule's 4.5 m includes its heat shield, which nests 0.34 m into the trunk: 3.94 m of trunk and that make the sourced 8.1 m
   "dragon-2": { capsule: 4.5, nest: 0.342, trunk: 3.94, baseRadius: 2, trunkRadius: 1.92, windows: true, wings: false, fins: true },
+  // the same sizes: its article gives one set for both versions. It has no windows
+  "cargo-dragon-2": { capsule: 4.5, nest: 0.342, trunk: 3.94, baseRadius: 2, trunkRadius: 1.92, windows: false, wings: false, fins: true },
 };
 
 export function capsule(d: DragonDraw): Piece[] {

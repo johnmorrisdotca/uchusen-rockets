@@ -65,9 +65,9 @@ export const FALCON_9_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstFlight: said("2015-12-22", F9, { note: "OG2 Flight 2." }),
     slots: ["first-stage", "second-stage", "fairing"],
-    note: "Blocks 3 and 4 are part of Full Thrust; Block 4 first flew on 2017-08-14, and no source read here gives it sizes of its own. So it is not listed apart.",
+    note: "Blocks 3 and 4 are part of Full Thrust. Block 4 was a transition between them and Block 5, with incremental thrust upgrades; its full design first flew on 2017-08-14. Neither the Falcon 9 article nor the Full Thrust article gives it sizes of its own, so it is not listed apart.",
     facts: {
-      height: m(69.8, F9, { note: FAIRING_NOTE, others: [{ value: 70, source: F9, note: "The same article's table of versions rounds to 70 m." }] }),
+      height: m(69.8, F9, { note: FAIRING_NOTE, others: [{ value: 70, source: F9, note: "The same article's table of versions rounds to 70 m." }, { value: 71, source: "wikipedia-falcon-9-ft", note: "The Full Thrust article's infobox says 71 m with the fairing, citing SpaceX's user's guide; its own Block 5 box says 69.8 m." }] }),
       diameter: m(3.7, F9),
       parts: { "first-stage": FIRST_STAGE_WITH_INTERSTAGE, "second-stage": SECOND_STAGE, fairing: FAIRING },
       engines: { "first-stage": said("9 Merlin 1D+", F9), "second-stage": said("1 Merlin 1D Vacuum", F9) },

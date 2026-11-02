@@ -57,7 +57,7 @@ Every part's flaps, fins and chines are drawn from proportions, not from publish
 | `block-5` Block 5 | 69.8 m; 65.7 m with Dragon 2, 63.7 m with Dragon 1. One table and SpaceX-API say 70 m | 47.7 m with its interstage | 13.8 m | 13.1 m | 2018-05-11 |
 | `block-5-dragon-2` Block 5 with Dragon 2 | 65.7 m as stated; the parts add to 64.8 m | The same | The same | Trunk, capsule | 2019-03-02 |
 
-All are 3.7 m across. The second stage's vacuum engine is drawn 3.3 m across at the end of its nozzle, the diameter Wikipedia's Merlin infobox gives for the vacuum engine (0.92 m at sea level); the v1.0's Merlin 1C Vacuum has no source here and keeps a narrower drawn bell. Block 4 first flew on 2017-08-14, and no source read here gives it sizes of its own, so it is not listed apart. `SpaceX-API` (Apache-2.0, archived in 2024) has one row for Falcon 9 and one for Falcon Heavy, not one per version, read from its repository's docs. It gives the fairing's 13.1 m; the Falcon 9 article rounds that to 13 m.
+All are 3.7 m across. The second stage's vacuum engine is drawn 3.3 m across at the end of its nozzle, the diameter Wikipedia's Merlin infobox gives for the vacuum engine (0.92 m at sea level); the v1.0's Merlin 1C Vacuum has no source here and keeps a narrower drawn bell. Block 4 first flew on 2017-08-14, and neither the Falcon 9 article nor the Full Thrust article gives it sizes of its own, so it is not listed apart. The Full Thrust article's infobox says 71 m with a fairing, citing SpaceX's user's guide, and its own Block 5 box says 69.8 m. `SpaceX-API` (Apache-2.0, archived in 2024) has one row for Falcon 9 and one for Falcon Heavy, not one per version, read from its repository's docs. It gives the fairing's 13.1 m; the Falcon 9 article rounds that to 13 m.
 
 ## Falcon Heavy, Dragon and Grasshopper
 
@@ -66,6 +66,7 @@ All are 3.7 m across. The second stage's vacuum engine is drawn 3.3 m across at 
 | `falcon-heavy` | 70 m | 12.2 m over its three cores, 3.7 m each | 2018-02-06 | Its painted model is one shell from the centre core to the fairing, so those stay one part. A side booster's height has no source and is drawn from the model |
 | `dragon` `dragon-1` Dragon 1 | 6.1 m | 3.7 m | 2010-12-08 | The original cargo Dragon, with solar wings. Not the later Cargo Dragon 2 |
 | `dragon` `dragon-2` Dragon 2 | 8.1 m; capsule 4.5 m | 4 m | 2019-03-02 | Crew Dragon, with windows |
+| `dragon` `cargo-dragon-2` Cargo Dragon 2 | 8.1 m; capsule 4.5 m | 4 m | 2020-12-06 | No windows and no SuperDraco abort engines. Its article gives one set of sizes for both versions of Dragon 2 |
 | `grasshopper` | 32 m | No source | 2012-09-21, a 1.8 m hop | A test vehicle, retired on 2013-10-07 |
 
 ## Falcon 1

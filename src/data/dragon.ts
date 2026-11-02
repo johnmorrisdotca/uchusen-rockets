@@ -44,4 +44,23 @@ export const DRAGON_VARIANTS: readonly Variant[] = [
       more: {},
     },
   },
+  {
+    id: "cargo-dragon-2",
+    rocket: "dragon",
+    name: "Cargo Dragon 2",
+    status: "flown",
+    firstFlight: said("2020-12-06", D2, { note: "CRS-21." }),
+    slots: ["trunk", "capsule"],
+    note: "The cargo version of Dragon 2. Its article gives one set of sizes for both versions, and says Cargo Dragon lacks Crew Dragon's seats, controls, life support, windows and SuperDraco abort engines. Painted by this package's own code: the licensed model shows Crew Dragon, with windows, and no model stands in for another version.",
+    facts: {
+      height: m(8.1, D2, { note: "Capsule with trunk: the article's one figure for both versions." }),
+      diameter: m(4, D2),
+      parts: {
+        trunk: blank("No source read here gives the trunk alone."),
+        capsule: m(4.5, D2),
+      },
+      engines: { capsule: said("16 Draco thrusters", D2, { note: "It has no SuperDraco abort engines." }) },
+      more: {},
+    },
+  },
 ];

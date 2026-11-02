@@ -109,6 +109,7 @@ for (const id of Object.keys(FALCON_DRAWS)) {
 const DRAGON_FROM: Readonly<Record<string, string>> = {
   "dragon-1": "This package's code for the two line looks, proportions taken from ProgressTH's model; ProgressTH's model for the painted look. It shows the original Dragon 1, with solar wings, not Cargo Dragon 2.",
   "dragon-2": "This package's code for the two line looks, proportions taken from KUBAHA's model; KUBAHA's model for the painted look. It shows Crew Dragon, with windows.",
+  "cargo-dragon-2": "This package's code in every look, on Dragon 2's sourced sizes, with no windows as its article says. No licensed model shows it.",
 };
 for (const variant of DRAGON_VARIANTS) {
   const d = DRAGON_DRAWS[variant.id];

@@ -28,6 +28,21 @@ test("Falcon 1e says it was announced and never flew", () => {
   assert.equal(check({ rocket: "falcon-1", variant: "falcon-1e" }).size?.height, 27.4);
 });
 
+test("Cargo Dragon 2 is Dragon 2's sizes with no windows, painted by this package's own code", () => {
+  const glass = (id: string) => (partEntry(id)?.pieces() ?? []).filter((piece) => piece.kind === "plate" && piece.material === "glass").length;
+  assert.equal(glass("dragon-dragon-2-capsule"), 4);
+  assert.equal(glass("dragon-cargo-dragon-2-capsule"), 0);
+  assert.equal(partEntry("dragon-cargo-dragon-2-capsule")?.record.painted, null);
+  assert.equal(variantOf("dragon", "cargo-dragon-2")?.firstFlight.value, "2020-12-06");
+  assert.ok(Math.abs((check({ rocket: "dragon", variant: "cargo-dragon-2" }).size?.height ?? 0) - 8.1) < 0.01);
+});
+
+test("Falcon 9 Block 4 has no sizes of its own in any source read, so it is not listed apart", () => {
+  assert.ok(!ROCKETS["falcon-9"].variants.some((variant) => /block-4/.test(variant.id)));
+  assert.match(variantOf("falcon-9", "ft")?.note ?? "", /Block 4/);
+  assert.ok(variantOf("falcon-9", "ft")?.facts.height.others?.some((other) => other.value === 71));
+});
+
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {
