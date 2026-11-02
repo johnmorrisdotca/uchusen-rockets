@@ -74,3 +74,4 @@ select { display: block; width: 100%; min-height: 44px; margin-top: 0.2rem; padd
   .stage-row, .builder { grid-template-columns: minmax(0, 1fr); }
   .stage-box { position: static; }
 }
+#credit-list li, #source-list li { overflow-wrap: anywhere; }
