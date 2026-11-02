@@ -4,6 +4,7 @@ import { FALCON_HEAVY_VARIANTS, FALCON_9_VARIANTS } from "./data/falcon.ts";
 import { FALCON_1_VARIANTS } from "./data/falcon1.ts";
 import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
 import { SATURN_V_VARIANTS } from "./data/saturn.ts";
+import { SHUTTLE_VARIANTS } from "./data/shuttle.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -37,6 +38,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   grasshopper: { id: "grasshopper", name: "Grasshopper", status: "built", variants: GRASSHOPPER_VARIANTS, defaultVariant: "grasshopper" },
   "falcon-1": { id: "falcon-1", name: "Falcon 1", status: "built", variants: FALCON_1_VARIANTS, defaultVariant: "falcon-1" },
   "saturn-v": { id: "saturn-v", name: "Saturn V", status: "built", variants: SATURN_V_VARIANTS, defaultVariant: "saturn-v" },
+  "space-shuttle": { id: "space-shuttle", name: "Space Shuttle", status: "built", variants: SHUTTLE_VARIANTS, defaultVariant: "stack" },
 };
 
 export const PLANNED_ROCKETS: readonly PlannedRocket[] = [];
@@ -66,4 +68,8 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   adapter: "Adapter",
   "service-module": "Service module",
   "escape-tower": "Escape tower",
+  "external-tank": "External tank",
+  "srb-left": "Solid rocket booster, left",
+  "srb-right": "Solid rocket booster, right",
+  orbiter: "Orbiter",
 };

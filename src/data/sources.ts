@@ -40,6 +40,11 @@ export const SOURCES = {
   "wikipedia-apollo-spacecraft": { title: "Apollo (spacecraft), the adapter's panels, and Saturn V instrument unit", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Apollo_(spacecraft)", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-f-1": { title: "Rocketdyne F-1 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Rocketdyne_F-1", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-j-2": { title: "Rocketdyne J-2 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Rocketdyne_J-2", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-space-shuttle": { title: "Space Shuttle (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Shuttle", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-shuttle-orbiter": { title: "Space Shuttle orbiter (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Shuttle_orbiter", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-shuttle-tank": { title: "Space Shuttle external tank (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Shuttle_external_tank", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-shuttle-srb": { title: "Space Shuttle Solid Rocket Booster (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Shuttle_Solid_Rocket_Booster", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-rs-25": { title: "RS-25 (the infobox and the nozzle's sizes)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/RS-25", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 

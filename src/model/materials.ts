@@ -28,6 +28,7 @@ export const MATERIALS = {
   solar: { color: "#10163a", metal: 0.4, rough: 0.22, fill: "dark" },
   glass: { color: "#141c26", metal: 0.1, rough: 0.08, fill: "dark" },
   blue: { color: "#1d4f96", metal: 0.25, rough: 0.5, fill: "metal" },
+  foam: { color: "#a9592a", metal: 0, rough: 0.8, fill: "metal" },
   red: { color: "#a4322b", metal: 0.1, rough: 0.5, fill: "metal" },
 } as const satisfies Record<string, MaterialSpec>;
 

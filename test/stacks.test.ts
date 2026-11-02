@@ -54,6 +54,21 @@ test("Saturn V is its sourced stages, and its parts add to its sourced height", 
   assert.equal(variantOf("saturn-v")?.facts.parts["escape-tower"].value, null);
 });
 
+test("the Space Shuttle stands as sourced: the tank's top at the stack's height, its parts their articles' lengths", () => {
+  const report = check({ rocket: "space-shuttle" });
+  assert.equal(report.size?.height, 56);
+  assert.deepEqual(report.parts.map(({ part }) => part.height), [46.88, 45.46, 45.46, 37.24]);
+  assert.equal(partEntry("space-shuttle-stack-orbiter")?.record.diameter, 23.79);
+  assert.equal(bells("space-shuttle-stack-orbiter"), 3);
+  assert.equal(bells("space-shuttle-stack-srb-left"), 1);
+  const stack = build({ rocket: "space-shuttle" });
+  assert.ok(Math.abs(stack.boundsOf("orbiter").max[0] - 23.79 / 2) < 0.01, "the wingspan");
+  assert.ok(stack.placesOf("together").every((place) => place.shown));
+  const alone = stack.placesOf("orbiter").find((place) => place.shown);
+  assert.deepEqual(alone?.at, [0, 0, 0], "alone it stands on the ground at the middle");
+  assert.match(variantOf("space-shuttle")?.note ?? "", /No name, flag or mark/);
+});
+
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {

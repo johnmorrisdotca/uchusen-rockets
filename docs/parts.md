@@ -62,6 +62,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Grasshopper | This package's code, its proportions taken from Echo_3's model | Echo_3's low-poly model |
 | Falcon 1 and 1e | This package's code, from SpaceX's user's guide; the stages' share of the whole judged from photographs | This package's code. No model shows them |
 | Saturn V, with the Apollo spacecraft | This package's code, from sourced sizes; the paint and the foot judged from photographs | This package's code. No model shows it, and no flag or lettering is drawn |
+| Space Shuttle | This package's code, from sourced sizes; the orbiter's outline and the gaps judged from photographs | This package's code. No model is used, and no name, flag or mark is drawn |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
 

@@ -8,7 +8,7 @@ This package holds work under two licences.
 
 No mesh or drawing carries a logo, wordmark or flag. Those were removed from the models below, and no photograph is shipped or traced: photographs were looked at for where parts sit.
 
-All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX. "SpaceX", "Starship", "Super Heavy", "Raptor", "Falcon" and "Dragon" appear only as plain descriptive words.
+All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. "SpaceX", "Starship", "Super Heavy", "Raptor", "Falcon", "Dragon" and the names of other makers' rockets appear only as plain descriptive words.
 
 ## Painted models (CC BY 4.0)
 
@@ -38,6 +38,7 @@ Sizes are plain facts, each with its source in `src/data/sources.ts` and on the 
 | SpaceX's Starship page, https://new.spacex.com/vehicles/starship, as a search engine quoted it: the page itself would not load | Rounded heights, kept as a second opinion |
 | SpaceX, Falcon 1 Launch Vehicle Payload User's Guide, Rev 7, 2008, read through the Internet Archive | Falcon 1's and Falcon 1e's heights and fairings. Facts only: no drawing is copied |
 | Wikipedia: Saturn V, Apollo command and service module, Apollo (spacecraft), Saturn V instrument unit, Rocketdyne F-1, Rocketdyne J-2 (CC BY-SA 4.0, read 2026-11-02) | Saturn V's and the Apollo spacecraft's lengths and widths, and the engines' sizes. Facts only: no text is copied |
+| Wikipedia: Space Shuttle, Space Shuttle orbiter, Space Shuttle external tank, Space Shuttle Solid Rocket Booster, RS-25 (CC BY-SA 4.0, read 2026-11-02) | The Shuttle's parts' lengths and widths, the wingspan and the engine's sizes. Facts only: no text is copied |
 | SatNews, 2026-05-14 | Grid fins, four to three and about 50% larger; about 1.5 m taller |
 | Gunter's Space Page | Version names, first flights by serial number; one set of sizes per family, not used for sizes |
 | NASASpaceflight, 2025-05-30, and Ars Technica, 2024-04-08 | Known through Wikipedia's citations; not read directly |

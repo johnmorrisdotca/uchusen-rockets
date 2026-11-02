@@ -86,6 +86,14 @@ No source read here gives a stage's own length, so those are blank and drawn in 
 
 The figures are the article's feet in metres, and each note keeps the feet. The adapter is added from two articles, the service module's 7.49 m includes its nozzle, and the capsule is 3.48 m. The escape tower has no size in a source read here, so it is what the whole leaves. The lunar module is hidden in the adapter and is not drawn.
 
+## Space Shuttle
+
+| Variant | Whole | External tank | Solid rocket booster | Orbiter | First flew |
+| --- | --- | --- | --- | --- | --- |
+| `stack` | 56 m, stacked | 46.88 m (153.8 feet), 8.41 m across (the Space Shuttle article says 8.7 m) | 45.46 m (149.16 feet), 3.71 m across | 37.24 m long, 23.79 m span | 1981-04-12 |
+
+No source read here says where the parts stand against each other, so the gaps and the orbiter's outline are judged from photographs. Its front view is the orbiter's belly side, behind the tank.
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape.
