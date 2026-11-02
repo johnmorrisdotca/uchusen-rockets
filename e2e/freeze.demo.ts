@@ -146,6 +146,7 @@ test("a view out of sight draws nothing and redraws nothing, even while the cont
 });
 
 test("changes give back what they took: contexts, buffers, vertex arrays and textures do not grow", async ({ page }) => {
+  test.setTimeout(300_000);
   await page.goto(URL);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);
@@ -161,7 +162,8 @@ test("changes give back what they took: contexts, buffers, vertex arrays and tex
     await press(page, "look-line");
     await settle(page, 600);
   };
-  // the first round fills the caches that are kept on purpose
+  // the first rounds fill the caches that are kept on purpose: on a slow machine a shape is first drawn in the second round, so its vertex array comes then. Measured: 38, 55, 55, 55
+  await round();
   await round();
   const first = await usage(page);
   await round();

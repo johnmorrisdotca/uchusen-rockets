@@ -23,7 +23,7 @@ export interface Look {
   halo: boolean;
 }
 
-export type FillName = "hull" | "white" | "tile" | "metal" | "dark" | "bell";
+export type FillName = "hull" | "white" | "tile" | "metal" | "dark" | "bell" | "foam";
 
 const NIGHT = {
   hull: ["#0c1422", "#2a3850", "#0c1422"],
@@ -32,6 +32,7 @@ const NIGHT = {
   metal: ["#16202f", "#3a475c", "#16202f"],
   dark: ["#070b12", "#121a28", "#070b12"],
   bell: ["#0a0f18", "#242f42", "#0a0f18"],
+  foam: ["#16202f", "#3a475c", "#16202f"],
 } as const;
 
 export const LOOKS: Readonly<Record<LookName, Look>> = {
@@ -53,6 +54,7 @@ export const LOOKS: Readonly<Record<LookName, Look>> = {
       metal: ["#5a5f66", "#a9afb6", "#5a5f66"],
       dark: ["#111316", "#2a2d31", "#111316"],
       bell: ["#141518", "#3c3f44", "#141518"],
+      foam: ["#6e3a1b", "#c8743a", "#6e3a1b"],
     },
     halo: false,
   },
