@@ -12,6 +12,7 @@ import { SOYUZ_VARIANTS } from "./data/soyuz.ts";
 import { DRONESHIP_VARIANTS, LANDING_ZONE_VARIANTS } from "./data/landing.ts";
 import { TOWER_VARIANTS } from "./data/tower.ts";
 import { STARBASE_VARIANTS } from "./data/starbase.ts";
+import { LUNAR_MODULE_VARIANTS } from "./data/lunarmodule.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -50,6 +51,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "new-glenn": { id: "new-glenn", name: "New Glenn", status: "built", variants: NEW_GLENN_VARIANTS, defaultVariant: "7x2" },
   "electron": { id: "electron", name: "Electron", status: "built", variants: ELECTRON_VARIANTS, defaultVariant: "electron" },
   "soyuz": { id: "soyuz", name: "Soyuz", status: "built", variants: SOYUZ_VARIANTS, defaultVariant: "soyuz-2" },
+  "lunar-module": { id: "lunar-module", name: "Apollo lunar module", status: "built", variants: LUNAR_MODULE_VARIANTS, defaultVariant: "lunar-module" },
   droneship: { id: "droneship", name: "Drone ships", status: "built", variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", variants: TOWER_VARIANTS, defaultVariant: "stack" },
@@ -93,6 +95,8 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "srb-right": "Solid rocket booster, right",
   orbiter: "Orbiter",
   "upper-stage": "Upper stage",
+  "descent": "Descent stage",
+  "ascent": "Ascent stage",
   ground: "The ground and the road",
   pads: "The pads",
   "tank-farm": "The tank farm",

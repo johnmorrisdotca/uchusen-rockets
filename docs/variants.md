@@ -167,6 +167,10 @@ A scene, built from OpenStreetMap's places and outlines (`© OpenStreetMap contr
 
 These are mappers' figures, not surveys. The tanks' and houses' numbers are not counts.
 
+## Apollo lunar module
+
+`lunar-module`: 7.04 m tall, 9.4 m across with its landing gear out, first flown on 1968-01-22. Its article gives the descent stage as 3.231 m and the ascent stage as 2.832 m; NASA's model is cut where its parts meet, so each is drawn taller, with what stands on it. Painted, it is NASA's model; its line looks are this package's own plain shapes.
+
 ## Real flights
 
 `FLIGHTS` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. Nothing plays them yet.

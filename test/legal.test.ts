@@ -77,6 +77,8 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "falcon-heavy-falcon-heavy-side-right.glb": [45.57, 3.7],
     "grasshopper-grasshopper-vehicle.glb": [32, Number.NaN],
     "space-shuttle-discovery-orbiter.glb": [37.24, 23.79],
+    "lunar-module-descent.glb": [3.96, 9.4],
+    "lunar-module-ascent.glb": [3.84, 4.29],
     "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
     "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
     "space-shuttle-stack-srb.glb": [45.46, 3.71],

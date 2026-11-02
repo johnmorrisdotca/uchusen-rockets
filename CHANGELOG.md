@@ -19,6 +19,7 @@
 - The licence line is now `MIT AND CC-BY-4.0 AND ODbL-1.0`: Starbase's coordinates, outlines and map heights and the tower's 13 m footprint are © OpenStreetMap contributors, under ODbL 1.0, not MIT. NOTICE, the README and the files that hold them say so.
 - In the to-scale lineup, the stacked Space Shuttle is turned so its orbiter shows, not its tank, and Electron, black all over, takes a thin light outline on the dark ground. Its shape and figures are unchanged.
 - The stacked Space Shuttle is painted by NASA's own models: its orbiter (30,000 triangles from 48,376, 842 KB), its external tank (6,326, 153 KB) and its solid rocket booster (4,136, 123 KB), with every mark painted out and the orbiter's bay shut. `pnpm models:nasa` makes NASA's models, by hand; NOTICE.md says what they rest on.
+- The Apollo lunar module, `lunar-module`: NASA's model, its flag and the country's name removed, 97,588 triangles reduced to 59,949 and 972 KB in two files, its stages apart.
 - The demo's credit and source lists break a long address, so it never pushes a phone's page sideways.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 

@@ -197,7 +197,7 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     partOf: (centre, material, node) => {
       if (material === "blinn8SG.001" || material === "blinn12SG.001") return null;
       // the legs' struts and the frames the ascent stage stands on run above the cut
-      return centre[1] < 2.47 || node === "pCylinder1" || (centre[1] < 2.95 && /^group7[345]/.test(node)) || (centre[1] < 2.5 && node.startsWith("group31")) ? LM_DESCENT : LM_ASCENT;
+      return centre[1] < 2.47 || node === "pCylinder1" || (centre[1] < 2.95 && /^group7[345]/.test(node)) || (centre[1] < 2.5 && node.startsWith("group31")) || (centre[1] < 3.1 && material === "blinn7SG.002") ? LM_DESCENT : LM_ASCENT;
     },
     atlas: 512,
   },
