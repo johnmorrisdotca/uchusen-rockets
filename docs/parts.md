@@ -76,6 +76,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Gemini | This package's plain shapes, from sourced sizes, where the adapter ends measured from NASA's model | NASA's model, flag and name painted out: 27,007 triangles and 548 KB in two files |
 | Mercury, Friendship 7 | This package's plain shape, from sourced sizes | NASA's model, its colours judged from photographs: 40,000 triangles and 591 KB |
 | Jupiter-C | This package's plain shapes, from sourced sizes | NASA's model, its lettering painted out: 8,933 triangles and 141 KB |
+| International Space Station | This package's plain shapes, from sourced sizes, where its arrays and modules stand measured from NASA's model | NASA's model, its colours judged from photographs: 60,701 triangles and 1,050 KB |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.

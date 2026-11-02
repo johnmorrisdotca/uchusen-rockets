@@ -17,6 +17,7 @@ import { APOLLO_SOYUZ_VARIANTS } from "./data/apollosoyuz.ts";
 import { GEMINI_VARIANTS } from "./data/gemini.ts";
 import { MERCURY_VARIANTS } from "./data/mercury.ts";
 import { JUPITER_C_VARIANTS } from "./data/jupiterc.ts";
+import { ISS_VARIANTS } from "./data/iss.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -60,6 +61,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "gemini": { id: "gemini", name: "Gemini", status: "built", variants: GEMINI_VARIANTS, defaultVariant: "gemini" },
   "mercury": { id: "mercury", name: "Mercury", status: "built", variants: MERCURY_VARIANTS, defaultVariant: "friendship-7" },
   "jupiter-c": { id: "jupiter-c", name: "Jupiter-C", status: "built", variants: JUPITER_C_VARIANTS, defaultVariant: "jupiter-c" },
+  "iss": { id: "iss", name: "International Space Station", status: "built", variants: ISS_VARIANTS, defaultVariant: "iss" },
   droneship: { id: "droneship", name: "Drone ships", status: "built", variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", variants: TOWER_VARIANTS, defaultVariant: "stack" },
@@ -107,6 +109,7 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "ascent": "Ascent stage",
   "csm": "Apollo command and service module",
   "docking-module": "Docking module",
+  "station": "The station",
   ground: "The ground and the road",
   pads: "The pads",
   "tank-farm": "The tank farm",

@@ -187,6 +187,10 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 `jupiter-c`: 21.3 m tall and 1.8 m across, first flown on 1956-09-20. Painted, it is NASA's model with its lettering painted out; its line looks are this package's own plain shapes.
 
+## International Space Station
+
+`iss`: 109 m long overall and 73 m across its solar arrays, its first module launched on 1998-11-20. NASA's model is scaled to the 109 m, and its arrays then span 71.7 m. It shows the station as it was when the model was made, not today's. NASA's copy leaves its materials all one grey, so their colours are judged from photographs. Its line looks are this package's own plain shapes.
+
 ## Real flights
 
 `FLIGHTS` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. Nothing plays them yet.

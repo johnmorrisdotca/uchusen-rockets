@@ -35,6 +35,8 @@ import { MERCURY_VARIANTS } from "../data/mercury.ts";
 import { MERCURY_BUILDS } from "./mercury.ts";
 import { JUPITER_C_VARIANTS } from "../data/jupiterc.ts";
 import { JUPITER_C_BUILDS } from "./jupiterc.ts";
+import { ISS_VARIANTS } from "../data/iss.ts";
+import { ISS_BUILDS } from "./iss.ts";
 import { DRAGON_INSIDE_BUILDS } from "./dragoninside.ts";
 import { STARBASE_VARIANTS } from "../data/starbase.ts";
 import { STARBASE_BUILDS } from "./starbase.ts";
@@ -165,8 +167,8 @@ entries.push(
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS];
-const stacks: readonly StackBuild[] = [...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS];
+const stackFacts = [...ISS_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS];
+const stacks: readonly StackBuild[] = [...ISS_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);
