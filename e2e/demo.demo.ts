@@ -476,6 +476,11 @@ test("the painted Falcon 9 second stage shows this package's own nozzle when it 
   await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("own");
   await press(page, "show-together");
   await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("");
+  // in a flight the stage leaves the one below, so its nozzle shows, and back in the stack it goes again
+  await hero(page).evaluate((node) => (node as HTMLElement & { seek(position: number): void }).seek(5));
+  await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("own");
+  await hero(page).evaluate((node) => (node as HTMLElement & { endFlight(): void }).endFlight());
+  await expect.poll(() => canvasData(page, "nozzle"), { timeout: 30_000 }).toBe("");
   await press(page, "look-line");
   await press(page, "show-second-stage");
   expect(await canvasData(page, "nozzle")).toBe("");

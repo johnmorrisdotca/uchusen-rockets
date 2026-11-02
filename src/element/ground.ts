@@ -71,9 +71,10 @@ export class GroundKit {
     this.group.visible = false;
   }
 
-  /** How wide the pad is, in metres. */
-  fit(radius: number): void {
+  /** How wide the smoke stands, and how far the plain ground reaches to hold everything that lands on it, in metres. */
+  fit(radius: number, reach: number): void {
     this.group.scale.setScalar(radius);
+    this.pad.scale.setScalar(Math.max(1, reach / radius));
     // a puff stays round to the camera, so its size is not in the group's scale
     for (let i = 0; i < PUFFS; i++) {
       this.puffs.getMatrixAt(i, matrix);

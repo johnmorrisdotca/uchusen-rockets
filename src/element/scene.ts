@@ -573,6 +573,7 @@ export class RocketViewer {
       if (!before) return;
       this.flightKey = "";
       if (this.ground) this.ground.group.visible = false;
+      for (const part of this.parts) if (part.model) this.showCode(part, this.look === "painted");
       const places = this.built.placesOf(this.show);
       for (const part of this.parts) {
         const place = places.find((one) => one.slot === part.slot);
@@ -595,8 +596,10 @@ export class RocketViewer {
         this.ground = new GroundKit();
         this.scene.add(this.ground.group);
       }
-      this.ground.fit(this.built.boundsOf("together").max[0] * 2.4 + 4);
+      const { min, max } = this.boundsNow();
+      this.ground.fit(this.built.boundsOf("together").max[0] * 2.4 + 4, Math.max(Math.abs(min[0]), Math.abs(max[0])));
       this.ground.group.visible = true;
+      for (const part of this.parts) if (part.model) this.showCode(part, this.look === "painted");
       this.reframe();
     }
     this.applyFlight();
@@ -727,7 +730,8 @@ export class RocketViewer {
   private showCode(part: PartView, painted: boolean): void {
     const nozzleOnly = painted && part.ownNozzle;
     part.code.visible = !painted || nozzleOnly;
-    const nozzle = nozzleOnly && this.show !== "together";
+    // in a flight a stage leaves the one below, so its nozzle shows then too
+    const nozzle = nozzleOnly && (this.show !== "together" || this.flightOn);
     for (const { mesh, name } of part.faces) mesh.visible = !nozzleOnly || (nozzle && NOZZLE_MATERIALS.has(name));
     for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
     part.nozzleShown = nozzle;
