@@ -39,7 +39,7 @@ test("no material is named for a product or a mark", () => {
 });
 
 /** NASA's models that had no mark to remove: looked at, from every side. */
-const NO_MARKS_FOUND = new Set(["space-shuttle-stack-external-tank.glb", "space-shuttle-stack-srb.glb"]);
+const NO_MARKS_FOUND = new Set(["mercury-capsule.glb", "space-shuttle-stack-external-tank.glb", "space-shuttle-stack-srb.glb"]);
 const OUR_MATERIALS = new Set([...Object.keys(MATERIALS), "atlas", "painted"]);
 const modelFiles = readdirSync("models").filter((name) => name.endsWith(".glb"));
 
@@ -84,6 +84,7 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "apollo-soyuz-soyuz.glb": [7.48, 2.72],
     "gemini-adapter.glb": [2.39, 3],
     "gemini-capsule.glb": [3.23, Number.NaN],
+    "mercury-capsule.glb": [3.3, 1.8],
     "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
     "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
     "space-shuttle-stack-srb.glb": [45.46, 3.71],
