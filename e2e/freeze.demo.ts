@@ -2,6 +2,7 @@
 // graphics memory (buffers, vertex arrays, textures) that grow with each change, on a canvas past its pixel budget at any zoom on a 5K screen, and on a lost context that is not let go.
 import { expect, type Page, test } from "@playwright/test";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
+import { ROCKETS } from "../src/rockets.ts";
 
 const URL = "/uchusen-rockets/";
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
@@ -161,6 +162,39 @@ test("changes give back what they took: contexts, buffers, vertex arrays and tex
   expect(last.buffers).toBeLessThanOrEqual(first.buffers);
   expect(last.arrays).toBeLessThanOrEqual(first.arrays);
   expect(last.textures).toBeLessThanOrEqual(first.textures);
+});
+
+test("every rocket in the catalogue: drawn line and painted, then contexts and graphics memory stay flat as they are walked again", async ({ page }) => {
+  test.setTimeout(420_000);
+  await page.goto(URL);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  await reach3d(page);
+  const walk = async (look: string) => {
+    await press(page, `look-${look}`);
+    for (const id of Object.keys(ROCKETS)) {
+      await press(page, `rocket-${id}`);
+      await expect(hero(page)).toHaveAttribute("rocket", id);
+      await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+      if (look === "painted") await expect(hero(page)).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
+      await settle(page, 150);
+    }
+  };
+  await walk("line");
+  await walk("painted");
+  const first = await usage(page);
+  await walk("line");
+  await walk("painted");
+  const last = await usage(page);
+  expect(last.contexts).toBe(1);
+  expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+  expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+  expect(last.textures).toBeLessThanOrEqual(first.textures);
+  // still only one draw a frame with all of them behind it
+  await bar(page).evaluate((node) => (node as HTMLElement & { play(): void }).play());
+  await settle(page, 800);
+  const { drew, frames } = await measure(page);
+  expect(drew).toBeLessThanOrEqual(frames + 3);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 });
 
 test("a lost context is let go, the drawing takes over, and nothing keeps drawing", async ({ page }) => {

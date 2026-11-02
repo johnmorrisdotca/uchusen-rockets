@@ -73,6 +73,7 @@ const WHOLE_HEIGHTS: readonly (readonly [string, string, number])[] = [
   ["sls", "block-1", 98.15],
   ["new-glenn", "7x2", 98],
   ["electron", "electron", 18],
+  ["soyuz", "soyuz-2", 46.3],
 ];
 
 test("each rocket's parts add up to its sourced whole, and its engines are the sourced count", () => {
@@ -86,6 +87,9 @@ test("each rocket's parts add up to its sourced whole, and its engines are the s
   assert.equal(bells("new-glenn-7x2-first-stage"), 7);
   assert.equal(bells("electron-electron-first-stage"), 9);
   assert.equal(bells("electron-electron-second-stage"), 1);
+  assert.equal(bells("soyuz-soyuz-2-first-stage"), 4);
+  assert.equal(bells("soyuz-soyuz-2-booster-1"), 4);
+  assert.ok(Math.abs((build({ rocket: "soyuz" }).boundsOf("together").max[2] ?? 0) * Math.SQRT2 - 10.3 / 2) < 0.1, "the fins, at 45 degrees, give the sourced width");
 });
 
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {

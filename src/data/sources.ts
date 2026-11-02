@@ -50,6 +50,9 @@ export const SOURCES = {
   "wikipedia-esm": { title: "European Service Module", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/European_Service_Module", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-new-glenn": { title: "New Glenn (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/New_Glenn", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-electron": { title: "Rocket Lab Electron (the infobox and the fairing's size)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Rocket_Lab_Electron", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-soyuz-2": { title: "Soyuz-2 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Soyuz-2", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-vulcan": { title: "Vulcan Centaur (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Vulcan_Centaur", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-ariane-6": { title: "Ariane 6 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Ariane_6", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 

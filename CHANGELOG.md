@@ -9,6 +9,7 @@
 - The Space Launch System, Block 1 with Orion, drawn by this package's code: 5,172 triangles and 155 KB.
 - New Glenn 7×2 (2,732 triangles, 84 KB) and Electron (2,812 triangles, 81 KB), drawn by this package's code.
 - Other makers' rockets share one scale in `<uchusen-lineup>`, and each lists its own sources.
+- Soyuz-2 with its four boosters, drawn by this package's code: 5,592 triangles and 160 KB. A lathe's axis may lean (`lean`), for its boosters. Vulcan Centaur and Ariane 6 are listed in `PLANNED_ROCKETS` with their sourced facts, to come.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 
 ## [0.2.2]

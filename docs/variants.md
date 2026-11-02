@@ -118,6 +118,14 @@ The fairing has no length in a source read here, so it is what the whole leaves.
 
 The parts add to 17 m, and no source read here says what the other metre is: it is drawn as an interstage, with no size of its own.
 
+## Soyuz
+
+| Variant | Whole | Block A, the core | Booster | Block I, third stage | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `soyuz-2` | 46.3 m | 27.1 m, 2.95 m across | 19.6 m, 2.68 m across | 6.7 m, 2.66 m across | 10.3 m over the fins | 2004-11-08 |
+
+The fairing's length is what the whole leaves, here a plain one. The waist and the boosters' lean are judged from photographs.
+
 ## Still to come
 
-`PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape.
+`PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Vulcan Centaur and Ariane 6.

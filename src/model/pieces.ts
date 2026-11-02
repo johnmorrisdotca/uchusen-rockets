@@ -18,6 +18,8 @@ export interface Lathe {
   material: MaterialName;
   profile: readonly (readonly [number, number])[];
   at?: readonly [number, number];
+  /** Its axis leans: this far along x and z for each metre up. */
+  lean?: readonly [number, number];
   segs: number;
   /** The part of the circle it covers at a height, as [from, to] radians; left out: all of it. */
   arc?: (y: number) => readonly [number, number];
@@ -170,7 +172,7 @@ function latheFaces(mesh: PartMesh, piece: Lathe): void {
         const a = a0 + ((a1 - a0) * j) / n;
         const sa = Math.sin(a);
         const ca = Math.cos(a);
-        out.positions.push(cx + r * sa, y, cz + r * ca);
+        out.positions.push(cx + r * sa + (piece.lean?.[0] ?? 0) * y, y, cz + r * ca + (piece.lean?.[1] ?? 0) * y);
         out.normals.push(normal[0] * sa, normal[1], normal[0] * ca);
         // u: round the hull; v: height over a hundred metres, so one picture repeats the same on every part
         // an arc that starts on the far side of the windward line is shifted a half turn, so it stays between 0 and 1
@@ -204,7 +206,7 @@ export function ringPath(piece: Lathe, y: number, lift = 0.012): Vec3[] {
   const path: Vec3[] = [];
   for (let j = 0; j <= n; j++) {
     const a = a0 + ((a1 - a0) * j) / n;
-    path.push([cx + r * Math.sin(a), y, cz + r * Math.cos(a)]);
+    path.push([cx + r * Math.sin(a) + (piece.lean?.[0] ?? 0) * y, y, cz + r * Math.cos(a) + (piece.lean?.[1] ?? 0) * y]);
   }
   return path;
 }

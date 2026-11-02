@@ -89,7 +89,7 @@ function latheItem(piece: Lathe, cam: Camera, at: Vec3, style: { line: string; o
   const [cx, cz] = piece.at ?? [0, 0];
   const profile = piece.profile;
   const steps = piece.segs > 24 ? 36 : 14;
-  const here = (r: number, y: number, a: number): Vec3 => [at[0] + cx + r * Math.sin(a), at[1] + y, at[2] + cz + r * Math.cos(a)];
+  const here = (r: number, y: number, a: number): Vec3 => [at[0] + cx + r * Math.sin(a) + (piece.lean?.[0] ?? 0) * y, at[1] + y, at[2] + cz + r * Math.cos(a) + (piece.lean?.[1] ?? 0) * y];
   const middleY = (profile[0][1] + profile[profile.length - 1][1]) / 2;
   const middle: Vec3 = [at[0] + cx, at[1] + middleY, at[2] + cz];
   const axisHere: Vec3 = [at[0], at[1] + middleY, at[2]];

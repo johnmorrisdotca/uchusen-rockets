@@ -8,6 +8,7 @@ import { SHUTTLE_VARIANTS } from "./data/shuttle.ts";
 import { SLS_VARIANTS } from "./data/sls.ts";
 import { NEW_GLENN_VARIANTS } from "./data/newglenn.ts";
 import { ELECTRON_VARIANTS } from "./data/electron.ts";
+import { SOYUZ_VARIANTS } from "./data/soyuz.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -45,9 +46,15 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "sls": { id: "sls", name: "Space Launch System", status: "built", variants: SLS_VARIANTS, defaultVariant: "block-1" },
   "new-glenn": { id: "new-glenn", name: "New Glenn", status: "built", variants: NEW_GLENN_VARIANTS, defaultVariant: "7x2" },
   "electron": { id: "electron", name: "Electron", status: "built", variants: ELECTRON_VARIANTS, defaultVariant: "electron" },
+  "soyuz": { id: "soyuz", name: "Soyuz", status: "built", variants: SOYUZ_VARIANTS, defaultVariant: "soyuz-2" },
 };
 
-export const PLANNED_ROCKETS: readonly PlannedRocket[] = [];
+const fig = (value: number, source: SourceId): Figure => ({ value, source });
+
+export const PLANNED_ROCKETS: readonly PlannedRocket[] = [
+  { id: "vulcan-centaur", name: "Vulcan Centaur", status: "planned", height: fig(61.6, "wikipedia-vulcan"), diameter: fig(5.4, "wikipedia-vulcan"), firstFlight: { value: "2024-01-08", source: "wikipedia-vulcan" }, source: "wikipedia-vulcan" },
+  { id: "ariane-6", name: "Ariane 6", status: "planned", height: fig(63, "wikipedia-ariane-6"), diameter: fig(5.4, "wikipedia-ariane-6"), firstFlight: { value: "2024-07-09", source: "wikipedia-ariane-6" }, source: "wikipedia-ariane-6" },
+];
 
 export function variantOf(rocket: string, id?: string | null): Variant | undefined {
   const entry = Object.hasOwn(ROCKETS, rocket) ? ROCKETS[rocket] : undefined;
@@ -79,4 +86,8 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "srb-right": "Solid rocket booster, right",
   orbiter: "Orbiter",
   "upper-stage": "Upper stage",
+  "booster-1": "Booster 1",
+  "booster-2": "Booster 2",
+  "booster-3": "Booster 3",
+  "booster-4": "Booster 4",
 };
