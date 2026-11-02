@@ -118,5 +118,7 @@ uchusen-flight { --uchusen-accent: var(--accent); }
 @media (max-width: 820px) {
   .stage-row, .builder { grid-template-columns: minmax(0, 1fr); }
   .stage-box { position: static; }
+  /* a flight stands still out of sight: where there is one to play, its controls are right under the view */
+  .flight-field.has-flight { order: -1; }
 }
 #credit-list li, #source-list li { overflow-wrap: anywhere; }
