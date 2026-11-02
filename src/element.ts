@@ -5,7 +5,7 @@ import { build, type Built, FitError } from "./build/index.ts";
 import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
-import { type Angle, cleanView, VIEWS } from "./framing.ts";
+import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS } from "./rockets.ts";
@@ -34,6 +34,7 @@ const CSS = `
 .drawing, .drawing svg { display: block; width: 100%; height: 100%; }
 .drawing, .canvas { transition: opacity var(--uchusen-fade, 1500ms) ease-in-out, filter var(--uchusen-fade, 1500ms) ease-in-out; }
 .stage { position: absolute; inset: 0; }
+:host([data-driven]) .picture { overflow: hidden; }
 .canvas { display: block; width: 100%; height: 100%; opacity: 0; filter: blur(3px); cursor: grab; border-radius: inherit; }
 .canvas:active { cursor: grabbing; }
 .canvas:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
@@ -106,6 +107,8 @@ export class UchusenRocket extends HTMLBase {
   private shownAt = 0;
   private starting = false;
   private key = "";
+  private driven: ViewChoice | null = null;
+  private placeFrame = 0;
 
   /** What is showing now. */
   get state(): RocketState {
@@ -129,6 +132,33 @@ export class UchusenRocket extends HTMLBase {
   /** Where the camera is looking from, while there is a 3D view. */
   get angle(): Angle | null {
     return this.viewer?.currentAngle() ?? null;
+  }
+
+  /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
+  drive(choice: Partial<ViewChoice> | null): void {
+    if (choice === null) {
+      this.driven = null;
+      delete this.dataset.driven;
+    } else {
+      const number = (value: unknown, fallback: number, lo: number, hi: number) => (typeof value === "number" && Number.isFinite(value) ? Math.min(hi, Math.max(lo, value)) : fallback);
+      this.driven = {
+        yaw: number(choice.yaw, this.driven?.yaw ?? 0, -3600, 3600),
+        tilt: number(choice.tilt, this.driven?.tilt ?? 0, -90, 90),
+        zoom: number(choice.zoom, this.driven?.zoom ?? 1, 0.25, 8),
+        panX: number(choice.panX, this.driven?.panX ?? 0, -5000, 5000),
+        panY: number(choice.panY, this.driven?.panY ?? 0, -5000, 5000),
+      };
+      this.dataset.driven = "true";
+    }
+    this.viewer?.drive(this.driven);
+    this.place();
+  }
+
+  /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. */
+  private place(): void {
+    if (this.stateNow === "3d" && this.viewer) return;
+    window.cancelAnimationFrame(this.placeFrame);
+    this.placeFrame = window.requestAnimationFrame(() => this.redraw());
   }
 
   connectedCallback(): void {
@@ -186,6 +216,7 @@ export class UchusenRocket extends HTMLBase {
     this.watch = null;
     window.clearTimeout(this.releaseTimer);
     window.clearTimeout(this.revealTimer);
+    window.cancelAnimationFrame(this.placeFrame);
     for (const clean of this.cleanups.splice(0)) clean();
     this.viewer?.dispose();
     this.viewer = null;
@@ -259,7 +290,7 @@ export class UchusenRocket extends HTMLBase {
     if (!this.builtNow || !this.drawing) return;
     const { look, show, angle } = this.settings(this.builtNow);
     // when a 3D view is showing, a drawing of the same angle is ready behind it
-    const from = this.viewer?.currentAngle() ?? angle;
+    const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
     const svg = this.builtNow.svg({ look, show, view: from });
     const template = document.createElement("template");
     template.innerHTML = svg;
@@ -267,6 +298,8 @@ export class UchusenRocket extends HTMLBase {
     if (!node) return;
     node.setAttribute("aria-label", this.getAttribute("label") ?? this.builtNow.report.label);
     this.drawing.replaceChildren(node);
+    const { zoom = 1, panX = 0, panY = 0 } = this.driven ?? {};
+    this.drawing.style.transform = zoom !== 1 || panX !== 0 || panY !== 0 ? `translate(${panX}px, ${panY}px) scale(${zoom})` : "";
   }
 
   private mark(): void {
@@ -287,7 +320,7 @@ export class UchusenRocket extends HTMLBase {
       const { look, show, viewName, angle } = this.settings(this.builtNow);
       this.viewer.setLabel(this.getAttribute("label") ?? this.builtNow.report.label);
       // a new rocket keeps the angle, unless the same change named another view
-      const from = viewName !== this.lastView ? angle : this.viewer.currentAngle();
+      const from = viewName !== this.lastView || this.driven ? angle : this.viewer.currentAngle();
       this.lastView = viewName;
       await this.viewer.load(this.builtNow, show, look, from);
       this.emit("uchusen-change", { report: this.builtNow.report });
@@ -331,7 +364,10 @@ export class UchusenRocket extends HTMLBase {
           this.releaseTimer = window.setTimeout(() => {
             this.viewer?.dispose();
             this.viewer = null;
-            if (generation === this.generation) this.setState("picture");
+            if (generation === this.generation) {
+              this.setState("picture");
+              if (this.driven) this.place();
+            }
           }, RELEASE_MS);
         }
       },
@@ -370,6 +406,7 @@ export class UchusenRocket extends HTMLBase {
         },
       });
       this.viewer = made;
+      if (this.driven) made.drive(this.driven);
       made.setVisible(true);
       const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
       this.lastView = viewName;

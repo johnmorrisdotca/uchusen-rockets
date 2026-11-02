@@ -28,7 +28,6 @@ try {
   });
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto(url);
-  await page.locator('[data-testid="spin"]').uncheck();
   await settled(page);
   const hero = (name: string) => page.locator("#main-view").screenshot({ path: join(out, name), type: "jpeg", quality: 84 });
   await hero("main-line.jpg");

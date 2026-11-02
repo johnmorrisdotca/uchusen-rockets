@@ -30,6 +30,20 @@ export const cleanView = (value: unknown): ViewName => ((VIEW_NAMES as readonly 
 
 export const deg = (d: number) => (d * Math.PI) / 180;
 
+/** What the family's view controls report: the turn and tip in degrees, the zoom (1 is the whole rocket in the picture) and the pan in pixels. */
+export interface ViewChoice {
+  yaw: number;
+  tilt: number;
+  zoom: number;
+  panX: number;
+  panY: number;
+}
+
+/** What the family's view controls choose: the turn and tip, in degrees, from a base angle. Dragging right makes `yaw` larger, which carries the camera the other way round; `tilt` larger tips the top away, which lowers the camera. */
+export function turnedBy(base: Angle, yaw: number, tilt: number): Angle {
+  return { az: base.az - yaw, el: Math.min(87, Math.max(-87, base.el - tilt)) };
+}
+
 /** The unit vector from what is looked at towards the camera. */
 export function directionOf({ az, el }: Angle): Vec3 {
   const c = Math.cos(deg(el));

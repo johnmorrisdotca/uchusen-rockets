@@ -31,6 +31,8 @@ const hero = (page: Page) => page.locator('[data-testid="hero"]');
 const press = (page: Page, id: string) => page.locator(`[data-testid="${id}"]`).click();
 const canvasData = (page: Page, name: string) => hero(page).evaluate((node, key) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset[key] ?? "", name);
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
+const stopTurn = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 const angle = (page: Page) => hero(page).evaluate((node) => (node as HTMLElement & { angle: { az: number; el: number } }).angle);
 
 test("the page loads clean, every address under the site's own path, and nothing costs more than it should at first", async ({ page, browserName }) => {
@@ -90,11 +92,11 @@ test("each variant lists its own sizes with their sources, and a blank says so",
   await expect(hero(page)).toHaveAttribute("data-show", "ship");
 });
 
-test("the look switches and the angle stays; dragging and the keyboard turn it; view moves it", async ({ page, browserName }) => {
+test("the look switches and the angle stays; the view controls turn it by drag and key, and a view button puts it back", async ({ page, browserName }) => {
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   const problems = watch(page);
   await page.goto(URL);
-  await page.locator('[data-testid="spin"]').uncheck();
+  await stopTurn(page);
   await reach3d(page);
   await press(page, "view-side");
   await expect.poll(async () => Math.round((await angle(page)).az)).toBe(90);
@@ -106,12 +108,13 @@ test("the look switches and the angle stays; dragging and the keyboard turn it; 
     expect(Math.abs(after.az - before.az)).toBeLessThan(0.01);
     expect(Math.abs(after.el - before.el)).toBeLessThan(0.01);
   }
-  // the keyboard
+  // a key on the view is the controls' hand
   await hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.focus());
   await page.keyboard.press("ArrowLeft");
-  await expect.poll(async () => Math.round((await angle(page)).az)).toBe(75);
+  await expect.poll(async () => Math.abs((await angle(page)).az - 90)).toBeGreaterThan(5);
   await page.keyboard.press("Home");
-  // a drag
+  await expect.poll(async () => Math.round((await angle(page)).az)).toBe(90);
+  // a drag at 1x turns it, the way a drag to the right turns a thing: its front goes right, so the camera goes left
   const box = await hero(page).boundingBox();
   expect(box).not.toBeNull();
   if (box) {
@@ -120,11 +123,81 @@ test("the look switches and the angle stays; dragging and the keyboard turn it; 
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 + 90, box.y + box.height / 2, { steps: 6 });
     await page.mouse.up();
-    await expect.poll(async () => Math.abs((await angle(page)).az - start.az)).toBeGreaterThan(5);
+    await expect.poll(async () => start.az - (await angle(page)).az).toBeGreaterThan(5);
   }
   // below
   await press(page, "view-below");
   await expect.poll(async () => Math.round((await angle(page)).el)).toBe(-70);
+  expect(problems).toEqual([]);
+});
+
+test("the tilt slider tips it, + zooms, the pad moves it, and Fit brings the whole rocket back", async ({ page, browserName }) => {
+  test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
+  const problems = watch(page);
+  await page.goto(URL);
+  await stopTurn(page);
+  await reach3d(page);
+  const home = await angle(page);
+  await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ tilt: 20 }));
+  await expect.poll(async () => home.el - (await angle(page)).el).toBeCloseTo(20, 0);
+  await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ tilt: 0 }));
+  await expect.poll(() => canvasData(page, "zoom")).toBe("1.00");
+  await bar(page).locator('[data-b="in"]').click();
+  await expect.poll(async () => Number(await canvasData(page, "zoom"))).toBeGreaterThan(1.2);
+  await bar(page).locator('[data-b="right"]').click();
+  await expect.poll(async () => Number((await canvasData(page, "pan")).split(",")[0])).not.toBe(0);
+  await bar(page).locator('[data-b="fit"]').click();
+  await expect.poll(() => canvasData(page, "zoom")).toBe("1.00");
+  await expect.poll(() => canvasData(page, "pan")).toBe("0,0");
+  const after = await angle(page);
+  expect(Math.abs(after.az - home.az)).toBeLessThan(0.5);
+  expect(Math.abs(after.el - home.el)).toBeLessThan(0.5);
+  expect(problems).toEqual([]);
+});
+
+test("a drawing follows the view controls too: turn, tip, zoom and move, and a hostile choice is only numbers", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(`${URL}element-check.html`);
+  const drawn = page.locator("#drawn");
+  await expect(drawn).toHaveAttribute("data-state", "picture");
+  type Driven = HTMLElement & { drive(choice: unknown): void };
+  const svg = () => drawn.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("svg")?.outerHTML ?? "");
+  const transform = () => drawn.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector<HTMLElement>(".drawing")?.style.transform ?? "");
+  const one = await svg();
+  await drawn.evaluate((node) => (node as Driven).drive({ yaw: 40, tilt: 10, zoom: 2, panX: 12, panY: -8 }));
+  await expect.poll(svg).not.toBe(one);
+  await expect.poll(transform).toBe("translate(12px, -8px) scale(2)");
+  await expect(drawn).toHaveAttribute("data-driven", "true");
+  const two = await svg();
+  // numbers only: anything else leaves what was, and a number out of range is held to the range
+  await drawn.evaluate((node) => (node as Driven).drive({ yaw: "<img src=x onerror=alert(1)>", zoom: Number.POSITIVE_INFINITY, panX: Number.NaN }));
+  await expect.poll(transform).toBe("translate(12px, -8px) scale(2)");
+  await drawn.evaluate((node) => (node as Driven).drive({ zoom: 1000 }));
+  await expect.poll(transform).toBe("translate(12px, -8px) scale(8)");
+  expect(await svg()).not.toContain("onerror");
+  expect(await svg()).toBe(two);
+  // and it can be handed back
+  await drawn.evaluate((node) => (node as Driven).drive(null));
+  await expect.poll(transform).toBe("");
+  await expect(drawn).not.toHaveAttribute("data-driven", /.*/);
+  expect(problems).toEqual([]);
+});
+
+test("a view in the address opens the same view, and what is chosen is kept in the address", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(`${URL}?yaw=40&tilt=10&zoom=2`);
+  await stopTurn(page);
+  await expect.poll(() => bar(page).evaluate((node) => JSON.stringify((node as HTMLElement & { state: { yaw: number; tilt: number; zoom: number } }).state))).toContain('"yaw":40');
+  const state = await bar(page).evaluate((node) => (node as HTMLElement & { state: { yaw: number; tilt: number; zoom: number } }).state);
+  expect([state.tilt, state.zoom]).toEqual([10, 2]);
+  await expect(hero(page)).toHaveAttribute("data-state", /^(3d|fallback)$/, { timeout: 90_000 });
+  if ((await hero(page).getAttribute("data-state")) === "3d") {
+    await expect.poll(() => canvasData(page, "zoom")).toBe("2.00");
+    await expect.poll(async () => Math.abs(32 - 40 - (await angle(page)).az) < 0.5).toBe(true);
+  } else await expect.poll(() => hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector<HTMLElement>(".drawing")?.style.transform ?? "")).toContain("scale(2)");
+  await bar(page).locator('[data-b="fit"]').click();
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("zoom")).toBeNull();
+  expect(new globalThis.URL(page.url()).searchParams.get("yaw")).toBe("40");
   expect(problems).toEqual([]);
 });
 
@@ -133,7 +206,7 @@ test("a variant change keeps the angle; every look draws every variant in a real
   test.setTimeout(240_000);
   const problems = watch(page);
   await page.goto(URL);
-  await page.locator('[data-testid="spin"]').uncheck();
+  await stopTurn(page);
   await reach3d(page);
   await press(page, "view-back");
   await expect.poll(async () => Math.abs(Math.round((await angle(page)).az))).toBe(180);
@@ -159,7 +232,7 @@ test("together to apart is an animated move, and a cut under reduced motion", as
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "no-preference" });
   const page = await context.newPage();
   await page.goto(URL);
-  await page.locator('[data-testid="spin"]').uncheck();
+  await stopTurn(page);
   await reach3d(page);
   await press(page, "show-apart");
   await expect.poll(() => canvasData(page, "moves"), { timeout: 5000 }).toBe("1");
@@ -193,7 +266,7 @@ test("the painted model loads only when asked for, only for its variant, and the
     if (request.url().includes("/assets/models/")) models.push(request.url().split("/").pop() as string);
   });
   await page.goto(URL);
-  await page.locator('[data-testid="spin"]').uncheck();
+  await stopTurn(page);
   await reach3d(page);
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toBeHidden();
@@ -310,7 +383,7 @@ test("each rocket's painted look fetches only its own models, and credits their 
     if (request.url().includes("/assets/models/")) models.push(request.url().split("/").pop() as string);
   });
   await page.goto(URL);
-  await page.locator('[data-testid="spin"]').uncheck();
+  await stopTurn(page);
   await reach3d(page);
   await press(page, "look-painted");
   await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
@@ -338,7 +411,7 @@ test("the painted Falcon 9 second stage shows this package's own nozzle when it 
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
   test.setTimeout(240_000);
   await page.goto(URL);
-  await page.locator('[data-testid="spin"]').uncheck();
+  await stopTurn(page);
   await reach3d(page);
   await press(page, "rocket-falcon-9");
   await press(page, "look-painted");
@@ -363,6 +436,12 @@ test("no sideways scroll at a phone's width, and controls big enough for a finge
   for (const id of ["show-apart", "look-painted", "view-below"]) {
     const box = await page.locator(`[data-testid="${id}"]`).boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
+  // the view controls are beside the view, inside the screen, with finger-sized buttons
+  for (const id of ["in", "fit", "front", "play"]) {
+    const box = await bar(page).locator(`[data-b="${id}"]`).boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width[1]);
   }
 });
 

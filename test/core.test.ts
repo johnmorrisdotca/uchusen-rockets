@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cleanLook, cleanShow, cleanView, CROSSFADE_MS, DEFAULT_LOOK, DEFAULT_VIEW, directionOf, DRAWING_HOLD_MS, frameFor, placesFor, REDUCED_FADE_MS, revealDelay, showsOf, tiltMode, tiltTurn, VIEWS } from "../src/index.ts";
+import { cleanLook, cleanShow, cleanView, CROSSFADE_MS, DEFAULT_LOOK, DEFAULT_VIEW, directionOf, DRAWING_HOLD_MS, frameFor, placesFor, REDUCED_FADE_MS, revealDelay, showsOf, tiltMode, tiltTurn, turnedBy, VIEWS } from "../src/index.ts";
 
 test("a hostile look, view or show falls back to the default", () => {
   assert.equal(cleanLook("<b>"), DEFAULT_LOOK);
@@ -50,4 +50,12 @@ test("a stack is placed by its joints", () => {
   const part = (id: string, height: number, top: boolean) => ({ slot: id, part: { id, height, joints: top ? { top: { kind: "stage", y: height, diameter: 9 } } : {} } }) as never;
   const places = placesFor([part("a", 70, true), part("b", 50, false)], "together", () => 5);
   assert.deepEqual(places.map((place) => place.at), [[0, 0, 0], [0, 70, 0]]);
+});
+
+test("the view controls turn and tip from the chosen view: a drag right carries the camera left, a tip lowers it, and it stays off the poles", () => {
+  assert.deepEqual(turnedBy(VIEWS.front, 0, 0), VIEWS.front);
+  assert.equal(turnedBy({ az: 32, el: 9 }, 40, 0).az, -8);
+  assert.equal(turnedBy({ az: 32, el: 9 }, 0, 20).el, -11);
+  assert.equal(turnedBy({ az: 0, el: 80 }, 0, -90).el, 87);
+  assert.equal(turnedBy({ az: 0, el: -70 }, 0, 90).el, -87);
 });

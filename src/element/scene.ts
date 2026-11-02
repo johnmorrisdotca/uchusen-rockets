@@ -39,7 +39,7 @@ import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
-import { type Angle, FOV_DEG, frameFor, PICTURE_H, type Vec3 } from "../framing.ts";
+import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { MATERIALS, type MaterialName } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
@@ -176,6 +176,9 @@ export class RocketViewer {
   private needsDraw = true;
   private pose: { from: { target: Vector3; offset: Vector3 }; to: { target: Vector3; offset: Vector3 }; start: number; ms: number; moveParts: boolean } | null = null;
   private tilt = { azimuth: 0, polar: 0, applied: { azimuth: 0, polar: 0 } };
+  private driven: ViewChoice | null = null;
+  private drivenDirty = false;
+  private lastDistance = 0;
   private resize: ResizeObserver;
   private disposed = false;
 
@@ -242,7 +245,9 @@ export class RocketViewer {
     this.canvas.addEventListener("focus", () => (this.controls.enableZoom = true));
     this.canvas.addEventListener("blur", () => (this.controls.enableZoom = false));
     this.canvas.addEventListener("pointerdown", () => this.canvas.focus({ preventScroll: true }));
-    this.canvas.addEventListener("dblclick", () => this.setAngle(this.homeAngle, true));
+    this.canvas.addEventListener("dblclick", () => {
+      if (!this.driven) this.setAngle(this.homeAngle, true);
+    });
     this.canvas.addEventListener("keydown", (event) => this.key(event));
     document.addEventListener("visibilitychange", this.onVisibility);
     this.resize = new ResizeObserver(() => this.fit());
@@ -305,6 +310,7 @@ export class RocketViewer {
     this.frameTo(angle ?? this.currentAngle(), false);
     this.canvas.dataset.ready = "true";
     this.canvas.dataset.parts = this.parts.map((part) => part.slot).join(" ");
+    this.drivenDirty = this.driven !== null;
     this.wake();
   }
 
@@ -626,6 +632,11 @@ export class RocketViewer {
   /** Turns to look from an angle. */
   setAngle(angle: Angle, animate: boolean): void {
     if (!this.built) return;
+    if (this.driven) {
+      this.homeAngle = angle;
+      this.syncDriven();
+      return;
+    }
     this.controls.autoRotate = false;
     const framing = this.framingFor(angle);
     if (animate && !this.options.reducedMotion) this.startPose(framing, VIEW_MS, false);
@@ -656,9 +667,60 @@ export class RocketViewer {
 
   setSpin(spin: Spin): void {
     this.controls.autoRotateSpeed = autoRotateOf(spin);
-    this.controls.autoRotate = !this.options.reducedMotion && spin.seconds > 0;
+    this.controls.autoRotate = !this.driven && !this.options.reducedMotion && spin.seconds > 0;
     this.canvas.dataset.spin = `${spin.seconds}${spin.way}`;
     this.wake();
+  }
+
+  /** Hands the turn, tip, zoom and pan to the page, as the family's view controls report them: this view's own hands (drag, wheel, keys, spin) stand down, and the camera is the chosen view's angle turned and tipped by them. `null` takes them back. */
+  drive(choice: ViewChoice | null): void {
+    this.driven = choice;
+    this.controls.enabled = choice === null;
+    if (choice) this.controls.autoRotate = false;
+    this.canvas.style.touchAction = choice ? "auto" : "pan-y";
+    this.syncDriven();
+  }
+
+  /** The camera is put where the choice says at once, seen or not, so a page that asks where it looks from is told the truth; a move between parts moves it by itself. */
+  private syncDriven(): void {
+    this.drivenDirty = false;
+    this.lens();
+    if (!this.pose) this.applyDriven();
+    this.needsDraw = true;
+    this.wake();
+  }
+
+  private drivenAngle(): Angle | null {
+    if (!this.driven) return null;
+    const turned = turnedBy(this.homeAngle, this.driven.yaw, this.driven.tilt);
+    const lean = this.tilt.applied;
+    return { az: turned.az + MathUtils.radToDeg(lean.azimuth), el: MathUtils.clamp(turned.el - MathUtils.radToDeg(lean.polar), -87, 87) };
+  }
+
+  /** The camera stands where the view's angle, turned and tipped, puts it, as far off as the whole rocket needs from the view's own angle, so turning never makes it breathe. */
+  private applyDriven(): void {
+    const angle = this.drivenAngle();
+    if (!angle || !this.built) return;
+    const framing = this.framingFor(this.homeAngle);
+    const direction = directionOf(angle);
+    this.camera.position.set(framing.target[0] + direction[0] * framing.distance, framing.target[1] + direction[1] * framing.distance, framing.target[2] + direction[2] * framing.distance);
+    this.controls.target.set(...framing.target);
+    if (Math.abs(framing.distance - this.lastDistance) > 1e-6) {
+      this.lastDistance = framing.distance;
+      this.limits(framing.distance);
+    }
+    this.controls.update();
+  }
+
+  /** Zoom is the camera's, and the pan moves the picture by pixels, so the view stays sharp at any zoom. */
+  private lens(): void {
+    const { zoom = 1, panX = 0, panY = 0 } = this.driven ?? {};
+    const w = Math.max(1, this.holder.clientWidth);
+    const h = Math.max(1, this.holder.clientHeight);
+    this.camera.zoom = zoom;
+    if (panX !== 0 || panY !== 0) this.camera.setViewOffset(w, h, -panX, -panY, w, h);
+    else this.camera.clearViewOffset();
+    this.camera.updateProjectionMatrix();
   }
 
   setTilt(azimuthDeg: number, polarDeg: number): void {
@@ -739,9 +801,16 @@ export class RocketViewer {
     const dA = (t.azimuth - t.applied.azimuth) * 0.12;
     const dP = (t.polar - t.applied.polar) * 0.12;
     if (Math.abs(dA) > 1e-5 || Math.abs(dP) > 1e-5) {
-      this.orbit(dA, dP);
+      if (this.driven) this.drivenDirty = true;
+      else this.orbit(dA, dP);
       t.applied.azimuth += dA;
       t.applied.polar += dP;
+      this.needsDraw = true;
+    }
+    if (this.drivenDirty) {
+      this.drivenDirty = false;
+      this.lens();
+      if (!this.pose) this.applyDriven();
       this.needsDraw = true;
     }
     if (this.pose) {
@@ -756,6 +825,8 @@ export class RocketViewer {
       while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
       while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
       const s = new Spherical(MathUtils.lerp(a.radius, b.radius, e), MathUtils.lerp(a.phi, b.phi, e), a.theta + dTheta * e);
+      const aim = this.drivenAngle();
+      if (aim) s.setFromVector3(new Vector3(...directionOf(aim)).setLength(s.radius));
       this.camera.position.copy(this.controls.target).add(new Vector3().setFromSpherical(s));
       if (moveParts)
         for (const part of this.parts) {
@@ -768,6 +839,7 @@ export class RocketViewer {
         const done = this.pose.moveParts;
         this.pose = null;
         if (done) this.finishParts();
+        this.drivenDirty = this.driven !== null;
       }
     }
     if (!ambient) this.controls.autoRotate = false;
@@ -782,6 +854,10 @@ export class RocketViewer {
       this.canvas.dataset.azimuth = angle.az.toFixed(2);
       this.canvas.dataset.elevation = angle.el.toFixed(2);
       this.canvas.dataset.moving = this.pose ? "true" : "false";
+      if (this.driven) {
+        this.canvas.dataset.zoom = this.driven.zoom.toFixed(2);
+        this.canvas.dataset.pan = `${Math.round(this.driven.panX)},${Math.round(this.driven.panY)}`;
+      }
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0;
     }
     if ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5) this.frame = requestAnimationFrame(this.tick);
@@ -797,7 +873,7 @@ export class RocketViewer {
     const h = Math.max(1, this.holder.clientHeight);
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
-    this.camera.updateProjectionMatrix();
+    this.lens();
     this.syncSizes();
     if (this.built && !this.pose) this.applyFraming(this.framingFor(this.currentAngle()));
     this.wake();
@@ -812,6 +888,7 @@ export class RocketViewer {
   }
 
   private key(event: KeyboardEvent): void {
+    if (this.driven) return;
     const step = MathUtils.degToRad(15);
     const moves: Record<string, () => void> = {
       ArrowLeft: () => this.orbit(-step, 0),

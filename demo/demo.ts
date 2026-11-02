@@ -1,6 +1,8 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
 import { check, type Description, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
+import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -21,6 +23,9 @@ const VIEW_WORDS: Record<ViewName, string> = { "three-quarter": "Three-quarter",
 const SHOW_WORDS: Record<string, string> = { together: "Together", apart: "Apart", ...SLOT_NAMES };
 
 const hero = byId<UchusenRocket>("hero");
+const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
+// The family's view controls turn, tip, zoom and move it; the rocket follows.
+bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 const state = { rocket: "starship", variant: "v3", show: "together", look: "line" as LookName, view: "three-quarter" as ViewName };
 
 function chip(label: string, testid: string, on: () => void): HTMLButtonElement {
@@ -125,6 +130,7 @@ function renderMain() {
 }
 
 function pick(change: Partial<typeof state>) {
+  if (change.view !== undefined && change.view !== state.view) bar.set({ yaw: 0, tilt: 0 });
   Object.assign(state, change);
   renderMain();
 }
@@ -132,8 +138,6 @@ function pick(change: Partial<typeof state>) {
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
 byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));
-byId<HTMLInputElement>("spin").addEventListener("change", (event) => hero.setAttribute("spin", (event.target as HTMLInputElement).checked ? "slow" : "off"));
-hero.setAttribute("spin", "slow");
 renderMain();
 
 // ------------------------------------------------------------- compare

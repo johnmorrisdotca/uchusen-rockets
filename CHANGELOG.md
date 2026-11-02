@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.2.0]
+
+- `element.drive({ yaw, tilt, zoom, panX, panY })`: a page can hand the turn, tip, zoom and move to the family's `<kazoku-view-controls>` ([`@johnmorrisdotca/kazoku-ui`](https://www.npmjs.com/package/@johnmorrisdotca/kazoku-ui)). The element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow, so it works with no WebGL as well. `drive(null)` takes them back. kazoku-ui is not imported by the package: the demo uses it, as a dev dependency.
+- The demo uses the shared view controls: angle, tilt, auto-turn, Front, zoom, Fit and move, with the same drag, pinch and keys as the rest of the family, and the choices kept in the address (`?yaw=40&tilt=10&zoom=2`). Its own slow-spin switch and hint are gone.
+- `turnedBy(base, yaw, tilt)` and the `ViewChoice` type: the camera angle for a view turned and tipped by the controls.
+
 ## [0.1.1]
 
 - The painted Falcon 9 Block 5 second stage shows this package's own engine nozzle when it stands apart or alone, as the model has none, and not when it is nested in the first stage.

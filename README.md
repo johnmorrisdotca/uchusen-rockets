@@ -39,7 +39,7 @@ npm install @johnmorrisdotca/uchusen-rockets three
 <uchusen-rocket rocket="starship" variant="v2" show="booster" look="thick" view="below"></uchusen-rocket>
 ```
 
-That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin. With no WebGL, under Save-Data, or on any failure, the drawing stays.
+That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin; or hand it to the family's shared view controls (angle, tilt, zoom, move) with `element.drive()`, see [the element](./docs/element.md#the-familys-view-controls). With no WebGL, under Save-Data, or on any failure, the drawing stays.
 
 | Attribute | Values |
 | --- | --- |
