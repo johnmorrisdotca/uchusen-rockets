@@ -43,7 +43,7 @@ export const SHUTTLE_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstFlight: said("1984-08-30", D, { note: "STS-41-D." }),
     slots: ["orbiter"],
-    note: "A real orbiter: the Smithsonian's scan, painted, with its landing gear down as it stands on display. The agency mark, the flags, the country's name and its own name are painted out, which leaves plain patches on its wings and sides. Its line looks are this package's own orbiter, with no gear. The licence is read from the Smithsonian's record as a search engine quoted it and from a Commons copy, because the Smithsonian's own pages asked for browser verification.",
+    note: "A real orbiter: the Smithsonian's scan, painted, with its landing gear down as it stands on display. The agency mark, the flags, the country's name and its own name are painted out, which leaves plain patches on its wings and sides. Its line looks are this package's own orbiter, with no gear. It is under CC0: the owner of this package confirmed that from the Smithsonian's record, https://www.si.edu/object/nasm_A20120325000, on 2026-11-02.",
     facts: {
       height: m(37.24, O, { note: "Its length, nose to tail. It stands 17.86 m tall on its gear." }),
       diameter: m(23.79, O, { note: "The wingspan." }),
