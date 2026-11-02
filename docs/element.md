@@ -68,6 +68,8 @@ Read from a script: `element.report` (the label, parts, credits and fit), `eleme
 <uchusen-lineup items="starship:v1,starship:v2,starship:v3,starship:v4,building,person" unit="3" look="line" ruler labels></uchusen-lineup>
 ```
 
+The front is what it shows unless `view` says otherwise, except that the stacked Space Shuttle is turned so its orbiter shows, and a rocket black all over takes a thin light outline in the painted look, so it does not vanish on a dark ground.
+
 `unit` is pixels a metre. The person (1.8 m) and the ten-storey building (30 m) are round numbers, there for scale.
 
 ## React

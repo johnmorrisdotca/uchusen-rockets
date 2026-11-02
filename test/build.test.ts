@@ -1,7 +1,7 @@
 // One description, one mesh and one drawing: the same bytes every time, real sizes, and the counts the sources give.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { LOOK_NAMES, ROCKETS, VIEW_NAMES, showsOf } from "../src/index.ts";
+import { LOOK_NAMES, LOOKS, ROCKETS, VIEW_NAMES, showsOf, variantOf } from "../src/index.ts";
 import { build, buildPart, drawnPieces, lineupSvg } from "../src/build/index.ts";
 import { PART_ENTRIES, partEntry } from "../src/model/registry.ts";
 import type { Lathe, Piece } from "../src/model/pieces.ts";
@@ -110,6 +110,23 @@ test("the drawing is seen from the camera it names", () => {
   assert.notEqual(built.svg({ look: "line" }), built.svg({ look: "painted" }));
   // from below the engines are drawn, from the front they are mostly behind the hull's own end
   assert.ok(built.svg({ view: "below" }).length > 2000);
+});
+
+test("the lineup turns the Shuttle so its orbiter shows, and asked for another side it keeps that side", () => {
+  const stack = ["space-shuttle:stack"];
+  const front = lineupSvg({ items: stack, unit: 2 }).svg;
+  assert.equal(front, lineupSvg({ items: stack, unit: 2, view: "back" }).svg);
+  assert.notEqual(front, lineupSvg({ items: stack, unit: 2, view: "side" }).svg);
+  assert.equal(variantOf("space-shuttle", "stack")?.lineupView, "back");
+});
+
+test("in a painted lineup a rocket that is black all over takes a light outline, and nothing else about it changes", () => {
+  const light = LOOKS.line.line;
+  const electron = lineupSvg({ items: ["electron:electron"], unit: 3, look: "painted" });
+  assert.ok(electron.svg.includes(`stroke="${light}"`));
+  assert.equal(electron.height, lineupSvg({ items: ["electron:electron"], unit: 3, look: "line" }).height);
+  assert.equal(variantOf("electron")?.facts.height.value, 18);
+  assert.ok(!lineupSvg({ items: ["falcon-9:block-5"], unit: 3, look: "painted" }).svg.includes(`stroke="${light}"`));
 });
 
 test("the lineup is to one scale: its picture's height is the tallest rocket's", () => {

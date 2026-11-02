@@ -245,9 +245,9 @@ function linesItem(piece: Lines, cam: Camera, at: Vec3, style: { line: string; f
 }
 
 /** One part's picture at `at`, as SVG text in painter's order. */
-export function drawPart(pieces: readonly Piece[], at: Vec3, cam: Camera, look: LookName, weight = 1): string {
+export function drawPart(pieces: readonly Piece[], at: Vec3, cam: Camera, look: LookName, weight = 1, line?: string): string {
   const base = LOOKS[look];
-  const style = { line: base.line, outline: base.outline * weight, feature: base.feature * weight, weld: base.weld * weight };
+  const style = { line: line ?? base.line, outline: base.outline * weight, feature: base.feature * weight, weld: base.weld * weight };
   const items: Item[] = [];
   for (const piece of pieces) {
     if (piece.only === "mesh") continue;

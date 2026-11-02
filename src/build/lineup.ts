@@ -4,6 +4,7 @@ import { check } from "../fit.ts";
 import { axesOf, cleanView, directionOf, VIEWS, type ViewName } from "../framing.ts";
 import { DEFAULT_LOOK, LOOKS, type LookName } from "../looks.ts";
 import { defsOf, drawPart, orthographic } from "../draw/svg.ts";
+import { MATERIALS } from "../model/materials.ts";
 import { variantOf } from "../rockets.ts";
 
 /** Comparison shapes: plain round sizes, for scale, not facts about anything. */
@@ -22,6 +23,13 @@ export interface LineupItem {
 
 const xmlText = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const n = (v: number) => (Math.round(v * 10) / 10).toString();
+
+/** A rocket painted black all over vanishes on the dark ground of a lineup, so it takes the line look's colour for its outline. Only the lines change: its shape and its figures stay. */
+const edgeOf = (built: Built, look: LookName): string | undefined => {
+  if (look !== "painted") return undefined;
+  const hulls = built.parts.flatMap((part) => part.pieces).filter((piece) => piece.kind === "lathe" && piece.body);
+  return hulls.length && hulls.every((piece) => piece.kind === "lathe" && MATERIALS[piece.material].fill === "dark") ? LOOKS.line.line : undefined;
+};
 
 export interface LineupOptions {
   /** "starship:v1,starship:v3,person,building". */
@@ -87,13 +95,15 @@ export function lineupSvg(options: LineupOptions): { svg: string; items: LineupI
     if (item.compare) body.push(comparison(item.compare, cx - (COMPARES[item.compare].width * unit) / 2, base, unit, line, "url(#metal)"));
     else if (item.built) {
       const show = options.show && item.built.shows.includes(options.show) ? options.show : item.built.shows[0];
-      const cam = orthographic(angle, unit, cx, base);
+      const faced = cleanView(view) === "front" ? variantOf(item.key.split(":")[0], item.key.split(":")[1])?.lineupView : undefined;
+      const facing = faced ? VIEWS[faced] : angle;
+      const cam = orthographic(facing, unit, cx, base);
       const places = item.built.placesOf(show).filter((place) => place.shown);
-      const { right, forward } = axesOf(directionOf(angle));
-      void right;
+      const { forward } = axesOf(directionOf(facing));
+      const edge = edgeOf(item.built, look);
       for (const place of places.sort((a, b) => b.at[0] * forward[0] + b.at[2] * forward[2] - a.at[0] * forward[0] - a.at[2] * forward[2])) {
         const part = item.built.parts.find((p) => p.slot === place.slot);
-        if (part) body.push(drawPart(drawnPieces(part, show === "together"), place.at, cam, look, 0.7));
+        if (part) body.push(drawPart(drawnPieces(part, show === "together"), place.at, cam, look, 0.7, edge));
       }
     }
     if (labels) {

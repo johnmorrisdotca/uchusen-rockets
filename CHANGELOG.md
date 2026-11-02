@@ -17,6 +17,7 @@
 - `FLIGHTS` and `flightsOf`: real flights as data, Falcon 1's five and Starship's fourteen, with their dates, vehicles and outcomes. Nothing plays them yet.
 - Discovery, the Smithsonian's CC0 scan of a real orbiter, as `space-shuttle` `discovery`: its mark, flags and names painted out, reduced to 116,672 triangles and 3.6 MB, against the largest painted model's 136,304 and 2.7 MB: fewer triangles and a larger file, because its picture is cut into thousands of islands and it could not be reduced further without showing them. `MODEL_CREDITS` rows may now say CC0.
 - The licence line is now `MIT AND CC-BY-4.0 AND ODbL-1.0`: Starbase's coordinates, outlines and map heights and the tower's 13 m footprint are © OpenStreetMap contributors, under ODbL 1.0, not MIT. NOTICE, the README and the files that hold them say so.
+- In the to-scale lineup, the stacked Space Shuttle is turned so its orbiter shows, not its tank, and Electron, black all over, takes a thin light outline on the dark ground. Its shape and figures are unchanged.
 - The demo's credit and source lists break a long address, so it never pushes a phone's page sideways.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 

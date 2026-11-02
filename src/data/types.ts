@@ -61,4 +61,6 @@ export interface Variant {
   partIds?: Readonly<Record<string, string>>;
   /** What a reader should be told about it. */
   note?: string;
+  /** The side a to-scale lineup shows of it when asked for the front, because the front hides what it is: the orbiter stands behind the Shuttle's tank. */
+  lineupView?: "back" | "side";
 }
