@@ -50,6 +50,7 @@ The dataset addresses named below are the record of what each model is. Their do
 | `mercury-capsule.glb` | Friendship 7 | https://data.nasa.gov/dataset/nasa-3d-models-friendship-7 | Reduced from 164,622 triangles to 40,000; rescaled to the sourced length and width; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove. |
 | `jupiter-c-vehicle.glb` | Jupiter-C | https://data.nasa.gov/dataset/nasa-3d-models-jupiter-c | The lettering painted out of its pictures; its 8,933 triangles kept; rescaled to the sourced height; its materials made into one picture. |
 | `iss-station.glb` | ISS | https://data.nasa.gov/dataset/nasa-3d-models-iss | Reduced from 174,440 triangles to 60,701; a ball of stray pieces far above it left out; rescaled to the sourced length; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove. |
+| `hubble-telescope.glb` | Hubble Space Telescope | https://data.nasa.gov/dataset/nasa-3d-models-hubble-space-telescope | A lettered plate painted out of its picture; its 7,672 triangles kept; rescaled to the sourced length; its materials made into one picture. |
 <!-- more NASA models -->
 
 ## Facts

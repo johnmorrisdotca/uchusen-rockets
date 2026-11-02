@@ -66,6 +66,7 @@ export const SOURCES = {
   "wikipedia-mercury": { title: "Mercury spacecraft", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Mercury_spacecraft", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-jupiter-c": { title: "Jupiter-C (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Jupiter-C", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-iss": { title: "International Space Station (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/International_Space_Station", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-hubble": { title: "Hubble Space Telescope (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Hubble_Space_Telescope", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-discovery": { title: "Space Shuttle Discovery (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Shuttle_Discovery", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;

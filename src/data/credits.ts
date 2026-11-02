@@ -115,6 +115,7 @@ export const MODEL_CREDITS = {
   "nasa-friendship-7": nasa("Friendship 7", "nasa-3d-models-friendship-7", "Reduced from 164,622 triangles; rescaled to the sourced length and width; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove."),
   "nasa-jupiter-c": nasa("Jupiter-C", "nasa-3d-models-jupiter-c", "The lettering painted out of its pictures; rescaled to the sourced height; its materials made into one picture."),
   "nasa-iss": nasa("ISS", "nasa-3d-models-iss", "Reduced from 174,440 triangles; a ball of stray pieces far above it left out; rescaled to the sourced length; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove."),
+  "nasa-hubble": nasa("Hubble Space Telescope", "nasa-3d-models-hubble-space-telescope", "A lettered plate painted out of its picture; rescaled to the sourced length; its materials made into one picture."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

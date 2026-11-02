@@ -191,6 +191,10 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 `iss`: 109 m long overall and 73 m across its solar arrays, its first module launched on 1998-11-20. NASA's model is scaled to the 109 m, and its arrays then span 71.7 m. It shows the station as it was when the model was made, not today's. NASA's copy leaves its materials all one grey, so their colours are judged from photographs. Its line looks are this package's own plain shapes.
 
+## Hubble Space Telescope
+
+`hubble`: 13.2 m by 4.2 m, launched on 1990-04-24. Its arrays have no size in a source read here: they are NASA's model's. Painted, it is NASA's model with a lettered plate painted out; its line looks are this package's own plain shapes.
+
 ## Real flights
 
 `FLIGHTS` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. Nothing plays them yet.

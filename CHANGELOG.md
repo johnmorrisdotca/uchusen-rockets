@@ -25,6 +25,7 @@
 - The Mercury spacecraft, `mercury` `friendship-7`: NASA's model, 164,622 triangles reduced to 40,000 and 591 KB, its colours judged from photographs because NASA's copy is all one grey.
 - Jupiter-C, `jupiter-c`: NASA's model, its lettering painted out, 8,933 triangles and 141 KB.
 - The International Space Station, `iss`: NASA's model, 174,440 triangles reduced to 60,701 and 1,050 KB, its colours judged from photographs because NASA's copy is all one grey.
+- The Hubble Space Telescope, `hubble`: NASA's model, a lettered plate painted out, 7,672 triangles and 470 KB.
 - The demo's credit and source lists break a long address, so it never pushes a phone's page sideways.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 
