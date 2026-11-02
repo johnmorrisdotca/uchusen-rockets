@@ -104,7 +104,6 @@ test("the artist's model is labelled as one, ship only, separate from the flown 
 });
 
 test("what is planned carries sourced facts, not shapes", () => {
-  assert.deepEqual(PLANNED_ROCKETS.map((rocket) => rocket.id), ["falcon-1"]);
   for (const rocket of PLANNED_ROCKETS) {
     assert.equal(rocket.status, "planned");
     assert.ok(rocket.height.source && rocket.diameter.source);

@@ -344,7 +344,6 @@ test("the sources and the credits are on the page, and the page says no one endo
   const credits = page.locator('[data-testid="credits"]');
   for (const name of ["Clarence365", "clarence365", "MartianDays", "Stanley Creative", "KUBAHA", "ProgressTH", "Antonio_Adams", "Echo_3"]) await expect(credits).toContainText(name);
   await expect(page.locator("footer")).toContainText("not affiliated with or endorsed by SpaceX");
-  await expect(page.locator('[data-testid="planned"]')).toContainText("Falcon 1");
   await expect(page.locator('[data-testid="planned"]')).not.toContainText("Falcon 9");
 });
 

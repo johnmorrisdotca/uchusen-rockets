@@ -19,7 +19,7 @@ const onlyShows = process.argv[5] ? process.argv[5].split(",") : null;
 const looks = list(6, ["line", "thick", "painted"]);
 const views = list(7, ["front", "back", "side", "below"]);
 mkdirSync(out, { recursive: true });
-const port = 7902;
+const port = Number(process.env.SHOTS_PORT ?? 7902);
 const server = spawn("node", ["scripts/dev.ts"], { env: { ...process.env, PORT: String(port) }, stdio: "ignore" });
 await new Promise((resolve) => setTimeout(resolve, 700));
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
@@ -31,6 +31,15 @@ try {
   });
   page.on("pageerror", (e) => problems.push(String(e)));
   await page.goto(`http://127.0.0.1:${port}/uchusen-rockets/element-check.html`);
+  // only ever in software: stop if this browser would draw on the graphics card
+  const renderer = await page.evaluate(() => {
+    const gl = document.createElement("canvas").getContext("webgl2");
+    const info = gl?.getExtension("WEBGL_debug_renderer_info");
+    const name = info && gl ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    return name;
+  });
+  if (!/swiftshader/i.test(renderer)) throw new Error(`not drawing in software: ${renderer}`);
   await page.evaluate(() => {
     document.body.style.cssText = "margin:0;background:#070c17;color:#e4ebf5";
     document.body.replaceChildren();

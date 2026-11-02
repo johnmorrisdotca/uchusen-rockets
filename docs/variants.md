@@ -68,6 +68,15 @@ All are 3.7 m across. The second stage's vacuum engine is drawn 3.3 m across at 
 | `dragon` `dragon-2` Dragon 2 | 8.1 m; capsule 4.5 m | 4 m | 2019-03-02 | Crew Dragon, with windows |
 | `grasshopper` | 32 m | No source | 2012-09-21, a 1.8 m hop | A test vehicle, retired on 2013-10-07 |
 
+## Falcon 1
+
+| Variant | Whole | Fairing | Across | First flew | Status |
+| --- | --- | --- | --- | --- | --- |
+| `falcon-1` | 21.3 m (70 feet), SpaceX's guide; Wikipedia's infobox says 21 m, its table 21.3 m and 22.25 m | 3.5 m, 1.54 m across | 1.7 m; the guide says 5.5 feet | 2006-03-24 | Flown, five times |
+| `falcon-1e` | 27.4 m (90 feet), announced; Wikipedia's table says 26.83 m | 4.4 m, 1.7 m across, announced | 1.7 m, announced | Never flew | Announced, never flown |
+
+No source read here gives a stage's own length, so those are blank and drawn in proportion to the whole.
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape.

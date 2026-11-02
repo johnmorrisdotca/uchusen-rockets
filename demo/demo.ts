@@ -227,6 +227,7 @@ byId("gallery").append(
 );
 
 // ------------------------------------------------------------- what is coming, and where it all comes from
+byId("planned").hidden = PLANNED_ROCKETS.length === 0;
 byId("planned-list").append(
   ...PLANNED_ROCKETS.map((rocket) =>
     el(

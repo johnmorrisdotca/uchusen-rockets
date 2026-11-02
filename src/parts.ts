@@ -28,8 +28,8 @@ export interface PartRecord {
   /** The sourced figures, blank where no source gives one. */
   sourced: { height: Figure; diameter: Figure };
   joints: { readonly top?: Joint; readonly bottom?: Joint };
-  /** It stands beside the part below it rather than on top, this far from the rocket's axis: a side booster. */
-  strapOn?: { x: number; z: number };
+  /** It is placed rather than stacked, this far from the rocket's axis and this far up (left out: on the ground): a side booster beside the core, or a booster standing on a deck. */
+  strapOn?: { x: number; z: number; y?: number };
   /** The painted look's mesh, when a licensed model gives one: its file under assets/models/ and whose it is. Otherwise this package's own code paints it. `ownNozzle`: the model has none, so this package's own shows with it unless the part is nested in the stage below. */
   painted: { file: string; credit: CreditId; ownNozzle?: true } | null;
   /** What a reader should be told about where its shape came from. */

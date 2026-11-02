@@ -43,8 +43,8 @@ That is all a page needs with a bundler. The drawing shows at once; when the ele
 
 | Attribute | Values |
 | --- | --- |
-| `rocket` | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper` |
-| `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2` |
+| `rocket` | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper`, `falcon-1` |
+| `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2`. Falcon 1: `falcon-1`, `falcon-1e` |
 | `show` | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right` |
 | `look` | `line`, `thick`, `painted` |
 | `view` | `three-quarter`, `front`, `back`, `side`, `below` |
@@ -53,7 +53,7 @@ Changing `look` keeps the angle. Changing `show` is an animated move, and a cut 
 
 ## The rockets
 
-Starship; Falcon 9 in v1.0, v1.1, Full Thrust and Block 5, with a fairing or with Dragon 2; Falcon Heavy; Dragon 1 and Dragon 2; and Grasshopper, the test vehicle. Falcon 1 is still to come.
+Starship; Falcon 9 in v1.0, v1.1, Full Thrust and Block 5, with a fairing or with Dragon 2; Falcon Heavy; Dragon 1 and Dragon 2; Grasshopper, the test vehicle; and Falcon 1, with the Falcon 1e that was announced and never flew.
 
 ```html
 <uchusen-rocket rocket="falcon-9" variant="block-5" show="apart" look="painted"></uchusen-rocket>
@@ -165,7 +165,7 @@ All under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Starship Bl
 
 ## Still to come
 
-`PLANNED_ROCKETS` lists rockets with sourced facts and no shape yet: Falcon 1.
+`PLANNED_ROCKETS` lists rockets with sourced facts and no shape yet, when there are any.
 
 ## The rest
 

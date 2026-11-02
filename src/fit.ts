@@ -52,7 +52,7 @@ function sizeOf(parts: readonly SlotPart[]): { height: number; diameter: number 
   let top = 0;
   for (const { part } of parts) {
     if (part.strapOn) {
-      top = Math.max(top, part.height);
+      top = Math.max(top, (part.strapOn.y ?? 0) + part.height);
       continue;
     }
     const base = y - (part.joints.bottom?.y ?? 0);

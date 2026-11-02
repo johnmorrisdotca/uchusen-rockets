@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Falcon 1, and the Falcon 1e that was announced and never flew, drawn by this package's code. Sizes from SpaceX's 2008 user's guide, with Wikipedia's other figures kept beside them. A part placed rather than stacked can now stand above the ground (`strapOn.y`).
+- `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
+
 ## [0.2.2]
 
 - Demo: kazoku-ui 0.7 (a dev dependency, used only by the demo). The demo's strict Content-Security-Policy is now plain `style-src 'self'`: the controls adopt their styles as a constructable stylesheet since kazoku-ui 0.3.1, so the build no longer writes the controls' style text's hash into the page (the `%KAZOKU_STYLE%` step of `scripts/site.ts` is gone). The introduction's own pause (a one-minute timer and a scroll observer in `demo/demo.ts`) is replaced by the controls' `autoplay-for="60"` and their idle-out-of-sight, from kazoku-ui 0.7.1; `docs/element.md` says so.

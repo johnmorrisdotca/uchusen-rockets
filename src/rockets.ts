@@ -1,6 +1,7 @@
 // The catalogue: which rockets there are, their variants with sourced sizes, and which are still to be built. All data, all typed. Pure.
 import { DRAGON_VARIANTS } from "./data/dragon.ts";
 import { FALCON_HEAVY_VARIANTS, FALCON_9_VARIANTS } from "./data/falcon.ts";
+import { FALCON_1_VARIANTS } from "./data/falcon1.ts";
 import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
@@ -33,13 +34,10 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "falcon-heavy": { id: "falcon-heavy", name: "Falcon Heavy", status: "built", variants: FALCON_HEAVY_VARIANTS, defaultVariant: "falcon-heavy" },
   dragon: { id: "dragon", name: "Dragon", status: "built", variants: DRAGON_VARIANTS, defaultVariant: "dragon-2" },
   grasshopper: { id: "grasshopper", name: "Grasshopper", status: "built", variants: GRASSHOPPER_VARIANTS, defaultVariant: "grasshopper" },
+  "falcon-1": { id: "falcon-1", name: "Falcon 1", status: "built", variants: FALCON_1_VARIANTS, defaultVariant: "falcon-1" },
 };
 
-const fig = (value: number, source: SourceId, note?: string): Figure => ({ value, source, ...(note ? { note } : {}) });
-
-export const PLANNED_ROCKETS: readonly PlannedRocket[] = [
-  { id: "falcon-1", name: "Falcon 1", status: "planned", height: fig(21, "wikipedia-falcon-1"), diameter: fig(1.7, "wikipedia-falcon-1"), firstFlight: { value: "2006-03-24", source: "wikipedia-falcon-1" }, source: "wikipedia-falcon-1" },
-];
+export const PLANNED_ROCKETS: readonly PlannedRocket[] = [];
 
 export function variantOf(rocket: string, id?: string | null): Variant | undefined {
   const entry = Object.hasOwn(ROCKETS, rocket) ? ROCKETS[rocket] : undefined;

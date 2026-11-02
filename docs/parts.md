@@ -59,9 +59,10 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Dragon 1 | This package's code, its proportions taken from ProgressTH's model | ProgressTH's model |
 | Falcon Heavy | This package's code, its proportions taken from Antonio_Adams's model | Antonio_Adams's low-poly model |
 | Grasshopper | This package's code, its proportions taken from Echo_3's model | Echo_3's low-poly model |
+| Falcon 1 and 1e | This package's code, from SpaceX's user's guide; the stages' share of the whole judged from photographs | This package's code. No model shows them |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
 
 ## A new rocket
 
-Its variants go in `src/data/`, its parts in `src/model/registry.ts` with pieces of plain geometry, and a row in `ROCKETS`. Nothing else changes.
+Its variants go in `src/data/`, its parts in `src/model/registry.ts` with pieces of plain geometry, and a row in `ROCKETS`. Nothing else changes. A rocket drawn wholly by this package's code is a table: see `src/model/falcon1.ts`, with the small shapes of `src/model/kit.ts`.

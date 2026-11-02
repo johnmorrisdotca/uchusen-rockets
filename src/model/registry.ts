@@ -7,6 +7,9 @@ import type { CreditId } from "../data/credits.ts";
 import type { PartKind, PartRecord } from "../parts.ts";
 import type { Piece } from "./pieces.ts";
 import { capsule, centreCore, DRAGON_DRAWS, falconFairing, falconFirstStage, FALCON_DRAWS, falconSecondStage, grasshopper, merlin, sideBooster, trunk } from "./falcon.ts";
+import { FALCON_1_VARIANTS } from "../data/falcon1.ts";
+import { FALCON_1_BUILDS } from "./falcon1.ts";
+import type { StackBuild } from "./stacks.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
 export interface PartEntry {
@@ -127,6 +130,33 @@ entries.push(
   { record: { id: "falcon-heavy-falcon-heavy-side-right", kind: "first-stage", name: "Falcon Heavy side booster, right", rocket: "falcon-heavy", trueTo: ["falcon-heavy"], height: FH_SIDE_HEIGHT, diameter: 3.7, strapOn: { x: FH_OFFSET, z: 0 }, sourced: { height: blankFigure, diameter: figure(3.7, "wikipedia-falcon-heavy") }, joints: {}, painted: PAINTED["falcon-heavy-falcon-heavy-side-right"], drawnFrom: FH_FROM }, pieces: () => sideBooster(FH_SIDE_HEIGHT, 1.85, 1) },
   { record: { id: "grasshopper-grasshopper-vehicle", kind: "test-vehicle", name: "Grasshopper, test vehicle", rocket: "grasshopper", trueTo: ["grasshopper"], height: 32, diameter: 3.2, sourced: { height: figure(32, "wikipedia-grasshopper"), diameter: blankFigure }, joints: {}, painted: PAINTED["grasshopper-grasshopper-vehicle"], drawnFrom: "This package's code for the two line looks, proportions taken from Echo_3's low-poly model at the sourced height; that model for the painted look." }, pieces: () => grasshopper(32) },
 );
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// Rockets drawn wholly by this package's code, from their tables
+
+const stackFacts = [...FALCON_1_VARIANTS];
+const stacks: readonly StackBuild[] = [...FALCON_1_BUILDS];
+for (const build of stacks)
+  for (const part of build.parts) {
+    const { height, diameter } = facts(stackFacts, build.variant, part.slot);
+    entries.push({
+      record: {
+        id: `${build.rocket}-${build.variant}-${part.slot}`,
+        kind: part.kind,
+        name: part.name,
+        rocket: build.rocket,
+        trueTo: [build.variant, ...(part.alsoTrueTo ?? [])],
+        height: part.height,
+        diameter: part.diameter,
+        sourced: { height, diameter: part.sourcedDiameter ?? diameter },
+        joints: { ...(part.top ? { top: { kind: STAGE, y: part.top[0], diameter: part.top[1] } } : {}), ...(part.bottom ? { bottom: { kind: STAGE, y: part.bottom[0], diameter: part.bottom[1] } } : {}) },
+        ...(part.place ? { strapOn: part.place } : {}),
+        painted: null,
+        drawnFrom: build.drawnFrom,
+      },
+      pieces: part.pieces,
+    });
+  }
 
 const RAPTOR_DIAMETER: Figure = { value: 1.3, source: "wikipedia-raptor", note: "The family's engine diameter." };
 const RAPTOR_LENGTH: Figure = { value: 3.1, source: "wikipedia-raptor", note: "The family's length." };
