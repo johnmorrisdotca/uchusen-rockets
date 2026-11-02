@@ -160,12 +160,18 @@ function weld(bucket: Bucket): { positions: Float32Array<ArrayBuffer>; normals: 
 }
 
 /** Simplifies to `ratio` of the triangles, with `error` in metres as the most it may move the surface. Normals count, so hard edges stay. */
-function reduce(bucket: Bucket, ratio: number, error: number, lockBorder = false): { positions: Float32Array<ArrayBuffer>; normals: Float32Array<ArrayBuffer>; uvs: Float32Array<ArrayBuffer>; indices: Uint32Array<ArrayBuffer> } {
+function reduce(bucket: Bucket, ratio: number, error: number, lockBorder = false, holdPicture = false): { positions: Float32Array<ArrayBuffer>; normals: Float32Array<ArrayBuffer>; uvs: Float32Array<ArrayBuffer>; indices: Uint32Array<ArrayBuffer> } {
   const w = weld(bucket);
   let indices: Uint32Array = w.indices;
   if (ratio < 1 && w.indices.length > 3) {
     const target = Math.max(3, Math.floor((w.indices.length * ratio) / 3) * 3);
-    [indices] = MeshoptSimplifier.simplifyWithAttributes(w.indices, w.positions, 3, w.normals, 3, [0.4, 0.4, 0.4], null, target, error, lockBorder ? ["ErrorAbsolute", "LockBorder"] : ["ErrorAbsolute"]);
+    if (holdPicture) {
+      // a picture cut into thousands of islands: its coordinates weigh so much that an edge moves only along what it shows, which frees far more triangles than locking every edge of every island
+      const n = w.positions.length / 3;
+      const attributes = new Float32Array(n * 5);
+      for (let i = 0; i < n; i++) attributes.set([w.normals[i * 3], w.normals[i * 3 + 1], w.normals[i * 3 + 2], w.uvs[i * 2], w.uvs[i * 2 + 1]], i * 5);
+      [indices] = MeshoptSimplifier.simplifyWithAttributes(w.indices, w.positions, 3, attributes, 5, [0.2, 0.2, 0.2, 30, 30], null, target, error, ["ErrorAbsolute"]);
+    } else [indices] = MeshoptSimplifier.simplifyWithAttributes(w.indices, w.positions, 3, w.normals, 3, [0.4, 0.4, 0.4], null, target, error, lockBorder ? ["ErrorAbsolute", "LockBorder"] : ["ErrorAbsolute"]);
   }
   // only the vertices still used
   const map = new Map<number, number>();
@@ -281,7 +287,7 @@ async function runRecipe(recipe: ModelRecipe): Promise<void> {
     const hi = [-1e9, -1e9, -1e9];
     for (const [name, bucket] of buckets) {
       const { ratio, error } = budget[name] ?? budget["*"] ?? { ratio: 0.2, error: 0.02 };
-      const r = reduce(bucket, ratio, error, recipe.lockBorder);
+      const r = reduce(bucket, ratio, error, recipe.lockBorder, recipe.holdPicture);
       if (r.indices.length === 0) continue;
       outTris += r.indices.length / 3;
       for (let i = 0; i < r.positions.length; i += 3)

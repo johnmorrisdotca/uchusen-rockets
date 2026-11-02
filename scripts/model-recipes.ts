@@ -36,6 +36,8 @@ export interface ModelRecipe {
   budgets: Record<string, Record<string, { ratio: number; error: number }>>;
   /** Keep each island of a cut-up picture whole: a free edge may not move, or it would sample its neighbour. */
   lockBorder?: boolean;
+  /** Or let free edges move, but only along what the picture shows. */
+  holdPicture?: boolean;
   /** For a model of many small meshes: the part by each primitive's own box, in the file's units. */
   wholeNodes?: (lo: number[], hi: number[]) => RecipePart;
   /** Something no outside view reaches, by its box: left out. */
@@ -261,8 +263,8 @@ export const MODEL_RECIPES: ModelRecipe[] = [
     materialSpec: { atlas: { base: [1, 1, 1], metal: 0, rough: 0.7 } },
     textures: { atlas: { from: "default", maps: ["base"], size: 1024 } },
     partAt: () => DISCOVERY,
-    lockBorder: true,
-    budgets: { orbiter: { "*": { ratio: 0.5, error: 0.02 } } },
+    holdPicture: true,
+    budgets: { orbiter: { "*": { ratio: 0.31, error: 0.04 } } },
   },
   {
     id: "starship-2019",
