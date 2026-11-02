@@ -145,7 +145,7 @@ import { UchusenRocket } from "@johnmorrisdotca/uchusen-rockets/react";
 
 ## Licences, credits and a word on trademarks
 
-The code, the code-made meshes and the drawings are under the MIT licence. **The painted models are not: they stay under Creative Commons Attribution 4.0, and using them means crediting them.** `check(description).credits` says which belong to a rocket. **Starbase's coordinates and outlines, its map heights and the tower's 13 m footprint are © OpenStreetMap contributors, under ODbL 1.0, not MIT** (https://www.openstreetmap.org/copyright).
+The code, the code-made meshes and the drawings are under the MIT licence. **The painted models are not: they stay under Creative Commons Attribution 4.0, or public domain where the row says so, and using them means crediting them.** `check(description).credits` says which belong to a rocket. **Starbase's coordinates and outlines, its map heights and the tower's 13 m footprint are © OpenStreetMap contributors, under ODbL 1.0, not MIT** (https://www.openstreetmap.org/copyright).
 
 | Painted | Title | Creator | Source | Changed |
 | --- | --- | --- | --- | --- |
@@ -161,7 +161,10 @@ The code, the code-made meshes and the drawings are under the MIT licence. **The
 
 | Discovery | Orbiter, Space Shuttle, OV-103, Discovery | [Smithsonian Institution, National Air and Space Museum](https://3d.si.edu/) | [Smithsonian 3D](https://3d.si.edu/object/3d/orbiter-space-shuttle-ov-103-discovery:d8c636ce-4ebc-11ea-b77f-2e728ce88125) | Marks painted out, reduced, stood upright, rescaled to the sourced length. Under CC0 |
 
-All but Discovery are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Starship Blocks 1, 2 and 4 and the older Falcon 9s are painted by this package's own code: no model is stretched to stand in for another version.
+| Space Shuttle, stacked | Shuttle (Hi-Res) and Shuttle Parts (Hi-Res) | [NASA](https://science.nasa.gov/3d-resources/) | [Orbiter](https://data.nasa.gov/dataset/nasa-3d-models-shuttle-hi-res), [tank and boosters](https://data.nasa.gov/dataset/nasa-3d-models-shuttle-parts-hi-res) | Marks painted out, bay shut, reduced, stood upright, rescaled to the sourced lengths. Public domain |
+<!-- more NASA models -->
+
+All but Discovery and NASA's are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). NASA is named as the source of its models, as its guidelines ask, with no suggestion that it endorses this package, and no NASA logo, insignia, flag or lettering is shipped: [NOTICE.md](NOTICE.md) says what that rests on. Starship Blocks 1, 2 and 4 and the older Falcon 9s are painted by this package's own code: no model is stretched to stand in for another version.
 
 **No mesh or drawing carries a logo, a wordmark or a flag.** Rocket names appear only as plain descriptive words. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. [NOTICE.md](NOTICE.md) names each source and what was taken from it.
 

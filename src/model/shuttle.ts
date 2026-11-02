@@ -97,7 +97,7 @@ function orbiter(): Piece[] {
   return out;
 }
 
-const FROM = "This package's code, from the sourced lengths and widths. The orbiter's outline and where the parts stand are judged from photographs. No licensed model is used, and no name, flag or mark is drawn.";
+const FROM = "NASA's models for the painted look, their marks painted out. This package's code for the two line looks, from the sourced lengths and widths. The orbiter's outline and where the parts stand are judged from photographs. No name, flag or mark is drawn.";
 
 export const SHUTTLE_BUILDS: readonly StackBuild[] = [
   {
@@ -111,10 +111,10 @@ export const SHUTTLE_BUILDS: readonly StackBuild[] = [
     variant: "stack",
     drawnFrom: FROM,
     parts: [
-      { slot: "external-tank", kind: "tank", name: "External tank", height: TANK, diameter: TANK_R * 2, place: { x: 0, z: 0, y: TANK_Y }, sourcedDiameter: SHUTTLE_TANK_DIAMETER, pieces: tank },
-      { slot: "srb-left", kind: "solid-booster", name: "Solid rocket booster, left", height: SRB, diameter: SRB_R * 2, place: { x: -SRB_X, z: 0 }, sourcedDiameter: SHUTTLE_SRB_DIAMETER, pieces: booster },
-      { slot: "srb-right", kind: "solid-booster", name: "Solid rocket booster, right", height: SRB, diameter: SRB_R * 2, place: { x: SRB_X, z: 0 }, sourcedDiameter: SHUTTLE_SRB_DIAMETER, pieces: booster },
-      { slot: "orbiter", kind: "orbiter", name: "Orbiter", height: ORB, diameter: (ORBITER_SPAN.value ?? 0), place: { x: 0, z: ORB_Z, y: ORB_Y }, sourcedDiameter: ORBITER_SPAN, pieces: orbiter },
+      { slot: "external-tank", kind: "tank", name: "External tank", height: TANK, diameter: TANK_R * 2, place: { x: 0, z: 0, y: TANK_Y }, sourcedDiameter: SHUTTLE_TANK_DIAMETER, painted: { file: "space-shuttle-stack-external-tank.glb", credit: "nasa-shuttle-parts" }, pieces: tank },
+      { slot: "srb-left", kind: "solid-booster", name: "Solid rocket booster, left", height: SRB, diameter: SRB_R * 2, place: { x: -SRB_X, z: 0 }, sourcedDiameter: SHUTTLE_SRB_DIAMETER, painted: { file: "space-shuttle-stack-srb.glb", credit: "nasa-shuttle-parts" }, pieces: booster },
+      { slot: "srb-right", kind: "solid-booster", name: "Solid rocket booster, right", height: SRB, diameter: SRB_R * 2, place: { x: SRB_X, z: 0 }, sourcedDiameter: SHUTTLE_SRB_DIAMETER, painted: { file: "space-shuttle-stack-srb.glb", credit: "nasa-shuttle-parts" }, pieces: booster },
+      { slot: "orbiter", kind: "orbiter", name: "Orbiter", height: ORB, diameter: (ORBITER_SPAN.value ?? 0), place: { x: 0, z: ORB_Z, y: ORB_Y }, sourcedDiameter: ORBITER_SPAN, painted: { file: "space-shuttle-stack-orbiter.glb", credit: "nasa-shuttle-hi-res" }, pieces: orbiter },
     ],
   },
 ];

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { LOOK_NAMES, MATERIALS, MODEL_CREDITS, PART_ENTRIES, ROCKETS, VIEW_NAMES } from "../src/index.ts";
+import { LOOK_NAMES, MATERIALS, MODEL_CREDITS, type ModelCredit, PART_ENTRIES, ROCKETS, VIEW_NAMES } from "../src/index.ts";
 import { build, buildPart } from "../src/build/index.ts";
 
 const BRANDS = /spacex|nasa\b|logo|wordmark|boring company|tesla|musk/i;
@@ -38,6 +38,8 @@ test("no material is named for a product or a mark", () => {
   for (const name of Object.keys(MATERIALS)) assert.ok(!BRANDS.test(name), name);
 });
 
+/** NASA's models that had no mark to remove: looked at, from every side. */
+const NO_MARKS_FOUND = new Set(["space-shuttle-stack-external-tank.glb", "space-shuttle-stack-srb.glb"]);
 const OUR_MATERIALS = new Set([...Object.keys(MATERIALS), "atlas", "painted"]);
 const modelFiles = readdirSync("models").filter((name) => name.endsWith(".glb"));
 
@@ -50,7 +52,7 @@ test("a painted model carries no logo: only our materials, only the images chose
     assert.ok((json.images?.length ?? 0) <= 4, `${name}: ${json.images?.length} images`);
     // the materials that carried a mark are gone by name too
     assert.ok(!/logo|serial|wordmark/i.test(JSON.stringify(json.materials)), name);
-    assert.match(json.asset.extras.license, /CC-BY-4\.0|CC0-1\.0/, name);
+    assert.match(json.asset.extras.license, /CC-BY-4\.0|CC0-1\.0|^Public domain, NASA /, name);
     assert.ok(json.asset.extras.author && json.asset.extras.source && json.asset.extras.title, name);
     assert.ok(json.asset.extras.changes, `${name} says what was changed`);
   }
@@ -75,6 +77,9 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "falcon-heavy-falcon-heavy-side-right.glb": [45.57, 3.7],
     "grasshopper-grasshopper-vehicle.glb": [32, Number.NaN],
     "space-shuttle-discovery-orbiter.glb": [37.24, 23.79],
+    "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
+    "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
+    "space-shuttle-stack-srb.glb": [45.46, 3.71],
   };
   for (const name of modelFiles) {
     assert.ok(statSync(join("models", name)).size < 8 * 1024 * 1024, name);
@@ -97,6 +102,18 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     const want = sized[name];
     assert.ok(want, `${name} has no sourced size in this test`);
     assert.ok(Math.abs(height - want[0]) / want[0] < 0.012, `${name}: ${height} against ${want[0]}, lift ${lift}`);
+  }
+});
+
+test("NASA's models rest on the owner's decision, which says so, with no suggestion of endorsement, and carry no mark", () => {
+  const notice = readFileSync("NOTICE.md", "utf8");
+  assert.match(notice, /owner's decision of 2026-11-02/);
+  assert.match(notice, /not affiliated with or endorsed by SpaceX, NASA/);
+  assert.match(notice, /No NASA logo, insignia, flag or lettering/);
+  for (const c of Object.values(MODEL_CREDITS) as readonly ModelCredit[]) if (c.creator === "NASA") assert.match(c.sourceUrl, /^https:\/\/data\.nasa\.gov\/dataset\//);
+  for (const name of modelFiles) {
+    const extras = (JSON.parse(glbJson(new Uint8Array(readFileSync(join("models", name))))) as { asset: { extras: Record<string, string> } }).asset.extras;
+    if (extras.author === "NASA") assert.ok(/painted out|removed|no mark/i.test(extras.changes) || NO_MARKS_FOUND.has(name), `${name} says what became of its marks`);
   }
 });
 

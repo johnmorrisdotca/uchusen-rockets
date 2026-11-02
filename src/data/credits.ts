@@ -1,4 +1,4 @@
-// Whose models the painted parts are made from. Each is under Creative Commons Attribution 4.0, or CC0 where the row says so, and each assembled rocket's credits are generated from these rows, so an author is credited exactly for
+// Whose models the painted parts are made from. Each is under Creative Commons Attribution 4.0, or CC0 or public domain where the row says so, and each assembled rocket's credits are generated from these rows, so an author is credited exactly for
 // what is used. The package's code is MIT; these assets are not: see NOTICE.md.
 
 export interface ModelCredit {
@@ -6,13 +6,24 @@ export interface ModelCredit {
   creator: string;
   creatorUrl: string;
   sourceUrl: string;
-  licence: "CC BY 4.0" | "CC0 1.0";
+  licence: "CC BY 4.0" | "CC0 1.0" | "Public domain (NASA)";
   licenceUrl: string;
   /** What this package changed. */
   changes: string;
 }
 
 const LICENCE_URL = "https://creativecommons.org/licenses/by/4.0/";
+
+/** One of NASA's own models: its source named, with no suggestion that NASA endorses anything. See NOTICE.md for what this rests on. */
+const nasa = (title: string, slug: string, changes: string): ModelCredit => ({
+  title,
+  creator: "NASA",
+  creatorUrl: "https://science.nasa.gov/3d-resources/",
+  sourceUrl: `https://data.nasa.gov/dataset/${slug}`,
+  licence: "Public domain (NASA)",
+  licenceUrl: "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+  changes,
+});
 
 export const MODEL_CREDITS = {
   "clarence365-block3": {
@@ -96,6 +107,9 @@ export const MODEL_CREDITS = {
     licenceUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
     changes: "The agency mark, the flags, the country's name and the orbiter's name painted out of its picture; reduced from 150,000 triangles; its pictures shrunk; stood upright and scaled to the sourced length; materials renamed.",
   },
+  "nasa-shuttle-hi-res": nasa("Shuttle (Hi-Res)", "nasa-3d-models-shuttle-hi-res", "The agency mark, the flag, the country's name and the rest of the lettering painted out of its pictures; its open bay closed with its own doors and what was inside it left out; its engines put in place; reduced; rescaled to the sourced length; stood upright; its materials made into one picture."),
+  "nasa-shuttle-parts": nasa("Shuttle Parts (Hi-Res)", "nasa-3d-models-shuttle-parts-hi-res", "Its external tank and solid rocket booster only; rescaled to the sourced lengths; stood upright; its materials made into one picture; its pictures shrunk."),
+  // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 
 export type CreditId = keyof typeof MODEL_CREDITS;

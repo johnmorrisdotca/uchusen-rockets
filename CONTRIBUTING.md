@@ -6,7 +6,7 @@ Thank you for helping. Bug reports, ideas and pull requests are all welcome. Bug
 
 - **A figure names its source, or is blank.** Every size, count and date in `src/data/` carries where it came from and, where it has one, its date. Never estimate to fill a gap. Where sources disagree, keep the one you chose and put the other in `others`, with why. A variant goes in only if a source documents it.
 - **No logos, no marks, no flags.** No mesh or drawing carries a maker's logo, wordmark, flag or printed name. `test/legal.test.ts` holds it, on the generated files and the models.
-- **Drawn here, or credited.** A mesh or drawing is made by this package's code from plain geometry and sourced sizes. The only meshes from outside are the licensed models named in `NOTICE.md`, each under CC BY 4.0 and credited there, with what was changed; a new one needs its row, its licence read from its own files, and its page checked for any notice against use. No traced photograph, no icon set. Anything else from outside must be MIT, ISC, BSD or Apache.
+- **Drawn here, or credited.** A mesh or drawing is made by this package's code from plain geometry and sourced sizes. The only meshes from outside are the licensed models named in `NOTICE.md`, each under CC BY 4.0, or public domain where it says so, and credited there, with what was changed; a new one needs its row, its licence read from its own files, and its page checked for any notice against use. No traced photograph, no icon set. Anything else from outside must be MIT, ISC, BSD or Apache.
 - **A model is labelled as what it shows.** A rocket labelled as a real version uses only parts true for it. A mix is a custom build and says so. A model never stands in for another version, stretched or not.
 - **One part record.** Every part from every source has the same record in `src/model/registry.ts`: its real size in metres, the joints it mates at and where its shape came from. `check` reads nothing else. Origin: the middle of the part's base on its axis. Y up, windward side towards +Z, in metres. One material naming scheme, `src/model/materials.ts`, for every source.
 - **A part is a table of numbers.** A change of block is a change of numbers in `src/model/starship.ts`. A mesh and a drawing come from the same pieces, so they cannot disagree.
@@ -24,7 +24,7 @@ Add its variants to `src/data/`, its parts to `src/model/registry.ts` with piece
 
 ## The source models
 
-They are kept outside this repository. `UCHUSEN_MODEL_SOURCES=<folder> pnpm models` rebuilds `models/` from them, by hand; the results are committed, and the build and CI never need the sources.
+They are kept outside this repository. `UCHUSEN_MODEL_SOURCES=<folder> pnpm models` rebuilds `models/` from them, and `pnpm models:nasa` NASA's, by hand; the results are committed, and the build and CI never need the sources.
 
 ## Pull requests
 

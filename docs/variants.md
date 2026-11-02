@@ -95,6 +95,8 @@ The figures are the article's feet in metres, and each note keeps the feet. The 
 
 No source read here says where the parts stand against each other, so the gaps and the orbiter's outline are judged from photographs. Its front view is the orbiter's belly side, behind the tank.
 
+`stack` is painted by NASA's own models, each its part's sourced length, with every mark painted out and the orbiter's bay shut.
+
 `discovery` is a real orbiter, the Smithsonian's scan, in its own variant: 37.24 m and first flown on 1984-08-30. Painted, it has its gear down as it stands on display, with plain patches where its marks and names are painted out. Its line looks are this package's own orbiter.
 
 ## Space Launch System

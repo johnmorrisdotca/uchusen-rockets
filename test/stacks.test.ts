@@ -180,7 +180,7 @@ test("Discovery is a CC0 scan, credited, in its own variant, with its marks pain
   const report = check({ rocket: "space-shuttle", variant: "discovery" });
   assert.equal(report.credits[0].id, "smithsonian-discovery");
   assert.equal(report.credits[0].licence, "CC0 1.0");
-  assert.deepEqual(check({ rocket: "space-shuttle", variant: "stack" }).credits, []);
+  assert.deepEqual(check({ rocket: "space-shuttle", variant: "stack" }).credits.map((credit) => credit.id).sort(), ["nasa-shuttle-hi-res", "nasa-shuttle-parts"]);
   assert.match(variantOf("space-shuttle", "discovery")?.note ?? "", /painted out/);
   assert.match(MODEL_CREDITS["smithsonian-discovery"].changes, /painted out/);
 });

@@ -1,10 +1,10 @@
 # Notice
 
-This package holds work under three licences.
+This package holds work under three licences, and NASA's models, which are public domain.
 
 **The code, the code-made meshes and the drawings are under the MIT licence** (see [LICENSE](LICENSE) and [LICENSES/MIT.txt](LICENSES/MIT.txt)), except the map data below. Each is made by this package's own code from plain geometry and sourced sizes.
 
-**The painted models in `models/` (shipped as `dist/assets/models/`) are not.** Each stays under the Creative Commons Attribution 4.0 licence of its author, except one under CC0 as its row says (see [LICENSES/CC-BY-4.0.txt](LICENSES/CC-BY-4.0.txt) and https://creativecommons.org/licenses/by/4.0/). Using them means crediting them, as below. The credits are also data: `MODEL_CREDITS` and `creditLine`, and `check(description).credits` says which belong to a given rocket.
+**The painted models in `models/` (shipped as `dist/assets/models/`) are not.** Each stays under the Creative Commons Attribution 4.0 licence of its author, except one under CC0 as its row says, and those of NASA, below (see [LICENSES/CC-BY-4.0.txt](LICENSES/CC-BY-4.0.txt) and https://creativecommons.org/licenses/by/4.0/). Using them means crediting them, as below. The credits are also data: `MODEL_CREDITS` and `creditLine`, and `check(description).credits` says which belong to a given rocket.
 
 **The map data is under the Open Database License, not MIT.** The coordinates, outlines and map heights of Starbase, in `src/data/starbase.ts` and `src/model/starbase.ts`, and the tower's 13 m footprint, in `src/data/tower.ts` and `src/model/tower.ts`, and those figures wherever they are built into `dist/`, are © OpenStreetMap contributors, https://www.openstreetmap.org/copyright, under ODbL 1.0 (see [LICENSES/ODbL-1.0.txt](LICENSES/ODbL-1.0.txt)). Each such figure names this source in the data (`SOURCES.openstreetmap`). The plain shapes standing on those places, and the rest of the package, stay MIT.
 
@@ -31,6 +31,20 @@ All trademarks belong to their owners, and this project is not affiliated with o
 Licence for all but the last: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The credit line the second model's author asks for: This work is based on "Spacex Starship Ship 24 & Booster 7 V4" (https://sketchfab.com/3d-models/spacex-starship-ship-24-booster-7-v4-97875d14b63e4b9ca9ed425ef4253306) by clarence365 (https://sketchfab.com/clarence365) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/).
 
 These models also informed the proportions of this package's own line drawings of the same vehicles: those measurements were taken after each was scaled to the sourced sizes. No model stands in for another version. A rocket's own parts are credited through `check(description).credits`, generated from which part came from where.
+
+## NASA's models
+
+NASA's models are from its 3D Resources, listed as the "NASA 3D Models" datasets on data.nasa.gov. **Using them rests on this package's owner's decision of 2026-11-02: "The NASA 135 are all public domain. The logo is not."** That settles what those 135 datasets state, "License not specified", and it covers them alone. NASA's own guidelines, https://www.nasa.gov/nasa-brand-center/images-and-media/, say that NASA content "used in the rendition of 3-dimensional models, such as texture maps and polygon data in any format" is generally not subject to copyright in the United States, that NASA "should be acknowledged as the source of the material", and that "The use of the Insignia, Logotype and NASA identifiers is protected by law". So NASA is credited here as the source; that is a factual credit and no suggestion that NASA endorses this package or anything made with it.
+
+**No NASA logo, insignia, flag or lettering is in any file here.** The worm, the meatball, the seal, a mission patch, a flag and a country's or vehicle's name were each looked for, in the pictures and from every side of the result, and removed. Whoever uses these files for something else must keep to NASA's guidelines themselves, and, for merchandise, to its Merchandise Guidelines.
+
+The dataset addresses named below are the record of what each model is. Their download addresses now lead to https://science.nasa.gov/3d-resources/, which says its assets are mirrored on https://github.com/nasa/NASA-3D-Resources, and the files were read from there on 2026-11-02; their triangle counts match the datasets' where a dataset states one.
+
+| Files | Title | Dataset | What was changed |
+| --- | --- | --- | --- |
+| `space-shuttle-stack-orbiter.glb` | Shuttle (Hi-Res) | https://data.nasa.gov/dataset/nasa-3d-models-shuttle-hi-res | The agency mark, the flag, the country's name and the rest of the lettering painted out of its pictures; its open bay closed with its own doors and what was inside it left out; its engines put in place; reduced from 31,318 triangles, with its five engines 48,376, to 30,000; rescaled to the sourced length; stood upright; its materials made into one picture. |
+| `space-shuttle-stack-external-tank.glb`, `space-shuttle-stack-srb.glb` | Shuttle Parts (Hi-Res) | https://data.nasa.gov/dataset/nasa-3d-models-shuttle-parts-hi-res | Its external tank and solid rocket booster only; rescaled to the sourced lengths; stood upright; its materials made into one picture; its pictures shrunk. |
+<!-- more NASA models -->
 
 ## Facts
 
@@ -73,6 +87,7 @@ The published package has no runtime dependency of its own. These are peer depen
 | @playwright/test | 1.64.0 | Apache-2.0 | The browser tests |
 | eslint, @eslint/js, typescript-eslint | 9, 9, 8 | MIT | Lint |
 | @gltf-transform/core, extensions, functions | 4.5.1 | MIT | Reducing the models, by hand, never at build time |
+| draco3dgltf | 1.5.7 | Apache-2.0 | Reading NASA's compressed files, by hand, never at build time |
 | meshoptimizer | 1.3.0 | MIT | Simplifying the models, by hand |
 | @types/node, @types/react, @types/react-dom, @types/three | 24, 19, 19, 0.186 | MIT | Types |
 

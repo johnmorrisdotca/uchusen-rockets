@@ -23,7 +23,7 @@ export const SHUTTLE_VARIANTS: readonly Variant[] = [
     firstFlight: said("1981-04-12", S, { note: "STS-1." }),
     slots: ["external-tank", "srb-left", "srb-right", "orbiter"],
     lineupView: "back",
-    note: "Stacked as for launch: the orbiter on the tank's side, a booster either side. No source read here gives how far apart the parts stand, so that and the orbiter's outline are judged from photographs. No name, flag or mark is drawn. Front is the orbiter's belly side, so it stands behind the tank from the front: turn it, or show it alone.",
+    note: "Stacked as for launch: the orbiter on the tank's side, a booster either side. NASA's models paint it, each its part's sourced length, with their marks painted out, and with the orbiter's bay shut. No source read here gives how far apart the parts stand, so that and the outline of the line looks' orbiter are judged from photographs. No name, flag or mark is drawn. Front is the orbiter's belly side, so it stands behind the tank from the front: turn it, or show it alone.",
     facts: {
       height: m(56, S, { note: "Stacked. The tank's top stands this high." }),
       diameter: m(8.41, T, { note: "The tank, 27.6 feet.", others: [{ value: 8.7, source: S, note: "The Space Shuttle article's infobox says 8.7 m for the tank; the tank's own article says 27.6 feet." }] }),

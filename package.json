@@ -2,27 +2,82 @@
   "name": "@johnmorrisdotca/uchusen-rockets",
   "version": "0.2.2",
   "description": "Uchusen Rockets 宇宙船: line drawings and 3D views of rockets, as a web component. Every variant with its own sourced sizes, a typed way to assemble a rocket from parts, stack and separate. No logos. three.js is a peer dependency.",
-  "keywords": ["rocket", "rockets", "spaceship", "starship", "super-heavy", "falcon-9", "dragon", "spaceflight", "line-drawing", "svg", "3d", "3d-models", "glb", "gltf", "three", "threejs", "webgl", "web-component", "custom-element", "react", "typescript", "data"],
+  "keywords": [
+    "rocket",
+    "rockets",
+    "spaceship",
+    "starship",
+    "super-heavy",
+    "falcon-9",
+    "dragon",
+    "spaceflight",
+    "line-drawing",
+    "svg",
+    "3d",
+    "3d-models",
+    "glb",
+    "gltf",
+    "three",
+    "threejs",
+    "webgl",
+    "web-component",
+    "custom-element",
+    "react",
+    "typescript",
+    "data"
+  ],
   "homepage": "https://johnmorrisdotca.github.io/uchusen-rockets/",
-  "repository": { "type": "git", "url": "git+https://github.com/johnmorrisdotca/uchusen-rockets.git" },
-  "bugs": { "url": "https://github.com/johnmorrisdotca/uchusen-rockets/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnmorrisdotca/uchusen-rockets.git"
+  },
+  "bugs": {
+    "url": "https://github.com/johnmorrisdotca/uchusen-rockets/issues"
+  },
   "author": "John Morris",
   "license": "MIT AND CC-BY-4.0 AND ODbL-1.0",
   "type": "module",
-  "sideEffects": ["./dist/element.js"],
+  "sideEffects": [
+    "./dist/element.js"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" },
-    "./build": { "types": "./dist/build/index.d.ts", "import": "./dist/build/index.js", "default": "./dist/build/index.js" },
-    "./element": { "types": "./dist/element.d.ts", "import": "./dist/element.js", "default": "./dist/element.js" },
-    "./react": { "types": "./dist/react.d.ts", "import": "./dist/react.js", "default": "./dist/react.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./build": {
+      "types": "./dist/build/index.d.ts",
+      "import": "./dist/build/index.js",
+      "default": "./dist/build/index.js"
+    },
+    "./element": {
+      "types": "./dist/element.d.ts",
+      "import": "./dist/element.js",
+      "default": "./dist/element.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "default": "./dist/react.js"
+    },
     "./assets/*": "./dist/assets/*",
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "LICENSE", "LICENSES", "NOTICE.md", "CHANGELOG.md"],
-  "engines": { "node": ">=22" },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "LICENSES",
+    "NOTICE.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.json && node scripts/make-assets.ts",
     "assets": "node scripts/make-assets.ts",
@@ -38,10 +93,21 @@
     "dev": "pnpm site && node scripts/dev.ts",
     "test:demo": "pnpm site && playwright test",
     "screenshots": "pnpm site && node scripts/screenshots.ts",
-    "models": "node scripts/reduce-models.ts"
+    "models": "node scripts/reduce-models.ts",
+    "models:nasa": "node scripts/reduce-nasa.ts"
   },
-  "peerDependencies": { "react": ">=18", "three": ">=0.170.0" },
-  "peerDependenciesMeta": { "react": { "optional": true }, "three": { "optional": true } },
+  "peerDependencies": {
+    "react": ">=18",
+    "three": ">=0.170.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "three": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@gltf-transform/core": "4.5.1",
@@ -53,6 +119,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@types/three": "0.186.0",
+    "draco3dgltf": "1.5.7",
     "esbuild": "0.25.12",
     "eslint": "9.39.5",
     "meshoptimizer": "1.3.0",
@@ -62,7 +129,13 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.1"
   },
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "packageManager": "pnpm@10.11.0",
-  "pnpm": { "onlyBuiltDependencies": ["esbuild"] }
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
 }
