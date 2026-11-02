@@ -13,6 +13,8 @@ import { FALCON_1_BUILDS } from "./falcon1.ts";
 import { SATURN_V_BUILDS } from "./saturn.ts";
 import { SHUTTLE_VARIANTS } from "../data/shuttle.ts";
 import { SHUTTLE_BUILDS } from "./shuttle.ts";
+import { SLS_VARIANTS } from "../data/sls.ts";
+import { SLS_BUILDS } from "./sls.ts";
 import type { StackBuild } from "./stacks.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
@@ -139,8 +141,8 @@ entries.push(
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS];
-const stacks: readonly StackBuild[] = [...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS];
+const stackFacts = [...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS];
+const stacks: readonly StackBuild[] = [...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);

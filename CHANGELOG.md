@@ -6,6 +6,7 @@
 - Cargo Dragon 2, on the sizes its article gives for both versions of Dragon 2, with no windows. Falcon 9 Block 4 stays unlisted: the Full Thrust article was read too and gives it no sizes of its own. Full Thrust keeps that article's 71 m beside its 69.8 m.
 - Saturn V with the Apollo spacecraft, drawn by this package's code from sourced lengths and widths: 7 parts, 4,658 triangles and 143 KB, well under the largest code-made mesh (Starship Block 4, 17,220 triangles and 508 KB).
 - The Space Shuttle, stacked with its external tank and two boosters, drawn by this package's code from each part's own article: 5,554 triangles and 156 KB.
+- The Space Launch System, Block 1 with Orion, drawn by this package's code: 5,172 triangles and 155 KB.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 
 ## [0.2.2]

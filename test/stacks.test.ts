@@ -69,6 +69,20 @@ test("the Space Shuttle stands as sourced: the tank's top at the stack's height,
   assert.match(variantOf("space-shuttle")?.note ?? "", /No name, flag or mark/);
 });
 
+const WHOLE_HEIGHTS: readonly (readonly [string, string, number])[] = [
+  ["sls", "block-1", 98.15],
+];
+
+test("each rocket's parts add up to its sourced whole, and its engines are the sourced count", () => {
+  for (const [rocket, variant, height] of WHOLE_HEIGHTS) {
+    assert.equal(variantOf(rocket, variant)?.facts.height.value, height, rocket);
+    assert.ok(Math.abs((check({ rocket, variant }).size?.height ?? 0) - height) < 0.01, `${rocket} ${variant}: ${check({ rocket, variant }).size?.height}`);
+  }
+  assert.equal(bells("sls-block-1-first-stage"), 4);
+  assert.equal(partEntry("sls-block-1-first-stage")?.record.height, 64.6);
+  assert.equal(partEntry("sls-block-1-srb-left")?.record.height, 53.95);
+});
+
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {

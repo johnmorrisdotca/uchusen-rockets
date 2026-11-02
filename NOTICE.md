@@ -39,6 +39,7 @@ Sizes are plain facts, each with its source in `src/data/sources.ts` and on the 
 | SpaceX, Falcon 1 Launch Vehicle Payload User's Guide, Rev 7, 2008, read through the Internet Archive | Falcon 1's and Falcon 1e's heights and fairings. Facts only: no drawing is copied |
 | Wikipedia: Saturn V, Apollo command and service module, Apollo (spacecraft), Saturn V instrument unit, Rocketdyne F-1, Rocketdyne J-2 (CC BY-SA 4.0, read 2026-11-02) | Saturn V's and the Apollo spacecraft's lengths and widths, and the engines' sizes. Facts only: no text is copied |
 | Wikipedia: Space Shuttle, Space Shuttle orbiter, Space Shuttle external tank, Space Shuttle Solid Rocket Booster, RS-25 (CC BY-SA 4.0, read 2026-11-02) | The Shuttle's parts' lengths and widths, the wingspan and the engine's sizes. Facts only: no text is copied |
+| Wikipedia: Space Launch System, Orion (spacecraft), European Service Module (CC BY-SA 4.0, read 2026-11-02) | Its sizes. Facts only: no text is copied |
 | SatNews, 2026-05-14 | Grid fins, four to three and about 50% larger; about 1.5 m taller |
 | Gunter's Space Page | Version names, first flights by serial number; one set of sizes per family, not used for sizes |
 | NASASpaceflight, 2025-05-30, and Ars Technica, 2024-04-08 | Known through Wikipedia's citations; not read directly |

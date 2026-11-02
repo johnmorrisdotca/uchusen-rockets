@@ -62,3 +62,21 @@ export const skirt = (material: MaterialName, r: number, y0: number, y1: number,
 
 /** A cone over an engine, off the axis: a fairing at the foot of a stage. */
 export const pod = (material: MaterialName, at: readonly [number, number], r0: number, y0: number, r1: number, y1: number, extra: Extra = {}): Lathe => ({ kind: "lathe", material, at, segs: 14, profile: [[r0, y0], [r1, y1]], ...extra });
+
+/** A fairing: straight from the joint, then a rounded nose, with the seam where its halves meet. */
+export function fairingShell(material: MaterialName, r: number, height: number, straight: number, blunt = 1.4, jointRadius = r): Piece[] {
+  const shell = nose(material, r, straight, height, blunt);
+  const seam = (a: number): Vec3[] => shell.profile.map(([x, y]) => [(x * 1.005) * Math.sin(a), y, (x * 1.005) * Math.cos(a)] as Vec3);
+  return [
+    { ...shell, profile: [[jointRadius, 0], ...shell.profile], rings: [straight] },
+    floor(jointRadius, 0),
+    { kind: "lines", weight: "feature", paths: [seam(deg(90)), seam(deg(-90))] },
+  ];
+}
+
+/** Legs folded against a hull, as dark ribs from the foot up. */
+export const foldedLegs = (material: MaterialName, r: number, azimuths: readonly number[], foot: number, top: number, width: number): Plate[] =>
+  azimuths.map((az) => {
+    const f = radial(deg(az));
+    return strut(material, pointOf(f, r + 0.1, foot), pointOf(f, r + 0.1, top), width, 0.3, { plain: false });
+  });

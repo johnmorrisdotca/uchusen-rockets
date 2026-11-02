@@ -45,6 +45,9 @@ export const SOURCES = {
   "wikipedia-shuttle-tank": { title: "Space Shuttle external tank (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Shuttle_external_tank", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-shuttle-srb": { title: "Space Shuttle Solid Rocket Booster (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Shuttle_Solid_Rocket_Booster", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-rs-25": { title: "RS-25 (the infobox and the nozzle's sizes)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/RS-25", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-sls": { title: "Space Launch System (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Space_Launch_System", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-orion": { title: "Orion (spacecraft) (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Orion_(spacecraft)", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-esm": { title: "European Service Module", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/European_Service_Module", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-falcon-heavy": { title: "Falcon Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 
