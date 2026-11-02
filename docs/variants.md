@@ -163,6 +163,18 @@ A scene, built from OpenStreetMap's places and outlines (`© OpenStreetMap contr
 
 These are mappers' figures, not surveys. The tanks' and houses' numbers are not counts.
 
+## Real flights
+
+`FLIGHTS` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. Nothing plays them yet.
+
+```ts
+import { flightsOf } from "@johnmorrisdotca/uchusen-rockets";
+
+const flight5 = flightsOf("starship").find((flight) => flight.id === "starship-flight-5");
+flight5.date; // "2024-10-13"
+flight5.variant; // "v1"
+```
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Vulcan Centaur and Ariane 6.

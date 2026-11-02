@@ -1,7 +1,7 @@
 // The rockets drawn wholly by this package's code: each is drawn to its sourced height, its engines are the sourced count, and each part has the record every part has.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { check, figureWords, partEntry, ROCKETS, variantOf } from "../src/index.ts";
+import { check, figureWords, FLIGHTS, flightsOf, partEntry, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
 import type { Piece } from "../src/model/pieces.ts";
 import { build, buildPart } from "../src/build/index.ts";
 
@@ -159,6 +159,21 @@ test("Starbase is the map's places, what is built only, in few pieces", () => {
   const materials = city.parts.reduce((sum, part) => sum + part.mesh.faces.size, 0);
   assert.ok(materials < 60, `${materials} meshes`);
   assert.ok(city.glb().bytes.byteLength < 300 * 1024);
+});
+
+test("real flights name a variant there is, a known source, and the source's own words", () => {
+  for (const flight of FLIGHTS) {
+    assert.ok(variantOf(flight.rocket, flight.variant), flight.id);
+    assert.ok(Object.hasOwn(SOURCES, flight.source), flight.id);
+    assert.match(flight.date, /^\d{4}-\d{2}-\d{2}$/);
+  }
+  const five = flightsOf("starship").find((flight) => flight.id === "starship-flight-5");
+  assert.equal(five?.date, "2024-10-13");
+  assert.match(five?.outcome ?? "", /Caught/);
+  assert.match(five?.vehicles ?? "", /B12.*S30/);
+  assert.deepEqual(flightsOf("falcon-1").map((flight) => flight.launch), ["Failure", "Failure", "Failure", "Success", "Success"]);
+  const dates = flightsOf("starship").map((flight) => flight.date);
+  assert.deepEqual(dates, [...dates].sort());
 });
 
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {

@@ -3,6 +3,8 @@ export { PLANNED_ROCKETS, ROCKETS, partIdOf, SLOT_NAMES, variantOf } from "./roc
 export type { PlannedRocket, RocketEntry, RocketStatus } from "./rockets.ts";
 export { blank, figureWords } from "./data/types.ts";
 export type { Disagreement, Figure, Variant, VariantFacts, VariantStatus } from "./data/types.ts";
+export { FLIGHTS, flightsOf } from "./data/flights.ts";
+export type { Flight } from "./data/flights.ts";
 export { SOURCES } from "./data/sources.ts";
 export type { Source, SourceId } from "./data/sources.ts";
 export { creditLine, MODEL_CREDITS } from "./data/credits.ts";
