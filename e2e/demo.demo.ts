@@ -712,6 +712,8 @@ test.describe("the way it turns", () => {
     await press(page, "variant-v2");
     await expect(button(page, "right")).toHaveAttribute("aria-pressed", "true");
     expect(await bar(page).getAttribute("speed")).toBe("5");
+    // on a phone those buttons are below the view, and it does not turn out of sight
+    await hero(page).scrollIntoViewIfNeeded();
     const later = await yaw(page);
     await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeGreaterThan(later + 1);
     await stopTurn(page);
