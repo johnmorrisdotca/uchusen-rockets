@@ -38,7 +38,7 @@ NASA's models are from its 3D Resources, listed as the "NASA 3D Models" datasets
 
 **No NASA logo, insignia, flag or lettering is in any file here.** The worm, the meatball, the seal, a mission patch, a flag and a country's or vehicle's name were each looked for, in the pictures and from every side of the result, and removed. Whoever uses these files for something else must keep to NASA's guidelines themselves, and, for merchandise, to its Merchandise Guidelines.
 
-The dataset addresses named below are the record of what each model is. Their download addresses now lead to https://science.nasa.gov/3d-resources/, which says its assets are mirrored on https://github.com/nasa/NASA-3D-Resources, and the files were read from there on 2026-11-02; their triangle counts match the datasets' where a dataset states one.
+The dataset addresses named below are the record of what each model is. Their download addresses now lead to https://science.nasa.gov/3d-resources/, which says its assets are mirrored on https://github.com/nasa/NASA-3D-Resources, and the files were read from there on 2026-11-02; where a dataset states a polygon count, the file's triangles match it or come within 4%.
 
 | Files | Title | Dataset | What was changed |
 | --- | --- | --- | --- |
