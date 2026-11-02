@@ -26,11 +26,7 @@ const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
-// The auto-turn is an introduction: it stops after a minute and whenever the view is out of sight, and the Play button starts it again.
-window.setTimeout(() => bar.pause(), 60_000);
-new IntersectionObserver(([seen]) => {
-  if (!seen.isIntersecting) bar.pause();
-}).observe(hero);
+// The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
 const state = { rocket: "starship", variant: "v3", show: "together", look: "line" as LookName, view: "three-quarter" as ViewName };
 
 function chip(label: string, testid: string, on: () => void): HTMLButtonElement {

@@ -21,8 +21,8 @@ importers:
         specifier: 4.5.1
         version: 4.5.1(@types/node@24.10.1)
       '@johnmorrisdotca/kazoku-ui':
-        specifier: 0.2.1
-        version: 0.2.1
+        specifier: ^0.7.3
+        version: 0.7.3
       '@playwright/test':
         specifier: 1.64.0
         version: 1.64.0
@@ -440,8 +440,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@johnmorrisdotca/kazoku-ui@0.2.1':
-    resolution: {integrity: sha512-GOKieJ+aCMJVP9CwThh1bVNUDFuAmV4Uv41Gdn6PMj8NWdXYD1RQmIrTJPwPpv5AmZWLlJS5qYT11iEBB4pLvg==}
+  '@johnmorrisdotca/kazoku-ui@0.7.3':
+    resolution: {integrity: sha512-NethtIFZhxHLcKKuCDnXJtQn4174lznqv/MS2gXHY4XrM6Dtaoiv6zQY68qVRxRJw/udmYTl9Jzttt2FhGD3hg==}
     engines: {node: '>=22'}
 
   '@playwright/test@1.64.0':
@@ -1240,7 +1240,7 @@ snapshots:
   '@img/sharp-win32-x64@0.35.5':
     optional: true
 
-  '@johnmorrisdotca/kazoku-ui@0.2.1': {}
+  '@johnmorrisdotca/kazoku-ui@0.7.3': {}
 
   '@playwright/test@1.64.0':
     dependencies:

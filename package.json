@@ -47,7 +47,7 @@
     "@gltf-transform/core": "4.5.1",
     "@gltf-transform/extensions": "4.5.1",
     "@gltf-transform/functions": "4.5.1",
-    "@johnmorrisdotca/kazoku-ui": "0.2.1",
+    "@johnmorrisdotca/kazoku-ui": "^0.7.3",
     "@playwright/test": "1.64.0",
     "@types/node": "24.10.1",
     "@types/react": "19.2.7",

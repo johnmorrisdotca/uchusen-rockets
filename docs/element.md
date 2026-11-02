@@ -56,7 +56,7 @@ Read from a script: `element.report` (the label, parts, credits and fit), `eleme
 - Zoom is the camera's, so a zoomed 3D view stays sharp. The camera keeps the distance that holds the whole rocket, so turning never makes it breathe.
 - Tilt to turn on a phone still works, added to the chosen view.
 - The drawing is zoomed and moved by its `viewBox`, so it is as sharp as its box at any zoom and never grows past it.
-- `autoplay` never stops by itself and the controls keep sending changes while the element is out of sight (the element then draws nothing). A page that wants a gentle introduction can call `controls.pause()` after a while and when the element leaves the screen, as the demo does.
+- `autoplay` is idle while the element is out of sight (a scrolled-away view or a hidden tab gets no change events and no frames) and goes on from where it was when it is back. `autoplay-for="60"` ends the turn by itself after a minute of turning, for a gentle introduction, as the demo does; a Play button starts it again (kazoku-ui 0.7.1 or later).
 
 `setAssetBase(url)` says where the models are for every element on a page. By default they are beside the module, in `./assets/`.
 

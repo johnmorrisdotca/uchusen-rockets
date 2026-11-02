@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' %KAZOKU_STYLE%; img-src 'self' data: blob:; connect-src 'self' blob: data:; base-uri 'none'; form-action 'none'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob: data:; base-uri 'none'; form-action 'none'" />
     <title>Uchusen Rockets</title>
     <meta name="description" content="Rockets drawn from sourced sizes: a line drawing, thick lines and a painted 3D view of each variant, together, apart and each part alone." />
     <link rel="stylesheet" href="demo.css" />
@@ -17,7 +17,7 @@
       <section class="stage-row" id="main-view" aria-label="The rocket">
         <div class="stage-box">
           <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter"></uchusen-rocket>
-          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay speed="5" theme="dark"></kazoku-view-controls>
+          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark"></kazoku-view-controls>
           <p class="hint">Drag to turn it. The controls tip, zoom and move it; Ctrl or Command with the wheel zooms.</p>
         </div>
         <div class="panel">
