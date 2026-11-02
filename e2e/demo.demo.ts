@@ -932,3 +932,63 @@ test("the React wrapper draws the element", async ({ page }) => {
   await expect(node).toHaveAttribute("data-look", "thick");
   expect(problems).toEqual([]);
 });
+
+test("the Earth behind the rocket: off by default, kept in the address, behind the rocket, and the rocket still turns", async ({ page, browserName }) => {
+  const problems = watch(page);
+  const earth = page.locator('[data-testid="earth"]');
+  const credit = page.locator('[data-testid="earth-credit"]');
+  await page.goto(URL);
+  await expect(page.locator('[data-testid="background-none"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(earth).toBeHidden();
+  await expect(credit).toBeHidden();
+  await stopTurn(page);
+  if (is3d(browserName)) await reach3d(page);
+
+  await press(page, "background-earth");
+  await expect(page.locator('[data-testid="background-earth"]')).toHaveAttribute("aria-pressed", "true");
+  // on a phone the row is below the view, and nothing is drawn out of sight: it is drawn when the view comes back
+  await hero(page).scrollIntoViewIfNeeded();
+  await expect(earth.locator("svg")).toBeVisible({ timeout: 30_000 });
+  await expect(earth).toHaveAttribute("data-form", "line");
+  await expect(credit).toContainText("Natural Earth");
+  await expect(credit).toContainText("NASA");
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("background")).toBe("earth");
+
+  // it sits behind, takes no press, and a drag still turns the rocket
+  const box = (await hero(page).boundingBox())!;
+  const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.id, middle)).toBe("hero");
+  const yaw = () => bar(page).evaluate((node) => (node as HTMLElement & { state: { yaw: number } }).state.yaw);
+  const before = await yaw();
+  await page.mouse.move(middle.x, middle.y);
+  await page.mouse.down();
+  await page.mouse.move(middle.x + 60, middle.y, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(yaw).not.toBe(before);
+
+  // the view's choices and this one share the address
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("yaw")).not.toBeNull();
+  expect(new globalThis.URL(page.url()).searchParams.get("background")).toBe("earth");
+  await page.reload();
+  await expect(page.locator('[data-testid="background-earth"]')).toHaveAttribute("aria-pressed", "true");
+  await hero(page).scrollIntoViewIfNeeded();
+  await expect(earth.locator("svg")).toBeVisible({ timeout: 30_000 });
+
+  // each look has its own form, and the realistic one's pictures load under the strict policy
+  await press(page, "look-thick");
+  await expect(earth).toHaveAttribute("data-form", "thick");
+  if (is3d(browserName)) {
+    await press(page, "look-painted");
+    await expect(earth).toHaveAttribute("data-form", "realistic", { timeout: 30_000 });
+    await expect(earth.locator("chikyu-earth-realistic")).toHaveAttribute("data-state", "live", { timeout: 90_000 });
+    await expect(earth.locator("svg")).toHaveCount(0);
+    await press(page, "look-line");
+    await expect(earth.locator("chikyu-earth-realistic")).toHaveCount(0);
+  }
+
+  await press(page, "background-none");
+  await expect(earth).toBeHidden();
+  await expect(earth.locator("svg")).toHaveCount(0);
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("background")).toBeNull();
+  expect(problems).toEqual([]);
+});

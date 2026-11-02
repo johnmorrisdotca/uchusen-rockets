@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob: data:; base-uri 'none'; form-action 'none'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'sha256-7BXnt0YqZnYTRq+B7bXxcm40QO7qsoo/M8KQwMR/B/A='; img-src 'self' data: blob:; connect-src 'self' blob: data:; base-uri 'none'; form-action 'none'" />
     <title>Uchusen Rockets</title>
     <meta name="description" content="Rockets drawn from sourced sizes: a line drawing, thick lines and a painted 3D view of each variant, together, apart and each part alone." />
     <link rel="stylesheet" href="demo.css" />
@@ -16,8 +16,11 @@
     <main>
       <section class="stage-row" id="main-view" aria-label="The rocket">
         <div class="stage-box">
-          <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter"></uchusen-rocket>
-          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark"></kazoku-view-controls>
+          <div class="view-space">
+            <div class="earth-back" id="earth-back" data-testid="earth" aria-hidden="true" hidden></div>
+            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter"></uchusen-rocket>
+          </div>
+          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark" controls="advanced"></kazoku-view-controls>
           <div class="chips turn-row" id="turn" role="group" aria-label="Which way it turns" data-testid="turn"></div>
           <p class="hint">Drag to turn it. The controls tip, zoom and move it; Ctrl or Command with the wheel zooms.</p>
         </div>
@@ -41,6 +44,11 @@
           <div class="field">
             <h2 id="view-title">From</h2>
             <div class="chips" id="views" role="group" aria-labelledby="view-title"></div>
+          </div>
+          <div class="field">
+            <h2 id="background-title">Background</h2>
+            <div class="chips" id="backgrounds" role="group" aria-labelledby="background-title"></div>
+            <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden>The Earth: <a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a>. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</p>
           </div>
           <div class="field">
             <h2 id="engines-title">Engines</h2>
@@ -110,10 +118,15 @@
         <ul id="source-list" class="sources" data-testid="sources"></ul>
         <h3>Models</h3>
         <ul id="credit-list" class="sources" data-testid="credits"></ul>
+        <h3>The Earth behind the rocket</h3>
+        <ul class="sources" data-testid="earth-credits">
+          <li><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a>, MIT, draws it. Its country outlines are <a href="https://www.naturalearthdata.com" rel="noopener">Natural Earth</a>, public domain, drawn with d3-geo.</li>
+          <li>The Painted look's pictures are NASA's: Blue Marble: Next Generation (NASA Earth Observatory, Reto Stöckli), for the day side, the water and the clouds, and Earth at Night, Black Marble 2016 (NASA Earth Observatory, Suomi NPP VIIRS data, Miguel Roman, NASA's Goddard Space Flight Center). NASA does not endorse this project.</li>
+        </ul>
       </section>
     </main>
     <footer class="foot">
-      <p>No logo, wordmark or flag is on any rocket here. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. The code is MIT; the painted models are CC BY 4.0, credited above.</p>
+      <p>No logo, wordmark or flag is on any rocket here. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. The code is MIT; the painted models are CC BY 4.0, credited above; the pictures of the Earth are NASA's.</p>
       <p><a href="https://github.com/johnmorrisdotca/uchusen-rockets">Source on GitHub</a></p>
     </footer>
     <script type="module" src="js/demo.js"></script>
