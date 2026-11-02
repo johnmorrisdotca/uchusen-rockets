@@ -126,6 +126,20 @@ The parts add to 17 m, and no source read here says what the other metre is: it 
 
 The fairing's length is what the whole leaves, here a plain one. The waist and the boosters' lean are judged from photographs.
 
+## Drone ships and landing zones
+
+Each is drawn with a Falcon 9 Block 5 first stage standing on it, legs out, as its own part: `show="deck"` or `show="pad"` leaves it out.
+
+| Variant | Size | In service |
+| --- | --- | --- |
+| `droneship` `ocisly` Of Course I Still Love You | Deck 91.44 by 51.82 m: 300 by 170 feet for the first barge of its kind, and its article says this one is nearly identical | June 2015 |
+| `droneship` `jrti` Just Read the Instructions | No source for this ship; drawn at the same size | 2016-01-17, first use |
+| `droneship` `asog` A Shortfall of Gravitas | No source for this ship; drawn at the same size | 2021-07-09, first sea trials |
+| `landing-zone` `lz-1` Cape Canaveral | 85.95 m across (282 feet) | 2015-12-22, first landing |
+| `landing-zone` `lz-4` Vandenberg | No source; drawn at LZ-1's size | 2018, landings began |
+
+No name, target mark or logo is drawn: each deck and pad has a plain ring.
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Vulcan Centaur and Ariane 6.

@@ -69,9 +69,10 @@ function factsFor(variant: Variant): HTMLElement[] {
     for (const slot of variant.slots) rows.push([`${name(slot)} height`, variant.facts.parts[slot]]);
   } else rows.push([`${name(show)} height`, variant.facts.parts[show]]);
   rows.push(["Diameter", variant.facts.diameter]);
+  for (const [label, figure] of Object.entries(variant.facts.sizes ?? {})) rows.push([label, figure]);
   // a part with no engines of its own has no row for them
   for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) if (variant.facts.engines[slot]) rows.push([`${name(slot)} engines`, variant.facts.engines[slot]]);
-  rows.push(["First flew", variant.firstFlight]);
+  rows.push([variant.firstWord ?? "First flew", variant.firstFlight]);
   const table = el("table", { className: "sizes" });
   for (const [label, figure] of rows) {
     const row = el("tr");

@@ -7,7 +7,7 @@ const figuresOf = (rocket: string, id: string): [string, Figure<number | string>
   const v = variantOf(rocket, id);
   assert.ok(v);
   const f = v.facts;
-  return [["height", f.height], ["diameter", f.diameter], ["first", v.firstFlight], ...Object.entries(f.parts), ...Object.entries(f.engines), ...Object.entries(f.more)] as [string, Figure<number | string>][];
+  return [["height", f.height], ["diameter", f.diameter], ["first", v.firstFlight], ...Object.entries(f.parts), ...Object.entries(f.engines), ...Object.entries(f.more), ...Object.entries(f.sizes ?? {})] as [string, Figure<number | string>][];
 };
 
 test("no variant's first flight or sizes come from nowhere: the dates are the launch list's", () => {

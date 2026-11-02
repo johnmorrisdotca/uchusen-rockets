@@ -21,6 +21,8 @@ import { ELECTRON_VARIANTS } from "../data/electron.ts";
 import { ELECTRON_BUILDS } from "./electron.ts";
 import { SOYUZ_VARIANTS } from "../data/soyuz.ts";
 import { SOYUZ_BUILDS } from "./soyuz.ts";
+import { DRONESHIP_VARIANTS, LANDING_ZONE_VARIANTS } from "../data/landing.ts";
+import { DRONESHIP_BUILDS, LANDING_ZONE_BUILDS } from "./landing.ts";
 import type { StackBuild } from "./stacks.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
@@ -147,8 +149,8 @@ entries.push(
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS];
-const stacks: readonly StackBuild[] = [...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS];
+const stackFacts = [...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS];
+const stacks: readonly StackBuild[] = [...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);

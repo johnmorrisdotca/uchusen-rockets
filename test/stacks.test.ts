@@ -92,6 +92,24 @@ test("each rocket's parts add up to its sourced whole, and its engines are the s
   assert.ok(Math.abs((build({ rocket: "soyuz" }).boundsOf("together").max[2] ?? 0) * Math.SQRT2 - 10.3 / 2) < 0.1, "the fins, at 45 degrees, give the sourced width");
 });
 
+test("a landing stands on each ship and pad, and only the sourced sizes carry a source", () => {
+  const ocisly = variantOf("droneship", "ocisly");
+  assert.equal(ocisly?.facts.sizes?.["Deck length"].value, 91.44);
+  assert.equal(ocisly?.facts.sizes?.["Deck width"].value, 51.82);
+  assert.equal(figureWords(ocisly?.facts.sizes?.["Deck width"], " m"), "51.82 m, nearly identical to the first barge");
+  for (const id of ["jrti", "asog"]) assert.equal(variantOf("droneship", id)?.facts.sizes?.["Deck length"].value, null, id);
+  assert.equal(variantOf("landing-zone", "lz-1")?.facts.diameter.value, 85.95);
+  assert.equal(variantOf("landing-zone", "lz-4")?.facts.diameter.value, null);
+  const ship = build({ rocket: "droneship" });
+  const deckTop = ship.boundsOf("deck").max[1];
+  const stage = ship.placesOf("together").find((place) => place.slot === "landed");
+  assert.equal(stage?.at[1], partEntry("droneship-ocisly-deck")?.record.height);
+  assert.ok(deckTop > 6);
+  assert.equal(build({ rocket: "droneship" }).boundsOf("landed").min[1], 0);
+  for (const words of [ocisly?.note ?? "", variantOf("landing-zone", "lz-1")?.note ?? ""]) assert.ok(/logo/.test(words));
+  assert.equal(bells("droneship-ocisly-landed"), 9);
+});
+
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {

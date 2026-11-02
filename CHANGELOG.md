@@ -10,6 +10,7 @@
 - New Glenn 7×2 (2,732 triangles, 84 KB) and Electron (2,812 triangles, 81 KB), drawn by this package's code.
 - Other makers' rockets share one scale in `<uchusen-lineup>`, and each lists its own sources.
 - Soyuz-2 with its four boosters, drawn by this package's code: 5,592 triangles and 160 KB. A lathe's axis may lean (`lean`), for its boosters. Vulcan Centaur and Ariane 6 are listed in `PLANNED_ROCKETS` with their sourced facts, to come.
+- Drone ships (Of Course I Still Love You, Just Read the Instructions, A Shortfall of Gravitas) and landing zones (LZ-1, LZ-4), each with a landed Falcon 9 first stage, legs out: 2,988 and 3,084 triangles, 109 and 106 KB. A variant's other sizes are `facts.sizes`, and `firstWord` names its first date when it is not a flight.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 
 ## [0.2.2]

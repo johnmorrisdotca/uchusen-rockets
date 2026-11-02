@@ -108,6 +108,8 @@ function fairing(d: FalconDraw["fairing"], jointRadius: number): Piece[] {
 }
 
 export const falconFirstStage = (id: string) => firstStage(FALCON_DRAWS[id].first, true);
+/** A first stage with no legs of its own: for one that has landed and has them out. */
+export const falconFirstStageBare = (id: string) => firstStage({ ...FALCON_DRAWS[id].first, legs: false }, true);
 export const falconSecondStage = (id: string) => secondStage(FALCON_DRAWS[id].second);
 export const falconFairing = (id: string) => fairing(FALCON_DRAWS[id].fairing, R);
 

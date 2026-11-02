@@ -9,6 +9,7 @@ import { SLS_VARIANTS } from "./data/sls.ts";
 import { NEW_GLENN_VARIANTS } from "./data/newglenn.ts";
 import { ELECTRON_VARIANTS } from "./data/electron.ts";
 import { SOYUZ_VARIANTS } from "./data/soyuz.ts";
+import { DRONESHIP_VARIANTS, LANDING_ZONE_VARIANTS } from "./data/landing.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -47,6 +48,8 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "new-glenn": { id: "new-glenn", name: "New Glenn", status: "built", variants: NEW_GLENN_VARIANTS, defaultVariant: "7x2" },
   "electron": { id: "electron", name: "Electron", status: "built", variants: ELECTRON_VARIANTS, defaultVariant: "electron" },
   "soyuz": { id: "soyuz", name: "Soyuz", status: "built", variants: SOYUZ_VARIANTS, defaultVariant: "soyuz-2" },
+  droneship: { id: "droneship", name: "Drone ships", status: "built", variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
+  "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
 };
 
 const fig = (value: number, source: SourceId): Figure => ({ value, source });
@@ -86,6 +89,9 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "srb-right": "Solid rocket booster, right",
   orbiter: "Orbiter",
   "upper-stage": "Upper stage",
+  deck: "Deck and hull",
+  pad: "Pad",
+  landed: "Landed first stage",
   "booster-1": "Booster 1",
   "booster-2": "Booster 2",
   "booster-3": "Booster 3",

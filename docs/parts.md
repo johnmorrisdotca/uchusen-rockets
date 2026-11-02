@@ -67,6 +67,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | New Glenn | This package's code, from sourced sizes; the fairing is what the whole leaves, and the legs, strakes and paint are judged from photographs | This package's code. No model is used, and no name or mark is drawn |
 | Electron | This package's code, from sourced sizes; the metre the sources leave over is drawn as an interstage | This package's code. No model is used, and no name or mark is drawn |
 | Soyuz-2 | This package's code, from sourced sizes; the waist, the boosters' lean, the fairing and the paint judged from photographs | This package's code. No model is used, and no name or mark is drawn |
+| Drone ships and landing zones | This package's code; hull, equipment and legs judged from photographs | This package's code. No name, mark or logo is drawn |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
 

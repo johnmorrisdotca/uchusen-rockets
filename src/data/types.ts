@@ -27,7 +27,7 @@ export function figureWords(figure: Figure<number | string> | undefined, unit = 
   return figure.brief ? `${value}, ${figure.brief}` : value;
 }
 
-export type VariantStatus = "flown" | "announced" | "artist-model" | "test-vehicle";
+export type VariantStatus = "flown" | "announced" | "artist-model" | "test-vehicle" | "support";
 
 export interface VariantFacts {
   /** Overall height with every part in place, metres. */
@@ -39,6 +39,8 @@ export interface VariantFacts {
   engines: Readonly<Record<string, Figure<string>>>;
   /** Other facts, each with its own source. */
   more: Readonly<Record<string, Figure<number | string>>>;
+  /** Sizes that are not a height or a width, shown as they are named here: "Deck length". */
+  sizes?: Readonly<Record<string, Figure>>;
 }
 
 export interface Variant {
@@ -48,6 +50,8 @@ export interface Variant {
   /** What it is called, in a line: "Block 3 (V3)". */
   name: string;
   status: VariantStatus;
+  /** What to call its first date, when it is not a vehicle that flew: "In service". */
+  firstWord?: string;
   /** When this variant, in this form, first flew. Its `brief` says so when the form is not the block's first. */
   firstFlight: Figure<string>;
   /** The parts this variant has, in stacking order from the bottom. */
