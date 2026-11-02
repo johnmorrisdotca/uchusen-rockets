@@ -63,4 +63,20 @@ export const DRAGON_VARIANTS: readonly Variant[] = [
       more: {},
     },
   },
+  {
+    id: "crew-dragon-inside",
+    rocket: "dragon",
+    name: "Inside Crew Dragon, cut open",
+    status: "flown",
+    firstFlight: said("2019-03-02", D2, { note: "Uncrewed test flight. First crewed flight 2020-05-30." }),
+    slots: ["capsule"],
+    note: "The capsule cut in half, with a person of 1.8 m for scale. Its article gives four seats, the three-screen panel over the two centre seats, the cargo below them and 9.3 cubic metres under pressure. No source read here gives those parts' sizes or places: they are judged from one published picture of the cabin.",
+    facts: {
+      height: m(4.5, D2, { note: "The capsule." }),
+      diameter: m(4, D2),
+      parts: { capsule: m(4.5, D2) },
+      engines: {},
+      more: { seats: { value: 4, source: D2, note: "In normal operations; 7 in an emergency evacuation." }, pressurized: { value: "9.3 cubic metres", source: D2 } },
+    },
+  },
 ];

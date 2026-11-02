@@ -12,6 +12,7 @@
 - Soyuz-2 with its four boosters, drawn by this package's code: 5,592 triangles and 160 KB. A lathe's axis may lean (`lean`), for its boosters. Vulcan Centaur and Ariane 6 are listed in `PLANNED_ROCKETS` with their sourced facts, to come.
 - Drone ships (Of Course I Still Love You, Just Read the Instructions, A Shortfall of Gravitas) and landing zones (LZ-1, LZ-4), each with a landed Falcon 9 first stage, legs out: 2,988 and 3,084 triangles, 109 and 106 KB. A variant's other sizes are `facts.sizes`, and `firstWord` names its first date when it is not a flight.
 - The Starbase integration tower with its mount and arms: alone (1,748 triangles, 65 KB), with Block 3 stacked on it (18,092 triangles, 546 KB, the largest code-made mesh so far, just over Block 4's 17,220 and 508 KB, and under the 600 KB limit) or catching its booster (12,236 triangles, 380 KB).
+- Inside Crew Dragon, cut open, with its four seats, panel and cargo, and a person for scale: `dragon` `crew-dragon-inside`, 1,268 triangles and 41 KB.
 - `node scripts/budget.ts` lists what each rocket asks of a page: triangles and bytes.
 
 ## [0.2.2]

@@ -67,6 +67,7 @@ All are 3.7 m across. The second stage's vacuum engine is drawn 3.3 m across at 
 | `dragon` `dragon-1` Dragon 1 | 6.1 m | 3.7 m | 2010-12-08 | The original cargo Dragon, with solar wings. Not the later Cargo Dragon 2 |
 | `dragon` `dragon-2` Dragon 2 | 8.1 m; capsule 4.5 m | 4 m | 2019-03-02 | Crew Dragon, with windows |
 | `dragon` `cargo-dragon-2` Cargo Dragon 2 | 8.1 m; capsule 4.5 m | 4 m | 2020-12-06 | No windows and no SuperDraco abort engines. Its article gives one set of sizes for both versions of Dragon 2 |
+| `dragon` `crew-dragon-inside` Inside Crew Dragon | 4.5 m | 4 m | 2019-03-02 | Cut open, with a person of 1.8 m for scale. Four seats, the three-screen panel, the cargo and 9.3 cubic metres under pressure are from its article; their sizes and places have no source and are judged from one published picture of the cabin |
 | `grasshopper` | 32 m | No source | 2012-09-21, a 1.8 m hop | A test vehicle, retired on 2013-10-07 |
 
 ## Falcon 1

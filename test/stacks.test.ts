@@ -131,6 +131,17 @@ test("the launch tower is the FAA's height, the stack stands on the mount, and i
   assert.equal(wrong.issues[0].code, "wrong-kind");
 });
 
+test("inside Crew Dragon: the four sourced seats, and what has no source says so", () => {
+  const v = variantOf("dragon", "crew-dragon-inside");
+  assert.equal(v?.facts.more.seats.value, 4);
+  assert.equal(v?.facts.more.pressurized.value, "9.3 cubic metres");
+  assert.match(v?.note ?? "", /judged from one published picture/);
+  assert.equal(partEntry("dragon-crew-dragon-inside-capsule")?.record.height, 4.5);
+  const seats = (partEntry("dragon-crew-dragon-inside-capsule")?.pieces() ?? []).filter((piece) => piece.kind === "plate" && piece.material === "white");
+  assert.equal(seats.length, 4);
+  assert.equal(partEntry("dragon-crew-dragon-inside-capsule")?.record.painted, null);
+});
+
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {
