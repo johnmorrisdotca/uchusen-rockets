@@ -16,7 +16,7 @@ test.beforeEach(({ browserName }, info) => {
 /** Counts what the page asks of the graphics card, from before any script runs. */
 const COUNT = () => {
   type Ctx = (WebGLRenderingContext | WebGL2RenderingContext) & { isContextLost(): boolean };
-  const seen = { contexts: [] as Ctx[], made: {} as Record<string, number>, freed: {} as Record<string, number>, frames: 0 };
+  const seen = { contexts: [] as Ctx[], made: {} as Record<string, number>, freed: {} as Record<string, number>, frames: 0, asked: 0 };
   const getContext = HTMLCanvasElement.prototype.getContext;
   // @ts-expect-error a wrapper with the same overloads is not worth writing out
   HTMLCanvasElement.prototype.getContext = function (type: string, ...rest: unknown[]) {
@@ -40,6 +40,7 @@ const COUNT = () => {
   let last = -1;
   const frame = window.requestAnimationFrame.bind(window);
   window.requestAnimationFrame = (callback) => {
+    seen.asked++;
     return frame((time) => {
       if (time !== last) seen.frames++;
       last = time;
@@ -49,12 +50,12 @@ const COUNT = () => {
   Object.assign(window, { __seen: seen });
 };
 
-type Seen = { contexts: { isContextLost(): boolean }[]; made: Record<string, number>; freed: Record<string, number>; frames: number };
+type Seen = { contexts: { isContextLost(): boolean }[]; made: Record<string, number>; freed: Record<string, number>; frames: number; asked: number };
 const usage = (page: Page) =>
   page.evaluate(() => {
     const seen = (window as unknown as { __seen: Seen }).__seen;
     const live = (kind: string) => (seen.made[kind] ?? 0) - (seen.freed[kind] ?? 0);
-    return { contexts: seen.contexts.filter((context) => !context.isContextLost()).length, buffers: live("Buffer"), arrays: live("VertexArray"), textures: live("Texture"), pageFrames: seen.frames };
+    return { contexts: seen.contexts.filter((context) => !context.isContextLost()).length, buffers: live("Buffer"), arrays: live("VertexArray"), textures: live("Texture"), programs: live("Program"), framebuffers: live("Framebuffer"), pageFrames: seen.frames, asked: seen.asked };
   });
 const drawn = (page: Page) => hero(page).evaluate((node) => Number((node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0));
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
@@ -69,6 +70,18 @@ const measure = async (page: Page, frames = 12) => {
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(COUNT);
+});
+
+test("these tests draw in software, never on this machine's graphics card", async ({ page }) => {
+  await page.goto(URL);
+  const renderer = await page.evaluate(() => {
+    const gl = document.createElement("canvas").getContext("webgl2");
+    const info = gl?.getExtension("WEBGL_debug_renderer_info");
+    const name = info ? String(gl?.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    return name;
+  });
+  expect(renderer).toMatch(/swiftshader/i);
 });
 
 test("it draws at most once a frame while it spins on its own, and not at all once it is still", async ({ page }) => {
@@ -150,17 +163,21 @@ test("changes give back what they took: contexts, buffers, vertex arrays and tex
     await press(page, "look-line");
     await settle(page, 600);
   };
-  // the first round fills the caches that are kept on purpose
-  await round();
-  const first = await usage(page);
-  await round();
-  await round();
-  await round();
-  const last = await usage(page);
-  expect(last.contexts).toBe(1);
-  expect(last.buffers).toBeLessThanOrEqual(first.buffers);
-  expect(last.arrays).toBeLessThanOrEqual(first.arrays);
-  expect(last.textures).toBeLessThanOrEqual(first.textures);
+  // the first rounds fill the caches that are kept on purpose; how much is held at any moment depends on what has been drawn yet, so it is the most held that must not grow
+  const peak = { buffers: 0, arrays: 0, textures: 0 };
+  for (let i = 0; i < 2; i++) {
+    await round();
+    const now = await usage(page);
+    for (const key of ["buffers", "arrays", "textures"] as const) peak[key] = Math.max(peak[key], now[key]);
+  }
+  for (let i = 0; i < 4; i++) {
+    await round();
+    const now = await usage(page);
+    expect(now.contexts).toBe(1);
+    expect(now.buffers).toBeLessThanOrEqual(peak.buffers);
+    expect(now.arrays).toBeLessThanOrEqual(peak.arrays);
+    expect(now.textures).toBeLessThanOrEqual(peak.textures);
+  }
 });
 
 test("a lost context is let go, the drawing takes over, and nothing keeps drawing", async ({ page }) => {
@@ -214,5 +231,248 @@ test.describe("on a 5K screen", () => {
       expect(now.w).toBeLessThanOrEqual(2560 * 2);
       expect(now.transform).toBe("");
     }
+  });
+});
+
+// ------------------------------------------------------------- the engines
+const pause = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+const canvasData = (page: Page, key: string) => hero(page).evaluate((node, name) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset[name] ?? "", key);
+/** Nothing is drawn or asked for, over `ms`, once whatever is moving has run down. */
+const expectIdle = async (page: Page, ms = 2000) => {
+  await expect
+    .poll(async () => {
+      const mark = await drawn(page);
+      await settle(page, 1000);
+      return (await drawn(page)) - mark;
+    }, { timeout: 90_000 })
+    .toBe(0);
+  const start = await usage(page);
+  await settle(page, ms);
+  const end = await usage(page);
+  expect(end.pageFrames - start.pageFrames).toBeLessThanOrEqual(2);
+  expect(end.asked - start.asked).toBeLessThanOrEqual(2);
+};
+
+test.describe("with the engines lit", () => {
+  test("a flame draws at most once a frame, asks for one frame at a time, and stops when it has settled", async ({ page }) => {
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await press(page, "engines-on");
+    await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    const before = await usage(page);
+    const { drew, frames } = await measure(page, 12);
+    const after = await usage(page);
+    // it does flicker
+    expect(drew).toBeGreaterThan(0);
+    expect(drew).toBeLessThanOrEqual(frames + 3);
+    // one for the view, and no more; the controls are paused and their own bar asks for none
+    expect(after.asked - before.asked).toBeLessThanOrEqual(after.pageFrames - before.pageFrames + 3);
+    await expectIdle(page);
+    expect(await canvasData(page, "plumes")).toBe("33");
+  });
+
+  test("a painted, spinning, lit rocket still draws once a frame, on its own hands and on the controls'", async ({ page }) => {
+    await page.goto(URL);
+    await reach3d(page);
+    await press(page, "engines-on");
+    await press(page, "look-painted");
+    await expect(hero(page)).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
+    const onControls = await measure(page, 12);
+    expect(onControls.drew).toBeGreaterThan(0);
+    expect(onControls.drew).toBeLessThanOrEqual(onControls.frames + 3);
+    await pause(page);
+    await hero(page).evaluate((node) => {
+      (node as HTMLElement & { drive(choice: null): void }).drive(null);
+      node.setAttribute("spin", "fast");
+    });
+    await settle(page, 1000);
+    const onItsOwn = await measure(page, 12);
+    expect(onItsOwn.drew).toBeGreaterThan(0);
+    expect(onItsOwn.drew).toBeLessThanOrEqual(onItsOwn.frames + 3);
+    await hero(page).evaluate((node) => node.setAttribute("spin", "off"));
+    await expectIdle(page);
+  });
+
+  test("out of sight and on a hidden tab a lit rocket draws nothing, and picks up when it is back", async ({ page }) => {
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await press(page, "engines-on");
+    await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    await page.evaluate(() => {
+      const spacer = document.createElement("div");
+      spacer.style.height = "6000px";
+      document.body.append(spacer);
+      window.scrollTo(0, 5000);
+    });
+    await settle(page, 1000);
+    const hiddenFrom = await drawn(page);
+    await settle(page, 1500);
+    expect(await drawn(page)).toBe(hiddenFrom);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(hiddenFrom);
+    // a hidden tab: headless Chromium never hides one by itself, so the page is told, as a real one would be
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await settle(page, 500);
+    const tabFrom = await usage(page);
+    const tabDrawn = await drawn(page);
+    await settle(page, 1500);
+    expect(await drawn(page)).toBe(tabDrawn);
+    expect((await usage(page)).asked - tabFrom.asked).toBeLessThanOrEqual(1);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => false });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(tabDrawn);
+  });
+
+  test("forty rounds of on and off, across looks and parts, make nothing on the graphics card; contexts stay at one", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    const round = async () => {
+      await press(page, "engines-on");
+      await press(page, "look-thick");
+      await press(page, "show-booster");
+      await press(page, "engines-off");
+      await press(page, "show-together");
+      await press(page, "look-line");
+    };
+    // the first round makes each part's flames, which are kept on purpose
+    await round();
+    await settle(page, 300);
+    const first = await usage(page);
+    for (let i = 0; i < 39; i++) await round();
+    await settle(page, 300);
+    const last = await usage(page);
+    expect(last.contexts).toBe(1);
+    expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+    expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+    expect(last.textures).toBeLessThanOrEqual(first.textures);
+    expect(last.programs).toBeLessThanOrEqual(first.programs);
+    expect(last.framebuffers).toBeLessThanOrEqual(first.framebuffers);
+  });
+
+  test("changing rocket with the engines lit gives back the flames of the old one", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await press(page, "engines-on");
+    const round = async () => {
+      await press(page, "rocket-falcon-9");
+      await expect.poll(() => canvasData(page, "plumes")).toBe("9");
+      await press(page, "rocket-falcon-heavy");
+      await expect.poll(() => canvasData(page, "plumes")).toBe("27");
+      await press(page, "rocket-starship");
+      await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    };
+    await round();
+    await settle(page, 300);
+    const first = await usage(page);
+    for (let i = 0; i < 4; i++) await round();
+    await settle(page, 300);
+    const last = await usage(page);
+    expect(last.contexts).toBe(1);
+    expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+    expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+  });
+
+  test("a lit rocket let go while out of sight gives back its context, and comes back lit", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await press(page, "engines-on");
+    await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    await page.evaluate(() => {
+      const spacer = document.createElement("div");
+      spacer.style.height = "6000px";
+      document.body.append(spacer);
+      window.scrollTo(0, 5000);
+    });
+    await expect(hero(page)).toHaveAttribute("data-state", "picture", { timeout: 60_000 });
+    expect((await usage(page)).contexts).toBe(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await reach3d(page);
+    await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    expect((await usage(page)).contexts).toBe(1);
+  });
+});
+
+test.describe("the embed page", () => {
+  const LIT = `${URL}embed.html?rocket=starship&variant=v3&look=painted&engines=on`;
+  const rocket = (page: Page) => page.locator('[data-testid="rocket"]');
+  const drew = (page: Page) => rocket(page).evaluate((node) => Number((node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0));
+
+  test("lit, it draws at most once a frame, settles to nothing, and holds one context", async ({ page }) => {
+    await page.goto(LIT);
+    await expect(rocket(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+    await expect.poll(() => rocket(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.plumes)).toBe("33");
+    const start = { drew: await drew(page), page: (await usage(page)).pageFrames };
+    await expect.poll(async () => (await usage(page)).pageFrames - start.page, { timeout: 90_000 }).toBeGreaterThanOrEqual(12);
+    const frames = (await usage(page)).pageFrames - start.page;
+    const count = (await drew(page)) - start.drew;
+    expect(count).toBeGreaterThan(0);
+    expect(count).toBeLessThanOrEqual(frames + 3);
+    await expect
+      .poll(async () => {
+        const mark = await drew(page);
+        await settle(page, 1000);
+        return (await drew(page)) - mark;
+      }, { timeout: 90_000 })
+      .toBe(0);
+    expect((await usage(page)).contexts).toBe(1);
+  });
+
+  test("forty rounds of on and off make nothing on the graphics card", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&look=line`);
+    await expect(rocket(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+    const toggle = (value: string) => rocket(page).evaluate((node, on) => node.setAttribute("engines", on), value);
+    await toggle("on");
+    await settle(page, 300);
+    await toggle("off");
+    await settle(page, 300);
+    const first = await usage(page);
+    for (let i = 0; i < 40; i++) {
+      await toggle("on");
+      await page.waitForTimeout(30);
+      await toggle("off");
+      await page.waitForTimeout(30);
+    }
+    await settle(page, 300);
+    const last = await usage(page);
+    expect(last.contexts).toBe(1);
+    expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+    expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+    expect(last.textures).toBeLessThanOrEqual(first.textures);
+  });
+
+  test("in a page that scrolls it away it draws nothing", async ({ page }) => {
+    await page.goto(`${URL}react-check.html`);
+    await page.evaluate((src) => {
+      document.documentElement.innerHTML = "<body></body>";
+      const frame = document.createElement("iframe");
+      frame.src = src;
+      frame.style.cssText = "width:480px;height:640px;border:0;display:block";
+      frame.dataset.testid = "embed";
+      const spacer = document.createElement("div");
+      spacer.style.height = "6000px";
+      document.body.append(frame, spacer);
+    }, LIT);
+    const inner = page.frameLocator('[data-testid="embed"]').locator('[data-testid="rocket"]');
+    await expect(inner).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+    const count = () => inner.evaluate((node) => Number((node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0));
+    await page.evaluate(() => window.scrollTo(0, 5000));
+    await settle(page, 1200);
+    const from = await count();
+    await settle(page, 1500);
+    expect(await count()).toBe(from);
   });
 });

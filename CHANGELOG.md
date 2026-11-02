@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 - Embeds: an embed page for a site that cannot run script, and `embedCode` for the element, an iframe, a module, the SVG and a data address. A painted embed carries the CC BY credit of the parts it shows.
+- Engines: `engines="on"` lights each engine at full thrust: a plume with shock diamonds and a glow on the hull in the painted look, a drawn flame and ring in the line looks, in each engine's own place. They are off by default and off under reduced motion. A flame's length and diamonds are a picture, not a measurement. One instanced draw for a part's flames however many burn: lighting or dousing them makes and frees nothing on the graphics card after the first, a flame draws at most 30 times a second, stops moving after 15 seconds with no one touching anything, and nothing draws after that.
+- Fixed: a view's own spin (`spin="slow"` with no controls driving it) now settles after a minute and a half with no one touching it, as it always said it did. Its own turning counted as being touched.
 
 ## [0.2.2]
 

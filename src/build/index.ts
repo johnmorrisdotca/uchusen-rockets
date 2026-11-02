@@ -6,7 +6,9 @@ import { DEFAULT_LOOK, type LookName } from "../looks.ts";
 import { type PartMesh, boundsOf, type Bounds, meshOf, type Piece } from "../model/pieces.ts";
 import { partEntry } from "../model/registry.ts";
 import type { PartRecord } from "../parts.ts";
+import { plumeMarkup } from "../draw/plume.ts";
 import { defsOf, drawPart, perspective } from "../draw/svg.ts";
+import { litBells } from "../engines.ts";
 import { type Glb, toGlb } from "./glb.ts";
 
 /** Raised when a description does not fit: its report says why. */
@@ -31,6 +33,8 @@ export interface SvgOptions {
   look?: LookName;
   view?: ViewName | Angle;
   show?: string;
+  /** A flame at each engine that is showing. The length is a picture, not a measured flame. Left out, the drawing is unchanged. */
+  engines?: boolean;
 }
 
 export interface Built {
@@ -101,7 +105,7 @@ function assembled(report: FitReport): Built {
     boundsOf: boundsOfShow,
     placesOf,
     glb: () => toGlb(parts.map((part) => ({ name: part.slot, mesh: part.mesh, at: placesOf("together").find((place) => place.slot === part.slot)?.at ?? [0, 0, 0] }))),
-    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show } = {}) => {
+    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false } = {}) => {
       const angle = typeof view === "string" ? VIEWS[cleanView(view)] : view;
       const places = placesOf(show).filter((place) => place.shown);
       const cam = perspective(boundsOfShow(show), angle);
@@ -113,7 +117,24 @@ function assembled(report: FitReport): Built {
         })
         .sort((a, b) => b.depth - a.depth);
       const together = !show || show === "together";
-      return wrap(ordered.map(({ place, part }) => drawPart(drawnPieces(part, together), place.at, cam, look)).join(""), look, PICTURE_W, PICTURE_H, report.label);
+      const flames = engines
+        ? litBells(
+            places.map((place) => {
+              const part = parts.find((p) => p.slot === place.slot) as BuiltPart;
+              return { slot: part.slot, atY: place.at[1], shown: true, pieces: part.pieces };
+            }),
+            together,
+          )
+        : [];
+      return wrap(
+        ordered
+          .map(({ place, part }) => drawPart(drawnPieces(part, together), place.at, cam, look) + plumeMarkup(flames.filter((bell) => bell.slot === place.slot), place.at, cam, look, part.slot))
+          .join(""),
+        look,
+        PICTURE_W,
+        PICTURE_H,
+        report.label,
+      );
     },
   };
 }

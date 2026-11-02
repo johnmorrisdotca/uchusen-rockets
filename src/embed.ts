@@ -63,13 +63,18 @@ export function paintedCredit(options: RocketOptions): string {
     .join("\n");
 }
 
+function svgOptionsOf(options: RocketOptions) {
+  return {
+    look: cleanLook(options.look),
+    view: cleanView(options.view),
+    ...(options.show ? { show: options.show } : {}),
+    ...(options.engines === "on" ? { engines: true } : {}),
+  };
+}
+
 function drawingOf(options: RocketOptions): string {
   try {
-    const drawn = build(descriptionOf(options)).svg({
-      look: cleanLook(options.look),
-      view: cleanView(options.view),
-      ...(options.show ? { show: options.show } : {}),
-    });
+    const drawn = build(descriptionOf(options)).svg(svgOptionsOf(options));
     const credit = paintedCredit(options);
     return credit === "" ? drawn : drawn.replace("</svg>", `<desc>${esc(credit)}</desc></svg>`);
   } catch {
@@ -94,7 +99,7 @@ export function embedCode(options: RocketOptions, kind: EmbedKind = "element", s
   }
   if (kind === "module") {
     const description = descriptionOf(options);
-    const svgOptions = { look: cleanLook(options.look), view: cleanView(options.view), ...(options.show ? { show: options.show } : {}) };
+    const svgOptions = svgOptionsOf(options);
     const caption = credit === "" ? "" : `\ndocument.querySelector("#credit").textContent = ${JSON.stringify(credit)};`;
     return `import { build } from "${cdn}/dist/build/index.js";\n// or, from npm: import { build } from "@johnmorrisdotca/uchusen-rockets/build";\n\nconst rocket = build(${JSON.stringify(description, null, 2)});\ndocument.querySelector("#rocket").innerHTML = rocket.svg(${JSON.stringify(svgOptions)});${caption}`;
   }

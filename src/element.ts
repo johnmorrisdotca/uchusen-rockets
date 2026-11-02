@@ -2,6 +2,7 @@
 // crossfading in over it; drag to turn, keyboard, tilt on phones, a slow spin, reduced motion; the drawing stays on no WebGL, Save-Data or any failure. Importing this file defines the elements. three.js is
 // loaded only when a 3D view is wanted, and a licensed model only when the painted look asks for one.
 import { build, type Built, FitError } from "./build/index.ts";
+import { enginesWanted } from "./engines.ts";
 import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
@@ -91,7 +92,7 @@ function whyNot(mode: string): string {
 type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () => Promise<string> };
 
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -187,14 +188,21 @@ export class UchusenRocket extends HTMLBase {
     if (!document.hidden && this.stale) this.place();
   };
 
+  /** A reader who changes the setting while the page is open is followed at once. */
+  private motionChanged = () => this.queue();
+  private motion: MediaQueryList | null = null;
+
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), CSS, rocketSheet);
     document.addEventListener("visibilitychange", this.seen);
+    this.motion = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+    this.motion?.addEventListener("change", this.motionChanged);
     this.queue();
   }
 
   disconnectedCallback(): void {
     document.removeEventListener("visibilitychange", this.seen);
+    this.motion?.removeEventListener("change", this.motionChanged);
     this.teardown();
     this.key = "";
   }
@@ -270,6 +278,17 @@ export class UchusenRocket extends HTMLBase {
     return { look, show, viewName, angle: VIEWS[viewName] };
   }
 
+  /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
+  private engineLights(): boolean {
+    return enginesWanted(this.getAttribute("engines"), media("(prefers-reduced-motion: reduce)"));
+  }
+
+  /** Hands the 3D view what the attributes say about the engines, and its reader's motion setting. */
+  private lightViewer(viewer: RocketViewer): void {
+    viewer.setReduced(media("(prefers-reduced-motion: reduce)"));
+    viewer.setEngines(this.engineLights() ? "full" : null);
+  }
+
   private update(): void {
     const description = this.descriptionNow();
     const key = JSON.stringify(description);
@@ -320,11 +339,12 @@ export class UchusenRocket extends HTMLBase {
     // when a 3D view is showing, a drawing of the same angle is ready behind it
     const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
     const label = this.getAttribute("label") ?? this.builtNow.report.label;
-    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}`;
+    const lit = this.engineLights();
+    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}|${lit}`;
     let node = this.drawing.firstElementChild;
     if (key !== this.drawn.key || !node) {
       const template = document.createElement("template");
-      template.innerHTML = this.builtNow.svg({ look, show, view: from });
+      template.innerHTML = this.builtNow.svg({ look, show, view: from, engines: lit });
       node = template.content.firstElementChild;
       if (!node) return;
       node.setAttribute("aria-label", label);
@@ -346,6 +366,7 @@ export class UchusenRocket extends HTMLBase {
     if (!this.builtNow) return;
     const { look, show, viewName } = this.settings(this.builtNow);
     this.dataset.look = look;
+    this.dataset.engines = this.engineLights() ? "on" : "off";
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
     this.dataset.variant = this.builtNow.report.variant?.id ?? "";
@@ -363,6 +384,7 @@ export class UchusenRocket extends HTMLBase {
       const from = viewName !== this.lastView || this.driven ? angle : this.viewer.currentAngle();
       this.lastView = viewName;
       await this.viewer.load(this.builtNow, show, look, from);
+      if (this.viewer) this.lightViewer(this.viewer);
       this.emit("uchusen-change", { report: this.builtNow.report });
     }
   }
@@ -375,6 +397,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.viewer) {
       this.viewer.setLook(look);
       this.viewer.setShow(show);
+      this.lightViewer(this.viewer);
       if (viewName !== this.lastView) this.viewer.setAngle(angle, true);
       this.viewer.setHome(angle);
     }
@@ -458,7 +481,10 @@ export class UchusenRocket extends HTMLBase {
       const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
       this.lastView = viewName;
       await made.load(this.builtNow ?? built, show, look, angle);
-      if (generation !== this.generation) return;
+      if (generation !== this.generation || this.viewer !== made) return;
+      const now = this.settings(this.builtNow ?? built);
+      if (now.show !== show) made.setShow(now.show);
+      this.lightViewer(made);
       made.setSpin(this.spin());
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {

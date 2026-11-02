@@ -24,7 +24,7 @@ rocketFromParams(rocketToParams(options)).view; // "three-quarter"
 
 ## The embed page
 
-For a page that cannot run script: an iframe of `embed.html` that draws what its address says. The query is the element's attributes.
+For a page that cannot run script: an iframe of `embed.html` that draws what its address says. The query is the element's attributes. `engines=on` lights the engines in the embed the same way it does on the element.
 
 ```html
 <iframe src="https://johnmorrisdotca.github.io/uchusen-rockets/embed.html?rocket=starship&variant=v3&look=line&view=three-quarter" title="Rocket" style="width:100%;max-width:480px;aspect-ratio:3 / 4;border:0"></iframe>

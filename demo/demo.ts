@@ -140,6 +140,21 @@ function pick(change: Partial<typeof state>) {
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
 byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));
+
+// ------------------------------------------------------------- the engines
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const enginesBox = byId("engines");
+function lightEngines(on: boolean) {
+  hero.setAttribute("engines", on ? "on" : "off");
+  press(enginesBox, `engines-${on ? "on" : "off"}`);
+  const note = byId("engines-note");
+  note.hidden = !(on && reducedMotion);
+  note.textContent = "This device asks for reduced motion, so the flames stay off. The engine chart still says which ones burn.";
+  drawEmbed();
+}
+enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false)), chip("Lit", "engines-on", () => lightEngines(true)));
+press(enginesBox, "engines-off");
+
 // ------------------------------------------------------------- copy the rocket that is on screen
 let embedKind: EmbedKind = "element";
 let embedFull = "";
@@ -157,7 +172,8 @@ for (const kind of EMBED_KINDS) {
   embedTabs.append(button);
 }
 function drawEmbed() {
-  embedFull = embedCode({ rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view }, embedKind);
+  const engines = hero.getAttribute("engines");
+  embedFull = embedCode({ rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...(engines ? { engines } : {}) }, embedKind);
   embedCodeNode.textContent = embedFull.length > 1400 ? `${embedFull.slice(0, 1400)}…` : embedFull;
   for (const button of embedTabs.querySelectorAll("button")) button.setAttribute("aria-selected", String(button.dataset.testid === `tab-${embedKind}`));
 }

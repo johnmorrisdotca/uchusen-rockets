@@ -39,11 +39,13 @@ import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
+import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, litBells, pickBells } from "../engines.ts";
 import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
+import { type Fuel, PartPlumes, PlumeKit } from "./plumes.ts";
 
 export interface ViewerOptions {
   label: string;
@@ -142,11 +144,15 @@ interface PartView {
   from: Vec3;
   to: Vec3;
   hideAtEnd: boolean;
+  /** Its flames, made the first time an engine of it is lit. */
+  plumes: PartPlumes | null;
 }
 
 /** The materials of an engine's bell, in this package's own meshes. */
 const NOZZLE_MATERIALS: ReadonlySet<string> = new Set(["bell", "bell-inside", "engine-metal"]);
 const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
+/** A flame's colours, a picture: Raptor burns methane, Merlin kerosene. */
+const fuelOf = (built: Built): Fuel => (built.report.parts.some(({ part }) => part.rocket === "starship") ? "methane" : "kerosene");
 /** The pictures a licensed model's material may hold (the shared sky it reflects is not one of them). */
 const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
@@ -164,6 +170,13 @@ export class RocketViewer {
   private built: Built | null = null;
   private look: LookName = "line";
   private show = "together";
+  private plumes: PlumeKit;
+  private lit: { readonly [slot: string]: number } | "full" | null = null;
+  private burningNow = 0;
+  /** A flame moves until then. */
+  private flameUntil = 0;
+  private flameDrawn = 0;
+  private inTick = false;
   private generation = 0;
   private materialCache = new Map<string, Material>();
   private outlineMaterial: ShaderMaterial;
@@ -224,7 +237,8 @@ export class RocketViewer {
     rim.position.set(-4, 1, -5);
     const low = new DirectionalLight("#ffffff", 0.35);
     low.position.set(1, -4, 2);
-    this.scene.add(key, rim, low, new HemisphereLight("#d7e6ff", "#22252b", 0.35), this.root);
+    this.plumes = new PlumeKit();
+    this.scene.add(key, rim, low, new HemisphereLight("#d7e6ff", "#22252b", 0.35), this.plumes.light, this.root);
 
     this.outlineMaterial = new ShaderMaterial({
       vertexShader: OUTLINE_VERTEX,
@@ -298,6 +312,7 @@ export class RocketViewer {
         from: [0, 0, 0],
         to: [0, 0, 0],
         hideAtEnd: false,
+        plumes: null,
       };
       this.takeMeshes(source, code, view);
       const place = places.find((p) => p.slot === part.slot);
@@ -308,6 +323,7 @@ export class RocketViewer {
     }
     this.addGlow();
     this.setLook(look);
+    this.plumes.setFuel(fuelOf(built));
     this.frameTo(angle ?? this.currentAngle(), false);
     this.canvas.dataset.ready = "true";
     this.canvas.dataset.parts = this.parts.map((part) => part.slot).join(" ");
@@ -461,8 +477,66 @@ export class RocketViewer {
     }
     if (this.glow) this.glow.visible = !painted;
     this.canvas.dataset.look = look;
+    this.plumes.setLook(painted);
+    this.relight();
     this.reportPainted();
     this.wake();
+  }
+
+  /** Which engines burn: at full thrust every one that shows, a count for each part, or none. Nothing is made or freed by this after a part's first flame: only which of its flames are drawn changes. */
+  setEngines(lit: { readonly [slot: string]: number } | "full" | null): void {
+    this.lit = lit;
+    this.relight();
+    this.wake();
+  }
+
+  /** The page reads reduced motion again at each change, so a view opened earlier follows the reader now. */
+  setReduced(reduced: boolean): void {
+    this.options.reducedMotion = reduced;
+  }
+
+  private relight(): void {
+    if (!this.built) return;
+    const counts = new Map<string, number>();
+    if (this.lit === "full") {
+      const places = this.built.placesOf(this.show);
+      const bells = litBells(
+        this.built.parts.map((part) => {
+          const place = places.find((one) => one.slot === part.slot);
+          return { slot: part.slot, atY: place?.at[1] ?? 0, shown: place?.shown ?? false, pieces: part.pieces };
+        }),
+        this.show === "together",
+      );
+      for (const bell of bells) counts.set(bell.slot, (counts.get(bell.slot) ?? 0) + 1);
+    } else if (this.lit) for (const [slot, count] of Object.entries(this.lit)) counts.set(slot, count);
+    let burning = 0;
+    let glowAt: Vector3 | null = null;
+    for (const view of this.parts) {
+      const count = counts.get(view.slot) ?? 0;
+      if (count > 0 && !view.plumes) {
+        const bells = bellsOf(this.built.parts.find((part) => part.slot === view.slot)?.pieces ?? []);
+        if (bells.length === 0) continue;
+        view.plumes = new PartPlumes(this.plumes, bells);
+        view.holder.add(view.plumes.group);
+      }
+      if (!view.plumes) continue;
+      const fired = pickBells(view.plumes.bells, count);
+      view.plumes.light(fired);
+      burning += fired.length;
+      if (fired.length > 0 && !glowAt) glowAt = new Vector3(0, fired[0].y - 1, 0).add(view.holder.position);
+    }
+    this.burningNow = burning;
+    this.plumes.light.intensity = burning === 0 || this.look !== "painted" ? 0 : Math.min(900, 120 + burning * 40);
+    if (glowAt) this.plumes.light.position.copy(glowAt);
+    this.canvas.dataset.engines = burning > 0 ? "on" : "off";
+    this.canvas.dataset.plumes = String(burning);
+  }
+
+  private freePlumes(): void {
+    for (const view of this.parts) {
+      view.plumes?.dispose();
+      view.plumes = null;
+    }
   }
 
   /** Which painted parts are in: "model" when all come from a licensed model, "code" when this package's own paint, "loading" while one is on its way. */
@@ -542,6 +616,7 @@ export class RocketViewer {
       }
       this.pose = null;
       this.applyFraming(framing);
+      this.relight();
       this.wake();
       return;
     }
@@ -566,6 +641,7 @@ export class RocketViewer {
       }
     }
     this.startPose(framing, MOVE_MS, true);
+    this.relight();
   }
 
   private framingFor(angle: Angle) {
@@ -739,6 +815,7 @@ export class RocketViewer {
     this.resize.disconnect();
     this.controls.dispose();
     this.disposeParts();
+    this.plumes.dispose();
     this.glow?.geometry.dispose();
     (this.glow?.material as Material | undefined)?.dispose();
     for (const material of this.materialCache.values()) material.dispose();
@@ -752,6 +829,7 @@ export class RocketViewer {
 
   /** Lets the graphics card have back what the parts took: geometries, the thick lines' materials and a licensed model's own materials and pictures. */
   private disposeParts(): void {
+    this.freePlumes();
     for (const part of this.parts) {
       part.holder.traverse((node) => {
         (node as Mesh).geometry?.dispose();
@@ -801,7 +879,11 @@ export class RocketViewer {
   }
 
   private wake(): void {
-    this.lastActive = performance.now();
+    // the view's own spin is not someone touching it: without this a spin would never settle
+    if (!this.inTick) {
+      this.lastActive = performance.now();
+      this.flameUntil = this.lastActive + FLAME_SETTLE_MS;
+    }
     this.needsDraw = true;
     if (!this.frame && this.visible && !document.hidden && !this.disposed) this.frame = requestAnimationFrame(this.tick);
   }
@@ -809,6 +891,7 @@ export class RocketViewer {
   private tick = (now: number) => {
     this.frame = 0;
     if (!this.visible || document.hidden || this.disposed) return;
+    this.inTick = true;
     this.clock.update(now);
     const dt = Math.min(this.clock.getDelta(), 0.1);
     const ambient = !this.options.reducedMotion && now - this.lastActive < IDLE_STOP_MS;
@@ -858,6 +941,12 @@ export class RocketViewer {
       }
     }
     if (!ambient) this.controls.autoRotate = false;
+    const flaming = this.burningNow > 0 && !this.options.reducedMotion && performance.now() < this.flameUntil;
+    if (flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
+      this.flameDrawn = now;
+      this.plumes.setTime(now / 1000);
+      this.needsDraw = true;
+    }
     const changed = this.controls.update(dt);
     if (this.needsDraw || changed || this.pose) {
       this.syncSizes();
@@ -876,7 +965,8 @@ export class RocketViewer {
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming)) this.frame = requestAnimationFrame(this.tick);
+    this.inTick = false;
   };
 
   private syncSizes(): void {

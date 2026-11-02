@@ -512,6 +512,57 @@ test("the copy panel matches the rocket on screen, and the embed page draws its 
   expect(problems).toEqual([]);
 });
 
+test.describe("the engines", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("light when asked and go dark when turned off, in the drawing and the 3D view", async ({ page, browserName }) => {
+    const problems = watch(page);
+    await page.goto(URL);
+    await stopTurn(page);
+    await expect(hero(page)).toHaveAttribute("data-engines", "off");
+    const plumes = () => hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
+    await expect.poll(plumes).toBe(0);
+    await press(page, "engines-on");
+    await expect(hero(page)).toHaveAttribute("data-engines", "on");
+    await expect.poll(plumes).toBe(33);
+    if (is3d(browserName)) {
+      await reach3d(page);
+      await expect.poll(() => canvasData(page, "engines")).toBe("on");
+      await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    }
+    await press(page, "engines-off");
+    await expect(hero(page)).toHaveAttribute("data-engines", "off");
+    await expect.poll(plumes).toBe(0);
+    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes")).toBe("0");
+    await press(page, "engines-on");
+    await press(page, "look-painted");
+    await expect.poll(plumes).toBe(33);
+    if (is3d(browserName)) {
+      await expect.poll(() => canvasData(page, "look")).toBe("painted");
+      await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    }
+    await press(page, "show-ship");
+    await expect.poll(plumes).toBe(6);
+    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes")).toBe("6");
+    expect(problems).toEqual([]);
+  });
+});
+
+test("under reduced motion the engines stay off, and the page says why", async ({ page, browserName }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  await press(page, "engines-on");
+  await expect(hero(page)).toHaveAttribute("data-engines", "off");
+  await expect(page.locator('[data-testid="engines-note"]')).toContainText("reduced motion");
+  const plumes = await hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
+  expect(plumes).toBe(0);
+  if (is3d(browserName)) {
+    await reach3d(page);
+    await expect.poll(() => canvasData(page, "plumes")).toBe("0");
+  }
+  expect(problems).toEqual([]);
+});
+
 test("the React wrapper draws the element", async ({ page }) => {
   const problems = watch(page);
   await page.goto(`${URL}react-check.html`);
