@@ -31,6 +31,9 @@ export const MATERIALS = {
   foam: { color: "#a9592a", metal: 0, rough: 0.8, fill: "metal" },
   yellow: { color: "#c9a227", metal: 0.1, rough: 0.6, fill: "metal" },
   concrete: { color: "#8b8d8a", metal: 0, rough: 0.9, fill: "metal" },
+  ground: { color: "#4d5a41", metal: 0, rough: 1, fill: "dark" },
+  sand: { color: "#c3b58c", metal: 0, rough: 1, fill: "white" },
+  water: { color: "#27475e", metal: 0.1, rough: 0.4, fill: "dark" },
   red: { color: "#a4322b", metal: 0.1, rough: 0.5, fill: "metal" },
 } as const satisfies Record<string, MaterialSpec>;
 

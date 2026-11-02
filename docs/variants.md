@@ -149,7 +149,19 @@ No name, target mark or logo is drawn: each deck and pad has a plain ring.
 | `stack` | The same | Block 3 stacked on the mount | |
 | `catch` | The same | The arms closed under Block 3's booster's grid fins, as on Flight 5 | 2024-10-13, first catch |
 
-No source read here gives the tower's width, the arms' length or the mount's size, so those are judged from photographs. Its nine sections are Wikipedia's. The arms are a part: `check({ rocket: "launch-tower", variant: "stack", parts: { arms: "launch-tower-catch-arms" } })` is a custom build, and it says so.
+The tower's 13 m footprint is OpenStreetMap's. No source read here gives the arms' length or the mount's size, so those are judged from photographs. Its nine sections are Wikipedia's. The arms are a part: `check({ rocket: "launch-tower", variant: "stack", parts: { arms: "launch-tower-catch-arms" } })` is a custom build, and it says so.
+
+## Starbase
+
+A scene, built from OpenStreetMap's places and outlines (`© OpenStreetMap contributors`, ODbL, a handful of named places, read 2026-11-02). A building is one plain box, with no lettering or logo. Nothing announced is shown, and no concept picture was used.
+
+| Variant | What | Sizes |
+| --- | --- | --- |
+| `launch-site` | Two towers and their mounts, the tank farm and the beach, with a plain rocket at Block 3's size on the first pad | 348 m between the towers; farm 314 by 78 m |
+| `build-site` | The Mega Bays, Starfactory's outer outline, the rocket garden on the Sanchez site and a plain board at the sign's place | Mega Bay 54 by 38 m and 100 m tall, the map's height tag; Starfactory 293 by 327 m and 16.3 m tall |
+| `city` | All of it, along the highway, with a few plain houses at the village | About 3.5 km end to end |
+
+These are mappers' figures, not surveys. The tanks' and houses' numbers are not counts.
 
 ## Still to come
 

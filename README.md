@@ -43,8 +43,8 @@ That is all a page needs with a bundler. The drawing shows at once; when the ele
 
 | Attribute | Values |
 | --- | --- |
-| `rocket` | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper`, `falcon-1`, `saturn-v`, `space-shuttle`, `sls`, `new-glenn`, `electron`, `soyuz`, `droneship`, `landing-zone`, `launch-tower` |
-| `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2`, `cargo-dragon-2`, `crew-dragon-inside`. Falcon 1: `falcon-1`, `falcon-1e`. Saturn V: `saturn-v`. Space Shuttle: `stack`. Space Launch System: `block-1`. New Glenn: `7x2`. Electron: `electron`. Soyuz: `soyuz-2`. Drone ships: `ocisly`, `jrti`, `asog`. Landing zones: `lz-1`, `lz-4`. Launch tower: `tower`, `stack`, `catch` |
+| `rocket` | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper`, `falcon-1`, `saturn-v`, `space-shuttle`, `sls`, `new-glenn`, `electron`, `soyuz`, `droneship`, `landing-zone`, `launch-tower`, `starbase` |
+| `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2`, `cargo-dragon-2`, `crew-dragon-inside`. Falcon 1: `falcon-1`, `falcon-1e`. Saturn V: `saturn-v`. Space Shuttle: `stack`. Space Launch System: `block-1`. New Glenn: `7x2`. Electron: `electron`. Soyuz: `soyuz-2`. Drone ships: `ocisly`, `jrti`, `asog`. Landing zones: `lz-1`, `lz-4`. Launch tower: `tower`, `stack`, `catch`. Starbase: `launch-site`, `build-site`, `city` |
 | `show` | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right` |
 | `look` | `line`, `thick`, `painted` |
 | `view` | `three-quarter`, `front`, `back`, `side`, `below` |
@@ -53,7 +53,7 @@ Changing `look` keeps the angle. Changing `show` is an animated move, and a cut 
 
 ## The rockets
 
-Starship; Falcon 9 in v1.0, v1.1, Full Thrust and Block 5, with a fairing or with Dragon 2; Falcon Heavy; Dragon 1, Dragon 2 and Cargo Dragon 2, and Crew Dragon cut open to see inside; Grasshopper, the test vehicle; and Falcon 1, with the Falcon 1e that was announced and never flew. From other makers, to compare at one scale, each drawn by this package's code from its published sizes: Saturn V; the Space Shuttle, stacked with its tank and boosters, each part alone too; the Space Launch System, Block 1 with Orion; New Glenn 7×2; Electron; and Soyuz-2. And where a booster lands: drone ships and landing zones. The Starbase integration tower too, with its mount and arms, a Block 3 stacked on it, or catching its booster. <!-- more rockets -->
+Starship; Falcon 9 in v1.0, v1.1, Full Thrust and Block 5, with a fairing or with Dragon 2; Falcon Heavy; Dragon 1, Dragon 2 and Cargo Dragon 2, and Crew Dragon cut open to see inside; Grasshopper, the test vehicle; and Falcon 1, with the Falcon 1e that was announced and never flew. From other makers, to compare at one scale, each drawn by this package's code from its published sizes: Saturn V; the Space Shuttle, stacked with its tank and boosters, each part alone too; the Space Launch System, Block 1 with Orion; New Glenn 7×2; Electron; and Soyuz-2. And where a booster lands: drone ships and landing zones. The Starbase integration tower too, with its mount and arms, a Block 3 stacked on it, or catching its booster. And Starbase, as a scene from the map: `launch-site`, `build-site` and `city`. <!-- more rockets -->
 
 ```html
 <uchusen-rocket rocket="falcon-9" variant="block-5" show="apart" look="painted"></uchusen-rocket>

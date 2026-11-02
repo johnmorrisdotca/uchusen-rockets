@@ -70,6 +70,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Soyuz-2 | This package's code, from sourced sizes; the waist, the boosters' lean, the fairing and the paint judged from photographs | This package's code. No model is used, and no name or mark is drawn |
 | Drone ships and landing zones | This package's code; hull, equipment and legs judged from photographs | This package's code. No name, mark or logo is drawn |
 | Launch tower | This package's code; the height and lightning rod from the FAA, the rest judged from photographs | This package's code, with Block 3 painted by this package's code here to keep the scene light. No lettering or mark is drawn |
+| Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
 

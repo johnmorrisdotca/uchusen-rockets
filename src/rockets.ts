@@ -11,6 +11,7 @@ import { ELECTRON_VARIANTS } from "./data/electron.ts";
 import { SOYUZ_VARIANTS } from "./data/soyuz.ts";
 import { DRONESHIP_VARIANTS, LANDING_ZONE_VARIANTS } from "./data/landing.ts";
 import { TOWER_VARIANTS } from "./data/tower.ts";
+import { STARBASE_VARIANTS } from "./data/starbase.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -52,6 +53,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   droneship: { id: "droneship", name: "Drone ships", status: "built", variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", variants: TOWER_VARIANTS, defaultVariant: "stack" },
+  starbase: { id: "starbase", name: "Starbase", status: "built", variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
 };
 
 const fig = (value: number, source: SourceId): Figure => ({ value, source });
@@ -91,6 +93,15 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "srb-right": "Solid rocket booster, right",
   orbiter: "Orbiter",
   "upper-stage": "Upper stage",
+  ground: "The ground and the road",
+  pads: "The pads",
+  "tank-farm": "The tank farm",
+  "on-pad": "On the pad",
+  "mega-bays": "The Mega Bays",
+  starfactory: "Starfactory",
+  garden: "The rocket garden",
+  sign: "The sign's place",
+  village: "The village",
   tower: "Tower",
   mount: "Mount",
   arms: "Arms",

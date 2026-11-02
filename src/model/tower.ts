@@ -1,4 +1,4 @@
-// The integration tower from a table of numbers: its height and its lightning rod are sourced; its width, its nine sections' bracing (nine sections is sourced), its arms and the mount are judged from photographs. Plain boxes, few enough that the scene with a whole Starship stays inside a code-made mesh's limit.
+// The integration tower from a table of numbers: its height, its lightning rod and its footprint are sourced; its nine sections are sourced, and their bracing, its arms and the mount are judged from photographs. Plain boxes, few enough that the scene with a whole Starship stays inside a code-made mesh's limit.
 import { STARSHIP_DRAWS, boosterPieces, shipPieces } from "./starship.ts";
 import { blank } from "../data/types.ts";
 import { TOWER_HEIGHT } from "../data/tower.ts";
@@ -10,7 +10,7 @@ import type { StackBuild, StackPart } from "./stacks.ts";
 const ROD = 10 * 0.3048;
 const SECTIONS = 9;
 const HALF = 6.5;
-const TOWER_X = -28;
+export const TOWER_X = -28;
 const MOUNT_TOP = 21;
 const ARM_REACH = 32;
 const ARM_FROM = TOWER_X + HALF + 1;
@@ -23,7 +23,7 @@ const R = 4.5;
 
 const beam = (material: MaterialName, a: Vec3, b: Vec3, width: number, depth = width): Plate => strut(material, a, b, width, depth, { plain: true });
 
-function tower(): Piece[] {
+export function tower(): Piece[] {
   const out: Piece[] = [];
   const corners: readonly (readonly [number, number])[] = [[HALF, HALF], [HALF, -HALF], [-HALF, -HALF], [-HALF, HALF]];
   const step = TOWER_HEIGHT / SECTIONS;
@@ -44,7 +44,7 @@ function tower(): Piece[] {
   return out;
 }
 
-function mount(): Piece[] {
+export function mount(): Piece[] {
   const table = (r: number, r0: number, y: number): Lathe => ({ kind: "lathe", material: "fin", segs: 48, body: true, profile: [[r, y], [r0, y]] });
   const out: Piece[] = [
     { kind: "lathe", material: "concrete", segs: 48, body: true, outline: true, profile: [[32, 0], [32, 0.5], [0.001, 0.5]] },
@@ -78,12 +78,12 @@ function arms(z: number): Piece[] {
 }
 
 const NONE = blank("No source read here gives it.");
-const FROM = "This package's code. The tower's height and lightning rod are from the FAA's 2022 assessment, its nine sections from Wikipedia; its width, bracing, arms and mount are judged from photographs, which were looked at and not traced. No lettering or mark is drawn.";
+const FROM = "This package's code. The tower's height and lightning rod are from the FAA's 2022 assessment, its nine sections from Wikipedia, its footprint from OpenStreetMap; its bracing, arms and mount are judged from photographs, which were looked at and not traced. No lettering or mark is drawn.";
 const v3 = STARSHIP_DRAWS.v3;
 
 const common = (armY: number, armZ: number): StackPart[] => [
   { slot: "mount", kind: "mount", name: "Launch mount and pad", height: MOUNT_TOP, diameter: 64, place: { x: 0, z: 0 }, sourcedDiameter: NONE, pieces: mount },
-  { slot: "tower", kind: "tower", name: "Integration tower", height: TOWER_HEIGHT, diameter: HALF * 2, place: { x: TOWER_X, z: 0 }, sourcedDiameter: NONE, pieces: tower },
+  { slot: "tower", kind: "tower", name: "Integration tower", height: TOWER_HEIGHT, diameter: HALF * 2, place: { x: TOWER_X, z: 0 }, sourcedDiameter: { value: 13, source: "openstreetmap", note: "The map's footprint of tower 1, 13 by 12 m." }, pieces: tower },
   { slot: "arms", kind: "arms", name: armZ === CLOSED_Z ? "The arms, closed" : "The arms, open", height: 4, diameter: ARM_REACH, place: { x: 0, z: 0, y: armY }, sourcedDiameter: NONE, pieces: () => arms(armZ) },
 ];
 const booster = (y: number): StackPart => ({ slot: "booster", kind: "booster", name: "Super Heavy, Block 3 (V3)", height: v3.boosterHeight, diameter: v3.radius * 2, place: { x: 0, z: 0, y }, sourcedDiameter: { value: R * 2, source: "wikipedia-starship" }, pieces: () => boosterPieces(v3) });

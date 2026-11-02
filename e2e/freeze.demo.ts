@@ -17,7 +17,7 @@ test.beforeEach(({ browserName }, info) => {
 /** Counts what the page asks of the graphics card, from before any script runs. */
 const COUNT = () => {
   type Ctx = (WebGLRenderingContext | WebGL2RenderingContext) & { isContextLost(): boolean };
-  const seen = { contexts: [] as Ctx[], made: {} as Record<string, number>, freed: {} as Record<string, number>, frames: 0 };
+  const seen = { contexts: [] as Ctx[], made: {} as Record<string, number>, freed: {} as Record<string, number>, frames: 0, draws: 0 };
   const getContext = HTMLCanvasElement.prototype.getContext;
   // @ts-expect-error a wrapper with the same overloads is not worth writing out
   HTMLCanvasElement.prototype.getContext = function (type: string, ...rest: unknown[]) {
@@ -37,6 +37,16 @@ const COUNT = () => {
       }
     }
   }
+  for (const proto of [WebGLRenderingContext.prototype, WebGL2RenderingContext.prototype] as unknown as Record<string, (...args: unknown[]) => unknown>[]) {
+    for (const name of ["drawElements", "drawArrays", "drawElementsInstanced", "drawArraysInstanced"]) {
+      const original = proto[name];
+      if (!original) continue;
+      proto[name] = function (this: unknown, ...args: unknown[]) {
+        seen.draws++;
+        return original.apply(this, args);
+      };
+    }
+  }
   // frames, not callbacks: callbacks of one frame share a time
   let last = -1;
   const frame = window.requestAnimationFrame.bind(window);
@@ -50,12 +60,12 @@ const COUNT = () => {
   Object.assign(window, { __seen: seen });
 };
 
-type Seen = { contexts: { isContextLost(): boolean }[]; made: Record<string, number>; freed: Record<string, number>; frames: number };
+type Seen = { contexts: { isContextLost(): boolean }[]; made: Record<string, number>; freed: Record<string, number>; frames: number; draws: number };
 const usage = (page: Page) =>
   page.evaluate(() => {
     const seen = (window as unknown as { __seen: Seen }).__seen;
     const live = (kind: string) => (seen.made[kind] ?? 0) - (seen.freed[kind] ?? 0);
-    return { contexts: seen.contexts.filter((context) => !context.isContextLost()).length, buffers: live("Buffer"), arrays: live("VertexArray"), textures: live("Texture"), pageFrames: seen.frames };
+    return { contexts: seen.contexts.filter((context) => !context.isContextLost()).length, buffers: live("Buffer"), arrays: live("VertexArray"), textures: live("Texture"), pageFrames: seen.frames, draws: seen.draws };
   });
 const drawn = (page: Page) => hero(page).evaluate((node) => Number((node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0));
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
@@ -195,6 +205,46 @@ test("every rocket in the catalogue: drawn line and painted, then contexts and g
   const { drew, frames } = await measure(page);
   expect(drew).toBeLessThanOrEqual(frames + 3);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+});
+
+test("a scene with many objects draws few things a frame, and its graphics memory stays flat over repeated switching", async ({ page }) => {
+  test.setTimeout(420_000);
+  await page.goto(URL);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  await reach3d(page);
+  const figures: string[] = [];
+  const scenes: readonly [string, string][] = [["starbase", "city"], ["starbase", "launch-site"], ["launch-tower", "stack"], ["droneship", "ocisly"]];
+  const go = async ([rocket, variant]: readonly [string, string]) => {
+    await press(page, `rocket-${rocket}`);
+    await press(page, `variant-${variant}`);
+    await expect(hero(page)).toHaveAttribute("data-variant", variant);
+    await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+    await settle(page, 400);
+  };
+  for (const scene of scenes) {
+    await go(scene);
+    const before = await usage(page);
+    const drewBefore = await drawn(page);
+    await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ yaw: 31 }));
+    await settle(page, 700);
+    const after = await usage(page);
+    const frames = (await drawn(page)) - drewBefore;
+    const perFrame = frames > 0 ? Math.round((after.draws - before.draws) / frames) : 0;
+    figures.push(`${scene.join(":")}: ${perFrame} draws a frame over ${frames} frames, ${after.buffers} buffers`);
+    expect(frames).toBeGreaterThan(0);
+    expect(perFrame).toBeLessThanOrEqual(400);
+    await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ yaw: 0 }));
+  }
+  console.log(figures.join("\n"));
+  for (const scene of scenes) await go(scene);
+  const first = await usage(page);
+  for (let round = 0; round < 3; round++) for (const scene of scenes) await go(scene);
+  const last = await usage(page);
+  console.log(`after three more rounds: buffers ${first.buffers} to ${last.buffers}, arrays ${first.arrays} to ${last.arrays}, textures ${first.textures} to ${last.textures}`);
+  expect(last.contexts).toBe(1);
+  expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+  expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+  expect(last.textures).toBeLessThanOrEqual(first.textures);
 });
 
 test("a lost context is let go, the drawing takes over, and nothing keeps drawing", async ({ page }) => {

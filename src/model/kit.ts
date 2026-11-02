@@ -80,3 +80,37 @@ export const foldedLegs = (material: MaterialName, r: number, azimuths: readonly
     const f = radial(deg(az));
     return strut(material, pointOf(f, r + 0.1, foot), pointOf(f, r + 0.1, top), width, 0.3, { plain: false });
   });
+
+/** Pieces turned round the Y axis by `turn` degrees, then moved along the ground. For putting a whole structure in its place on a map. A lathe's arc and lean are left as they are, so they are for pieces with neither. */
+export function moved(pieces: readonly Piece[], x: number, z: number, turn = 0): Piece[] {
+  const c = Math.cos(deg(turn));
+  const s = Math.sin(deg(turn));
+  const spin = ([a, b, d]: readonly [number, number, number]): Vec3 => [a * c + d * s, b, -a * s + d * c];
+  const at = (p: readonly [number, number, number]): Vec3 => {
+    const [a, b, d] = spin(p);
+    return [a + x, b, d + z];
+  };
+  return pieces.map((piece): Piece => {
+    if (piece.kind === "plate") return { ...piece, frame: { o: at(piece.frame.o), u: spin(piece.frame.u), v: spin(piece.frame.v), w: spin(piece.frame.w) } };
+    if (piece.kind === "lines") return { ...piece, paths: piece.paths.map((path) => path.map(at)) };
+    const [a0, d0] = piece.at ?? [0, 0];
+    const [a, , d] = at([a0, 0, d0]);
+    return { ...piece, at: [a, d] };
+  });
+}
+
+/** A box on the ground, `wide` by `deep` and turned `turn` degrees, from y0 to y1. */
+export function slab(material: MaterialName, x: number, z: number, wide: number, deep: number, turn: number, y0: number, y1: number, plain = true): Plate {
+  const c = Math.cos(deg(turn));
+  const s = Math.sin(deg(turn));
+  return { kind: "plate", material, frame: { o: [x, (y0 + y1) / 2, z], u: [c, 0, s], v: [-s, 0, c], w: [0, 1, 0] }, outline: [[-wide / 2, -deep / 2], [wide / 2, -deep / 2], [wide / 2, deep / 2], [-wide / 2, deep / 2]], thickness: y1 - y0, plain };
+}
+
+/** A road on the ground, from point to point. */
+export const road = (material: MaterialName, points: readonly (readonly [number, number])[], width: number, y: number): Plate[] =>
+  points.slice(1).map((b, i) => {
+    const a = points[i];
+    const dx = b[0] - a[0];
+    const dz = b[1] - a[1];
+    return slab(material, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, Math.hypot(dx, dz) + width, width, (Math.atan2(dz, dx) * 180) / Math.PI, y, y + 0.2);
+  });

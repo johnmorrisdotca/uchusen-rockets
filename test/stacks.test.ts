@@ -142,6 +142,25 @@ test("inside Crew Dragon: the four sourced seats, and what has no source says so
   assert.equal(partEntry("dragon-crew-dragon-inside-capsule")?.record.painted, null);
 });
 
+test("Starbase is the map's places, what is built only, in few pieces", () => {
+  const city = build({ rocket: "starbase", variant: "city" });
+  const box = city.boundsOf("together");
+  assert.ok(box.max[0] - box.min[0] > 3500, "launch site to build site");
+  assert.equal(variantOf("starbase", "launch-site")?.facts.sizes?.["Tower 1 to tower 2"].value, 348);
+  assert.equal(variantOf("starbase", "build-site")?.facts.sizes?.["Mega Bay's height"].source, "openstreetmap");
+  for (const variant of ROCKETS.starbase.variants) {
+    assert.match(variant.note ?? "", /no lettering or logo/);
+    assert.match(variant.note ?? "", /nothing announced/);
+    assert.equal(variant.status, "support");
+  }
+  const count = city.parts.reduce((sum, part) => sum + part.pieces.length, 0);
+  assert.ok(count < 400, `${count} pieces`);
+  // each part is one mesh per material, so what the card draws is small however many buildings there are
+  const materials = city.parts.reduce((sum, part) => sum + part.mesh.faces.size, 0);
+  assert.ok(materials < 60, `${materials} meshes`);
+  assert.ok(city.glb().bytes.byteLength < 300 * 1024);
+});
+
 test("no code-made rocket is labelled as a custom build, and each comes apart and alone", () => {
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {
