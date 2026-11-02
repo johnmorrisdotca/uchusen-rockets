@@ -53,7 +53,8 @@ Rockets drawn by code from sourced sizes. `CONTRIBUTING.md` has the rules and th
 - A figure names its source, or is blank: never estimate to fill a gap.
 - No logos, marks or flags on any mesh or drawing; a model is labelled as what it shows.
 - The core has no dependency; the element loads three.js only for a 3D view. The family's shared parts (`@johnmorrisdotca/kazoku-ui`) are a dev dependency used by the demo only.
-- The demo keeps a strict Content-Security-Policy (`style-src 'self'`): no inline style hash is needed since kazoku-ui 0.3.1.
+- The demo keeps a strict Content-Security-Policy. `style-src` is `'self'` and one hash, for the inline `<style>` of `<chikyu-earth-realistic>` (chikyu-earth 0.5.0); the kazoku-ui controls need none since 0.3.1. The hash goes when chikyu-earth adopts its styles as kazoku-ui does.
+- The demo's Earth (`demo/earth.ts`) is off by default and loads only when chosen. `e2e/freeze.demo.ts` holds what it may cost: read it before changing its rate or adding anything that draws.
 
 ### Work in progress
 

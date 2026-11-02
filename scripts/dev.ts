@@ -18,6 +18,7 @@ const TYPES: Record<string, string> = {
   ".glb": "model/gltf-binary",
   ".jpg": "image/jpeg",
   ".png": "image/png",
+  ".webp": "image/webp",
 };
 
 createServer(async (request, response) => {

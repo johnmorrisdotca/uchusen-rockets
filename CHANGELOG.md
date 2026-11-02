@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Demo: a Background row, None or Earth, off by default and kept in the address (`?background=earth`). The rocket floats in front of the Earth from [`@johnmorrisdotca/chikyu-earth`](https://www.npmjs.com/package/@johnmorrisdotca/chikyu-earth), turning once in 12 minutes: a line-drawn globe behind Line drawing and Thick lines, one SVG and no canvas, and the realistic Earth behind Painted, a second WebGL context given back when it is left. A person who does not choose it loads nothing of it and pays nothing. It draws 2 or 4 times a second, not at all out of sight, on a hidden tab or under reduced motion, and stops turning when nobody has touched the page for five minutes. `e2e/freeze.demo.ts` holds its budgets, and `pnpm test:freeze` runs that file alone. None of this is in the published package.
+- Demo: kazoku-ui 0.10 (chikyu-earth needs >=0.9.0), with `controls="advanced"` on the bar, so it keeps tilt, Front and the pan pad on show; its `2×` preset is gone, and a double press on the view still goes to 2 times. The Content-Security-Policy's `style-src` gains one hash, for the realistic Earth's inline `<style>`, until chikyu-earth adopts its styles as kazoku-ui does.
+
 ## [0.2.2]
 
 - Demo: kazoku-ui 0.7 (a dev dependency, used only by the demo). The demo's strict Content-Security-Policy is now plain `style-src 'self'`: the controls adopt their styles as a constructable stylesheet since kazoku-ui 0.3.1, so the build no longer writes the controls' style text's hash into the page (the `%KAZOKU_STYLE%` step of `scripts/site.ts` is gone). The introduction's own pause (a one-minute timer and a scroll observer in `demo/demo.ts`) is replaced by the controls' `autoplay-for="60"` and their idle-out-of-sight, from kazoku-ui 0.7.1; `docs/element.md` says so.

@@ -53,6 +53,7 @@ The published package has no runtime dependency of its own. These are peer depen
 | Name | Version | Licence | Used for |
 | --- | --- | --- | --- |
 | three | 0.186.1 (peer, >=0.170.0) | MIT | The 3D view |
+| @johnmorrisdotca/chikyu-earth | 0.5.0 | MIT | The demo's Earth, never in the package |
 | react | 19 (optional peer, >=18) | MIT | The React wrapper |
 | react-dom | 19 | MIT | Testing the wrapper |
 | typescript | 5.9 | Apache-2.0 | The build |
@@ -64,3 +65,17 @@ The published package has no runtime dependency of its own. These are peer depen
 | @types/node, @types/react, @types/react-dom, @types/three | 24, 19, 19, 0.186 | MIT | Types |
 
 The demo site bundles three and, on its check page, react and react-dom, each under the MIT licence.
+
+## The demo's Earth
+
+The Earth behind the rocket on the demo site is not in the published package. The site bundles @johnmorrisdotca/chikyu-earth (MIT, a dev dependency here), with @johnmorrisdotca/chizu (MIT) and d3-geo (ISC, its licence in chikyu-earth's `LICENSES/d3-geo.txt`), and its shared renderer is @johnmorrisdotca/kazoku-ui (MIT).
+
+The country outlines are [Natural Earth](https://www.naturalearthdata.com), public domain, through chizu.
+
+The Painted look's pictures, copied beside the demo page from chikyu-earth's `dist/textures/`, are NASA's own images, resized and re-encoded by that package. NASA says its content "generally are not subject to copyright in the United States" and asks that "NASA should be acknowledged as the source of the material" (https://www.nasa.gov/nasa-brand-center/images-and-media/, as chikyu-earth's NOTICE quotes it, read there 2026-11-02). This project is not endorsed by NASA and uses none of NASA's insignia.
+
+| Picture | Source | Credit |
+| --- | --- | --- |
+| `day-*.webp`, and `water-*.webp`, made from it | Blue Marble: Next Generation, September 2004 (Visible Earth 73801) | NASA Earth Observatory (Reto Stöckli, Blue Marble Next Generation) |
+| `night-*.webp` | Earth at Night, Black Marble 2016 (Visible Earth 144898) | NASA Earth Observatory, Suomi NPP VIIRS data (Miguel Roman, NASA's Goddard Space Flight Center) |
+| `clouds-*.webp` | Blue Marble clouds (Visible Earth 57747) | NASA Earth Observatory (Reto Stöckli) |

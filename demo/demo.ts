@@ -1,8 +1,10 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
 import { check, type Description, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
+import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
+import type { EarthForm, EarthShow } from "./earth.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -27,7 +29,10 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const state = { rocket: "starship", variant: "v3", show: "together", look: "line" as LookName, view: "three-quarter" as ViewName };
+const address = createAddressState({ defaults: { background: "none" } });
+const BACKGROUND_WORDS = { none: "None", earth: "Earth" } as const;
+type BackgroundName = keyof typeof BACKGROUND_WORDS;
+const state = { rocket: "starship", variant: "v3", show: "together", look: "line" as LookName, view: "three-quarter" as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName };
 
 function chip(label: string, testid: string, on: () => void): HTMLButtonElement {
   const button = el("button", { type: "button", className: "chip", textContent: label });
@@ -88,6 +93,36 @@ function factsFor(variant: Variant): HTMLElement[] {
 const credit = byId("credit");
 const creditsFor = (variant: Variant) => check({ rocket: variant.rocket, variant: variant.id }).credits;
 
+// ------------------------------------------------------------- the Earth behind it: nothing of it is loaded or runs until it is chosen
+const earthHolder = byId("earth-back");
+let earthShown: EarthShow | null = null;
+let earthForm: EarthForm | null = null;
+let earthAsked = 0;
+/** No WebGL here, or a picture would not load: the line globe needs neither. */
+let realisticBarred = false;
+hero.addEventListener("uchusen-fallback", () => {
+  realisticBarred = true;
+  syncEarth();
+});
+function syncEarth() {
+  byId("earth-credit").hidden = state.background !== "earth";
+  const form: EarthForm | null = state.background !== "earth" ? null : state.look === "line" ? "line" : state.look === "thick" || realisticBarred ? "thick" : "realistic";
+  if (form === earthForm) return;
+  earthForm = form;
+  const asked = ++earthAsked;
+  earthShown?.stop();
+  earthShown = null;
+  earthHolder.hidden = form === null;
+  if (form)
+    void import("./earth.ts").then(({ showEarth }) => {
+      if (asked === earthAsked)
+        earthShown = showEarth(earthHolder, form, () => {
+          realisticBarred = true;
+          syncEarth();
+        });
+    });
+}
+
 function renderMain() {
   const rocket = ROCKETS[state.rocket];
   if (!rocket.variants.some((one) => one.id === state.variant)) state.variant = rocket.defaultVariant;
@@ -103,6 +138,7 @@ function renderMain() {
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
   press(byId("views"), `view-${state.view}`);
+  press(byId("backgrounds"), `background-${state.background}`);
   hero.setAttribute("rocket", state.rocket);
   hero.setAttribute("variant", state.variant);
   hero.setAttribute("show", state.show);
@@ -128,17 +164,20 @@ function renderMain() {
       ]),
     );
   } else credit.textContent = "Painted by this package's own code, from sourced sizes. No licensed model shows this variant.";
+  syncEarth();
 }
 
 function pick(change: Partial<typeof state>) {
   if (change.view !== undefined && change.view !== state.view) bar.set({ yaw: 0, tilt: 0 });
   Object.assign(state, change);
+  if (change.background) address.set("background", change.background);
   renderMain();
 }
 
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
 byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));
+byId("backgrounds").append(...(Object.keys(BACKGROUND_WORDS) as BackgroundName[]).map((background) => chip(BACKGROUND_WORDS[background], `background-${background}`, () => pick({ background }))));
 renderMain();
 
 // ------------------------------------------------------------- compare
