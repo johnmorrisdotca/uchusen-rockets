@@ -183,6 +183,10 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 `friendship-7`: the Mercury spacecraft, 3.3 m long without its escape tower and 1.8 m wide, as flown on 1962-02-20. Those are two scales, 19% apart, because NASA's file is stouter than its sources. NASA's copy leaves its materials all one grey, so their colours are judged from photographs. Its line looks are this package's own plain shape.
 
+## Jupiter-C
+
+`jupiter-c`: 21.3 m tall and 1.8 m across, first flown on 1956-09-20. Painted, it is NASA's model with its lettering painted out; its line looks are this package's own plain shapes.
+
 ## Real flights
 
 `FLIGHTS` lists Falcon 1's five flights and Starship's fourteen with their dates, vehicles and outcomes, each with its source. Nothing plays them yet.

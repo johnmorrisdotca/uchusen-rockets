@@ -16,6 +16,7 @@ import { LUNAR_MODULE_VARIANTS } from "./data/lunarmodule.ts";
 import { APOLLO_SOYUZ_VARIANTS } from "./data/apollosoyuz.ts";
 import { GEMINI_VARIANTS } from "./data/gemini.ts";
 import { MERCURY_VARIANTS } from "./data/mercury.ts";
+import { JUPITER_C_VARIANTS } from "./data/jupiterc.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -58,6 +59,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "apollo-soyuz": { id: "apollo-soyuz", name: "Apollo and Soyuz", status: "built", variants: APOLLO_SOYUZ_VARIANTS, defaultVariant: "apollo-soyuz" },
   "gemini": { id: "gemini", name: "Gemini", status: "built", variants: GEMINI_VARIANTS, defaultVariant: "gemini" },
   "mercury": { id: "mercury", name: "Mercury", status: "built", variants: MERCURY_VARIANTS, defaultVariant: "friendship-7" },
+  "jupiter-c": { id: "jupiter-c", name: "Jupiter-C", status: "built", variants: JUPITER_C_VARIANTS, defaultVariant: "jupiter-c" },
   droneship: { id: "droneship", name: "Drone ships", status: "built", variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", variants: TOWER_VARIANTS, defaultVariant: "stack" },

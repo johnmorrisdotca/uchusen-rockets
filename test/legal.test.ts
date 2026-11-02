@@ -85,6 +85,7 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "gemini-adapter.glb": [2.39, 3],
     "gemini-capsule.glb": [3.23, Number.NaN],
     "mercury-capsule.glb": [3.3, 1.8],
+    "jupiter-c-vehicle.glb": [21.3, 1.8],
     "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
     "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
     "space-shuttle-stack-srb.glb": [45.46, 3.71],

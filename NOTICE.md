@@ -48,6 +48,7 @@ The dataset addresses named below are the record of what each model is. Their do
 | `apollo-soyuz-csm.glb`, `apollo-soyuz-docking-module.glb`, `apollo-soyuz-soyuz.glb` | Apollo Soyuz | https://data.nasa.gov/dataset/nasa-3d-models-apollo-soyuz | The flags and the countries' names painted out of its pictures; reduced from 32,996 triangles to 29,314; rescaled to the sourced lengths and widths; stood on end; separated into its three craft; its materials made into one picture. |
 | `gemini-adapter.glb`, `gemini-capsule.glb` | Gemini | https://data.nasa.gov/dataset/nasa-3d-models-gemini | The flag and the country's name painted out of its picture; reduced from 38,840 triangles to 27,007; rescaled to the sourced length; separated into adapter and capsule; its materials made into one picture. |
 | `mercury-capsule.glb` | Friendship 7 | https://data.nasa.gov/dataset/nasa-3d-models-friendship-7 | Reduced from 164,622 triangles to 40,000; rescaled to the sourced length and width; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove. |
+| `jupiter-c-vehicle.glb` | Jupiter-C | https://data.nasa.gov/dataset/nasa-3d-models-jupiter-c | The lettering painted out of its pictures; its 8,933 triangles kept; rescaled to the sourced height; its materials made into one picture. |
 <!-- more NASA models -->
 
 ## Facts

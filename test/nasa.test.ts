@@ -18,6 +18,7 @@ const ROWS: readonly Row[] = [
   { rocket: "apollo-soyuz", variant: "apollo-soyuz", credit: "nasa-apollo-soyuz", files: ["apollo-soyuz-csm.glb", "apollo-soyuz-docking-module.glb", "apollo-soyuz-soyuz.glb"] },
   { rocket: "gemini", variant: "gemini", credit: "nasa-gemini", files: ["gemini-adapter.glb", "gemini-capsule.glb"] },
   { rocket: "mercury", variant: "friendship-7", credit: "nasa-friendship-7", files: ["mercury-capsule.glb"] },
+  { rocket: "jupiter-c", variant: "jupiter-c", credit: "nasa-jupiter-c", files: ["jupiter-c-vehicle.glb"] },
   // more models
 ];
 
