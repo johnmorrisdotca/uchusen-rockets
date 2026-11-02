@@ -82,11 +82,10 @@
 
       <section id="builder" aria-labelledby="builder-title">
         <h2 id="builder-title">Build one from parts</h2>
-        <p>Every part has the same record: its size, its origin and the joints it mates at, so a part from anywhere can go in a slot. The check says whether the joints fit, and a mix is labelled as what it is: never a vehicle that flew.</p>
+        <p>Parts from every rocket. Each row offers what fits on the row below, and a row with one answer is answered for you. A mix is labelled as what it is: never a vehicle that flew.</p>
         <div class="builder">
           <div class="builder-picks">
-            <label>Booster <select id="pick-booster" data-testid="pick-booster"></select></label>
-            <label>Ship <select id="pick-ship" data-testid="pick-ship"></select></label>
+            <div class="builder-rows" id="builder-rows" data-testid="builder-rows"></div>
             <p id="builder-report" class="report" data-testid="builder-report" role="status"></p>
             <pre class="code"><code id="builder-code"></code></pre>
           </div>

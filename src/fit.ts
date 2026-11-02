@@ -44,7 +44,8 @@ export interface FitReport {
   credits: readonly (ModelCredit & { id: CreditId; usedFor: readonly string[] })[];
 }
 
-const TOLERANCE = 0.1;
+/** How far apart two joints may be in metres and still meet. */
+export const JOINT_TOLERANCE = 0.1;
 
 /** The whole height, joint to joint up the stack, and the widest part. */
 function sizeOf(parts: readonly SlotPart[]): { height: number; diameter: number } {
@@ -121,7 +122,7 @@ export function check(description: Description): FitReport {
       continue;
     }
     if (top.kind !== bottom.kind) fail("joint-kind", `${below.name} ends in a ${top.kind} joint and ${above.name} starts with a ${bottom.kind} joint.`);
-    if (Math.abs(top.diameter - bottom.diameter) > TOLERANCE) fail("joint-diameter", `${below.name} is ${top.diameter} m across at the joint and ${above.name} is ${bottom.diameter} m.`);
+    if (Math.abs(top.diameter - bottom.diameter) > JOINT_TOLERANCE) fail("joint-diameter", `${below.name} is ${top.diameter} m across at the joint and ${above.name} is ${bottom.diameter} m.`);
   }
   if (custom) issues.push({ code: "custom", level: "note", message: "A part here is not true for this variant, so this is a custom build, not a vehicle that flew." });
   return done(variant, parts, custom);

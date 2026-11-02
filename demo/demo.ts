@@ -1,5 +1,5 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { check, type Description, embedCode, EMBED_KINDS, embedNote, type EmbedKind, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { builderState, check, embedCode, EMBED_KINDS, embedNote, type EmbedKind, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
@@ -309,27 +309,43 @@ renderCompare();
 
 // ------------------------------------------------------------- builder
 const builderRocket = byId<UchusenRocket>("builder-rocket");
-const pickBooster = byId<HTMLSelectElement>("pick-booster");
-const pickShip = byId<HTMLSelectElement>("pick-ship");
-const fill = (select: HTMLSelectElement, kind: string) => {
-  for (const { record } of PART_ENTRIES) if (record.kind === kind) select.append(el("option", { value: record.id, textContent: record.name }));
-};
-fill(pickBooster, "booster");
-fill(pickShip, "ship");
-pickBooster.value = "starship-v3-booster";
-pickShip.value = "starship-v3-ship";
+const builderRows = byId("builder-rows");
+let builderPicks: string[] = [];
 function renderBuilder() {
-  const description: Description = { rocket: "starship", variant: "v3", parts: { booster: pickBooster.value, ship: pickShip.value } };
-  const report = check(description);
+  const { rows, description, report } = builderState(builderPicks);
+  // what the builder chose is what stands: a later change starts from here
+  builderPicks = rows.map((row) => row.chosen);
+  builderRows.replaceChildren(
+    ...rows.map((row, index) => {
+      const label = el("label", {}, row.label);
+      if (row.auto) {
+        // one answer: no question to ask
+        label.append(el("output", { className: "builder-only", textContent: row.options[0].name }));
+        label.dataset.testid = `pick-${index}-only`;
+        return label;
+      }
+      const select = el("select");
+      select.dataset.testid = `pick-${index}`;
+      for (const rocket of new Set(row.options.map((option) => option.rocket))) {
+        const group = el("optgroup", { label: rocket });
+        for (const option of row.options) if (option.rocket === rocket) group.append(el("option", { value: option.id, textContent: option.name }));
+        select.append(group);
+      }
+      select.value = row.chosen;
+      select.addEventListener("change", () => {
+        builderPicks[index] = select.value;
+        renderBuilder();
+      });
+      label.append(select);
+      return label;
+    }),
+  );
   const box = byId("builder-report");
-  box.dataset.kind = !report.ok ? "refused" : report.custom ? "custom" : "real";
-  box.textContent = !report.ok ? report.issues.filter((issue) => issue.level === "error").map((issue) => issue.message).join(" ") : `${report.label}. ${report.size?.height.toFixed(1)} m tall as drawn.`;
-  const trim = report.custom ? description : { rocket: "starship", variant: "v3" };
-  byId("builder-code").textContent = `build(${JSON.stringify(trim)})`;
-  if (report.ok) builderRocket.description = trim;
+  box.dataset.kind = report.custom ? "custom" : "real";
+  box.textContent = `${report.label}. ${report.size?.height.toFixed(1)} m tall as drawn.`;
+  byId("builder-code").textContent = `build(${JSON.stringify(description)})`;
+  builderRocket.description = description;
 }
-pickBooster.addEventListener("change", renderBuilder);
-pickShip.addEventListener("change", renderBuilder);
 renderBuilder();
 
 // ------------------------------------------------------------- the parts alone

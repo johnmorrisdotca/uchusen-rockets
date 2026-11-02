@@ -326,15 +326,48 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
   expect(problems).toEqual([]);
 });
 
-test("the builder labels a mix as what it is, and credits only what is used", async ({ page }) => {
+test("the builder offers parts from every rocket, labels a mix as what it is, and never reaches one that does not fit", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
   const report = page.locator('[data-testid="builder-report"]');
-  await expect(report).toContainText("Block 3 (V3)");
-  await page.locator('[data-testid="pick-ship"]').selectOption("starship-v2-ship");
+  const pick = (index: number) => page.locator(`[data-testid="pick-${index}"]`);
+  const rocket = page.locator('[data-testid="builder-rocket"]');
+  // it starts on a real vehicle
+  await expect(report).toHaveAttribute("data-kind", "real");
+  const bottoms = await pick(0).locator("option").evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+  for (const id of ["starship-v3-booster", "falcon-9-block-5-first-stage", "falcon-heavy-falcon-heavy-centre", "dragon-dragon-2-trunk", "grasshopper-grasshopper-vehicle"]) expect(bottoms).toContain(id);
+  // a mix says so, in no alarming colour
+  const first = await pick(0).inputValue();
+  expect(first).toBe("starship-v1-flight1-booster");
+  await pick(1).selectOption("starship-v2-ship");
   await expect(report).toContainText("Custom build, not a vehicle that flew");
   await expect(report).toHaveAttribute("data-kind", "custom");
-  await expect(page.locator('[data-testid="builder-rocket"]')).toHaveAttribute("data-custom", "true");
+  await expect(rocket).toHaveAttribute("data-custom", "true");
+  // a Falcon 9 stage: the rows change, and what could not fit is not offered
+  await pick(0).selectOption("falcon-9-block-5-first-stage");
+  await expect(report).not.toContainText("Custom build");
+  await expect(report).toContainText("Falcon 9 Block 5");
+  const seconds = await pick(1).locator("option").evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+  expect(seconds.every((id) => id.includes("second-stage"))).toBe(true);
+  // the third row is a fairing or a Dragon, and a Dragon brings its own row
+  const tops = await pick(2).locator("option").evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+  expect(tops).toContain("falcon-9-block-5-fairing");
+  expect(tops).toContain("dragon-dragon-2-trunk");
+  await pick(2).selectOption("dragon-dragon-2-trunk");
+  await expect(report).toContainText("Falcon 9 Block 5 with Dragon 2");
+  await expect(rocket).toHaveAttribute("data-variant", "block-5-dragon-2");
+  await expect(pick(3)).toBeVisible();
+  // Falcon Heavy's side boosters have one answer each: made for the reader, with no question
+  await pick(0).selectOption("falcon-heavy-falcon-heavy-centre");
+  await expect(page.locator('[data-testid="pick-1-only"]')).toContainText("side booster, left");
+  await expect(page.locator('[data-testid="pick-2-only"]')).toContainText("side booster, right");
+  await expect(report).toContainText("Falcon Heavy");
+  await expect(rocket).toHaveAttribute("data-variant", "falcon-heavy");
+  // a thing that stands alone
+  await pick(0).selectOption("grasshopper-grasshopper-vehicle");
+  await expect(report).toContainText("Grasshopper");
+  await expect(pick(1)).toHaveCount(0);
+  await expect(page.locator(".report")).toHaveCSS("border-color", "rgb(39, 52, 76)");
   expect(problems).toEqual([]);
 });
 
