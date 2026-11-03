@@ -11,7 +11,7 @@
 </script>
 ```
 
-`<uchusen-flight>` is a play button, a slider, Back, Next, where the flight is, what happens there, a chart of each part's engines from below with the burning ones filled, and where it all comes from. It says so when a version has no flight.
+`<uchusen-flight>` is a play button, a slider, Back, Next, where the flight is, what happens there, a chart of each part's engines from below with the burning ones filled, and where it all comes from. It says so when a version has no flight. The words it says itself (Play, Back, Next and the rest) are English; `flight.words = { play: "…" }` gives it another language's (the keys are `play`, `pause`, `again`, `back`, `next`, `leave`, `range`, `none`, `sourced`, `reduced` and `from`, and any left out stay English). A phase's name, what happens in it and a flight's note are the data's and stay as they are.
 
 ## What is sourced and what is a picture
 
@@ -32,14 +32,16 @@ Each flight says whose timing it is and whether it was the plan or what happened
 | Falcon 9 Full Thrust | ABS-2A and Eutelsat 117 West B, June 2016, as planned; the first stage is not followed | Spaceflight Now, with the version from Wikipedia's ABS-2A |
 | Falcon 9 Block 5 | Starlink, November 2019, landing on a drone ship | Spaceflight Now |
 | Falcon 9 Block 5 with Dragon 2 | CRS-16, returning to land, which flew the first Dragon | Spaceflight Now |
+| Falcon 9 v1.0 with Dragon 1 | COTS Demo Flight 1, December 2010, as planned; the first stage is not followed and the trunk stays with the second stage | SpaceX's press kit and Spaceflight Now's launch timeline |
+| Dragon 1 | The same flight from Dragon's separation to its water landing: the deorbit burn, entry, both parachutes and the landing, as planned | SpaceX's COTS Demo Flight 1 press kit |
 | Falcon Heavy | The test flight | Wikipedia's timeline |
 | Grasshopper | Its highest hop, 744 m in 79 s | Wikipedia's table of its eight hops |
 
-The other variants have no flight, and a custom build never has one: Falcon 9 v1.0 (no page read gives a flight of it with a fairing), Block 4 of Starship (it has not flown), the 2019 design, Dragon on its own (no timeline read for it) and the rest. There is no tower, no catch arms and no drone ship yet: the parts come down on a plain pad.
+The other variants have no flight, and a custom build never has one: Falcon 9 v1.0 with its fairing (it never flew with one: the vehicle that flew is `v1.0-dragon`), Block 4 of Starship (it has not flown), the 2019 design and the rest. There is no tower, no catch arms and no drone ship yet: the parts come down on a plain pad.
 
 ## Altitude and speed
 
-A phase carries an altitude or a speed only where its page gives one, in the page's own words and units: Starship flight test 1's 39 km and 29 km, flight test 5's 69 km and 212 km, flight test 7's 146 km, flight test 12's 195 km and its booster's 1,450 km/h at the water, CASSIOPE's "more than 20 miles" at two minutes and "310 kilometers" at seven minutes twenty, "Mach 1" on the Full Thrust flight, Grasshopper's 744 m, and the planned orbit of CRS-16. The flight bar shows them beside the time. A blank is a blank: no figure is worked out from another.
+A phase carries an altitude or a speed only where its page gives one, in the page's own words and units: Starship flight test 1's 39 km and 29 km, flight test 5's 69 km and 212 km, flight test 7's 146 km, flight test 12's 195 km and its booster's 1,450 km/h at the water, CASSIOPE's "more than 20 miles" at two minutes and "310 kilometers" at seven minutes twenty, "Mach 1" on the Full Thrust flight, Grasshopper's 744 m, the planned orbit of CRS-16, and COTS Demo Flight 1's "186-mile-high orbit", its drogue parachutes at "45,000 feet" and main parachutes at "about 10,000 feet". The flight bar shows them beside the time. A blank is a blank: no figure is worked out from another.
 
 ## What turns
 

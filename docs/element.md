@@ -11,7 +11,7 @@
 | Attribute | What | Values |
 | --- | --- | --- |
 | `rocket` | Which rocket | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper` |
-| `variant` | Which version | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2` |
+| `variant` | Which version | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.0-dragon`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2` |
 | `show` | Which parts | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right` |
 | `look` | How it is drawn | `line`, `thick`, `painted` |
 | `engines` | Full thrust, one flame and a glow at each engine | `off` (the default), `on`. A reader who asked for reduced motion has them off whatever the page says. A flame's length and its shock diamonds are a picture, not a measurement |

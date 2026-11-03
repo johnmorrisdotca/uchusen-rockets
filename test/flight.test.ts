@@ -166,6 +166,21 @@ test("the flights of the other variants: each from its page, with the figures it
   assert.equal(flightOf("falcon-9", "v1.1")?.id, "falcon-9-cassiope");
   assert.equal(flightOf("falcon-9", "ft")?.id, "falcon-9-abs-eutelsat");
   assert.equal(flightOf("falcon-9", "v1.0"), null, "no page read gives a v1.0 flight with a fairing");
+  // the vehicle that flew COTS Demo Flight 1, and Dragon on its own, from the press kit's and the launch timeline's own times
+  assert.equal(flightOf("falcon-9", "v1.0-dragon")?.id, "falcon-9-cots-1");
+  assert.equal(flightOf("dragon", "dragon-1")?.id, "dragon-cots-1");
+  assert.equal(at("falcon-9-cots-1", "max-q").at.value, 76);
+  assert.equal(at("falcon-9-cots-1", "meco").at.value, 178);
+  assert.equal(at("falcon-9-cots-1", "separation").at.value, 182);
+  assert.equal(at("falcon-9-cots-1", "dragon-separates").at.value, 575);
+  assert.equal(at("falcon-9-cots-1", "two-down").at.value, null, "the page gives no time for it");
+  assert.deepEqual(burnsOf(at("falcon-9-cots-1", "two-down")), { "first-stage": 7 });
+  assert.match(at("falcon-9-cots-1", "seco").altitude?.value ?? "", /186-mile/);
+  assert.equal(at("dragon-cots-1", "deorbit-start").at.value, 2 * 3600 + 32 * 60);
+  assert.equal(at("dragon-cots-1", "splashdown").at.value, 3 * 3600 + 19 * 60);
+  assert.match(at("dragon-cots-1", "drogue").altitude?.value ?? "", /45,000 feet/);
+  assert.match(at("dragon-cots-1", "main").altitude?.value ?? "", /10,000 feet/);
+  assert.equal(SOURCES["sfn-cots1-presskit"].read, "direct");
   assert.match(at("falcon-9-cassiope", "altitude").altitude?.value ?? "", /310 kilometers/);
   assert.match(at("falcon-9-cassiope", "climb").altitude?.value ?? "", /more than 20 miles/);
   assert.equal(at("falcon-9-abs-eutelsat", "mach-1").speed?.value, "Mach 1");

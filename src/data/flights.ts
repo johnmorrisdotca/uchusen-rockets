@@ -203,9 +203,13 @@ const CASSIOPE = "sfn-cassiope" as const;
 const ABS = "sfn-abs-eutelsat" as const;
 const F9 = "wikipedia-falcon-9" as const;
 const GRASSHOPPER = "wikipedia-grasshopper" as const;
+const COTS1_TIMELINE = "sfn-cots1-timeline" as const;
+const COTS1_PRESSKIT = "sfn-cots1-presskit" as const;
 const nineMerlin = (note: string): FlightBurn => count(9, F9, note);
 const oneMerlin = (note: string): FlightBurn => count(1, F9, note);
 
+/** The second stage and Dragon on it move as one. */
+const onTop = (dx: number, dy: number): Record<string, PartPose> => ({ "second-stage": { dx, dy }, trunk: { dx, dy }, capsule: { dx, dy } });
 const lower = (dy: number, extra: PartPose = {}): PartPose => ({ dx: -0.26, dy, ...extra });
 
 const BASE_FLIGHTS: readonly Flight[] = [
@@ -380,6 +384,46 @@ const BASE_FLIGHTS: readonly Flight[] = [
       { id: "seco-2", name: "SECO 2", what: "The second stage shuts down again.", at: time("+00:26:58", ABS), burns: {}, pose: { "first-stage": { gone: true }, "second-stage": { dx: 0.22, dy: 0.16 }, fairing: { gone: true } }, ground: 1.6 },
       { id: "eutelsat", name: "Eutelsat 117 West B separates", what: "The first of the two satellites is released.", at: time("+00:30:29", ABS), burns: {}, pose: { "first-stage": { gone: true }, "second-stage": { dx: 0.22, dy: 0.18 }, fairing: { gone: true } }, ground: 1.6 },
       { id: "abs", name: "ABS-2A separates", what: "The second satellite is released.", at: time("+00:35:29", ABS), burns: {}, pose: { "first-stage": { gone: true }, "second-stage": { dx: 0.22, dy: 0.2 }, fairing: { gone: true } }, ground: 1.6 },
+    ],
+  },
+  {
+    id: "falcon-9-cots-1",
+    rocket: "falcon-9",
+    variant: "v1.0-dragon",
+    name: "Falcon 9 v1.0 with Dragon 1, COTS Demo Flight 1",
+    basis: "SpaceX's press kit for COTS Demo Flight 1 and Spaceflight Now's launch timeline, both written before the launch of 8 December 2010: the plan, which the kit says will vary with the mission. The press kit gives the times; the timeline page adds max q and what the stages do.",
+    source: COTS1_TIMELINE,
+    note: "The page says that two of the nine first-stage engines shut down before the rest and gives no time for it, so that step has none. The first stage is not followed after it separates. It says the Dragon capsule separates from the second stage 'leaving behind its unpressurized trunk section', so the trunk stays with the second stage here. Dragon 1 is drawn with solar wings, which the press kit says nothing of. No fairing: Dragon is the payload.",
+    phases: [
+      { id: "ignition", name: "Ignition", what: "The engine controller starts the ignition sequence on the pad.", at: time("-00:00:03", COTS1_PRESSKIT), burns: { "first-stage": nineMerlin("The nine Merlin 1C of this version, from its page.") }, pose: {}, ground: 0, smoke: 0.7 },
+      { id: "liftoff", name: "Liftoff", what: "The four hold-down clamps release the booster.", at: time("+00:00:00", COTS1_TIMELINE), burns: { "first-stage": nineMerlin("The nine Merlin 1C of this version, from its page.") }, pose: {}, ground: 0.02, smoke: 1 },
+      { id: "max-q", name: "Max q", what: "The rocket reaches the point of maximum aerodynamic pressure.", at: time("+00:01:16", COTS1_TIMELINE), burns: { "first-stage": nineMerlin("The nine Merlin 1C of this version, from its page.") }, pose: {}, ground: 1.6, air: 0.25 },
+      { id: "two-down", name: "Two engines shut down", what: "Two of the first stage's engines shut down before the other seven.", at: blank("The timeline says two engines shut down before the rest and gives no time."), burns: { "first-stage": count(7, COTS1_TIMELINE, "The page says the remaining seven cut off at MECO.") }, pose: {}, ground: 1.6, air: 0.7 },
+      { id: "meco", name: "MECO", what: "The remaining seven Merlin engines cut off.", at: time("+00:02:58", COTS1_TIMELINE), burns: {}, pose: {}, ground: 1.6, air: 0.8 },
+      { id: "separation", name: "Stage separation", what: "The first stage separates from the second, four seconds after MECO. It is not followed from here.", at: time("+00:03:02", COTS1_TIMELINE), burns: {}, pose: { "first-stage": lower(-0.05), ...onTop(0.14, 0.04) }, ground: 1.6, air: 0.9 },
+      { id: "second-stage", name: "Second stage ignition", what: "The second stage's Merlin vacuum engine ignites for a six-minute burn to put Dragon in orbit.", at: time("+00:03:09", COTS1_TIMELINE), burns: { "second-stage": oneMerlin("The one vacuum Merlin of this version, from its page.") }, pose: { "first-stage": lower(-0.1, { gone: true }), ...onTop(0.2, 0.08) }, ground: 1.6, air: 1 },
+      { id: "seco", name: "Second stage cutoff", what: "The vacuum engine shuts down in orbit.", at: time("+00:09:00", COTS1_TIMELINE), burns: {}, pose: { "first-stage": { gone: true }, ...onTop(0.22, 0.12) }, ground: 1.6, altitude: { value: "a 186-mile-high orbit, inclined 34.5 degrees", source: COTS1_TIMELINE } },
+      { id: "dragon-separates", name: "Dragon separates", what: "The Dragon capsule separates from the second stage; the trunk stays behind with the second stage.", at: time("+00:09:35", COTS1_TIMELINE), burns: {}, pose: { "first-stage": { gone: true }, "second-stage": { dx: 0.22, dy: 0.12 }, trunk: { dx: 0.22, dy: 0.12 }, capsule: { dx: 0.25, dy: 0.2 } }, ground: 1.6 },
+      { id: "operations", name: "On-orbit operations begin", what: "Dragon begins a series of demonstrations in space lasting about three and a half hours.", at: time("+00:13:00", COTS1_TIMELINE), burns: {}, pose: { "first-stage": { gone: true }, "second-stage": { gone: true }, trunk: { gone: true }, capsule: { dx: 0.25, dy: 0.24 } }, ground: 1.6 },
+    ],
+  },
+  {
+    id: "dragon-cots-1",
+    rocket: "dragon",
+    variant: "dragon-1",
+    name: "Dragon 1, COTS Demo Flight 1",
+    basis: "SpaceX's press kit for COTS Demo Flight 1, written before the launch of 8 December 2010: the plan, which the kit says will vary with the mission. Its times after the first thirteen minutes are hours and minutes from launch, as its 'roughly 3 1/2 hours from launch to splashdown' reads, so they are given to the minute.",
+    source: COTS1_PRESSKIT,
+    note: "Dragon's thrusters and parachutes are not drawn, so the burn and the descent are only said in words. The trunk is left with the second stage at separation, as Spaceflight Now's launch timeline says. Dragon 1 is drawn with solar wings; the press kit says this Dragon ran on a lithium battery.",
+    phases: [
+      { id: "separation", name: "Dragon separates", what: "Dragon separates from Falcon 9 and starts its propulsion. The trunk stays with the second stage.", at: time("+00:09:35", COTS1_PRESSKIT), burns: {}, pose: { trunk: { dx: -0.25, dy: -0.2 }, capsule: {} }, ground: 1.6, altitude: { value: "a 300 kilometers circular orbit", source: COTS1_PRESSKIT } },
+      { id: "operations", name: "On-orbit operations", what: "Dragon begins its demonstrations: its thrusters, telemetry, guidance and control.", at: time("+00:13:00", COTS1_PRESSKIT), burns: {}, pose: { trunk: { gone: true }, capsule: {} }, ground: 1.6, speed: { value: "greater than 17,000 mph, an orbit in 90 minutes", source: COTS1_PRESSKIT } },
+      { id: "deorbit-start", name: "Deorbit burn begins", what: "The Draco thrusters fire to bring Dragon down.", at: time("+02:32:00", COTS1_PRESSKIT, { note: "The kit's 2:32, read as hours and minutes." }), burns: {}, pose: { trunk: { gone: true }, capsule: { pitch: 20 } }, ground: 1.6 },
+      { id: "deorbit-end", name: "Deorbit burn ends", what: "The burn ends.", at: time("+02:38:00", COTS1_PRESSKIT), burns: {}, pose: { trunk: { gone: true }, capsule: { pitch: 20 } }, ground: 1.6 },
+      { id: "entry", name: "Entry interface", what: "The reentry phase begins; the heat shield faces the air.", at: time("+02:58:00", COTS1_PRESSKIT), burns: {}, pose: { trunk: { gone: true }, capsule: { pitch: 30 } }, ground: 0.8, air: 1 },
+      { id: "drogue", name: "Drogue parachutes", what: "Dual drogue parachutes deploy to stabilize and slow Dragon.", at: time("+03:09:00", COTS1_PRESSKIT), burns: {}, pose: { trunk: { gone: true }, capsule: {} }, ground: 0.5, air: 0.4, altitude: { value: "45,000 feet", source: COTS1_PRESSKIT } },
+      { id: "main", name: "Main parachutes", what: "The drogues release the main parachutes, which slow Dragon to a gentle landing.", at: time("+03:10:00", COTS1_PRESSKIT), burns: {}, pose: { trunk: { gone: true }, capsule: {} }, ground: 0.2, air: 0.1, altitude: { value: "about 10,000 feet", source: COTS1_PRESSKIT } },
+      { id: "splashdown", name: "Water landing", what: "Dragon lands in the Pacific Ocean, roughly 500 miles west of the coast of Mexico, drawn here on plain ground.", at: time("+03:19:00", COTS1_PRESSKIT), burns: {}, pose: { trunk: { gone: true }, capsule: { rest: true } }, ground: 0, speed: { value: "approximately 16 to 18 ft/sec under the main parachutes", source: COTS1_PRESSKIT } },
     ],
   },
   {

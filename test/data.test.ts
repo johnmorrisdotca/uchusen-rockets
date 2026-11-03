@@ -113,8 +113,8 @@ test("what is planned carries sourced facts, not shapes", () => {
 
 test("Falcon 9's versions are those the sources document, each with its own height, and Block 4 is not listed apart", () => {
   const ids = ROCKETS["falcon-9"].variants.map((variant) => variant.id);
-  assert.deepEqual(ids, ["v1.0", "v1.1", "ft", "block-5", "block-5-dragon-2"]);
-  assert.deepEqual(ids.slice(0, 4).map((id) => variantOf("falcon-9", id)?.facts.height.value), [54.9, 68.4, 69.8, 69.8]);
+  assert.deepEqual(ids, ["v1.0", "v1.0-dragon", "v1.1", "ft", "block-5", "block-5-dragon-2"]);
+  assert.deepEqual(ids.slice(0, 5).map((id) => variantOf("falcon-9", id)?.facts.height.value), [54.9, 47.8, 68.4, 69.8, 69.8]);
   // the rounded figures are kept as what else was said, and say why
   assert.ok(variantOf("falcon-9", "block-5")?.facts.height.others?.some((other) => other.value === 70 && /rounds/.test(other.note)));
   assert.ok(variantOf("falcon-9", "v1.0")?.facts.height.others?.some((other) => other.value === 53));

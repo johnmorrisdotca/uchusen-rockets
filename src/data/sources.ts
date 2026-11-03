@@ -107,6 +107,9 @@ export const SOURCES = {
   "sfn-crs-16": { title: "Launch timeline for SpaceX's 16th resupply launch to the space station", publisher: "Spaceflight Now", url: "https://spaceflightnow.com/2018/12/05/launch-timeline-for-spacexs-16th-resupply-launch-to-the-space-station/", date: "2018-12-05", read: "direct" },
   "sfn-starlink-2019": { title: "Timeline for Falcon 9 launch of Starlink satellites", publisher: "Spaceflight Now", url: "https://spaceflightnow.com/2019/11/11/launch-timeline-for-falcon-9-launch-of-starlink-satellites/", date: "2019-11-11", read: "direct" },
   "sfn-flight-23": { title: "Timeline for the Falcon 9 rocket's 23rd flight", publisher: "Spaceflight Now", url: "https://spaceflightnow.com/2016/04/07/timeline-for-the-falcon-9-rockets-23rd-flight/", date: "2016-04-07", read: "direct" },
+  "wikipedia-falcon-9-v1-0": { title: "Falcon 9 v1.0 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Falcon_9_v1.0", date: "2026-11-03", read: "direct", licence: "CC BY-SA 4.0" },
+  "sfn-cots1-timeline": { title: "Falcon 9/COTS 1 launch timeline", publisher: "Spaceflight Now", url: "https://spaceflightnow.com/falcon9/002/launchtimeline.html", date: "2010-12-06", read: "direct" },
+  "sfn-cots1-presskit": { title: "SpaceX COTS Demo Flight 1 press kit (its mission timeline, page 7)", publisher: "SpaceX, as hosted by Spaceflight Now", url: "https://spaceflightnow.com/falcon9/002/cots1_presskit.pdf", date: "2026-11-03", read: "direct" },
   "sfn-flight-35": { title: "Timeline of SpaceX's 35th Falcon 9 launch", publisher: "Spaceflight Now", url: "https://spaceflightnow.com/?p=24998", date: "2017-05-31", read: "direct" },
 } as const satisfies Record<string, Source>;
 

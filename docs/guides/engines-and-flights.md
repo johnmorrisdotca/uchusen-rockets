@@ -49,7 +49,9 @@ if (booster) {
 
 ![The flight bar below a rocket at hot staging, with its chart of engines.](../images/flight.jpg)
 
-A variant has a flight only where a page gives one: Starship's first, fifth, seventh and twelfth flight tests, Falcon 9 v1.1, Full Thrust and Block 5 (with and without Dragon 2), Falcon Heavy and Grasshopper's highest hop. The other variants say so, and a custom build never has one. A phase shows an altitude or a speed only where its page gives one, in the page's words.
+A variant has a flight only where a page gives one: Starship's first, fifth, seventh and twelfth flight tests, Falcon 9 v1.0 with Dragon 1 and Dragon 1 on its own (COTS Demo Flight 1), Falcon 9 v1.1, Full Thrust and Block 5 (with and without Dragon 2), Falcon Heavy and Grasshopper's highest hop. The other variants say so, and a custom build never has one. A phase shows an altitude or a speed only where its page gives one, in the page's words.
+
+The flight bar says its own words (Play, Back, Next and the rest) in English. To say them in another language, set `words` on the element: `flight.words = { play: "Start", pause: "Stop" }`. What is left out stays English, and a phase's name, what happens in it and a flight's note are the data's and stay as they are.
 
 Grid fins, legs and flaps turn in a flight where the pages say they do (the Falcon 9's grid fins stowed on ascent and open for the entry, its legs open before the touchdown, Super Heavy's fins steering after the boostback, the Ship's flaps at its entry). How far they turn is a picture, and a painted model that is one shell does not turn: nothing is cut to fake a move.
 

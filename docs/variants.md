@@ -52,6 +52,7 @@ Every part's flaps, fins and chines are drawn from proportions, not from publish
 | Variant | Whole | First stage | Second stage | Fairing | First flew |
 | --- | --- | --- | --- | --- | --- |
 | `v1.0` | 54.9 m, to the fairing's top; 47.8 m with Dragon 1. One table says 53 m | 39.6 m, the stage alone | No source | No source | 2010-06-04 |
+| `v1.0-dragon` Falcon 9 v1.0 with Dragon 1 | 47.8 m as stated, with Dragon 1 and no fairing; the parts are drawn to more | 39.6 m, the stage alone | No source | Trunk, capsule | 2010-12-08 |
 | `v1.1` | 68.4 m; 63.4 m with Dragon 1 | 41.2 m, the stage alone | No source | No source | 2013-09-29 |
 | `ft` Full Thrust | 69.8 m; one table rounds to 70 m | 47.7 m with its interstage | 13.8 m | 13.1 m | 2015-12-22 |
 | `block-5` Block 5 | 69.8 m; 65.7 m with Dragon 2, 63.7 m with Dragon 1. One table and SpaceX-API say 70 m | 47.7 m with its interstage | 13.8 m | 13.1 m | 2018-05-11 |

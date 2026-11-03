@@ -133,8 +133,8 @@ for (const id of Object.keys(FALCON_DRAWS)) {
   const painted = (slot: string) => PAINTED[`falcon-9-${id}-${slot}`] ?? null;
   const drawnFrom = id === "block-5" ? FROM_F9 : FROM_CODE;
   entries.push(
-    { record: { id: `falcon-9-${id}-first-stage`, kind: "first-stage", name: `First stage, Falcon 9 ${id}`, rocket: "falcon-9", trueTo: id === "block-5" ? [id, "block-5-dragon-2"] : [id], height: d.first.height, diameter: 3.7, sourced: facts(FALCON_9_VARIANTS, id, "first-stage"), joints: { top: { kind: "stage", y: d.first.height, diameter: 3.7 } }, painted: painted("first-stage"), drawnFrom }, pieces: () => falconFirstStage(id) },
-    { record: { id: `falcon-9-${id}-second-stage`, kind: "second-stage", name: `Second stage, Falcon 9 ${id}`, rocket: "falcon-9", trueTo: id === "block-5" ? [id, "block-5-dragon-2"] : [id], height: d.second.height, diameter: 3.7, sourced: facts(FALCON_9_VARIANTS, id, "second-stage"), joints: { bottom: { kind: "stage", y: d.second.joint, diameter: 3.7 }, top: { kind: "stage", y: d.second.height, diameter: 3.7 } }, painted: painted("second-stage"), drawnFrom }, pieces: () => falconSecondStage(id) },
+    { record: { id: `falcon-9-${id}-first-stage`, kind: "first-stage", name: `First stage, Falcon 9 ${id}`, rocket: "falcon-9", trueTo: id === "block-5" ? [id, "block-5-dragon-2"] : id === "v1.0" ? [id, "v1.0-dragon"] : [id], height: d.first.height, diameter: 3.7, sourced: facts(FALCON_9_VARIANTS, id, "first-stage"), joints: { top: { kind: "stage", y: d.first.height, diameter: 3.7 } }, painted: painted("first-stage"), drawnFrom }, pieces: () => falconFirstStage(id) },
+    { record: { id: `falcon-9-${id}-second-stage`, kind: "second-stage", name: `Second stage, Falcon 9 ${id}`, rocket: "falcon-9", trueTo: id === "block-5" ? [id, "block-5-dragon-2"] : id === "v1.0" ? [id, "v1.0-dragon"] : [id], height: d.second.height, diameter: 3.7, sourced: facts(FALCON_9_VARIANTS, id, "second-stage"), joints: { bottom: { kind: "stage", y: d.second.joint, diameter: 3.7 }, top: { kind: "stage", y: d.second.height, diameter: 3.7 } }, painted: painted("second-stage"), drawnFrom }, pieces: () => falconSecondStage(id) },
     { record: { id: `falcon-9-${id}-fairing`, kind: "fairing", name: `Fairing, Falcon 9 ${id}`, rocket: "falcon-9", trueTo: [id], height: d.fairing.height, diameter: d.fairing.radius * 2, sourced: { height: facts(FALCON_9_VARIANTS, id, "fairing").height, diameter: blankFigure }, joints: { bottom: { kind: "stage", y: 0, diameter: 3.7 } }, painted: painted("fairing"), drawnFrom }, pieces: () => falconFairing(id) },
   );
 }
@@ -147,7 +147,7 @@ const DRAGON_FROM: Readonly<Record<string, string>> = {
 for (const variant of DRAGON_VARIANTS) {
   const d = DRAGON_DRAWS[variant.id];
   if (!d) continue;
-  const trueTo = variant.id === "dragon-2" ? [variant.id, "block-5-dragon-2"] : [variant.id];
+  const trueTo = variant.id === "dragon-2" ? [variant.id, "block-5-dragon-2"] : variant.id === "dragon-1" ? [variant.id, "v1.0-dragon"] : [variant.id];
   const joint = 3.7;
   entries.push(
     { record: { id: `dragon-${variant.id}-trunk`, kind: "trunk", name: `Trunk, ${variant.name}`, rocket: "dragon", trueTo, height: d.trunk, diameter: d.trunkRadius * 2, sourced: { height: variant.facts.parts.trunk, diameter: blankFigure }, joints: { bottom: { kind: "stage", y: 0, diameter: joint }, top: { kind: "stage", y: d.trunk, diameter: joint } }, painted: PAINTED[`dragon-${variant.id}-trunk`] ?? null, drawnFrom: DRAGON_FROM[variant.id] }, pieces: () => trunk(d) },

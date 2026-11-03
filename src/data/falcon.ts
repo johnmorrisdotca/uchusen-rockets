@@ -2,6 +2,7 @@
 import { blank, type Figure, type Variant } from "./types.ts";
 
 const F9 = "wikipedia-falcon-9" as const;
+const V10 = "wikipedia-falcon-9-v1-0" as const;
 const FH = "wikipedia-falcon-heavy" as const;
 const B5 = "wikipedia-falcon-9-block-5" as const;
 const API = "r-spacex" as const;
@@ -35,6 +36,23 @@ export const FALCON_9_VARIANTS: readonly Variant[] = [
         fairing: blank("No source read here gives it for this version."),
       },
       engines: { "first-stage": said("9 Merlin 1C, in a 3 by 3 grid", F9), "second-stage": said("1 Merlin 1C Vacuum", F9) },
+      more: { landingLegs: blank("It had none on the sources read here.", "None shown") },
+    },
+  },
+  {
+    id: "v1.0-dragon",
+    rocket: "falcon-9",
+    name: "Falcon 9 v1.0 with Dragon 1",
+    status: "flown",
+    firstFlight: said("2010-12-08", "sfn-cots1-timeline", { note: "COTS Demo Flight 1: the first Dragon to fly, and the Falcon 9's second flight. The first, on 2010-06-04, carried a Dragon Spacecraft Qualification Unit." }),
+    slots: ["first-stage", "second-stage", "trunk", "capsule"],
+    partIds: { "first-stage": "falcon-9-v1.0-first-stage", "second-stage": "falcon-9-v1.0-second-stage", trunk: "dragon-dragon-1-trunk", capsule: "dragon-dragon-1-capsule" },
+    note: "The vehicle that flew COTS Demo Flight 1: the v1.0's two stages with Dragon 1 on top and no fairing. The same parts as Falcon 9 v1.0 and Dragon 1, joined at their joints. Dragon 1 is drawn with the solar wings of the later cargo flights; the press kit for this flight says this Dragon ran on its own battery.",
+    facts: {
+      height: m(47.8, V10, { brief: "with Dragon 1, as stated; the parts are drawn to more", note: "The Falcon 9 v1.0 article's infobox gives 54.9 m with the fairing and 47.8 m with Dragon 1. No source read here gives the second stage or the interstage, so the parts of the v1.0 are drawn in proportion to its 54.9 m, and with Dragon 1 on top they add up to more than 47.8 m." }),
+      diameter: m(3.7, F9),
+      parts: { "first-stage": m(39.6, F9, { brief: "the stage alone, without its interstage" }), "second-stage": blank("No source read here gives it for this version."), trunk: m(2.3, "wikipedia-dragon-1", { note: "Aft of the heat shield." }), capsule: blank("No source read here gives the capsule alone.") },
+      engines: { "first-stage": said("9 Merlin 1C, in a 3 by 3 grid", F9), "second-stage": said("1 Merlin 1C Vacuum", F9), capsule: said("18 Draco thrusters", "wikipedia-dragon-1") },
       more: { landingLegs: blank("It had none on the sources read here.", "None shown") },
     },
   },

@@ -136,6 +136,7 @@ test("the parts that have engines in their data and no bell in their drawing sta
     "dragon/dragon-1/capsule",
     "dragon/dragon-2/capsule",
     "falcon-9/block-5-dragon-2/capsule",
+    "falcon-9/v1.0-dragon/capsule",
     "jupiter-c/jupiter-c/vehicle",
     "lunar-module/lunar-module/ascent",
   ]);
