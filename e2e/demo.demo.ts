@@ -12,7 +12,7 @@ function watch(page: Page): string[] {
   const problems: string[] = [];
   page.on("console", (message) => {
     const text = message.text();
-    // WebKit reports a refused stylesheet where Chromium reports nothing, and the page's touch icon is the published site's own address, which a local test server is not
+    // WebKit puts an inline style on its own <select> menus and reports that as a refused stylesheet (a `style-src-attr` violation whose target is a SELECT, as the check below knows), and the page's touch icon is the published site's own address, which a local test server is not
     if (message.type() === "error" && !text.startsWith("Refused to apply a stylesheet") && !text.includes("johnmorrisdotca.github.io/uchusen-rockets/icon.png")) problems.push(`console: ${message.text()}`);
   });
   page.on("pageerror", (error) => problems.push(`page: ${error.message}`));
@@ -442,7 +442,7 @@ test("the builder offers parts from every rocket, labels a mix as what it is, an
   await pick(0).selectOption("grasshopper-grasshopper-vehicle");
   await expect(report).toContainText("Grasshopper");
   await expect(pick(1)).toHaveCount(0);
-  await expect(page.locator(".report")).toHaveCSS("border-color", "rgb(39, 52, 76)");
+  await expect(page.locator(".report")).toHaveCSS("border-color", "rgb(221, 214, 198)");
   expect(problems).toEqual([]);
 });
 
@@ -468,7 +468,7 @@ test("the sources and the credits are on the page, and the page says no one endo
   await expect(page.locator('[data-testid="sources"]')).toContainText("Wikipedia");
   const credits = page.locator('[data-testid="credits"]');
   for (const name of ["Clarence365", "clarence365", "MartianDays", "Stanley Creative", "KUBAHA", "ProgressTH", "Antonio_Adams", "Echo_3"]) await expect(credits).toContainText(name);
-  await expect(page.locator("footer")).toContainText("not affiliated with or endorsed by SpaceX");
+  await expect(page.locator("#legal")).toContainText("not affiliated with or endorsed by SpaceX");
   await press(page, "more-planned");
   await expect(page.locator('[data-testid="planned"]')).toContainText("Vulcan");
   await expect(page.locator('[data-testid="planned"]')).not.toContainText("Falcon 9");
@@ -1098,7 +1098,7 @@ test("every variant's painted look names whose models it is, and the sources lis
   const listed = page.locator('[data-testid="credits"]');
   for (const id of Object.keys(MODEL_CREDITS) as (keyof typeof MODEL_CREDITS)[]) await expect(listed).toContainText(creditLine(id));
   await expect(page.locator('[data-testid="sources"]')).toContainText("OpenStreetMap contributors");
-  await expect(page.locator("footer")).toContainText("ODbL");
+  await expect(page.locator("#legal")).toContainText("ODbL");
   expect(problems).toEqual([]);
 });
 

@@ -91,12 +91,18 @@ function showLine(holder: HTMLElement, style: "line" | "thick"): EarthShow {
   let stopTurn: (() => void) | null = null;
   let stopped = false;
   let draws = 0;
+  // the globe is redrawn a few times a second, in a shadow root of its own: the family header's help switch watches the page's own markup for changes, and a redraw is none of its business
+  const root = holder.shadowRoot ?? holder.attachShadow({ mode: "open" });
+  const sheet = document.createElement("style");
+  sheet.textContent = "svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.55; }";
+  const picture = document.createElement("div");
+  root.replaceChildren(sheet, picture);
   void import("@johnmorrisdotca/chikyu-earth").then(({ globe }) => {
     if (stopped) return;
     stopTurn = turn(holder, TICK_MS[style], (seconds, { width, height, radius, panX, panY }) => {
       // the globe's SVG is square: as wide as the longer side of the box, centred on it and cut off by it
       const size = Math.max(width, height);
-      holder.innerHTML = globe({ size, style, centre: CENTRE, graticule: true, view: { yaw: turnAt(seconds).yaw, tilt: 0, zoom: radius / (size / 2 - 1), panX, panY } });
+      picture.innerHTML = globe({ size, style, centre: CENTRE, graticule: true, view: { yaw: turnAt(seconds).yaw, tilt: 0, zoom: radius / (size / 2 - 1), panX, panY } });
       holder.dataset.draws = String(++draws);
     });
   });
@@ -104,6 +110,7 @@ function showLine(holder: HTMLElement, style: "line" | "thick"): EarthShow {
     stop() {
       stopped = true;
       stopTurn?.();
+      root.replaceChildren();
       holder.replaceChildren();
       delete holder.dataset.draws;
     },

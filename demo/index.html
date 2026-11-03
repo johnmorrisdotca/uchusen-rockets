@@ -1,19 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob: data:; base-uri 'none'; form-action 'none'" />
-    <title>Uchusen Rockets</title>
-    <meta name="description" content="Rockets drawn from sourced sizes: a line drawing, thick lines and a painted 3D view of each variant, together, apart and each part alone." />
+    <!--family:head-->
+    <link rel="stylesheet" href="family.css" />
     <link rel="stylesheet" href="demo.css" />
   </head>
-  <body>
-    <header class="top">
-      <h1>Uchusen Rockets <span class="jp" lang="ja">宇宙船</span></h1>
-      <p class="lede">Rockets made by code from sourced sizes. Pick a variant, take it apart, turn it round. Every figure names its source, and a blank means no source gives it.</p>
-    </header>
+  <body class="demo">
     <main>
+      <!--family:header-->
       <section class="stage-row" id="main-view" aria-label="The rocket">
         <div class="stage-box">
           <div class="view-space">
@@ -132,11 +126,12 @@
           <li>The Painted look's pictures are NASA's: Blue Marble: Next Generation (NASA Earth Observatory, Reto Stöckli), for the day side, the water and the clouds, and Earth at Night, Black Marble 2016 (NASA Earth Observatory, Suomi NPP VIIRS data, Miguel Roman, NASA's Goddard Space Flight Center). NASA does not endorse this project.</li>
         </ul>
       </section>
+      <div class="legal" id="legal">
+        <p>No logo, wordmark or flag is on any rocket here. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. The code is MIT; the painted models are CC BY 4.0 or public domain, each credited above; Starbase's map data is © OpenStreetMap contributors, under ODbL 1.0; the pictures of the Earth are NASA's.</p>
+      </div>
+      <!--family:unreviewed-->
+      <!--family:footer-->
     </main>
-    <footer class="foot">
-      <p>No logo, wordmark or flag is on any rocket here. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. The code is MIT; the painted models are CC BY 4.0 or public domain, each credited above; Starbase's map data is © OpenStreetMap contributors, under ODbL 1.0; the pictures of the Earth are NASA's.</p>
-      <p><a href="https://github.com/johnmorrisdotca/uchusen-rockets">Source on GitHub</a></p>
-    </footer>
-    <script type="module" src="js/demo.js"></script>
+    <!--family:scripts js/demo.js-->
   </body>
 </html>

@@ -2,22 +2,22 @@
 title: React とその他のフレームワーク
 section: how-to
 order: 8
-description: React ではラッパーで、Vue・Svelte・Angular・素の HTML ではカスタム要素として、ロケットを使います。
+description: React ではラッパーで、Vue・Svelte・Angular・素の HTML ではカスタム要素として、ロケットを使います。どの例もビルドして、ブラウザーで開いて確かめています。
 ---
 
-`<uchusen-rocket>` は標準のカスタム要素なので、どのフレームワークでも使えます。React ではカスタム要素にオブジェクトを渡しにくいため、薄いラッパーを用意しています。
+`<uchusen-rocket>` は標準のカスタム要素なので、どのフレームワークでも使えます。React ではカスタム要素にオブジェクトを渡しにくいため、薄いラッパーを用意しています。このページの例は、すべて [`examples/`](https://github.com/johnmorrisdotca/uchusen-rockets/tree/main/examples) のファイルです。`pnpm test:usage` が、npm が作るとおりのパッケージを使って、ひとつずつビルドし、ブラウザーで開いてロケットが描かれるのを待ち、このページに同じファイルがそのまま載っているかも確かめます。
 
 ## React
 
 ```tsx no-run
 import { UchusenRocket } from "@johnmorrisdotca/uchusen-rockets/react";
 
-export function Hero() {
-  return <UchusenRocket rocket="starship" variant="v3" show="apart" look="thick" label="Starship Block 3, taken apart" />;
+export function RocketView({ look = "thick" }: { look?: "line" | "thick" | "painted" }) {
+  return <UchusenRocket rocket="starship" variant="v3" show="apart" look={look} label="Starship Block 3, taken apart" />;
 }
 ```
 
-props は要素の属性と同じです。`rocket`、`variant`、`show`、`look`、`view`、`mode`、`assets`、`spin`、`way`、`label`、`engines`、`phase` です。`build` にはオブジェクトを渡すと、ラッパーが要素の JSON 属性に変えます。ラッパーは最初に使われたときに、エフェクトの中で要素を読み込むので、サーバーレンダリングではタグだけが描かれ、ブラウザーが中身を埋めます。`react` はオプションのピア依存関係です。
+props は要素の属性と同じです。`rocket`、`variant`、`show`、`look`、`view`、`mode`、`assets`、`spin`、`way`、`label`、`engines`、`phase` です。`build` にはオブジェクトを渡すと、ラッパーが要素の JSON 属性に変えます。ラッパーは最初に使われたときに、エフェクトの中で要素を読み込むので、サーバーレンダリング（`renderToString`）ではタグ（`<uchusen-rocket rocket="starship" ...>`）だけが描かれ、ブラウザーが中身を埋めます。`react` はオプションのピア依存関係です。
 
 ```tsx no-run
 import { UchusenRocket } from "@johnmorrisdotca/uchusen-rockets/react";
@@ -27,59 +27,79 @@ export const Custom = () => <UchusenRocket build={{ rocket: "starship", variant:
 
 ## Vue
 
-Vue に `uchusen-` で始まるタグはカスタム要素だと伝え、要素を一度インポートします。
+Vite の設定で、`uchusen-` で始まるタグはカスタム要素だと Vue に伝えます。
 
 ```ts no-check
-// vite.config.ts
 import vue from "@vitejs/plugin-vue";
 
 export default { plugins: [vue({ template: { compilerOptions: { isCustomElement: (tag: string) => tag.startsWith("uchusen-") } } })] };
 ```
 
+そのうえで、コンポーネントがページに載ってから要素をインポートします。サーバーが描いているあいだは読み込みません。
+
 ```html
-<script setup>
-import "@johnmorrisdotca/uchusen-rockets/element";
+<script setup lang="ts">
+import { onMounted } from "vue";
+
+withDefaults(defineProps<{ rocket?: string; variant?: string; look?: "line" | "thick" | "painted" }>(), { rocket: "falcon-9", variant: "block-5", look: "thick" });
+
+// The element needs a browser: import it once the component is on the page, never while a server renders it.
+onMounted(() => {
+  void import("@johnmorrisdotca/uchusen-rockets/element");
+});
 </script>
 
 <template>
-  <uchusen-rocket rocket="falcon-9" variant="block-5" look="painted" />
+  <uchusen-rocket :rocket="rocket" :variant="variant" :look="look"></uchusen-rocket>
 </template>
 ```
 
 ## Svelte
 
-Svelte は属性をそのまま渡します。
+Svelte は属性をそのまま渡します。`onMount` はサーバーでは動かないので、インポートはブラウザーを待ちます。
 
 ```html
-<script>
-  import "@johnmorrisdotca/uchusen-rockets/element";
-  let look = "line";
+<script lang="ts">
+  import { onMount } from "svelte";
+
+  let { rocket = "falcon-heavy", look = "thick" }: { rocket?: string; look?: "line" | "thick" | "painted" } = $props();
+
+  // The element needs a browser: onMount never runs on the server.
+  onMount(() => {
+    void import("@johnmorrisdotca/uchusen-rockets/element");
+  });
 </script>
 
-<uchusen-rocket rocket="falcon-heavy" {look}></uchusen-rocket>
-<button onclick={() => (look = look === "line" ? "thick" : "line")}>Change look</button>
+<uchusen-rocket {rocket} {look}></uchusen-rocket>
 ```
 
 ## Angular
 
-タグを使うコンポーネントに `CUSTOM_ELEMENTS_SCHEMA` を加え、`main.ts` で要素をインポートします。
+タグを使うコンポーネントに `CUSTOM_ELEMENTS_SCHEMA` を加えます。`ngOnInit` はサーバーが描くときにも動くので、インポートはブラウザーを待ちます。
 
 ```ts no-check
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
-import "@johnmorrisdotca/uchusen-rockets/element";
+import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from "@angular/core";
 
 @Component({
-  selector: "app-rocket",
+  selector: "app-rocket-view",
   standalone: true,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  template: `<uchusen-rocket rocket="dragon" variant="dragon-2" look="painted"></uchusen-rocket>`,
+  template: `<uchusen-rocket [attr.rocket]="rocket" [attr.look]="look"></uchusen-rocket>`,
 })
-export class RocketComponent {}
+export class RocketViewComponent implements OnInit {
+  @Input() rocket = "dragon";
+  @Input() look: "line" | "thick" | "painted" = "thick";
+
+  ngOnInit(): void {
+    // The element needs a browser: ngOnInit also runs when a server renders, so the import waits for one.
+    if (typeof window !== "undefined") void import("@johnmorrisdotca/uchusen-rockets/element");
+  }
+}
 ```
 
 ## フレームワークなし
 
-ページでのモジュールのインポートか、インポートマップつきの CDN スクリプトでも同じです。ページの例は[はじめに](getting-started.md)にあります。スクリプトを実行できない静的サイトは、[埋め込みページ](embed-on-your-site.md)を使います。
+ページでのモジュールのインポートか、インポートマップつきの CDN スクリプトでも同じです。ページの例は[はじめに](getting-started.md)に、unpkg・Vite・webpack は[バンドラーと CDN](bundlers-and-cdn.md)にあります。スクリプトを実行できない静的サイトは、[埋め込みページ](embed-on-your-site.md)を使います。
 
 ## 彩色モデルとバンドラー
 

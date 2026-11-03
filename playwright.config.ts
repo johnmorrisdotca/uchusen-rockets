@@ -11,7 +11,7 @@ const webkitPages = process.env.CI ? undefined : /.*/;
 
 export default defineConfig({
   testDir: "e2e",
-  testMatch: "*.demo.ts",
+  testMatch: "*.demo.{ts,mjs}",
   fullyParallel: true,
   forbidOnly: true,
   // A hosted runner has two cores and draws 3D in software: one test at a time, with room for it.

@@ -34,7 +34,22 @@ for (const kind of EMBED_KINDS) console.log(kind.padEnd(8), embedCode(options, k
 For a page that cannot run script: an iframe of `embed.html` that draws what its address says. The query is the element's attributes, and `rocketToParams` and `rocketFromParams` convert between options and a query.
 
 ```html
-<iframe src="https://johnmorrisdotca.github.io/uchusen-rockets/embed.html?rocket=starship&variant=v3&look=line&view=three-quarter" title="Starship Block 3" style="width:100%;max-width:480px;aspect-ratio:3 / 4;border:0"></iframe>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Uchusen Rockets in an iframe</title>
+  </head>
+  <body>
+    <iframe
+      src="https://johnmorrisdotca.github.io/uchusen-rockets/embed.html?rocket=starship&variant=v3&look=line"
+      title="Starship Block 3"
+      style="width: 100%; max-width: 480px; aspect-ratio: 3 / 4; border: 0"
+      loading="lazy"
+    ></iframe>
+  </body>
+</html>
 ```
 
 ```ts

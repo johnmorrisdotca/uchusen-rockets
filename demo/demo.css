@@ -1,5 +1,6 @@
-:root {
-  color-scheme: dark;
+/* The embed page (no family.css) is dark. The demo page (body.demo, with family.css) takes the family's light or dark tokens; the stage, the lineup and the part tiles stay a dark panel. */
+:root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+body:not(.demo), .stage-box, uchusen-lineup, .tile, .code {
   --ground: #070c17;
   --raised: #0e1626;
   --card: #131d31;
@@ -8,15 +9,21 @@
   --muted: #9dacc2;
   --accent: #7cc7ff;
   --warm: #ffc47a;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
 }
+body.demo { --ground: var(--page); --raised: var(--surface); --card: var(--surface); --line: var(--rule); --accent: #1d5f9e; --warm: #8a4b00; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body.demo { --accent: #7cc7ff; --warm: #ffc47a; }
+}
+:root[data-theme="dark"] body.demo { --accent: #7cc7ff; --warm: #ffc47a; }
 * { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(1200px 700px at 30% -10%, #16263f 0%, transparent 70%), var(--ground); color: var(--ink); line-height: 1.5; }
+body:not(.demo) { margin: 0; background: radial-gradient(1200px 700px at 30% -10%, #16263f 0%, transparent 70%), var(--ground); color: var(--ink); line-height: 1.5; }
 a { color: var(--accent); }
-.top { max-width: 1240px; margin: 0 auto; padding: 2rem 1rem 0.5rem; }
-h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.6rem); font-weight: 650; letter-spacing: -0.01em; }
+body.demo main > header a, body.demo footer a { color: inherit; }
+body:not(.demo) .top { max-width: 1240px; margin: 0 auto; padding: 2rem 1rem 0.5rem; }
+body:not(.demo) h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.6rem); font-weight: 650; letter-spacing: -0.01em; }
 .jp { color: var(--muted); font-weight: 400; font-size: 0.7em; margin-left: 0.3em; }
-.lede { margin: 0.4rem 0 0; color: var(--muted); max-width: 62ch; }
+body:not(.demo) .lede { margin: 0.4rem 0 0; color: var(--muted); max-width: 62ch; }
 main { max-width: 1240px; margin: 0 auto; padding: 0 1rem 3rem; }
 section { margin-top: 2.5rem; }
 section > h2 { font-size: 1.35rem; margin: 0 0 0.4rem; font-weight: 600; }
@@ -96,13 +103,21 @@ uchusen-flight { --uchusen-accent: var(--accent); }
 .more-tabs .chip[aria-selected="true"] { background: #1c3556; border-color: var(--accent); color: #fff; }
 .more-tabs ~ section { margin-top: 1.2rem; }
 .foot { max-width: 1240px; margin: 0 auto; padding: 1rem 1rem 3rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--line); }
+.legal { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
+.legal p { margin: 0; max-width: 90ch; }
 /* At a desk the view is limited by the window's height, so the choices have the width, and a mouse needs no finger's room: the choices stay on one screen. */
 @media (min-width: 1100px) {
-  .top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 1.2rem; padding-top: 0.6rem; padding-bottom: 0.2rem; }
-  h1 { font-size: 1.6rem; }
-  .lede { flex: 1 1 24rem; margin: 0; font-size: 0.85rem; max-width: none; }
+  body:not(.demo) .top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 1.2rem; padding-top: 0.6rem; padding-bottom: 0.2rem; }
+  body:not(.demo) h1 { font-size: 1.6rem; }
+  body:not(.demo) .lede { flex: 1 1 24rem; margin: 0; font-size: 0.85rem; max-width: none; }
+  /* the family's header on one row, so the choices stay on one screen */
+  body.demo main > header { display: flex; flex-wrap: wrap; align-items: center; gap: 0 1rem; }
+  body.demo main > header .intro p { display: none; }
+  body.demo main > header .intro { min-height: 0; }
+  body.demo main { padding-top: 8px; }
+  body.demo main > header { margin-bottom: 6px; }
   .stage-row { grid-template-columns: minmax(0, 1fr) minmax(0, 40rem); margin-top: 0.4rem; }
-  .stage-box uchusen-rocket { max-width: min(620px, calc((100vh - 22rem) * 0.75)); }
+  .stage-box uchusen-rocket { max-width: min(620px, calc((100vh - 23.4rem) * 0.75)); }
   /* the flight's words on the left and its engine charts on the right */
   uchusen-flight::part(flight-body) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 1rem; align-content: start; }
   uchusen-flight::part(flight-charts) { grid-column: 2; grid-row: 2 / span 3; margin: 0; align-content: start; }
@@ -110,7 +125,7 @@ uchusen-flight { --uchusen-accent: var(--accent); }
   uchusen-flight::part(flight-now), uchusen-flight::part(flight-what), uchusen-flight::part(flight-about) { grid-column: 1; }
 }
 @media (hover: hover) and (pointer: fine) and (min-width: 821px) {
-  .panel { gap: 0.55rem; }
+  .panel { gap: 0.35rem; }
   .panel .chip { min-height: 32px; padding: 0.15rem 0.6rem; font-size: 0.85rem; }
   .panel .chips { gap: 0.3rem; }
   .panel .field h2 { margin-bottom: 0.2rem; }

@@ -19,14 +19,14 @@ Save this as `rocket.html` and open it. The `<uchusen-rocket>` tag is the rocket
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>A rocket</title>
+    <title>Uchusen Rockets from jsDelivr</title>
     <script type="importmap">
-      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" } }
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/" } }
     </script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/uchusen-rockets@0/dist/element.js"></script>
   </head>
   <body>
-    <uchusen-rocket rocket="starship" variant="v3" style="max-width: 480px"></uchusen-rocket>
+    <uchusen-rocket rocket="starship" variant="v3" look="thick" style="max-width: 360px"></uchusen-rocket>
   </body>
 </html>
 ```

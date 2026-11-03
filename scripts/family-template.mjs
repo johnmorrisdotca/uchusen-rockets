@@ -46,7 +46,7 @@
 const OWNER = "johnmorrisdotca";
 
 /** The day this file was last changed, in every repository at once. A test records the file's hash beside it. */
-export const FAMILY_TEMPLATE_VERSION = "2026-11-02b";
+export const FAMILY_TEMPLATE_VERSION = "2026-11-03";
 
 /** The packages, in the order the footer lists them. `kana` is the name as it is written in Japanese. */
 export const FAMILY = [
@@ -78,6 +78,8 @@ export const FAMILY = [
   { id: "chizu", name: "Chizu", kana: "地図" },
   { id: "hata", name: "Hata", kana: "旗" },
   { id: "kuni", name: "Kuni", kana: "国" },
+  { id: "uchusen-rockets", name: "Uchusen Rockets", kana: "宇宙船" },
+  { id: "wakusei-planets", name: "Wakusei Planets", kana: "惑星" },
   { id: "dougu-sports", name: "Dougu Sports", kana: "道具" },
   { id: "kyogijo-stadiums", name: "Kyogijo Stadiums", kana: "競技場" },
   { id: "senshu-jerseys", name: "Senshu Jerseys", kana: "選手" },
@@ -92,7 +94,7 @@ export const FAMILY_GROUPS = [
   { id: "puzzles", en: "Games — puzzles", ja: "パズルゲーム", members: ["houseki", "jirai", "karakuri", "kazu", "kyuubu", "meikyuu", "suido", "tobiishi", "tsunagi"] },
   { id: "random", en: "Games — dice & random", ja: "ダイスと乱数", members: ["korokoro", "tane"] },
   { id: "language", en: "Language", ja: "ことばと文字", members: ["bushu", "hikidashi", "kotoba"] },
-  { id: "geography", en: "Geography & data", ja: "地理とデータ", members: ["address-plus", "chikyu-earth", "chizu", "hata", "kuni"] },
+  { id: "geography", en: "Geography & data", ja: "地理とデータ", members: ["address-plus", "chikyu-earth", "chizu", "hata", "kuni", "uchusen-rockets", "wakusei-planets"] },
   { id: "sports", en: "Sports", ja: "スポーツ", members: ["dougu-sports", "kyogijo-stadiums", "senshu-jerseys", "taisen-brackets"] },
   { id: "developer", en: "Developer tools", ja: "開発ツール", members: ["rest-in-pieces"] },
 ];
@@ -137,6 +139,8 @@ export const FAMILY_PITCH = {
   "address-plus": "parse and format addresses in the United States, Canada, Japan, Australia, France, Germany and the United Kingdom",
   "hata": "country and regional flags as SVG, at their true proportions and keyed by ISO code",
   "kuni": "countries and their regions, with ISO codes and names in English and Japanese",
+  "uchusen-rockets": "rockets drawn from sourced sizes, as line drawings and 3D views you can take apart and turn, with a check that a rocket really goes together",
+  "wakusei-planets": "the Sun, the planets and their moons, as line drawings, shaded drawings and painted surface maps, with their real sizes, tilt and rotation",
   "rest-in-pieces": "seeded test data and REST APIs for frontend development, with latency and error drills",
   "kyogijo-stadiums": "sports fields, rinks, courts and ballparks drawn to scale as SVG, with each team and the score on them",
   "taisen-brackets": "a sport-agnostic tournament bracket, drawn as SVG, from a list of ties",
@@ -149,6 +153,8 @@ export const FAMILY_PITCH_JA = {
   "address-plus": "アメリカ、カナダ、日本、オーストラリア、フランス、ドイツ、イギリスの住所を解析・整形",
   "hata": "国と行政区画の旗を、実際の縦横比のSVGで収録。ISOコードで引けます",
   "kuni": "世界の国と行政区画を、ISOコードと英語・日本語の名称つきで収録",
+  "uchusen-rockets": "出典つきの寸法からロケットを描きます。線画と3Dで、分解して回して見られ、ロケットが本当に組み合わさるかも確かめられます",
+  "wakusei-planets": "太陽・惑星・衛星を、線画・陰影つきの絵・表面の地図で描きます。実際の大きさ・傾き・自転つき",
   "rest-in-pieces": "フロントエンド開発向けの、シード値で固定できるテストデータとREST API（遅延・エラーの再現つき）",
 };
 

@@ -34,7 +34,22 @@ for (const kind of EMBED_KINDS) console.log(kind.padEnd(8), embedCode(options, k
 スクリプトを実行できないページ向けに、URL の指定どおりに描く `embed.html` の iframe があります。クエリは要素の属性と同じで、`rocketToParams` と `rocketFromParams` がオプションとクエリを相互に変換します。
 
 ```html
-<iframe src="https://johnmorrisdotca.github.io/uchusen-rockets/embed.html?rocket=starship&variant=v3&look=line&view=three-quarter" title="Starship Block 3" style="width:100%;max-width:480px;aspect-ratio:3 / 4;border:0"></iframe>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Uchusen Rockets in an iframe</title>
+  </head>
+  <body>
+    <iframe
+      src="https://johnmorrisdotca.github.io/uchusen-rockets/embed.html?rocket=starship&variant=v3&look=line"
+      title="Starship Block 3"
+      style="width: 100%; max-width: 480px; aspect-ratio: 3 / 4; border: 0"
+      loading="lazy"
+    ></iframe>
+  </body>
+</html>
 ```
 
 ```ts

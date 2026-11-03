@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { publishThumbnails, thumbnailHead } from "./family-thumbnail.mjs";
+import { renderIndex } from "./page.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const site = join(root, "site");
@@ -13,7 +14,7 @@ mkdirSync(site, { recursive: true });
 // The demo's page, with the family's card in its <head> (og:image, twitter:image, the icon), published beside it.
 const ALT = "Uchusen Rockets: Saturn V, Starship, the Space Shuttle, Falcon Heavy and SLS, painted in 3D, side by side.";
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-writeFileSync(join(site, "index.html"), readFileSync(join(root, "demo", "index.html"), "utf8").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
+writeFileSync(join(site, "index.html"), renderIndex().replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 publishThumbnails(root, site);
 for (const file of ["demo.css", "family.css", "react-check.html", "element-check.html", "embed.html", "builder.html"]) cpSync(join(root, "demo", file), join(site, file));
 cpSync(join(root, "dist", "assets"), join(site, "assets"), { recursive: true });
@@ -35,5 +36,9 @@ await build({
   define: { "process.env.NODE_ENV": '"production"' },
   logLevel: "warning",
 });
+// The family header's language picker and theme switch: one small module for the page.
+writeFileSync(join(site, "kazoku-parts.src.js"), `import "@johnmorrisdotca/kazoku-ui/language-picker/define";\nimport "@johnmorrisdotca/kazoku-ui/theme-switch/define";\n`);
+await build({ entryPoints: [join(site, "kazoku-parts.src.js")], outfile: join(site, "kazoku-parts.js"), bundle: true, format: "esm", minify: true, logLevel: "warning", absWorkingDir: root });
+rmSync(join(site, "kazoku-parts.src.js"));
 writeFileSync(join(site, ".nojekyll"), "");
 console.log("site/ is ready");
