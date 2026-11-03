@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- The README opens with the package's thumbnail, and the demo carries it as its link preview (og:image) and publishes the card, a dark card and an icon on Pages at `thumbnail.png`, `thumbnail-dark.png` and `icon.png`.
+
 ## [0.3.0] - 2026-11-02
 
 - Falcon 1, and the Falcon 1e that was announced and never flew, drawn by this package's code. Sizes from SpaceX's 2008 user's guide, with Wikipedia's other figures kept beside them. A part placed rather than stacked can now stand above the ground (`strapOn.y`).

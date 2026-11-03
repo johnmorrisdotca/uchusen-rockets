@@ -1,3 +1,5 @@
+<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/thumbnail-dark.png"><img src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/thumbnail.png" alt="Uchusen Rockets: Saturn V, Starship, the Space Shuttle, Falcon Heavy and SLS, painted in 3D, side by side." width="1200"></picture></a></p>
+
 <h1 align="center">Uchusen Rockets <sub>宇宙船</sub></h1>
 
 <p align="center"><strong>Rockets drawn from sourced sizes, that you drop into a page, take apart and turn round.</strong><br>

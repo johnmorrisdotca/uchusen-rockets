@@ -1,16 +1,20 @@
 // Pictures of the demo for the README, in a real headless browser: `pnpm screenshots [folder]`. It starts the site's own server on 7902, takes the shots and stops it.
+// `pnpm screenshots --thumbnail` takes only the family's thumbnail, dark thumbnail and icon (scripts/family-thumbnail.mjs).
+// Chromium draws in software only (SwiftShader), never on the graphics card.
 import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { chromium, type Page } from "@playwright/test";
+import { captureDrawing, composeThumbnails } from "./family-thumbnail.mjs";
 
-const out = process.argv[2] ?? "docs/images";
+const onlyThumbnail = process.argv.includes("--thumbnail");
+const out = process.argv.slice(2).find((arg) => !arg.startsWith("--")) ?? "docs/images";
 mkdirSync(out, { recursive: true });
 const port = 7902;
 const server = spawn("node", ["scripts/dev.ts"], { env: { ...process.env, PORT: String(port) }, stdio: "ignore" });
 await new Promise((resolve) => setTimeout(resolve, 600));
-const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+const browser = await chromium.launch({ args: ["--headless=new", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--disable-gpu-compositing", "--ignore-gpu-blocklist"] });
 const url = `http://127.0.0.1:${port}/uchusen-rockets/`;
 const errors: string[] = [];
 const press = async (page: Page, id: string) => {
@@ -21,7 +25,61 @@ const settled = async (page: Page) => {
   await page.waitForFunction(() => (document.getElementById("hero") as HTMLElement).dataset.painted !== "loading", undefined, { timeout: 90_000 });
   await page.waitForTimeout(1200);
 };
+// The family's thumbnail: rockets of different kinds side by side, painted, in 3D, on the family's paper and its black
+// cloth; the icon is one rocket alone, laid across the square so that it fills it. Each element only, never the page.
+const THUMBNAIL_ROCKETS = [
+  ["saturn-v", "saturn-v"],
+  ["starship", "v3"],
+  ["space-shuttle", "stack", "side"],
+  ["falcon-heavy", "falcon-heavy"],
+  ["sls", "block-1"],
+];
+const ICON_ROCKET = [["space-shuttle", "stack", "side"]];
+const stage = async (page: Page, rockets: string[][], width: number, height: number, turn = 0) => {
+  await page.goto(url);
+  await page.waitForFunction(() => customElements.get("uchusen-rocket"));
+  await page.evaluate(
+    ({ rockets, width, height, turn }) => {
+      const row = document.createElement("div");
+      row.id = "thumbnail-stage";
+      row.style.cssText = `display:flex;align-items:flex-end;padding:8px;width:max-content;transform:rotate(${turn}deg)`;
+      for (const [rocket, variant, view = "three-quarter"] of rockets) {
+        const one = document.createElement("uchusen-rocket");
+        for (const [name, value] of Object.entries({ rocket, variant, show: "together", look: "painted", view, spin: "off" })) one.setAttribute(name, value);
+        one.style.cssText = `display:block;width:${width}px;--uchusen-aspect:${width} / ${height};background:transparent`;
+        row.append(one);
+      }
+      document.body.replaceChildren(row);
+    },
+    { rockets, width, height, turn },
+  );
+  const all = page.locator("#thumbnail-stage uchusen-rocket");
+  for (let at = 0; at < rockets.length; at += 1) await all.nth(at).and(page.locator('[data-state="3d"]')).waitFor({ timeout: 120_000 });
+  await page.waitForFunction(() => [...document.querySelectorAll<HTMLElement>("#thumbnail-stage uchusen-rocket")].every((one) => one.dataset.painted !== "loading"), undefined, { timeout: 120_000 });
+  await page.waitForTimeout(2500);
+  return captureDrawing(page, "#thumbnail-stage");
+};
+const thumbnails = async () => {
+  const taken: Record<string, Buffer> = {};
+  for (const [kind, scheme] of [["light", "light"], ["dark", "dark"], ["icon", "light"]] as const) {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2, colorScheme: scheme, reducedMotion: "reduce" });
+    taken[kind] = kind === "icon" ? await stage(page, ICON_ROCKET, 300, 600, 0) : await stage(page, THUMBNAIL_ROCKETS, 200, 560);
+    if (kind === "icon") for (const picture of await composeThumbnails({ page, light: taken.light, dark: taken.dark, icon: taken.icon, label: "Uchusen Rockets 宇宙船" })) console.log(picture.file, `${Math.round(picture.bytes / 1024)} KB`);
+    await page.close();
+  }
+};
 try {
+  if (!onlyThumbnail) await shots();
+  await thumbnails();
+} finally {
+  await browser.close();
+  server.kill();
+}
+if (errors.length) console.error(errors.join("\n"));
+console.log(`shots in ${out}`);
+
+/** The README's pictures of the demo. */
+async function shots() {
   const page = await browser.newPage({ viewport: { width: 1320, height: 980 }, deviceScaleFactor: 1.5, reducedMotion: "reduce" });
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text());
@@ -75,9 +133,4 @@ try {
   await phone.waitForTimeout(1500);
   await phone.screenshot({ path: join(out, "phone.jpg"), type: "jpeg", quality: 84 });
   await phone.close();
-} finally {
-  await browser.close();
-  server.kill();
 }
-if (errors.length) console.error(errors.join("\n"));
-console.log(`shots in ${out}`);
