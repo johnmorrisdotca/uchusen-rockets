@@ -1,6 +1,6 @@
 // The demo in a real browser: no console or policy error, every control on the main view, looks that keep the angle, the move between together and apart, the parts alone, the painted model only when asked for,
 // the credit, the comparison, the builder, the element's own failures and the React wrapper.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { flightOf } from "../src/flight.ts";
 import { ROCKETS } from "../src/rockets.ts";
 
@@ -41,6 +41,12 @@ const canvasData = (page: Page, name: string) => hero(page).evaluate((node, key)
  * wait past the default five seconds without ever getting an answer. */
 const lookIs = (page: Page, look: string) => expect.poll(() => canvasData(page, "look"), { timeout: 60_000 }).toBe(look);
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+/** Where the 3D view is drawn, the painted look's models load in the background, and their pictures are read from blob: addresses. A page left while they load has those reads cut short, and WebKit reports
+ * each as an error ("Couldn't load texture blob:..."). So a test that leaves the page first waits until they are in; with no WebGL there is nothing to wait for. */
+const paintedIn = async (rocket: Locator) => {
+  await expect(rocket).toHaveAttribute("data-state", /^(3d|fallback)$/, { timeout: 90_000 });
+  if ((await rocket.getAttribute("data-state")) === "3d") await expect(rocket).toHaveAttribute("data-painted", /^(model|mixed|code)$/, { timeout: 90_000 });
+};
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
 const stopTurn = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 const angle = (page: Page) => hero(page).evaluate((node) => (node as HTMLElement & { angle: { az: number; el: number } }).angle);
@@ -623,6 +629,7 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   await expect(code).toContainText("Clarence365");
   await expect(code).toContainText("creativecommons.org/licenses/by/4.0");
   await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Clarence365");
+  await paintedIn(hero(page));
   await press(page, "tab-svg");
   await expect(code).toContainText("<svg");
   await page.locator('[data-testid="embed-copy"]').click();
@@ -650,6 +657,7 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Clarence365");
   await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Ship");
   await expect(page.locator('[data-testid="embed-credit"]')).not.toContainText("Super Heavy");
+  await paintedIn(page.locator('[data-testid="rocket"]'));
   await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&flight=1&phase=liftoff`);
   await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-phase", "liftoff");
   await expect(page.locator('[data-testid="flight"]').locator('[data-testid="flight-now"]')).toContainText("Liftoff");
