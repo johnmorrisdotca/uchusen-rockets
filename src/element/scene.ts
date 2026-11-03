@@ -56,7 +56,7 @@ export interface ViewerOptions {
   onLost: () => void;
   /** Where the licensed models are. */
   assets: string;
-  /** Tells the page which painted parts have come in. */
+  /** Tells the page which painted parts have come in, or "" when the look is not painted. */
   onPainted: (state: string) => void;
   /** Tells the page a timeline moved. */
   onFlight?: () => void;
@@ -64,6 +64,8 @@ export interface ViewerOptions {
 
 const IDLE_STOP_MS = 90_000;
 const MOVE_MS = 1400;
+/** Longest a draw waits for shaders to build: a browser that never says they are ready still draws. */
+const COMPILE_MS = 4000;
 const VIEW_MS = 700;
 
 const autoRotateOf = (spin: Spin): number => (spin.seconds <= 0 ? 0 : (60 / spin.seconds) * (spin.way === "cw" ? -1 : 1));
@@ -203,6 +205,9 @@ export class RocketViewer {
   private lastDistance = 0;
   private resize: ResizeObserver;
   private disposed = false;
+  private compiling = 0;
+  private compiled = new Set<string>();
+  private settled: Promise<void> = Promise.resolve();
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
     this.holder = holder;
@@ -350,6 +355,7 @@ export class RocketViewer {
     this.canvas.dataset.parts = this.parts.map((part) => part.slot).join(" ");
     this.drivenDirty = this.driven !== null;
     this.wake();
+    await this.settled;
   }
 
   /** Moves the parts from the packed nodes into `into`, keeping each mesh's own placement. */
@@ -501,7 +507,28 @@ export class RocketViewer {
     this.plumes.setLook(painted);
     this.relight();
     this.reportPainted();
+    this.prepare(false);
     this.wake();
+  }
+
+  /** Builds the shaders a look needs beside the page's own work (in parallel where the browser can), and holds the next draw until they are in, so the page keeps answering while a look is first built. The last picture stays up meanwhile. A model that comes in later builds its own. */
+  private prepare(force: boolean): void {
+    if (this.disposed || (!force && this.compiled.has(this.look))) return;
+    this.compiled.add(this.look);
+    this.compiling++;
+    let timer = 0;
+    const late = new Promise<void>((resolve) => {
+      timer = window.setTimeout(resolve, COMPILE_MS);
+    });
+    const built = this.renderer.compileAsync(this.scene, this.camera).then(() => undefined);
+    const wait = Promise.race([built, late])
+      .catch(() => undefined)
+      .finally(() => {
+        window.clearTimeout(timer);
+        this.compiling--;
+        if (!this.disposed) this.wake();
+      });
+    this.settled = Promise.all([this.settled, wait]).then(() => undefined);
   }
 
   /** Which engines burn: at full thrust every one that shows, a count for each part, or none. Nothing is made or freed by this after a part's first flame: only which of its flames are drawn changes. */
@@ -697,6 +724,7 @@ export class RocketViewer {
   private reportPainted(): void {
     if (this.look !== "painted") {
       this.canvas.dataset.painted = "";
+      this.options.onPainted("");
       return;
     }
     const states = this.parts.map((part) => (part.modelFile ? part.modelState : "code"));
@@ -734,6 +762,7 @@ export class RocketViewer {
         part.modelState = "ready";
         this.useModel(part, this.look === "painted");
         this.reportPainted();
+        this.prepare(true);
         this.wake();
       })
       .catch(() => {
@@ -1047,6 +1076,8 @@ export class RocketViewer {
   private tick = (now: number) => {
     this.frame = 0;
     if (!this.visible || document.hidden || this.disposed) return;
+    // shaders are being built: the next draw waits for them (prepare asks for a frame when they are in)
+    if (this.compiling > 0) return;
     this.inTick = true;
     this.clock.update(now);
     const dt = Math.min(this.clock.getDelta(), 0.1);

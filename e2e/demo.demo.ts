@@ -363,6 +363,109 @@ test("the painted model loads only when asked for, only for its variant, and the
   expect(models).toContain("starship-2019-ship.glb");
 });
 
+test("a look chosen while the 3D view starts, or while a rocket loads, is the look drawn", async ({ page, browserName }) => {
+  test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
+  const problems = watch(page);
+  await page.goto(`${URL}element-check.html`);
+  // the look is changed in the same turn the 3D view's canvas appears, while its rocket is still being read
+  const made = await page.evaluate(
+    () =>
+      new Promise<string>((done) => {
+        const rocket = document.createElement("uchusen-rocket");
+        rocket.setAttribute("rocket", "starship");
+        rocket.setAttribute("variant", "v3");
+        rocket.id = "late";
+        document.body.prepend(rocket);
+        // the shadow root exists once the element is in the page, and the 3D view starts later, when it is seen
+        const watching = new MutationObserver(() => {
+          if (!rocket.shadowRoot?.querySelector("canvas")) return;
+          watching.disconnect();
+          rocket.setAttribute("look", "thick");
+          done("changed");
+        });
+        watching.observe(rocket.shadowRoot as ShadowRoot, { childList: true, subtree: true });
+      }),
+  );
+  expect(made).toBe("changed");
+  const late = page.locator("#late");
+  await expect(late).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await expect(late).toHaveAttribute("data-look", "thick");
+  expect(await late.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.look)).toBe("thick");
+  // a rocket chosen, and a look with it, before the new rocket is in
+  const changed = late.evaluate((node) => new Promise<void>((done) => node.addEventListener("uchusen-change", () => done(), { once: true })));
+  await late.evaluate((node) => {
+    node.setAttribute("variant", "v2");
+    node.setAttribute("look", "line");
+  });
+  await changed;
+  await expect(late).toHaveAttribute("data-variant", "v2");
+  await expect.poll(() => late.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.look), { timeout: 30_000 }).toBe("line");
+  expect(problems).toEqual([]);
+});
+
+test("leaving the painted look clears data-painted, even while a model is still on its way", async ({ page, browserName }) => {
+  test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
+  // a model that never comes in leaves the painted look at "loading"
+  await page.route("**/assets/models/**", () => {});
+  await page.goto(URL);
+  await reach3d(page);
+  await press(page, "look-painted");
+  await expect(hero(page)).toHaveAttribute("data-painted", "loading", { timeout: 60_000 });
+  await press(page, "look-line");
+  await expect(hero(page)).toHaveAttribute("data-painted", "");
+  await page.unroute("**/assets/models/**");
+});
+
+test("the page itself is in Japanese when asked, and the language picker switches all of it", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(`${URL}?lang=ja`);
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  const text = (id: string) => page.locator(`[data-testid="${id}"]`).first();
+  await expect(page.locator("#maker-title")).toHaveText("メーカー");
+  await expect(text("look-painted")).toHaveText("彩色");
+  await expect(text("show-together")).toHaveText("合体");
+  await expect(text("view-below")).toHaveText("下から");
+  await expect(text("turn-left")).toHaveText("左へ回す");
+  await expect(text("engines-on")).toHaveText("点火");
+  await expect(text("more-embed")).toHaveText("自分のサイトに置く");
+  await expect(page.locator(".hint")).toContainText("ドラッグ");
+  await expect(page.locator("#data-note")).toBeVisible();
+  await expect(text("facts").locator("th").first()).toHaveText("全体の高さ");
+  await expect(text("facts").locator("tr[data-row='Diameter'] th")).toHaveText("直径");
+  // the flight bar says its own words in Japanese too
+  await expect.poll(() => text("flight").evaluate((node) => node.shadowRoot?.querySelector('[data-testid="flight-play"]')?.textContent)).toBe("再生");
+  // a press keeps the language, and the parts chips follow the rocket
+  await press(page, "variant-v1");
+  await expect(text("show-booster")).toHaveText("Super Heavy（1 段目）");
+  await expect(text("facts").locator("tr[data-row='Whole height'] th")).toHaveText("全体の高さ");
+  // each section, said in Japanese
+  await press(page, "more-compare");
+  await expect(page.locator("#compare-title")).toHaveText("大きさを比べる");
+  await expect(text("compare-table").locator("th").nth(1)).not.toHaveText("");
+  await expect(text("compare-table").locator("tbody th").first()).toHaveText("全体の高さ");
+  await press(page, "more-builder");
+  await expect(page.locator("#builder-title")).toHaveText("部品から組み立てる");
+  await expect(text("builder-report")).toContainText("描いた高さは");
+  await press(page, "more-planned");
+  await expect(text("planned")).toContainText("出典：");
+  await press(page, "more-sources");
+  await expect(page.locator("#sources-title")).toHaveText("出どころ");
+  await expect(page.locator("#legal")).toContainText("関係なく");
+  // every heading of the page is Japanese
+  const headings = await page.locator("main h2, #sources h3").allTextContents();
+  for (const heading of headings) expect(heading, "a heading left in English").toMatch(/[\u3040-\u30ff\u4e00-\u9fff]/);
+  // and back to English by the picker, which changes all of it again
+  await page.locator("kazoku-language-picker").getByRole("button", { name: /English/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("#maker-title")).toHaveText("Maker");
+  await expect(text("look-painted")).toHaveText("Painted");
+  await expect(text("show-booster")).toHaveText("Super Heavy");
+  await expect(page.locator("#sources-title")).toHaveText("Where it comes from");
+  await expect(page.locator("#data-note")).toBeHidden();
+  await expect.poll(() => text("flight").evaluate((node) => node.shadowRoot?.querySelector('[data-testid="flight-play"]')?.textContent)).toBe("Play");
+  expect(problems).toEqual([]);
+});
+
 test("a painted model that cannot be fetched leaves this package's own paint, and no failure", async ({ page, browserName }) => {
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   await page.route("**/assets/models/**", (route) => route.abort());

@@ -570,8 +570,15 @@ export class UchusenRocket extends HTMLBase {
       // a new rocket keeps the angle, unless the same change named another view
       const from = viewName !== this.lastView || this.driven ? angle : this.viewer.currentAngle();
       this.lastView = viewName;
-      await this.viewer.load(this.builtNow, show, look, from);
-      if (this.viewer) this.lightViewer(this.viewer);
+      const viewer = this.viewer;
+      await viewer.load(this.builtNow, show, look, from);
+      if (this.viewer === viewer && this.builtNow) {
+        // a look or part chosen while the rocket loaded
+        const now = this.settings(this.builtNow);
+        if (now.look !== look) viewer.setLook(now.look);
+        if (now.show !== show) viewer.setShow(now.show);
+        this.lightViewer(viewer);
+      }
       this.emit("uchusen-change", { report: this.builtNow.report });
     }
   }
@@ -662,7 +669,7 @@ export class UchusenRocket extends HTMLBase {
         assets: assets ? `${assets.replace(/\/$/, "")}/` : defaultBase(),
         onPainted: (state) => {
           this.dataset.painted = state;
-          this.emit("uchusen-painted", { state });
+          if (state) this.emit("uchusen-painted", { state });
         },
         onFlight: () => this.noteFlight(!this.clock?.playing),
       });
@@ -677,6 +684,7 @@ export class UchusenRocket extends HTMLBase {
       await made.load(this.builtNow ?? built, show, look, angle);
       if (generation !== this.generation || this.viewer !== made) return;
       const now = this.settings(this.builtNow ?? built);
+      if (now.look !== look) made.setLook(now.look);
       if (now.show !== show) made.setShow(now.show);
       this.lightViewer(made);
       made.setSpin(this.spin());
