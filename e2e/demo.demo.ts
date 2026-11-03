@@ -11,7 +11,8 @@ const is3d = (browserName: string) => browserName === "chromium";
 function watch(page: Page): string[] {
   const problems: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") problems.push(`console: ${message.text()}`);
+    // the page's touch icon is the published site's own address, which a local test server is not
+    if (message.type() === "error" && !message.text().includes("johnmorrisdotca.github.io/uchusen-rockets/icon.png")) problems.push(`console: ${message.text()}`);
   });
   page.on("pageerror", (error) => problems.push(`page: ${error.message}`));
   page.on("response", (response) => {
