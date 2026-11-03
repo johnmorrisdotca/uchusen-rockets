@@ -525,7 +525,8 @@ export class UchusenRocket extends HTMLBase {
     const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
     const label = this.getAttribute("label") ?? this.builtNow.report.label;
     const lit = flying ? (media("(prefers-reduced-motion: reduce)") ? false : flying.burns) : this.engineLights();
-    const moves = flying ? Object.fromEntries(Object.entries(flying.phase.pose).flatMap(([slot, pose]) => (pose.moves ? [[slot, pose.moves]] : []))) : undefined;
+    // the angles the 3D view has now, to 5 degrees: the drawing changes a few times a phase, not once a frame
+    const moves = flying ? Object.fromEntries(Object.entries(flying.poses).flatMap(([slot, pose]) => { const turned = Object.entries(pose.moves).map(([name, angle]) => [name, Math.round(angle / 5) * 5] as const).filter(([, angle]) => angle !== 0); return turned.length ? [[slot, Object.fromEntries(turned)]] : []; })) : undefined;
     const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}|${flying ? flying.index : ""}|${JSON.stringify(lit)}|${JSON.stringify(moves ?? {})}`;
     let node = this.drawing.firstElementChild;
     if (key !== this.drawn.key || !node) {

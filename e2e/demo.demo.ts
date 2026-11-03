@@ -1,7 +1,7 @@
 // The demo in a real browser: no console or policy error, every control on the main view, looks that keep the angle, the move between together and apart, the parts alone, the painted model only when asked for,
 // the credit, the comparison, the builder, the element's own failures and the React wrapper.
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { flightOf } from "../src/flight.ts";
+import { flightOf, frameAt } from "../src/flight.ts";
 import { ROCKETS } from "../src/rockets.ts";
 
 const URL = "/uchusen-rockets/";
@@ -1114,6 +1114,47 @@ test.describe("the flight", () => {
     await rocket.evaluate((node) => (node as HTMLElement & { play(): void }).play());
     await expect.poll(() => rocket.getAttribute("data-phase"), { timeout: 30_000 }).toBe("max-q");
     await rocket.evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  });
+
+  test("the drawing with no WebGL has the grid fins and legs the 3D view has, to 5 degrees, a few redraws a phase", async ({ page }) => {
+    await page.goto(`${URL}element-check.html`);
+    const rocket = page.locator("uchusen-rocket").first();
+    await rocket.evaluate((node) => {
+      node.setAttribute("mode", "drawing");
+      node.setAttribute("rocket", "falcon-9");
+      node.setAttribute("variant", "block-5");
+    });
+    await expect(rocket).toHaveAttribute("data-flight", "falcon-9-starlink-2019");
+    const flight = flightOf("falcon-9", "block-5");
+    if (!flight) throw new Error("no flight");
+    // between the fairing and the entry burn the grid fins open from 85 degrees to 0, which the 3D view mixes
+    const from = flight.phases.findIndex((phase) => phase.id === "fairing");
+    expect(flight.phases[from + 1].id).toBe("entry-burn");
+    // the phase's own place, not the next phase's (its engines and flame differ)
+    const steps = Array.from({ length: 20 }, (_, step) => from + step / 20);
+    const wanted = steps.map((at) => {
+      const moves = frameAt(flight, at, [{ slot: "first-stage", baseY: 0 }], 70).poses["first-stage"].moves;
+      return `${Math.round(moves["grid-fins"] / 5) * 5}|${Math.round(moves.legs / 5) * 5}`;
+    });
+    const markup = () => rocket.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector(".drawing svg")?.outerHTML.replace(/ viewBox="[^"]*"/, "") ?? "");
+    const drawn: string[] = [];
+    for (const at of steps) {
+      await rocket.evaluate((node, place) => (node as HTMLElement & { seek(position: number): void }).seek(place), at);
+      await page.waitForTimeout(150);
+      drawn.push(await markup());
+    }
+    // one drawing for each angle (to 5 degrees) and no more: 85 to 0 is at most 18 of them, never one for the whole phase
+    const byAngle = new Map<string, string>();
+    wanted.forEach((angle, index) => {
+      if (byAngle.has(angle)) expect(drawn[index]).toBe(byAngle.get(angle));
+      else byAngle.set(angle, drawn[index]);
+    });
+    expect(new Set(drawn).size).toBe(byAngle.size);
+    expect(byAngle.size).toBeGreaterThan(8);
+    expect(byAngle.size).toBeLessThanOrEqual(18);
+    // and the drawings only change when the angle does: the picture is not remade for a movement under 5 degrees
+    const changes = drawn.filter((one, index) => index > 0 && one !== drawn[index - 1]).length;
+    expect(changes).toBe(wanted.filter((angle, index) => index > 0 && angle !== wanted[index - 1]).length);
   });
 });
 
