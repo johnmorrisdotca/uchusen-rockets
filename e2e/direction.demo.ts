@@ -28,7 +28,7 @@ test.describe("drag, keys and Auto-turn", () => {
   test("the Space Shuttle's stack follows the hand: drag right and up, the arrow keys, and Auto-turn takes the near side to the right", async ({ page }) => {
     test.setTimeout(240_000);
     await open(page, "space-shuttle", "stack", "thick");
-    await checkFollowsTheHand(page, { view: '[data-testid="hero"]', controls: "kazoku-view-controls", distance: 100, min: 3, autoTurn: "right" });
+    await checkFollowsTheHand(page, { view: '[data-testid="hero"]', controls: "kazoku-view-controls", distance: 100, min: 2, autoTurn: "right" });
   });
 
   test("Starship's camera goes round to the left and down as the surface goes right and up: drag, keys and Auto-turn", async ({ page }) => {

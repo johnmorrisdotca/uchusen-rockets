@@ -92,7 +92,9 @@ function showLine(holder: HTMLElement, style: "line" | "thick"): EarthShow {
   let stopped = false;
   let draws = 0;
   // the globe is redrawn a few times a second, in a shadow root of its own: the family header's help switch watches the page's own markup for changes, and a redraw is none of its business
-  const root = holder.shadowRoot ?? holder.attachShadow({ mode: "open" });
+  const mount = document.createElement("div");
+  holder.append(mount);
+  const root = mount.attachShadow({ mode: "open" });
   const sheet = document.createElement("style");
   sheet.textContent = "svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.55; }";
   const picture = document.createElement("div");
@@ -110,7 +112,7 @@ function showLine(holder: HTMLElement, style: "line" | "thick"): EarthShow {
     stop() {
       stopped = true;
       stopTurn?.();
-      root.replaceChildren();
+      mount.remove();
       holder.replaceChildren();
       delete holder.dataset.draws;
     },
