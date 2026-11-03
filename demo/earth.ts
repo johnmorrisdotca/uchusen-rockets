@@ -13,8 +13,6 @@ export interface EarthShow {
 const TICK_MS: Record<EarthForm, number> = { line: 500, thick: 500, realistic: 250 };
 /** A page nobody has touched stops turning after this long, and a move, a key or a scroll starts it again. */
 export const IDLE_STOP_MS = 5 * 60_000;
-/** The realistic Earth moves the Sun on every this many draws and the view on the others: a change of each asks for its own draw, so both at once would draw the same picture twice. */
-const SUN_EVERY = 4;
 const SIGNS_OF_LIFE = ["pointermove", "pointerdown", "keydown", "wheel", "scroll"] as const;
 
 /** How far it has turned, kept when the look or the choice changes, so the same land is in view afterwards. */
@@ -123,23 +121,16 @@ function showRealistic(holder: HTMLElement, unavailable: () => void): EarthShow 
     made.setAttribute("time", new Date(START_TIME).toISOString());
     made.setAttribute("texture-base", new URL("textures/", document.baseURI).href);
     made.setAttribute("max-texture", "2048");
+    // a soft picture behind the rocket needs no more than a canvas pixel to a CSS pixel, however dense the screen
+    made.setAttribute("max-ratio", "1");
     made.setAttribute("role", "presentation");
     made.addEventListener("chikyu-unavailable", unavailable);
     holder.append(made);
     earth = made;
-    // A soft picture behind the rocket, whose widest pictures are coarser than a CSS pixel anyway, needs no more than a canvas pixel to a CSS pixel, however dense the screen: the element is half the box and shown at twice that, a quarter of the pixels on a Retina screen.
-    const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-    made.style.width = made.style.height = `${100 / ratio}%`;
-    made.style.transform = `scale(${ratio})`;
-    let placed: unknown = null;
-    let ticks = 0;
     stopTurn = turn(holder, TICK_MS.realistic, (seconds, box) => {
       const { yaw, time } = turnAt(seconds);
-      const fresh = box !== placed;
-      placed = box;
-      if (fresh || ticks % SUN_EVERY === 0) made.time = time;
-      if (fresh || ticks % SUN_EVERY !== 0) made.setView({ yaw, tilt: 0, zoom: box.radius / ratio / discRadius(box.width / ratio, box.height / ratio, 1), panX: box.panX / ratio, panY: box.panY / ratio }, true);
-      ticks++;
+      made.time = time;
+      made.setView({ yaw, tilt: 0, zoom: box.radius / discRadius(box.width, box.height, 1), panX: box.panX, panY: box.panY }, true);
     });
   });
   return {
