@@ -145,3 +145,40 @@ test("a drawing burns just the engines a phase names, and is unchanged with none
   assert.equal(built.svg({ look: "line", engines: {} }), built.svg({ look: "line" }));
   assert.match(built.svg({ look: "line", show: "apart", engines: { "first-stage": 1 } }), /data-diamond=/);
 });
+
+test("the flights of the other variants: each from its page, with the figures its page gives and a blank where it gives none", () => {
+  const one = (id: string) => {
+    const flight = FLIGHTS.find((entry) => entry.id === id);
+    assert.ok(flight, id);
+    return flight;
+  };
+  const at = (id: string, phase: string) => one(id).phases[phasePosition(one(id), phase) ?? 0];
+  // Starship's first flight: what happened, to the destruction, with no separation
+  const first = one("starship-flight-1");
+  assert.equal(flightOf("starship", "v1-flight1")?.id, "starship-flight-1");
+  assert.deepEqual(first.phases.map((phase) => phase.id), ["ignition", "liftoff", "max-q", "meco", "separation", "termination", "destroyed"]);
+  assert.equal(at("starship-flight-1", "liftoff").at.value, 5);
+  assert.equal(at("starship-flight-1", "destroyed").at.value, 241);
+  assert.deepEqual(burnsOf(at("starship-flight-1", "liftoff")), { booster: 30 });
+  assert.match(at("starship-flight-1", "separation").altitude?.value ?? "", /39 km/);
+  for (const phase of first.phases) for (const slot of Object.keys(phase.pose)) assert.deepEqual(phase.pose[slot], {}, "the stages never separated");
+  // Falcon 9 v1.1, the first one, and Full Thrust
+  assert.equal(flightOf("falcon-9", "v1.1")?.id, "falcon-9-cassiope");
+  assert.equal(flightOf("falcon-9", "ft")?.id, "falcon-9-abs-eutelsat");
+  assert.equal(flightOf("falcon-9", "v1.0"), null, "no page read gives a v1.0 flight with a fairing");
+  assert.match(at("falcon-9-cassiope", "altitude").altitude?.value ?? "", /310 kilometers/);
+  assert.match(at("falcon-9-cassiope", "climb").altitude?.value ?? "", /more than 20 miles/);
+  assert.equal(at("falcon-9-abs-eutelsat", "mach-1").speed?.value, "Mach 1");
+  assert.equal(at("falcon-9-abs-eutelsat", "seco-2").at.value, 26 * 60 + 58);
+  assert.equal(SOURCES["wikipedia-abs-2a"].read, "direct");
+  // Grasshopper's highest hop: the page's height and duration, and no times between
+  assert.equal(flightOf("grasshopper", "grasshopper")?.id, "grasshopper-hop-8");
+  assert.match(at("grasshopper-hop-8", "top").altitude?.value ?? "", /744 m/);
+  assert.equal(at("grasshopper-hop-8", "landing").at.value, 79);
+  assert.equal(at("grasshopper-hop-8", "top").at.value, null);
+  // altitudes and speeds that other flights' pages give
+  assert.match(at("starship-flight-12", "seco").altitude?.value ?? "", /195 km/);
+  assert.match(at("starship-flight-12", "booster-down").speed?.value ?? "", /1,450 km\/h/);
+  assert.match(at("starship-flight-7", "seco").altitude?.value ?? "", /146 km/);
+  assert.match(at("falcon-9-crs-16", "seco").altitude?.value ?? "", /223 miles/);
+});

@@ -12,6 +12,16 @@ export interface Frame {
   w: Vec3;
 }
 
+/**
+ * A piece that a flight can turn: the name of the group it belongs to (every piece with the same name and pivot turns together), the point it turns about and the axis it turns round, in the part's own metres.
+ * A positive angle turns it right-handed about the axis. The piece is drawn where its group is at rest, which is the angle 0.
+ */
+export interface Move {
+  name: string;
+  pivot: Vec3;
+  axis: Vec3;
+}
+
 /** A body of revolution: `profile` is [radius, y] points going up the outside (going the other way faces inward). */
 export interface Lathe {
   kind: "lathe";
@@ -37,6 +47,7 @@ export interface Lathe {
   body?: boolean;
   /** Its outline is drawn in a drawing. */
   outline?: boolean;
+  move?: Move;
 }
 
 /** A flat outline with a thickness, in a frame: `outline` is [u, v] points, going round; it stands from -thickness/2 to +thickness/2 along w. Convex, or it is drawn as its hull. */
@@ -53,6 +64,7 @@ export interface Plate {
   only?: "mesh" | "drawing";
   /** No feature lines of its own. */
   plain?: boolean;
+  move?: Move;
 }
 
 /** Lines only, in the part's own space. */
@@ -61,6 +73,7 @@ export interface Lines {
   weight: "feature" | "weld";
   paths: readonly (readonly Vec3[])[];
   only?: "mesh" | "drawing";
+  move?: Move;
 }
 
 export type Piece = Lathe | Plate | Lines;
@@ -118,10 +131,22 @@ export interface LineBuffers {
   indices: number[];
 }
 
+/** The mesh of one moving group, its points relative to its pivot, so the group turns about its own origin. */
+export interface MoveMesh {
+  /** The group's name, and a node name of its own: `grid-fins~0`, `grid-fins~1`. */
+  name: string;
+  id: string;
+  pivot: Vec3;
+  axis: Vec3;
+  mesh: PartMesh;
+}
+
 export interface PartMesh {
   faces: Map<MaterialName, Buffers>;
   feature: LineBuffers;
   weld: LineBuffers;
+  /** What a flight can turn, apart from the rest. Empty for a part with no moving group. */
+  moves: MoveMesh[];
 }
 
 const newBuffers = (): Buffers => ({ positions: [], normals: [], uvs: [], indices: [], hasUv: false });
@@ -267,7 +292,41 @@ function plateFaces(mesh: PartMesh, piece: Plate): void {
 
 /** The triangles and lines of a part. */
 export function meshOf(pieces: readonly Piece[]): PartMesh {
-  const mesh: PartMesh = { faces: new Map(), feature: { positions: [], indices: [] }, weld: { positions: [], indices: [] } };
+  const mesh = meshOfFixed(pieces.filter((piece) => !piece.move));
+  for (const group of moveGroups(pieces)) {
+    const part = meshOfFixed(group.pieces);
+    const shift = (positions: number[]) => {
+      for (let i = 0; i < positions.length; i += 3) for (let c = 0; c < 3; c++) positions[i + c] -= group.pivot[c];
+    };
+    for (const buffers of part.faces.values()) shift(buffers.positions);
+    shift(part.feature.positions);
+    shift(part.weld.positions);
+    mesh.moves.push({ name: group.name, id: group.id, pivot: group.pivot, axis: group.axis, mesh: part });
+  }
+  return mesh;
+}
+
+/** The groups a flight can turn: the pieces with a `move`, by name and pivot, in the order they come, each with a node name of its own. */
+export function moveGroups(pieces: readonly Piece[]): { name: string; id: string; pivot: Vec3; axis: Vec3; pieces: Piece[] }[] {
+  const groups: { name: string; id: string; pivot: Vec3; axis: Vec3; pieces: Piece[]; key: string }[] = [];
+  const counts = new Map<string, number>();
+  for (const piece of pieces) {
+    if (!piece.move) continue;
+    const key = `${piece.move.name}@${piece.move.pivot.join(",")}`;
+    let group = groups.find((one) => one.key === key);
+    if (!group) {
+      const n = counts.get(piece.move.name) ?? 0;
+      counts.set(piece.move.name, n + 1);
+      group = { name: piece.move.name, id: `${piece.move.name}~${n}`, pivot: piece.move.pivot, axis: piece.move.axis, pieces: [], key };
+      groups.push(group);
+    }
+    group.pieces.push(piece);
+  }
+  return groups.map((group) => ({ name: group.name, id: group.id, pivot: group.pivot, axis: group.axis, pieces: group.pieces }));
+}
+
+function meshOfFixed(pieces: readonly Piece[]): PartMesh {
+  const mesh: PartMesh = { faces: new Map(), feature: { positions: [], indices: [] }, weld: { positions: [], indices: [] }, moves: [] };
   for (const piece of pieces) {
     if (piece.only === "drawing") continue;
     if (piece.kind === "lathe") {
@@ -297,11 +356,16 @@ export interface Bounds {
 export function boundsOf(mesh: PartMesh): Bounds {
   const min: Vec3 = [Infinity, Infinity, Infinity];
   const max: Vec3 = [-Infinity, -Infinity, -Infinity];
-  for (const b of mesh.faces.values())
-    for (let i = 0; i < b.positions.length; i += 3)
-      for (let c = 0; c < 3; c++) {
-        if (b.positions[i + c] < min[c]) min[c] = b.positions[i + c];
-        if (b.positions[i + c] > max[c]) max[c] = b.positions[i + c];
-      }
+  const sweep = (from: PartMesh, offset: Vec3) => {
+    for (const b of from.faces.values())
+      for (let i = 0; i < b.positions.length; i += 3)
+        for (let c = 0; c < 3; c++) {
+          const value = b.positions[i + c] + offset[c];
+          if (value < min[c]) min[c] = value;
+          if (value > max[c]) max[c] = value;
+        }
+  };
+  sweep(mesh, [0, 0, 0]);
+  for (const group of mesh.moves) sweep(group.mesh, group.pivot);
   return { min, max };
 }

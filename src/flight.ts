@@ -110,6 +110,8 @@ export interface PoseNow {
   dy: number;
   pitch: number;
   gone: boolean;
+  /** Degrees each moving group is turned, by name. */
+  moves: Readonly<Record<string, number>>;
 }
 
 /**
@@ -151,7 +153,14 @@ const poseIn = (pose: PartPose | undefined, part: FlightPart, height: number): P
   dy: pose?.rest ? -part.baseY : (pose?.dy ?? 0) * height,
   pitch: pose?.pitch ?? 0,
   gone: pose?.gone ?? false,
+  moves: pose?.moves ?? {},
 });
+
+const mixMoves = (from: Readonly<Record<string, number>>, to: Readonly<Record<string, number>>, t: number): Record<string, number> => {
+  const out: Record<string, number> = {};
+  for (const name of new Set([...Object.keys(from), ...Object.keys(to)])) out[name] = mix(from[name] ?? 0, to[name] ?? 0, t);
+  return out;
+};
 
 /**
  * Everything the picture needs at a place on the timeline, for a vehicle `height` metres tall.
@@ -178,7 +187,7 @@ export function frameAt(flight: Flight, position: number, parts: readonly Flight
   for (const part of parts) {
     const from = poseIn(phase.pose[part.slot], part, height);
     const to = poseIn(next.pose[part.slot], part, height);
-    const now: PoseNow = { dx: mix(from.dx, to.dx, t), dy: mix(from.dy, to.dy, t), pitch: mix(from.pitch, to.pitch, t), gone: from.gone };
+    const now: PoseNow = { dx: mix(from.dx, to.dx, t), dy: mix(from.dy, to.dy, t), pitch: mix(from.pitch, to.pitch, t), gone: from.gone, moves: mixMoves(from.moves, to.moves, t) };
     poses[part.slot] = now;
     if (now.dx !== 0 || now.dy !== 0) separated = true;
   }

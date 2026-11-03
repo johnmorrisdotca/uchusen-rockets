@@ -90,8 +90,8 @@ export function toGlb(parts: readonly GlbPart[]): Glb {
   const meshes: Record<string, unknown>[] = [];
   const nodes: Record<string, unknown>[] = [];
   const roots: number[] = [];
-  for (const part of parts) {
-    const { mesh } = part;
+  /** One mesh of a part or of one of its moving groups: its primitives and the packing's middle and half-size, returned as the nodes that hold it. */
+  const packMesh = (mesh: PartMesh, name: string): number => {
     const faces = [...mesh.faces] as [MaterialName, Buffers][];
     // the packing's middle and half-size, over all of the part's points
     const lo = [Infinity, Infinity, Infinity];
@@ -146,11 +146,20 @@ export function toGlb(parts: readonly GlbPart[]): Glb {
       if (lines.indices.length === 0) continue;
       primitives.push({ attributes: { POSITION: packPositions(lines.positions) }, indices: indexAccessor(lines.indices, lines.positions.length / 3), material: useMaterial(name), mode: LINES });
     }
-    meshes.push({ name: part.name, primitives });
-    // a holder that the viewer moves, and the packed mesh under it
-    nodes.push({ name: `${part.name}-mesh`, mesh: meshes.length - 1, translation: q.map(round6), scale: [round6(half), round6(half), round6(half)] });
-    const child = nodes.length - 1;
-    nodes.push({ name: part.name, children: [child], translation: part.at.map(round6) });
+    meshes.push({ name, primitives });
+    nodes.push({ name: `${name}-mesh`, mesh: meshes.length - 1, translation: q.map(round6), scale: [round6(half), round6(half), round6(half)] });
+    return nodes.length - 1;
+  };
+
+  for (const part of parts) {
+    // a holder that the viewer moves, and the packed mesh under it; each moving group is a node of its own beside it, at its pivot, with the axis it turns about
+    const children = [packMesh(part.mesh, part.name)];
+    for (const group of part.mesh.moves) {
+      const inside = packMesh(group.mesh, `${part.name}~${group.id}`);
+      nodes.push({ name: `${part.name}~${group.id}`, children: [inside], translation: group.pivot.map(round6), extras: { axis: group.axis.map(round6), group: group.name } });
+      children.push(nodes.length - 1);
+    }
+    nodes.push({ name: part.name, children, translation: part.at.map(round6) });
     roots.push(nodes.length - 1);
   }
 

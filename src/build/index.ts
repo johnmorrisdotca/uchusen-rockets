@@ -1,10 +1,13 @@
 // The builder: one description into one mesh and one drawing. Works in Node and in a browser, with no dependency: the geometry here is this package's own.
+import { propellantOf, type FlameKind } from "../data/propellants.ts";
 import { check, type Description, type FitReport } from "../fit.ts";
 import { type Angle, cleanView, DEFAULT_VIEW, PICTURE_H, PICTURE_W, VIEWS, type Vec3, type ViewName } from "../framing.ts";
 import { cleanShow, placesFor, showsOf } from "../layout.ts";
 import { DEFAULT_LOOK, type LookName } from "../looks.ts";
 import { type PartMesh, boundsOf, type Bounds, meshOf, type Piece } from "../model/pieces.ts";
+import { moved } from "../model/moves.ts";
 import { partEntry } from "../model/registry.ts";
+import { partIdOf, variantOf } from "../rockets.ts";
 import type { PartRecord } from "../parts.ts";
 import { plumeMarkup } from "../draw/plume.ts";
 import { defsOf, drawPart, perspective } from "../draw/svg.ts";
@@ -52,6 +55,8 @@ export interface BuiltPart {
   pieces: readonly Piece[];
   mesh: PartMesh;
   bounds: Bounds;
+  /** The colour of this part's flame, from what a page says its engine burns; `neutral` when none read here says. */
+  flame: FlameKind;
 }
 
 /**
@@ -71,6 +76,8 @@ export interface SvgOptions {
   show?: string;
   /** A flame at each engine that is showing, or as many as a count names for each part. The length is a picture, not a measured flame. Left out, the drawing is unchanged. */
   engines?: boolean | Readonly<Record<string, number>>;
+  /** Degrees each moving group of each part is turned from where it is drawn at rest, by slot and then by name: `{ booster: { "grid-fins": 12 } }`. A flight asks for them. */
+  moves?: Readonly<Record<string, Readonly<Record<string, number>>>>;
 }
 
 /**
@@ -128,10 +135,19 @@ const widthOf = (id: string): number => {
   return Math.max(Math.abs(min[0]), Math.abs(max[0]), Math.abs(min[2]), Math.abs(max[2]));
 };
 
+/** What colour a part's flame is: the kind its engine's page says it burns, found by the engine's name in the data of a variant the part is true for. */
+function flameKindOf(part: PartRecord): FlameKind {
+  for (const variantId of part.trueTo) {
+    const variant = variantOf(part.rocket, variantId);
+    for (const [slot, engines] of Object.entries(variant?.facts.engines ?? {})) if (partIdOf(part.rocket, variantId, slot) === part.id) return propellantOf(part.rocket, engines.value)?.flame ?? "neutral";
+  }
+  return "neutral";
+}
+
 function assembled(report: FitReport): Built {
   const parts: BuiltPart[] = report.parts.map(({ slot, part }) => {
     const { pieces, mesh, bounds } = made(part.id);
-    return { slot, record: part, pieces, mesh, bounds };
+    return { slot, record: part, pieces, mesh, bounds, flame: flameKindOf(part) };
   });
   const slots = parts.map((part) => part.slot);
   const placesOf = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id));
@@ -172,7 +188,7 @@ function assembled(report: FitReport): Built {
     placesOf,
     flamesOf,
     glb: () => toGlb(parts.map((part) => ({ name: part.slot, mesh: part.mesh, at: placesOf("together").find((place) => place.slot === part.slot)?.at ?? [0, 0, 0] }))),
-    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false } = {}) => {
+    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false, moves } = {}) => {
       const angle = typeof view === "string" ? VIEWS[cleanView(view)] : view;
       const places = placesOf(show).filter((place) => place.shown);
       // a flame drawn at full thrust is held in the picture; a count of engines is the timeline's, which has its own room
@@ -192,7 +208,7 @@ function assembled(report: FitReport): Built {
         : [];
       return wrap(
         ordered
-          .map(({ place, part }) => drawPart(drawnPieces(part, together), place.at, cam, look) + plumeMarkup(flames.filter((bell) => bell.slot === place.slot), place.at, cam, look, part.slot))
+          .map(({ place, part }) => drawPart(moved(drawnPieces(part, together), moves?.[part.slot] ?? {}), place.at, cam, look) + plumeMarkup(flames.filter((bell) => bell.slot === place.slot), place.at, cam, look, part.slot, part.flame))
           .join(""),
         look,
         PICTURE_W,

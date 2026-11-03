@@ -48,7 +48,7 @@ import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import type { Spin } from "../spin.ts";
 import { GroundKit } from "./ground.ts";
-import { type Fuel, PartPlumes, PlumeKit } from "./plumes.ts";
+import { PartPlumes, PlumeKit } from "./plumes.ts";
 
 export interface ViewerOptions {
   label: string;
@@ -145,13 +145,13 @@ interface PartView {
   hideAtEnd: boolean;
   /** Its flames, made the first time an engine of it is lit. */
   plumes: PartPlumes | null;
+  /** What a flight turns: each moving group is a node of its own, at its pivot, with the axis it turns about (they come from the file, so the viewer holds no table of them). */
+  moves: { name: string; group: Group; axis: Vector3; angle: number }[];
 }
 
 /** The materials of an engine's bell, in this package's own meshes. */
 const NOZZLE_MATERIALS: ReadonlySet<string> = new Set(["bell", "bell-inside", "engine-metal"]);
 const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
-/** A flame's colours, a picture: Raptor burns methane, Merlin kerosene. */
-const fuelOf = (built: Built): Fuel => (built.report.parts.some(({ part }) => part.rocket === "starship") ? "methane" : "kerosene");
 /** The pictures a licensed model's material may hold (the shared sky it reflects is not one of them). */
 const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
@@ -319,8 +319,19 @@ export class RocketViewer {
         to: [0, 0, 0],
         hideAtEnd: false,
         plumes: null,
+        moves: [],
       };
       this.takeMeshes(source, code, view);
+      for (const node of source.children.slice(1)) {
+        const axis = node.userData.axis as number[] | undefined;
+        if (!axis) continue;
+        const group = new Group();
+        group.name = node.name;
+        group.position.copy(node.position);
+        code.add(group);
+        this.takeMeshes(node, group, view);
+        view.moves.push({ name: String(node.userData.group), group, axis: new Vector3(axis[0], axis[1], axis[2]).normalize(), angle: 0 });
+      }
       const place = places.find((p) => p.slot === part.slot);
       holder.position.set(...(place?.at ?? [0, 0, 0]));
       holder.visible = place?.shown ?? false;
@@ -329,7 +340,6 @@ export class RocketViewer {
     }
     this.addGlow();
     this.setLook(look);
-    this.plumes.setFuel(fuelOf(built));
     this.frameTo(angle ?? this.currentAngle(), false);
     if (this.clockNow) {
       this.flightKey = "";
@@ -527,9 +537,10 @@ export class RocketViewer {
     for (const view of this.parts) {
       const count = counts.get(view.slot) ?? 0;
       if (count > 0 && !view.plumes) {
-        const bells = bellsOf(this.built.parts.find((part) => part.slot === view.slot)?.pieces ?? []);
+        const built = this.built.parts.find((part) => part.slot === view.slot);
+        const bells = bellsOf(built?.pieces ?? []);
         if (bells.length === 0) continue;
-        view.plumes = new PartPlumes(this.plumes, bells);
+        view.plumes = new PartPlumes(this.plumes, bells, built?.flame ?? "neutral");
         view.holder.add(view.plumes.group);
       }
       if (!view.plumes) continue;
@@ -572,7 +583,12 @@ export class RocketViewer {
         part.holder.position.set(...(place?.at ?? [0, 0, 0]));
         part.holder.rotation.set(0, 0, 0);
         part.holder.visible = place?.shown ?? false;
+        for (const move of part.moves) {
+          move.angle = 0;
+          move.group.quaternion.identity();
+        }
       }
+      this.canvas.dataset.turned = "";
       this.plumes.setAir(0);
       this.plumes.setFloor(-1e6);
       this.reframe();
@@ -645,10 +661,18 @@ export class RocketViewer {
       if (!pose || !place) continue;
       const turn = MathUtils.degToRad(pose.pitch);
       const middle = (parts.find((one) => one.slot === part.slot)?.height ?? 0) / 2;
+      for (const move of part.moves) {
+        const angle = pose.moves[move.name] ?? 0;
+        if (angle === move.angle) continue;
+        move.angle = angle;
+        move.group.quaternion.setFromAxisAngle(move.axis, MathUtils.degToRad(angle));
+      }
       part.holder.visible = !pose.gone;
       part.holder.rotation.set(0, 0, turn);
       part.holder.position.set(place.at[0] + pose.dx + Math.sin(turn) * middle, place.at[1] + pose.dy + middle - Math.cos(turn) * middle, place.at[2]);
     }
+    const turned = this.parts.flatMap((part) => part.moves.filter((move) => move.angle !== 0).map((move) => `${part.slot}:${move.group.name.split("~").slice(1).join("~")}=${Math.round(move.angle)}`)).join(" ");
+    if (turned !== this.canvas.dataset.turned) this.canvas.dataset.turned = turned;
     this.plumes.setAir(frame.air);
     this.plumes.setFloor(frame.groundY);
     this.ground?.set(frame.groundY, this.options.reducedMotion ? 0 : frame.smoke, performance.now() / 1000);

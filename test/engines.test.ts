@@ -66,7 +66,7 @@ test("a flame is drawn at each bell already in the rocket, and nowhere else", ()
   assert.equal(lit.match(/data-plume=/g)?.length, 33);
   const painted = starship.svg({ look: "painted", view: "side", show: "apart", engines: true });
   assert.equal(painted.match(/data-plume=/g)?.length, 39);
-  assert.match(painted, /#fff4d2/);
+  assert.match(painted, /#fff1e6/);
   assert.equal(/spacex|logo|wordmark/i.test(painted), false);
 
   const falcon = build({ rocket: "falcon-9", variant: "block-5" });

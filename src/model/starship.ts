@@ -2,7 +2,7 @@
 // figure: no source gives a flap's size or a fin's reach. Block 3's come from measuring Clarence365's model after it was scaled to the sourced sizes (CC BY 4.0, see NOTICE.md); Blocks 1 and 2 keep their
 // own documented differences (four fins, flap angles, engine shielding) with sizes judged from photographs.
 import { deg } from "../framing.ts";
-import { flat, type Frame, type Lathe, type Piece, type Plate, pointOf, radial, radiusAt, strut, type Vec3 } from "./pieces.ts";
+import { flat, type Frame, type Lathe, type Move, type Piece, type Plate, pointOf, radial, radiusAt, strut, type Vec3 } from "./pieces.ts";
 
 export interface FlapDraw {
   /** Where its root is, degrees round from the windward side. */
@@ -280,8 +280,8 @@ function clip(a: readonly [number, number], b: readonly [number, number], outlin
   ];
 }
 
-/** A grid fin held out flat: a frame and a lattice, u outwards and v along the circle. */
-export function gridFin(azDeg: number, y: number, rootRadius: number, reach: number, width: number, thick: number, octagon: boolean): Piece[] {
+/** A grid fin held out flat: a frame and a lattice, u outwards and v along the circle. With `turn`, every piece of it is one moving group, hinged at its root: round the fin's own axis out from the hull (`radial`, how it steers) or across it (`tangent`, how it folds in). */
+export function gridFin(azDeg: number, y: number, rootRadius: number, reach: number, width: number, thick: number, octagon: boolean, turn?: { name: string; about: "radial" | "tangent" }): Piece[] {
   const frame = flat(deg(azDeg), y);
   const r0 = rootRadius + 0.35;
   const hw = width / 2;
@@ -340,11 +340,15 @@ export function gridFin(azDeg: number, y: number, rootRadius: number, reach: num
   });
   // where it meets the hull
   pieces.push(strut("fin", pointOf(frame, rootRadius - 0.1, 0, 0), pointOf(frame, r0 + 0.05, 0, 0), 1, 0.7, { only: "mesh" }));
+  if (turn) {
+    const move: Move = { name: turn.name, pivot: pointOf(frame, r0, 0, 0), axis: turn.about === "radial" ? frame.u : frame.v };
+    return pieces.map((piece) => ({ ...piece, move }));
+  }
   return pieces;
 }
 
 /** A flap's plate, tiled on its windward face. `outline` is [radius, height]. */
-export function flap(draw: FlapDraw, side: 1 | -1): Plate {
+export function flap(draw: FlapDraw, side: 1 | -1, name?: string): Plate {
   const az = deg(draw.az) * side;
   const frame = radial(az);
   // w must look windward, so the +w face takes the tiles
@@ -357,7 +361,8 @@ export function flap(draw: FlapDraw, side: 1 | -1): Plate {
     const seam = clip([Math.min(...reach) - 1, y], [Math.max(...reach) + 1, y], draw.outline);
     if (seam) ribs.push(seam);
   }
-  return { kind: "plate", material: "steel", top: "tile-plain", frame: windward, outline: draw.outline, thickness: draw.thickness, ribs };
+  const hinge: Move | undefined = name ? { name, pivot: pointOf(frame, Math.min(...reach), 0, 0), axis: [0, side, 0] } : undefined;
+  return { kind: "plate", material: "steel", top: "tile-plain", frame: windward, outline: draw.outline, thickness: draw.thickness, ribs, ...(hinge ? { move: hinge } : {}) };
 }
 
 /** A flap's root fairing above it. */
@@ -496,7 +501,7 @@ export function boosterPieces(d: StarshipDraw): Piece[] {
   for (const az of [0, 180]) pieces.push(strut("engine-metal", pointOf(radial(deg(az)), r + 0.08, skirt + 3), pointOf(radial(deg(az)), r + 0.08, topOfHull - 8), 0.5, 0.2, { plain: false }));
   // the band of vents round the common dome
   pieces.push({ kind: "lathe", material: "engine-pale", segs: 64, only: "mesh", profile: [[r + 0.015, topOfHull * 0.62 - 0.12], [r + 0.015, topOfHull * 0.62 + 0.12]] });
-  for (const az of d.fins.az) pieces.push(...gridFin(az, d.fins.y, r, d.fins.reach, d.fins.width, d.fins.thick, d.fins.octagon));
+  for (const az of d.fins.az) pieces.push(...gridFin(az, d.fins.y, r, d.fins.reach, d.fins.width, d.fins.thick, d.fins.octagon, { name: "grid-fins", about: "radial" }));
   if (d.ring.height > 0) pieces.push(...hotStage(d));
   else pieces.push({ kind: "lathe", material: "soot", segs: 48, profile: [[r, topOfHull], [0, topOfHull]], only: "mesh" });
   return pieces;
@@ -522,8 +527,8 @@ export function shipPieces(d: StarshipDraw): Piece[] {
   pieces.push(...engineRings(d.shipEngines, 0.2));
   const surface = (y: number) => radiusAt(profile, y);
   for (const side of [1, -1] as const) {
-    pieces.push(flap(d.aft, side));
-    pieces.push(flap(d.forward, side));
+    pieces.push(flap(d.aft, side, "aft-flaps"));
+    pieces.push(flap(d.forward, side, "forward-flaps"));
     const aftTop = Math.max(...d.aft.outline.map(([, y]) => y));
     pieces.push(fairing(d.aft.az * side, aftTop - 1, aftTop + 2.8, surface, 0.8));
     const fwdBottom = Math.min(...d.forward.outline.map(([, y]) => y));

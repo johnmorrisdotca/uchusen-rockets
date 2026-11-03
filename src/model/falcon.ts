@@ -74,9 +74,9 @@ function firstStage(d: FirstStageDraw, withTop: boolean): Piece[] {
   if (d.legs)
     for (const az of [45, 135, 225, 315]) {
       const frame = radial(deg(az));
-      pieces.push({ kind: "plate", material: "black", frame, outline: [[r - 0.05, 0.8], [r + 0.5, 0.8], [r + 0.55, 3], [r + 0.15, 10.5], [r - 0.05, 11]], thickness: 1.2 });
+      pieces.push({ kind: "plate", material: "black", frame, outline: [[r - 0.05, 0.8], [r + 0.5, 0.8], [r + 0.55, 3], [r + 0.15, 10.5], [r - 0.05, 11]], thickness: 1.2, move: { name: "legs", pivot: pointOf(frame, r + 0.2, 0.8), axis: frame.w } });
     }
-  if (d.fins) for (const az of [45, 135, 225, 315]) pieces.push(...gridFin(az, tank + 0.1, r, r + 1.4, 1.5, 0.3, false));
+  if (d.fins) for (const az of [45, 135, 225, 315]) pieces.push(...gridFin(az, tank + 0.1, r, r + 1.4, 1.5, 0.3, false, { name: "grid-fins", about: "tangent" }));
   return pieces;
 }
 

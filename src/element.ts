@@ -525,11 +525,12 @@ export class UchusenRocket extends HTMLBase {
     const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
     const label = this.getAttribute("label") ?? this.builtNow.report.label;
     const lit = flying ? (media("(prefers-reduced-motion: reduce)") ? false : flying.burns) : this.engineLights();
-    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}|${flying ? flying.index : ""}|${JSON.stringify(lit)}`;
+    const moves = flying ? Object.fromEntries(Object.entries(flying.phase.pose).flatMap(([slot, pose]) => (pose.moves ? [[slot, pose.moves]] : []))) : undefined;
+    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}|${flying ? flying.index : ""}|${JSON.stringify(lit)}|${JSON.stringify(moves ?? {})}`;
     let node = this.drawing.firstElementChild;
     if (key !== this.drawn.key || !node) {
       const template = document.createElement("template");
-      template.innerHTML = this.builtNow.svg({ look, show, view: from, engines: lit });
+      template.innerHTML = this.builtNow.svg({ look, show, view: from, engines: lit, ...(moves ? { moves } : {}) });
       node = template.content.firstElementChild;
       if (!node) return;
       node.setAttribute("aria-label", label);

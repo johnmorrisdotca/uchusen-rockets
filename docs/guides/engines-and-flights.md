@@ -49,7 +49,9 @@ if (booster) {
 
 Picture: [The flight bar below a rocket at hot staging, with its chart of engines.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/flight.jpg)
 
-A variant has a flight only where a page gives one. The other variants say so, and a custom build never has one.
+A variant has a flight only where a page gives one: Starship's first, fifth, seventh and twelfth flight tests, Falcon 9 v1.1, Full Thrust and Block 5 (with and without Dragon 2), Falcon Heavy and Grasshopper's highest hop. The other variants say so, and a custom build never has one. A phase shows an altitude or a speed only where its page gives one, in the page's words.
+
+Grid fins, legs and flaps turn in a flight where the pages say they do (the Falcon 9's grid fins stowed on ascent and open for the entry, its legs open before the touchdown, Super Heavy's fins steering after the boostback, the Ship's flaps at its entry). How far they turn is a picture, and a painted model that is one shell does not turn: nothing is cut to fake a move.
 
 ## A flight as data
 
@@ -82,6 +84,18 @@ if (flight) {
   clock.advance(2.4);
   console.log(clock.position, lastPosition(flight), clock.ended);
 }
+```
+
+## A flame's colour
+
+A flame is drawn in the colours of what its engine burns, and the engine's propellant is a figure with its page: `PROPELLANTS` lists each engine whose propellant a page read here names, and `propellantOf(rocket, engineText)` finds it from the engine text of a variant. A kerosene flame (Merlin, Kestrel, F-1, Rutherford, RD-107 and RD-108) is orange, a methane flame (Raptor, BE-4) bluish, a hydrogen flame (J-2, RS-25, BE-3) pale blue and almost white, a solid motor's (the Space Shuttle's boosters and the SLS's) a brighter orange, and the lunar module's descent engine, which burns Aerozine 50 and nitrogen tetroxide, a faint pale one. An engine no page read here names, such as the ship of the 2019 design, whose data counts its engines and names none, has a neutral grey-white flame: a colour is never a guess. The colours themselves are a picture, as a flame's length is.
+
+```ts
+import { propellantOf } from "@johnmorrisdotca/uchusen-rockets";
+
+const raptor = propellantOf("starship", "33 Raptor 3");
+console.log(raptor?.propellant.value, raptor?.propellant.source, raptor?.flame);
+console.log(propellantOf("starship", "3 sea-level and 3 vacuum"));
 ```
 
 ## Sourced, and only a picture

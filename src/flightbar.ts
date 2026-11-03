@@ -171,7 +171,7 @@ export class UchusenFlight extends HTMLBase {
     parts.leave.disabled = !state.active;
     parts.range.value = String(state.position);
     parts.range.setAttribute("aria-valuetext", `${clockWords(phase.at)}, ${phase.name}`);
-    parts.now.textContent = `${clockWords(phase.at)}, ${phase.name}${phase.altitude?.value ? `, ${phase.altitude.value}` : ""}`;
+    parts.now.textContent = `${clockWords(phase.at)}, ${phase.name}${phase.altitude?.value ? `, ${phase.altitude.value}` : ""}${phase.speed?.value ? `, ${phase.speed.value}` : ""}`;
     parts.what.textContent = phase.what;
     const chartKey = `${flight.id}/${index}/${state.active}`;
     if (chartKey !== this.chartKey) {

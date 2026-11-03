@@ -678,6 +678,55 @@ test.describe("a played timeline", () => {
     expect(last.programs).toBeLessThanOrEqual(first.programs);
   });
 
+  test("grid fins, legs and flaps turn in a flight, and forty rounds of it make nothing on the graphics card and draw nothing extra", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await press(page, "rocket-falcon-9");
+    await press(page, "variant-block-5");
+    await press(page, "look-thick");
+    await expect(hero(page)).toHaveAttribute("data-flight", "falcon-9-starlink-2019");
+    const seek = (position: number) => rocket(page).evaluate((node, at) => (node as HTMLElement & { seek(p: number): void }).seek(at), position);
+    const leave = () => rocket(page).evaluate((node) => (node as HTMLElement & { endFlight(): void }).endFlight());
+    const turned = () => canvasData(page, "turned");
+    // folded fins for the ascent, none for the entry, the legs open for the landing
+    await seek(2);
+    await expect.poll(turned).toContain("first-stage:grid-fins~0=85");
+    await seek(7);
+    await expect.poll(turned).not.toContain("grid-fins");
+    await seek(9);
+    await expect.poll(turned).toContain("first-stage:legs~0=60");
+    await leave();
+    // the first round makes what is kept on purpose (the ground and the flames); the rest make nothing
+    const round = async () => {
+      for (const at of [0, 2, 5, 7, 8, 9, 10]) await seek(at);
+      await page.waitForTimeout(40);
+      await leave();
+      await page.waitForTimeout(40);
+    };
+    for (const at of [0, 2, 5, 7, 8, 9, 10]) {
+      const was = await drawn(page);
+      await seek(at);
+      await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(was);
+    }
+    await leave();
+    await settle(page, 500);
+    const first = await usage(page);
+    const mark = await drawn(page);
+    for (let i = 0; i < 40; i++) await round();
+    await settle(page, 300);
+    const last = await usage(page);
+    expect(last.contexts).toBe(1);
+    expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+    expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+    expect(last.textures).toBeLessThanOrEqual(first.textures);
+    expect(last.programs).toBeLessThanOrEqual(first.programs);
+    // 40 rounds of 7 steps and a leave: a draw for each at most (one a frame), not a loop
+    expect((await drawn(page)) - mark).toBeLessThanOrEqual(40 * 9 + 20);
+    await expectIdle(page);
+  });
+
   test("changing variant in the middle of a flight ends it and gives back its flames", async ({ page }) => {
     test.setTimeout(240_000);
     await page.goto(URL);

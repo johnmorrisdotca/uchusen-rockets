@@ -1,4 +1,5 @@
 // Flames for the 3D view, made here and loaded only with it. One shape, one material and one instanced draw for every engine of a part, however many burn, so lighting and dousing engines changes numbers, never what the graphics card holds. The look of a flame (its shock diamonds, its length, its glow) is a picture, not a measurement.
+import type { FlameKind } from "../data/propellants.ts";
 import { AdditiveBlending, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, Float32BufferAttribute, Group, InstancedMesh, Matrix4, PointLight, Quaternion, ShaderMaterial, Vector3 } from "three";
 import { type Bell, PLUME_DIAMONDS, plumeLength } from "../engines.ts";
 
@@ -108,11 +109,14 @@ function glowShape(): BufferGeometry {
   return geometry;
 }
 
-/** What burns in each engine's flame, as a picture: a fuel's flame is drawn in its own colours. */
-export type Fuel = "methane" | "kerosene";
-const FUEL_COLOURS: Readonly<Record<Fuel, { hot: string; cool: string }>> = {
-  methane: { hot: "#fff1e6", cool: "#6f7dff" },
+/** What a flame is drawn in: the kind of flame its engine's propellant gives (`src/data/propellants.ts`), and a neutral grey-white where no page read says. A picture, not a measurement. */
+const FLAME_TONES: Readonly<Record<FlameKind, { hot: string; cool: string }>> = {
   kerosene: { hot: "#fff4d2", cool: "#ff7a1a" },
+  methane: { hot: "#fff1e6", cool: "#6f7dff" },
+  hydrogen: { hot: "#ffffff", cool: "#6fa8ff" },
+  solid: { hot: "#fff1c4", cool: "#ff4a12" },
+  hypergolic: { hot: "#ffffff", cool: "#b8c4ee" },
+  neutral: { hot: "#ffffff", cool: "#9aa3b2" },
 };
 
 const place = new Matrix4();
@@ -128,11 +132,11 @@ export class PartPlumes {
   private glows: InstancedMesh;
   private key = "";
 
-  constructor(kit: PlumeKit, bells: readonly Bell[]) {
+  constructor(kit: PlumeKit, bells: readonly Bell[], kind: FlameKind) {
     this.bells = bells;
     this.group.name = "plumes";
-    this.flames = new InstancedMesh(kit.shape, kit.flame, bells.length);
-    this.glows = new InstancedMesh(kit.quad, kit.glow, bells.length);
+    this.flames = new InstancedMesh(kit.shape, kit.flameFor(kind), bells.length);
+    this.glows = new InstancedMesh(kit.quad, kit.glowFor(kind), bells.length);
     for (const mesh of [this.flames, this.glows]) {
       mesh.instanceMatrix.setUsage(DynamicDrawUsage);
       mesh.frustumCulled = false;
@@ -164,12 +168,10 @@ export class PartPlumes {
   }
 }
 
-/** One set of everything a flame needs, for one viewer. */
+/** One set of everything a flame needs, for one viewer. The materials of each kind of flame share one program and one set of clocks; only the two colours differ. */
 export class PlumeKit {
   readonly shape = flameShape();
   readonly quad = glowShape();
-  readonly flame: ShaderMaterial;
-  readonly glow: ShaderMaterial;
   /** The hull's own glow in the painted look. Always in the scene, at no strength when no engine burns, so lighting engines never makes the materials build again. */
   readonly light = new PointLight("#ffb56b", 0, 0, 1.6);
   private uniforms = {
@@ -179,23 +181,33 @@ export class PlumeKit {
     uLine: { value: 1 },
     uFloor: { value: -1e6 },
     uGlow: { value: 0.75 },
-    uHot: { value: new Color(FUEL_COLOURS.kerosene.hot) },
-    uCool: { value: new Color(FUEL_COLOURS.kerosene.cool) },
   };
+  private kinds = new Map<FlameKind, { flame: ShaderMaterial; glow: ShaderMaterial }>();
 
-  constructor() {
-    const common = { transparent: true, depthWrite: false, blending: AdditiveBlending, toneMapped: false };
-    this.flame = new ShaderMaterial({ ...common, vertexShader: FLAME_VERTEX, fragmentShader: FLAME_FRAGMENT, uniforms: this.uniforms, side: DoubleSide });
-    this.glow = new ShaderMaterial({ ...common, vertexShader: GLOW_VERTEX, fragmentShader: GLOW_FRAGMENT, uniforms: this.uniforms });
+  private kind(kind: FlameKind): { flame: ShaderMaterial; glow: ShaderMaterial } {
+    const known = this.kinds.get(kind);
+    if (known) return known;
+    const tone = FLAME_TONES[kind];
+    const uniforms = { ...this.uniforms, uHot: { value: new Color(tone.hot) }, uCool: { value: new Color(tone.cool) } };
+    const common = { transparent: true, depthWrite: false, blending: AdditiveBlending, toneMapped: false, uniforms };
+    const made = {
+      flame: new ShaderMaterial({ ...common, vertexShader: FLAME_VERTEX, fragmentShader: FLAME_FRAGMENT, side: DoubleSide }),
+      glow: new ShaderMaterial({ ...common, vertexShader: GLOW_VERTEX, fragmentShader: GLOW_FRAGMENT }),
+    };
+    this.kinds.set(kind, made);
+    return made;
+  }
+
+  flameFor(kind: FlameKind): ShaderMaterial {
+    return this.kind(kind).flame;
+  }
+
+  glowFor(kind: FlameKind): ShaderMaterial {
+    return this.kind(kind).glow;
   }
 
   setLook(painted: boolean): void {
     this.uniforms.uLine.value = painted ? 0 : 1;
-  }
-
-  setFuel(fuel: Fuel): void {
-    this.uniforms.uHot.value.set(FUEL_COLOURS[fuel].hot);
-    this.uniforms.uCool.value.set(FUEL_COLOURS[fuel].cool);
   }
 
   /** 0 near the ground, 1 high up where a flame fans out. */
@@ -222,8 +234,11 @@ export class PlumeKit {
   dispose(): void {
     this.shape.dispose();
     this.quad.dispose();
-    this.flame.dispose();
-    this.glow.dispose();
+    for (const { flame, glow } of this.kinds.values()) {
+      flame.dispose();
+      glow.dispose();
+    }
+    this.kinds.clear();
     this.light.dispose();
     this.light.removeFromParent();
   }
