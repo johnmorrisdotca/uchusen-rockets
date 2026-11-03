@@ -102,11 +102,25 @@ const usage = (page: Page) =>
     return { contexts: alive.length, buffers: live("Buffer"), arrays: live("VertexArray"), textures: live("Texture"), programs: live("Program"), framebuffers: live("Framebuffer"), pageFrames: seen.frames, callbacks: seen.callbacks, mostInAFrame: seen.mostInAFrame, asked: seen.asked, draws: seen.draws };
   });
 const drawn = (page: Page) => hero(page).evaluate((node) => Number((node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0));
-/** Presses a choice and waits until the view has drawn it. What three.js holds depends on which materials each shape was drawn with, so a reading of it means something only when no frame of a change was skipped; and a new rocket is in only when `uchusen-change` says so. */
+/** Presses a choice and waits until the view has drawn it. What three.js holds depends on which materials each shape was drawn with, so a reading of it means something only when no frame of a change was skipped.
+ * The frames are counted in the page at the change itself: a new rocket's when `uchusen-change` says it is in, anything else's when the element's attributes change. Counted before the press instead, a frame
+ * of an earlier move that came between the count and the press passed for one of the change, and the reading was taken before the change was drawn. */
 const pressAndDraw = async (page: Page, id: string) => {
-  const rocketChange = /^(rocket|variant)-/.test(id);
-  const mark = await drawn(page);
-  await Promise.all([rocketChange ? hero(page).evaluate((node) => new Promise((done) => node.addEventListener("uchusen-change", done, { once: true }))) : null, press(page, id)]);
+  await hero(page).evaluate((node, whole) => {
+    const frames = () => Number(node.shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0);
+    (window as unknown as { __change: Promise<number> }).__change = new Promise((done) => {
+      if (whole) node.addEventListener("uchusen-change", () => done(frames()), { once: true });
+      else {
+        const watching = new MutationObserver(() => {
+          watching.disconnect();
+          done(frames());
+        });
+        watching.observe(node, { attributes: true, attributeFilter: ["look", "show", "view", "engines"] });
+      }
+    });
+  }, /^(rocket|variant)-/.test(id));
+  await press(page, id);
+  const mark = await page.evaluate(() => (window as unknown as { __change: Promise<number> }).__change);
   await expect.poll(() => drawn(page), { timeout: 60_000 }).toBeGreaterThan(mark);
 };
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
@@ -203,13 +217,27 @@ test("changes give back what they took: contexts, buffers, vertex arrays and tex
   await page.goto(URL);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);
+  // A licensed model is let through only once the view has drawn this package's own paint, which shows until the model is in. Left to itself it is a race: when the model comes before the next frame the own
+  // paint is never drawn, and three.js holds no vertex arrays for it. Those are let go with the rocket, so the count went up and down by round (72, 55, 55, 55 here; 55 then 72 on a hosted runner) and a
+  // round that drew the own paint after one that did not read as growth. Held, every round draws the same things.
+  let open = () => {};
+  let gate = Promise.resolve();
+  await page.route("**/assets/models/**", async (route) => {
+    await gate;
+    await route.continue();
+  });
+  const withModelsHeld = async (id: string) => {
+    gate = new Promise((done) => (open = done));
+    await pressAndDraw(page, id);
+    open();
+  };
   const round = async () => {
     await pressAndDraw(page, "variant-v1");
     await pressAndDraw(page, "show-apart");
     await pressAndDraw(page, "look-thick");
-    await pressAndDraw(page, "look-painted");
+    await withModelsHeld("look-painted");
     await expect(hero(page)).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
-    await pressAndDraw(page, "variant-v3");
+    await withModelsHeld("variant-v3");
     await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
     await pressAndDraw(page, "show-together");
     await pressAndDraw(page, "look-line");
@@ -218,9 +246,11 @@ test("changes give back what they took: contexts, buffers, vertex arrays and tex
   // the first round fills the caches that are kept on purpose; each change is waited for until it is drawn, so no later round finds a shape not yet drawn, and every later reading is held to the first
   await round();
   const first = await usage(page);
+  console.log(`round 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}`);
   for (let i = 0; i < 4; i++) {
     await round();
     const now = await usage(page);
+    console.log(`round ${i + 2}: buffers ${now.buffers}, arrays ${now.arrays}, textures ${now.textures}, programs ${now.programs}`);
     expect(now.contexts).toBe(1);
     expect(now.buffers).toBeLessThanOrEqual(first.buffers);
     expect(now.arrays).toBeLessThanOrEqual(first.arrays);
