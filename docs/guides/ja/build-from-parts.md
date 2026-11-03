@@ -91,6 +91,6 @@ const picked = builderState([start.rows[0]?.options[1]?.id ?? ""]);
 console.log(picked.description, picked.report.ok);
 ```
 
-図：[デモのビルダー：部品の行が下から並び、各行はその下の行に合うものだけを提示する。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/builder.jpg)
+![デモのビルダー：部品の行が下から並び、各行はその下の行に合うものだけを提示する。](../../images/builder.jpg)
 
 [ライブのビルダー](https://johnmorrisdotca.github.io/uchusen-rockets/builder.html)はこの仕組みに、プレビューとコピーできるコードを加えたものです。部品が数値の表であることは、[設計](architecture.md)を参照してください。

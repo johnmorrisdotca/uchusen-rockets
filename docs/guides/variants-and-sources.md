@@ -7,7 +7,7 @@ description: Why every rocket comes in versions, how a figure names its source, 
 
 Rockets change. Starship Block 1 is not Block 3, and a Falcon 9 from 2012 is not a Block 5. So the package never has one "Falcon 9"; it has the variants a source documents, each with its own sizes.
 
-Picture: [Every rocket at one scale: Starship, Falcon 9, Falcon 9 with Dragon 2, Falcon Heavy, Grasshopper and Dragon 2.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/family.jpg)
+![Every rocket at one scale: Starship, Falcon 9, Falcon 9 with Dragon 2, Falcon Heavy, Grasshopper and Dragon 2.](../images/family.jpg)
 
 ## A figure names its source, or is blank
 

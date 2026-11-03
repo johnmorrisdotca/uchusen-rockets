@@ -7,7 +7,7 @@ description: エンジンを全推力で点火し、公表されたタイムラ�
 
 `engines="on"` は、見えているすべてのエンジンを全推力で点火します。飛行は、ロケットをフェーズごとに進め、そのフェーズで燃えているエンジンだけを点火します。
 
-図：[エンジンに点火したファルコン9の第1段。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/engines.jpg)
+![エンジンに点火したファルコン9の第1段。](../../images/engines.jpg)
 
 ## エンジンを点火する
 
@@ -47,7 +47,7 @@ if (booster) {
 <uchusen-flight for="rocket"></uchusen-flight>
 ```
 
-図：[ホットステージングの場面のロケットと、その下の飛行バーおよびエンジンのチャート。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/flight.jpg)
+![ホットステージングの場面のロケットと、その下の飛行バーおよびエンジンのチャート。](../../images/flight.jpg)
 
 飛行が用意されているのは、出典ページがタイムラインを示している型式だけです。スターシップの飛行試験1・5・7・12、ファルコン9のv1.1・フルスラスト・ブロック5（ドラゴン2つきとなし）、ファルコン・ヘビー、グラスホッパーのいちばん高い跳躍があります。ほかの型式はその旨を表示し、カスタム構成には飛行がありません。高度や速度は、そのページが示しているときだけ、ページの言葉のまま表示されます。
 

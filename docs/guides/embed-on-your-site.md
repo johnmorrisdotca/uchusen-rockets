@@ -7,7 +7,7 @@ description: Six ways to copy a rocket into a page, from a script tag to a plain
 
 The drawings are made to be used. A page of yours can show the same rocket the demo shows, in any of six ways. The demo has a panel that copies the code for whatever is on the screen, and saves it as an SVG or a PNG.
 
-Picture: [The embed page: a rocket drawn from its address, with nothing else.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/embed.jpg)
+![The embed page: a rocket drawn from its address, with nothing else.](../images/embed.jpg)
 
 | Way | When |
 | --- | --- |

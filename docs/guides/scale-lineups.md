@@ -7,7 +7,7 @@ description: Stand rockets on one baseline at one scale beside a ruler, a person
 
 `<uchusen-lineup>` stands rockets side by side at one scale. It is how you see that Block 4 is taller than Block 3, or that a Falcon 9 would fit inside Starship's booster twice over.
 
-Picture: [Block 1, 2, 3 and 4 side by side at one scale, with a ruler to 140 metres, a ten-storey building and a person.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/compare.jpg)
+![Block 1, 2, 3 and 4 side by side at one scale, with a ruler to 140 metres, a ten-storey building and a person.](../images/compare.jpg)
 
 ## The element
 
@@ -48,6 +48,6 @@ console.log(COMPARES);
 
 ## Every rocket at one scale
 
-Picture: [Every rocket at one scale as line drawings beside a ruler, a building and a person.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/family.jpg)
+![Every rocket at one scale as line drawings beside a ruler, a building and a person.](../images/family.jpg)
 
 Other makers' rockets share the same scale, and each lists its own sources. Because every height is a sourced `Figure`, the lineup cannot show a size the data does not have: a variant with no sourced height is left out rather than guessed.

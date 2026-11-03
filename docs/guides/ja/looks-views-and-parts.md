@@ -7,7 +7,7 @@ description: ロケットの描き方、見る向き、表示する部品を選�
 
 見え方を変える選択は3つあり、互いに独立しています。**見た目**（`look`、どう描くか）、**視点**（`view`、どちらから見るか）、**表示**（`show`、どの部品を出すか）です。どの見た目も、すべての型式で、組み上げた状態でも分解した状態でも、部品ひとつだけでも使えます。
 
-図：[濃紺の地に明るい線で描いたロケット。タイルの面は六角形のモザイク。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-line.jpg)
+![濃紺の地に明るい線で描いたロケット。タイルの面は六角形のモザイク。](../../images/main-line.jpg)
 
 ## 見た目
 
@@ -29,7 +29,7 @@ console.log(LOOK_NAMES, LOOKS.thick.outline, cleanLook("glossy"));
 
 ## 視点
 
-図：[下から見たブースター：リングに並ぶ33基のエンジン、3枚のグリッドフィン、長いチャイン。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/booster-below.jpg)
+![下から見たブースター：リングに並ぶ33基のエンジン、3枚のグリッドフィン、長いチャイン。](../../images/booster-below.jpg)
 
 `view` は `three-quarter`（既定）、`front`、`back`、`side`、`below` です。**正面は風上のタイルの面、背面は鋼の面です。** それぞれの名前は角度です。
 
@@ -51,7 +51,7 @@ import { showsOf, variantOf } from "@johnmorrisdotca/uchusen-rockets";
 console.log(showsOf(variantOf("falcon-9", "block-5-dragon-2")?.slots ?? []));
 ```
 
-図：[分解して彩色した、ドラゴン2つきファルコン9ブロック5。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/falcon-9-apart.jpg)
+![分解して彩色した、ドラゴン2つきファルコン9ブロック5。](../../images/falcon-9-apart.jpg)
 
 `show` を変えるとアニメーションで切り替わります。動きを減らす設定を選んだ閲覧者には、アニメーションなしで切り替わります。部品ひとつだけを見ると画面いっぱいに表示され、その部品の寸法が出ます。
 
