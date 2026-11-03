@@ -21,11 +21,11 @@ importers:
         specifier: 4.5.1
         version: 4.5.1(@types/node@24.10.1)
       '@johnmorrisdotca/chikyu-earth':
-        specifier: 0.5.0
-        version: 0.5.0(@johnmorrisdotca/kazoku-ui@0.10.0(three@0.186.1))(three@0.186.1)
+        specifier: 0.10.0
+        version: 0.10.0(@johnmorrisdotca/kazoku-ui@0.12.0(three@0.186.1))(three@0.186.1)
       '@johnmorrisdotca/kazoku-ui':
-        specifier: ^0.10.0
-        version: 0.10.0(three@0.186.1)
+        specifier: ^0.12.0
+        version: 0.12.0(three@0.186.1)
       '@playwright/test':
         specifier: 1.64.0
         version: 1.64.0
@@ -452,14 +452,20 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@johnmorrisdotca/chikyu-earth@0.5.0':
-    resolution: {integrity: sha512-YUCDZhLpaT6W+9WtsaT+QQqwBF0rG0ZsiMnErjmRw2x2W1FosFbnHyqi5amySOWsN4K0fkufwwdYf2M0GSVa7g==}
+  '@johnmorrisdotca/chikyu-earth@0.10.0':
+    resolution: {integrity: sha512-OYw/Sp0ahaZoQ32D8R1RD7xeI9iq9TF5mqSoBbyovzByo+/vX6ecEnv3/V4VfWRl6l6YKFpkeOgAThQEk4BCmw==}
     engines: {node: '>=24'}
     peerDependencies:
       '@johnmorrisdotca/kazoku-ui': '>=0.9.0'
+      astronomy-engine: '>=2.1.0'
+      satellite.js: '>=6.0.0'
       three: '>=0.160.0'
     peerDependenciesMeta:
       '@johnmorrisdotca/kazoku-ui':
+        optional: true
+      astronomy-engine:
+        optional: true
+      satellite.js:
         optional: true
       three:
         optional: true
@@ -468,8 +474,8 @@ packages:
     resolution: {integrity: sha512-h4FL4u99l4qKrZ1SPtQydC3PS3eswM8TZ0eH+wSCPchfZeW9CMfyNWjhXfx3EivDHIllfzC3e270PsKhj0ZYjg==}
     engines: {node: '>=22'}
 
-  '@johnmorrisdotca/kazoku-ui@0.10.0':
-    resolution: {integrity: sha512-FlPfB98tFxB9nvsovyCoHjXwgL9sG3ZOg2upb6//XTygu11I6dmNHvYkOaiXplzMbRLou3B7Al4St66F4Cxw6A==}
+  '@johnmorrisdotca/kazoku-ui@0.12.0':
+    resolution: {integrity: sha512-1lwzvgUfV+D5UsvR+swBGQHyQ3YO7zt/9se+fMck9gflO7NB0Ele+dFsbi9y0V4M2g7OhVgub8sifaEFd32iHQ==}
     engines: {node: '>=22'}
     peerDependencies:
       three: '>=0.160.0'
@@ -1332,17 +1338,17 @@ snapshots:
   '@img/sharp-win32-x64@0.35.5':
     optional: true
 
-  '@johnmorrisdotca/chikyu-earth@0.5.0(@johnmorrisdotca/kazoku-ui@0.10.0(three@0.186.1))(three@0.186.1)':
+  '@johnmorrisdotca/chikyu-earth@0.10.0(@johnmorrisdotca/kazoku-ui@0.12.0(three@0.186.1))(three@0.186.1)':
     dependencies:
       '@johnmorrisdotca/chizu': 1.6.1
       d3-geo: 3.1.1
     optionalDependencies:
-      '@johnmorrisdotca/kazoku-ui': 0.10.0(three@0.186.1)
+      '@johnmorrisdotca/kazoku-ui': 0.12.0(three@0.186.1)
       three: 0.186.1
 
   '@johnmorrisdotca/chizu@1.6.1': {}
 
-  '@johnmorrisdotca/kazoku-ui@0.10.0(three@0.186.1)':
+  '@johnmorrisdotca/kazoku-ui@0.12.0(three@0.186.1)':
     optionalDependencies:
       three: 0.186.1
 
