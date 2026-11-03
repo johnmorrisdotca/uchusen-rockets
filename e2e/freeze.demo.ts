@@ -29,7 +29,7 @@ const COUNT = () => {
   type Ctx = (WebGLRenderingContext | WebGL2RenderingContext) & { isContextLost(): boolean };
   type Tally = { made: Record<string, number>; freed: Record<string, number> };
   const tallies = new WeakMap<object, Tally>();
-  const seen = { contexts: [] as { context: WeakRef<Ctx>; tally: Tally }[], frames: 0, callbacks: 0, mostInAFrame: 0, asked: 0, draws: 0 };
+  const seen = { contexts: [] as { context: WeakRef<Ctx>; tally: Tally }[], frames: 0, callbacks: 0, mostInAFrame: 0, asked: 0, draws: 0, pending: 0, newestRun: 0 };
   const tallyOf = (context: object) => {
     let tally = tallies.get(context);
     if (!tally) {
@@ -69,13 +69,17 @@ const COUNT = () => {
       };
     }
   }
-  // frames, not callbacks: callbacks of one frame share a time
+  // frames, not callbacks: callbacks of one frame share a time. Each request is numbered, and the requests not yet run or cancelled are `pending`: a frame that comes later can be told from one asked for later.
   let last = -1;
   let inThisFrame = 0;
+  const waiting = new Set<number>();
   const frame = window.requestAnimationFrame.bind(window);
+  const cancel = window.cancelAnimationFrame.bind(window);
   window.requestAnimationFrame = (callback) => {
-    seen.asked++;
-    return frame((time) => {
+    const asked = ++seen.asked;
+    const handle = frame((time) => {
+      if (waiting.delete(handle)) seen.pending--;
+      seen.newestRun = Math.max(seen.newestRun, asked);
       if (time !== last) {
         seen.frames++;
         inThisFrame = 0;
@@ -85,12 +89,19 @@ const COUNT = () => {
       seen.mostInAFrame = Math.max(seen.mostInAFrame, ++inThisFrame);
       callback(time);
     });
+    waiting.add(handle);
+    seen.pending++;
+    return handle;
+  };
+  window.cancelAnimationFrame = (handle) => {
+    if (waiting.delete(handle)) seen.pending--;
+    cancel(handle);
   };
   Object.assign(window, { __seen: seen });
 };
 
 type Tallied = { context: WeakRef<{ isContextLost(): boolean }>; tally: { made: Record<string, number>; freed: Record<string, number> } };
-type Seen = { contexts: Tallied[]; frames: number; callbacks: number; mostInAFrame: number; asked: number; draws: number };
+type Seen = { contexts: Tallied[]; frames: number; callbacks: number; mostInAFrame: number; asked: number; draws: number; pending: number; newestRun: number };
 const usage = (page: Page) =>
   page.evaluate(() => {
     const seen = (window as unknown as { __seen: Seen }).__seen;
@@ -99,8 +110,17 @@ const usage = (page: Page) =>
       return held !== undefined && !held.isContextLost();
     });
     const live = (kind: string) => alive.reduce((sum, { tally }) => sum + (tally.made[kind] ?? 0) - (tally.freed[kind] ?? 0), 0);
-    return { contexts: alive.length, buffers: live("Buffer"), arrays: live("VertexArray"), textures: live("Texture"), programs: live("Program"), framebuffers: live("Framebuffer"), pageFrames: seen.frames, callbacks: seen.callbacks, mostInAFrame: seen.mostInAFrame, asked: seen.asked, draws: seen.draws };
+    return { contexts: alive.length, buffers: live("Buffer"), arrays: live("VertexArray"), textures: live("Texture"), programs: live("Program"), framebuffers: live("Framebuffer"), pageFrames: seen.frames, callbacks: seen.callbacks, mostInAFrame: seen.mostInAFrame, asked: seen.asked, draws: seen.draws, pending: seen.pending, newestRun: seen.newestRun };
   });
+type Usage = Awaited<ReturnType<typeof usage>>;
+/** No frame was asked for and run between two readings. A frame asked for before the first reading may still come after it, late on a busy machine: a hosted runner drawing in software had one come more than two
+ * seconds after the tab was hidden. Only such a frame may come, and only as many as were waiting at the first reading; a frame asked for after it fails, so a loop always does. */
+const noFrameAskedSince = (before: Usage, after: Usage) => {
+  const frames = after.pageFrames - before.pageFrames;
+  expect(after.newestRun, "a frame asked for during the quiet stretch was run").toBeLessThanOrEqual(before.asked);
+  if (frames > 0) console.log(`${frames} frame(s) asked for before the quiet stretch came during it (${before.pending} waiting at its start)`);
+  expect(frames).toBeLessThanOrEqual(before.pending);
+};
 const drawn = (page: Page) => hero(page).evaluate((node) => Number((node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0));
 /** Presses a choice and waits until the view has drawn it. What three.js holds depends on which materials each shape was drawn with, so a reading of it means something only when no frame of a change was skipped.
  * The frames are counted in the page at the change itself: a new rocket's when `uchusen-change` says it is in, anything else's when the element's attributes change. Counted before the press instead, a frame
@@ -935,11 +955,11 @@ for (const { look, form, contexts } of LOOKS) {
         await expect(earth(page)).toHaveAttribute("data-turning", "false");
         // a frame already asked for when the page learned it is out of sight still comes, late on a busy machine
         await settle(page, 2000);
-        const before = { earth: await earthDraws(page), rocket: await drawn(page), frames: (await usage(page)).pageFrames };
+        const before = { earth: await earthDraws(page), rocket: await drawn(page), usage: await usage(page) };
         await settle(page, 2500);
         expect(await earthDraws(page)).toBe(before.earth);
         expect(await drawn(page)).toBe(before.rocket);
-        expect((await usage(page)).pageFrames).toBe(before.frames);
+        noFrameAskedSince(before.usage, await usage(page));
       };
       const turning = async () => {
         await expect(earth(page)).toHaveAttribute("data-turning", "true");
@@ -1285,13 +1305,13 @@ for (const { look, form, contexts } of LOOKS.filter((one) => one.look !== "thick
     const quiet = async () => {
       await expect(earth(page)).toHaveAttribute("data-turning", "false");
       await settle(page, 2000);
-      const before = { earth: await earthDraws(page), rocket: await drawn(page), frames: (await usage(page)).pageFrames, asked: (await usage(page)).asked };
+      const before = { earth: await earthDraws(page), rocket: await drawn(page), usage: await usage(page) };
       await settle(page, 2500);
       expect(await earthDraws(page)).toBe(before.earth);
       expect(await drawn(page)).toBe(before.rocket);
       const after = await usage(page);
-      expect(after.pageFrames).toBe(before.frames);
-      expect(after.asked - before.asked).toBeLessThanOrEqual(1);
+      noFrameAskedSince(before.usage, after);
+      expect(after.asked - before.usage.asked).toBeLessThanOrEqual(1);
     };
     const back = async () => {
       await expect(earth(page)).toHaveAttribute("data-turning", "true");
