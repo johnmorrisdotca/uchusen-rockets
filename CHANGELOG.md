@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-03
+
 - Demo: the view controls' Auto-turn speeds are the family's speed buttons, 0.5×, 1× and 2× (kazoku-ui 0.14, `^0.14.0`), in place of Slow, Medium and Fast. The reader's choice is the controls' `pace` attribute and `?pace=2` in the address (the address key was `speed`). The base speed stays `speed="5"` degrees a second, which the buttons multiply, and Turn left and Turn right keep their way at any speed. The copied embed code turns at the same speed as the page (`spin` is the seconds a turn: 144, 72 or 36), where it said `slow` whatever the buttons said. Browser tests hold the three buttons, the speed each sets (sign kept), the address and the copied code, and that an old `?speed=fast` opens at 1×.
 - Fixed: the drawing of a flight (no WebGL, `mode="drawing"`, the embed page before the 3D view) took each phase's own angles for the grid fins, legs and flaps, so every move jumped at a phase while the 3D view mixed them. It now takes the angles the 3D view has at that moment, rounded to 5 degrees: the drawing changes at most about one time in five degrees of a move (17 times for Falcon 9's grid fins opening from 85 degrees), still no more than about 20 draws a second. A browser test seeks across the fins' opening and holds that each angle has its drawing, the drawing changes only when the rounded angle does, and the phase's own drawing is no longer the one for all of it; it fails without the fix.
 - Documentation: the Element page, the Looks guide and the Upgrading guide (English and Japanese) say what the speed buttons do; the README's pictures of the demo show them.
