@@ -515,9 +515,10 @@ export class RocketViewer {
     this.wake();
   }
 
-  /** Builds the shaders a look needs beside the page's own work (in parallel where the browser can), and holds the next draw until they are in, so the page keeps answering while a look is first built. The last picture stays up meanwhile. A model that comes in later builds its own. */
+  /** Builds the shaders a look needs beside the page's own work, where the browser can build them in parallel (KHR_parallel_shader_compile), and holds the next draw until they are in, so the page keeps answering while a look is first built. The last picture stays up meanwhile. A model that comes in later builds its own. */
   private prepare(force: boolean): Promise<void> {
-    if (this.disposed || (!force && this.compiled.has(this.look))) return Promise.resolve();
+    // without the browser's parallel compile (software drawing has none) compileAsync is no different from the first draw's own build, so nothing waits
+    if (this.disposed || !this.renderer.extensions.has("KHR_parallel_shader_compile") || (!force && this.compiled.has(this.look))) return Promise.resolve();
     this.compiled.add(this.look);
     this.compiling++;
     let timer = 0;
