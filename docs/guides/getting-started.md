@@ -7,7 +7,7 @@ description: Put a rocket on a page, take it apart, change how it looks, and rea
 
 This guide puts a Starship on a page, lets the reader turn it, takes it apart, paints it, and then reads the same rocket as data in Node. You need a text editor and a browser; the page loads the package from a CDN.
 
-![Block 3 of the rocket as a painted 3D view, stainless steel with black tiles, beside its controls and its sizes.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg)
+Picture: [Block 3 of the rocket as a painted 3D view, stainless steel with black tiles, beside its controls and its sizes.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg)
 
 ## 1. A page with a rocket
 

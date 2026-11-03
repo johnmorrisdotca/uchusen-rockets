@@ -7,7 +7,7 @@ description: スクリプトタグから単なる画像まで、ロケットを�
 
 図面は使われるために作られています。自分のページにも、デモと同じロケットを6通りのどの方法でも載せられます。デモには、画面に出ているものを載せるコードをコピーしたり、SVG や PNG として保存したりできるパネルがあります。
 
-![埋め込みページ：URL のとおりに描かれたロケットだけが表示される。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/embed.jpg)
+図：[埋め込みページ：URL のとおりに描かれたロケットだけが表示される。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/embed.jpg)
 
 | 方法 | 使う場面 |
 | --- | --- |

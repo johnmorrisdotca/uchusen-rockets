@@ -23,7 +23,7 @@ description: 同梱の .glb と .svg をそのまま使い、build で自分用�
 ## そのまま使う
 
 ```html
-<img src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/uchusen-rockets@0/dist/assets/starship-v3.svg" alt="Starship Block 3" width="320" />
+図：[Starship Block 3](https://cdn.jsdelivr.net/npm/@johnmorrisdotca/uchusen-rockets@0/dist/assets/starship-v3.svg)
 ```
 
 `assetPathOf(options)` は、オプションに対応するファイルのパスを返します。対応するファイルが同梱されていなければ `null` です。

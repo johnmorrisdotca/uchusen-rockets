@@ -91,6 +91,6 @@ const picked = builderState([start.rows[0]?.options[1]?.id ?? ""]);
 console.log(picked.description, picked.report.ok);
 ```
 
-![The demo's builder: a row of parts from the bottom, each offering only what fits on the row below.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/builder.jpg)
+Picture: [The demo's builder: a row of parts from the bottom, each offering only what fits on the row below.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/builder.jpg)
 
 The [live builder](https://johnmorrisdotca.github.io/uchusen-rockets/builder.html) is this, with a preview and the code to copy. See [Architecture](architecture.md) for how a part is a table of numbers.

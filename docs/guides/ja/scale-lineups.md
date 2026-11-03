@@ -7,7 +7,7 @@ description: ロケットを同じ基準線の上に同じ縮尺で、定規・�
 
 `<uchusen-lineup>` は、ロケットを同じ縮尺で横に並べます。ブロック4がブロック3より高いことや、ファルコン9がスターシップのブースターの中に2本入ることが、一目でわかります。
 
-![ブロック1、2、3、4を同じ縮尺で並べた図。140メートルまでの定規、10階建てのビル、人が添えられている。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/compare.jpg)
+図：[ブロック1、2、3、4を同じ縮尺で並べた図。140メートルまでの定規、10階建てのビル、人が添えられている。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/compare.jpg)
 
 ## 要素
 
@@ -48,6 +48,6 @@ console.log(COMPARES);
 
 ## すべてのロケットを同じ縮尺で
 
-![すべてのロケットを同じ縮尺の線画で、定規・建物・人と並べた図。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/family.jpg)
+図：[すべてのロケットを同じ縮尺の線画で、定規・建物・人と並べた図。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/family.jpg)
 
 ほかのメーカーのロケットも同じ縮尺を共有し、それぞれが自分の出典を示します。高さはすべて出典つきの `Figure` なので、並べた図にデータにない大きさが出ることはありません。出典つきの高さがない型式は、推測で描かずに省かれます。

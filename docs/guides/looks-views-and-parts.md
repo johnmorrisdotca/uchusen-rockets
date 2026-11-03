@@ -7,7 +7,7 @@ description: Choose how a rocket is drawn, from where, and which parts of it sho
 
 Three choices change what you see, and they are independent: **look** (how it is drawn), **view** (where from) and **show** (which parts). Every look works for every variant, together, apart and each part alone.
 
-![The same rocket as a light line drawing on night blue, its tiled side a mosaic of hexagons.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-line.jpg)
+Picture: [The same rocket as a light line drawing on night blue, its tiled side a mosaic of hexagons.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-line.jpg)
 
 ## Looks
 
@@ -29,7 +29,7 @@ console.log(LOOK_NAMES, LOOKS.thick.outline, cleanLook("glossy"));
 
 ## Views
 
-![The booster from below: 33 engines in their rings, three grid fins and the long chines.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/booster-below.jpg)
+Picture: [The booster from below: 33 engines in their rings, three grid fins and the long chines.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/booster-below.jpg)
 
 `view` is `three-quarter` (the default), `front`, `back`, `side` or `below`. **Front is the windward, tiled side; back is the steel side.** Each name is an angle:
 
@@ -51,7 +51,7 @@ import { showsOf, variantOf } from "@johnmorrisdotca/uchusen-rockets";
 console.log(showsOf(variantOf("falcon-9", "block-5-dragon-2")?.slots ?? []));
 ```
 
-![Falcon 9 Block 5 with Dragon 2, taken apart and painted.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/falcon-9-apart.jpg)
+Picture: [Falcon 9 Block 5 with Dragon 2, taken apart and painted.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/falcon-9-apart.jpg)
 
 Changing `show` is an animated move, and a cut for a reader who asked for reduced motion. A part alone fills the frame and lists its own size.
 

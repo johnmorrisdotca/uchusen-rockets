@@ -7,7 +7,7 @@ description: ロケットをページに置き、分解し、見た目を変え�
 
 このガイドでは、スターシップをページに置き、閲覧者が回せるようにし、分解し、彩色し、最後に同じロケットを Node でデータとして読みます。必要なのはテキストエディターとブラウザーだけです。ページはパッケージを CDN から読み込みます。
 
-![ブロック3のロケットを彩色した3Dビュー。ステンレスの機体に黒いタイル、横にはコントロールと出典つきの寸法が並ぶ。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg)
+図：[ブロック3のロケットを彩色した3Dビュー。ステンレスの機体に黒いタイル、横にはコントロールと出典つきの寸法が並ぶ。](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg)
 
 ## 1. ロケットのあるページ
 

@@ -23,7 +23,7 @@ Everything is in metres, Y up, the base of a part on its axis, the windward side
 ## Use one directly
 
 ```html
-<img src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/uchusen-rockets@0/dist/assets/starship-v3.svg" alt="Starship Block 3" width="320" />
+Picture: [Starship Block 3](https://cdn.jsdelivr.net/npm/@johnmorrisdotca/uchusen-rockets@0/dist/assets/starship-v3.svg)
 ```
 
 `assetPathOf(options)` gives the path of a file for a set of options, or `null` when none is shipped for them.

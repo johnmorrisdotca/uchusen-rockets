@@ -7,7 +7,7 @@ description: Light the engines at full thrust, play a flight phase by phase from
 
 `engines="on"` lights every engine that shows, at full thrust. A flight plays a rocket through its phases with only the engines that burn in each one.
 
-![The Falcon 9 first stage with its engines lit.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/engines.jpg)
+Picture: [The Falcon 9 first stage with its engines lit.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/engines.jpg)
 
 ## Light the engines
 
@@ -47,7 +47,7 @@ if (booster) {
 <uchusen-flight for="rocket"></uchusen-flight>
 ```
 
-![The flight bar below a rocket at hot staging, with its chart of engines.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/flight.jpg)
+Picture: [The flight bar below a rocket at hot staging, with its chart of engines.](https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/flight.jpg)
 
 A variant has a flight only where a page gives one. The other variants say so, and a custom build never has one.
 
