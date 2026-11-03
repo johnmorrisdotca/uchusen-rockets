@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Demo: the view controls' Auto-turn speeds are the family's speed buttons, 0.5×, 1× and 2× (kazoku-ui 0.14, `^0.14.0`), in place of Slow, Medium and Fast. The reader's choice is the controls' `pace` attribute and `?pace=2` in the address (the address key was `speed`). The base speed stays `speed="5"` degrees a second, which the buttons multiply, and Turn left and Turn right keep their way at any speed. The copied embed code turns at the same speed as the page (`spin` is the seconds a turn: 144, 72 or 36), where it said `slow` whatever the buttons said. Browser tests hold the three buttons, the speed each sets (sign kept), the address and the copied code, and that an old `?speed=fast` opens at 1×.
+- Documentation: the Element page, the Looks guide and the Upgrading guide (English and Japanese) say what the speed buttons do; the README's pictures of the demo show them.
+
 ## [0.6.0] - 2026-11-03
 
 - Fixed: a look chosen while the 3D view starts, or while a rocket loads, is no longer lost. `start()` and the rocket change read the look before the load and applied it after, so the attribute said the new look and the view drew the old one; both now read it again after the load (and the parts shown with it). Two browser tests change the look in the turn the canvas appears and again with a variant change, and fail without the fix.

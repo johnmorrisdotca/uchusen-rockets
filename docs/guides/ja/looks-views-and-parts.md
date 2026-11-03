@@ -39,7 +39,7 @@ import { VIEWS, VIEW_NAMES, directionOf } from "@johnmorrisdotca/uchusen-rockets
 for (const name of VIEW_NAMES) console.log(name, VIEWS[name], directionOf(VIEWS[name]).map((n) => n.toFixed(2)).join(" "));
 ```
 
-ドラッグすると選んだ角度から回り、矢印キーで少し動き、`+` と `-` で拡大縮小し、Home かダブルクリックで元に戻ります。`spin` は自転の速さで、`off`、`slow`、`medium`、`fast`、または1周の秒数を指定します。`way` は `cw` か `ccw` です。
+ドラッグすると選んだ角度から回り、矢印キーで少し動き、`+` と `-` で拡大縮小し、Home かダブルクリックで元に戻ります。`spin` は自転の速さで、`off`、`slow`、`medium`、`fast`、または1周の秒数を指定します。`way` は `cw` か `ccw` です。ファミリー共通の表示コントロールを使うときは、回転はコントロール側が受け持ちます。速さは 0.5×、1×、2× のボタンで選び、コントロールが動かしている間、`spin` は止まります。
 
 ## 部品を表示する
 

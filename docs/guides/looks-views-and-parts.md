@@ -39,7 +39,7 @@ import { VIEWS, VIEW_NAMES, directionOf } from "@johnmorrisdotca/uchusen-rockets
 for (const name of VIEW_NAMES) console.log(name, VIEWS[name], directionOf(VIEWS[name]).map((n) => n.toFixed(2)).join(" "));
 ```
 
-Drag turns the view from the chosen angle, the arrow keys nudge it, `+` and `-` zoom, and Home or a double-click puts it back. `spin` sets a slow turn of its own: `off`, `slow`, `medium`, `fast` or seconds a turn, and `way` is `cw` or `ccw`.
+Drag turns the view from the chosen angle, the arrow keys nudge it, `+` and `-` zoom, and Home or a double-click puts it back. `spin` sets a slow turn of its own: `off`, `slow`, `medium`, `fast` or seconds a turn, and `way` is `cw` or `ccw`. With the family's view controls the turn is theirs instead: their speed buttons (0.5×, 1× and 2×) set how fast it goes, and `spin` stands down while they drive the element.
 
 ## Showing parts
 

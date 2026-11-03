@@ -912,6 +912,7 @@ test.describe("the way it turns", () => {
   const yaw = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { state: { yaw: number } }).state.yaw);
   const turning = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { state: { turning: boolean } }).state.turning);
   const button = (page: Page, way: string) => page.locator(`[data-testid="turn-${way}"]`);
+  const paceInAddress = (page: Page) => /[?&]pace=([^&]*)/.exec(page.url())?.[1] ?? null;
 
   test("a press changes the way at once, with no jump, starts it if it had stopped, and a change of look or parts keeps it", async ({ page, browserName }) => {
     const problems = watch(page);
@@ -950,6 +951,52 @@ test.describe("the way it turns", () => {
     await stopTurn(page);
     await expect(button(page, "right")).toHaveAttribute("aria-pressed", "false");
     expect(problems).toEqual([]);
+  });
+
+  test("the speed buttons are the family's 0.5×, 1× and 2×: they set the turn's speed, are kept as pace in the address, and the copied code turns as fast", async ({ page, browserName }) => {
+    const problems = watch(page);
+    await page.goto(URL);
+    if (is3d(browserName)) await reach3d(page);
+    await stopTurn(page);
+    const buttons = bar(page).locator("kazoku-speed-buttons button");
+    await expect(buttons).toHaveText(["0.5×", "1×", "2×"]);
+    await expect(buttons.nth(1)).toHaveAttribute("aria-pressed", "true");
+    // degrees a second the controls turn it at: the base speed (5) times the button, either way
+    const speed = () => bar(page).evaluate((node) => (node as HTMLElement & { controller: { speed: number } }).controller.speed);
+    expect(await speed()).toBe(5);
+    await press(page, "turn-right");
+    await expect.poll(() => turning(page)).toBe(true);
+    await buttons.nth(2).click();
+    await expect(buttons.nth(2)).toHaveAttribute("aria-pressed", "true");
+    expect(await bar(page).getAttribute("pace")).toBe("2");
+    expect(await speed()).toBe(10);
+    await expect.poll(() => paceInAddress(page)).toBe("2");
+    expect(page.url()).not.toContain("speed=");
+    // 72 seconds a turn at 1× (5 degrees a second), 36 at 2×, 144 at 0.5×; the way is kept
+    await expect(button(page, "right")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator('[data-testid="embed-code"]')).toContainText('spin="36"');
+    await press(page, "turn-left");
+    expect(await speed()).toBe(-10);
+    await buttons.nth(0).click();
+    expect(await speed()).toBe(-2.5);
+    await expect.poll(() => paceInAddress(page)).toBe("0.5");
+    await expect(page.locator('[data-testid="embed-code"]')).toContainText('spin="144"');
+    await buttons.nth(1).click();
+    expect(await speed()).toBe(-5);
+    await expect.poll(() => paceInAddress(page)).toBeNull();
+    // and it turns, at the speed it says
+    const from = await yaw(page);
+    await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeLessThan(from - 1);
+    await stopTurn(page);
+    expect(problems).toEqual([]);
+  });
+
+  test("an old address with speed=fast opens at 1×, and pace=fast reads as 2×", async ({ page }) => {
+    await page.goto(`${URL}?speed=fast`);
+    await expect(bar(page).locator("kazoku-speed-buttons button").nth(1)).toHaveAttribute("aria-pressed", "true");
+    await page.goto(`${URL}?pace=fast`);
+    await expect(bar(page).locator("kazoku-speed-buttons button").nth(2)).toHaveAttribute("aria-pressed", "true");
+    await stopTurn(page);
   });
 
   test("the element's own spin goes either way, and a bad value is the default", async ({ page, browserName }) => {

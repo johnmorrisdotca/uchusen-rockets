@@ -7,6 +7,12 @@ description: What changed between versions that a project might feel, and how to
 
 The package is at 0.x, so a minor version may change behaviour. Read [CHANGELOG.md](../../CHANGELOG.md) before you move; this page says what to look for.
 
+## From 0.6 to 0.7
+
+The package itself is unchanged: `spin` and `way` work as before.
+
+- **The demo's view controls need kazoku-ui 0.14** (`^0.14.0`). Their Auto-turn speeds are the family's speed buttons, 0.5×, 1× and 2×; Slow, Medium and Fast are gone. The reader's choice is the controls' `pace` attribute and `?pace=2` in the address, not `speed`. A page that gives the controls `speed="5"` keeps that base speed, which the buttons now multiply.
+
 ## From 0.2 to 0.3
 
 0.3 added rockets, data and helpers. Its changelog lists no removal and no rename.

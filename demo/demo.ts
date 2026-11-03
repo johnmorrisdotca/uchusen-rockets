@@ -247,7 +247,7 @@ byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.repl
 byId("backgrounds").append(...BACKGROUND_NAMES.map((background) => chip(WORDS.en[`background_${background}`], `background-${background}`, () => pick({ background }), `background_${background}`)));
 
 // ------------------------------------------------------------- which way it turns
-// The family's controls turn it at their `speed`: positive takes the near side to the right, negative to the left. A press changes the way at once, from where it is, and starts the turn if it had stopped.
+// The family's controls turn it at their `speed` times the speed buttons' `pace` (0.5×, 1×, 2×): positive takes the near side to the right, negative to the left. A press changes the way at once, from where it is, and starts the turn if it had stopped.
 const TURN_SPEED = 5;
 const turnBox = byId("turn");
 const TURN_FOR_MS = 60_000;
@@ -273,6 +273,8 @@ function turnTo(way: "left" | "right") {
 }
 turnBox.append(chip("Turn left", "turn-left", () => turnTo("left"), "turnLeft"), chip("Turn right", "turn-right", () => turnTo("right"), "turnRight"));
 bar.addEventListener("kazoku-viewchange", drawTurn);
+// the speed buttons write the speed to the bar's `pace`
+new MutationObserver(() => drawEmbed()).observe(bar, { attributes: true, attributeFilter: ["pace"] });
 
 // ------------------------------------------------------------- the engines
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -308,8 +310,8 @@ for (const kind of EMBED_KINDS) {
 function embedOptions(): RocketOptions {
   const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
-  // what turns here by the controls turns there by itself: left is `cw`, the near side going left
-  const turning = bar.state.turning ? { spin: "slow", way: turnWay === "left" ? "cw" : "ccw" } : {};
+  // what turns here by the controls turns there by itself, as fast: left is `cw`, the near side going left
+  const turning = bar.state.turning ? { spin: String(Math.round(360 / (TURN_SPEED * (Number(bar.getAttribute("pace")) || 1)))), way: turnWay === "left" ? "cw" : "ccw" } : {};
   return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
 function drawEmbed() {
