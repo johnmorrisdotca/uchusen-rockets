@@ -506,14 +506,18 @@ export class RocketViewer {
     this.canvas.dataset.look = look;
     this.plumes.setLook(painted);
     this.relight();
-    this.reportPainted();
-    this.prepare(false);
+    // "painted" is said when its shaders are built, so a reader who waits for it finds the next frame ready to draw
+    if (look === "painted") void this.prepare(false).then(() => this.reportPainted());
+    else {
+      this.reportPainted();
+      void this.prepare(false);
+    }
     this.wake();
   }
 
   /** Builds the shaders a look needs beside the page's own work (in parallel where the browser can), and holds the next draw until they are in, so the page keeps answering while a look is first built. The last picture stays up meanwhile. A model that comes in later builds its own. */
-  private prepare(force: boolean): void {
-    if (this.disposed || (!force && this.compiled.has(this.look))) return;
+  private prepare(force: boolean): Promise<void> {
+    if (this.disposed || (!force && this.compiled.has(this.look))) return Promise.resolve();
     this.compiled.add(this.look);
     this.compiling++;
     let timer = 0;
@@ -529,6 +533,7 @@ export class RocketViewer {
         if (!this.disposed) this.wake();
       });
     this.settled = Promise.all([this.settled, wait]).then(() => undefined);
+    return wait;
   }
 
   /** Which engines burn: at full thrust every one that shows, a count for each part, or none. Nothing is made or freed by this after a part's first flame: only which of its flames are drawn changes. */
@@ -761,8 +766,7 @@ export class RocketViewer {
         part.holder.add(gltf.scene);
         part.modelState = "ready";
         this.useModel(part, this.look === "painted");
-        this.reportPainted();
-        this.prepare(true);
+        void this.prepare(true).then(() => this.reportPainted());
         this.wake();
       })
       .catch(() => {

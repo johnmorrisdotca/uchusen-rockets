@@ -1234,7 +1234,13 @@ test.describe("50 rounds", () => {
       await settle(page, 300);
     };
     const log: string[] = [];
-    // the first round fills the caches kept on purpose; each round ends where it began
+    // The caches kept on purpose are filled before the first round, each by what fills it: the painted look's own paint (a Block 2 has no model, so this package's steel and tiles are drawn) is one of them.
+    // Which frame first drew it used to depend on whether a model had arrived by then, so the reading of the first round moved with timing.
+    await pressAndDraw(page, "look-painted");
+    await pressAndDraw(page, "variant-v2");
+    await pressAndDraw(page, "variant-v3");
+    await pressAndDraw(page, "look-line");
+    // the first round fills the rest; each round ends where it began
     await round();
     await settle(page, 2500);
     const first = await usage(page);
