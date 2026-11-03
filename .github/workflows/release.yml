@@ -1,6 +1,6 @@
 name: Release
 # Run by hand (Actions → Release → Run workflow) from main, or push a v<version> tag. The steps are kazoku-ui's shared release workflow
-# (docs/release-workflow.md there): check the tag, run pnpm check, tag, attach the tarball to a GitHub release, publish to npm by trusted publishing.
+# (docs/release-workflow.md there): check the tag, run pnpm check and the freeze test (the live 3D view must not ask too much of a machine), tag, attach the tarball to a GitHub release, publish to npm by trusted publishing.
 # npm trusts this file by name (npmjs.com → the package → Settings → Trusted Publisher: release.yml), so publishing needs no token and no secret.
 on:
   push:
@@ -11,6 +11,7 @@ permissions:
   id-token: write
 jobs:
   release:
-    uses: johnmorrisdotca/kazoku-ui/.github/workflows/reusable-release.yml@v0.7.3
+    uses: johnmorrisdotca/kazoku-ui/.github/workflows/reusable-release.yml@v0.11.0
     with:
+      freeze-command: pnpm test:freeze
       github-release: true
