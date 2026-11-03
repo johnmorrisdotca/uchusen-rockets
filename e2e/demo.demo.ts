@@ -12,8 +12,8 @@ function watch(page: Page): string[] {
   const problems: string[] = [];
   page.on("console", (message) => {
     const text = message.text();
-    // WebKit puts an inline style on its own <select> menus and reports that as a refused stylesheet (a `style-src-attr` violation whose target is a SELECT, as the check below knows), and the page's touch icon is the published site's own address, which a local test server is not
-    if (message.type() === "error" && !text.startsWith("Refused to apply a stylesheet") && !text.includes("johnmorrisdotca.github.io/uchusen-rockets/icon.png")) problems.push(`console: ${message.text()}`);
+    // the page's touch icon is the published site's own address, which a local test server is not
+    if (message.type() === "error" && !text.includes("johnmorrisdotca.github.io/uchusen-rockets/icon.png")) problems.push(`console: ${message.text()}`);
   });
   page.on("pageerror", (error) => problems.push(`page: ${error.message}`));
   page.on("response", (response) => {
@@ -1187,6 +1187,22 @@ test("the choices fit a 1440 by 900 window for every variant, Earth on and all, 
   const fits = process.env.CI ? 1010 : 900;
   expect(desk.bottom).toBeLessThanOrEqual(fits);
   expect(desk.stage).toBeLessThanOrEqual(fits);
+});
+
+test("the embed page and the code builder run under a strict policy, in 3D, with no report: no inline script, no inline style, no refused stylesheet", async ({ page, browserName }) => {
+  test.setTimeout(120_000);
+  const problems = watch(page);
+  const policy = async (path: string) => {
+    await page.goto(`${URL}${path}`);
+    expect(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content")).toContain("style-src 'self'");
+    expect(await page.locator("style").count()).toBe(0);
+  };
+  await policy("embed.html?rocket=starship&variant=v3&look=painted&show=ship");
+  await expect(page.locator("uchusen-rocket")).toHaveAttribute("data-state", /^(3d|fallback)$/, { timeout: 90_000 });
+  if (is3d(browserName)) await expect(page.locator("uchusen-rocket")).toHaveAttribute("data-state", "3d");
+  await policy("builder.html");
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  expect(problems).toEqual([]);
 });
 
 test("the code builder is one screen of choices, and writes the code for exactly what is chosen", async ({ page }) => {

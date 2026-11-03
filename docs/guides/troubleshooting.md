@@ -28,7 +28,7 @@ A licensed model is fetched only when the painted look asks for it. Until it is 
 
 ## A strict content security policy blocks it
 
-The element works under a strict policy with no inline script or style. It needs `connect-src` for a painted model, and `img-src blob:`. The demo runs under `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob: data:`.
+The element works under a strict policy with no inline script or style. It needs `connect-src` for a painted model, and `img-src blob:`. The embed page and the code builder run under `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob: data:`.
 
 ## `HTMLElement is not defined` on the server
 

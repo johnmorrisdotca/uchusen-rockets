@@ -28,7 +28,7 @@ description: タグが何も出さない、3Dビューが出ない、彩色モ�
 
 ## 厳格なコンテンツセキュリティポリシーで止められる
 
-要素は、インラインのスクリプトもスタイルもない厳格なポリシーの下で動きます。彩色モデルのために `connect-src` が、また `img-src blob:` が必要です。デモは `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob: data:` で動いています。
+要素は、インラインのスクリプトもスタイルもない厳格なポリシーの下で動きます。彩色モデルのために `connect-src` が、また `img-src blob:` が必要です。埋め込みページとコードビルダーは `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob: data:` で動いています。
 
 ## サーバーで `HTMLElement is not defined`
 
