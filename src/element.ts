@@ -825,6 +825,7 @@ export function defineUchusenRocket(): void {
 defineUchusenRocket();
 
 export { ROCKETS, UchusenFlight };
+export type { FlightWords } from "./flightbar.ts";
 
 declare global {
   interface HTMLElementTagNameMap {

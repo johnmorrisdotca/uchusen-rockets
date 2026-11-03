@@ -7,6 +7,7 @@ import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
+import { WORDS } from "./words.js";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -22,9 +23,20 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLEl
   return node;
 };
 
-const LOOK_WORDS: Record<LookName, string> = { line: "Line drawing", thick: "Thick lines", painted: "Painted" };
-const VIEW_WORDS: Record<ViewName, string> = { "three-quarter": "Three-quarter", front: "Front", back: "Back", side: "Side", below: "Below" };
-const SHOW_WORDS: Record<string, string> = { together: "Together", apart: "Apart", ...SLOT_NAMES };
+type Chooser = { word(key: string): string | undefined; lang: string };
+/** A word of the page in the language it is in now (the family's chooser), English where the chooser is not there or has none. */
+const say = (key: string, values: Record<string, string | number> = {}): string => {
+  const chooser = (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage;
+  return (chooser?.word(key) ?? WORDS.en[key] ?? key).replace(/\{(\w+)\}/g, (all, name: string) => String(values[name] ?? all));
+};
+const japanese = () => document.documentElement.lang === "ja";
+const slotWord = (slot: string) => (`slot_${slot}` in WORDS.en ? say(`slot_${slot}`) : (SLOT_NAMES[slot] ?? slot));
+const showWord = (show: string) => (show === "together" || show === "apart" ? say(`show_${show}`) : slotWord(show));
+/** The English name of a slot is what a builder row says; find the slot again to say it in the page's language. */
+const slotOfName = new Map(Object.entries(SLOT_NAMES).map(([slot, name]) => [name, slot]));
+const wordsKey = (text: string) => text.toLowerCase().replaceAll(" ", "_");
+/** A source's own label (a size, a first-flight word) in the page's language when the page knows it. */
+const knownWord = (prefix: string, text: string) => (`${prefix}_${wordsKey(text)}` in WORDS.en ? say(`${prefix}_${wordsKey(text)}`) : text);
 
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
@@ -32,8 +44,8 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
 const address = createAddressState({ defaults: { background: "none", rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
-const BACKGROUND_WORDS = { none: "None", earth: "Earth" } as const;
-type BackgroundName = keyof typeof BACKGROUND_WORDS;
+const BACKGROUND_NAMES = ["none", "earth"] as const;
+type BackgroundName = (typeof BACKGROUND_NAMES)[number];
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
@@ -51,9 +63,11 @@ function sizeObject() {
 }
 new ResizeObserver(sizeObject).observe(hero);
 
-function chip(label: string, testid: string, on: () => void): HTMLButtonElement {
-  const button = el("button", { type: "button", className: "chip", textContent: label });
+/** A chip. `say` is the key of its words where the family's chooser should keep them up to date. */
+function chip(label: string, testid: string, on: () => void, key?: string): HTMLButtonElement {
+  const button = el("button", { type: "button", className: "chip", textContent: key ? say(key) : label });
   button.dataset.testid = testid;
+  if (key) button.dataset.say = key;
   button.addEventListener("click", on);
   return button;
 }
@@ -63,10 +77,13 @@ const press = (group: HTMLElement, chosen: string) => {
 
 const metres = (value: number) => `${value} m`;
 
+/** A blank figure says why in its own English; the one blank the page words itself, "No source", is said in the page's language. */
+const blankWords = (figure: Figure<number | string> | undefined) => (!figure?.brief ? say("noSource") : figureWords(figure));
+
 function figureCell(figure: Figure<number | string> | undefined, unit: (v: number) => string = metres): HTMLElement {
   const cell = el("td");
   if (!figure || figure.value === null) {
-    cell.append(el("span", { className: "blank", textContent: figureWords(figure) }));
+    cell.append(el("span", { className: "blank", textContent: blankWords(figure) }));
     if (figure?.note) cell.append(el("span", { className: "src", textContent: figure.note }));
     return cell;
   }
@@ -74,7 +91,7 @@ function figureCell(figure: Figure<number | string> | undefined, unit: (v: numbe
   if (figure.brief) cell.append(el("span", { className: "brief", textContent: `, ${figure.brief}` }));
   if (figure.source) {
     const source = SOURCES[figure.source];
-    const link = el("a", { href: source.url, textContent: `${source.publisher}${figure.date ? `, ${figure.date}` : source.date ? `, read ${source.date}` : ""}`, rel: "noopener" });
+    const link = el("a", { href: source.url, textContent: `${source.publisher}${figure.date ? `, ${figure.date}` : source.date ? `, ${say("read", { date: source.date })}` : ""}`, rel: "noopener" });
     cell.append(el("span", { className: "src" }, link));
   }
   if (figure.note) cell.append(el("span", { className: "src", textContent: figure.note }));
@@ -83,24 +100,25 @@ function figureCell(figure: Figure<number | string> | undefined, unit: (v: numbe
 }
 
 function factsFor(variant: Variant): HTMLElement[] {
-  const rows: [string, Figure<number | string> | undefined][] = [];
   const show = state.show;
-  const name = (slot: string) => SHOW_WORDS[slot] ?? slot;
+  const name = showWord;
+  // a row is found by its English label, whatever language it is said in
+  const rows2: [string, string, Figure<number | string> | undefined][] = [];
   if (show === "together" || show === "apart") {
-    rows.push(["Whole height", variant.facts.height]);
-    for (const slot of variant.slots) rows.push([`${name(slot)} height`, variant.facts.parts[slot]]);
-  } else rows.push([`${name(show)} height`, variant.facts.parts[show]]);
-  rows.push(["Diameter", variant.facts.diameter]);
-  for (const [label, figure] of Object.entries(variant.facts.sizes ?? {})) rows.push([label, figure]);
+    rows2.push(["Whole height", say("wholeHeight"), variant.facts.height]);
+    for (const slot of variant.slots) rows2.push([`${SLOT_NAMES[slot] ?? slot} height`, say("partHeight", { name: name(slot) }), variant.facts.parts[slot]]);
+  } else rows2.push([`${SLOT_NAMES[show] ?? show} height`, say("partHeight", { name: name(show) }), variant.facts.parts[show]]);
+  rows2.push(["Diameter", say("diameter"), variant.facts.diameter]);
+  for (const [label, figure] of Object.entries(variant.facts.sizes ?? {})) rows2.push([label, knownWord("size", label), figure]);
   // a part with no engines of its own has no row for them
-  for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) if (variant.facts.engines[slot]) rows.push([`${name(slot)} engines`, variant.facts.engines[slot]]);
-  rows.push([variant.firstWord ?? "First flew", variant.firstFlight]);
-  if (ROCKETS[variant.rocket].madeBy.value !== null) rows.push(["Made by", ROCKETS[variant.rocket].madeBy]);
+  for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) if (variant.facts.engines[slot]) rows2.push([`${SLOT_NAMES[slot] ?? slot} engines`, say("partEngines", { name: name(slot) }), variant.facts.engines[slot]]);
+  rows2.push([variant.firstWord ?? "First flew", knownWord("first", variant.firstWord ?? "First flew"), variant.firstFlight]);
+  if (ROCKETS[variant.rocket].madeBy.value !== null) rows2.push(["Made by", say("madeBy"), ROCKETS[variant.rocket].madeBy]);
   const table = el("table", { className: "sizes" });
-  for (const [label, figure] of rows) {
+  for (const [key, label, figure] of rows2) {
     const row = el("tr");
     row.append(el("th", { scope: "row", textContent: label }), figureCell(figure));
-    row.dataset.row = label;
+    row.dataset.row = key;
     table.append(row);
   }
   const heading = el("h3", { textContent: show === "together" || show === "apart" ? variant.name : `${name(show)}: ${variant.name}` });
@@ -152,7 +170,7 @@ function renderMain() {
   const shows = showsOf(variant.slots);
   if (!shows.includes(state.show)) state.show = shows[0];
   const showBox = byId("shows");
-  showBox.replaceChildren(...shows.map((show) => chip(SHOW_WORDS[show] ?? show, `show-${show}`, () => pick({ show }))));
+  showBox.replaceChildren(...shows.map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))));
   press(showBox, `show-${state.show}`);
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
@@ -173,9 +191,9 @@ function renderMain() {
         el(
           "span",
           { className: "one-credit" },
-          `${c.usedFor.length > 1 ? "Painted" : "Part painted"} from `,
+          say(c.usedFor.length > 1 ? "creditAll" : "creditPart"),
           el("a", { href: c.sourceUrl, textContent: c.title, rel: "noopener" }),
-          " by ",
+          say("creditBy"),
           el("a", { href: c.creatorUrl, textContent: c.creator, rel: "noopener" }),
           ", ",
           el("a", { href: c.licenceUrl, textContent: c.licence, rel: "noopener" }),
@@ -183,7 +201,7 @@ function renderMain() {
         ),
       ]),
     );
-  } else credit.textContent = "Painted by this package's own code, from sourced sizes. No licensed model shows this variant.";
+  } else credit.textContent = say("creditOwn");
   drawEmbed();
   syncEarth();
   sizeObject();
@@ -222,11 +240,11 @@ function pickMaker(maker: MakerId) {
   drawMakers();
 }
 
-byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker))));
+byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker), `maker_${maker}`)));
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
-byId("looks").append(...LOOK_NAMES.map((look) => chip(LOOK_WORDS[look], `look-${look}`, () => pick({ look }))));
-byId("views").append(...VIEW_NAMES.map((view) => chip(VIEW_WORDS[view], `view-${view}`, () => pick({ view }))));
-byId("backgrounds").append(...(Object.keys(BACKGROUND_WORDS) as BackgroundName[]).map((background) => chip(BACKGROUND_WORDS[background], `background-${background}`, () => pick({ background }))));
+byId("looks").append(...LOOK_NAMES.map((look) => chip(WORDS.en[`look_${look}`], `look-${look}`, () => pick({ look }), `look_${look}`)));
+byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.replaceAll("-", "_")}`], `view-${view}`, () => pick({ view }), `view_${view.replaceAll("-", "_")}`)));
+byId("backgrounds").append(...BACKGROUND_NAMES.map((background) => chip(WORDS.en[`background_${background}`], `background-${background}`, () => pick({ background }), `background_${background}`)));
 
 // ------------------------------------------------------------- which way it turns
 // The family's controls turn it at their `speed`: positive takes the near side to the right, negative to the left. A press changes the way at once, from where it is, and starts the turn if it had stopped.
@@ -253,7 +271,7 @@ function turnTo(way: "left" | "right") {
   drawTurn();
   drawEmbed();
 }
-turnBox.append(chip("Turn left", "turn-left", () => turnTo("left")), chip("Turn right", "turn-right", () => turnTo("right")));
+turnBox.append(chip("Turn left", "turn-left", () => turnTo("left"), "turnLeft"), chip("Turn right", "turn-right", () => turnTo("right"), "turnRight"));
 bar.addEventListener("kazoku-viewchange", drawTurn);
 
 // ------------------------------------------------------------- the engines
@@ -264,22 +282,22 @@ function lightEngines(on: boolean) {
   press(enginesBox, `engines-${on ? "on" : "off"}`);
   const note = byId("engines-note");
   note.hidden = !(on && reducedMotion);
-  note.textContent = "This device asks for reduced motion, so the flames stay off. The engine chart still says which ones burn.";
+  note.textContent = say("enginesNote");
   drawEmbed();
 }
-enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false)), chip("Lit", "engines-on", () => lightEngines(true)));
+enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false), "engines_off"), chip("Lit", "engines-on", () => lightEngines(true), "engines_on"));
 press(enginesBox, "engines-off");
 
 // ------------------------------------------------------------- copy the rocket that is on screen
-const EMBED_WORDS: Readonly<Record<EmbedKind, string>> = { element: "CDN script", iframe: "Iframe", module: "Module", svg: "SVG", data: "Data address", link: "Image link" };
 let embedKind: EmbedKind = "element";
 let embedFull = "";
 const embedTabs = byId("embed-tabs");
 const embedCodeNode = byId("embed-code");
 const embedStatus = byId("embed-status");
 for (const kind of EMBED_KINDS) {
-  const button = el("button", { type: "button", className: "chip", textContent: EMBED_WORDS[kind] });
+  const button = el("button", { type: "button", className: "chip", textContent: say(`embed_${kind}`) });
   button.dataset.testid = `tab-${kind}`;
+  button.dataset.say = `embed_${kind}`;
   button.setAttribute("role", "tab");
   button.addEventListener("click", () => {
     embedKind = kind;
@@ -298,11 +316,13 @@ function drawEmbed() {
   const options = embedOptions();
   embedFull = embedCode(options, embedKind);
   // the Earth is this page's own and is not in the package: what is copied is the rocket
-  byId("embed-note").textContent = `${embedNote(embedKind, options)}${state.background === "earth" ? " The Earth behind it stays on this page: what you copy is the rocket." : ""}`;
+  // the note is the package's English; the page says it again in its own language, from the same kinds
+  const noteKey = embedKind === "link" && options.view && options.view !== "three-quarter" ? "note_linkView" : `note_${embedKind}`;
+  byId("embed-note").textContent = `${japanese() ? say(noteKey) : embedNote(embedKind, options)}${state.background === "earth" ? say("embedEarth") : ""}`;
   const credit = paintedCredit(options);
   const creditNode = byId("embed-credit");
   creditNode.hidden = credit === "";
-  creditNode.textContent = credit === "" ? "" : `Keep this credit with a painted rocket, however you use it. ${credit}`;
+  creditNode.textContent = credit === "" ? "" : `${say("embedKeep")}${credit}`;
   byId<HTMLAnchorElement>("embed-open").href = `embed.html?${rocketToParams(options).toString()}`;
   embedStatus.textContent = "";
   embedCodeNode.textContent = embedFull.length > 1400 ? `${embedFull.slice(0, 1400)}…` : embedFull;
@@ -319,20 +339,20 @@ byId("embed-copy").addEventListener("click", async () => {
     document.execCommand("copy");
     area.remove();
   }
-  embedStatus.textContent = "Copied";
+  embedStatus.textContent = say("copied");
 });
 const fileName = () => ["uchusen", state.rocket, state.variant, state.show === "together" ? "" : state.show, state.look].filter(Boolean).join("-");
 const drawingText = () => embedCode(embedOptions(), "svg");
 byId("embed-svg").addEventListener("click", () => {
   downloadBlob(new Blob([drawingText()], { type: "image/svg+xml" }), `${fileName()}.svg`);
-  embedStatus.textContent = "Saved";
+  embedStatus.textContent = say("saved");
 });
 byId("embed-png").addEventListener("click", async () => {
   try {
     downloadBlob((await svgToPng(drawingText(), PICTURE_W, PICTURE_H, 2)).blob, `${fileName()}.png`);
-    embedStatus.textContent = "Saved";
+    embedStatus.textContent = say("saved");
   } catch {
-    embedStatus.textContent = "This browser could not make a PNG. Save SVG still works.";
+    embedStatus.textContent = say("pngFail");
   }
 });
 // a phase of flight is part of what is copied: it is said when it changes, not on every step of the slider
@@ -361,10 +381,10 @@ function renderCompare() {
   const head = el("tr", {}, el("th", { textContent: "" }), ...chosen.map((variant) => el("th", { scope: "col", textContent: variant.name })));
   const slots = [...new Set(chosen.flatMap((variant) => variant.slots))];
   const rows: [string, (variant: Variant) => Figure<number | string> | undefined][] = [
-    ["Whole height", (variant) => variant.facts.height],
-    ...slots.map((slot): [string, (variant: Variant) => Figure<number | string> | undefined] => [SLOT_NAMES[slot] ?? slot, (variant) => (variant.slots.includes(slot) ? variant.facts.parts[slot] : { value: null, source: null, brief: "None" })]),
-    ["Diameter", (variant) => variant.facts.diameter],
-    ["First flew", (variant) => variant.firstFlight],
+    [say("wholeHeight"), (variant) => variant.facts.height],
+    ...slots.map((slot): [string, (variant: Variant) => Figure<number | string> | undefined] => [slotWord(slot), (variant) => (variant.slots.includes(slot) ? variant.facts.parts[slot] : { value: null, source: null, brief: say("compareNone") })]),
+    [say("diameter"), (variant) => variant.facts.diameter],
+    [say("first_first_flew"), (variant) => variant.firstFlight],
   ];
   const body = rows.map(([label, read]) =>
     el(
@@ -374,7 +394,7 @@ function renderCompare() {
       ...chosen.map((variant) => {
         const figure = read(variant);
         const cell = el("td");
-        if (!figure || figure.value === null) cell.append(el("span", { className: "blank", textContent: figureWords(figure) }));
+        if (!figure || figure.value === null) cell.append(el("span", { className: "blank", textContent: blankWords(figure) }));
         else cell.textContent = figureWords(figure, " m");
         return cell;
       }),
@@ -403,7 +423,7 @@ function renderBuilder() {
   builderPicks = rows.map((row) => row.chosen);
   builderRows.replaceChildren(
     ...rows.map((row, index) => {
-      const label = el("label", {}, row.label);
+      const label = el("label", {}, row.label.split(" or ").map((name) => (slotOfName.has(name) ? slotWord(slotOfName.get(name) as string) : name)).join(say("builderOr")));
       if (row.auto) {
         // one answer: no question to ask
         label.append(el("output", { className: "builder-only", textContent: row.options[0].name }));
@@ -428,7 +448,7 @@ function renderBuilder() {
   );
   const box = byId("builder-report");
   box.dataset.kind = report.custom ? "custom" : "real";
-  box.textContent = `${report.label}. ${report.size?.height.toFixed(1)} m tall as drawn.`;
+  box.textContent = say("builderReport", { label: report.label, height: report.size?.height.toFixed(1) ?? "" });
   byId("builder-code").textContent = `build(${JSON.stringify(description)})`;
   builderRocket.description = description;
 }
@@ -436,41 +456,41 @@ renderBuilder();
 
 // ------------------------------------------------------------- the parts alone
 const assets = new URL("assets/", document.baseURI).href;
-byId("gallery").append(
-  ...PART_ENTRIES.filter(({ record }) => record.trueTo.length === 0).map(({ record }) =>
+const gallery = () =>
+  PART_ENTRIES.filter(({ record }) => record.trueTo.length === 0).map(({ record }) =>
     el(
       "figure",
       { className: "tile" },
       el("img", { src: `${assets}parts/${record.id}.svg`, alt: record.name, loading: "lazy", width: 240, height: 320 }),
-      el("figcaption", {}, record.name, el("small", { textContent: record.sourced.height.value === null ? "Size judged from photographs" : `${record.sourced.height.value} m long, ${record.sourced.diameter.value} m across` })),
+      el("figcaption", {}, record.name, el("small", { textContent: record.sourced.height.value === null ? say("partJudged") : say("partSize", { height: record.sourced.height.value, width: record.sourced.diameter.value as number }) })),
     ),
-  ),
-);
+  );
+byId("gallery").append(...gallery());
 
 // ------------------------------------------------------------- what is coming, and where it all comes from
 byId("planned").hidden = PLANNED_ROCKETS.length === 0;
-byId("planned-list").append(
-  ...PLANNED_ROCKETS.map((rocket) =>
+const planned = () =>
+  PLANNED_ROCKETS.map((rocket) =>
     el(
       "li",
       {},
       el("strong", { textContent: rocket.name }),
-      `: ${rocket.height.value} m tall, ${rocket.diameter.value} m across${rocket.diameter.note ? ` (${rocket.diameter.note.toLowerCase()})` : ""}, first flown ${rocket.firstFlight.value}. From `,
+      say("plannedLine", { height: rocket.height.value as number, width: rocket.diameter.value as number, note: rocket.diameter.note ? ` (${rocket.diameter.note.toLowerCase()})` : "", first: rocket.firstFlight.value as string }),
       el("a", { href: SOURCES[rocket.source].url, textContent: SOURCES[rocket.source].publisher, rel: "noopener" }),
-      ".",
+      say("plannedEnd"),
     ),
-  ),
-);
-byId("source-list").append(
-  ...(Object.keys(SOURCES) as SourceId[]).map((id) => {
+  );
+byId("planned-list").append(...planned());
+const sourceItems = () =>
+  (Object.keys(SOURCES) as SourceId[]).map((id) => {
     const source = SOURCES[id];
-    return el("li", {}, el("a", { href: source.url, textContent: source.title, rel: "noopener" }), `, ${source.publisher}${source.date ? `, ${source.date}` : ""}.${source.read === "search" ? " Read only as a search engine quoted it." : source.read === "cited" ? " Known through another source's citation." : ""}`);
-  }),
-);
+    return el("li", {}, el("a", { href: source.url, textContent: source.title, rel: "noopener" }), `, ${source.publisher}${source.date ? `, ${source.date}` : ""}.${source.read === "search" ? say("sourceSearch") : source.read === "cited" ? say("sourceCited") : ""}`);
+  });
+byId("source-list").append(...sourceItems());
 byId("credit-list").append(...(Object.keys(MODEL_CREDITS) as CreditId[]).map((id) => el("li", { textContent: creditLine(id) })));
 
 // ------------------------------------------------------------- one section at a time, chosen in a row, and kept in the address
-const MORE: readonly (readonly [string, string])[] = [["embed", "Put it on your site"], ["compare", "Compare to scale"], ["builder", "Build from parts"], ["details", "The parts"], ["planned", "Still to come"], ["sources", "Sources"]];
+const MORE: readonly (readonly [string, string])[] = ["embed", "compare", "builder", "details", "planned", "sources"].map((id) => [id, WORDS.en[`more_${id}`]] as const);
 const moreTabs = byId("more-tabs");
 function showMore(chosen: string) {
   for (const [id] of MORE) {
@@ -482,10 +502,30 @@ for (const [id, words] of MORE) {
   const tab = chip(words, `more-${id}`, () => {
     showMore(id);
     history.replaceState(history.state, "", `${location.pathname}${location.search}#${id}`);
-  });
+  }, `more_${id}`);
   tab.setAttribute("role", "tab");
   tab.setAttribute("aria-controls", id);
   moreTabs.append(tab);
 }
 const askedTab = location.hash.slice(1);
 showMore(MORE.some(([id]) => id === askedTab) ? askedTab : MORE[0][0]);
+
+// ------------------------------------------------------------- the language: the family's chooser has filled every data-say; what the page draws itself is drawn again
+const flightBar = byId<HTMLElement & { words: Record<string, string> }>("flight");
+function setWords() {
+  byId("data-note").hidden = !japanese();
+  flightBar.words = Object.fromEntries(["play", "pause", "again", "back", "next", "leave", "range", "none", "sourced", "reduced", "from"].map((key) => [key, say(`flight${key[0].toUpperCase()}${key.slice(1)}`)]));
+}
+function speak() {
+  setWords();
+  renderMain();
+  renderCompare();
+  renderBuilder();
+  lightEngines(hero.getAttribute("engines") === "on");
+  drawTurn();
+  byId("gallery").replaceChildren(...gallery());
+  byId("planned-list").replaceChildren(...planned());
+  byId("source-list").replaceChildren(...sourceItems());
+}
+document.addEventListener("kazoku-languagechange", () => queueMicrotask(speak));
+setWords();

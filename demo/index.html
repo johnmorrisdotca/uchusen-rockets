@@ -8,93 +8,94 @@
   <body class="demo">
     <main>
       <!--family:header-->
-      <section class="stage-row" id="main-view" aria-label="The rocket">
+      <section class="stage-row" id="main-view" aria-label="The rocket" data-say-label="viewLabel">
         <div class="stage-box">
           <div class="view-space">
             <div class="earth-back" id="earth-back" data-testid="earth" aria-hidden="true" hidden></div>
             <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter"></uchusen-rocket>
           </div>
           <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark" controls="advanced"></kazoku-view-controls>
-          <div class="chips turn-row" id="turn" role="group" aria-label="Which way it turns" data-testid="turn"></div>
-          <p class="hint">Drag to turn it. The controls tip, zoom and move it; Ctrl or Command with the wheel zooms.</p>
+          <div class="chips turn-row" id="turn" role="group" aria-label="Which way it turns" data-say-label="turnLabel" data-testid="turn"></div>
+          <p class="hint" data-say="hint">Drag to turn it. The controls tip, zoom and move it; Ctrl or Command with the wheel zooms.</p>
         </div>
         <div class="panel">
           <div class="field">
-            <h2 id="maker-title">Maker</h2>
+            <h2 id="maker-title" data-say="maker">Maker</h2>
             <div class="chips" id="makers" role="group" aria-labelledby="maker-title"></div>
           </div>
           <div class="field">
-            <h2 id="rocket-title">Rocket</h2>
+            <h2 id="rocket-title" data-say="rocket">Rocket</h2>
             <div class="chips" id="rockets" role="group" aria-labelledby="rocket-title"></div>
           </div>
           <div class="field">
-            <h2 id="variant-title">Variant</h2>
+            <h2 id="variant-title" data-say="variant">Variant</h2>
             <div class="chips" id="variants" role="group" aria-labelledby="variant-title"></div>
           </div>
           <div class="field">
-            <h2 id="show-title">The parts</h2>
+            <h2 id="show-title" data-say="parts">The parts</h2>
             <div class="chips" id="shows" role="group" aria-labelledby="show-title"></div>
           </div>
           <div class="field-pair">
             <div class="field">
-              <h2 id="look-title">Look</h2>
+              <h2 id="look-title" data-say="look">Look</h2>
               <div class="chips" id="looks" role="group" aria-labelledby="look-title"></div>
             </div>
             <div class="field">
-              <h2 id="view-title">From</h2>
+              <h2 id="view-title" data-say="from">From</h2>
               <div class="chips" id="views" role="group" aria-labelledby="view-title"></div>
             </div>
           </div>
           <div class="field-pair">
             <div class="field">
-              <h2 id="background-title">Background</h2>
+              <h2 id="background-title" data-say="background">Background</h2>
               <div class="chips" id="backgrounds" role="group" aria-labelledby="background-title"></div>
             </div>
             <div class="field">
-              <h2 id="engines-title">Engines</h2>
+              <h2 id="engines-title" data-say="engines">Engines</h2>
               <div class="chips" id="engines" role="group" aria-labelledby="engines-title"></div>
             </div>
             <p class="note" id="engines-note" data-testid="engines-note" hidden></p>
-            <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden>The Earth: <a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a>. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</p>
+            <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
           </div>
           <div class="field flight-field" id="flight-field">
-            <h2 id="flight-title">Flight</h2>
+            <h2 id="flight-title" data-say="flight">Flight</h2>
             <uchusen-flight id="flight" data-testid="flight" for="hero" aria-labelledby="flight-title"></uchusen-flight>
           </div>
           <div class="field" id="facts" data-testid="facts" aria-live="polite"></div>
+          <p class="note" id="data-note" data-say="dataNote" hidden></p>
           <p class="credit" id="credit" data-testid="credit" hidden></p>
         </div>
       </section>
 
-      <div class="chips more-tabs" id="more-tabs" role="tablist" aria-label="More about this rocket" data-testid="more-tabs"></div>
+      <div class="chips more-tabs" id="more-tabs" role="tablist" aria-label="More about this rocket" data-say-label="moreLabel" data-testid="more-tabs"></div>
 
       <section id="embed" aria-labelledby="embed-title">
-        <h2 id="embed-title">Put this rocket on your site</h2>
-        <p>Copy the code for the rocket on the screen: its variant, parts, look, view, and its engines and phase of flight. A painted rocket's credit is in the code, from the parts that are showing.</p>
-        <div class="chips" id="embed-tabs" role="tablist" aria-label="How to embed it" data-testid="embed-tabs"></div>
+        <h2 id="embed-title" data-say="embedTitle">Put this rocket on your site</h2>
+        <p data-say="embedIntro">Copy the code for the rocket on the screen: its variant, parts, look, view, and its engines and phase of flight. A painted rocket's credit is in the code, from the parts that are showing.</p>
+        <div class="chips" id="embed-tabs" role="tablist" aria-label="How to embed it" data-say-label="embedTabsLabel" data-testid="embed-tabs"></div>
         <p id="embed-note" data-testid="embed-note"></p>
         <pre class="code"><code id="embed-code" data-testid="embed-code"></code></pre>
         <div class="embed-actions">
-          <button type="button" class="chip" id="embed-copy" data-testid="embed-copy">Copy</button>
-          <button type="button" class="chip" id="embed-svg" data-testid="embed-svg">Save SVG</button>
-          <button type="button" class="chip" id="embed-png" data-testid="embed-png">Save PNG</button>
-          <a class="chip" id="embed-open" data-testid="embed-open" target="_blank" rel="noopener">Open the embed page</a>
+          <button type="button" class="chip" id="embed-copy" data-testid="embed-copy" data-say="copy">Copy</button>
+          <button type="button" class="chip" id="embed-svg" data-testid="embed-svg" data-say="saveSvg">Save SVG</button>
+          <button type="button" class="chip" id="embed-png" data-testid="embed-png" data-say="savePng">Save PNG</button>
+          <a class="chip" id="embed-open" data-testid="embed-open" target="_blank" rel="noopener" data-say="openEmbed">Open the embed page</a>
           <span id="embed-status" role="status" aria-live="polite"></span>
         </div>
         <p id="embed-credit" data-testid="embed-credit" hidden></p>
       </section>
 
       <section id="compare" aria-labelledby="compare-title">
-        <h2 id="compare-title">Compare, to scale</h2>
-        <p>The same metre on every one, with a ruler, a person and a ten-storey building. The person and the building are round numbers, there for scale.</p>
-        <div class="chips" id="compare-picks" role="group" aria-label="Which variants to compare"></div>
+        <h2 id="compare-title" data-say="compareTitle">Compare, to scale</h2>
+        <p data-say="compareIntro">The same metre on every one, with a ruler, a person and a ten-storey building. The person and the building are round numbers, there for scale.</p>
+        <div class="chips" id="compare-picks" role="group" aria-label="Which variants to compare" data-say-label="comparePicks"></div>
         <uchusen-lineup id="lineup" data-testid="lineup" unit="3.4" ruler labels view="front"></uchusen-lineup>
         <div class="table-wrap"><table id="compare-table" data-testid="compare-table"></table></div>
       </section>
 
       <section id="builder" aria-labelledby="builder-title">
-        <h2 id="builder-title">Build one from parts</h2>
-        <p>Parts from every rocket. Each row offers what fits on the row below, and a row with one answer is answered for you. A mix is labelled as what it is: never a vehicle that flew.</p>
+        <h2 id="builder-title" data-say="builderTitle">Build one from parts</h2>
+        <p data-say="builderIntro">Parts from every rocket. Each row offers what fits on the row below, and a row with one answer is answered for you. A mix is labelled as what it is: never a vehicle that flew.</p>
         <div class="builder">
           <div class="builder-picks">
             <div class="builder-rows" id="builder-rows" data-testid="builder-rows"></div>
@@ -106,28 +107,28 @@
       </section>
 
       <section id="details" aria-labelledby="details-title">
-        <h2 id="details-title">The parts on their own</h2>
+        <h2 id="details-title" data-say="detailsTitle">The parts on their own</h2>
         <div class="gallery" id="gallery" data-testid="gallery"></div>
       </section>
 
       <section id="planned" aria-labelledby="planned-title">
-        <h2 id="planned-title">Still to come</h2>
+        <h2 id="planned-title" data-say="plannedTitle">Still to come</h2>
         <ul id="planned-list" data-testid="planned"></ul>
       </section>
 
       <section id="sources" aria-labelledby="sources-title">
-        <h2 id="sources-title">Where it comes from</h2>
+        <h2 id="sources-title" data-say="sourcesTitle">Where it comes from</h2>
         <ul id="source-list" class="sources" data-testid="sources"></ul>
-        <h3>Models</h3>
+        <h3 data-say="modelsTitle">Models</h3>
         <ul id="credit-list" class="sources" data-testid="credits"></ul>
-        <h3>The Earth behind the rocket</h3>
+        <h3 data-say="earthTitle">The Earth behind the rocket</h3>
         <ul class="sources" data-testid="earth-credits">
-          <li><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a>, MIT, draws it. Its country outlines are <a href="https://www.naturalearthdata.com" rel="noopener">Natural Earth</a>, public domain, drawn with d3-geo.</li>
-          <li>The Painted look's pictures are NASA's: Blue Marble: Next Generation (NASA Earth Observatory, Reto Stöckli), for the day side, the water and the clouds, and Earth at Night, Black Marble 2016 (NASA Earth Observatory, Suomi NPP VIIRS data, Miguel Roman, NASA's Goddard Space Flight Center). NASA does not endorse this project.</li>
+          <li><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earth1">, MIT, draws it. Its country outlines are </span><a href="https://www.naturalearthdata.com" rel="noopener">Natural Earth</a><span data-say="earth1b">, public domain, drawn with d3-geo.</span></li>
+          <li data-say="earth2">The Painted look's pictures are NASA's: Blue Marble: Next Generation (NASA Earth Observatory, Reto Stöckli), for the day side, the water and the clouds, and Earth at Night, Black Marble 2016 (NASA Earth Observatory, Suomi NPP VIIRS data, Miguel Roman, NASA's Goddard Space Flight Center). NASA does not endorse this project.</li>
         </ul>
       </section>
       <div class="legal" id="legal">
-        <p>No logo, wordmark or flag is on any rocket here. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. The code is MIT; the painted models are CC BY 4.0 or public domain, each credited above; Starbase's map data is © OpenStreetMap contributors, under ODbL 1.0; the pictures of the Earth are NASA's.</p>
+        <p data-say="legal">No logo, wordmark or flag is on any rocket here. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. The code is MIT; the painted models are CC BY 4.0 or public domain, each credited above; Starbase's map data is © OpenStreetMap contributors, under ODbL 1.0; the pictures of the Earth are NASA's.</p>
       </div>
       <!--family:unreviewed-->
       <!--family:footer-->

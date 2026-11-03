@@ -27,6 +27,45 @@ a { color: inherit; }
 const sheet: { made: CSSStyleSheet | null } = { made: null };
 
 /**
+ * The words the flight bar says itself, each of which a page can replace (for a language) with `flight.words = { play: "…" }`. A phase's name, what happens in it and a flight's note are the data's and stay as they are.
+ *
+ * @example
+ * ```ts
+ * import type { FlightWords } from "@johnmorrisdotca/uchusen-rockets/element";
+ *
+ * const words: Partial<FlightWords> = { play: "Start", pause: "Stop" };
+ * console.log(Object.keys(words));
+ * ```
+ */
+export interface FlightWords {
+  play: string;
+  pause: string;
+  again: string;
+  back: string;
+  next: string;
+  leave: string;
+  range: string;
+  none: string;
+  sourced: string;
+  reduced: string;
+  from: string;
+}
+
+const WORDS: FlightWords = {
+  play: "Play",
+  pause: "Pause",
+  again: "Play again",
+  back: "Back",
+  next: "Next",
+  leave: "Back to the rocket",
+  range: "Where along the flight",
+  none: "No flight timeline for this version yet: no page read here gives one.",
+  sourced: " The times and engine counts are sourced; how the picture moves between them is illustrative, not to scale. ",
+  reduced: "This device asks for reduced motion, so nothing plays and no flame shows: move the slider or step through, and the charts say which engines burn. ",
+  from: "From ",
+};
+
+/**
  * The `<uchusen-flight>` element: a play button, a slider and the phase's name for a rocket's flight. Its `for` attribute is the id of the `<uchusen-rocket>` it drives. A variant with no flight says so.
  *
  * @example
@@ -43,7 +82,34 @@ export class UchusenFlight extends HTMLBase {
   private rocket: UchusenRocket | null = null;
   private drawnFor = "";
   private chartKey = "";
+  private said: Partial<FlightWords> = {};
   private parts: { play: HTMLButtonElement; back: HTMLButtonElement; next: HTMLButtonElement; leave: HTMLButtonElement; range: HTMLInputElement; now: HTMLElement; what: HTMLElement; charts: HTMLElement; about: HTMLElement; none: HTMLElement; body: HTMLElement } | null = null;
+
+  /** The words this bar says, in the page's language. Anything left out stays English. */
+  get words(): Partial<FlightWords> {
+    return this.said;
+  }
+
+  set words(words: Partial<FlightWords>) {
+    this.said = { ...words };
+    this.relabel();
+  }
+
+  private word(key: keyof FlightWords): string {
+    return this.said[key] ?? WORDS[key];
+  }
+
+  private relabel(): void {
+    const parts = this.parts;
+    if (!parts) return;
+    parts.back.textContent = this.word("back");
+    parts.next.textContent = this.word("next");
+    parts.leave.textContent = this.word("leave");
+    parts.range.setAttribute("aria-label", this.word("range"));
+    parts.none.textContent = this.word("none");
+    this.drawnFor = "";
+    this.update();
+  }
 
   connectedCallback(): void {
     if (!this.shadowRoot) this.build();
@@ -93,20 +159,20 @@ export class UchusenFlight extends HTMLBase {
       node.addEventListener("click", on);
       return node;
     };
-    const play = button("flight-play", "Play", () => {
+    const play = button("flight-play", this.word("play"), () => {
       if (this.rocket?.flightState.playing) this.rocket.pause();
       else this.rocket?.play();
     });
     const position = () => this.rocket?.flightState.position ?? 0;
-    const back = button("flight-back", "Back", () => this.rocket?.seek(Math.ceil(position()) - 1));
-    const next = button("flight-next", "Next", () => this.rocket?.seek(Math.floor(position()) + 1));
-    const leave = button("flight-leave", "Back to the rocket", () => this.rocket?.endFlight());
+    const back = button("flight-back", this.word("back"), () => this.rocket?.seek(Math.ceil(position()) - 1));
+    const next = button("flight-next", this.word("next"), () => this.rocket?.seek(Math.floor(position()) + 1));
+    const leave = button("flight-leave", this.word("leave"), () => this.rocket?.endFlight());
     const range = make("input", "flight-range");
     range.type = "range";
     range.min = "0";
     range.step = "0.01";
     range.value = "0";
-    range.setAttribute("aria-label", "Where along the flight");
+    range.setAttribute("aria-label", this.word("range"));
     range.addEventListener("input", () => this.rocket?.seek(Number(range.value)));
     const row = document.createElement("div");
     row.className = "row";
@@ -124,7 +190,7 @@ export class UchusenFlight extends HTMLBase {
     const body = document.createElement("div");
     body.setAttribute("part", "flight-body");
     body.append(row, now, what, charts, about);
-    const none = make("p", "flight-none", "No flight timeline for this version yet: no page read here gives one.");
+    const none = make("p", "flight-none", this.word("none"));
     none.className = "fine";
     root.append(body, none);
     this.parts = { play, back, next, leave, range, now, what, charts, about, none, body };
@@ -137,7 +203,7 @@ export class UchusenFlight extends HTMLBase {
     link.href = source.url;
     link.rel = "noopener";
     link.textContent = `${source.publisher}: ${source.title}`;
-    this.parts.about.replaceChildren(`${flight.basis} The times and engine counts are sourced; how the picture moves between them is illustrative, not to scale. ${flight.note ?? ""} ${reduced ? "This device asks for reduced motion, so nothing plays and no flame shows: move the slider or step through, and the charts say which engines burn. " : ""}From `, link, ".");
+    this.parts.about.replaceChildren(`${flight.basis}${this.word("sourced")}${flight.note ?? ""} ${reduced ? this.word("reduced") : ""}${this.word("from")}`, link, ".");
   }
 
   private update = (): void => {
@@ -164,7 +230,7 @@ export class UchusenFlight extends HTMLBase {
     this.dataset.flight = flight.id;
     this.dataset.phase = state.active ? phase.id : "";
     this.dataset.playing = String(state.playing);
-    parts.play.textContent = state.playing ? "Pause" : state.ended ? "Play again" : "Play";
+    parts.play.textContent = this.word(state.playing ? "pause" : state.ended ? "again" : "play");
     parts.play.setAttribute("aria-pressed", String(state.playing));
     parts.back.disabled = state.position <= 0;
     parts.next.disabled = state.position >= lastPosition(flight);
