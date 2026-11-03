@@ -391,9 +391,9 @@ const BASE_FLIGHTS: readonly Flight[] = [
     rocket: "falcon-9",
     variant: "v1.0-dragon",
     name: "Falcon 9 v1.0 with Dragon 1, COTS Demo Flight 1",
-    basis: "SpaceX's press kit for COTS Demo Flight 1 and Spaceflight Now's launch timeline, both written before the launch of 8 December 2010: the plan, which the kit says will vary with the mission. The press kit gives the times; the timeline page adds max q and what the stages do.",
+    basis: "SpaceX's COTS Demo Flight 1 press kit and Spaceflight Now's launch timeline, both from before the launch of 8 December 2010: the plan, which the kit says will vary.",
     source: COTS1_TIMELINE,
-    note: "The page says that two of the nine first-stage engines shut down before the rest and gives no time for it, so that step has none. The first stage is not followed after it separates. It says the Dragon capsule separates from the second stage 'leaving behind its unpressurized trunk section', so the trunk stays with the second stage here. Dragon 1 is drawn with solar wings, which the press kit says nothing of. No fairing: Dragon is the payload.",
+    note: "Two engines shut down before the rest, with no time given. The first stage is not followed after it separates, and the trunk stays with the second stage, as the timeline says. Dragon 1 is drawn with solar wings the kit does not mention.",
     phases: [
       { id: "ignition", name: "Ignition", what: "The engine controller starts the ignition sequence on the pad.", at: time("-00:00:03", COTS1_PRESSKIT), burns: { "first-stage": nineMerlin("The nine Merlin 1C of this version, from its page.") }, pose: {}, ground: 0, smoke: 0.7 },
       { id: "liftoff", name: "Liftoff", what: "The four hold-down clamps release the booster.", at: time("+00:00:00", COTS1_TIMELINE), burns: { "first-stage": nineMerlin("The nine Merlin 1C of this version, from its page.") }, pose: {}, ground: 0.02, smoke: 1 },
@@ -412,9 +412,9 @@ const BASE_FLIGHTS: readonly Flight[] = [
     rocket: "dragon",
     variant: "dragon-1",
     name: "Dragon 1, COTS Demo Flight 1",
-    basis: "SpaceX's press kit for COTS Demo Flight 1, written before the launch of 8 December 2010: the plan, which the kit says will vary with the mission. Its times after the first thirteen minutes are hours and minutes from launch, as its 'roughly 3 1/2 hours from launch to splashdown' reads, so they are given to the minute.",
+    basis: "SpaceX's COTS Demo Flight 1 press kit, from before the launch of 8 December 2010: the plan, which the kit says will vary. Its later times read as hours and minutes from launch (the kit says about three and a half hours to splashdown).",
     source: COTS1_PRESSKIT,
-    note: "Dragon's thrusters and parachutes are not drawn, so the burn and the descent are only said in words. The trunk is left with the second stage at separation, as Spaceflight Now's launch timeline says. Dragon 1 is drawn with solar wings; the press kit says this Dragon ran on a lithium battery.",
+    note: "Dragon's thrusters and parachutes are not drawn: the burn and the descent are in words. The trunk stays with the second stage, as Spaceflight Now's timeline says. Dragon 1 is drawn with solar wings; the kit says this Dragon ran on a battery.",
     phases: [
       { id: "separation", name: "Dragon separates", what: "Dragon separates from Falcon 9 and starts its propulsion. The trunk stays with the second stage.", at: time("+00:09:35", COTS1_PRESSKIT), burns: {}, pose: { trunk: { dx: -0.25, dy: -0.2 }, capsule: {} }, ground: 1.6, altitude: { value: "a 300 kilometers circular orbit", source: COTS1_PRESSKIT } },
       { id: "operations", name: "On-orbit operations", what: "Dragon begins its demonstrations: its thrusters, telemetry, guidance and control.", at: time("+00:13:00", COTS1_PRESSKIT), burns: {}, pose: { trunk: { gone: true }, capsule: {} }, ground: 1.6, speed: { value: "greater than 17,000 mph, an orbit in 90 minutes", source: COTS1_PRESSKIT } },
