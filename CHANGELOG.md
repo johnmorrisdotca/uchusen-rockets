@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-03
+
+- Demo: the rocket, variant, parts, look and view (the From row) are kept in the address with the maker, the Earth and the view controls' choices, each at a default that leaves the address clean, so a link or a reload opens what was on the screen.
+- Demo: kazoku-ui 0.12 (Centre came in 0.11). Once the view is zoomed or moved, a Centre button brings the rocket back to the middle at Fit and the default angle (the keys Home and 0 too). A rocket is thin, so the controls are told its size on the screen (`object-size`) and hold a pan so that at least a quarter of it stays in view. There is no `grab-radius`: a rocket is not round, so the default drag is kept. A browser test drags it far off and presses Centre.
+- The drag rule has its browser check: `e2e/direction.demo.ts` runs kazoku-ui's shared `e2e/ground.mjs` on the Space Shuttle's stack (a plain rocket body has nothing to follow up or down), and reads Starship's camera angle. A drag right moves the surface right, a drag up moves it up, the arrow keys agree and Auto-turn takes the near side to the right.
+- Demo: the Earth behind the rocket takes chikyu-earth 0.10: `max-ratio="1"` instead of sizing the element at half and scaling it, the Sun and the view are set on the same tick (one draw, so the every-fourth-draw workaround is gone), and the page's Content-Security-Policy has no style hash: `style-src 'self'` alone, which a test now holds (a refused stylesheet is an error).
+- The release runs the freeze test before anything is published: `release.yml` calls kazoku-ui's shared release workflow at v0.11.0 with `freeze-command: pnpm test:freeze`.
+- Engines: the parts whose data lists engines but whose drawing has no bell stay dark on purpose, and a test names them (Jupiter-C, Dragon 1, Dragon 2, Cargo Dragon 2, Apollo's service module, the lunar module's ascent stage, Dragon on top of Falcon 9). No source read here gives a Draco or SuperDraco thruster's size, the service propulsion engine's or the A-7's, and a bell's size is never estimated.
 - The README opens with the package's thumbnail, and the demo carries it as its link preview (og:image) and publishes the card, a dark card and an icon on Pages at `thumbnail.png`, `thumbnail-dark.png` and `icon.png`.
 - Documentation: a reference site made from the source's doc comments (every export has a summary, its parameters, what it returns and an example that runs), thirteen guides with a Japanese twin of each, a code builder page (`builder.html`), eighteen pictures, a longer README, and every release of this changelog dated. `pnpm docs:check` and `pnpm docs:site` are new, and `pnpm test:readme` now runs the guides too. No behaviour changed.
 
