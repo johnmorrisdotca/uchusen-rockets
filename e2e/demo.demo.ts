@@ -37,6 +37,9 @@ const press = async (page: Page, id: string) => {
   await page.locator(`[data-testid="${id}"]`).click();
 };
 const canvasData = (page: Page, name: string) => hero(page).evaluate((node, key) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset[key] ?? "", name);
+/** The 3D view shows a look. The first draw of the painted look compiles its shaders, and in software drawing that holds the page itself (0.3 to 1.1 s on a Mac, more on a hosted runner), so a reading can
+ * wait past the default five seconds without ever getting an answer. */
+const lookIs = (page: Page, look: string) => expect.poll(() => canvasData(page, "look"), { timeout: 60_000 }).toBe(look);
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
 const stopTurn = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
@@ -110,7 +113,7 @@ test("the look switches and the angle stays; the view controls turn it by drag a
   const before = await angle(page);
   for (const look of ["thick", "painted", "line"]) {
     await press(page, `look-${look}`);
-    await expect.poll(() => canvasData(page, "look")).toBe(look);
+    await lookIs(page, look);
     const after = await angle(page);
     expect(Math.abs(after.az - before.az)).toBeLessThan(0.01);
     expect(Math.abs(after.el - before.el)).toBeLessThan(0.01);
@@ -222,7 +225,7 @@ test("a variant change keeps the angle; every look draws every variant in a real
     await expect.poll(() => canvasData(page, "parts")).toBe(variant === "2019" ? "ship" : "booster ship");
     for (const look of ["line", "thick", "painted"]) {
       await press(page, `look-${look}`);
-      await expect.poll(() => canvasData(page, "look")).toBe(look);
+      await lookIs(page, look);
       const pixels = await hero(page).evaluate((node) => {
         const canvas = (node as HTMLElement).shadowRoot?.querySelector("canvas") as HTMLCanvasElement;
         return canvas.width * canvas.height;
@@ -728,8 +731,7 @@ test.describe("the engines", () => {
     await press(page, "look-painted");
     await expect.poll(plumes).toBe(33);
     if (is3d(browserName)) {
-      // software draws slowly: a page busy building a material can miss the default five seconds
-      await expect.poll(() => canvasData(page, "look"), { timeout: 60_000 }).toBe("painted");
+      await lookIs(page, "painted");
       await expect.poll(() => canvasData(page, "plumes"), { timeout: 60_000 }).toBe("33");
     }
     await press(page, "show-ship");
