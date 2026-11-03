@@ -118,3 +118,30 @@ test("every variant lights what a source says it has and the drawing shows, and 
       for (const bell of built.flamesOf("apart")) assert.notEqual(variant.facts.engines[bell.slot]?.value ?? null, null, `${rocket.id} ${variant.id} ${bell.slot}`);
     }
 });
+
+test("the parts that have engines in their data and no bell in their drawing stay dark, and nothing joins them without a decision", () => {
+  // No source read here gives the size of a Draco or SuperDraco thruster, the service propulsion engine or the A-7, so none is drawn and none burns: a bell's size is never estimated.
+  // Thrusters and the service engine also burn in orbit, not in the stacked picture a flame is drawn for. Add a part here only with a reason; give it a sourced bell and take it out when a source gives one.
+  const dark: string[] = [];
+  for (const rocket of Object.values(ROCKETS))
+    for (const variant of rocket.variants) {
+      const withData = Object.entries(variant.facts.engines).filter(([, figure]) => figure?.value != null).map(([slot]) => slot);
+      if (withData.length === 0) continue;
+      const lit = new Set(build({ rocket: rocket.id, variant: variant.id }).flamesOf("apart").map((bell) => bell.slot));
+      for (const slot of withData) if (!lit.has(slot)) dark.push(`${rocket.id}/${variant.id}/${slot}`);
+    }
+  assert.deepEqual(dark.sort(), [
+    "apollo-soyuz/apollo-soyuz/csm",
+    "dragon/cargo-dragon-2/capsule",
+    "dragon/dragon-1/capsule",
+    "dragon/dragon-2/capsule",
+    "falcon-9/block-5-dragon-2/capsule",
+    "jupiter-c/jupiter-c/vehicle",
+    "lunar-module/lunar-module/ascent",
+  ]);
+  for (const key of ["dragon/dragon-1", "dragon/dragon-2", "dragon/cargo-dragon-2", "apollo-soyuz/apollo-soyuz", "jupiter-c/jupiter-c"]) {
+    const [rocket, variant] = key.split("/");
+    assert.equal(build({ rocket, variant }).flamesOf("apart").length, 0, key);
+    assert.equal(build({ rocket, variant }).svg({ look: "line", show: "together", engines: true }).includes("data-plume"), false, key);
+  }
+});
