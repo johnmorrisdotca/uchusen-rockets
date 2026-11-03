@@ -11,7 +11,7 @@ const is3d = (browserName: string) => browserName === "chromium";
 function watch(page: Page): string[] {
   const problems: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error" && !message.text().startsWith("Refused to apply a stylesheet")) problems.push(`console: ${message.text()}`);
+    if (message.type() === "error") problems.push(`console: ${message.text()}`);
   });
   page.on("pageerror", (error) => problems.push(`page: ${error.message}`));
   page.on("response", (response) => {
@@ -214,6 +214,61 @@ test("a view in the address opens the same view, and what is chosen is kept in t
   await bar(page).locator('[data-b="fit"]').click();
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("zoom")).toBeNull();
   expect(new globalThis.URL(page.url()).searchParams.get("yaw")).toBe("40");
+  expect(problems).toEqual([]);
+});
+
+test("the rocket, variant, parts, look and view are kept in the address and come back; a hostile choice gives way", async ({ page }) => {
+  const problems = watch(page);
+  const params = () => new globalThis.URL(page.url()).searchParams;
+  await page.goto(`${URL}?rocket=falcon-9&variant=block-5&show=first-stage&look=thick&view=side`);
+  await stopTurn(page);
+  await expect(hero(page)).toHaveAttribute("data-variant", "block-5");
+  await expect(hero(page)).toHaveAttribute("data-show", "first-stage");
+  await expect(hero(page)).toHaveAttribute("data-look", "thick");
+  await expect(hero(page)).toHaveAttribute("data-view-angle", "side");
+  await expect(page.locator('[data-testid="look-thick"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('[data-testid="view-side"]')).toHaveAttribute("aria-pressed", "true");
+  await press(page, "show-together");
+  await press(page, "look-painted");
+  await press(page, "view-front");
+  await expect.poll(() => [params().get("show"), params().get("look"), params().get("view")]).toEqual([null, "painted", "front"]);
+  // a choice at its start leaves the address plain
+  await press(page, "look-line");
+  await press(page, "view-three-quarter");
+  await expect.poll(() => [params().get("look"), params().get("view")]).toEqual([null, null]);
+  await page.goto(`${URL}?show=__proto__&look=%22%3E%3Cscript%3E&view=constructor`);
+  await expect(hero(page)).toHaveAttribute("data-look", "line");
+  await expect(hero(page)).toHaveAttribute("data-view-angle", "three-quarter");
+  await expect(hero(page)).toHaveAttribute("data-show", "together");
+  expect(problems).toEqual([]);
+});
+
+test("Centre appears once the view is moved and puts the rocket back in the middle; a pan keeps a quarter of it in view", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(URL);
+  await stopTurn(page);
+  const centre = bar(page).locator('[data-b="centre"]');
+  type Bar = HTMLElement & { set(next: object): void; state: { zoom: number; panX: number; panY: number; yaw: number; tilt: number } };
+  const state = () => bar(page).evaluate((node) => (node as Bar).state);
+  const drawn = () => hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector<HTMLElement>(node.getAttribute("data-state") === "3d" ? "canvas" : ".drawing")?.dataset.pan ?? "");
+  await expect(centre).toBeHidden();
+  // the rocket is thin, so the controls know its size and hold a pan at a quarter of it
+  const size = (await bar(page).getAttribute("object-size"))?.split(",").map(Number) ?? [];
+  expect(size[0]).toBeGreaterThan(0);
+  expect(size[0]).toBeLessThan(size[1]);
+  await bar(page).evaluate((node) => (node as Bar).set({ zoom: 2, panX: 100000, panY: -100000, yaw: 40, tilt: 10 }));
+  await expect(centre).toBeVisible();
+  const away = await state();
+  expect(Math.abs(away.panX)).toBeGreaterThan(0);
+  expect(Math.abs(away.panX)).toBeLessThan(5000);
+  expect(Math.abs(away.panY)).toBeLessThan(5000);
+  await expect.poll(drawn).not.toBe("0,0");
+  await centre.click();
+  await expect.poll(async () => (await state()).panX).toBe(0);
+  const back = await state();
+  expect([back.zoom, back.panX, back.panY, back.yaw, back.tilt]).toEqual([1, 0, 0, 0, 0]);
+  await expect.poll(drawn).toBe("0,0");
+  await expect(centre).toBeHidden();
   expect(problems).toEqual([]);
 });
 

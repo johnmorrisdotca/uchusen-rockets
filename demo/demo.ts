@@ -31,13 +31,25 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", rocket: "starship", variant: "v3" } });
+const address = createAddressState({ defaults: { background: "none", rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
 const BACKGROUND_WORDS = { none: "None", earth: "Earth" } as const;
 type BackgroundName = keyof typeof BACKGROUND_WORDS;
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: "together", look: "line" as LookName, view: "three-quarter" as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName };
+
+/** A rocket is thin: the controls hold a pan so that a quarter of it stays in view. Its size on the screen: the picture is as wide as the box and a third taller, and the framing leaves 8% round the rocket. */
+function sizeObject() {
+  const variant = variantOf(state.rocket, state.variant);
+  const box = hero.getBoundingClientRect();
+  const height = state.show === "together" ? variant?.facts.height.value : state.show === "apart" ? null : variant?.facts.parts[state.show]?.value;
+  const width = variant?.facts.diameter.value;
+  if (!box.width || typeof height !== "number" || typeof width !== "number") return bar.removeAttribute("object-size");
+  const scale = Math.min(box.width / width, (box.width * 4) / 3 / height) / 1.08;
+  bar.setAttribute("object-size", `${Math.round(width * scale)},${Math.round(height * scale)}`);
+}
+new ResizeObserver(sizeObject).observe(hero);
 
 function chip(label: string, testid: string, on: () => void): HTMLButtonElement {
   const button = el("button", { type: "button", className: "chip", textContent: label });
@@ -174,6 +186,7 @@ function renderMain() {
   } else credit.textContent = "Painted by this package's own code, from sourced sizes. No licensed model shows this variant.";
   drawEmbed();
   syncEarth();
+  sizeObject();
 }
 
 /** The maker's row, and in the rocket's row only that maker's rockets. */
@@ -193,6 +206,9 @@ function pick(change: Partial<typeof state>) {
   renderMain();
   address.set("rocket", state.rocket);
   address.set("variant", state.variant);
+  address.set("show", state.show);
+  address.set("look", state.look);
+  address.set("view", state.view);
 }
 
 /** A maker with one rocket has one answer, and it is chosen for the reader; otherwise the rocket on screen stays until another is pressed. */

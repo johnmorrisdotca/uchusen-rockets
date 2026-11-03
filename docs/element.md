@@ -60,6 +60,7 @@ A flight, where a page gives one for the variant, plays from a script or from [`
 - The auto-turn goes either way: `speed` is degrees a second, positive taking the near side to the right and negative to the left. Set the attribute while it turns and it changes at once, from where it is. The demo's Turn left and Turn right do this.
 - Zoom is the camera's, so a zoomed 3D view stays sharp. The camera keeps the distance that holds the whole rocket, so turning never makes it breathe.
 - Tilt to turn on a phone still works, added to the chosen view.
+- A rocket is thin, so a pan could lose it. Tell the controls how big it is on the screen with `object-size="width,height"` (CSS pixels at Fit) and they hold a pan so that at least a quarter of it stays in view; once the view is zoomed or moved their Centre button (and the keys Home and 0) puts it back in the middle. Leave `grab-radius` out: it is for a round piece, and a rocket's drag keeps the controls' default turn.
 - The drawing is zoomed and moved by its `viewBox`, so it is as sharp as its box at any zoom and never grows past it.
 - `autoplay` is idle while the element is out of sight (a scrolled-away view or a hidden tab gets no change events and no frames) and goes on from where it was when it is back. `autoplay-for="60"` ends the turn by itself after a minute of turning, for a gentle introduction, as the demo does; a Play button starts it again (kazoku-ui 0.7.1 or later).
 
