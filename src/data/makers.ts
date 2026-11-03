@@ -1,7 +1,28 @@
 // Whose each rocket is, as its own article's infobox and first lines say, read 2026-11-02. `maker` is how the demo groups them; `by` says what the source says, with the companies that built it where it names them. The sites have no maker here: a blank, not a guess.
 import { blank, type Figure } from "./types.ts";
 
+/**
+ * The groups the demo lists rockets under, by id, with the name shown for each.
+ *
+ * @example
+ * ```ts
+ * import { MAKERS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(MAKERS.spacex, Object.keys(MAKERS).length);
+ * ```
+ */
 export const MAKERS = { spacex: "SpaceX", nasa: "NASA and partners", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", russia: "Russia", "us-army": "US Army", sites: "Sites" } as const;
+/**
+ * The id of a group in `MAKERS`.
+ *
+ * @example
+ * ```ts
+ * import type { MakerId } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const maker: MakerId = "nasa";
+ * console.log(maker);
+ * ```
+ */
 export type MakerId = keyof typeof MAKERS;
 
 export interface MadeBy {

@@ -17,6 +17,17 @@ export interface GlbPart {
   at: readonly [number, number, number];
 }
 
+/**
+ * A binary glTF file: its bytes and how many triangles it holds. Save the bytes as a `.glb` file or hand them to any glTF viewer.
+ *
+ * @example
+ * ```ts
+ * import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const glb = build({ rocket: "starship", variant: "v3" }).glb();
+ * console.log(glb.bytes.length > 1000, glb.triangles > 0);
+ * ```
+ */
 export interface Glb {
   bytes: Uint8Array;
   triangles: number;
@@ -26,6 +37,20 @@ const round6 = (v: number) => Math.round(v * 1e6) / 1e6;
 const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 const linearOf = (hex: string) => [1, 3, 5].map((i) => round6(toLinear(Number.parseInt(hex.slice(i, i + 2), 16) / 255)));
 
+/**
+ * Writes parts into one small binary glTF file, in Node or a browser, with no dependency: one node for each part and one primitive for each material. The same parts always give the same bytes.
+ *
+ * @param parts The parts to write: each has a node name, its mesh and where it stands in metres.
+ * @returns The file's bytes and its triangle count.
+ * @example
+ * ```ts
+ * import { build, toGlb } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const rocket = build({ rocket: "falcon-9", variant: "block-5" });
+ * const glb = toGlb(rocket.parts.map((part) => ({ name: part.slot, mesh: part.mesh, at: [0, 0, 0] as const })));
+ * console.log(glb.bytes.length > 1000, glb.triangles > 0);
+ * ```
+ */
 export function toGlb(parts: readonly GlbPart[]): Glb {
   const chunks: Uint8Array[] = [];
   let offset = 0;

@@ -58,5 +58,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: The README's and the docs' examples, run against the built package
+      - name: The README's, the docs' and the guides' examples, run against the built package
         run: pnpm test:readme
+      - name: The documentation site's checks, every export documented and every example run
+        run: pnpm docs:check

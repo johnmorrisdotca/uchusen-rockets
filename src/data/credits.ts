@@ -1,6 +1,17 @@
 // Whose models the painted parts are made from. Each is under Creative Commons Attribution 4.0, or CC0 or public domain where the row says so, and each assembled rocket's credits are generated from these rows, so an author is credited exactly for
 // what is used. The package's code is MIT; these assets are not: see NOTICE.md.
 
+/**
+ * The credit for one licensed model: its title, its creator and their page, where it came from, its licence and what this package changed.
+ *
+ * @example
+ * ```ts
+ * import { MODEL_CREDITS, type ModelCredit } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const credit: ModelCredit = MODEL_CREDITS["clarence365-block3"];
+ * console.log(credit.creator, credit.licence);
+ * ```
+ */
 export interface ModelCredit {
   title: string;
   creator: string;
@@ -25,6 +36,16 @@ const nasa = (title: string, slug: string, changes: string): ModelCredit => ({
   changes,
 });
 
+/**
+ * Every licensed model this package paints with, by credit id. A painted rocket must carry the credit of the parts that are showing; `embedCode` writes it for you.
+ *
+ * @example
+ * ```ts
+ * import { MODEL_CREDITS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(Object.keys(MODEL_CREDITS).length > 10);
+ * ```
+ */
 export const MODEL_CREDITS = {
   "clarence365-block3": {
     title: "SpaceX Starship Block 3",
@@ -119,9 +140,31 @@ export const MODEL_CREDITS = {
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 
+/**
+ * The id of one model's credit in `MODEL_CREDITS`.
+ *
+ * @example
+ * ```ts
+ * import type { CreditId } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const id: CreditId = "clarence365-block3";
+ * console.log(id);
+ * ```
+ */
 export type CreditId = keyof typeof MODEL_CREDITS;
 
-/** One credit as a line of text. */
+/**
+ * One credit as a line of text.
+ *
+ * @param id The id of a credit in `MODEL_CREDITS`.
+ * @returns The credit as one line of text.
+ * @example
+ * ```ts
+ * import { creditLine } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(creditLine("clarence365-block3"));
+ * ```
+ */
 export function creditLine(id: CreditId): string {
   const c: ModelCredit = MODEL_CREDITS[id];
   return `"${c.title}" by ${c.creator} (${c.sourceUrl}), ${c.licence} (${c.licenceUrl}). ${c.changes}`;

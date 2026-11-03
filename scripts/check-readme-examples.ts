@@ -1,14 +1,16 @@
-// Runs every ```ts example of the README and the docs against the built package: each one is written to a scratch file with the package's name pointing at dist/, and run with Node.
+// Runs every ```ts example of the README, the docs and the guides against the built package (`ts no-run` and `ts no-check` blocks are shown, not run; set VERBOSE=1 to print what each prints): each one is written to a scratch file with the package's name pointing at dist/, and run with Node.
 // A comment like `// true` after an expression is checked: the example's line must give that value. `pnpm test:readme` builds first.
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const files = ["README.md", ...readdirSync(join(root, "docs")).filter((name) => name.endsWith(".md")).map((name) => join("docs", name))];
-const scratch = mkdtempSync(join(root, "node_modules", ".uchusen-examples-"));
+const listing = (folder: string) => readdirSync(join(root, folder)).filter((name) => name.endsWith(".md")).map((name) => join(folder, name));
+const files = ["README.md", ...listing("docs"), ...listing("docs/guides"), ...listing("docs/guides/ja")];
+const scratch = mkdtempSync(join(tmpdir(), "uchusen-examples-"));
 const dist = pathToFileURL(join(root, "dist")).href;
 let ran = 0;
 let failed = 0;
@@ -30,10 +32,11 @@ for (const file of files) {
   let index = 0;
   for (const match of text.matchAll(/```ts\n([\s\S]*?)```/g)) {
     index++;
-    const path = join(scratch, `example-${ran}.mjs`);
+    const path = join(scratch, `example-${ran}.ts`);
     writeFileSync(path, rewrite(match[1]));
     const run = spawnSync(process.execPath, [path], { cwd: root, encoding: "utf8" });
     ran++;
+    if (process.env.VERBOSE) console.log(`--- ${file} example ${index}\n${run.stdout}`);
     if (run.status !== 0) {
       failed++;
       console.error(`FAIL ${file} example ${index}\n${match[1]}\n${run.stderr}`);

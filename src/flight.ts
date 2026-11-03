@@ -4,16 +4,62 @@ import type { Figure } from "./data/types.ts";
 
 export type { Flight, FlightBurn, FlightPhase, PartPose } from "./data/flights.ts";
 
-/** Seconds a phase takes on the screen when the timeline plays: one flight in under a minute, whatever its real length. */
+/**
+ * Seconds a phase takes on the screen when the timeline plays: one flight in under a minute, whatever its real length.
+ *
+ * @example
+ * ```ts
+ * import { SECONDS_PER_PHASE } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(SECONDS_PER_PHASE);
+ * ```
+ */
 export const SECONDS_PER_PHASE = 2.4;
 
-/** The flight for a rocket's variant, when a page gives one. */
+/**
+ * The flight for a rocket's variant, when a page gives one.
+ *
+ * @param rocket A rocket's id.
+ * @param variant A variant's id, or undefined.
+ * @returns The flight for that variant, or null when it has none.
+ * @example
+ * ```ts
+ * import { flightOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(flightOf("starship", "v3")?.name, flightOf("starship", "v4"));
+ * ```
+ */
 export const flightOf = (rocket: string, variant: string | undefined): Flight | null => FLIGHTS.find((flight) => flight.rocket === rocket && flight.variant === variant) ?? null;
 
-/** The last place on the timeline: the last phase. */
+/**
+ * The last place on the timeline: the last phase.
+ *
+ * @param flight A flight.
+ * @returns The index of its last phase.
+ * @example
+ * ```ts
+ * import { flightOf, lastPosition } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const flight = flightOf("falcon-9", "block-5");
+ * console.log(flight ? lastPosition(flight) : null);
+ * ```
+ */
 export const lastPosition = (flight: Flight): number => flight.phases.length - 1;
 
-/** Which phase a place on the timeline is in, and how far along to the next. A value that is not a number is the start. */
+/**
+ * Which phase a place on the timeline is in, and how far along to the next. A value that is not a number is the start.
+ *
+ * @param flight A flight.
+ * @param position A place on the timeline: 0 is the first phase, 1 the second, 1.5 halfway to the third.
+ * @returns The phase index, how far along to the next (0 to 1) and the phase.
+ * @example
+ * ```ts
+ * import { flightOf, phaseAt } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const flight = flightOf("falcon-9", "block-5");
+ * if (flight) console.log(phaseAt(flight, 1.5).phase.name);
+ * ```
+ */
 export function phaseAt(flight: Flight, position: number): { index: number; along: number; phase: FlightPhase } {
   const last = lastPosition(flight);
   const place = Number.isFinite(position) ? Math.min(last, Math.max(0, position)) : 0;
@@ -21,13 +67,38 @@ export function phaseAt(flight: Flight, position: number): { index: number; alon
   return { index, along: place - index, phase: flight.phases[index] };
 }
 
-/** The place on the timeline of a phase by its id, or null for one the flight does not have. */
+/**
+ * The place on the timeline of a phase by its id, or null for one the flight does not have.
+ *
+ * @param flight A flight.
+ * @param id A phase's id, or null or undefined.
+ * @returns The place of that phase on the timeline, or null for an id the flight does not have.
+ * @example
+ * ```ts
+ * import { flightOf, phasePosition } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const flight = flightOf("falcon-9", "block-5");
+ * if (flight) console.log(phasePosition(flight, "nonsense"));
+ * ```
+ */
 export function phasePosition(flight: Flight, id: string | null | undefined): number | null {
   const index = flight.phases.findIndex((phase) => phase.id === id);
   return index < 0 ? null : index;
 }
 
-/** How many engines of each part burn in a phase, as drawn: a blank figure draws its `drawn`. */
+/**
+ * How many engines of each part burn in a phase, as drawn: a blank figure draws its `drawn`.
+ *
+ * @param phase A phase of a flight.
+ * @returns The number of engines burning for each part, by slot.
+ * @example
+ * ```ts
+ * import { burnsOf, flightOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const phase = flightOf("falcon-9", "block-5")?.phases[0];
+ * console.log(phase ? burnsOf(phase) : {});
+ * ```
+ */
 export function burnsOf(phase: FlightPhase): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [slot, burn] of Object.entries(phase.burns)) out[slot] = burn.engines.value ?? burn.drawn ?? 0;
@@ -41,6 +112,18 @@ export interface PoseNow {
   gone: boolean;
 }
 
+/**
+ * Everything the picture needs at one place on the timeline: the phase, how each part stands, which engines burn, how far the ground has fallen, and how much smoke stands on the pad.
+ *
+ * @example
+ * ```ts
+ * import { flightOf, frameAt, type FlightFrame } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const flight = flightOf("falcon-9", "block-5");
+ * const frame: FlightFrame | undefined = flight ? frameAt(flight, 0, [{ slot: "first-stage", baseY: 0 }], 70) : undefined;
+ * console.log(frame?.phase.name, frame?.separated);
+ * ```
+ */
 export interface FlightFrame {
   index: number;
   phase: FlightPhase;
@@ -70,7 +153,22 @@ const poseIn = (pose: PartPose | undefined, part: FlightPart, height: number): P
   gone: pose?.gone ?? false,
 });
 
-/** Everything the picture needs at a place on the timeline, for a vehicle `height` metres tall. */
+/**
+ * Everything the picture needs at a place on the timeline, for a vehicle `height` metres tall.
+ *
+ * @param flight A flight.
+ * @param position A place on the timeline.
+ * @param parts Each part's slot and the height of its base in the stack, in metres.
+ * @param height The vehicle's height in metres.
+ * @returns The frame to draw.
+ * @example
+ * ```ts
+ * import { flightOf, frameAt } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const flight = flightOf("falcon-9", "block-5");
+ * if (flight) console.log(frameAt(flight, 1, [{ slot: "first-stage", baseY: 0 }, { slot: "second-stage", baseY: 41 }], 70).burns);
+ * ```
+ */
 export function frameAt(flight: Flight, position: number, parts: readonly FlightPart[], height: number): FlightFrame {
   const { index, along, phase } = phaseAt(flight, position);
   const next = flight.phases[Math.min(index + 1, lastPosition(flight))];
@@ -115,7 +213,23 @@ export function flightBounds(flight: Flight, parts: readonly (FlightPart & { hei
   return { min, max };
 }
 
-/** The clock of one timeline: where it is and whether it runs. It only moves when told to, once a frame by whoever draws, so a timeline out of sight stands still. */
+/**
+ * The clock of one timeline: where it is and whether it runs. It only moves when told to, once a frame by whoever draws, so a timeline out of sight stands still.
+ *
+ * @param flight The flight whose clock this is.
+ * @example
+ * ```ts
+ * import { FlightClock, flightOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const flight = flightOf("falcon-9", "block-5");
+ * if (flight) {
+ *   const clock = new FlightClock(flight);
+ *   clock.play();
+ *   clock.advance(2.4);
+ *   console.log(clock.position, clock.ended);
+ * }
+ * ```
+ */
 export class FlightClock {
   readonly flight: Flight;
   position = 0;
@@ -152,7 +266,18 @@ export class FlightClock {
   }
 }
 
-/** A time as words: `T+2:35`, `T-0:03`, `T+1:05:20`. A blank says so. */
+/**
+ * A time as words: `T+2:35`, `T-0:03`, `T+1:05:20`. A blank says so.
+ *
+ * @param at A figure holding seconds from the flight's zero.
+ * @returns The time as text, such as `T+2:35`. A blank figure gives "Time: no source".
+ * @example
+ * ```ts
+ * import { clockWords } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(clockWords({ value: 155, source: "wikipedia-starship" }), clockWords({ value: -3, source: null }));
+ * ```
+ */
 export function clockWords(at: Figure): string {
   if (at.value === null) return "Time: no source";
   const sign = at.value < 0 ? "-" : "+";

@@ -7,13 +7,44 @@ import { defsOf, drawPart, orthographic } from "../draw/svg.ts";
 import { MATERIALS } from "../model/materials.ts";
 import { variantOf } from "../rockets.ts";
 
-/** Comparison shapes: plain round sizes, for scale, not facts about anything. */
+/**
+ * Comparison shapes: plain round sizes, for scale, not facts about anything.
+ *
+ * @example
+ * ```ts
+ * import { COMPARES } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * console.log(COMPARES.person.height, COMPARES.building.height);
+ * ```
+ */
 export const COMPARES = {
   person: { name: "A person, 1.8 m", height: 1.8, width: 0.5 },
   building: { name: "A ten-storey building, 30 m", height: 30, width: 18 },
 } as const;
+/**
+ * The name of a comparison shape that can stand in a lineup: `person` or `building`.
+ *
+ * @example
+ * ```ts
+ * import type { CompareId } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const id: CompareId = "person";
+ * console.log(id);
+ * ```
+ */
 export type CompareId = keyof typeof COMPARES;
 
+/**
+ * One thing standing in a lineup: its key (`starship:v3` or a comparison's name), its label and its height in metres.
+ *
+ * @example
+ * ```ts
+ * import { lineupSvg, type LineupItem } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const items: LineupItem[] = lineupSvg({ items: ["starship:v3", "person"], unit: 3 }).items;
+ * console.log(items.map((item) => item.label));
+ * ```
+ */
 export interface LineupItem {
   /** "starship:v3" or a comparison's name. */
   key: string;
@@ -31,6 +62,17 @@ const edgeOf = (built: Built, look: LookName): string | undefined => {
   return hulls.length && hulls.every((piece) => piece.kind === "lathe" && MATERIALS[piece.material].fill === "dark") ? LOOKS.line.line : undefined;
 };
 
+/**
+ * What a lineup is asked for: the items by key, how many pixels make a metre, and optionally the look, the view, what to show, a ruler and labels.
+ *
+ * @example
+ * ```ts
+ * import { lineupSvg, type LineupOptions } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const options: LineupOptions = { items: ["starship:v2", "starship:v3", "building"], unit: 3, ruler: true, labels: true };
+ * console.log(lineupSvg(options).width);
+ * ```
+ */
 export interface LineupOptions {
   /** "starship:v1,starship:v3,person,building". */
   items: readonly string[];
@@ -56,7 +98,19 @@ function comparison(id: CompareId, x: number, base: number, unit: number, line: 
   return `<rect x="${n(x)}" y="${n(base - h)}" width="${n(w)}" height="${n(h)}" fill="${fill}" stroke="${line}" stroke-width=".9"/><path d="${floors}" stroke="${line}" stroke-width=".35" opacity=".6"/>`;
 }
 
-/** The whole picture as SVG text. Unknown items are left out. */
+/**
+ * The whole picture as SVG text. Unknown items are left out.
+ *
+ * @param options The items and how they are drawn.
+ * @returns The picture as SVG text, the items it holds, and its width and height.
+ * @example
+ * ```ts
+ * import { lineupSvg } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const picture = lineupSvg({ items: ["falcon-9:block-5", "falcon-heavy:falcon-heavy", "person"], unit: 4, ruler: true });
+ * console.log(picture.items.length, picture.svg.startsWith("<svg"));
+ * ```
+ */
 export function lineupSvg(options: LineupOptions): { svg: string; items: LineupItem[]; width: number; height: number } {
   const { items, unit, look = DEFAULT_LOOK, view = "front", ruler = true, labels = true } = options;
   const angle = VIEWS[cleanView(view)];

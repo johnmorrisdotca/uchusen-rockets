@@ -17,6 +17,17 @@ import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
 import type { RocketViewer } from "./element/scene.ts";
 import { type Spin, spinOf } from "./spin.ts";
 
+/**
+ * What a `<uchusen-rocket>` is doing, as its `data-state` attribute says: `picture` (the drawing), `loading` (the 3D view is on its way), `3d`, `fallback` (no WebGL, so the drawing stays) or `error`.
+ *
+ * @example
+ * ```ts
+ * import type { RocketState } from "@johnmorrisdotca/uchusen-rockets/element";
+ *
+ * const states: RocketState[] = ["picture", "loading", "3d", "fallback", "error"];
+ * console.log(states.length);
+ * ```
+ */
 export type RocketState = "picture" | "loading" | "3d" | "fallback" | "error";
 
 const HTMLBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
@@ -27,7 +38,17 @@ const RELEASE_MS = 30_000;
 const PLACE_MS = 50;
 
 let assetBase: string | null = null;
-/** Where the licensed models are, for every element with no `assets` attribute of its own. Left unset: beside this module, in ./assets/. */
+/**
+ * Where the licensed models are, for every element with no `assets` attribute of its own. Left unset: beside this module, in ./assets/.
+ *
+ * @param url The folder the licensed models are in. A trailing slash is added if it has none.
+ * @example
+ * ```ts no-run
+ * import { setAssetBase } from "@johnmorrisdotca/uchusen-rockets/element";
+ *
+ * setAssetBase("/static/uchusen-assets/");
+ * ```
+ */
 export function setAssetBase(url: string): void {
   assetBase = url.endsWith("/") ? url : `${url}/`;
 }
@@ -94,6 +115,20 @@ function whyNot(mode: string): string {
 
 type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () => Promise<string> };
 
+/**
+ * The `<uchusen-rocket>` element: a rocket as a drawing that a 3D view takes over from when the browser can draw WebGL. Its attributes are the words of `RocketOptions`. It exposes its state as `data-state` and loads three.js only for a 3D view.
+ *
+ * @example
+ * ```ts no-run
+ * import { UchusenRocket } from "@johnmorrisdotca/uchusen-rockets/element";
+ *
+ * const rocket: UchusenRocket = document.createElement("uchusen-rocket") as UchusenRocket;
+ * rocket.setAttribute("rocket", "starship");
+ * rocket.setAttribute("variant", "v3");
+ * rocket.setAttribute("look", "painted");
+ * document.body.append(rocket);
+ * ```
+ */
 export class UchusenRocket extends HTMLBase {
   static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase"];
 
@@ -709,7 +744,20 @@ const LINEUP_CSS = `
 svg { display: block; }
 `;
 
-/** Rockets side by side on one baseline at one scale: `<uchusen-lineup items="starship:v1,starship:v3,person,building" unit="4" ruler labels>`. */
+/**
+ * Rockets side by side on one baseline at one scale: `<uchusen-lineup items="starship:v1,starship:v3,person,building" unit="4" ruler labels>`.
+ *
+ * @example
+ * ```ts no-run
+ * import { UchusenLineup } from "@johnmorrisdotca/uchusen-rockets/element";
+ *
+ * const lineup: UchusenLineup = document.createElement("uchusen-lineup") as UchusenLineup;
+ * lineup.setAttribute("items", "starship:v2,starship:v3,person");
+ * lineup.setAttribute("unit", "3");
+ * lineup.toggleAttribute("ruler", true);
+ * document.body.append(lineup);
+ * ```
+ */
 export class UchusenLineup extends HTMLBase {
   static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels"];
 
@@ -747,7 +795,17 @@ export class UchusenLineup extends HTMLBase {
   }
 }
 
-/** Defines both elements, once. Importing this module does it. */
+/**
+ * Defines both elements, once. Importing this module does it.
+ *
+ * @example
+ * ```ts no-run
+ * import { defineUchusenRocket } from "@johnmorrisdotca/uchusen-rockets/element";
+ *
+ * defineUchusenRocket();
+ * console.log(customElements.get("uchusen-rocket") !== undefined);
+ * ```
+ */
 export function defineUchusenRocket(): void {
   if (typeof customElements === "undefined") return;
   if (!customElements.get("uchusen-rocket")) customElements.define("uchusen-rocket", UchusenRocket);

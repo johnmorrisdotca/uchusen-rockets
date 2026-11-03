@@ -1,6 +1,17 @@
 // Every source a figure may name. Plain facts are taken from these, and each figure says which one it came from. `read` is how this project read it: "direct" means the page itself, "search" that only
 // a search engine's quote of it could be read, and "cited" that it is known through another source's citation.
 
+/**
+ * A source of a figure: its title, publisher and address, the date on it where it has one, how it was read (directly, by search or cited) and its licence.
+ *
+ * @example
+ * ```ts
+ * import { SOURCES, type Source } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const source: Source = SOURCES["wikipedia-starship"];
+ * console.log(source.publisher, source.read);
+ * ```
+ */
 export interface Source {
   title: string;
   publisher: string;
@@ -11,6 +22,16 @@ export interface Source {
   licence?: string;
 }
 
+/**
+ * Every source a figure can name, by id. A figure carries only an id; look the id up here for the page it came from.
+ *
+ * @example
+ * ```ts
+ * import { SOURCES } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(Object.keys(SOURCES).length > 20, SOURCES["wikipedia-starship"].url);
+ * ```
+ */
 export const SOURCES = {
   "wikipedia-starship": { title: "SpaceX Starship (the block table and infobox, read as raw wikitext)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Starship", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-super-heavy": { title: "SpaceX Super Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Super_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
@@ -80,4 +101,15 @@ export const SOURCES = {
   "sfn-flight-35": { title: "Timeline of SpaceX's 35th Falcon 9 launch", publisher: "Spaceflight Now", url: "https://spaceflightnow.com/?p=24998", date: "2017-05-31", read: "direct" },
 } as const satisfies Record<string, Source>;
 
+/**
+ * The id of a source in `SOURCES`.
+ *
+ * @example
+ * ```ts
+ * import type { SourceId } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const id: SourceId = "wikipedia-starship";
+ * console.log(id);
+ * ```
+ */
 export type SourceId = keyof typeof SOURCES;

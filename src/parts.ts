@@ -3,9 +3,30 @@
 import type { CreditId } from "./data/credits.ts";
 import type { Figure } from "./data/types.ts";
 
+/**
+ * What kind of part a record is: a booster, a ship, a stage, a fairing, a capsule, an engine, a fin and so on. A joint only mates a part of a kind that fits it.
+ *
+ * @example
+ * ```ts
+ * import { partEntry, type PartKind } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const kind: PartKind | undefined = partEntry("raptor-vacuum")?.record.kind;
+ * console.log(kind);
+ * ```
+ */
 export type PartKind = "booster" | "first-stage" | "ship" | "second-stage" | "fairing" | "capsule" | "trunk" | "engine" | "fin" | "flap" | "ring" | "test-vehicle" | "third-stage" | "adapter" | "service-module" | "tower" | "tank" | "solid-booster" | "liquid-booster" | "orbiter" | "deck" | "mount" | "arms" | "site" | "spacecraft";
 
-/** Where a part mates. Every part's origin is the middle of its base on its axis, at its lowest point; Y is up and the windward side faces +Z, in metres. */
+/**
+ * Where a part mates. Every part's origin is the middle of its base on its axis, at its lowest point; Y is up and the windward side faces +Z, in metres.
+ *
+ * @example
+ * ```ts
+ * import { partEntry, type Joint } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const top: Joint | undefined = partEntry("starship-v3-booster")?.record.joints.top;
+ * console.log(top);
+ * ```
+ */
 export interface Joint {
   /** What this joint is, so only like meets like: "stage". */
   kind: "stage";
@@ -15,6 +36,17 @@ export interface Joint {
   diameter: number;
 }
 
+/**
+ * The one record every part has: its id, kind and name, the rocket and variants it is true for, its height and diameter in metres, the sourced figures, its joints, any painted model, and where its shape came from.
+ *
+ * @example
+ * ```ts
+ * import { partEntry, type PartRecord } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const record: PartRecord | undefined = partEntry("starship-v3-ship")?.record;
+ * console.log(record?.name, record?.height, record?.trueTo);
+ * ```
+ */
 export interface PartRecord {
   id: string;
   kind: PartKind;

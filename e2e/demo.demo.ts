@@ -1131,3 +1131,33 @@ test("the choices fit a 1440 by 900 window for every variant, Earth on and all, 
   expect(desk.bottom).toBeLessThanOrEqual(fits);
   expect(desk.stage).toBeLessThanOrEqual(fits);
 });
+
+test("the code builder is one screen of choices, and writes the code for exactly what is chosen", async ({ page }) => {
+  const problems = watch(page);
+  await page.goto(`${URL}builder.html`);
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  const code = page.locator('[data-testid="builder-code"]');
+  await expect(code).toContainText('rocket="starship"');
+  await page.locator('[data-testid="rocket-falcon-9"]').click();
+  await page.locator('[data-testid="variant-block-5"]').click();
+  await page.locator('[data-testid="look-thick"]').click();
+  await page.locator('[data-testid="show-apart"]').click();
+  await expect(code).toContainText('rocket="falcon-9"');
+  await expect(code).toContainText('variant="block-5"');
+  await expect(code).toContainText('look="thick"');
+  await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-show", "apart");
+  await expect(page.locator('[data-testid="builder-credit"]')).toBeHidden();
+  await page.locator('[data-testid="kind-iframe"]').click();
+  await expect(code).toContainText("embed.html?");
+  await expect(page.locator('[data-testid="builder-open"]')).toHaveAttribute("href", /embed\.html\?.*look=thick/);
+  // a painted rocket carries its credit into the page
+  await page.locator('[data-testid="look-painted"]').click();
+  await expect(page.locator('[data-testid="builder-credit"]')).toBeVisible();
+  // a maker's rockets are a row of their own, and nothing scrolls sideways
+  await page.locator('[data-testid="maker-nasa"]').click();
+  await expect(page.locator('[data-testid="rocket-saturn-v"]')).toBeVisible();
+  await expect(page.locator('[data-testid="rocket-falcon-9"]')).toHaveCount(0);
+  const sideways = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(sideways).toBeLessThanOrEqual(0);
+  expect(problems).toEqual([]);
+});

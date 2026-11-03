@@ -1,0 +1,19 @@
+{
+  "title": "Uchusen Rockets",
+  "kana": "宇宙船",
+  "job": "line drawings and 3D views of rockets",
+  "pitch": {
+    "en": "Rockets drawn from sourced sizes: line drawings and painted 3D views you drop into a page, take apart and turn round, and a typed model that checks whether a rocket really goes together.",
+    "ja": "出典つきの寸法から描いたロケットです。ページに置いて、分解して、回して見られる線画と彩色した3Dビューに加え、ロケットが本当に組み合わさるかを確かめる、型付きのデータモデルを備えています。"
+  },
+  "name": {
+    "en": "Uchusen is the Japanese word 宇宙船 for spaceship.",
+    "ja": "Uchusen は、宇宙を飛ぶ乗り物を意味する日本語「宇宙船」（うちゅうせん）から取った名前です。"
+  },
+  "entries": {
+    ".": { "en": "Rockets, variants, parts and the fit check", "ja": "ロケット・型式・部品・適合チェック" },
+    "./build": { "en": "Build a mesh and a drawing", "ja": "メッシュと図面を作る" },
+    "./element": { "en": "The web components", "ja": "Webコンポーネント" },
+    "./react": { "en": "The React wrapper", "ja": "Reactラッパー" }
+  }
+}

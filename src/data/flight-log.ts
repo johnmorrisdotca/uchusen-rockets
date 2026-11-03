@@ -1,6 +1,17 @@
 // The log of real flights: which rocket flew, on what date, and how it came out, as the source's table says. Data only: what plays is `FLIGHTS` in flights.ts, the timelines. A flight is named for the variant this package has that is nearest it: its vehicles are named where the source names them, and a booster's or ship's fate is only the source's own words.
 import type { SourceId } from "./sources.ts";
 
+/**
+ * One flight from the flight log: its name, the rocket and variant that show it, the date, whether the launch succeeded, the source's own words on the outcome, and the source.
+ *
+ * @example
+ * ```ts
+ * import { FLIGHT_LOG, type LoggedFlight } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const flight: LoggedFlight | undefined = FLIGHT_LOG[0];
+ * console.log(flight?.name, flight?.launch);
+ * ```
+ */
 export interface LoggedFlight {
   id: string;
   name: string;
@@ -16,6 +27,16 @@ export interface LoggedFlight {
   source: SourceId;
 }
 
+/**
+ * The flights this package keeps a record of, each from a named source. Use `flightLogOf` for one rocket.
+ *
+ * @example
+ * ```ts
+ * import { FLIGHT_LOG } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(FLIGHT_LOG.length > 0);
+ * ```
+ */
 export const FLIGHT_LOG: readonly LoggedFlight[] = [
   { id: "falcon-1-flight-1", name: "Falcon 1, flight 1", rocket: "falcon-1", variant: "falcon-1", date: "2006-03-24", launch: "Failure", outcome: "Engine failure at T+33 seconds, and the vehicle was lost.", source: "wikipedia-falcon-1" },
   { id: "falcon-1-flight-2", name: "Falcon 1, flight 2", rocket: "falcon-1", variant: "falcon-1", date: "2007-03-21", launch: "Failure", outcome: "Reached 289 km and did not reach orbit: an oscillation of the second stage, and an early engine shutdown.", source: "wikipedia-falcon-1" },
@@ -38,5 +59,16 @@ export const FLIGHT_LOG: readonly LoggedFlight[] = [
   { id: "starship-flight-14", name: "Starship flight 14", rocket: "starship", variant: "v3", date: "2026-09-28", launch: "Success", vehicles: "Booster B21, Ship S41", outcome: "Booster: Controlled (gulf). Ship: Controlled (ocean).", source: "wikipedia-launches" },
 ];
 
-/** A rocket's flights, in order. */
+/**
+ * A rocket's flights, in order.
+ *
+ * @param rocket A rocket's id, such as `falcon-1`.
+ * @returns That rocket's logged flights, in order. It is empty for a rocket with none.
+ * @example
+ * ```ts
+ * import { flightLogOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(flightLogOf("falcon-1").map((flight) => flight.name));
+ * ```
+ */
 export const flightLogOf = (rocket: string): readonly LoggedFlight[] => FLIGHT_LOG.filter((flight) => flight.rocket === rocket);

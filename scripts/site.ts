@@ -15,14 +15,14 @@ const ALT = "Uchusen Rockets: Saturn V, Starship, the Space Shuttle, Falcon Heav
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 writeFileSync(join(site, "index.html"), readFileSync(join(root, "demo", "index.html"), "utf8").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 publishThumbnails(root, site);
-for (const file of ["demo.css", "react-check.html", "element-check.html", "embed.html"]) cpSync(join(root, "demo", file), join(site, file));
+for (const file of ["demo.css", "family.css", "react-check.html", "element-check.html", "embed.html", "builder.html"]) cpSync(join(root, "demo", file), join(site, file));
 cpSync(join(root, "dist", "assets"), join(site, "assets"), { recursive: true });
 // the realistic Earth's pictures, from the package: no wider than the demo asks for (`max-texture` in demo/earth.ts)
 const earthPictures = join(root, "node_modules", "@johnmorrisdotca", "chikyu-earth", "dist", "textures");
 mkdirSync(join(site, "textures"));
 for (const file of readdirSync(earthPictures)) if (/-(1024|2048)\.webp$/.test(file)) cpSync(join(earthPictures, file), join(site, "textures", file));
 await build({
-  entryPoints: { demo: join(root, "demo", "demo.ts"), embed: join(root, "demo", "embed.ts"), "react-check": join(root, "demo", "react-check.ts"), "element-check": join(root, "demo", "element-check.ts") },
+  entryPoints: { demo: join(root, "demo", "demo.ts"), embed: join(root, "demo", "embed.ts"), builder: join(root, "demo", "builder.ts"), "react-check": join(root, "demo", "react-check.ts"), "element-check": join(root, "demo", "element-check.ts") },
   outdir: join(site, "js"),
   bundle: true,
   splitting: true,

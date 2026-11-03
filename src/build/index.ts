@@ -11,7 +11,21 @@ import { defsOf, drawPart, perspective } from "../draw/svg.ts";
 import { bellsOf, litBells, type LitBell, pickBells, plumeLength } from "../engines.ts";
 import { type Glb, toGlb } from "./glb.ts";
 
-/** Raised when a description does not fit: its report says why. */
+/**
+ * Raised by `build` when a description does not fit. Its `report` says why, in the same words `check` gives.
+ *
+ * @param report The report of the fit check that failed.
+ * @example
+ * ```ts
+ * import { build, FitError } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * try {
+ *   build({ rocket: "starship", variant: "v3", parts: { booster: "starship-v3-ship" } });
+ * } catch (error) {
+ *   if (error instanceof FitError) console.log(error.report.issues[0]?.message);
+ * }
+ * ```
+ */
 export class FitError extends Error {
   readonly report: FitReport;
   constructor(report: FitReport) {
@@ -21,6 +35,17 @@ export class FitError extends Error {
   }
 }
 
+/**
+ * One part of a built rocket: its slot, its record, the pieces it is made of, its mesh and its bounds in metres.
+ *
+ * @example
+ * ```ts
+ * import { build, type BuiltPart } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const first: BuiltPart | undefined = build({ rocket: "falcon-9", variant: "block-5" }).parts[0];
+ * console.log(first?.slot, first?.record.name);
+ * ```
+ */
 export interface BuiltPart {
   slot: string;
   record: PartRecord;
@@ -29,6 +54,17 @@ export interface BuiltPart {
   bounds: Bounds;
 }
 
+/**
+ * What a drawing is asked for: the look, the view, what to show and whether the engines are lit. Anything left out takes its default.
+ *
+ * @example
+ * ```ts
+ * import { build, type SvgOptions } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const options: SvgOptions = { look: "thick", view: "below", show: "booster" };
+ * console.log(build({ rocket: "starship", variant: "v3" }).svg(options).startsWith("<svg"));
+ * ```
+ */
 export interface SvgOptions {
   look?: LookName;
   view?: ViewName | Angle;
@@ -37,6 +73,18 @@ export interface SvgOptions {
   engines?: boolean | Readonly<Record<string, number>>;
 }
 
+/**
+ * A rocket built from a description: the fit report, its parts, and the ways to ask for its size, where each part stands, its lit engines, a `.glb` file and a drawing.
+ *
+ * @example
+ * ```ts
+ * import { build, type Built } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const rocket: Built = build({ rocket: "starship", variant: "v3" });
+ * console.log(rocket.shows.join(", "));
+ * console.log(rocket.boundsOf("together").max);
+ * ```
+ */
 export interface Built {
   report: FitReport;
   parts: readonly BuiltPart[];
@@ -155,21 +203,58 @@ function assembled(report: FitReport): Built {
   };
 }
 
-/** What a drawing draws of a part: in a stack, what nests inside the part below is out of sight. */
+/**
+ * What a drawing draws of a part: in a stack, what nests inside the part below is out of sight.
+ *
+ * @param part A built part: its record and its pieces.
+ * @param together True when the part stands in a stack, false when it is shown alone.
+ * @returns The pieces to draw. In a stack, what nests inside the part below is left out.
+ * @example
+ * ```ts
+ * import { build, drawnPieces } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const [first] = build({ rocket: "falcon-9", variant: "block-5" }).parts;
+ * if (first) console.log(drawnPieces(first, true).length, drawnPieces(first, false).length);
+ * ```
+ */
 export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[] }, together: boolean): readonly Piece[] {
   const joint = part.record.joints.bottom?.y ?? 0;
   if (!together || joint <= 0) return part.pieces;
   return part.pieces.filter((piece) => !(piece.kind === "lathe" && piece.under && Math.max(...piece.profile.map(([, y]) => y)) <= joint + 0.01));
 }
 
-/** A rocket from a description. Throws FitError when it does not go together. */
+/**
+ * A rocket from a description. Throws FitError when it does not go together.
+ *
+ * @param description The rocket, its variant and any other part in a slot.
+ * @returns The built rocket. It throws a `FitError` when the description does not go together.
+ * @example
+ * ```ts
+ * import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const rocket = build({ rocket: "falcon-heavy" });
+ * console.log(rocket.report.label, rocket.glb().bytes.length > 1000);
+ * ```
+ */
 export function build(description: Description): Built {
   const report = check(description);
   if (!report.ok) throw new FitError(report);
   return assembled(report);
 }
 
-/** One part on its own, by its id. */
+/**
+ * One part on its own, by its id.
+ *
+ * @param id A part's id, as `PART_ENTRIES` lists it.
+ * @returns The part's record and bounds, a function for its `.glb` and one for its drawing. It throws for an id that is not a part.
+ * @example
+ * ```ts
+ * import { buildPart } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * const raptor = buildPart("raptor-vacuum");
+ * console.log(raptor.record.name, raptor.bounds.max);
+ * ```
+ */
 export function buildPart(id: string): { record: PartRecord; bounds: Bounds; glb: () => Glb; svg: (options?: SvgOptions) => string } {
   const entry = partEntry(id);
   if (!entry) throw new Error(`There is no part "${id}".`);

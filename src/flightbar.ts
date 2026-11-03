@@ -26,6 +26,18 @@ a { color: inherit; }
 
 const sheet: { made: CSSStyleSheet | null } = { made: null };
 
+/**
+ * The `<uchusen-flight>` element: a play button, a slider and the phase's name for a rocket's flight. Its `for` attribute is the id of the `<uchusen-rocket>` it drives. A variant with no flight says so.
+ *
+ * @example
+ * ```ts no-run
+ * import { UchusenFlight } from "@johnmorrisdotca/uchusen-rockets/element";
+ *
+ * const flight: UchusenFlight = document.createElement("uchusen-flight") as UchusenFlight;
+ * flight.setAttribute("for", "rocket");
+ * document.body.append(flight);
+ * ```
+ */
 export class UchusenFlight extends HTMLBase {
   static readonly observedAttributes = ["for"];
   private rocket: UchusenRocket | null = null;

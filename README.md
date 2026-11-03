@@ -12,7 +12,7 @@ Uchūsen means "spaceship". Each rocket comes in every variant a source document
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
 </p>
 
-<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/flight.md">Lit engines and flights</a> · <a href="./docs/embed.md">Use one on your site</a> · <a href="./docs/assets.md">Assets</a></p>
+<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/flight.md">Lit engines and flights</a> · <a href="./docs/embed.md">Use one on your site</a> · <a href="./docs/assets.md">Assets</a> · <a href="./docs/guides/getting-started.md">Guides</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/builder.html">Code builder</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/docs/">Docs site</a></p>
 
 <p align="center"><img alt="Block 3 of the rocket as a painted 3D view, stainless steel with black tiles, beside its controls and its sizes, each with a source." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg" width="820"></p>
 
@@ -25,7 +25,7 @@ Uchūsen means "spaceship". Each rocket comes in every variant a source document
 
 <p align="center"><img alt="Every rocket at one scale: Starship, Falcon 9, Falcon 9 with Dragon 2, Falcon Heavy, Grasshopper and Dragon 2, as line drawings beside a ruler, a building and a person." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/family.jpg" width="820"></p>
 
-## One minute
+## In 30 seconds
 
 ```sh
 npm install @johnmorrisdotca/uchusen-rockets three
@@ -42,6 +42,54 @@ npm install @johnmorrisdotca/uchusen-rockets three
 ```
 
 That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin. `engines="on"` lights each engine at full thrust, in the painted look and as a drawn flame in the line looks, and a reader who asked for reduced motion has them off. A flame's length and its shock diamonds are a picture, not a measurement. [A flight](docs/flight.md) plays each phase with the engines that burn in it, from published timelines. With no WebGL, under Save-Data, or on any failure, the drawing stays.
+
+## Who it is for
+
+- **A developer who wants a rocket on a page** with one tag, no build step, and a drawing that is there before any 3D has loaded.
+- **A writer or teacher** who needs a rocket to scale, beside a person and a building, with every size traceable to a source.
+- **A maker of tools** who wants rockets as data: variants, sourced sizes, parts that carry their own joints, and a check that says whether a mix goes together.
+- **Anyone who must credit what they show**: a painted rocket's licence travels with it, in every form it is copied.
+
+## Features
+
+- Twenty-three kinds of thing, from Starship to the Hubble Space Telescope, each in every variant a source documents, with its own sizes.
+- Three looks (`line`, `thick`, `painted`), five views, together, apart and each part alone, for every one of them.
+- A drawing made by code, and a 3D view that takes over without a jump. With no WebGL, under Save-Data or on any failure, the drawing stays.
+- Lit engines at full thrust, and flights played phase by phase from published timelines.
+- `check` and `build`: a typed part record, a fit check, a `.glb` mesh and an SVG, in Node or a browser, with no three.js.
+- `<uchusen-lineup>`: rockets at one scale with a ruler, a person and a building.
+- Six ways to copy a rocket into your own page, with the credit written in.
+- A strict content security policy is enough. No network request but the painted model you ask for.
+
+## Use it in your project
+
+```sh
+npm install @johnmorrisdotca/uchusen-rockets three
+```
+
+```ts no-run
+import "@johnmorrisdotca/uchusen-rockets/element";
+```
+
+Import the element once, anywhere in your client code, and use the tag. `three` is an optional peer dependency, loaded only for a 3D view. Copy `node_modules/@johnmorrisdotca/uchusen-rockets/dist/assets` to a folder your site serves and call `setAssetBase("/that/folder/")` if you want painted models. [Getting started](docs/guides/getting-started.md) and [React and other frameworks](docs/guides/react-and-frameworks.md) go through it step by step.
+
+## Use it anywhere
+
+A page with no bundler loads the element from a CDN, with an import map for three.js:
+
+```html
+<script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" } }
+</script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/uchusen-rockets@0/dist/element.js"></script>
+<uchusen-rocket rocket="falcon-heavy" look="thick" view="below"></uchusen-rocket>
+```
+
+A page that cannot run script uses an iframe of the embed page:
+
+```html
+<iframe src="https://johnmorrisdotca.github.io/uchusen-rockets/embed.html?rocket=starship&variant=v3&look=line" title="Starship Block 3" style="width:100%;max-width:480px;aspect-ratio:3 / 4;border:0"></iframe>
+```
 
 ## Put one on your own site
 
@@ -75,6 +123,10 @@ embedCode({ rocket: "starship", variant: "v3", look: "line" }, "element").includ
 | `view` | `three-quarter`, `front`, `back`, `side`, `below` |
 
 Changing `look` keeps the angle. Changing `show` is an animated move, and a cut under reduced motion. Each part alone fills the frame and has its own listed size. Every look works for every variant and every choice of parts. Front is the windward, tiled side; back is the steel side.
+
+<p align="center"><img alt="The code builder: a row of makers, rockets, variants, parts, looks and views beside the rocket, and the code to copy below." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/builder.jpg" width="820"></p>
+
+<p align="center"><img alt="The demo on a phone, the rocket on a screen 390 pixels wide." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/phone.jpg" width="320"></p>
 
 ## The rockets
 
@@ -170,7 +222,14 @@ import { UchusenRocket } from "@johnmorrisdotca/uchusen-rockets/react";
 
 ## Licences, credits and a word on trademarks
 
-The code, the code-made meshes and the drawings are under the MIT licence. **The painted models are not: they stay under Creative Commons Attribution 4.0, or public domain where the row says so, and using them means crediting them.** `check(description).credits` says which belong to a rocket. **Starbase's coordinates and outlines, its map heights and the tower's 13 m footprint are © OpenStreetMap contributors, under ODbL 1.0, not MIT** (https://www.openstreetmap.org/copyright).
+The code, the code-made meshes and the drawings are under the MIT licence. **The painted models are not: they stay under Creative Commons Attribution 4.0, or public domain where the row says so, and using them means crediting them.** `check(description).credits` says which belong to a rocket.
+
+```ts
+import { check } from "@johnmorrisdotca/uchusen-rockets";
+
+check({ rocket: "starship", variant: "v3" }).credits[0].licence; // "CC BY 4.0"
+```
+ **Starbase's coordinates and outlines, its map heights and the tower's 13 m footprint are © OpenStreetMap contributors, under ODbL 1.0, not MIT** (https://www.openstreetmap.org/copyright).
 
 | Painted | Title | Creator | Source | Changed |
 | --- | --- | --- | --- | --- |
@@ -200,9 +259,185 @@ All but Discovery and NASA's are under [CC BY 4.0](https://creativecommons.org/l
 
 **No mesh or drawing carries a logo, a wordmark or a flag.** Rocket names appear only as plain descriptive words. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. [NOTICE.md](NOTICE.md) names each source and what was taken from it.
 
-## Still to come
+## Examples
+
+Every `ts` block in this README and in the guides runs against the built package (`pnpm test:readme`).
+
+```ts
+import { check, variantOf } from "@johnmorrisdotca/uchusen-rockets";
+
+const falcon = variantOf("falcon-9", "block-5");
+falcon.facts.height.value; // 69.8
+check({ rocket: "falcon-9", variant: "block-5" }).ok; // true
+check({ rocket: "falcon-9", variant: "block-5" }).custom; // false
+```
+
+```ts
+import { showsOf, variantOf } from "@johnmorrisdotca/uchusen-rockets";
+
+showsOf(variantOf("falcon-9", "block-5").slots).includes("apart"); // true
+```
+
+```ts
+import { lineupSvg } from "@johnmorrisdotca/uchusen-rockets/build";
+
+const picture = lineupSvg({ items: ["starship:v3", "falcon-9:block-5", "person"], unit: 4, ruler: true, labels: true });
+picture.items.length; // 3
+picture.svg.startsWith("<svg"); // true
+```
+
+```ts
+import { cleanLook, cleanView } from "@johnmorrisdotca/uchusen-rockets";
+
+cleanLook("shiny"); // "line"
+cleanView("below"); // "below"
+```
+
+Anything from outside is treated as text: an attribute that is not in its list falls back to the default and nothing else.
+
+## The code builder
+
+[The code builder](https://johnmorrisdotca.github.io/uchusen-rockets/builder.html) is one screen: choose the maker, the rocket, the variant, the parts, the look, the view and the engines, see the rocket, and copy the code for any of the six ways. A painted rocket's credit is under the code. It is built from `ROCKETS`, `showsOf`, `embedCode` and `paintedCredit`, so it offers every rocket the package has, as it gains them.
+
+## Lit engines and flights
+
+```html
+<uchusen-rocket id="rocket" rocket="falcon-9" variant="block-5" look="painted" engines="on"></uchusen-rocket>
+<uchusen-flight for="rocket"></uchusen-flight>
+```
+
+<p align="center"><img alt="Falcon 9 painted, seen from below with its engines lit." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/engines.jpg" width="360"></p>
+
+<p align="center"><img alt="The flight bar: play, back, a slider and next, what happens at hot staging and a chart of the engines that burn." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/flight.jpg" width="720"></p>
+
+`engines="on"` lights each engine that shows, and a flight lights only the engines that burn in each phase, from a published timeline. How the picture moves between phases, and a flame's length, is illustrative; the times and counts are sourced. [The guide](docs/guides/engines-and-flights.md) has the details.
+
+## NASA's models
+
+The Apollo lunar module, Apollo docked to Soyuz, Gemini, Mercury, Jupiter-C, the Space Shuttle, the International Space Station and the Hubble Space Telescope are painted by NASA's own public-domain models, each with its marks removed and its sizes set from a source.
+
+<p align="center">
+  <img alt="The Apollo lunar module painted from NASA's model." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/lunar-module.jpg" width="300">
+  <img alt="The Space Shuttle stacked for launch, painted from NASA's models." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/shuttle.jpg" width="300">
+</p>
+
+## API
+
+The reference is a site, made from the source's own doc comments: every export has a summary, its parameters, what it returns, and an example that runs when the site is built. [Open the reference](https://johnmorrisdotca.github.io/uchusen-rockets/docs/).
+
+```ts
+import { ROCKETS, PART_ENTRIES, SOURCES, MODEL_CREDITS } from "@johnmorrisdotca/uchusen-rockets";
+
+Object.keys(ROCKETS).length > 20; // true
+PART_ENTRIES.length > 100; // true
+Object.keys(SOURCES).length > 20; // true
+Object.keys(MODEL_CREDITS).length > 10; // true
+```
+
+<p align="center"><img alt="The documentation site: a search box, the entry points, the guides in sections, and every export with its example." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/docs-site.jpg" width="720"></p>
+
+## Guides
+
+Each guide has a Japanese twin in [docs/guides/ja](docs/guides/ja).
+
+| Guide | What it is for |
+| --- | --- |
+| [Getting started](docs/guides/getting-started.md) | A rocket on a page in ten minutes |
+| [Looks, views and parts](docs/guides/looks-views-and-parts.md) | The three choices that change what you see |
+| [Build a rocket from parts](docs/guides/build-from-parts.md) | Part records, the fit check, `build`, the builder |
+| [Lit engines and flights](docs/guides/engines-and-flights.md) | Engines at full thrust, flights, what is sourced |
+| [Rockets to scale](docs/guides/scale-lineups.md) | `<uchusen-lineup>` and `lineupSvg` |
+| [Put a rocket on your own site](docs/guides/embed-on-your-site.md) | Six ways, and the credit |
+| [React and other frameworks](docs/guides/react-and-frameworks.md) | React, Vue, Svelte, Angular |
+| [Ready files and 3D models](docs/guides/assets-and-3d-files.md) | The `.glb` and `.svg` files |
+| [Variants and sourced sizes](docs/guides/variants-and-sources.md) | Why a figure names its source |
+| [Licences, credits and trademarks](docs/guides/licences-and-credits.md) | What is MIT, CC BY, public domain, ODbL |
+| [Architecture](docs/guides/architecture.md) | How the layers fit |
+| [Troubleshooting](docs/guides/troubleshooting.md) | Why the 3D view or the model is missing |
+| [Upgrading](docs/guides/upgrading.md) | What to look for between versions |
+
+## Limits
+
+- A rocket is only as good as its sources. A figure no source gives is blank, never estimated, and a blank is shown as one.
+- A flame's length and its shock diamonds, how parts move between flight phases, smoke and the ground falling away are pictures, not measurements.
+- A part with no licensed model is painted by this package's own code from photographs and sizes. It is a likeness, not a scan.
+- A flight exists only for the variants a published timeline covers. A custom build has none.
+- A painted model is up to 8 MB and is fetched only when asked for. Code-made meshes stay under 600 KB and drawings under 80 KB.
+- There is no logo, wordmark or flag on anything, so a rocket is never "the real livery".
+
+```ts
+import { variantOf } from "@johnmorrisdotca/uchusen-rockets";
+
+variantOf("starship", "2019").facts.diameter.value; // null
+```
+
+## Accessibility
+
+- The element has an accessible name from its `label` attribute, or from the fit report's label (such as "Block 3 (V3)") when there is none. The 3D view's canvas says how to turn it.
+- A reader who asked for reduced motion gets no spin, no flames, no played flight and a cut instead of an animated move. The slider and charts still work.
+- Turning works by drag, touch and the keyboard: the arrow keys turn it, `+` and `-` zoom, Home puts it back.
+- The demo's controls are at least 44 pixels tall and work with a keyboard.
+
+```html
+<uchusen-rocket rocket="starship" variant="v3" label="Starship Block 3, taken apart" show="apart"></uchusen-rocket>
+```
+
+## Browser and runtime support
+
+- Using the package needs Node 22 or later. Working on it needs 22.18 or later.
+- In a browser, any current one. The 3D view needs WebGL; without it the drawing stays.
+- The test suite runs the demo in Chromium and WebKit at a phone's width and a desk's, and the packed package on Linux, macOS and Windows, on Node 22 and 24.
+- `three` `>=0.170.0` and `react` `>=18` are optional peer dependencies.
+
+## Languages
+
+The documentation is in English and Japanese: each guide in [docs/guides](docs/guides) has a twin in [docs/guides/ja](docs/guides/ja), and the documentation site switches between them. The rockets' own names are plain descriptive words and are the same in both.
+
+## Architecture
+
+The data is typed once. A part is a table of numbers: its real size in metres and the joints it mates at. A mesh and a drawing come from the same pieces, so they cannot disagree with each other or with the data. The root and `build` entries import neither three.js nor the DOM; the element loads three.js only for a 3D view.
+
+```ts
+import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+
+const a = build({ rocket: "falcon-9", variant: "block-5" }).glb().bytes;
+const b = build({ rocket: "falcon-9", variant: "block-5" }).glb().bytes;
+a.length === b.length; // true
+```
+
+A mesh is a pure function of its description: the same description gives the same bytes. [Architecture](docs/guides/architecture.md) has the layers.
+
+## Development
+
+```sh
+pnpm install
+pnpm check          # lint, types, tests, the build and the packed package
+pnpm test:readme    # run every example of the README, the docs and the guides
+pnpm docs:check     # the reference site's checks: every export documented, every example run
+pnpm test:demo      # the demo in a real browser
+pnpm dev            # the demo on http://127.0.0.1:7900/uchusen-rockets/
+pnpm screenshots    # the pictures in docs/images
+```
+
+## Contributing
+
+Bug reports, ideas and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). The rules that matter most: a figure names its source or is blank, no logos or marks, a mesh is a pure function of its description, and anything from outside is text.
+
+## Changes
+
+[CHANGELOG.md](CHANGELOG.md) lists every release with its date.
+
+## Roadmap
 
 `PLANNED_ROCKETS` lists rockets with sourced facts and no shape yet: Vulcan Centaur and Ariane 6.
+
+```ts
+import { PLANNED_ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
+
+PLANNED_ROCKETS.map((rocket) => rocket.id).length > 0; // true
+```
+
+A rocket goes in only when a source documents it.
 
 ## The rest
 

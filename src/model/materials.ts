@@ -2,6 +2,17 @@
 // painted look and in the two line looks. Colours are sRGB.
 import type { FillName } from "../looks.ts";
 
+/**
+ * One material: its colour, how metal and how rough it is in a 3D view, and the fill group it takes in a drawing.
+ *
+ * @example
+ * ```ts
+ * import { MATERIALS, type MaterialSpec } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const steel: MaterialSpec = MATERIALS.steel;
+ * console.log(steel.color, steel.fill);
+ * ```
+ */
 export interface MaterialSpec {
   color: string;
   metal: number;
@@ -10,6 +21,16 @@ export interface MaterialSpec {
   fill: FillName;
 }
 
+/**
+ * Every material the meshes use, by name. One naming scheme serves every source.
+ *
+ * @example
+ * ```ts
+ * import { MATERIALS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(Object.keys(MATERIALS).length > 5);
+ * ```
+ */
 export const MATERIALS = {
   steel: { color: "#c3c7cb", metal: 1, rough: 0.3, fill: "hull" },
   tile: { color: "#101114", metal: 0, rough: 0.62, fill: "tile" },
@@ -37,4 +58,15 @@ export const MATERIALS = {
   red: { color: "#a4322b", metal: 0.1, rough: 0.5, fill: "metal" },
 } as const satisfies Record<string, MaterialSpec>;
 
+/**
+ * The name of one material in `MATERIALS`.
+ *
+ * @example
+ * ```ts
+ * import type { MaterialName } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const name: MaterialName = "steel";
+ * console.log(name);
+ * ```
+ */
 export type MaterialName = keyof typeof MATERIALS;

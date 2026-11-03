@@ -39,7 +39,9 @@ pnpm test           # the unit tests
 pnpm test:demo      # build the site and play it in a real browser at a phone's width and a desk's
 pnpm test:freeze    # only the freeze test: what the page asks of the machine, in software, at a desk's width
 pnpm test:package   # pack it as npm does, install it in an empty project, import every entry
-pnpm test:readme    # run every example of the README and the docs
+pnpm test:readme    # run every example of the README, the docs and the guides
+pnpm docs:check     # the reference site's checks: every export has a doc comment with an example, every guide has its Japanese twin's links
+pnpm docs:site      # make the documentation site into site/docs
 pnpm dev            # the demo on http://127.0.0.1:7900/uchusen-rockets/
 pnpm assets         # make dist/assets again
 pnpm models         # make models/ from the source models, by hand

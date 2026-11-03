@@ -24,8 +24,30 @@ import { MADE_BY, type MakerId } from "./data/makers.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
 
+/**
+ * Whether a rocket is `built` (it has a shape) or `planned` (it has facts and no shape yet).
+ *
+ * @example
+ * ```ts
+ * import { ROCKETS, type RocketStatus } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const status: RocketStatus | undefined = ROCKETS["starship"]?.status;
+ * console.log(status);
+ * ```
+ */
 export type RocketStatus = "built" | "planned";
 
+/**
+ * One rocket: its id and name, its variants, its default variant, the group it is listed under and who made it.
+ *
+ * @example
+ * ```ts
+ * import { ROCKETS, type RocketEntry } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const starship: RocketEntry | undefined = ROCKETS["starship"];
+ * console.log(starship?.name, starship?.variants.map((variant) => variant.id));
+ * ```
+ */
 export interface RocketEntry {
   id: string;
   name: string;
@@ -38,7 +60,17 @@ export interface RocketEntry {
   madeBy: Figure<string>;
 }
 
-/** A rocket on the list with no mesh yet: its name and the sourced facts to build it from. */
+/**
+ * A rocket on the list with no mesh yet: its name and the sourced facts to build it from.
+ *
+ * @example
+ * ```ts
+ * import { PLANNED_ROCKETS, type PlannedRocket } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const planned: PlannedRocket | undefined = PLANNED_ROCKETS[0];
+ * console.log(planned?.name);
+ * ```
+ */
 export interface PlannedRocket {
   id: string;
   name: string;
@@ -49,6 +81,16 @@ export interface PlannedRocket {
   source: SourceId;
 }
 
+/**
+ * Every rocket that has a shape, by id, each with its variants. Add a rocket here and the element, the drawing, the fit check and the demo all read it.
+ *
+ * @example
+ * ```ts
+ * import { ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(Object.keys(ROCKETS).slice(0, 6));
+ * ```
+ */
 export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   starship: { id: "starship", name: "Starship", status: "built", ...MADE_BY["starship"], variants: STARSHIP_VARIANTS, defaultVariant: "v3" },
   "falcon-9": { id: "falcon-9", name: "Falcon 9", status: "built", ...MADE_BY["falcon-9"], variants: FALCON_9_VARIANTS, defaultVariant: "block-5" },
@@ -77,20 +119,66 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
 
 const fig = (value: number, source: SourceId): Figure => ({ value, source });
 
+/**
+ * Rockets with sourced facts and no shape yet.
+ *
+ * @example
+ * ```ts
+ * import { PLANNED_ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(PLANNED_ROCKETS.map((rocket) => rocket.name));
+ * ```
+ */
 export const PLANNED_ROCKETS: readonly PlannedRocket[] = [
   { id: "vulcan-centaur", name: "Vulcan Centaur", status: "planned", height: fig(61.6, "wikipedia-vulcan"), diameter: fig(5.4, "wikipedia-vulcan"), firstFlight: { value: "2024-01-08", source: "wikipedia-vulcan" }, source: "wikipedia-vulcan" },
   { id: "ariane-6", name: "Ariane 6", status: "planned", height: fig(63, "wikipedia-ariane-6"), diameter: fig(5.4, "wikipedia-ariane-6"), firstFlight: { value: "2024-07-09", source: "wikipedia-ariane-6" }, source: "wikipedia-ariane-6" },
 ];
 
+/**
+ * Finds a rocket's variant, with its sourced sizes.
+ *
+ * @param rocket A rocket's id.
+ * @param id A variant's id. Left out, null or undefined: the rocket's default variant.
+ * @returns The variant, or undefined when the rocket or the variant is not known.
+ * @example
+ * ```ts
+ * import { variantOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const v3 = variantOf("starship", "v3");
+ * console.log(v3?.facts.height.value, variantOf("starship", "v99"));
+ * ```
+ */
 export function variantOf(rocket: string, id?: string | null): Variant | undefined {
   const entry = Object.hasOwn(ROCKETS, rocket) ? ROCKETS[rocket] : undefined;
   return entry?.variants.find((variant) => variant.id === (id ?? entry.defaultVariant));
 }
 
-/** A part's name for a rocket's slot in a variant. */
+/**
+ * A part's name for a rocket's slot in a variant.
+ *
+ * @param rocket A rocket's id.
+ * @param variant A variant's id.
+ * @param slot A slot name.
+ * @returns The id of the part that stands in that slot.
+ * @example
+ * ```ts
+ * import { partIdOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(partIdOf("starship", "v3", "booster"));
+ * ```
+ */
 export const partIdOf = (rocket: string, variant: string, slot: string): string => variantOf(rocket, variant)?.partIds?.[slot] ?? `${rocket}-${variant}-${slot}`;
 
-/** What to call a slot. */
+/**
+ * What to call a slot.
+ *
+ * @example
+ * ```ts
+ * import { SLOT_NAMES } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(SLOT_NAMES["booster"]);
+ * ```
+ */
 export const SLOT_NAMES: Readonly<Record<string, string>> = {
   booster: "Super Heavy",
   ship: "Ship",

@@ -1,23 +1,113 @@
 // Where the camera stands. One rule for the drawing and the 3D view, so the drawing turns into the 3D view without a jump. Pure, in metres.
 
+/**
+ * Three numbers: x, y and z. Y is up and the windward side faces +Z, in metres.
+ *
+ * @example
+ * ```ts
+ * import type { Vec3 } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const origin: Vec3 = [0, 0, 0];
+ * console.log(origin);
+ * ```
+ */
 export type Vec3 = [number, number, number];
 
-/** The camera's field of view, in degrees, top to bottom. Narrow, because a rocket is long. */
+/**
+ * The camera's field of view, in degrees, top to bottom. Narrow, because a rocket is long.
+ *
+ * @example
+ * ```ts
+ * import { FOV_DEG } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(FOV_DEG);
+ * ```
+ */
 export const FOV_DEG = 24;
-/** The picture's shape. */
+/**
+ * The width of the picture a drawing is made in, in drawing units.
+ *
+ * @example
+ * ```ts
+ * import { PICTURE_W, PICTURE_H } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(PICTURE_W, PICTURE_H);
+ * ```
+ */
 export const PICTURE_W = 480;
+/**
+ * The height of the picture a drawing is made in, in drawing units.
+ *
+ * @example
+ * ```ts
+ * import { PICTURE_H } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(PICTURE_H);
+ * ```
+ */
 export const PICTURE_H = 640;
 
+/**
+ * The names of the views, in the order the demo lists them: `three-quarter`, `front`, `back`, `side` and `below`.
+ *
+ * @example
+ * ```ts
+ * import { VIEW_NAMES } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(VIEW_NAMES.join(", "));
+ * ```
+ */
 export const VIEW_NAMES = ["three-quarter", "front", "back", "side", "below"] as const;
+/**
+ * The name of one view in `VIEW_NAMES`.
+ *
+ * @example
+ * ```ts
+ * import type { ViewName } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const view: ViewName = "below";
+ * console.log(view);
+ * ```
+ */
 export type ViewName = (typeof VIEW_NAMES)[number];
+/**
+ * The view used when none is named or the name is not a view: `three-quarter`.
+ *
+ * @example
+ * ```ts
+ * import { DEFAULT_VIEW } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(DEFAULT_VIEW);
+ * ```
+ */
 export const DEFAULT_VIEW: ViewName = "three-quarter";
 
-/** An angle to look from: `az` degrees round from the windward side towards +X, `el` degrees above the horizon. Front is the windward, tiled side; back is the steel side. */
+/**
+ * An angle to look from: `az` degrees round from the windward side towards +X, `el` degrees above the horizon. Front is the windward, tiled side; back is the steel side.
+ *
+ * @example
+ * ```ts
+ * import { VIEWS, type Angle } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const angle: Angle = VIEWS.back;
+ * console.log(angle);
+ * ```
+ */
 export interface Angle {
   az: number;
   el: number;
 }
 
+/**
+ * The angle of each named view.
+ *
+ * @example
+ * ```ts
+ * import { VIEWS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(VIEWS.front, VIEWS.below);
+ * ```
+ */
 export const VIEWS: Readonly<Record<ViewName, Angle>> = {
   "three-quarter": { az: 32, el: 9 },
   front: { az: 0, el: 3 },
@@ -26,11 +116,33 @@ export const VIEWS: Readonly<Record<ViewName, Angle>> = {
   below: { az: 24, el: -70 },
 };
 
+/**
+ * A value from outside as a view's name.
+ *
+ * @param value Anything.
+ * @returns The name if it is one of the views, and `three-quarter` for anything else.
+ * @example
+ * ```ts
+ * import { cleanView } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(cleanView("side"), cleanView("sideways"), cleanView(42));
+ * ```
+ */
 export const cleanView = (value: unknown): ViewName => ((VIEW_NAMES as readonly unknown[]).includes(value) ? (value as ViewName) : DEFAULT_VIEW);
 
 export const deg = (d: number) => (d * Math.PI) / 180;
 
-/** What the family's view controls report: the turn and tip in degrees, the zoom (1 is the whole rocket in the picture) and the pan in pixels. */
+/**
+ * What the family's view controls report: the turn and tip in degrees, the zoom (1 is the whole rocket in the picture) and the pan in pixels.
+ *
+ * @example
+ * ```ts
+ * import type { ViewChoice } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const choice: ViewChoice = { yaw: 20, tilt: -5, zoom: 1, panX: 0, panY: 0 };
+ * console.log(choice);
+ * ```
+ */
 export interface ViewChoice {
   yaw: number;
   tilt: number;
@@ -39,17 +151,52 @@ export interface ViewChoice {
   panY: number;
 }
 
-/** What the family's view controls choose: the turn and tip, in degrees, from a base angle. Dragging right makes `yaw` larger, which carries the camera the other way round; `tilt` larger tips the top away, which lowers the camera. */
+/**
+ * What the family's view controls choose: the turn and tip, in degrees, from a base angle. Dragging right makes `yaw` larger, which carries the camera the other way round; `tilt` larger tips the top away, which lowers the camera.
+ *
+ * @param base The angle to turn from.
+ * @param yaw Degrees turned round.
+ * @param tilt Degrees tipped up or down.
+ * @returns The new angle.
+ * @example
+ * ```ts
+ * import { turnedBy, VIEWS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(turnedBy(VIEWS.front, 30, 10));
+ * ```
+ */
 export function turnedBy(base: Angle, yaw: number, tilt: number): Angle {
   return { az: base.az - yaw, el: Math.min(87, Math.max(-87, base.el - tilt)) };
 }
 
-/** The unit vector from what is looked at towards the camera. */
+/**
+ * The unit vector from what is looked at towards the camera.
+ *
+ * @param angle The angle to look from.
+ * @returns A unit vector.
+ * @example
+ * ```ts
+ * import { directionOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(directionOf({ az: 0, el: 0 }));
+ * ```
+ */
 export function directionOf({ az, el }: Angle): Vec3 {
   const c = Math.cos(deg(el));
   return [c * Math.sin(deg(az)), Math.sin(deg(el)), c * Math.cos(deg(az))];
 }
 
+/**
+ * Where the camera stands: the point it looks at, its position and its distance from that point, in metres.
+ *
+ * @example
+ * ```ts
+ * import { frameFor, type Framing } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const framing: Framing = frameFor([-5, 0, -5], [5, 100, 5], { az: 30, el: 15 }, 480 / 640);
+ * console.log(framing.distance > 0);
+ * ```
+ */
 export interface Framing {
   target: Vec3;
   position: Vec3;
@@ -63,7 +210,18 @@ const unit = (a: Vec3): Vec3 => {
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
-/** The camera's own axes for looking along `direction`, with up as near to +Y as it can be. */
+/**
+ * The camera's own axes for looking along `direction`, with up as near to +Y as it can be.
+ *
+ * @param direction The direction from the target to the camera.
+ * @returns The camera's right, up and forward axes.
+ * @example
+ * ```ts
+ * import { axesOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(axesOf([0, 0, 1]));
+ * ```
+ */
 export function axesOf(direction: Vec3): { right: Vec3; up: Vec3; forward: Vec3 } {
   const forward: Vec3 = [-direction[0], -direction[1], -direction[2]];
   const near = Math.abs(forward[1]) > 0.999;
@@ -71,7 +229,23 @@ export function axesOf(direction: Vec3): { right: Vec3; up: Vec3; forward: Vec3 
   return { right, up: cross(right, forward), forward };
 }
 
-/** The nearest camera that holds the whole of `min` to `max` in a picture `aspect` wide for 1 tall, from `angle`. */
+/**
+ * The nearest camera that holds the whole of `min` to `max` in a picture `aspect` wide for 1 tall, from `angle`.
+ *
+ * @param min The lowest corner of the box to hold.
+ * @param max The highest corner.
+ * @param angle The angle to look from.
+ * @param aspect The picture's width over its height.
+ * @param margin Room left round the box, as a multiple. Defaults to 1.08.
+ * @returns The camera that holds the whole box.
+ * @example
+ * ```ts
+ * import { frameFor, VIEWS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const framing = frameFor([-4.5, 0, -4.5], [4.5, 124, 4.5], VIEWS.front, 480 / 640);
+ * console.log(framing.target, framing.distance.toFixed(0));
+ * ```
+ */
 export function frameFor(min: Vec3, max: Vec3, angle: Angle, aspect: number, margin = 1.08): Framing {
   const target: Vec3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2];
   const direction = directionOf(angle);

@@ -36,6 +36,17 @@ const fitsOn = (part: PartRecord, below: PartRecord | undefined): boolean => {
 
 const REAL_PARTS = (): readonly PartRecord[] => PART_ENTRIES.map(({ record }) => record).filter((record) => record.trueTo.length > 0);
 
+/**
+ * One part a row of the builder offers: its id, its name and the rocket it comes from.
+ *
+ * @example
+ * ```ts
+ * import { builderState, type BuilderOption } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const first: BuilderOption | undefined = builderState().rows[0]?.options[0];
+ * console.log(first);
+ * ```
+ */
 export interface BuilderOption {
   id: string;
   name: string;
@@ -43,6 +54,17 @@ export interface BuilderOption {
   rocket: string;
 }
 
+/**
+ * One row of the builder, from the bottom: what it chooses, the parts it offers, the one chosen, and whether the builder made the choice because only one part fits.
+ *
+ * @example
+ * ```ts
+ * import { builderState, type BuilderRow } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const row: BuilderRow | undefined = builderState().rows[0];
+ * console.log(row?.label, row?.chosen, row?.auto);
+ * ```
+ */
 export interface BuilderRow {
   /** What this row chooses. */
   label: string;
@@ -52,6 +74,17 @@ export interface BuilderRow {
   auto: boolean;
 }
 
+/**
+ * What the builder shows for a set of picks: its rows, the description they make and the fit report for it.
+ *
+ * @example
+ * ```ts
+ * import { builderState, type BuilderState } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const state: BuilderState = builderState();
+ * console.log(state.rows.length, state.report.ok);
+ * ```
+ */
 export interface BuilderState {
   rows: readonly BuilderRow[];
   description: Description;
@@ -60,7 +93,20 @@ export interface BuilderState {
 
 const optionOf = (part: PartRecord): BuilderOption => ({ id: part.id, name: part.name, rocket: ROCKETS[part.rocket]?.name ?? part.rocket });
 
-/** The rows for these picks, from the bottom. A pick that is not offered, for a change lower down or a hostile value, gives way to the part that belongs with what is below, or else the first that fits. */
+/**
+ * The rows for these picks, from the bottom. A pick that is not offered, for a change lower down or a hostile value, gives way to the part that belongs with what is below, or else the first that fits.
+ *
+ * @param picks The part ids chosen so far, row by row from the bottom. Leave it out to start.
+ * @returns The rows to show, the description they make and its fit report.
+ * @example
+ * ```ts
+ * import { builderState } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const start = builderState();
+ * const next = builderState([start.rows[0]?.chosen ?? ""]);
+ * console.log(next.description, next.report.label);
+ * ```
+ */
 export function builderState(picks: readonly string[] = []): BuilderState {
   const every = framesOf();
   const parts = REAL_PARTS();

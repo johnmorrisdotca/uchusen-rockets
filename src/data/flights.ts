@@ -2,7 +2,17 @@
 import { blank, type Figure } from "./types.ts";
 import type { SourceId } from "./sources.ts";
 
-/** How a part stands in the picture at a phase. A picture, not a measurement: `dx` and `dy` are in heights of the whole vehicle. */
+/**
+ * How a part stands in the picture at a phase. A picture, not a measurement: `dx` and `dy` are in heights of the whole vehicle.
+ *
+ * @example
+ * ```ts
+ * import type { PartPose } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const pose: PartPose = { dx: 0.2, dy: -0.1, pitch: 12 };
+ * console.log(pose);
+ * ```
+ */
 export interface PartPose {
   dx?: number;
   dy?: number;
@@ -14,12 +24,33 @@ export interface PartPose {
   gone?: boolean;
 }
 
-/** How many engines of a part burn. `drawn` says how many flames to draw where no page says how many burned. */
+/**
+ * How many engines of a part burn. `drawn` says how many flames to draw where no page says how many burned.
+ *
+ * @example
+ * ```ts
+ * import type { FlightBurn } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const burn: FlightBurn = { engines: { value: null, source: null, brief: "not given" }, drawn: 9 };
+ * console.log(burn);
+ * ```
+ */
 export interface FlightBurn {
   engines: Figure;
   drawn?: number;
 }
 
+/**
+ * One phase of a flight: its id and name, what happens, when (a figure with its source), how many engines burn, how each part stands, and how far the ground has fallen away. The poses and the smoke are a picture, not a measurement.
+ *
+ * @example
+ * ```ts
+ * import { FLIGHTS, type FlightPhase } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const phase: FlightPhase | undefined = FLIGHTS[0]?.phases[0];
+ * console.log(phase?.name, phase?.what);
+ * ```
+ */
 export interface FlightPhase {
   id: string;
   name: string;
@@ -39,6 +70,17 @@ export interface FlightPhase {
   speed?: Figure<string>;
 }
 
+/**
+ * A flight, from a published timeline: its rocket and variant, whose timing it is, its source and its phases in order.
+ *
+ * @example
+ * ```ts
+ * import { FLIGHTS, type Flight } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const flight: Flight | undefined = FLIGHTS[0];
+ * console.log(flight?.name, flight?.phases.length);
+ * ```
+ */
 export interface Flight {
   id: string;
   rocket: string;
@@ -153,6 +195,16 @@ const CRS16 = "sfn-crs-16" as const;
 
 const lower = (dy: number, extra: PartPose = {}): PartPose => ({ dx: -0.26, dy, ...extra });
 
+/**
+ * Every flight the package can play, one for each variant that has a timeline. Use `flightOf` to find one.
+ *
+ * @example
+ * ```ts
+ * import { FLIGHTS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(FLIGHTS.map((flight) => `${flight.rocket}:${flight.variant}`));
+ * ```
+ */
 export const FLIGHTS: readonly Flight[] = [
   starshipFlight({
     id: "starship-flight-5",

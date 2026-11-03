@@ -1,9 +1,51 @@
 // The three looks, each one table entry: the line drawing, the thick lines, and the painted rocket. A look changes lines, colours and fills, never a shape. Pure.
 
+/**
+ * The names of the looks: `line`, `thick` and `painted`.
+ *
+ * @example
+ * ```ts
+ * import { LOOK_NAMES } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(LOOK_NAMES.join(", "));
+ * ```
+ */
 export const LOOK_NAMES = ["line", "thick", "painted"] as const;
+/**
+ * The name of one look in `LOOK_NAMES`.
+ *
+ * @example
+ * ```ts
+ * import type { LookName } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const look: LookName = "thick";
+ * console.log(look);
+ * ```
+ */
 export type LookName = (typeof LOOK_NAMES)[number];
+/**
+ * The look used when none is named or the name is not a look: `line`.
+ *
+ * @example
+ * ```ts
+ * import { DEFAULT_LOOK } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(DEFAULT_LOOK);
+ * ```
+ */
 export const DEFAULT_LOOK: LookName = "line";
 
+/**
+ * What a look changes: the colour and width of its lines in a 3D view and in a drawing, how much of the weld lines shows, the fills by material group and whether there is a halo. A look never changes a shape.
+ *
+ * @example
+ * ```ts
+ * import { LOOKS, type Look } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const thick: Look = LOOKS.thick;
+ * console.log(thick.line, thick.outline);
+ * ```
+ */
 export interface Look {
   /** The colour of its lines. */
   line: string;
@@ -35,6 +77,16 @@ const NIGHT = {
   foam: ["#16202f", "#3a475c", "#16202f"],
 } as const;
 
+/**
+ * Every look, by name. A look is one entry of this table.
+ *
+ * @example
+ * ```ts
+ * import { LOOKS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(Object.keys(LOOKS));
+ * ```
+ */
 export const LOOKS: Readonly<Record<LookName, Look>> = {
   line: { line: "#8fa1b8", outlinePx: 1.4, featurePx: 1, weldPx: 0.6, weldOpacity: 0.45, outline: 1.2, feature: 0.8, weld: 0.45, fills: NIGHT, halo: true },
   thick: { line: "#b4c2d4", outlinePx: 3.4, featurePx: 2, weldPx: 0.9, weldOpacity: 0.5, outline: 3.4, feature: 1.7, weld: 0.6, fills: NIGHT, halo: true },
@@ -60,5 +112,16 @@ export const LOOKS: Readonly<Record<LookName, Look>> = {
   },
 };
 
-/** A value from outside as a look's name: the default for anything else. */
+/**
+ * A value from outside as a look's name: the default for anything else.
+ *
+ * @param value Anything.
+ * @returns The look's name if it is one, and the default (`line`) for anything else.
+ * @example
+ * ```ts
+ * import { cleanLook } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(cleanLook("painted"), cleanLook("shiny"));
+ * ```
+ */
 export const cleanLook = (value: unknown): LookName => ((LOOK_NAMES as readonly unknown[]).includes(value) ? (value as LookName) : DEFAULT_LOOK);

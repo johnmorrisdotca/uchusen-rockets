@@ -6,6 +6,17 @@ import { partEntry } from "./model/registry.ts";
 import type { PartRecord } from "./parts.ts";
 import { partIdOf, ROCKETS, variantOf } from "./rockets.ts";
 
+/**
+ * A rocket to check or build: its id, its variant (left out: the rocket's default) and any other part in a slot, by part id.
+ *
+ * @example
+ * ```ts
+ * import { check, type Description } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const description: Description = { rocket: "starship", variant: "v3", parts: { ship: "starship-v2-ship" } };
+ * console.log(check(description).label);
+ * ```
+ */
 export interface Description {
   rocket: string;
   /** Left out: the rocket's default variant. */
@@ -14,8 +25,30 @@ export interface Description {
   parts?: Readonly<Record<string, string>>;
 }
 
+/**
+ * Why a check said what it said: an unknown rocket, variant, slot or part, a part of the wrong kind, a joint that is missing, of another kind or of another width, or a custom build.
+ *
+ * @example
+ * ```ts
+ * import { check, type FitCode } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const codes: FitCode[] = check({ rocket: "nowhere" }).issues.map((issue) => issue.code);
+ * console.log(codes);
+ * ```
+ */
 export type FitCode = "unknown-rocket" | "unknown-variant" | "unknown-slot" | "unknown-part" | "wrong-kind" | "no-joint" | "joint-kind" | "joint-diameter" | "custom";
 
+/**
+ * One thing a check found: its code, its level (`error` stops a build, `note` says what was decided) and a sentence saying it.
+ *
+ * @example
+ * ```ts
+ * import { check, type FitIssue } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const issue: FitIssue | undefined = check({ rocket: "starship", variant: "v3", parts: { booster: "starship-v3-ship" } }).issues[0];
+ * console.log(issue?.level, issue?.message);
+ * ```
+ */
 export interface FitIssue {
   code: FitCode;
   /** "error" stops the build. "note" says what the check decided. */
@@ -23,11 +56,33 @@ export interface FitIssue {
   message: string;
 }
 
+/**
+ * A part standing in a slot of a checked rocket.
+ *
+ * @example
+ * ```ts
+ * import { check, type SlotPart } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const bottom: SlotPart | undefined = check({ rocket: "starship", variant: "v3" }).parts[0];
+ * console.log(bottom?.slot, bottom?.part.name);
+ * ```
+ */
 export interface SlotPart {
   slot: string;
   part: PartRecord;
 }
 
+/**
+ * The answer of `check`: whether the parts go together, the issues, the label to call the rocket, whether it is a custom build, the variant, the parts, the size and the credits of every licensed model.
+ *
+ * @example
+ * ```ts
+ * import { check, type FitReport } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const report: FitReport = check({ rocket: "falcon-9", variant: "block-5" });
+ * console.log(report.ok, report.size);
+ * ```
+ */
 export interface FitReport {
   ok: boolean;
   issues: readonly FitIssue[];
@@ -63,6 +118,19 @@ function sizeOf(parts: readonly SlotPart[]): { height: number; diameter: number 
   return { height: Math.round(top * 1000) / 1000, diameter: Math.max(...parts.map(({ part }) => part.diameter)) };
 }
 
+/**
+ * Asks whether a rocket goes together, from the parts' records alone, with no three.js and no DOM. A rocket labelled as a real version uses only parts true for it; any mix is a custom build and says so.
+ *
+ * @param description The rocket, its variant and any other part in a slot.
+ * @returns A report that says whether it fits and why, with the size and the credits.
+ * @example
+ * ```ts
+ * import { check } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const report = check({ rocket: "starship", variant: "v3", parts: { booster: "starship-v3-ship" } });
+ * console.log(report.ok, report.issues[0]?.message);
+ * ```
+ */
 export function check(description: Description): FitReport {
   const issues: FitIssue[] = [];
   const fail = (code: FitCode, message: string) => issues.push({ code, level: "error", message });

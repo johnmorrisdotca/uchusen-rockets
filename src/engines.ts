@@ -6,20 +6,64 @@ export const PLUME_EXITS = 34;
 export const PLUME_MOST_M = 26;
 /** How many shock diamonds a flame shows near the ground. A picture. */
 export const PLUME_DIAMONDS = 6;
-/** With no one touching anything, a flame stops moving after this long and nothing draws: a lit rocket at rest costs the same as a dark one. */
+/**
+ * With no one touching anything, a flame stops moving after this long and nothing draws: a lit rocket at rest costs the same as a dark one.
+ *
+ * @example
+ * ```ts
+ * import { FLAME_SETTLE_MS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(FLAME_SETTLE_MS / 1000, "seconds");
+ * ```
+ */
 export const FLAME_SETTLE_MS = 15_000;
 /** A flame that only flickers is drawn at most this often. A turn or a move still draws once a frame. */
 export const FLAME_GAP_MS = 33;
 
+/**
+ * How long a flame is drawn, in metres, for an engine whose bell is `exit` metres across at the mouth. The length is a picture, not a measured flame.
+ *
+ * @param exit The exit radius of the bell, in metres.
+ * @returns The flame's length in metres.
+ * @example
+ * ```ts
+ * import { plumeLength } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(plumeLength(0.45).toFixed(2));
+ * ```
+ */
 export function plumeLength(exit: number): number {
   return Math.min(exit * PLUME_EXITS, PLUME_MOST_M);
 }
 
-/** `on` asks for them, and a reader who asked for reduced motion has them off whatever the page says. Anything else, or nothing, is off. */
+/**
+ * `on` asks for them, and a reader who asked for reduced motion has them off whatever the page says. Anything else, or nothing, is off.
+ *
+ * @param attribute The value of the `engines` attribute, or null when it is missing.
+ * @param reduced True when the reader asked for reduced motion.
+ * @returns True when the flames should be drawn.
+ * @example
+ * ```ts
+ * import { enginesWanted } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(enginesWanted("on", false), enginesWanted("on", true), enginesWanted(null, false));
+ * ```
+ */
 export function enginesWanted(attribute: string | null, reduced: boolean): boolean {
   return attribute === "on" && !reduced;
 }
 
+/**
+ * One engine bell as the drawing has it: where it stands across the part, the height of its mouth and its exit radius, all in metres in the part's own frame.
+ *
+ * @example
+ * ```ts
+ * import { bellsOf, type Bell } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const bells: Bell[] = bellsOf([]);
+ * console.log(bells.length);
+ * ```
+ */
 export interface Bell {
   x: number;
   z: number;
@@ -29,7 +73,20 @@ export interface Bell {
   exit: number;
 }
 
-/** One bell for every engine the pieces already draw. The mouth is the first point of the bell. */
+/**
+ * One bell for every engine the pieces already draw. The mouth is the first point of the bell.
+ *
+ * @param pieces The pieces of a part, as the builder makes them.
+ * @returns The bells, one for each engine the pieces already draw.
+ * @example
+ * ```ts
+ * import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+ * import { bellsOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const booster = build({ rocket: "falcon-9", variant: "block-5" }).parts[0];
+ * console.log(booster ? bellsOf(booster.pieces).length : 0);
+ * ```
+ */
 export function bellsOf(pieces: readonly Piece[]): Bell[] {
   const bells: Bell[] = [];
   for (const piece of pieces) {
@@ -61,7 +118,20 @@ export function litBells(parts: readonly { slot: string; atY: number; shown: boo
   return bells;
 }
 
-/** The bells grouped by how far they are from the part's axis, innermost ring first, and each ring in order round the axis. */
+/**
+ * The bells grouped by how far they are from the part's axis, innermost ring first, and each ring in order round the axis.
+ *
+ * @param bells The bells of one part.
+ * @returns The rings, innermost first, each a list of bells.
+ * @example
+ * ```ts
+ * import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+ * import { bellsOf, ringsOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const booster = build({ rocket: "falcon-9", variant: "block-5" }).parts[0];
+ * console.log(booster ? ringsOf(bellsOf(booster.pieces)).map((ring) => ring.length) : []);
+ * ```
+ */
 export function ringsOf(bells: readonly Bell[]): Bell[][] {
   const sorted = [...bells].sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
   const rings: Bell[][] = [];
@@ -76,6 +146,18 @@ export function ringsOf(bells: readonly Bell[]): Bell[][] {
 
 /**
  * Which `count` engines burn: from the middle out, and a ring that is only partly used has them evenly round it, so three of a Falcon 9's nine are the middle one and two opposite. A source says how many; where they stand is this rule.
+ *
+ * @param bells All the bells of a part.
+ * @param count How many burn.
+ * @returns The bells that burn.
+ * @example
+ * ```ts
+ * import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+ * import { bellsOf, pickBells } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const booster = build({ rocket: "falcon-9", variant: "block-5" }).parts[0];
+ * console.log(booster ? pickBells(bellsOf(booster.pieces), 3).length : 0);
+ * ```
  */
 export function pickBells(bells: readonly Bell[], count: number): Bell[] {
   const wanted = Math.max(0, Math.min(bells.length, Math.floor(count)));

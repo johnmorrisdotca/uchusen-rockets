@@ -207,6 +207,28 @@ entries.push(
   detail("merlin-sea-level", "engine", "Merlin, sea-level", 2, 0.92, { height: blankFigure, diameter: blankFigure }, () => merlin([0, 0], 0, 0.46, 2)),
 );
 
+/**
+ * Every part of every rocket, each with its record: its real size in metres, the joints it mates at, and where its shape came from.
+ *
+ * @example
+ * ```ts
+ * import { PART_ENTRIES } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(PART_ENTRIES.length, PART_ENTRIES[0]?.record.name);
+ * ```
+ */
 export const PART_ENTRIES: readonly PartEntry[] = entries;
 const byId = new Map(entries.map((entry) => [entry.record.id, entry]));
+/**
+ * Finds a part by its id.
+ *
+ * @param id A part's id.
+ * @returns The part's entry, or undefined for an id that is not a part.
+ * @example
+ * ```ts
+ * import { partEntry } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(partEntry("raptor-vacuum")?.record.height, partEntry("nonsense"));
+ * ```
+ */
 export const partEntry = (id: string): PartEntry | undefined => byId.get(id);

@@ -2,6 +2,17 @@
 import type { Vec3 } from "./framing.ts";
 import type { PartRecord } from "./parts.ts";
 
+/**
+ * What to show of a rocket: `together`, `apart`, or the slot of one part, such as `booster`.
+ *
+ * @example
+ * ```ts
+ * import type { ShowName } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const shows: ShowName[] = ["together", "apart", "booster"];
+ * console.log(shows);
+ * ```
+ */
 export type ShowName = "together" | "apart" | (string & {});
 
 /** A part's own width from the axis, for keeping apart parts clear of each other. */
@@ -10,20 +21,73 @@ export type WidthOf = (part: PartRecord) => number;
 /** Seen square-on to the diagonal the parts take the whole distance; from the front or the side, seven tenths of it. */
 const APART_SPREAD = 1.45;
 
+/**
+ * Where one part stands for a choice of what to show: its slot, its position in metres and whether it is shown at all.
+ *
+ * @example
+ * ```ts
+ * import { placesFor, type Place } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const places: Place[] = placesFor([], "together", () => 1);
+ * console.log(places.length);
+ * ```
+ */
 export interface Place {
   slot: string;
   at: Vec3;
   shown: boolean;
 }
 
-/** The first choices of `show`, then one per slot. */
+/**
+ * The first choices of `show`, then one per slot.
+ *
+ * @param slots A variant's slots, from the bottom.
+ * @returns What can be shown: together and apart first when there is more than one slot, then one for each slot.
+ * @example
+ * ```ts
+ * import { showsOf, variantOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(showsOf(variantOf("falcon-9", "block-5")?.slots ?? []));
+ * ```
+ */
 export const showsOf = (slots: readonly string[]): string[] => (slots.length > 1 ? ["together", "apart", ...slots] : [...slots]);
 
+/**
+ * A value from outside as something that can be shown.
+ *
+ * @param value Anything.
+ * @param slots The variant's slots.
+ * @returns The value if it can be shown, and the first choice (together) for anything else.
+ * @example
+ * ```ts
+ * import { cleanShow, variantOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const slots = variantOf("falcon-9", "block-5")?.slots ?? [];
+ * console.log(cleanShow("first-stage", slots), cleanShow("nonsense", slots));
+ * ```
+ */
 export function cleanShow(value: unknown, slots: readonly string[]): string {
   const shows = showsOf(slots);
   return typeof value === "string" && shows.includes(value) ? value : shows[0];
 }
 
+/**
+ * Where each part stands: up the stack joint to joint, or spread apart on a diagonal of the ground, or one part alone.
+ *
+ * @param parts The parts with their slots, from the bottom.
+ * @param show What to show.
+ * @param widthOf The width of a part, for spacing when they are apart.
+ * @returns A place for each part.
+ * @example
+ * ```ts
+ * import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+ * import { placesFor } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const rocket = build({ rocket: "falcon-9", variant: "block-5" });
+ * const parts = rocket.parts.map((part) => ({ slot: part.slot, part: part.record }));
+ * console.log(placesFor(parts, "apart", (part) => part.diameter / 2).map((place) => place.slot));
+ * ```
+ */
 export function placesFor(parts: readonly { slot: string; part: PartRecord }[], show: string, widthOf: WidthOf): Place[] {
   if (show === "apart") {
     const widths = parts.map(({ part }) => widthOf(part));

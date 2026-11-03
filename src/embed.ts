@@ -8,9 +8,41 @@ import { cleanShow, showsOf } from "./layout.ts";
 import { cleanLook, DEFAULT_LOOK } from "./looks.ts";
 import { attributesFromOptions, rocketToParams, type RocketOptions } from "./attrs.ts";
 
+/**
+ * The six ways `embedCode` writes a rocket for another page: `element`, `iframe`, `module`, `svg`, `data` and `link`.
+ *
+ * @example
+ * ```ts
+ * import { EMBED_KINDS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(EMBED_KINDS.join(", "));
+ * ```
+ */
 export const EMBED_KINDS = ["element", "iframe", "module", "svg", "data", "link"] as const;
+/**
+ * One of the ways in `EMBED_KINDS`.
+ *
+ * @example
+ * ```ts
+ * import type { EmbedKind } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const kind: EmbedKind = "iframe";
+ * console.log(kind);
+ * ```
+ */
 export type EmbedKind = (typeof EMBED_KINDS)[number];
 
+/**
+ * Where the embed code points: the address of the demo that holds `embed.html`, and the CDN folder the element loads from. Both default to this package's own.
+ *
+ * @example
+ * ```ts
+ * import { embedCode, type EmbedSettings } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const settings: EmbedSettings = { site: "https://example.test/rockets/" };
+ * console.log(embedCode({ rocket: "starship" }, "iframe", settings));
+ * ```
+ */
 export interface EmbedSettings {
   /** The address of the published demo, where `embed.html` is. */
   site?: string;
@@ -18,9 +50,38 @@ export interface EmbedSettings {
   cdn?: string;
 }
 
+/**
+ * The address of the published demo, where `embed.html` is.
+ *
+ * @example
+ * ```ts
+ * import { SITE } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(SITE);
+ * ```
+ */
 export const SITE = "https://johnmorrisdotca.github.io/uchusen-rockets/";
+/**
+ * The folder on a CDN the element loads from when the embed is a plain script with no bundler.
+ *
+ * @example
+ * ```ts
+ * import { CDN } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(CDN);
+ * ```
+ */
 export const CDN = "https://cdn.jsdelivr.net/npm/@johnmorrisdotca/uchusen-rockets@0";
-/** The three.js a page with no bundler takes from the CDN: the version this package is built and tested with. */
+/**
+ * The three.js a page with no bundler takes from the CDN: the version this package is built and tested with.
+ *
+ * @example
+ * ```ts
+ * import { THREE_VERSION } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(THREE_VERSION);
+ * ```
+ */
 export const THREE_VERSION = "0.186.1";
 const THREE_CDN = `https://cdn.jsdelivr.net/npm/three@${THREE_VERSION}`;
 const IMPORT_MAP = `<script type="importmap">\n  { "imports": { "three": "${THREE_CDN}/build/three.module.js", "three/addons/": "${THREE_CDN}/examples/jsm/" } }\n</script>`;
@@ -47,7 +108,19 @@ function descriptionOf(options: RocketOptions): Description {
   return { rocket: options.rocket ?? "starship", ...(options.variant ? { variant: options.variant } : {}) };
 }
 
-/** What an embed asks of the page around it, in words: a line for the demo to show. */
+/**
+ * What an embed asks of the page around it, in words: a line for the demo to show.
+ *
+ * @param kind Which way of embedding.
+ * @param options The rocket being embedded.
+ * @returns A line of text for the demo to show beside the code.
+ * @example
+ * ```ts
+ * import { embedNote } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(embedNote("iframe", { rocket: "starship" }));
+ * ```
+ */
 export function embedNote(kind: EmbedKind, options: RocketOptions): string {
   const notes: Readonly<Record<EmbedKind, string>> = {
     element: "One script from the CDN and the tag. The import map names three.js, for the 3D view; a page with a bundler needs neither, only the package.",
@@ -61,8 +134,17 @@ export function embedNote(kind: EmbedKind, options: RocketOptions): string {
 }
 
 /**
- * The CC BY line for a painted rocket, generated from the parts that are showing.
- * Empty when the look is not painted, or when those parts are this package's own paint.
+ * The CC BY line for a painted rocket, generated from the parts that are showing. Empty when the look is not painted, or when those parts are this package's own paint.
+ *
+ * @param options The rocket as it will be drawn.
+ * @returns The credit line, or an empty text when nothing needs crediting.
+ * @example
+ * ```ts
+ * import { paintedCredit } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(paintedCredit({ rocket: "starship", variant: "v3", look: "painted" }));
+ * console.log(paintedCredit({ rocket: "starship", variant: "v3", look: "line" }) === "");
+ * ```
  */
 export function paintedCredit(options: RocketOptions): string {
   if (cleanLook(options.look) !== "painted") return "";
@@ -83,6 +165,15 @@ export function paintedCredit(options: RocketOptions): string {
 
 /**
  * The shipped picture of these options, under the package's `dist/assets/`: `starship-v3.svg`, `falcon-9-block-5-apart.thick.svg`. These are drawn from the default view, with no flames. Null for a custom build, which has no file, or a variant, part or look that does not exist.
+ *
+ * @param options The rocket, variant, look, view and what to show.
+ * @returns The path of the shipped picture under `dist/assets/`, or null when none is shipped for those options.
+ * @example
+ * ```ts
+ * import { assetPathOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(assetPathOf({ rocket: "starship", variant: "v3" }));
+ * ```
  */
 export function assetPathOf(options: RocketOptions): string | null {
   if (options.build) return null;
@@ -118,7 +209,21 @@ function drawingOf(options: RocketOptions): string {
 
 const creditHtml = (credit: string): string => (credit === "" ? "" : `\n<p>${esc(credit).replaceAll("\n", "<br>\n")}</p>`);
 
-/** The text of one embed. The `module` one imports the package; the `data` one is a `data:image/svg+xml` address for an `<img>`. */
+/**
+ * The text of one embed. The `module` one imports the package; the `data` one is a `data:image/svg+xml` address for an `<img>`.
+ *
+ * @param options The rocket and how it looks.
+ * @param kind Which way to write it. Defaults to the element.
+ * @param settings Where the demo and the CDN are, if not the package's own.
+ * @returns The text to paste into a page. A painted rocket's credit is part of it.
+ * @example
+ * ```ts
+ * import { embedCode } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(embedCode({ rocket: "falcon-9", variant: "block-5", look: "thick" }));
+ * console.log(embedCode({ rocket: "falcon-9", variant: "block-5" }, "iframe"));
+ * ```
+ */
 export function embedCode(options: RocketOptions, kind: EmbedKind = "element", settings: EmbedSettings = {}): string {
   const site = settings.site ?? SITE;
   const cdn = settings.cdn ?? CDN;
