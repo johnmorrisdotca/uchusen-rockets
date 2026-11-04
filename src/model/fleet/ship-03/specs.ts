@@ -1,4 +1,4 @@
-// Waymark's numbers and names: identity, the specification table, the journey arithmetic, the engine cards, the named sections and decks, and the history. Every number here is a fictional design target. The physics is
+// Miyamoto's numbers and names: identity, the specification table, the journey arithmetic, the engine cards, the named sections and decks, and the history. Every number here is a fictional design target. The physics is
 // one function (`journey`), the table and the cards are derived from it so they cannot disagree, and `test/ship-03.test.ts` pins each figure the bible prints. Pure: no three.js and no DOM.
 import type { EngineCard, HullStack, Section, SectionRole, Vec3 } from "./adapter.ts";
 import { HULL_STACKS } from "./adapter.ts";
@@ -10,18 +10,17 @@ export const G0 = 9.80665;
 export const LIGHT_YEAR = 9_460_730_472_580_800;
 export const YEAR = 31_557_600;
 
-/** Who and what the ship is. The Japanese name wants a native reader's check; a language review passed. */
+/** Who and what the ship is. The name is checked by the Japanese reviewer. */
 export const IDENTITY = {
   designation: "SPX-ICV-03",
   fleetNumber: 3,
-  class: "Waymark-class expedition command vessel",
+  class: "flagship and command vessel",
   maker: "SPX",
-  japanese: "道標",
-  reading: "みちしるべ",
-  romaji: "Michishirube",
-  english: "Waymark",
-  meaning: "a marker that shows the way",
-  nativeCheck: "needs a native reader's check",
+  japanese: "宮本",
+  romaji: "Miyamoto",
+  english: "Miyamoto",
+  meaning: "at the foot of the shrine",
+  line: "Flagship. The stately ship that commands the whole fleet.",
   designed: 2448,
   keelLaid: 2452,
   firstFlight: 2456,
@@ -117,7 +116,7 @@ export function specification(): Line[] {
   const p = journey(ROUTES.proxima);
   return [
     { name: "Designation", value: `${IDENTITY.designation} (fleet number 03)`, note: IDENTITY.class },
-    { name: "Name", value: `${IDENTITY.japanese} (${IDENTITY.reading}, ${IDENTITY.romaji}), Waymark`, note: IDENTITY.nativeCheck },
+    { name: "Name", value: `${IDENTITY.japanese} ${IDENTITY.romaji}`, note: IDENTITY.meaning },
     { name: "Length", value: `${ENVELOPE.length} m` },
     { name: "Beam", value: `${ENVELOPE.beam} m`, note: "across both hangar shoulders" },
     { name: "Height", value: `${ENVELOPE.height} m`, note: "keel to the dorsal pod" },
@@ -150,12 +149,12 @@ export const ENGINES: Readonly<Record<string, EngineCard>> = (() => {
     return { ...c, massFlow: flow, exhaust: v, exhaustOfC: v / C, jetPower: relativistic ? flow * (gamma - 1) * C * C : 0.5 * c.thrust * v };
   };
   return {
-    "waymark-main": card(
-      { id: "waymark-main", name: "Directed-conversion fusion drive, main", role: "main", module: "drive", count: 2, thrust: mainThrust, isp: exhaust / G0, fuel: "deuterium-helium-3 slurry, converted to a directed beam", fuelCapacity: MASS.propellant, operation: "continuous", note: "Proposed. A fusion-triggered conversion process that turns about 22% of the expelled mass-energy into a directed beam at 0.63 c. Two nozzles, recessed in the tail, with coil-lined throats. It also does the braking burn, after the ship turns end for end." },
+    "miyamoto-main": card(
+      { id: "miyamoto-main", name: "Directed-conversion fusion drive, main", role: "main", module: "drive", count: 2, thrust: mainThrust, isp: exhaust / G0, fuel: "deuterium-helium-3 slurry, converted to a directed beam", fuelCapacity: MASS.propellant, operation: "continuous", note: "Proposed. A fusion-triggered conversion process that turns about 22% of the expelled mass-energy into a directed beam at 0.63 c. Two nozzles, recessed in the tail, with coil-lined throats. It also does the braking burn, after the ship turns end for end." },
       true,
     ),
-    "waymark-vernier": card({ id: "waymark-vernier", name: "Plasma vernier, manoeuvring", role: "manoeuvring", module: "drive", count: 4, thrust: 0.9e6, isp: 60_000, fuel: "hydrogen plasma", fuelCapacity: 600, operation: "continuous", note: "Proposed. Four low-power plasma thrusters at the aft corners that trim, dock and turn the ship. Too weak to brake it." }),
-    "waymark-attitude": card({ id: "waymark-attitude", name: "Attitude thruster block", role: "vernier", module: "command", count: 24, thrust: 40_000, isp: 3000, fuel: "nitrogen gas", fuelCapacity: 90, operation: "pulsed", pulseHz: 20, note: "Proposed. Cold-gas blocks at the corners of the citadel and the drive frame for fine pointing and the flip." }),
+    "miyamoto-vernier": card({ id: "miyamoto-vernier", name: "Plasma vernier, manoeuvring", role: "manoeuvring", module: "drive", count: 4, thrust: 0.9e6, isp: 60_000, fuel: "hydrogen plasma", fuelCapacity: 600, operation: "continuous", note: "Proposed. Four low-power plasma thrusters at the aft corners that trim, dock and turn the ship. Too weak to brake it." }),
+    "miyamoto-attitude": card({ id: "miyamoto-attitude", name: "Attitude thruster block", role: "vernier", module: "command", count: 24, thrust: 40_000, isp: 3000, fuel: "nitrogen gas", fuelCapacity: 90, operation: "pulsed", pulseHz: 20, note: "Proposed. Cold-gas blocks at the corners of the citadel and the drive frame for fine pointing and the flip." }),
   };
 })();
 
@@ -163,17 +162,17 @@ export const ENGINES: Readonly<Record<string, EngineCard>> = (() => {
 export const HULL: HullStack = HULL_STACKS.command;
 
 /** One named section, between two stations on the spine. A deck is a flat floor across the beam, stacked up the spine; the label points at (x, z). */
-export interface WaymarkSection extends Omit<Section, "from" | "to" | "reach"> {
+export interface MiyamotoSection extends Omit<Section, "from" | "to" | "reach"> {
   module: string;
   y0: number;
   y1: number;
   at: readonly [number, number];
 }
 
-const s = (module: string, id: string, name: string, role: SectionRole, y0: number, y1: number, x: number, z: number, does: string, deck = false): WaymarkSection => ({ module, id, name, role, y0, y1, at: [x, z], does, ...(deck ? { deck } : {}) });
+const s = (module: string, id: string, name: string, role: SectionRole, y0: number, y1: number, x: number, z: number, does: string, deck = false): MiyamotoSection => ({ module, id, name, role, y0, y1, at: [x, z], does, ...(deck ? { deck } : {}) });
 
 /** Every named section of the ship, tail to bow. More than one for every 3 to 5% of its 380 m, with the sub-parts inside each module. */
-export const SECTIONS: readonly WaymarkSection[] = [
+export const SECTIONS: readonly MiyamotoSection[] = [
   s("drive", "vernier-pods", "Vernier pods", "engine", 0, 9, 41, 17, "Four plasma verniers at the aft corners that steer and dock.", true),
   s("drive", "nozzles", "Main nozzles, port and starboard", "engine", 2, 31, 22, 0, "Shape the directed-conversion exhaust into a beam."),
   s("drive", "field-coils", "Field coils", "power", 4, 34, -22, 8, "Copper rings, one every 1.8 m, that hold the plasma off the throat."),
@@ -236,7 +235,7 @@ export const SECTIONS: readonly WaymarkSection[] = [
 ];
 
 /** One label of a sheet: the same shape as the kit's, in ship metres. */
-export interface WaymarkLabel {
+export interface MiyamotoLabel {
   id: string;
   module: string;
   text: string;
@@ -248,7 +247,7 @@ export interface WaymarkLabel {
 }
 
 /** The labels of the whole ship, alternating sides by their side of the spine. */
-export function labels(): WaymarkLabel[] {
+export function labels(): MiyamotoLabel[] {
   const decks = deckSummary();
   return SECTIONS.map((section, i) => ({
     id: `${section.module}/${section.id}`,

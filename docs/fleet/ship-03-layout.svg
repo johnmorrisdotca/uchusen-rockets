@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1270" viewBox="0 0 1440 1270" role="img">
-<title>ICV–03 / WAYMARK</title>
+<title>ICV–03 / MIYAMOTO</title>
 <defs>
 <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
 <path d="M20 0H0V20" fill="none" stroke="#283b49" stroke-width=".65"/>
@@ -50,8 +50,8 @@
 </g>
 </defs>
 <rect width="1440" height="1270" class="bg"/>
-<text x="37" y="57" class="t" text-anchor="start">ICV–03 / WAYMARK</text>
-<text x="40" y="86" class="sub" text-anchor="start">Exterior engineering · stowed envelope 380 × 118 × 74 m · provisional dimensions</text>
+<text x="37" y="57" class="t" text-anchor="start">ICV–03 / MIYAMOTO</text>
+<text x="40" y="86" class="sub" text-anchor="start">Exterior engineering · stowed envelope 380 × 118 × 74 m · design dimensions</text>
 <text x="1400" y="55" class="id" text-anchor="end">FLEET CATALOGUE / 03-A</text>
 <rect x="32" y="109" width="1376" height="424" rx="10" class="pane"/>
 <rect x="39" y="141" width="1362" height="384" rx="0" class="grid"/>
