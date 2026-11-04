@@ -4,7 +4,7 @@
 import { antenna, beam, box, chamfered, collar, cub, discX, HULL_STACKS, type Piece, prism, quad, rng, ringOf, rod, stamp, type Vec3 } from "./adapter.ts";
 import { CITADEL, STATION } from "./dims.ts";
 import { dressedFace, facesOf, wallShells } from "./hulls.ts";
-import { ARMOUR, lamp, rail } from "./faces.ts";
+import { along, ARMOUR, lamp, rail } from "./faces.ts";
 import { collarAt, ringAt, tubeAt } from "./shapes.ts";
 
 const [Y0, Y1] = STATION.command;
@@ -105,6 +105,6 @@ export function command(cut: boolean, detail = 1, seed = "command"): Piece[] {
         for (const d of [-0.7, 0.7]) out.push(rod("bell", [x, y + d * 1.4, z + d], [x + sx * 0.8, y + d * 1.4, z + d], 0.5, 8), rod("bell-inside", [x + sx * 0.8, y + d * 1.4, z + d], [x + sx * 0.9, y + d * 1.4, z + d], 0.36, 8));
       }
   out.push(...collar("L", Y0, -1), ...collar("L", Y1, 1));
-  out.push(...rail(f.dorsal, -17, Y0 + 2, Y1 - 2), ...rail(f.dorsal, 17, Y0 + 2, Y1 - 2));
+  out.push(...rail(along(f.dorsal), -17, Y0 + 2, Y1 - 2), ...rail(along(f.dorsal), 17, Y0 + 2, Y1 - 2));
   return out;
 }

@@ -3,7 +3,7 @@
 import { collar, cub, HULL_STACKS, type Piece, rng, rod } from "./adapter.ts";
 import { STATION } from "./dims.ts";
 import { facesOf, hullBox, wallShells } from "./hulls.ts";
-import { rail, WHITE } from "./faces.ts";
+import { along, rail, WHITE } from "./faces.ts";
 import { capsule, ringAt, tubeAt } from "./shapes.ts";
 
 const [Y0, Y1] = STATION.habitat;
@@ -70,8 +70,8 @@ export function habitat(cut: boolean, detail = 1, seed = "habitat"): Piece[] {
   }
   // the rails the radiator banks mount on, dorsal and ventral, and a transfer lock on the starboard flank
   const f = facesOf(BOX);
-  out.push(...rail(f.dorsal, -9, Y0 + 2, Y1 - 2), ...rail(f.dorsal, 9, Y0 + 2, Y1 - 2));
-  out.push(...rail(f.ventral, -9, Y0 + 2, Y1 - 2), ...rail(f.ventral, 9, Y0 + 2, Y1 - 2));
+  out.push(...rail(along(f.dorsal), -9, Y0 + 2, Y1 - 2), ...rail(along(f.dorsal), 9, Y0 + 2, Y1 - 2));
+  out.push(...rail(along(f.ventral), -9, Y0 + 2, Y1 - 2), ...rail(along(f.ventral), 9, Y0 + 2, Y1 - 2));
   out.push(...collar("L", Y0, -1), ...collar("L", Y1, 1));
   return out;
 }

@@ -4,7 +4,7 @@
 import { beam, cub, HULL_STACKS, type Lathe, type Piece, prism, rng, rod } from "./adapter.ts";
 import { HANGAR } from "./dims.ts";
 import { dressedFace, pipe, wallShells } from "./hulls.ts";
-import { conduit, type Face, faceOf, frame, hazard, ladder, lamp, on, rail, stencil, WHITE } from "./faces.ts";
+import { along, conduit, type Face, faceOf, frame, hazard, ladder, lamp, on, rail, stencil, WHITE } from "./faces.ts";
 
 type Side = "starboard" | "port";
 
@@ -120,7 +120,7 @@ export function hangar(side: Side, cut: boolean, detail = 1, seed = `hangar-${si
       const a0 = openY[0] + k * lw;
       if (k >= leaves - drawn) out.push(on(door, a0 + lw / 2, (openLow + openHigh) / 2, lw - 0.2, openHigh - openLow, 0.1, 0.7 + (k % 2) * 0.3, k % 2 ? "hull-orange" : "hull-orange-worn"), ...hazard(door, openHigh - 0.5, a0 + 0.3, a0 + lw - 0.3, 0.3, 0.6), on(door, a0 + lw / 2, (openLow + openHigh) / 2, 0.3, openHigh - openLow - 0.4, 0.8, 1.1, "hull-grey-dark"));
     }
-    out.push(...stencil(door, side === "starboard" ? "104" : "222", openY[0] - 3, openLow - 1.4, 1.6), ...conduit(door, openHigh + 2.1, openY[0], openY[1], { count: 3, seed }), ...ladder(door, openY[1] + 3, openLow, openHigh), ...lamp(door, openY[0] - 1.5, openHigh, "amber"), ...lamp(door, openY[1] + 1.5, openHigh, "blue"));
+    out.push(...stencil(door, side === "starboard" ? "104" : "222", openY[0] - 3, openLow - 1.4, 1.6), ...conduit(door, openHigh + 2.1, openY[0], openY[1], { count: 3, seed }), ...ladder(along(door), openY[1] + 3, openLow, openHigh), ...lamp(door, openY[0] - 1.5, openHigh, "amber"), ...lamp(door, openY[1] + 1.5, openHigh, "blue"));
     // a rail outside the sill, on posts
     out.push(...rail(door, openLow - 1.4, openY[0] - 2, openY[1] + 2));
   } else {
