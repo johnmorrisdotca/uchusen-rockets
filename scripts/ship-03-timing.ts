@@ -30,18 +30,18 @@ try {
       import { meshOf } from "/model/pieces.js";
       import { toGlb } from "/build/glb.js";
       const ids = Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto);
-      const once = (detail) => {
+      const once = (detail, level) => {
         const start = performance.now();
         let pieces = 0;
         const made = parts().filter((part) => ids.includes(part.id)).map((part) => {
-          const p = part.pieces({ detail });
+          const p = part.pieces({ detail, level });
           pieces += p.length;
           return { name: part.id, mesh: meshOf(p), at: [0, 0, 0] };
         });
         const glb = toGlb(made);
         return { ms: Math.round(performance.now() - start), pieces, bytes: glb.bytes.length };
       };
-      window.measure = () => ({ coarse: once(LEVELS[0]), fullCold: once(1), fullWarm: once(1) });
+      window.measure = () => ({ firstPicture: once(1, "coarse"), quarterDetail: once(LEVELS[0], "fine"), fullCold: once(1, "fine"), fullWarm: once(1, "fine") });
     `,
   });
   await page.waitForFunction(() => "measure" in window);
