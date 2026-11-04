@@ -20,6 +20,8 @@ async function open(page: Page, rocket: string, variant: string, look: string) {
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.look ?? ""), { timeout: 60_000 }).toBe(look);
+  // the 3D view fades in from a blur over 1.5 s once it is drawn, and a slow machine is still in the fade after a fixed wait: the pictures the checks compare must be of a view that has finished it
+  await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.getAnimations().length ?? -1), { timeout: 60_000 }).toBe(0);
   await page.waitForTimeout(500);
 }
 

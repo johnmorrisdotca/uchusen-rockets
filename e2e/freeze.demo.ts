@@ -738,7 +738,7 @@ test.describe("a played timeline", () => {
       await press(page, "variant-v2");
       await expect.poll(async () => (await state(page)).active).toBe(false);
       await expect.poll(() => canvasData(page, "plumes")).toBe("0");
-      await press(page, "variant-v3");
+      await pressAndDraw(page, "variant-v3");
       await expect.poll(() => rocket(page).getAttribute("data-flight")).toBe("starship-flight-12");
       await settle(page, 200);
     };

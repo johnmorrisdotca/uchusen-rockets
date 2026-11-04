@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Test only**: two e2e flakes on a slow runner. The Space Shuttle drag check took its first picture while the 3D view was still fading in from a blur (1.5 s), so the picture it compared with was blurred; the test now waits for the fade to end. The variant-change freeze test sampled graphics buffers before the new variant's parts were built, so its peak could be too low; it now waits for the view to draw the change.
+
 ## [0.9.0] - 2026-11-04
 
 "Put this rocket on your site" is the family's embed panel (MODULES-379).
