@@ -57,6 +57,8 @@ export interface ModuleOptions {
   hull?: HullStackName;
   /** Which of several of the same module this is, so the weathering differs. */
   seed?: string;
+  /** Where a cutaway opens, in degrees round the spine from +Z towards +X: 0 opens on +Z (the default), 90 on +X, 180 on -Z. A ship whose own axes differ turns it to face its own camera. */
+  cutYaw?: number;
   /** `coarse` builds the hull, the collars and the big shapes only: a first picture in a moment. `fine` (the default) adds all the detail; the detail pass of a ship is `fineOnly`. */
   level?: "coarse" | "fine";
 }

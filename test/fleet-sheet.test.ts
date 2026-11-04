@@ -212,3 +212,25 @@ test("the SPX fleet is written in-universe: no visible text says fictional or in
     assert.ok(!/fictional|in service|commissioned|entered service/i.test(text), text);
   }
 });
+
+test("the fleet's glossary: ISV, the class codes, FTD and DCD, KAZE and ATC in one form on every sheet, and the operator is just SPX, in one constant", async () => {
+  const { FLEET_OPERATOR, GLOSSARY, titleBlock, specBlock, ENGINE_CARDS } = await import("../src/index.ts");
+  assert.equal(GLOSSARY.ISV, "Interstellar Service Vehicle");
+  assert.deepEqual([GLOSSARY.IHT, GLOSSARY.ICV, GLOSSARY.IXV], ["Interstellar Heavy Transport", "Interstellar Command Vessel", "Interstellar eXploration Vessel"]);
+  assert.equal(GLOSSARY.FTD, "Fusion Torch Drive");
+  assert.equal(GLOSSARY.DCD, "Directed Conversion Drive");
+  assert.equal(GLOSSARY.KAZE, "Kinetic Autonomous Zonal Executive");
+  assert.equal(GLOSSARY.ATC, "Auxiliary Transfer Craft");
+  assert.equal(FLEET_OPERATOR, "SPX");
+  const block = titleBlock({ designation: "SPX-207", name: "Kaminari", shipClass: "IHT", drive: { code: "FTD", count: 8 }, computer: "KAZE core v4", ja: { kanji: "加美鳴", ruby: "かみなり" }, sheet: "exterior", sheetNo: [1, 8], scale: "1:1000", revision: "A", date: "2026-11-04", stage: "planned", firstFlight: 2412 });
+  assert.equal(block.rows.find((row) => row.name === "Name in Japanese")?.value, "加美鳴 かみなり");
+  assert.equal(block.line, "ISV Kaminari, SPX-207 · IHT class · SPX · FTD ×8 · KAZE core v4");
+  assert.equal(block.rows.find((row) => row.name === "Class")?.value, "IHT, Interstellar Heavy Transport");
+  assert.equal(block.rows.find((row) => row.name === "Main drive")?.value, "FTD ×8, Fusion Torch Drive");
+  assert.equal(block.rows.find((row) => row.name === "Operator")?.value, "SPX");
+  assert.equal(ENGINE_CARDS["fusion-main"].code, "FTD");
+  const lines = specBlock(SAMPLE_SHIPS.scout, { computer: "KAZE core v4", atc: 4 });
+  assert.ok(lines.some((line) => line.name === "Engines, main (FTD ×3)"));
+  assert.equal(lines.find((line) => line.name === "Small craft")?.value, "4 ATC");
+  assert.equal(lines.find((line) => line.name === "Ship computer")?.value, "KAZE core v4");
+});

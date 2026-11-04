@@ -3,6 +3,7 @@
 import type { Vec3 } from "../pieces.ts";
 import { COLLARS } from "./collars.ts";
 import { engineTable, performanceOf, PROXIMA_LY, trip } from "./engines.ts";
+import { FLEET_OPERATOR, GLOSSARY, type GlossaryCode } from "./glossary.ts";
 import { assemble } from "./kit.ts";
 import { SECTIONS, type SectionRole } from "./sections.ts";
 import type { ShipList } from "./types.ts";
@@ -156,6 +157,7 @@ export interface SpecLine {
  * and in Earth's. Crew, passengers and cargo belong to the ship's own bible and are not here.
  *
  * @param ship The ship's list.
+ * @param extras The ship's computer ("KAZE core v4") and its number of small craft (ATC), which belong to the ship and not to the kit.
  * @returns The lines, in the order a sheet prints them.
  * @example
  * ```ts
@@ -164,7 +166,7 @@ export interface SpecLine {
  * for (const line of specBlock(SAMPLE_SHIPS.scout)) console.log(`${line.name}: ${line.value}`);
  * ```
  */
-export function specBlock(ship: ShipList): SpecLine[] {
+export function specBlock(ship: ShipList, extras: { computer?: string; atc?: number } = {}): SpecLine[] {
   const a = assemble(ship);
   const p = performanceOf(ship);
   const rows = engineTable(ship);
@@ -175,7 +177,9 @@ export function specBlock(ship: ShipList): SpecLine[] {
     { name: "Beam", value: `${n(Math.max(a.width, a.depth), 1)} m` },
     { name: "Dry mass", value: `${n(a.mass)} t` },
     { name: "Full mass", value: `${n(p.full)} t`, note: `${n(a.propellant)} t of propellant` },
-    ...rows.map((row) => ({ name: `Engines, ${row.role}`, value: `${row.count} x ${n(row.card.thrust / 1e6, 1)} MN = ${n(row.thrust / 1e6)} MN`, note: `${row.card.name}, ${n(row.card.isp)} s, exhaust ${(row.card.exhaustOfC * 100).toFixed(1)}% of c, ${row.card.operation}` })),
+    ...rows.map((row) => ({ name: `Engines, ${row.role}${row.card.code ? ` (${row.card.code} ×${row.count})` : ""}`, value: `${row.count} x ${n(row.card.thrust / 1e6, 1)} MN = ${n(row.thrust / 1e6)} MN`, note: `${row.card.name}, ${n(row.card.isp)} s, exhaust ${(row.card.exhaustOfC * 100).toFixed(1)}% of c, ${row.card.operation}` })),
+    ...(extras.computer ? [{ name: "Ship computer", value: extras.computer, note: GLOSSARY.KAZE }] : []),
+    ...(extras.atc ? [{ name: "Small craft", value: `${extras.atc} ATC`, note: GLOSSARY.ATC }] : []),
     { name: "Acceleration", value: `${p.accelerationFull.toFixed(3)} g full, ${p.accelerationDry.toFixed(3)} g dry` },
     { name: "Cruise speed", value: `${(p.cruise * 100).toFixed(1)}% of c`, note: "the most it can reach and still stop, from its fuel" },
     { name: "Top speed", value: `${(p.topSpeed * 100).toFixed(1)}% of c`, note: "one way, all the fuel" },
@@ -382,14 +386,14 @@ export function exploded(ship: ShipList, gap?: number): ExplodedModule[] {
 }
 
 /**
- * A sheet's title block: the office, and a line for each of ship, designation, maker, sheet, scale, revision and status.
+ * A sheet's title block: the office, a line for each of the vehicle, its registry, class, drive and computer, the maker, sheet, scale, revision and status, and the vehicle's line in the fleet's own form.
  *
  * @example
  * ```ts
  * import { titleBlock, type TitleBlock } from "@johnmorrisdotca/uchusen-rockets";
  *
- * const block: TitleBlock = titleBlock({ designation: "SPX-03", name: "宮本 Miyamoto", sheet: "exterior", sheetNo: [1, 8], scale: "1:1000", revision: "A", date: "2026-11-04", stage: "planned", firstFlight: 2412 });
- * console.log(block.office, block.rows.length);
+ * const block: TitleBlock = titleBlock({ designation: "SPX-207", name: "Kaminari", shipClass: "IHT", drive: { code: "FTD", count: 8 }, computer: "KAZE core v4", sheet: "exterior", sheetNo: [1, 8], scale: "1:1000", revision: "A", date: "2026-11-04", stage: "planned", firstFlight: 2412 });
+ * console.log(block.line);
  * ```
  */
 export interface TitleBlock {
@@ -397,31 +401,41 @@ export interface TitleBlock {
   rows: { name: string; value: string }[];
   /** The status line on its own, such as "PLANNED · FIRST FLIGHT 2412". */
   status: string;
+  /** The vehicle's line, such as "ISV Kaminari, SPX-207 · IHT class · SPX · FTD ×8 · KAZE core v4". */
+  line: string;
 }
 
 /**
- * A sheet's title block, written in-universe: the SPX fleet drawing office, the designation (always SPX- first), the maker "SPX", and a status in the future tense: "PLANNED · FIRST FLIGHT 2412" or
- * "IN DEVELOPMENT · FIRST FLIGHT PLANNED 2412", never "in service". A date is a planned date.
+ * A sheet's title block, written in-universe: the SPX fleet drawing office, the vehicle as "ISV <name>, <registry>", the maker "SPX", its class, drive and computer in the fleet's own codes (see `GLOSSARY`), and a
+ * status in the future tense: "PLANNED · FIRST FLIGHT 2412" or "IN DEVELOPMENT · FIRST FLIGHT PLANNED 2412", never "in service". A date is a planned date. The operator is `FLEET_OPERATOR`, just "SPX".
  *
- * @param o The ship's designation and name, the sheet (its title and its place in the set), the scale, the revision and its date, the stage and the planned year of the first flight.
- * @returns The block's rows and its status line.
+ * @param o The designation (SPX- and any registry number, such as SPX-207) and name, its Japanese name with its ruby (`{ kanji: "加美鳴", ruby: "かみなり" }`, always shown together), the class, drive and computer, the sheet (its title and its place in the set), the scale, the revision and its date, the stage and the planned year of the first flight.
+ * @returns The block's rows, its status line and the vehicle's line.
  * @example
  * ```ts
  * import { titleBlock } from "@johnmorrisdotca/uchusen-rockets";
  *
- * const block = titleBlock({ designation: "SPX-02", name: "加美鳴 Kaminari", sheet: "cutaway", sheetNo: [2, 8], scale: "1.4 px per metre", revision: "A", date: "2026-11-04", stage: "planned", firstFlight: 2412 });
- * console.log(block.status);
+ * const block = titleBlock({ designation: "SPX-207", name: "Kaminari", shipClass: "IHT", drive: { code: "FTD", count: 8 }, computer: "KAZE core v4", sheet: "exterior", sheetNo: [1, 8], scale: "1:1000", revision: "A", date: "2026-11-04", stage: "planned", firstFlight: 2412 });
+ * console.log(block.line, block.status);
  * ```
  */
-export function titleBlock(o: { designation: string; name: string; sheet: string; sheetNo: readonly [number, number]; scale: string; revision: string; date: string; stage: "planned" | "development"; firstFlight: number }): TitleBlock {
+export function titleBlock(o: { designation: string; name: string; shipClass?: "IHT" | "ICV" | "IXV"; drive?: { code: "FTD" | "DCD"; count: number }; computer?: string; ja?: { kanji: string; ruby: string }; sheet: string; sheetNo: readonly [number, number]; scale: string; revision: string; date: string; stage: "planned" | "development"; firstFlight: number }): TitleBlock {
   if (!o.designation.startsWith("SPX-")) throw new Error(`"${o.designation}" does not start with SPX-.`);
   const status = o.stage === "planned" ? `PLANNED · FIRST FLIGHT ${o.firstFlight}` : `IN DEVELOPMENT · FIRST FLIGHT PLANNED ${o.firstFlight}`;
+  const vehicle = `ISV ${o.name}, ${o.designation}`;
+  const parts = [vehicle, o.shipClass ? `${o.shipClass} class` : "", FLEET_OPERATOR, o.drive ? `${o.drive.code} ×${o.drive.count}` : "", o.computer ?? ""].filter((part) => part !== "");
   return {
     office: "SPX FLEET DRAWING OFFICE",
     status,
+    line: parts.join(" · "),
     rows: [
-      { name: "Ship", value: o.name },
+      { name: "Vehicle", value: vehicle },
       { name: "Designation", value: o.designation },
+      ...(o.ja ? [{ name: "Name in Japanese", value: `${o.ja.kanji} ${o.ja.ruby}` }] : []),
+      ...(o.shipClass ? [{ name: "Class", value: `${o.shipClass}, ${GLOSSARY[o.shipClass]}` }] : []),
+      ...(o.drive ? [{ name: "Main drive", value: `${o.drive.code} ×${o.drive.count}, ${GLOSSARY[o.drive.code]}` }] : []),
+      ...(o.computer ? [{ name: "Ship computer", value: `${o.computer}, ${GLOSSARY.KAZE}` }] : []),
+      ...(FLEET_OPERATOR ? [{ name: "Operator", value: FLEET_OPERATOR }] : []),
       { name: "Maker", value: "SPX" },
       { name: "Sheet", value: `${o.sheetNo[0]} of ${o.sheetNo[1]} · ${o.sheet}` },
       { name: "Scale", value: o.scale },
@@ -430,3 +444,6 @@ export function titleBlock(o: { designation: string; name: string; sheet: string
     ],
   };
 }
+
+/** The glossary code a drive card carries. */
+export type DriveCode = Extract<GlossaryCode, "FTD" | "DCD">;

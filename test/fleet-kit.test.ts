@@ -270,3 +270,43 @@ test("every module names the real hardware it descends from; pipes are round wit
   assert.ok(s.length >= 5 && s.every((piece) => piece.kind === "plate" && piece.outline.length >= 12));
   assert.ok(modules.some((module) => module.kind === "truss"));
 });
+
+test("any registry number is a designation, and the kit's builders make a module of a ship's own size", async () => {
+  const { BUILDERS, designation } = await import("../src/index.ts");
+  assert.equal(designation("207"), "SPX-207");
+  assert.equal(designation("3"), "SPX-3");
+  const container40 = BUILDERS.container("test-container-40", "Container, 40 m", 40, false, 400);
+  assert.equal(container40.length, 40);
+  assert.ok(container40.pieces({ detail: 0.4 }).length > 100);
+  const tank80 = BUILDERS.tank("test-tank-80", "Tank, 80 m", 6, 80, "L", "L", 900, 12000, "A long tank.");
+  assert.equal(tank80.length, 80);
+  assert.ok(Math.abs(measured(tank80.pieces({ detail: 0.4 })).length - 80) < 0.5);
+  assert.ok(assemble([{ module: "engine-fusion-7" }]).ok);
+});
+
+test("a cutaway opens where the ship says: +Z by default, +X for cutYaw 90", () => {
+  const tank = KIT["tank-cryo-12"];
+  const open = (cutYaw?: number) => tank.pieces({ cutaway: true, cutYaw }).filter((piece) => piece.kind === "lathe" && piece.arc && piece.body);
+  const mid = (cutYaw?: number) => {
+    const shell = open(cutYaw)[0];
+    assert.ok(shell && shell.kind === "lathe" && shell.arc);
+    const [a, b] = shell.arc(5);
+    // the middle of the hull that is left is opposite the opening
+    return ((((a + b) / 2) * 180) / Math.PI + 360) % 360;
+  };
+  assert.ok(Math.abs(mid(0) - 180) < 1);
+  assert.ok(Math.abs(mid(90) - 270) < 1);
+  assert.ok(Math.abs(mid(180) - 0) < 1 || Math.abs(mid(180) - 360) < 1);
+});
+
+test("solids by range and by corner, shared from SPX-03's adapter: a box, a prism, a quad, discs facing X and Z", async () => {
+  const { DETAIL } = await import("../src/model/fleet/kit.ts");
+  const bounds = (pieces: Parameters<typeof meshOf>[0]) => boundsOf(meshOf(pieces));
+  const box = bounds([DETAIL.cub("hull-grey", [0, 2], [0, 3], [1, 5])]);
+  assert.deepEqual([box.min, box.max].map((v) => v.map((n) => Math.round(n * 100) / 100)), [[0, 0, 1], [2, 3, 5]]);
+  const prism = bounds([DETAIL.prism("hull-grey", DETAIL.chamfered(2, 1, 0.5), 3, 7)]);
+  assert.ok(Math.abs(prism.max[1] - 7) < 1e-6 && Math.abs(prism.min[1] - 3) < 1e-6 && Math.abs(prism.max[0] - 2) < 1e-6);
+  const slope = bounds([DETAIL.quad("hull-grey", [0, 0, 0], [4, 0, 0], [3, 2, 0], [1, 2, 0], 0.2)]);
+  assert.ok(slope.max[0] - slope.min[0] > 3.9 && slope.max[1] - slope.min[1] > 1.9);
+  assert.ok(bounds([DETAIL.discZ("hull-grey", 1, 1, 0, 2, 0.5)]).max[2] > 1.99 && bounds([DETAIL.discX("hull-grey", 1, 1, 0, 3, 0.5)]).max[0] > 2.99);
+});

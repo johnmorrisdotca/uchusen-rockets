@@ -43,7 +43,7 @@ export { OPTION_ATTRIBUTES, attributesFromOptions, optionsFromAttributes, rocket
 export type { RocketOptions } from "./attrs.ts";
 export { assetPathOf, CDN, EMBED_KINDS, SITE, THREE_VERSION, embedCode, embedNote, paintedCredit } from "./embed.ts";
 export type { EmbedKind, EmbedSettings } from "./embed.ts";
-export { assemble, BUILD_BUDGET_MS, COLLAR_CLASSES, COLLARS, designation, FLEET_MAKER, INSETS, isCoarse, KIT, LIVERY, mates, SAMPLE_SHIPS, shipLevels, shipParts, shipPieces, swapsFor, timeBuild } from "./model/fleet/kit.ts";
+export { assemble, BUILDERS, BUILD_BUDGET_MS, COLLAR_CLASSES, COLLARS, designation, FLEET_MAKER, INSETS, isCoarse, KIT, LIVERY, mates, SAMPLE_SHIPS, shipLevels, shipParts, shipPieces, swapsFor, timeBuild } from "./model/fleet/kit.ts";
 export type { Assembly, BuildTime, CollarClass, CollarSpec, Inset, InsetPart, KitModule, Livery, LiveryName, ModuleKind, ModuleOptions, Placed, Port, ShipIssue, ShipList, ShipParts, ShipPlace } from "./model/fleet/kit.ts";
 export { ENGINE_CARDS, engineTable, G0, performanceOf, PROXIMA_LY, rocketSpeed, trip } from "./model/fleet/engines.ts";
 export type { EngineCard, EngineRole, EngineRow, Performance, Trip } from "./model/fleet/engines.ts";
@@ -55,3 +55,5 @@ export { arrangement, deckSummary, exploded, labelDensity, labelsOf, LEGEND, sca
 export type { Arrangement, Deck, ExplodedModule, Label, LegendSymbol, ScaleBar, SpecLine, TitleBlock } from "./model/fleet/sheet.ts";
 export { FLEET_PALETTE } from "./model/fleet/palette.ts";
 export type { FleetColour } from "./model/fleet/palette.ts";
+export { FLEET_OPERATOR, GLOSSARY } from "./model/fleet/glossary.ts";
+export type { GlossaryCode } from "./model/fleet/glossary.ts";

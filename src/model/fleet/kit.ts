@@ -20,7 +20,7 @@ export { LIVERY } from "./detail.ts";
 export { FLEET_PALETTE } from "./palette.ts";
 export type { FleetColour } from "./palette.ts";
 export type { Livery, LiveryName } from "./detail.ts";
-export { KIT } from "./modules.ts";
+export { BUILDERS, KIT } from "./modules.ts";
 export { BUILD_BUDGET_MS, isCoarse } from "./levels.ts";
 export { INSETS } from "./insets.ts";
 export type { Inset, InsetPart } from "./insets.ts";

@@ -10,11 +10,13 @@ One manufacturer, three ships. Every ship of the fleet is **a list of modules on
 
 Every fleet ship's designation starts with `SPX-` and its class code (`designation("03")` is "SPX-03"), and the maker field is just "SPX" (`FLEET_MAKER`). That is John's written exception to the rule that keeps his marks out of an MIT package, and it covers only the designation text and the maker field: no logo or wordmark is on any hull or in the package. The kit's own sample ships are `SPX-KIT-H`, `SPX-KIT-S` and `SPX-KIT-B`.
 
+The fleet's words are in `GLOSSARY` (`glossary.ts`), in one form for every ship, sheet and doc: the ship prefix ISV (Interstellar Service Vehicle: "ISV Kaminari, SPX-207"), the class codes IHT, ICV and IXV, the drives FTD (Fusion Torch Drive) and DCD (Directed Conversion Drive), the ship's computer KAZE ("KAZE core v4") and the small craft ATC (Auxiliary Transfer Craft). The registry number after `SPX-` comes from John and is never explained. `FLEET_OPERATOR` is just "SPX". `titleBlock` writes a sheet's block in this form (the line "ISV Kaminari, SPX-207 · IHT class · SPX · FTD ×8 · KAZE core v4", rows for class, drive, computer and operator, and a status in the future tense), and `specBlock(list, { computer, atc })` adds the computer and the small craft to the spec block.
+
 ## Units and axes
 
 - **Metres, tonnes.** A module's `length` is along the spine (Y), its `width` is across X and its `depth` across Z. `test/fleet-kit.test.ts` holds the declared sizes to the mesh, so they are true. `node scripts/fleet-sizes.ts` rewrites `sizes.ts` after you change a module.
 - **A module stands from y = 0 to y = `length`, its origin the middle of its base on the spine.** Y is up the spine, the way every rocket here stands. A ship's engines are at the bottom, so its nose points up the page. The viewer lays it down if it likes.
-- **Windward is +Z.** A cutaway opens the hull on the windward side, between 58 and 302 degrees round the axis, so the default view looks into it.
+- **A cutaway opens on +Z by default** (the windward side), leaving the hull between 58 and 302 degrees round the axis, so the default view looks into it. `pieces({ cutaway: true, cutYaw })` turns the opening: `cutYaw` is degrees round the spine from +Z towards +X, so 90 opens on +X (a ship whose own axes have X to starboard opens its cutaway to starboard) and 180 on -Z. A ship passes its own `cutYaw` in the options of `shipPieces` and `shipParts`.
 
 ## The collar standard
 
@@ -98,6 +100,10 @@ import { assemble, KIT, shipParts, shipPieces, SAMPLE_SHIPS, COLLARS } from "@jo
 - `shipParts(ship, list, options?, rocket?, variant?)` is how a ship joins the registry: one `PartEntry` for each place (a `PartRecord` with its joints and, for a hung module, `strapOn`), the slot names in stacking order, and the slot-to-part ids. Together, apart and one-part-alone then work as for Saturn V or the Shuttle.
 - `SAMPLE_SHIPS` holds three working lists (`hauler`, `scout`, `bulwark`) to copy.
 - `LIVERY` is the colour language: `industrial` (orange and white), `science` (white and yellow), `command` (grey and blue), `transport` (white and orange), each with worn twins, an accent and a dark structural colour. A ship picks a livery for each module, so the colour blocking runs along the ship.
+
+### Modules of a ship's own size
+
+The kit's modules are made by builders with the numbers as parameters, and `BUILDERS` gives a ship the same builders: `BUILDERS.container(id, name, length, cold, mass)`, `BUILDERS.tank(id, name, radius, length, top, bottom, mass, propellant, note)`, `BUILDERS.habitatRing(id, name, majorRadius, mass)`, `BUILDERS.truss(id, name, length, collar, mass)`, `BUILDERS.radiatorArray(...)`, `BUILDERS.engineCluster(...)`, and so on. A ship that needs a 40 m container, an 80 m tank or a 165 m ring asks for one and gets a `KitModule` with the standard collars, the detail, the sections' table entry to fill and the cutaway. Plating and detail scale with the hull's radius and length, and `detail` keeps a large module inside its build budget; GPU instancing of the stamped detail, hardpoints and variants on a module, and per-deck parts are the next steps and are ticketed.
 
 ### How a ship joins the package
 

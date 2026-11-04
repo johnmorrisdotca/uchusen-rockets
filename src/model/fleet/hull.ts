@@ -108,7 +108,7 @@ export function drum(ctx: Ctx, spec: DrumSpec): Piece[] {
     out.push(beam(i % 3 === 0 ? ctx.livery.dark : "hull-grey-dark", [f.o[0] + f.w[0] * 0.14, y0 + 0.3, f.o[2] + f.w[2] * 0.14], [f.o[0] + f.w[0] * 0.14, y1 - 0.3, f.o[2] + f.w[2] * 0.14], 0.16, 0.2));
   }
   for (const y of [y0 + 0.1, ...ringYs, y1 - 0.1]) out.push(annulus("hull-grey-dark", R + 0.02, R + 0.24, y - 0.1, y + 0.1, 48, { only: "mesh", ...(open ? { arc: () => az } : {}) }));
-  for (const y of ringYs) out.push(...pipeRing(random() < 0.5 ? "coolant" : "hull-grey", R + 0.05, y, 0.1, 48));
+  for (const y of ringYs) out.push(...pipeRing(random() < 0.5 ? "coolant" : "hull-grey", R + 0.2, y, 0.1, 48));
   const span = az[1] - az[0];
   const spot = (i: number, n: number) => az[0] + span * ((i + 0.5 + (random() - 0.5) * 0.3) / n);
   const mid = (a: number, b: number) => a + (b - a) * (0.15 + random() * 0.7);

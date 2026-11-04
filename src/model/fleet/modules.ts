@@ -50,7 +50,8 @@ const define = (d: Def): KitModule => ({
   ...(d.slot ? { slot: d.slot } : {}),
   livery: d.livery,
   pieces: (options = {}) => {
-    const all = d.build(contextOf(d.id, d.livery, { ...options, detail: options.detail ?? d.detail ?? 0.85 }, HULL_OF[d.kind]), options);
+    const built = d.build(contextOf(d.id, d.livery, { ...options, detail: options.detail ?? d.detail ?? 0.85 }, HULL_OF[d.kind]), options);
+    const all = options.cutaway && options.cutYaw ? place(built, { at: [0, 0, 0], yaw: options.cutYaw }) : built;
     return options.level === "coarse" ? all.filter(isCoarse) : all;
   },
 });
@@ -1069,3 +1070,17 @@ const list: KitModule[] = [
  * ```
  */
 export const KIT: Readonly<Record<string, KitModule>> = Object.fromEntries(list.map((m) => [m.id, m]));
+
+/**
+ * The kit's builders, for a ship that needs a module of its own size: a 40 m container, an 80 m tank, a 165 m ring, a 24 m truss bay. Each takes the numbers a module is made from and gives a `KitModule` with the same collars,
+ * detail and cutaway; the ship adds it to its list by putting it in its own table, or by `shipParts`.
+ *
+ * @example
+ * ```ts
+ * import { BUILDERS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const container40 = BUILDERS.container("my-container-40", "Container, 40 m", 40, false, 400);
+ * console.log(container40.length, container40.pieces({ detail: 0.4 }).length > 100);
+ * ```
+ */
+export const BUILDERS = { container, tank, habitatRing, habitatDrum, truss, radiatorArray, engineCluster, adapter, dockingNode, bay, missionPod } as const;

@@ -63,6 +63,8 @@ export interface EngineCard {
   /** The kit module that carries it, and how many engines that module has. */
   module: string;
   count: number;
+  /** The fleet's code for the drive, where it has one: FTD, the Fusion Torch Drive. */
+  code?: "FTD" | "DCD";
   /** Thrust of one engine in newtons. */
   thrust: number;
   /** Specific impulse in seconds. */
@@ -104,6 +106,7 @@ export const ENGINE_CARDS: Readonly<Record<string, EngineCard>> = {
     id: "fusion-main",
     name: "Magnetic-nozzle fusion drive, main",
     role: "main",
+    code: "FTD",
     module: "engine-fusion-7",
     count: 7,
     thrust: 30e6,
