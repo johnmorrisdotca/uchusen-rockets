@@ -1,4 +1,4 @@
-// ISV Miyamoto (SPX-03): a planned interstellar flagship, this package's own design. It is four variants of one ship: stowed, with its radiators out, with the relief pod on its collar, and cut open to the
+// ISV Miyamoto (SPX-452), the Romurusu class's first ship, and its sister ISV Ariake (SPX-186): planned interstellar flagships, this package's own design. It is four variants of one ship: stowed, with its radiators out, with the relief pod on its collar, and cut open to the
 // starboard side. Every figure is blank and says it is a design: no source gives them. The ship's own numbers are in `src/model/fleet/ship-03/specs.ts`.
 import { MIYAMOTO_PARTS, MIYAMOTO_VARIANT_SLOTS } from "../model/fleet/ship-03/variants.ts";
 import { CARDS, SHIP_INSETS } from "../model/fleet/ship-03/insets.ts";
@@ -9,21 +9,22 @@ const fiction = (brief: string) => blank<number>(FICTION, brief);
 const metres = (value: number) => `${Number(value.toFixed(1))} m, as designed`;
 
 const NOTES: Readonly<Record<string, string>> = {
-  miyamoto: "ISV 宮本 Miyamoto, SPX-03, ICV class, the flagship and command vessel, stowed, with the relay pod on its keyed collar. A narrow spine, two staggered hangar shoulders, a layered bow and two recessed drives, 380 m by 118 m by 74 m, 105,000 t at departure. Status: planned, first flight 2456. All numbers are design targets; the drive and its limits are described in the ship's bible.",
+  miyamoto: "ISV 宮本 Miyamoto, SPX-452, Romurusu class (ロムルス級, ICV type), the flagship and command vessel, stowed, with the relay pod on its keyed collar. A narrow spine, two staggered hangar shoulders, a layered bow and two recessed drives, 380 m by 118 m by 74 m, 105,000 t at departure. Status: planned, first flight 2456. All numbers are design targets; the drive and its limits are described in the ship's bible.",
   "miyamoto-deployed": "Miyamoto with both radiator banks out: four leaves of 25 by 60 m on each, clear of the hangar corridors. Sustained main burn needs every leaf out.",
   "miyamoto-relief": "Miyamoto with the relief pod on its collar: six relief and equipment containers under a gantry, in place of the relay pod.",
   "miyamoto-no-collar": "ISV Miyamoto with the drive's neck bare: the shadow-shield collar swapped for none, to compare the two ways the engines meet the hull.",
+  ariake: "ISV 有明 Ariake, SPX-186, \"daybreak\": the sister of ISV Miyamoto in the Romurusu class (ロムルス級), the same model with its own registry, hull marks and its relief pod. Status: planned, first flight 2456.",
   "miyamoto-cutaway": "Miyamoto opened to starboard: the layers of its armour at the cut edge, the reactor and power rooms, the barrels, both bays, the decks of the habitat and the operations ring of the citadel.",
 };
 
-const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-03", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-03, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-03, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-03, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-03, no collar" };
+const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", ariake: "ISV 有明 Ariake, SPX-186" };
 
 /** The ship's variants. */
-export const SHIP_03_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).map(([id, slots]) => {
+const variantOf = ([id, slots]: [string, Readonly<Record<string, string>>]): Variant => {
   const stacked = Object.keys(slots);
   return {
     id,
-    rocket: "fleet-ship-03",
+    rocket: id === "ariake" ? "fleet-ship-ariake" : "fleet-ship-03",
     name: NAMES[id],
     status: "fictional" as const,
     firstWord: "Planned first flight",
@@ -39,7 +40,13 @@ export const SHIP_03_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARI
       more: {},
     },
   };
-});
+};
+
+/** Miyamoto's variants. */
+export const SHIP_03_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).filter(([id]) => id !== "ariake").map(variantOf);
+
+/** The sister ship: the same model, its own name, registry, hull marks and mission pod. A row of its own in the picker. */
+export const ARIAKE_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).filter(([id]) => id === "ariake").map(variantOf);
 
 const insetVariant = (inset: (typeof SHIP_INSETS)[string]): Variant => ({
   id: inset.id,

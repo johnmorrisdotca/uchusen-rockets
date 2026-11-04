@@ -11,7 +11,7 @@ const [Y0] = STATION.bow;
 /** One layer's extent: its gaps are shaved off so a layer stands clear of the next. */
 const layerY = (i: number): [number, number] => [BOW_LAYERS[i].y[0] + (i > 0 ? 0.7 : 0), BOW_LAYERS[i].y[1] - 0.5];
 
-export function bow(cut: boolean, detail = 1, seed = "bow"): Piece[] {
+export function bow(cut: boolean, detail = 1, seed = "bow", marks = "452"): Piece[] {
   const out: Piece[] = [];
   const random = rng(`${seed}/bow`);
   BOW_LAYERS.forEach((layer, i) => {
@@ -84,7 +84,7 @@ export function bow(cut: boolean, detail = 1, seed = "bow"): Piece[] {
     for (const x of [-1, 1]) out.push(rod("hull-grey", [x, y1[0] + 2, z + s * 2.6], [x, y1[1] + 3, z + s * 2.6], 0.34, 8), rod("bell-inside", [x, y1[1] + 3, z + s * 2.6], [x, y1[1] + 3.15, z + s * 2.6], 0.22, 8), ringAt("hull-grey-dark", x, z + s * 2.6, 0.45, y1[0] + 4, 0.1));
     out.push(cub("hull-grey-dark", [-1.8, 1.8], [y1[0] + 1.6, y1[0] + 3.4], [z + s * 1.8, z + s * 2.8]));
   }
-  out.push(...stencil({ n: "x", sign: -1, at: -l0.hx, a: [Y0, Y0 + 12], b: [-l0.hz, l0.hz] }, "03", Y0 + 6, -4, 2.2));
+  out.push(...stencil({ n: "x", sign: -1, at: -l0.hx, a: [Y0, Y0 + 12], b: [-l0.hz, l0.hz] }, marks, Y0 + 6, -4, 2.2));
   out.push(...collar("L", Y0, -1));
   return out;
 }

@@ -1,4 +1,4 @@
-// The catalogue sheets of ISV Miyamoto, SPX-03, from the real model: `node scripts/ship-03-sheets.ts <folder>`. It builds the .glb files the ship's code makes (stowed, deployed, cutaway, exploded, each insets' sub-part, the engine
+// The catalogue sheets of ISV Miyamoto, SPX-452, from the real model: `node scripts/ship-03-sheets.ts <folder>`. It builds the .glb files the ship's code makes (stowed, deployed, cutaway, exploded, each insets' sub-part, the engine
 // cards), draws them with scripts/ship-03-render.ts, and lays the pictures out with the numbers from `specs.ts` as eight sheets: a three-quarter view with callouts, the general arrangement (front, side and top at one scale
 // with a length ruler), the exploded assembly, the variants and the pods, the hull layers, the engine cards, the insets, and the specification with the decks and the legend. The title block is the one every sheet of the fleet has.
 // One browser at a time (the caller holds the lock); server ports 7903 (pictures) and 7905 (sheets).
@@ -59,6 +59,7 @@ const files = {
   relief: glb("relief", slots("miyamoto-relief")),
   cut: glb("cut", slots("miyamoto-cutaway")),
   exploded: glb("exploded", slots("miyamoto"), explodedAt),
+  ariake: glb("ariake", slots("ariake")),
   pods: glb("pods", ["pod-relay", "pod-relief"], (_, i) => [i === 0 ? -18 : 18, 0, 0]),
 };
 /** A camera that frames a box from a direction, filling about 80% of the picture. */
@@ -84,6 +85,7 @@ const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: strin
     shots("ga-rear", [150 * PPM, 100 * PPM], { eye: [0, -500, -3], target: [0, 0, -3], up: [0, 0, 1], ortho: 100, shadow: 300 }),
     shots("var-stowed", [1300, 560], { eye: [560, 190, 120], target: [0, 190, -3], fov: 22, shadow: 300 }),
   ] },
+  { glb: files.stowed, more: [{ glb: files.ariake, at: [172, 0, 0] }], shots: [shots("class-pair", [2400, 1100], { eye: [86, 190, 800], target: [86, 190, 0], up: [-1, 0, 0], fov: 24, shadow: 420 })] },
   { glb: files.exploded, shots: [shots("sheet3-exploded", [2400, 1300], { eye: [620, 210, 330], target: [0, 215, 20], fov: 40, shadow: 420, points: modulePoints })] },
   { glb: files.deployed, shots: [shots("var-deployed", [1300, 560], { eye: [420, 140, 220], target: [0, 215, 0], fov: 26, shadow: 420 })] },
   { glb: files.relief, shots: [shots("var-relief", [1300, 560], { eye: [560, 190, 120], target: [0, 190, -3], fov: 22, shadow: 300 })] },
@@ -135,7 +137,7 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid #223446
 .grid{display:grid;gap:18px}
 `;
 const titleBlock = (sheet: number, name: string, scale: string) => `<div class="title"><div><h1>${NAME}</h1><div class="sub">${esc(TITLE_BLOCK)}</div></div><div class="meta"><div class="status">${esc(STATUS)}</div><div>SHEET ${sheet} OF 8 · ${esc(name)}</div><div>${esc(scale)} · REVISION A · 2026-11-04 · ${OPERATOR} FLEET DRAWING OFFICE</div></div></div>`;
-const foot = (note: string) => `<div class="foot"><div>${esc(IDENTITY.designation)} · ${esc(IDENTITY.prefix)} (${esc(IDENTITY.prefixMeans)}) · ${esc(IDENTITY.class)} class (${esc(IDENTITY.classMeans)}) · ${esc(IDENTITY.drive)}: ${esc(IDENTITY.driveMeans)} · ${esc(IDENTITY.computer)}</div><div>${esc(note)}</div></div>`;
+const foot = (note: string) => `<div class="foot"><div>${esc(IDENTITY.designation)} · ${esc(IDENTITY.prefix)} (${esc(IDENTITY.prefixMeans)}) · ${esc(IDENTITY.class)} class (${esc(IDENTITY.classKanji)}, ${esc(IDENTITY.classMeaning)}) · ${esc(IDENTITY.type)} (${esc(IDENTITY.typeMeans)}) · ${esc(IDENTITY.drive)}: ${esc(IDENTITY.driveMeans)} · ${esc(IDENTITY.computer)}</div><div>${esc(note)}</div></div>`;
 const page = (sheet: number, name: string, scale: string, body: string, note = "Dimensions in metres, mass in tonnes. A design for reference; every date is a plan.") => `<!doctype html><meta charset="utf-8"><style>${CSS}</style><div class="sheet">${titleBlock(sheet, name, scale)}${body}${foot(note)}</div>`;
 
 /** Callouts: leaders from the points to two columns of labels. */
@@ -178,7 +180,7 @@ try {
 
   // 4: variants and pods
   const cell = (title: string, name: string, note: string) => `<div class="panel"><h2>${esc(title)}</h2><img src="${img(name)}" style="width:100%"/><div style="color:#9fb4c8;margin-top:6px">${esc(note)}</div></div>`;
-  await shoot("4-variants-and-pods.png", page(4, "VARIANTS AND MISSION PODS", "PERSPECTIVE · NOT TO SCALE", `<div class="grid" style="grid-template-columns:1fr 1fr">${cell("STOWED, RELAY POD", "var-stowed", "Radiators folded on the habitation hull; the relay pod on the collar.")}${cell("RADIATORS OUT", "var-deployed", "Two banks of four leaves, 25 by 60 m, on masts, clear of the bays and the exhaust.")}${cell("RELIEF POD", "var-relief", "Six relief and equipment containers under a gantry replace the relay pod.")}${cell("CUTAWAY, STARBOARD", "var-cut", "Stepped armour layers at the cut, the rooms inside.")}</div><div class="panel" style="margin-top:18px"><h2>THE SWAPPABLE POD: RELAY (LEFT) AND RELIEF (RIGHT) ON ONE COLLAR</h2><img src="${img("pods")}" style="width:100%"/><div style="color:#9fb4c8">${esc(ANCESTORS.pod)}.</div></div>`));
+  await shoot("4-variants-and-pods.png", page(4, "VARIANTS AND MISSION PODS", "PERSPECTIVE · NOT TO SCALE", `<div class="grid" style="grid-template-columns:1fr 1fr">${cell("STOWED, RELAY POD", "var-stowed", "Radiators folded on the habitation hull; the relay pod on the collar.")}${cell("RADIATORS OUT", "var-deployed", "Two banks of four leaves, 25 by 60 m, on masts, clear of the bays and the exhaust.")}${cell("RELIEF POD", "var-relief", "Six relief and equipment containers under a gantry replace the relay pod.")}${cell("CUTAWAY, STARBOARD", "var-cut", "Stepped armour layers at the cut, the rooms inside.")}</div><div class="panel" style="margin-top:18px"><h2>THE ROMURUSU CLASS: ISV MIYAMOTO, SPX-452 (ABOVE) AND ITS SISTER ISV <ruby>有明<rt>ありあけ</rt></ruby> ARIAKE, SPX-186 (BELOW)</h2><img src="${img("class-pair")}" style="width:100%"/><div style="color:#9fb4c8">One model, two ships: each its own name, registry, hull marks and mission pod (Miyamoto the relay pod, Ariake the relief pod).</div></div><div class="panel" style="margin-top:18px"><h2>THE SWAPPABLE POD: RELAY (LEFT) AND RELIEF (RIGHT) ON ONE COLLAR</h2><img src="${img("pods")}" style="width:100%"/><div style="color:#9fb4c8">${esc(ANCESTORS.pod)}.</div></div>`));
 
   // 5: hull layers
   const total = HULL.layers.reduce((s, l) => s + l.mm, 0);

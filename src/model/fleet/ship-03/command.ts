@@ -1,7 +1,7 @@
 // The armoured command citadel, station 302 to 350 m: an operations ring around a communications core, a local navigation desk, a medical link and two escape passages. There is no exposed bridge window: remote cameras
 // stand on the armour instead. The hull is a chamfered block of thick laminate, plated in grey with white blocks; aerial booms with beacons reach out to port and starboard, and thruster blocks sit at the corners. A cutaway
 // opens the starboard side. Pure: no three.js and no DOM.
-import { antenna, box, chamfered, collar, cub, discX, HULL_STACKS, type Piece, pipeRun, prism, quad, rng, ringOf, rod, roundStrut, stamp, type Vec3 } from "./adapter.ts";
+import { antenna, box, chamfered, collar, cub, discX, discZ, HULL_STACKS, ibeam, type Piece, pipeRun, prism, quad, rng, ringOf, rod, roundStrut, stamp, type Vec3 } from "./adapter.ts";
 import { CITADEL, STATION } from "./dims.ts";
 import { dressedFace, facesOf, wallShells } from "./hulls.ts";
 import { along, ARMOUR, lamp, rail } from "./faces.ts";
@@ -89,7 +89,7 @@ export function command(cut: boolean, detail = 1, seed = "command"): Piece[] {
   }
   // dishes and phased arrays dorsal, and a whip each side
   for (const [x, y] of [[-8, Y0 + 14], [8, Y0 + 14], [-8, Y0 + 34], [8, Y0 + 34]] as const) out.push(...antenna("dish", [x, y, HZ], [0, 0, 1], 5.2, `${seed}${x}${y}`));
-  out.push(...antenna("phased", [0, Y0 + 24, HZ], [0, 0, 1], 6, `${seed}ph`), ...antenna("whip", [0, Y1 - 6, HZ], [0, 0, 1], 9, `${seed}w`), ...antenna("omni", [-HX - 0.2, Y0 + 4, 0], [-1, 0, 0], 4, `${seed}o`));
+  out.push(...antenna("phased", [0, Y0 + 38, HZ], [0, 0, 1], 6, `${seed}ph`), ...antenna("whip", [0, Y1 - 6, HZ], [0, 0, 1], 9, `${seed}w`), ...antenna("omni", [-HX - 0.2, Y0 + 4, 0], [-1, 0, 0], 4, `${seed}o`));
   // aerial booms with beacons: a truss out to each side at the aft end, ending in a ring beacon
   for (const s of [-1, 1]) {
     out.push(...roundStrut("hull-grey", [s * HX, Y0 + 8, 2], [s * (HX + 17), Y0 + 12, 2], 0.5), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, -2], [s * (HX + 17), Y0 + 12, -2], 0.35), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, 2], [s * (HX + 17), Y0 + 12, -2], 0.22), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, -2], [s * (HX + 17), Y0 + 12, 2], 0.22));
@@ -104,7 +104,7 @@ export function command(cut: boolean, detail = 1, seed = "command"): Piece[] {
         out.push(cub("hull-grey-dark", [x - 0.9, x + 0.9], [y - 1.3, y + 1.3], [z - 1.4, z + 1.4]));
         for (const d of [-0.7, 0.7]) out.push(rod("bell", [x, y + d * 1.4, z + d], [x + sx * 0.8, y + d * 1.4, z + d], 0.5, 8), rod("bell-inside", [x + sx * 0.8, y + d * 1.4, z + d], [x + sx * 0.9, y + d * 1.4, z + d], 0.36, 8));
       }
-  out.push(...collar("L", Y0, -1), ...separationJoint(Y0, cut), ...collar("L", Y1, 1));
+  out.push(...observation(seed), ...collar("L", Y0, -1), ...separationJoint(Y0, cut), ...collar("L", Y1, 1));
   out.push(...rail(along(f.dorsal), -17, Y0 + 2, Y1 - 2), ...rail(along(f.dorsal), 17, Y0 + 2, Y1 - 2));
   return out;
 }
@@ -146,4 +146,43 @@ export function separationJoint(y: number, cut: boolean): Piece[] {
     out.push(...pipeRun("copper", [[cx + 2, y - 0.3, 2.6], [cx + 3.4, y - 1.4, 2.6], [cx + 3.4, y - 3.2, 2.6]], 0.14, { clampEvery: 1.5 }));
   }
   return out;
+}
+
+/** The armoured observation dome above the operations ring, and the solarium beside it: a glazed garden hall with grow-lamps and shutters, lit at night. The dome is a faceted cap of glass panes in an armoured ring with eight ribs; the solarium is a frame of I-beams holding glass, with plant beds, lamps and half-drawn orange shutters. Simple until the kit's own arrive. */
+export function observation(seed: string): Piece[] {
+  const out: Piece[] = [];
+  const dy = Y0 + 21;
+  const z0 = HZ;
+  // the dome: an armoured base ring, then stacked facets narrowing to a crown, glass above the ring and armoured ribs over it
+  out.push(discZ("hull-grey", 0, dy, z0, z0 + 1.2, 6.2, 16), discZ("hull-grey-dark", 0, dy, z0 + 1.2, z0 + 1.7, 5.6, 16));
+  [[5, 1.6], [4.4, 3], [3.5, 4.1], [2.4, 4.9], [1.2, 5.4]].forEach(([r, h], i) => out.push(discZ(i < 4 ? "glass" : "hull-grey-dark", 0, dy, z0 + h - 0.5, z0 + h, r, 16)));
+  for (let k = 0; k < 8; k++) {
+    const a = (Math.PI * 2 * k) / 8;
+    const pts: [number, number, number][] = [[5.4, 1.7], [4.7, 3.1], [3.7, 4.2], [2.5, 5], [0.3, 5.5]].map(([r, h]) => [r * Math.cos(a), dy + r * Math.sin(a), z0 + h]);
+    for (let i = 0; i + 1 < pts.length; i++) out.push(rod("hull-grey", pts[i], pts[i + 1], 0.24, 8));
+  }
+  out.push(...ringAtZ("lamp-blue", 0, dy, z0 + 1.75, 5.7));
+  // the solarium: a hall beside the dome, a frame of I-beams, glass walls and roof, beds of plants, grow-lamps, and shutters half drawn
+  const sx0 = 8.5;
+  const sx1 = 17.5;
+  const sy0 = dy - 5;
+  const sy1 = dy + 5;
+  const h = 4.2;
+  out.push(cub("hull-grey-dark", [sx0, sx1], [sy0, sy1], [z0, z0 + 0.5]), cub("glass", [sx0 + 0.3, sx1 - 0.3], [sy0 + 0.3, sy1 - 0.3], [z0 + h - 0.2, z0 + h]));
+  for (const x of [sx0, (sx0 + sx1) / 2, sx1]) for (const y of [sy0, (sy0 + sy1) / 2, sy1]) out.push(rod("hull-grey", [x, y, z0 + 0.5], [x, y, z0 + h], 0.22, 12));
+  for (const y of [sy0, sy1]) out.push(...ibeam("hull-grey", [sx0, y, z0 + h], [sx1, y, z0 + h], 0.5, 0.3, [0, 0, 1]));
+  for (const x of [sx0, sx1]) out.push(...ibeam("hull-grey", [x, sy0, z0 + h], [x, sy1, z0 + h], 0.5, 0.3, [0, 0, 1]), cub("glass", [x - 0.05, x + 0.05], [sy0 + 0.3, sy1 - 0.3], [z0 + 0.7, z0 + h - 0.3]));
+  for (const y of [sy0, sy1]) out.push(cub("glass", [sx0 + 0.3, sx1 - 0.3], [y - 0.05, y + 0.05], [z0 + 0.7, z0 + h - 0.3]));
+  for (let r = 0; r < 3; r++) out.push(cub("plant", [sx0 + 0.8, sx1 - 0.8], [sy0 + 1 + r * 3.2, sy0 + 3 + r * 3.2], [z0 + 0.5, z0 + 1.1]), cub("lamp-blue", [sx0 + 1.2, sx1 - 1.2], [sy0 + 1.8 + r * 3.2, sy0 + 2.2 + r * 3.2], [z0 + h - 0.8, z0 + h - 0.6]), rod("hull-grey-dark", [sx0 + 1, sy0 + 2 + r * 3.2, z0 + h - 0.2], [sx0 + 1, sy0 + 2 + r * 3.2, z0 + h - 0.8], 0.06, 6));
+  out.push(cub("hull-orange", [sx0 + 0.2, sx1 - 0.2], [sy0, sy0 + 1.4], [z0 + h, z0 + h + 0.2]), cub("hull-orange-worn", [sx0 + 0.2, sx1 - 0.2], [sy1 - 1.4, sy1], [z0 + h, z0 + h + 0.2]), rod("hull-grey-dark", [sx0, sy0, z0 + h + 0.15], [sx1, sy0, z0 + h + 0.15], 0.12, 8), rod("hull-grey-dark", [sx0, sy1, z0 + h + 0.15], [sx1, sy1, z0 + h + 0.15], 0.12, 8));
+  void seed;
+  return out;
+}
+
+/** A ring facing along Z at (x, y), at height z, of a given radius: a ring of small blocks. */
+function ringAtZ(material: "lamp-blue" | "lamp-amber", x: number, y: number, z: number, r: number): Piece[] {
+  return Array.from({ length: 16 }, (_, k) => {
+    const a = (Math.PI * 2 * k) / 16;
+    return cub(material, [x + r * Math.cos(a) - 0.12, x + r * Math.cos(a) + 0.12], [y + r * Math.sin(a) - 0.12, y + r * Math.sin(a) + 0.12], [z, z + 0.2]);
+  });
 }

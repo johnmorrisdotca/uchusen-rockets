@@ -7,7 +7,7 @@ import { command } from "./command.ts";
 import { HANGAR, RADIATOR, SHADOW_COLLAR, STATION } from "./dims.ts";
 import { driveFrame, noCollar, shadowCollar } from "./drive.ts";
 import { engineering } from "./engineering.ts";
-import { ANCESTORS } from "./specs.ts";
+import { ANCESTORS, SHIPS } from "./specs.ts";
 import { hangar } from "./hangar.ts";
 import { habitat } from "./habitat.ts";
 import { pod, type PodKind } from "./pod.ts";
@@ -58,7 +58,7 @@ const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [num
   diameter: Math.max(width, depth),
   ...(first ? {} : { bottom: true }),
   ...(last ? {} : { top: true }),
-  note: `${note} Descends from ${ANCESTORS[id]}.`,
+  note: note.includes("hull marks") ? note : `${note} Descends from ${ANCESTORS[id]}.`,
   pieces: (o) => local(build(cut, o?.detail ?? 1), 0, y0, 0, o?.level),
 });
 
@@ -125,11 +125,17 @@ const collarPart = (none: boolean): MiyamotoPart => ({
   pieces: (o) => (none ? noCollar() : local(shadowCollar(false, o?.detail ?? 1), 0, SHADOW_COLLAR.y, 0, o?.level)),
 });
 
+/** The parts that differ for the sister ship: the drive and the bow carry its registry marks. */
+const sister = (): MiyamotoPart[] => [
+  stack("drive-ariake", "Main drive and shrouds, Ariake", "engine", STATION.drive, 90, 46, `The sister ship's drive, with its hull marks 186. Descends from ${ANCESTORS.drive}.`, (c, d) => driveFrame(c, d, "drive-ariake", SHIPS.ariake.marks), false, true),
+  stack("bow-ariake", "Bow defence and navigation, Ariake", "module", STATION.bow, 36, 40, `The sister ship's bow, with its hull marks 186. Descends from ${ANCESTORS.bow}.`, (c, d) => bow(c, d, "bow-ariake", SHIPS.ariake.marks), false, false, true),
+];
+
 /** Every part of the ship, each once. */
 export function parts(): MiyamotoPart[] {
   const out: MiyamotoPart[] = [...STACK(false), ...STACK(true)];
   for (const cut of [false, true]) out.push(shoulder("starboard", cut), shoulder("port", cut));
-  out.push(collarPart(false), collarPart(true), missionPod("relay"), missionPod("relief"));
+  out.push(...sister(), collarPart(false), collarPart(true), missionPod("relay"), missionPod("relief"));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   return out;
 }
