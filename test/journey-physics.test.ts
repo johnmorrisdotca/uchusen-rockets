@@ -2,7 +2,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { WAKUSEI_SOURCE } from "../demo/journey-bodies.ts";
-import { AU_KM, C, circularSpeed, DAY_S, escapeBurn, flipAndBurn, G0, GM_KM3_S2, hohmann, kepler, LY_M, synodicPeriod, transferPoint, windows, YEAR_S } from "../src/journey/index.ts";
+import { AU_KM, C, circularSpeed, DAY_S, escapeBurn, flipAndBurn, G0, GM_KM3_S2, hohmann, kepler, LY_M, synodicPeriod, windows, YEAR_S } from "../src/journey/index.ts";
+import { transferPoint } from "../src/journey/physics.ts";
 import { voyage } from "../src/model/fleet/ship-02/journey.ts";
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);

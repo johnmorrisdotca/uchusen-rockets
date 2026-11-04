@@ -5,9 +5,20 @@ import { AU_KM, C, DAY_S, G0, GM_KM3_S2, PARKING_ALTITUDE_KM, PERIOD_DAYS } from
 import type { BallisticCraft, CapacityKind, ContinuousCraft, Craft, Quantity } from "./crafts.ts";
 import { accelerating, circularSpeed, escapeBurn, flipAndBurn, hohmann, transferPoint, wrapPi } from "./physics.ts";
 
+/** The kinds of phase a trip is made of: the countdown, the climb, the burns, the coast, the turn round, the braking and the arrival. */
 export type PhaseId = "preheat" | "ignition" | "ascent" | "burn" | "coast" | "flip" | "brake" | "flyby" | "accelerate" | "decelerate" | "arrival";
 
-/** One stretch of a trip: its length in mission seconds (from lift-off, which is 0) and how long it takes on the screen at normal speed. */
+/**
+ * One stretch of a trip: its length in mission seconds (from lift-off, which is 0) and how long it takes on the screen at normal speed.
+ *
+ * @example
+ * ```ts
+ * import type { Phase } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const coast: Phase = { id: "coast", startS: 1_050, endS: 430_000, screenS: 22 };
+ * console.log(coast.endS - coast.startS);
+ * ```
+ */
 export interface Phase {
   id: PhaseId;
   startS: number;
@@ -15,9 +26,20 @@ export interface Phase {
   screenS: number;
 }
 
+/** How a craft stands on a trip: rated, rated at least, fine, not rated, flyby only, or cannot. */
 export type VerdictLevel = "rated" | "at-least" | "ok" | "not-rated" | "flyby" | "cannot";
 
-/** What a craft can do on a trip, in one plain line, with the lines behind it. */
+/**
+ * What a craft can do on a trip, in one plain line, with the lines behind it.
+ *
+ * @example
+ * ```ts
+ * import type { Verdict } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const verdict: Verdict = { level: "cannot", line: "Not enough fuel.", because: [], playable: false };
+ * console.log(verdict.line, verdict.playable);
+ * ```
+ */
 export interface Verdict {
   level: VerdictLevel;
   /** The one line shown beside the picker. */
@@ -28,9 +50,20 @@ export interface Verdict {
   playable: boolean;
 }
 
+/** A place or a speed as x, y and z. */
 export type Vec3 = readonly [number, number, number];
 
-/** A trip, planned. */
+/**
+ * A trip, planned: when it leaves, its phases, its verdict, its distances, its speed changes and what is true of the craft at the peak. Plain data, with no function in it.
+ *
+ * @example
+ * ```ts
+ * import type { Trip } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const describe = (trip: Trip) => `${trip.from} to ${trip.to}: ${trip.verdict.line}`;
+ * console.log(typeof describe);
+ * ```
+ */
 export interface Trip {
   from: string;
   to: string;
@@ -159,7 +192,17 @@ function transferAt(source: BodySource, from: string, to: string, t0: number): T
   return { r1, r2, seconds, theta0: lon(p1), f: wrapPi(lon(p2) - lon(p1) - Math.PI), dv1: h.dv1, dv2: h.dv2 };
 }
 
-/** A day a ballistic craft can leave on. */
+/**
+ * A day a ballistic craft can leave on, with the flight time and the two speed changes of the Sun's frame.
+ *
+ * @example
+ * ```ts
+ * import type { Window } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const next: Window = { dateMs: Date.UTC(2026, 10, 4), days: 265, dv1: 3.2, dv2: 2.9 };
+ * console.log(new Date(next.dateMs).toISOString());
+ * ```
+ */
 export interface Window {
   dateMs: number;
   /** The flight time, days. */

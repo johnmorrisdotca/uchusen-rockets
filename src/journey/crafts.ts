@@ -90,7 +90,17 @@ export interface ContinuousCraft {
   flipS: Quantity;
 }
 
-/** A craft the journey can fly. */
+/**
+ * A craft the journey can fly: a rocket on a Hohmann transfer, or a ship that burns all the way.
+ *
+ * @example
+ * ```ts
+ * import { CRAFTS, type Craft } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const first: Craft = CRAFTS[0]!;
+ * console.log(first.name, first.drive);
+ * ```
+ */
 export type Craft = BallisticCraft | ContinuousCraft;
 
 const ascentEstimate = (seconds: number): Quantity => ({ value: seconds, source: null, estimate: "A rocket of this class reaches orbit in about eight to nine minutes; this craft's own figure is not in the sources read." });

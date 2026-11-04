@@ -4,7 +4,7 @@ John, 2026-11-04: "start journey mode now". Phase 1 is in the solar system only 
 
 Parts: 395 distances and calculations panel, 396 countdown, preheat and ignition, 397 changeable views, 398 deceleration (flip and burn), 399 summary at arrival, 401 wakusei-planets bodies as stops.
 
-Reference pictures: Dropbox `/Projects/Resources/uchusen-rockets/journey-2026-11-04/` (12 PNGs). They are read for style only: dark ground, pale blue lines, amber values, small-caps labels, a route bar with ACCELERATE and DECELERATE brackets, a segmented preheat bar, a ring dial for the ignition count. Nothing is copied.
+Reference pictures: John's twelve pictures for this ticket (kept outside the repository). They are read for style only: dark ground, pale blue lines, amber values, small-caps labels, a route bar with ACCELERATE and DECELERATE brackets, a segmented preheat bar, a ring dial for the ignition count. Nothing is copied.
 
 ## 1. The screens
 

@@ -3,12 +3,32 @@
 import type { BodySource } from "./bodies.ts";
 import { C, G0 } from "./constants.ts";
 import { accelerating, transferPoint } from "./physics.ts";
-import { positionKm, type Phase, type PhaseId, type Trip, type Vec3 } from "./trip.ts";
+import { positionKm, type Phase, type Trip, type Vec3 } from "./trip.ts";
 
-/** How fast the screen plays: a multiple of normal speed. */
+/**
+ * How fast the screen plays: a multiple of normal speed.
+ *
+ * @example
+ * ```ts
+ * import type { PlaySpeed } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const fast: PlaySpeed = 4;
+ * console.log(fast);
+ * ```
+ */
 export type PlaySpeed = 0.5 | 1 | 2 | 4;
 
-/** Where in a trip a moment of playback is. */
+/**
+ * Where in a trip a moment of playback is: the phase, how far through it, the mission time and how many mission seconds each screen second shows.
+ *
+ * @example
+ * ```ts
+ * import type { Place } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const words = (place: Place) => `${place.phase.id} ${Math.round(place.fraction * 100)} %`;
+ * console.log(typeof words);
+ * ```
+ */
 export interface Place {
   phase: Phase;
   index: number;
@@ -20,7 +40,17 @@ export interface Place {
   scale: number;
 }
 
-/** What is true of the craft at a moment. */
+/**
+ * What is true of the craft at a moment: its place, speed, acceleration, the distances, the clocks, the signal time home and how far it has turned round.
+ *
+ * @example
+ * ```ts
+ * import type { State } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const speed = (state: State) => `${Math.round(state.speedMs)} m/s`;
+ * console.log(typeof speed);
+ * ```
+ */
 export interface State extends Place {
   dateMs: number;
   /** Which way the engine is firing: not at all, pushing it on, or against its motion. */
@@ -87,16 +117,6 @@ export function placeAt(trip: Trip, playbackS: number): Place {
     left -= phase.screenS;
   }
   throw new Error("A trip has phases.");
-}
-
-/** The playback time at which a phase begins, seconds at normal speed. */
-export function phaseStart(trip: Trip, id: PhaseId): number {
-  let at = 0;
-  for (const phase of trip.phases) {
-    if (phase.id === id) return at;
-    at += phase.screenS;
-  }
-  return at;
 }
 
 const mix = (a: number, b: number, f: number): number => a + (b - a) * f;
