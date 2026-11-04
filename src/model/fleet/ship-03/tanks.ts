@@ -80,7 +80,15 @@ function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean, detail: numb
     out.push(rod("hull-grey-dark", [px, y - 0.1, pz], [px + 0.5 * Math.sin(a), y - 0.1, pz + 0.5 * Math.cos(a)], 1.1, 14), rod("hull-grey", [px + 0.5 * Math.sin(a), y - 0.1, pz + 0.5 * Math.cos(a)], [px + 0.7 * Math.sin(a), y - 0.1, pz + 0.7 * Math.cos(a)], 0.8, 14));
   }
   out.push(...pipeRun("coolant", [[x, straight[0] + 2, z + r + 0.7], [x, straight[1] - 2, z + r + 0.7]], 0.22, { clampEvery: 3, bracket: [0, 0, -0.6] }));
-  for (const [ya, yb] of [[y0 + 0.4, y0 + r * 0.55], [y1 - r * 0.55, y1 - 0.4]] as const) out.push(collarAt("gold", x, z, r - 0.4, r + 0.35, ya, yb, { segs: 12, ...(open ? { arc: OPEN_STARBOARD } : {}) }));
+  // gold foil on each dome: a faceted cap that hugs the rounded end, as the blanket does on a real tank
+  for (const end of ["bottom", "top"] as const) {
+    const cap: [number, number][] = [];
+    for (let i = 0; i <= 5; i++) {
+      const t = (i / 5) * 1.1;
+      cap.push(end === "bottom" ? [r * 1.025 * Math.sin(t) + 0.001, y0 + r * (1 - Math.cos(t)) - 0.02] : [r * 1.025 * Math.sin(t) + 0.001, y1 - r * (1 - Math.cos(t)) + 0.02]);
+    }
+    out.push({ kind: "lathe", material: "gold", at: [x, z], segs: 12, profile: end === "bottom" ? cap : cap.reverse(), only: "mesh", ...(open ? { arc: OPEN_STARBOARD } : {}) });
+  }
   // vented fuel cassettes on the outer face (facing away from the spine): two columns of six boxes with vent slots
   const outward: 1 | -1 = side;
   for (const dz of [-3, 3]) {
