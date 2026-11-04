@@ -12,6 +12,8 @@ export interface Face {
   at: number;
   a: readonly [number, number];
   b: readonly [number, number];
+  /** The two surface axes the other way round: a runs along the second. */
+  swap?: boolean;
 }
 
 /** The colours a hull is plated in. */
@@ -29,11 +31,15 @@ export const ARMOUR: Scheme = { main: "hull-grey", worn: "hull-grey-dark", block
 export const SPINE: Scheme = { main: "hull-grey-dark", worn: "panel-dark", block: "hull-grey", blockWorn: "hull-grey-dark", accent: "hull-yellow" };
 
 const AXES: Record<Axis, [Axis, Axis]> = { x: ["y", "z"], y: ["z", "x"], z: ["x", "y"] };
+const axesOf = (face: Face): [Axis, Axis] => (face.swap ? [AXES[face.n][1], AXES[face.n][0]] : AXES[face.n]);
+
+/** The same face with its axes the other way round, so a run along `a` goes along the spine on a dorsal or ventral face. */
+export const along = (face: Face): Face => ({ ...face, swap: !face.swap, a: face.b, b: face.a });
 
 /** The point at surface coordinates (a, b), `h` metres out of the face. */
 export function pt(face: Face, a: number, b: number, h = 0): Vec3 {
   const p: Record<Axis, number> = { x: 0, y: 0, z: 0 };
-  const [ta, tb] = AXES[face.n];
+  const [ta, tb] = axesOf(face);
   p[ta] = a;
   p[tb] = b;
   p[face.n] = face.at + face.sign * h;
@@ -43,7 +49,7 @@ export function pt(face: Face, a: number, b: number, h = 0): Vec3 {
 /** A box on a face: centred on (a, b), `da` by `db` across, standing from `h0` to `h1` metres out of it. */
 export function on(face: Face, a: number, b: number, da: number, db: number, h0: number, h1: number, material: MaterialName, extra: Partial<Parameters<typeof cub>[4]> = {}) {
   const r: Record<Axis, readonly [number, number]> = { x: [0, 0], y: [0, 0], z: [0, 0] };
-  const [ta, tb] = AXES[face.n];
+  const [ta, tb] = axesOf(face);
   r[ta] = [a - da / 2, a + da / 2];
   r[tb] = [b - db / 2, b + db / 2];
   r[face.n] = [face.at + face.sign * h0, face.at + face.sign * h1];
@@ -57,15 +63,20 @@ export function faceOf(box: { x: readonly [number, number]; y: readonly [number,
 }
 
 /** Plating: rows and columns of raised panels, a hand's width apart, in the scheme's colours, some worn, some bare, some in the block colour; sizes vary by row so no two walls are the same. */
-export function skin(face: Face, scheme: Scheme, seed: string, o: { cell?: readonly [number, number]; raise?: number; blocks?: number; bare?: number; skip?: (a: number, b: number) => boolean } = {}): Piece[] {
+export function skin(face: Face, scheme: Scheme, seed: string, o: { cell?: readonly [number, number]; raise?: number; blocks?: number; bare?: number; detail?: number; skip?: (a: number, b: number) => boolean } = {}): Piece[] {
   const random = rng(`${seed}/skin/${face.n}${face.sign}`);
-  const [ca, cb] = o.cell ?? [4, 3];
+  // a lower level of detail plates in bigger cells: a quarter of the detail is a quarter of the plates
+  const k = 1 / Math.sqrt(Math.max(0.2, Math.min(1, o.detail ?? 1)));
+  const [ca, cb] = (o.cell ?? [4, 3]).map((c) => c * k) as [number, number];
   const raise = o.raise ?? 0.22;
   const gap = Math.min(0.12, ca * 0.03);
   const out: Piece[] = [];
   let b = face.b[0];
   while (b < face.b[1] - 0.2) {
     const hb = Math.min(face.b[1] - b, cb * (0.7 + random() * 0.7));
+    // a row has one tone: mostly white, sometimes a worn band, now and then a block colour, so the plating reads in bands
+    const tone = random();
+    const rowMain = tone < 0.04 ? scheme.block : tone < 0.3 ? scheme.worn : scheme.main;
     let a = face.a[0];
     while (a < face.a[1] - 0.2) {
       const wa = Math.min(face.a[1] - a, ca * (0.6 + random() * 0.9));
@@ -74,17 +85,16 @@ export function skin(face: Face, scheme: Scheme, seed: string, o: { cell?: reado
       a += wa;
       if (o.skip?.(cA, cB)) continue;
       const roll = random();
-      if (roll < (o.bare ?? 0.04)) continue;
-      const block = random() < (o.blocks ?? 0.2);
-      const worn = random() < 0.2;
-      const material = block ? (worn ? scheme.blockWorn : scheme.block) : worn ? scheme.worn : scheme.main;
+      if (roll < (o.bare ?? 0.03)) continue;
+      const pick = random();
+      const material = pick < 0.9 ? rowMain : pick < 0.96 ? scheme.worn : pick < 0.985 ? scheme.main : pick < 0.995 ? scheme.accent : scheme.blockWorn;
       const h = raise * (0.55 + random() * 0.45);
       out.push(on(face, cA, cB, wa - gap, hb - gap, 0, h, material));
       // an access plate or a rivet strip on some panels, so no panel is blank
       const dress = random();
-      if (dress < 0.18 && wa > 1.2 && hb > 1) out.push(on(face, cA, cB, wa * 0.55, hb * 0.5, h, h + 0.04, material === scheme.main ? scheme.worn : scheme.main), on(face, cA - wa * 0.22, cB, 0.14, hb * 0.5, h + 0.04, h + 0.1, "hull-grey-dark"), on(face, cA + wa * 0.22, cB, 0.14, hb * 0.5, h + 0.04, h + 0.1, "hull-grey-dark"));
-      else if (dress < 0.3 && wa > 1.2) for (const s of [-0.38, -0.13, 0.13, 0.38]) out.push(on(face, cA + wa * s, cB + hb * 0.34, 0.12, 0.12, h, h + 0.07, "hull-grey-dark"));
-      else if (dress < 0.36) out.push(on(face, cA, cB, 0.5, 0.5, h, h + 0.12, "panel-dark"), on(face, cA, cB, 0.32, 0.32, h + 0.12, h + 0.17, "lamp-amber"));
+      if (dress < 0.16 && wa > 1.2 && hb > 1) out.push(on(face, cA, cB, wa * 0.55, hb * 0.5, h, h + 0.04, material === scheme.main ? scheme.worn : scheme.main), on(face, cA - wa * 0.22, cB, 0.14, hb * 0.5, h + 0.04, h + 0.1, "hull-grey-dark"), on(face, cA + wa * 0.22, cB, 0.14, hb * 0.5, h + 0.04, h + 0.1, "hull-grey-dark"));
+      else if (dress < 0.28 && wa > 1.2) for (const s of [-0.38, -0.13, 0.13, 0.38]) out.push(on(face, cA + wa * s, cB + hb * 0.34, 0.12, 0.12, h, h + 0.07, "hull-grey-dark"));
+      else if (dress < 0.33) out.push(on(face, cA, cB, 0.5, 0.5, h, h + 0.12, "panel-dark"), on(face, cA, cB, 0.32, 0.32, h + 0.12, h + 0.17, "lamp-amber"));
     }
     b += hb;
   }

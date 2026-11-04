@@ -3,7 +3,8 @@
 // radiators allow short transients only. Pure: no three.js and no DOM.
 import { beam, cub, type Piece, rng, rod } from "./adapter.ts";
 import { RADIATOR } from "./dims.ts";
-import { lamp } from "./faces.ts";
+import { lamp, WHITE } from "./faces.ts";
+import { dressedFace } from "./hulls.ts";
 
 export type Bank = "dorsal" | "ventral";
 
@@ -41,7 +42,7 @@ function leaf(x0: number, x1: number, zc: number, seed: string): Piece[] {
 }
 
 /** The bank stowed: a flat box of four folded leaves on a rail seat, with latches, a coolant manifold and a service step. */
-function stowed(bank: Bank): Piece[] {
+function stowed(bank: Bank, detail: number, seed: string): Piece[] {
   const z0 = SEAT[bank];
   const s = bank === "dorsal" ? 1 : -1;
   const out: Piece[] = [];
@@ -50,6 +51,7 @@ function stowed(bank: Bank): Piece[] {
   // four leaves seen at the edge as folded plates, and a cover in white with orange latches
   for (let k = 0; k < 4; k++) out.push(cub(k % 2 ? "radiator" : "hull-white-worn", [-LEAF.wide / 2 + 0.2, LEAF.wide / 2 - 0.2], [Y0 + 0.5, Y1 - 0.5], [z0 + s * (0.5 + k * 1.2), z0 + s * (1.5 + k * 1.2)]));
   out.push(cub("hull-white", [-LEAF.wide / 2, LEAF.wide / 2], [Y0, Y1], [z0 + s * depth, z0 + s * (depth + 0.4)], { only: undefined }));
+  out.push(...dressedFace({ n: "z", sign: s as 1 | -1, at: z0 + s * (depth + 0.4), a: [-LEAF.wide / 2 + 0.5, LEAF.wide / 2 - 0.5], b: [Y0 + 0.5, Y1 - 0.5] }, { seed, scheme: WHITE, detail, density: 0.3, kinds: ["hatch", "vent", "lamps", "number", "greeble", "sensor"], slot: [8, 7] }));
   for (let y = Y0 + 3; y < Y1; y += 6) for (const x of [-LEAF.wide / 2 + 1, LEAF.wide / 2 - 1, 0]) out.push(cub("hull-orange", [x - 0.9, x + 0.9], [y - 0.6, y + 0.6], [z0 + s * depth, z0 + s * (depth + 0.9)]), cub("hull-grey-dark", [x - 0.2, x + 0.2], [y - 0.2, y + 0.2], [z0 + s * (depth + 0.9), z0 + s * (depth + 1.2)]));
   for (let x = -LEAF.wide / 2 + 3; x < LEAF.wide / 2; x += 6) out.push(cub("hull-grey", [x - 0.14, x + 0.14], [Y0, Y1], [z0 + s * (depth + 0.4), z0 + s * (depth + 0.7)]));
   out.push(cub("hull-orange", [-LEAF.wide / 2, LEAF.wide / 2], [Y0 - 0.4, Y0], [Math.min(z0, z0 + s * depth), Math.max(z0, z0 + s * depth)]), cub("hull-orange", [-LEAF.wide / 2, LEAF.wide / 2], [Y1, Y1 + 0.4], [Math.min(z0, z0 + s * depth), Math.max(z0, z0 + s * depth)]));
@@ -84,6 +86,5 @@ function deployed(bank: Bank, seed: string): Piece[] {
 }
 
 export function radiators(bank: Bank, open: boolean, detail = 1, seed = `rad-${bank}`): Piece[] {
-  void detail;
-  return open ? deployed(bank, seed) : stowed(bank);
+  return open ? deployed(bank, seed) : stowed(bank, detail, seed);
 }
