@@ -142,6 +142,20 @@ Starship; Falcon 9 in v1.0 (with a fairing, or with Dragon 1 as it flew), v1.1, 
 
 The SPX fleet ships are original designs.
 
+One of them is a class of two, the Romurusu class: ISV Miyamoto, SPX-452, and its sister ISV Ariake, SPX-186. They share one hull and differ like this:
+
+| | ISV Miyamoto, SPX-452 | ISV Ariake, SPX-186 |
+|---|---|---|
+| Role | flagship and command | survey and command |
+| Accent | orange | dawn-gold band and pinstripes |
+| Signature | a long gold solar array along the starboard side, 10 bays over 120 m of her 380 m | near-black hexagonal panelling on the engine end |
+| Nose | more rounded, clad in solar cells | standard |
+| Side box modules | the staggered pair (starboard aft, port fore) | all four (port and starboard, fore and aft): double the capacity |
+| Default pod | relay (the relief pod on request) | survey |
+| Refits | none extra | an extra sensor mast, a second solarium |
+| Interior theme | its own: blue and white | warm wood and dawn-gold |
+| Shared | hull, drive with shadow-shield collar, decks, length 380 m | same |
+
 ## Variants, with their sources
 
 Sizes changed over time, so each variant lists its own, as data with types. A variant goes in only if a source documents it. A size no source gives is blank, never estimated. Where sources disagree, the data keeps the one chosen and says what else was said.

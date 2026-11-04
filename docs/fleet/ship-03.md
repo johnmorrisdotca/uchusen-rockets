@@ -22,9 +22,27 @@ Title block: *ISV Miyamoto, SPX-452 · Romurusu class · ICV · SPX · DCD ×2 �
 
 Both bays of Miyamoto (and each of Ariake's four) are empty: the craft that fly from them (the ATC rescue cutter and the survey craft) are designed separately. What stands in the bays is hangar hardware: a cradle with six clamp arms (hydraulic cylinder, column and padded jaw) and hazard chocks, round guide rails on I-beam sleepers from the cradle out through the door, an overhead gantry crane on I-beam rails, an umbilical boom with fuel, coolant and power hoses to a connector head and a hose reel, deck markings, and eight floodlights. The starboard bay has one large cradle, the port bay three smaller ones. The bay door reads as a door: a heavy grey frame with a second dark frame inside it, corner gussets and bolt rows; a heavy I-beam track along the lintel and the sill that the leaves run on; shutter leaves of orange slats (the only orange on the door) drawn into a stack, with hinge barrels and two hydraulic actuators each; a clear opening seam where the leaves stop (a dark gap, a tall hazard-striped leading edge, and a column of red and amber lamps); a roller housing above the door; and frame lights down both jambs and along the lintel. The racks on the wall that faces the spine are real shelving: steel uprights every seven metres, eight shelf boards with a front lip, standard cases in three neutral colours (white, grey, blue-grey) with a label, a handle and a hinge line, a strap across each shelf and a net of straps down each bay.
 
-## The class and its sister ship
+## The Romurusu class: Miyamoto and Ariake
 
-The Romurusu class (ロムルス級) has two ships: ISV Miyamoto, SPX-452, and ISV 有明 Ariake (ありあけ), SPX-186, "daybreak". Ariake is the same model, not a second one: a variant record that shares every part it does not change, with its own name, registry and hull marks (the registry digits on the bow), and it appears in the picker as its own row under SPX. Its title block reads *ISV Ariake, SPX-186 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*.
+The Romurusu class (ロムルス級) has two ships: ISV Miyamoto, SPX-452, and ISV 有明 Ariake (ありあけ), SPX-186, "daybreak". They share one model: the same hull, drive with its shadow-shield collar, decks and length (380 m). Each is a variant record that shares every part it does not change, with its own name, registry and hull marks (the registry digits on the bow), and each appears in the picker as its own row under SPX. Ariake's title block reads *ISV Ariake, SPX-186 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*. How they differ (the table is written once, in `CLASS_TABLE` in `specs.ts`, and a test holds the variant records to it):
+
+| | ISV Miyamoto, SPX-452 | ISV Ariake, SPX-186 |
+|---|---|---|
+| Role | flagship and command | survey and command |
+| Accent | orange | dawn-gold band and pinstripes |
+| Signature | a long gold solar array along the starboard side, 10 bays over 120 m of her 380 m | near-black hexagonal panelling on the engine end |
+| Nose | more rounded, clad in solar cells | standard |
+| Side box modules | the staggered pair (starboard aft, port fore) | all four (port and starboard, fore and aft): double the capacity |
+| Default pod | relay (the relief pod on request) | survey |
+| Refits | none extra | an extra sensor mast, a second solarium |
+| Interior theme | its own: blue and white | warm wood and dawn-gold |
+| Shared | hull, drive with shadow-shield collar, decks, length 380 m | same |
+
+What sets Miyamoto apart:
+
+- **A long gold solar array along the starboard side.** Ten bays on a root beam, 120 m of her 380 m, built like the ISS's wings and iROSA: a rotary joint (a ring gear and a motor) at each end of the beam that turns the wing to face the star, a beta gimbal and a hinge to each bay, and, deployed, a lattice mast 56 m long with a blanket of gold cells each side of it (5,832 square metres of cells on kapton, in rows, with edge wires, a tension bar and a take-up box). Stowed, each bay folds into a gold-foil canister on the beam. Two states, `array-stowed` and `array-deployed` (the variant "solar array out"); the corner it fills is the one Ariake fills with a hangar box. The cells are one template of size and thickness, built as raised plates.
+- **Power from the array.** About 2.1 MW(e) at one astronomical unit from a Sun-like star (30% cells, 89% of the blanket covered). It is for time near a star only: it falls with the square of the distance, and it is under 1% of the fusion plants' 240 MW(e). Fusion is the ship's main power; the array is for the departure and arrival ends of a voyage, and it is in the specification as "Solar array".
+- **A rounded nose.** The three staggered shield layers of the bow are round drums with rounded shoulders under a domed front, still 350 to 380 m, still with the ranging apertures, the optical heads, the side apertures and the two debris-intercept mounts; every round surface is covered in gold solar cells, with the orange removable rim round the front of each layer. Ariake keeps the standard (square) bow.
 
 What sets Ariake apart:
 
@@ -67,7 +85,8 @@ Strengths: independent command and medical systems, protected navigation, two se
 | Endurance | 32 years aboard at the normal complement |
 | Main drive | 2 DCD (Directed Conversion Drive), 20.6 MN each (41.2 MN at departure mass), effective exhaust 0.63 c |
 | Manoeuvring | 4 plasma verniers (0.9 MN each) and 24 attitude thrusters (40 kN each) |
-| Power | 2 auxiliary fusion plants of 120 MW(e) and 1 fission emergency unit of 12 MW(e) |
+| Power | 2 auxiliary fusion plants of 120 MW(e) and 1 fission emergency unit of 12 MW(e): fusion is the main power |
+| Solar array | 5,832 m2 of gold cells in 10 bays on the starboard side: 2.1 MW(e) at one astronomical unit from a Sun-like star; for time near a star only, falling with the square of the distance (Ariake has none) |
 | Heat rejection | 8 radiator leaves of 25 by 60 m, two-sided: 24,000 m2; 0.8 GW effective |
 | Acceleration | 0.040 g sustained. 0.050 g for up to 120 s with the thermal buffer charged, not used in journey planning |
 | Peak and ideal speed | 0.398 c on the 4.37 light-year route; ideal midpoint 0.422 c; shield limit 0.400 c |
@@ -181,7 +200,7 @@ The line, thick and painted looks work as for every craft. The Lit look uses the
 
 ## The catalogue sheets
 
-Eight sheets are made from the model by `scripts/ship-03-sheets.ts`: the exterior three-quarter view with callouts, the general arrangement (side, top, front and rear at one scale with a length ruler), the exploded assembly, the variants and pods, the hull layers, the engine cards, the system insets, and the specification with the decks and the legend. Every sheet has the title block `ISV 宮本 MIYAMOTO` (ruby みやもと), `ISV Miyamoto, SPX-452 · ICV class · SPX · DCD ×2 · KAZE core v4` and the status line.
+Nine sheets are made from the model by `scripts/ship-03-sheets.ts`: the exterior three-quarter view with callouts, the general arrangement (side, top, front and rear at one scale with a length ruler), the exploded assembly, the variants and pods, the hull layers, the engine cards, the system insets, the specification with the decks and the legend, and the class sheet: both ships side by side with a numbered callout at each difference of the table. Every sheet has the title block `ISV 宮本 MIYAMOTO` (ruby みやもと), `ISV Miyamoto, SPX-452 · ICV class · SPX · DCD ×2 · KAZE core v4` and the status line.
 
 ## Real ancestors
 
@@ -202,7 +221,7 @@ Each module descends from real hardware, taken a few centuries on: round pressur
 
 ## Parts, variants and the build
 
-38 parts: seven stacked modules and their cutaway forms (14), two hangars and their cutaways (4), the collar and its none (2), three pods (relay, relief, survey), and Ariake's own drive (and its cutaway), drum (and its cutaway), citadel, bow, four hangars and collar (10) and four radiator banks (dorsal and ventral, stowed and deployed), of which a variant uses two, plus 18 inset sub-parts and 2 engine cards. About 21,700 pieces build the stowed ship (19,300 for the cutaway), with about 70 kinds of detail: plating with access plates and rivet strips, structural ribs, corner beams, hatches, louvred vents, window rows, lamp rows, machinery clusters, our own numbers, bolt rows, hazard frames, sensor posts, round conduits with clamps, pipe runs with bends and flanges, valve blocks, handrails, ladders, catwalks, I-beams, round struts with ball joints, truss chords and nodes, docking collars, antennas of five kinds, cameras, thruster blocks, gimbals, field coils, throat rings, nozzle bells and liners, shutter leaves, a gantry crane, bay cradles with clamp arms, guide rails, an umbilical boom with hoses, floodlights, racks, containers, radiator leaves with heat pipes, hinge blocks, foil blankets, cassettes, level gauges, cradles, a header tank, a keel dock, bow tiles, crush cells, spacer struts, ranging apertures, optical heads, intercept turrets and, inside, a reactor, power units, battery cells, breakers, isolation locks, berths, bunks, tables, hydroponic trays, tanks, scrubbers, consoles, a communications core, a navigation desk, baffles, pumps and the layers of the hull.
+40 parts: seven stacked modules and their cutaway forms (14), two hangars and their cutaways (4), the collar and its none (2), three pods (relay, relief, survey), Miyamoto's solar array stowed and deployed, and Ariake's own drive (and its cutaway), drum (and its cutaway), citadel, bow, four hangars and collar (10) and four radiator banks (dorsal and ventral, stowed and deployed), of which a variant uses two, plus 18 inset sub-parts and 2 engine cards. About 21,700 pieces build the stowed ship (19,300 for the cutaway), with about 70 kinds of detail: plating with access plates and rivet strips, structural ribs, corner beams, hatches, louvred vents, window rows, lamp rows, machinery clusters, our own numbers, bolt rows, hazard frames, sensor posts, round conduits with clamps, pipe runs with bends and flanges, valve blocks, handrails, ladders, catwalks, I-beams, round struts with ball joints, truss chords and nodes, docking collars, antennas of five kinds, cameras, thruster blocks, gimbals, field coils, throat rings, nozzle bells and liners, shutter leaves, a gantry crane, bay cradles with clamp arms, guide rails, an umbilical boom with hoses, floodlights, racks, containers, radiator leaves with heat pipes, hinge blocks, foil blankets, cassettes, level gauges, cradles, a header tank, a keel dock, bow tiles, crush cells, spacer struts, ranging apertures, optical heads, intercept turrets and, inside, a reactor, power units, battery cells, breakers, isolation locks, berths, bunks, tables, hydroponic trays, tanks, scrubbers, consoles, a communications core, a navigation desk, baffles, pumps and the layers of the hull.
 
 The ship builds on the visitor's computer, once a visit. No `.glb` is shipped; the viewer exports one on request. On the development computer the coarse level (a quarter of the detail) builds the whole stowed ship in about 50 ms and the full detail in about 80 ms, measured by `test/ship-03.test.ts`, which fails if the first picture would take more than a second or the full detail more than three.
 

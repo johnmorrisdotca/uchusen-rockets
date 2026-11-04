@@ -11,7 +11,7 @@ export type ArrayState = "stowed" | "deployed";
 const { root, pitch, mast, blanket } = ARRAY;
 const [Y0, Y1] = ARRAY.y;
 const CELL = 1.35;
-const CELLS = ["coil", "gold", "coil", "coil", "gold"] as const;
+const CELLS = ["gold", "kapton", "gold", "coil", "gold"] as const;
 
 /** One stowed bay: a gold-foil canister on the beam, the folded cells showing at its ends, launch locks, the beta gimbal and the hinge barrel. In the wing's own frame: the root beam is the Y axis, a bay reaches out along +X. */
 function stowedBay(yb: number): Piece[] {

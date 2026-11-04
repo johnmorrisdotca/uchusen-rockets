@@ -78,6 +78,7 @@ const CSS = `
 .panel button:disabled { opacity: 0.5; cursor: default; }
 .panel .body { margin-top: 0.5rem; max-height: 14rem; overflow: auto; }
 .panel .body button { margin: 0 0.35rem 0.35rem 0; }
+.panel td button.link { margin: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; text-decoration: underline; text-align: left; }
 .panel table { border-collapse: collapse; width: 100%; }
 .panel th, .panel td { text-align: left; padding: 0.15rem 0.4rem; border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent); vertical-align: top; }
 .panel p { margin: 0 0 0.5rem; }
@@ -657,6 +658,10 @@ export class UchusenRocket extends HTMLBase {
         drawn: () => Boolean(this.viewer),
         onLabels: (on) => (on ? this.setAttribute("labels", "on") : this.removeAttribute("labels")),
         download: () => this.downloadModel(),
+        go: (rocket, variant) => {
+          this.setAttribute("rocket", rocket);
+          this.setAttribute("variant", variant);
+        },
       });
       root.appendChild(this.panel.el);
       this.panelFor = inspector;

@@ -12,6 +12,8 @@ export interface PanelHooks {
   onLabels: (on: boolean) => void;
   /** Saves the full-detail model on screen as a .glb file. */
   download: () => void;
+  /** Goes to another rocket and variant: a spec row that is a link (the sister ship). */
+  go?: (rocket: string, variant: string) => void;
 }
 
 const TABS: readonly (readonly [string, string])[] = [
@@ -85,7 +87,7 @@ export class Panel {
 
   private render(): void {
     this.bar.replaceChildren();
-    for (const [id, name] of TABS) this.bar.append(this.button(name, { role: "tab", "aria-selected": String(this.tab === id), "data-tab": id }, () => {
+    for (const [id, name] of TABS) if (id !== "insets" || this.inspector.insets.length) this.bar.append(this.button(name, { role: "tab", "aria-selected": String(this.tab === id), "data-tab": id }, () => {
       this.tab = id;
       this.render();
     }));
@@ -100,7 +102,7 @@ export class Panel {
     const save = this.button("Download 3D model", { "data-download": "", title: "Saves the full-detail model on screen as a .glb file" }, () => this.hooks.download());
     this.bar.append(save);
     this.body.replaceChildren();
-    if (this.tab === "spec") this.body.append(this.table(this.inspector.spec.map(([a, b]) => [a, b])));
+    if (this.tab === "spec") this.body.append(this.table(this.inspector.spec.map(([a, b]) => [a, b]), this.inspector.links));
     else if (this.tab === "insets") this.renderInsets();
     else for (const text of this.inspector.notes[this.tab] ?? []) {
       const p = document.createElement("p");
@@ -109,7 +111,7 @@ export class Panel {
     }
   }
 
-  private table(rows: readonly (readonly [string, string])[]): HTMLTableElement {
+  private table(rows: readonly (readonly [string, string])[], links?: Inspector["links"]): HTMLTableElement {
     const table = document.createElement("table");
     for (const [a, b] of rows) {
       const tr = table.insertRow();
@@ -117,7 +119,12 @@ export class Panel {
       th.scope = "row";
       th.textContent = a;
       tr.append(th);
-      tr.insertCell().textContent = b;
+      const go = links?.[a];
+      if (go && this.hooks.go) {
+        const link = this.button(b, { "data-go": `${go.rocket}/${go.variant}`, title: "Go to the sister ship" }, () => this.hooks.go?.(go.rocket, go.variant));
+        link.className = "link";
+        tr.insertCell().append(link);
+      } else tr.insertCell().textContent = b;
     }
     return table;
   }
