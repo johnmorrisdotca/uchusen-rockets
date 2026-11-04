@@ -20,6 +20,10 @@ interface Shot {
   look?: "painted" | "line" | "lit";
   /** A larger shadow normal bias (a share of the shadow radius) for a ship so big that the shadow map shows acne on its curved hulls. */
   shadowBias?: number;
+  /** How strongly lit materials glow in the lit look (default 1.6). */
+  glow?: number;
+  /** The key light in the lit look (default 0.3). */
+  sun?: number;
   /** Radius round the target the key light's shadow covers, metres. */
   shadow?: number;
   /** Parts of the glb to hide, by node name. */
@@ -54,10 +58,12 @@ const MAX_SIDE = 4096;
 const MAX_PIXELS = 6_000_000;
 
 const GLOW = JSON.stringify(Object.fromEntries(Object.entries(MATERIALS).filter(([, m]) => m.glow).map(([name, m]) => [name, { color: m.glowColor ?? m.color, strength: m.glow }])));
+const OPACITY = JSON.stringify(Object.fromEntries(Object.entries(MATERIALS).filter(([, m]) => m.opacity).map(([name, m]) => [name, m.opacity])));
 const PAGE = `<!doctype html><meta charset="utf-8"><body style="margin:0;background:#070c17">
 <script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
 <script type="module">
 const GLOW = ${GLOW};
+const OPACITY = ${OPACITY};
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -93,7 +99,7 @@ window.draw = async (job, shot) => {
     if (o.isMesh) {
       o.castShadow = shot.look !== "line"; o.receiveShadow = shot.look !== "line";
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (shot.look === 'lit') { const n = m.name || ''; const g = GLOW[n]; const glow = g ? [new THREE.Color(g.color), g.strength * 1.6] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
+      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (OPACITY[m.name] && shot.look !== 'line') { m.transparent = true; m.opacity = OPACITY[m.name]; m.depthWrite = false; } if (shot.look === 'lit') { const n = m.name || ''; const g = GLOW[n]; const glow = g ? [new THREE.Color(g.color), g.strength * (shot.glow ?? 1.6)] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
       if (shot.look === "line") { const e = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), new THREE.LineBasicMaterial({ color: "#8fd3ff", clippingPlanes: planes })); o.add(e); }
     } else if (o.material) { o.material.clippingPlanes = planes; }
   });
@@ -107,7 +113,7 @@ window.draw = async (job, shot) => {
   camera.lookAt(...shot.target);
   const target = new THREE.Vector3(...shot.target);
   const dir = new THREE.Vector3(0.5, 0.7, 0.6).normalize();
-  const sun = new THREE.DirectionalLight("#fff3e0", shot.look === "line" ? 0 : shot.look === "lit" ? 0.3 : 2.6);
+  const sun = new THREE.DirectionalLight("#fff3e0", shot.look === "line" ? 0 : shot.look === "lit" ? (shot.sun ?? 0.3) : 2.6);
   const r = shot.shadow ?? 200;
   sun.position.copy(target).addScaledVector(dir, r * 3);
   sun.target.position.copy(target);
