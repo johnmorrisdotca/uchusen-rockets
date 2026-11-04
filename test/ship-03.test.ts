@@ -139,12 +139,15 @@ test("Miyamoto is in the registry: four variants, every slot's part exists, the 
   assert.deepEqual(shared?.record.trueTo, ["miyamoto", "miyamoto-deployed", "miyamoto-relief", "miyamoto-no-collar"]);
   // the sister ship is a variant of the same model: its own row in the picker, its own marks and pod, the rest shared
   const sister = ROCKETS["fleet-ship-ariake"];
-  assert.equal(sister.variants.length, 1);
+  assert.equal(sister.variants.length, 2);
   assert.equal(sister.variants[0].name, "ISV 有明 Ariake, SPX-186");
   assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.drive, "drive-ariake");
-  assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.pod, "pod-relief");
-  assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.habitat, "habitat");
+  assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.pod, "pod-survey");
+  assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.habitat, "habitat-ariake");
+  assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.command, "command-ariake");
+  assert.equal(MIYAMOTO_VARIANT_SLOTS["ariake-cutaway"].habitat, "habitat-ariake-cutaway");
   assert.equal(check({ rocket: "fleet-ship-ariake", variant: "ariake" }).ok, true);
+  assert.equal(check({ rocket: "fleet-ship-ariake", variant: "ariake-cutaway" }).ok, true);
   // the shadow-shield collar swaps for none in one slot
   assert.equal(MIYAMOTO_VARIANT_SLOTS.miyamoto["drive-collar"], "shield-collar");
   assert.equal(MIYAMOTO_VARIANT_SLOTS["miyamoto-no-collar"]["drive-collar"], "collar-none");
@@ -205,4 +208,19 @@ test("every module names the real hardware it descends from, and the pipes and s
   const rods = pieces.filter((piece) => piece.kind === "plate" && piece.outline.length >= 5);
   const lathes = pieces.filter((piece) => piece.kind === "lathe" && piece.segs >= 10);
   assert.ok(rods.length > 1500 && lathes.length > 800, `${rods.length} round rods, ${lathes.length} round lathes`);
+});
+
+test("Ariake is a variant record of the same model: a dawn-gold livery, a survey pod, a refit and a warm interior, none of it on Miyamoto", () => {
+  const all = parts();
+  const get = (id: string) => all.find((part) => part.id === id)!.pieces({ detail: 0.6 });
+  // dawn-gold appears on Ariake's own parts and on none of Miyamoto's
+  for (const id of ["drive-ariake", "habitat-ariake", "command-ariake", "bow-ariake", "hangar-starboard-ariake", "hangar-port-ariake", "pod-survey"]) assert.ok(materialsOf(get(id)).has("hull-dawn"), id);
+  for (const id of ["drive", "habitat", "command", "bow", "hangar-starboard", "hangar-port", "pod-relay", "pod-relief"]) assert.ok(!materialsOf(get(id)).has("hull-dawn"), id);
+  // the warm interior: wood and dawn-gold rooms in Ariake's cutaway, blue ones in Miyamoto's
+  assert.ok(materialsOf(get("habitat-ariake-cutaway")).has("wood") && !materialsOf(get("habitat-cutaway")).has("wood"));
+  // the refit: a sensor mast and a second solarium, so the citadel has more pieces than Miyamoto's
+  assert.ok(get("command-ariake").length > get("command").length + 150);
+  // orange stays on the removable leaves: Ariake's hangar has the same number of orange pieces as Miyamoto's
+  const orange = (pieces: Piece[]) => pieces.filter((piece) => piece.kind !== "lines" && (piece as { material: string }).material === "hull-orange").length;
+  assert.equal(orange(get("hangar-starboard-ariake")), orange(get("hangar-starboard")));
 });

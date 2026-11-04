@@ -67,6 +67,8 @@ export const MATERIALS = {
   "hull-white-worn": { color: "#b9b7ae", metal: 0.3, rough: 0.62, fill: "white" },
   "hull-orange": { color: P.shield, metal: 0.35, rough: 0.5, fill: "metal" },
   "hull-orange-worn": { color: "#a86432", metal: 0.4, rough: 0.62, fill: "metal" },
+  "hull-dawn": { color: "#eca637", metal: 0.55, rough: 0.36, fill: "metal" },
+  "hull-dawn-worn": { color: "#b87a2c", metal: 0.5, rough: 0.55, fill: "metal" },
   "hull-yellow": { color: P.service, metal: 0.3, rough: 0.5, fill: "metal" },
   "hull-grey": { color: P.structure, metal: 0.65, rough: 0.45, fill: "metal" },
   "hull-grey-dark": { color: "#4b5057", metal: 0.7, rough: 0.5, fill: "dark" },

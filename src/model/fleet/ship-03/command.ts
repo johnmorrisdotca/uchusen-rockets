@@ -62,7 +62,7 @@ function inside(seed: string): Piece[] {
   return out;
 }
 
-export function command(cut: boolean, detail = 1, seed = "command"): Piece[] {
+export function command(cut: boolean, detail = 1, seed = "command", refit = false): Piece[] {
   const out: Piece[] = [];
   const o = { seed, scheme: ARMOUR, detail, density: 0.55 };
   const outline = chamfered(HX, HZ, C);
@@ -104,7 +104,7 @@ export function command(cut: boolean, detail = 1, seed = "command"): Piece[] {
         out.push(cub("hull-grey-dark", [x - 0.9, x + 0.9], [y - 1.3, y + 1.3], [z - 1.4, z + 1.4]));
         for (const d of [-0.7, 0.7]) out.push(rod("bell", [x, y + d * 1.4, z + d], [x + sx * 0.8, y + d * 1.4, z + d], 0.5, 8), rod("bell-inside", [x + sx * 0.8, y + d * 1.4, z + d], [x + sx * 0.9, y + d * 1.4, z + d], 0.36, 8));
       }
-  out.push(...observation(seed), ...collar("L", Y0, -1), ...separationJoint(Y0, cut), ...collar("L", Y1, 1));
+  out.push(...observation(seed, refit), ...(refit ? sensorMast() : []), ...collar("L", Y0, -1), ...separationJoint(Y0, cut), ...collar("L", Y1, 1));
   out.push(...rail(along(f.dorsal), -17, Y0 + 2, Y1 - 2), ...rail(along(f.dorsal), 17, Y0 + 2, Y1 - 2));
   return out;
 }
@@ -149,7 +149,7 @@ export function separationJoint(y: number, cut: boolean): Piece[] {
 }
 
 /** The armoured observation dome above the operations ring, and the solarium beside it: a glazed garden hall with grow-lamps and shutters, lit at night. The dome is a faceted cap of glass panes in an armoured ring with eight ribs; the solarium is a frame of I-beams holding glass, with plant beds, lamps and half-drawn orange shutters. Simple until the kit's own arrive. */
-export function observation(seed: string): Piece[] {
+export function observation(seed: string, twin = false): Piece[] {
   const out: Piece[] = [];
   const dy = Y0 + 21;
   const z0 = HZ;
@@ -163,18 +163,20 @@ export function observation(seed: string): Piece[] {
   }
   out.push(...ringAtZ("lamp-blue", 0, dy, z0 + 1.75, 5.7));
   // the solarium: a hall beside the dome, a frame of I-beams, glass walls and roof, beds of plants, grow-lamps, and shutters half drawn
-  const sx0 = 8.5;
-  const sx1 = 17.5;
-  const sy0 = dy - 5;
-  const sy1 = dy + 5;
-  const h = 4.2;
-  out.push(cub("hull-grey-dark", [sx0, sx1], [sy0, sy1], [z0, z0 + 0.5]), cub("glass", [sx0 + 0.3, sx1 - 0.3], [sy0 + 0.3, sy1 - 0.3], [z0 + h - 0.2, z0 + h]));
-  for (const x of [sx0, (sx0 + sx1) / 2, sx1]) for (const y of [sy0, (sy0 + sy1) / 2, sy1]) out.push(rod("hull-grey", [x, y, z0 + 0.5], [x, y, z0 + h], 0.22, 12));
-  for (const y of [sy0, sy1]) out.push(...ibeam("hull-grey", [sx0, y, z0 + h], [sx1, y, z0 + h], 0.5, 0.3, [0, 0, 1]));
-  for (const x of [sx0, sx1]) out.push(...ibeam("hull-grey", [x, sy0, z0 + h], [x, sy1, z0 + h], 0.5, 0.3, [0, 0, 1]), cub("glass", [x - 0.05, x + 0.05], [sy0 + 0.3, sy1 - 0.3], [z0 + 0.7, z0 + h - 0.3]));
-  for (const y of [sy0, sy1]) out.push(cub("glass", [sx0 + 0.3, sx1 - 0.3], [y - 0.05, y + 0.05], [z0 + 0.7, z0 + h - 0.3]));
-  for (let r = 0; r < 3; r++) out.push(cub("plant", [sx0 + 0.8, sx1 - 0.8], [sy0 + 1 + r * 3.2, sy0 + 3 + r * 3.2], [z0 + 0.5, z0 + 1.1]), cub("lamp-blue", [sx0 + 1.2, sx1 - 1.2], [sy0 + 1.8 + r * 3.2, sy0 + 2.2 + r * 3.2], [z0 + h - 0.8, z0 + h - 0.6]), rod("hull-grey-dark", [sx0 + 1, sy0 + 2 + r * 3.2, z0 + h - 0.2], [sx0 + 1, sy0 + 2 + r * 3.2, z0 + h - 0.8], 0.06, 6));
-  out.push(cub("hull-orange", [sx0 + 0.2, sx1 - 0.2], [sy0, sy0 + 1.4], [z0 + h, z0 + h + 0.2]), cub("hull-orange-worn", [sx0 + 0.2, sx1 - 0.2], [sy1 - 1.4, sy1], [z0 + h, z0 + h + 0.2]), rod("hull-grey-dark", [sx0, sy0, z0 + h + 0.15], [sx1, sy0, z0 + h + 0.15], 0.12, 8), rod("hull-grey-dark", [sx0, sy1, z0 + h + 0.15], [sx1, sy1, z0 + h + 0.15], 0.12, 8));
+  const hall = (sx0: number, sx1: number): void => {
+    const sy0 = dy - 5;
+    const sy1 = dy + 5;
+    const h = 4.2;
+    out.push(cub("hull-grey-dark", [sx0, sx1], [sy0, sy1], [z0, z0 + 0.5]), cub("glass", [sx0 + 0.3, sx1 - 0.3], [sy0 + 0.3, sy1 - 0.3], [z0 + h - 0.2, z0 + h]));
+    for (const x of [sx0, (sx0 + sx1) / 2, sx1]) for (const y of [sy0, (sy0 + sy1) / 2, sy1]) out.push(rod("hull-grey", [x, y, z0 + 0.5], [x, y, z0 + h], 0.22, 12));
+    for (const y of [sy0, sy1]) out.push(...ibeam("hull-grey", [sx0, y, z0 + h], [sx1, y, z0 + h], 0.5, 0.3, [0, 0, 1]));
+    for (const x of [sx0, sx1]) out.push(...ibeam("hull-grey", [x, sy0, z0 + h], [x, sy1, z0 + h], 0.5, 0.3, [0, 0, 1]), cub("glass", [x - 0.05, x + 0.05], [sy0 + 0.3, sy1 - 0.3], [z0 + 0.7, z0 + h - 0.3]));
+    for (const y of [sy0, sy1]) out.push(cub("glass", [sx0 + 0.3, sx1 - 0.3], [y - 0.05, y + 0.05], [z0 + 0.7, z0 + h - 0.3]));
+    for (let r = 0; r < 3; r++) out.push(cub("plant", [sx0 + 0.8, sx1 - 0.8], [sy0 + 1 + r * 3.2, sy0 + 3 + r * 3.2], [z0 + 0.5, z0 + 1.1]), cub("lamp-blue", [sx0 + 1.2, sx1 - 1.2], [sy0 + 1.8 + r * 3.2, sy0 + 2.2 + r * 3.2], [z0 + h - 0.8, z0 + h - 0.6]), rod("hull-grey-dark", [sx0 + 1, sy0 + 2 + r * 3.2, z0 + h - 0.2], [sx0 + 1, sy0 + 2 + r * 3.2, z0 + h - 0.8], 0.06, 6));
+    out.push(cub("hull-orange", [sx0 + 0.2, sx1 - 0.2], [sy0, sy0 + 1.4], [z0 + h, z0 + h + 0.2]), cub("hull-orange-worn", [sx0 + 0.2, sx1 - 0.2], [sy1 - 1.4, sy1], [z0 + h, z0 + h + 0.2]), rod("hull-grey-dark", [sx0, sy0, z0 + h + 0.15], [sx1, sy0, z0 + h + 0.15], 0.12, 8), rod("hull-grey-dark", [sx0, sy1, z0 + h + 0.15], [sx1, sy1, z0 + h + 0.15], 0.12, 8));
+  };
+  hall(8.5, 17.5);
+  if (twin) hall(-17.5, -8.5);
   void seed;
   return out;
 }
@@ -185,4 +187,30 @@ function ringAtZ(material: "lamp-blue" | "lamp-amber", x: number, y: number, z: 
     const a = (Math.PI * 2 * k) / 16;
     return cub(material, [x + r * Math.cos(a) - 0.12, x + r * Math.cos(a) + 0.12], [y + r * Math.sin(a) - 0.12, y + r * Math.sin(a) + 0.12], [z, z + 0.2]);
   });
+}
+
+/** Ariake's refit: a lattice mast on the citadel's dorsal side aft of the dome, three round legs braced at every level, with a ring of lamps and a head of sensors (a gimballed telescope, a radar dish, a lidar turret and a magnetometer boom). */
+export function sensorMast(): Piece[] {
+  const out: Piece[] = [];
+  const y = Y0 + 7;
+  const z0 = HZ;
+  const top = z0 + 26;
+  const leg = (k: number, h: number): Vec3 => {
+    const a = (Math.PI * 2 * k) / 3;
+    const r = 2.2 - (1.2 * (h - z0)) / (top - z0);
+    return [r * Math.cos(a), y + r * Math.sin(a), h];
+  };
+  out.push(cub("hull-grey-dark", [-3.2, 3.2], [y - 3.2, y + 3.2], [z0, z0 + 0.8]), ...ringAtZ("lamp-amber", 0, y, z0 + 0.85, 3.4));
+  for (let k = 0; k < 3; k++) {
+    out.push(...roundStrut("hull-grey", leg(k, z0 + 0.8), leg(k, top), 0.22));
+    for (let h = z0 + 0.8; h + 4 < top; h += 4) out.push(...roundStrut("hull-grey-dark", leg(k, h), leg((k + 1) % 3, h + 4), 0.1), ...roundStrut("hull-grey-dark", leg((k + 1) % 3, h), leg(k, h + 4), 0.1));
+  }
+  for (let h = z0 + 4.8; h < top; h += 4) out.push(rod("hull-dawn", [leg(0, h)[0] * 1.02, y + leg(0, h)[1] - y, h], [leg(1, h)[0] * 1.02, leg(1, h)[1], h], 0.08, 6));
+  out.push(discZ("hull-grey", 0, y, top, top + 0.5, 1.6, 12), discZ("hull-dawn", 0, y, top + 0.5, top + 0.8, 1.7, 12));
+  // the head: a telescope in a yoke, a dish, a lidar drum, and a boom with a sensor ball
+  out.push(rod("hull-grey-dark", [-1, y, top + 0.8], [-1, y, top + 2.2], 0.15, 8), rod("hull-grey-dark", [1, y, top + 0.8], [1, y, top + 2.2], 0.15, 8), rod("hull-white", [0, y - 1.4, top + 2.4], [0, y + 1.8, top + 2.4], 0.55, 14), rod("glass", [0, y + 1.8, top + 2.4], [0, y + 1.95, top + 2.4], 0.42, 14), rod("hull-grey-dark", [0, y - 1.6, top + 2.4], [0, y - 1.4, top + 2.4], 0.6, 14));
+  out.push(...antenna("dish", [0, y - 2.2, top + 1.2], [0, -0.5, 1], 3.2, "mast-dish"), rod("hull-grey", [1.5, y + 0.4, top + 0.8], [1.5, y + 0.4, top + 1.6], 0.5, 12), rod("glass", [1.5, y + 0.4, top + 1.6], [1.5, y + 0.4, top + 1.75], 0.4, 12));
+  out.push(...roundStrut("hull-grey", [1.6, y, top - 3], [11, y, top - 3.5], 0.14), ...roundStrut("hull-grey", [-1.6, y, top - 3], [-11, y, top - 3.5], 0.14), rod("hull-dawn", [11, y, top - 3.5], [11.5, y, top - 3.5], 0.5, 12), rod("hull-dawn", [-11, y, top - 3.5], [-11.5, y, top - 3.5], 0.5, 12));
+  out.push(rod("lamp-red", [0, y, top + 3.7], [0, y, top + 4], 0.18, 8), ...antenna("whip", [0, y + 0.6, top + 3], [0, 0, 1], 4, "mast-whip"));
+  return out;
 }
