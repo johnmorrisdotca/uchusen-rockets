@@ -1,6 +1,5 @@
 // The journey page: choose a start, an end and a craft, then fly the trip. Draws with one 2D canvas, SVG and the package's own line drawing of the craft: no WebGL, so no context to make or let go.
 // It asks for a frame only while the trip plays and the page can be seen, at most 30 a second, and never when nothing moves.
-import { build } from "../src/build/index.ts";
 import { ROCKETS, SOURCES } from "../src/index.ts";
 import {
   astronomicalUnits,
@@ -18,6 +17,7 @@ import {
   playSeconds,
   preheat,
   speedWords,
+  stageOf,
   stateAt,
   tonnesWords,
   windows,
@@ -29,6 +29,7 @@ import {
 } from "../src/journey/index.ts";
 import { transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
+import { stagedSvg } from "./journey-craft.ts";
 import { WORDS } from "./words.js";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
@@ -195,25 +196,17 @@ const craftBox = byId("craft");
 const mapSvg = byId<SVGSVGElement>("map");
 const routeSvg = byId<SVGSVGElement>("route");
 let litNow = false;
-const svgCache = new Map<string, string>();
+let stageNow = "";
 
-function craftSvg(lit: boolean): string {
-  const craft = craftNow();
-  const key = `${craft.id}:${lit}`;
-  let text = svgCache.get(key);
-  if (!text) {
-    text = build({ rocket: craft.rocket, variant: craft.variant }).svg({ look: "line", view: "side", engines: lit }).replace("<svg ", '<svg aria-hidden="true" ');
-    svgCache.set(key, text);
-  }
-  return text;
-}
-
-function setCraft(lit: boolean): void {
+function setCraft(lit: boolean, phase = "ascent"): void {
   litNow = lit;
+  const shown = stagedSvg(craftNow(), phase, lit);
+  stageNow = shown.stage.name;
   const template = document.createElement("template");
-  template.innerHTML = craftSvg(lit);
+  template.innerHTML = shown.svg;
   craftBox.replaceChildren(template.content);
-  craftBox.setAttribute("aria-label", craftName(craftNow()));
+  craftBox.setAttribute("aria-label", `${craftName(craftNow())}: ${shown.stage.name}`);
+  craftBox.dataset.stage = shown.stage.name;
   layout();
 }
 
@@ -479,6 +472,7 @@ function buildPanel(): void {
     ["peakg", say("jPeakG"), gWords(trip.peakG), trip.estimated.includes("departure burn length") || trip.estimated.includes("braking acceleration")],
     ["peak", say("jPeakSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     ["fuel", say("jFuel"), fuelWords()],
+    ["payload", say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],
   ];
   const list = byId("trip");
   list.replaceChildren(
@@ -502,12 +496,17 @@ function buildPanel(): void {
 }
 
 function fuelWords(): string {
-  if (trip.continuous) return `${tonnesWords(trip.propellantUsedT ?? 0)} / ${tonnesWords(trip.propellantCarriedT ?? 0)}`;
-  const craft = craftNow();
-  if (craft.drive !== "ballistic") return "";
-  const kind = choice.to === "moon" ? "tli" : choice.to === "mars" ? "mars" : null;
-  const figure = kind ? craft.capacityKg[kind] : undefined;
-  return figure ? `${tonnesWords(figure.value / 1000)} ${say("jPayload")}` : trip.verdict.level === "at-least" ? tonnesWords(Math.max(...Object.entries(craft.capacityKg).filter(([k]) => k === "mars").map(([, q]) => q!.value)) / 1000) : say("jNoFigure");
+  const fuel = trip.fuel;
+  if (fuel.usedT === null) return `${say("jNA")}: ${fuel.note}`;
+  if (fuel.carriedT !== null) return `${tonnesWords(fuel.usedT)} / ${tonnesWords(fuel.carriedT)}`;
+  return `${tonnesWords(fuel.usedT)}, ${say("jBrakeOnly")}`;
+}
+
+function payloadWords(): string {
+  const payload = trip.payload;
+  if (payload.kg === null) return `${say("jNA")}: ${payload.note}`;
+  const t = tonnesWords(payload.kg / 1000);
+  return payload.atLeast ? say("jAtLeast", { t }) : t;
 }
 
 function drawPanel(state: State): void {
@@ -589,6 +588,7 @@ function showSummary(): void {
     [say("jPeakG"), gWords(trip.peakG)],
     [say("jDvAll"), speedWords(trip.dv.total)],
     [say("jFuel"), fuelWords()],
+    [say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],
     [say("jSignalEnd"), duration(end.signalS)],
     [say("jCompare"), `${say("jLightTakes", { t: duration(trip.pathKm / 299_792.458) })} ${say("jVoyager", { t: duration(trip.pathKm / VOYAGER_KMS) })}`],
   ];
@@ -665,7 +665,7 @@ function draw(force = false): void {
   setText(byId("speed-sub"), say("jOfLight", { pct: percentOfLight(state.speedMs) }));
   // the craft: which way it faces, and whether its engines burn
   const lit = state.burn !== "off";
-  if (lit !== litNow) setCraft(lit);
+  if (lit !== litNow || stageOf(craftNow(), id).name !== stageNow) setCraft(lit, id);
   craftBox.style.setProperty("--turn", `${(90 - 180 * state.turned).toFixed(1)}deg`);
   drawRoute(state);
   if (choice.view === "map") drawMap(state);

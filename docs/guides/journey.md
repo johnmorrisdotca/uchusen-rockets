@@ -83,3 +83,9 @@ console.log(duration(258.8 * 86_400));
 ## What the page draws
 
 One 2D canvas for the stars, SVG for the map and the route, and the package's own line drawing of the craft turned on its side: no WebGL, so the page makes no context to let go. It asks for a frame only while a trip plays and the page is on screen, at most 30 a second. The address keeps the choices (`?from=earth&to=mars&craft=falcon-heavy`).
+
+## What is left after each burn
+
+The side view shows only what is left. A rocket is drawn whole through the countdown and the ascent, then as the upper stage with its payload for the departure burn and the coast, then as the payload alone from the turn round: Saturn V as the S-IVB with the Apollo spacecraft, then the command and service module; the Space Launch System as the upper stage with Orion, then Orion; Falcon Heavy as its upper stage with the payload, then the payload in its fairing. Nothing is drawn new: each stage is the rockets' own parts (`stageOf` says which), closed up into one stack and fitted to the whole rocket, so the scale never changes. A rocket with boosters on its sides, such as Falcon Heavy at lift-off, is drawn from the front so that all of its cores show.
+
+The trip's numbers have a Fuel row, which is the propellant used (or n/a, with the reason: for most rockets no source gives the engine's specific impulse), and a row of its own for the payload, "Payload to" the target.

@@ -157,3 +157,50 @@ test("the Japanese page says its words in Japanese and keeps the trip", async ({
   await expect(page.getByTestId("to-mars")).toHaveText("火星");
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "rated");
 });
+
+test("after each burn only what is left is drawn: the whole rocket, the upper stage with its payload, then the payload", async ({ page }) => {
+  const found = problems(page);
+  await page.goto(`${URL}&craft=saturn-v&to=moon`);
+  await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Saturn V");
+  const size = async () => (await page.getByTestId("craft").locator("svg").innerHTML()).length;
+  const whole = await size();
+  await page.goto(`${URL}&craft=saturn-v&to=moon&t=26`);
+  await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "S-IVB with the Apollo spacecraft");
+  const upper = await size();
+  await page.goto(`${URL}&craft=saturn-v&to=moon&t=51`);
+  await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Apollo command and service module");
+  const payload = await size();
+  expect(whole).toBeGreaterThan(upper);
+  expect(upper).toBeGreaterThan(payload);
+  await page.goto(`${URL}&craft=falcon-heavy&to=mars&t=26`);
+  await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Upper stage with its payload");
+  await page.goto(`${URL}&craft=sls&to=moon&t=26`);
+  await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Upper stage with Orion");
+  expect(found).toEqual([]);
+});
+
+test("Falcon Heavy at lift-off shows all three cores", async ({ page }) => {
+  await page.goto(`${URL}&craft=falcon-heavy&to=mars`);
+  await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Falcon Heavy");
+  // three cores are many more paths than the upper stage and its payload
+  await page.goto(`${URL}&craft=falcon-heavy&to=mars`);
+  const paths = await page.getByTestId("craft").locator("svg path").count();
+  await page.goto(`${URL}&craft=falcon-heavy&to=mars&t=26`);
+  const upperPaths = await page.getByTestId("craft").locator("svg path").count();
+  expect(paths).toBeGreaterThan(upperPaths * 2);
+});
+
+test("the Fuel row is the propellant used or n/a with a reason, and the payload has its own row, named for the target", async ({ page }) => {
+  await page.goto(`${URL}&craft=falcon-heavy&to=mars`);
+  await expect(page.getByTestId("trip-payload")).toHaveText("16.8 t");
+  await expect(page.getByTestId("trip").getByText("Payload to Mars")).toBeVisible();
+  await expect(page.getByTestId("trip-fuel")).toContainText("n/a: no source gives the specific impulse");
+  await page.goto(`${URL}&craft=saturn-v&to=moon`);
+  await expect(page.getByTestId("trip-payload")).toHaveText("43.5 t");
+  await expect(page.getByTestId("trip-fuel")).toContainText("10.2 t");
+  await page.goto(`${URL}&craft=saturn-v&to=mars`);
+  await expect(page.getByTestId("trip-payload")).toContainText("n/a: no published payload figure covers a trip to Mars");
+  await page.goto(`${URL}&craft=kaminari&to=mars`);
+  await expect(page.getByTestId("trip-fuel")).toContainText("/");
+  await expect(page.getByTestId("trip-payload")).toContainText("million t");
+});
