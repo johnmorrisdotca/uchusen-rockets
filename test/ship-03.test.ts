@@ -1,4 +1,4 @@
-// ISV Miyamoto (SPX-03): the physics the bible prints, its parts in metres, the detail on every module, one mesh for one description, the named sections and decks, and how long it takes to build.
+// ISV Miyamoto (SPX-452): the physics the bible prints, its parts in metres, the detail on every module, one mesh for one description, the named sections and decks, and how long it takes to build.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
@@ -6,7 +6,7 @@ import { build } from "../src/build/index.ts";
 import { BUILD_BUDGET_MS, MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
-import { ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, TITLE_BLOCK, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
+import { ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, SHIPS, TITLE_BLOCK, titleBlockOf, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
@@ -49,16 +49,20 @@ test("the engine cards agree: thrust is mass flow times exhaust speed, and the m
 });
 
 test("the identity and the specification: the SPX designation, the Japanese name with its reading, the numbers", () => {
-  assert.equal(IDENTITY.designation, "SPX-03");
-  assert.equal(IDENTITY.class, "ICV");
+  assert.equal(IDENTITY.designation, "SPX-452");
+  assert.equal(IDENTITY.type, "ICV");
+  assert.equal(IDENTITY.class, "Romurusu");
+  assert.equal(SHIPS.ariake.registry, "SPX-186");
+  assert.equal(SHIPS.ariake.meaning, "daybreak");
   assert.equal(OPERATOR, "SPX");
-  assert.equal(TITLE_BLOCK, "ISV Miyamoto, SPX-03 · ICV class · SPX · DCD ×2 · KAZE core v4");
+  assert.equal(TITLE_BLOCK, "ISV Miyamoto, SPX-452 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4");
+  assert.equal(titleBlockOf("ariake"), "ISV Ariake, SPX-186 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4");
   assert.equal(IDENTITY.maker, "SPX");
   assert.equal(IDENTITY.japanese, "宮本");
   assert.equal(IDENTITY.meaning, "at the foot of the shrine");
   assert.deepEqual([ENVELOPE.length, ENVELOPE.beam, ENVELOPE.height], [380, 118, 74]);
-  const lines = specification().map((line) => `${line.name}: ${line.value}`).join("\n");
-  for (const text of ["ISV Miyamoto, SPX-03", "KAZE core v4", "DCD", "380 m", "118 m", "105,000 t", "20.42 years aboard", "21.03 years", "0.04 g sustained", "24,000 m2"]) assert.ok(lines.includes(text), text);
+  const lines = specification().map((line) => `${line.name}: ${line.value} ${line.note ?? ""}`).join("\n");
+  for (const text of ["ISV Miyamoto, SPX-452", "Romurusu class", "KAZE core v4", "DCD", "380 m", "118 m", "105,000 t", "20.42 years aboard", "21.03 years", "0.04 g sustained", "24,000 m2"]) assert.ok(lines.includes(text), text);
   assert.ok(HISTORY.service.includes("2459") && IDENTITY.firstFlight === 2456 && STATUS === "STATUS: PLANNED · FIRST FLIGHT 2456");
   assert.ok(!/in service|serving|was commissioned/i.test(Object.values(HISTORY).join(" ")), "the history reads as a plan");
   assert.equal(ROCKETS["fleet-ship-03"].madeBy.value, "SPX");
@@ -133,6 +137,14 @@ test("Miyamoto is in the registry: four variants, every slot's part exists, the 
   // the same part serves more than one variant
   const shared = PART_ENTRIES.find((entry) => entry.record.id === "fleet-ship-03-drive");
   assert.deepEqual(shared?.record.trueTo, ["miyamoto", "miyamoto-deployed", "miyamoto-relief", "miyamoto-no-collar"]);
+  // the sister ship is a variant of the same model: its own row in the picker, its own marks and pod, the rest shared
+  const sister = ROCKETS["fleet-ship-ariake"];
+  assert.equal(sister.variants.length, 1);
+  assert.equal(sister.variants[0].name, "ISV 有明 Ariake, SPX-186");
+  assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.drive, "drive-ariake");
+  assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.pod, "pod-relief");
+  assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.habitat, "habitat");
+  assert.equal(check({ rocket: "fleet-ship-ariake", variant: "ariake" }).ok, true);
   // the shadow-shield collar swaps for none in one slot
   assert.equal(MIYAMOTO_VARIANT_SLOTS.miyamoto["drive-collar"], "shield-collar");
   assert.equal(MIYAMOTO_VARIANT_SLOTS["miyamoto-no-collar"]["drive-collar"], "collar-none");
@@ -184,7 +196,7 @@ test("the build budget: the first picture inside a second, the full detail insid
 
 test("every module names the real hardware it descends from, and the pipes and struts are round", () => {
   for (const part of parts()) {
-    const key = part.id.replace(/-cutaway$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod").replace(/^(shield-collar|collar-none)$/, "collar");
+    const key = part.id.replace(/-cutaway$/, "").replace(/-ariake$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod").replace(/^(shield-collar|collar-none)$/, "collar");
     assert.ok(ANCESTORS[key], key);
     assert.ok(part.note.includes("Descends from"), `${part.id}: ${part.note}`);
   }

@@ -1,4 +1,4 @@
-// The one door between Miyamoto and the fleet kit: everything SPX-03 Miyamoto's parts take from the kit comes through here, and the three shapes the kit has no use for (an axis-aligned box on any axis, a prism up the spine and a planar quad)
+// The one door between Miyamoto and the fleet kit: everything ISV Miyamoto's parts take from the kit comes through here, and the three shapes the kit has no use for (an axis-aligned box on any axis, a prism up the spine and a planar quad)
 // are made here. When the kit changes, this is the only file of the ship to touch. Pure: no three.js and no DOM.
 import { iBeam as kitIBeam, pipeRun as kitPipeRun, strut as kitStrut } from "../detail.ts";
 import type { MaterialName } from "../../materials.ts";

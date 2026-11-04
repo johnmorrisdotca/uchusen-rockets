@@ -15,9 +15,12 @@ export const OPERATOR = FLEET_MAKER;
 
 /** Who and what the ship is. The name is checked by the Japanese reviewer. */
 export const IDENTITY = {
-  designation: designation("03"),
-  class: "ICV",
-  classMeans: "Interstellar Command Vessel",
+  designation: designation("452"),
+  type: "ICV",
+  typeMeans: "Interstellar Command Vessel",
+  class: "Romurusu",
+  classKanji: "ロムルス級",
+  classMeaning: "after Romulus",
   prefix: "ISV",
   prefixMeans: "Interstellar Service Vehicle",
   computer: "KAZE core v4",
@@ -124,7 +127,7 @@ export function specification(): Line[] {
   const j = journey(ROUTES.benchmark);
   const p = journey(ROUTES.proxima);
   return [
-    { name: "Designation", value: `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.designation}`, note: `${IDENTITY.class} class (${IDENTITY.classMeans}), flagship and command` },
+    { name: "Designation", value: `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.designation}`, note: `${IDENTITY.class} class (${IDENTITY.classKanji}, "${IDENTITY.classMeaning}"), ${IDENTITY.type} type (${IDENTITY.typeMeans}); flagship and command; sister of ISV Ariake, SPX-186` },
     { name: "Name", value: `${IDENTITY.japanese} ${IDENTITY.romaji}`, note: IDENTITY.meaning },
     { name: "Length", value: `${ENVELOPE.length} m` },
     { name: "Beam", value: `${ENVELOPE.beam} m`, note: "across both hangar shoulders" },
@@ -226,12 +229,15 @@ export const SECTIONS: readonly MiyamotoSection[] = [
   s("habitat", "crew-quarters", "Crew quarters", "crew", 259, 272, 0, 8, "Two tiers of bunks in two rows.", true),
   s("habitat", "triage", "Triage bay, six berths", "medical", 251, 259, -4, -4, "Six berths and a quarantine room.", true),
   s("habitat", "transfer-lock", "Medical transfer lock", "hatch", 251, 258, -11, 8, "Where casualties come in from the bays."),
+  s("habitat", "portholes", "Portholes with burn shutters", "hatch", 258, 290, 13, 0, "Three rings of twelve round windows, each with a shutter that closes for a burn."),
   s("habitat", "radiator-seat", "Radiator seats", "thermal", 252, 300, 0, 14, "Rails for the dorsal and ventral banks."),
   s("command", "ops-ring", "Operations ring", "nav", 316, 332, 0, 0, "Fourteen consoles round the communications core.", true),
   s("command", "comms-core", "Communications core and KAZE core v4", "comms", 304, 348, 0, 0, "The tall tube through every deck, with the ship computer KAZE in it.", true),
   s("command", "nav-desk", "Navigation desk", "nav", 330, 340, 0, 4, "A star-map table and three seats.", true),
   s("command", "medical-link", "Medical link and escape passages", "medical", 304, 330, 0, -12, "A transfer tube to the habitat and two passages to the dorsal and ventral hatches.", true),
   s("command", "armour", "Armour laminate", "shield", 302, 350, 21, 0, "Eight layers, 1.1 m in all.", true),
+  s("command", "obs-dome", "Armoured observation dome", "nav", 316, 326, 0, 16, "A faceted glass dome in an armoured ring above the operations ring, with eight ribs and a burn shutter.", true),
+  s("command", "solarium", "Solarium", "farm", 316, 326, 13, 16, "A glazed garden hall beside the dome, with beds, grow-lamps and shutters, lit at night.", true),
   s("command", "cameras", "Remote cameras", "nav", 306, 346, 14, 16, "Domed heads on posts replace a bridge window.", true),
   s("command", "booms", "Aerial booms and beacons", "comms", 308, 316, 36, 0, "Two trusses with ring beacons."),
   s("command", "attitude", "Attitude thruster blocks", "engine", 302, 350, 22, 12, "Four nozzles in each corner block."),
@@ -292,7 +298,16 @@ export const HISTORY = {
 } as const;
 
 /** The title-block line of every sheet: the prefix and name, the registry number, the class, the operator, the drive and the ship computer. */
-export const TITLE_BLOCK = `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.designation} · ${IDENTITY.class} class · ${OPERATOR} · ${IDENTITY.drive} ×2 · ${IDENTITY.computer}`;
+export const TITLE_BLOCK = `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.designation} · ${IDENTITY.class} class · ${IDENTITY.type} · ${OPERATOR} · ${IDENTITY.drive} ×2 · ${IDENTITY.computer}`;
+
+/** The ships of the class: one model, each with its own name, ruby, registry, hull marks and mission pod. */
+export const SHIPS = {
+  miyamoto: { variant: "miyamoto", romaji: "Miyamoto", kanji: "宮本", ruby: "みやもと", registry: designation("452"), meaning: "at the foot of the shrine", marks: "452", pod: "relay" },
+  ariake: { variant: "ariake", romaji: "Ariake", kanji: "有明", ruby: "ありあけ", registry: designation("186"), meaning: "daybreak", marks: "186", pod: "relief" },
+} as const;
+
+/** The title-block line of a ship of the class. */
+export const titleBlockOf = (ship: keyof typeof SHIPS): string => `${IDENTITY.prefix} ${SHIPS[ship].romaji}, ${SHIPS[ship].registry} · ${IDENTITY.class} class · ${IDENTITY.type} · ${OPERATOR} · ${IDENTITY.drive} ×2 · ${IDENTITY.computer}`;
 
 /** The status line of a sheet's title block, in the story: a planned ship with a first flight, never one in service. */
 export const STATUS = `STATUS: ${IDENTITY.status} · FIRST FLIGHT ${IDENTITY.firstFlight}`;

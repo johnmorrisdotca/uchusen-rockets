@@ -1,10 +1,10 @@
-# ISV 宮本 MIYAMOTO · SPX-03
+# ISV 宮本 MIYAMOTO · SPX-452
 
 **宮本 · Miyamoto** — "at the foot of the shrine". Flagship. The stately ship that commands the whole fleet.
 
 | | |
 |---|---|
-| Designation | ISV Miyamoto, SPX-03 · ICV class (Interstellar Command Vessel), flagship and command |
+| Designation | ISV Miyamoto, SPX-452 · Romurusu class (ロムルス級, "after Romulus"), ICV type (Interstellar Command Vessel), flagship and command |
 | Operator | SPX |
 | Ship computer | KAZE core v4 (Kinetic Autonomous Zonal Executive) |
 | Status | PLANNED · FIRST FLIGHT 2456 |
@@ -16,7 +16,11 @@
 
 Every number on this page is a design target of the programme. The ship is built in code from tables of metres in `src/model/fleet/ship-03/` and joins the other craft of the package as four variants: stowed, radiators out, relief pod, and cutaway.
 
-Title block: *ISV Miyamoto, SPX-03 · ICV class · SPX · DCD ×2 · KAZE core v4*
+Title block: *ISV Miyamoto, SPX-452 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*
+
+## The class and its sister ship
+
+The Romurusu class (ロムルス級) has two ships: ISV Miyamoto, SPX-452, and ISV 有明 Ariake (ありあけ), SPX-186, "daybreak". Ariake is the same model, not a second one: it has its own name, registry, hull marks (the registry digits on the drive shrouds and the bow) and its relief pod, and it appears in the picker as its own row under SPX fleet. Its title block reads *ISV Ariake, SPX-186 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*.
 
 ## The programme
 
@@ -131,6 +135,10 @@ Every deck and section is its own part group in the registry and can be shown al
 
 The fleet's four (reactor core, navigation and sensor suite, life support, docking port) are shared by every ship. Miyamoto adds three of its own, each with six numbered sub-parts that come apart: the command citadel (communications core, operations ring, navigation desk, medical link, escape passage, armour laminate), the hangars (bay door and shutters, gantry crane, rescue cutter, maintenance racks, pressure vestibule, drone rack) and the medical bay (triage berth, monitor arm and curtain rail, quarantine room, transfer lock, air and power isolation, medical stores).
 
+## Life aboard
+
+A crew of 144 lives aboard for decades, so the ship is built to be lived in as well as worked. The habitation drum has three rings of twelve portholes, each with a burn shutter that closes for a drive burn. Above the operations ring an armoured observation dome stands in the dorsal armour, a faceted cap of glass panes in a ring with eight ribs. Beside it is a small solarium: a glazed garden hall with beds, grow-lamps and half-drawn shutters, lit at night. The cutaway names the rooms: triage bay, crew quarters, mess and hydroponics, water and air recycling, operations ring, navigation desk, medical link, observation dome, solarium, survey bay, rescue bay.
+
 ## Planned separation
 
 The command citadel is the ship's lifeboat. Its aft face carries the separation joint, built as hardware you can see: a separation collar (a split ring with a hazard seam and an armed lamp), twelve latch dogs each with a pyro bolt, eight separation springs, and two umbilical plates with a grid of connector pins, guide pins, a locking lever and a copper line each. The joint is a clean part boundary at 302 m (the plane between the habitation module and the citadel). The viewer's side of separation is a separate ticket.
@@ -145,7 +153,7 @@ The line, thick and painted looks work as for every craft. The Lit look uses the
 
 ## The catalogue sheets
 
-Eight sheets are made from the model by `scripts/ship-03-sheets.ts`: the exterior three-quarter view with callouts, the general arrangement (side, top, front and rear at one scale with a length ruler), the exploded assembly, the variants and pods, the hull layers, the engine cards, the system insets, and the specification with the decks and the legend. Every sheet has the title block `ISV 宮本 MIYAMOTO` (ruby みやもと), `ISV Miyamoto, SPX-03 · ICV class · SPX · DCD ×2 · KAZE core v4` and the status line.
+Eight sheets are made from the model by `scripts/ship-03-sheets.ts`: the exterior three-quarter view with callouts, the general arrangement (side, top, front and rear at one scale with a length ruler), the exploded assembly, the variants and pods, the hull layers, the engine cards, the system insets, and the specification with the decks and the legend. Every sheet has the title block `ISV 宮本 MIYAMOTO` (ruby みやもと), `ISV Miyamoto, SPX-452 · ICV class · SPX · DCD ×2 · KAZE core v4` and the status line.
 
 ## Real ancestors
 
