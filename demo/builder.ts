@@ -3,6 +3,7 @@ import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
 import { embedCode, embedNote, LOOK_NAMES, MAKERS, OPTION_ATTRIBUTES, ROCKETS, VIEW_NAMES, attributesFromOptions, paintedCredit, rocketToParams, showsOf, variantOf, type MakerId, type RocketOptions } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
+import { isListed } from "./listed.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -40,11 +41,11 @@ function draw(): void {
   if (!entry) return;
   fill("makers", Object.entries(MAKERS).map(([id, label]) => ({ id, label })), state.maker, "maker", (id) => {
     state.maker = id as MakerId;
-    const among = Object.values(ROCKETS).find((rocket) => rocket.maker === state.maker);
+    const among = Object.values(ROCKETS).find((rocket) => rocket.maker === state.maker && isListed(rocket.id));
     if (among) pick(among.id);
     else draw();
   });
-  fill("rockets", Object.values(ROCKETS).filter((rocket) => rocket.maker === state.maker).map((rocket) => ({ id: rocket.id, label: rocket.name })), state.rocket, "rocket", pick);
+  fill("rockets", Object.values(ROCKETS).filter((rocket) => rocket.maker === state.maker && isListed(rocket.id)).map((rocket) => ({ id: rocket.id, label: rocket.name })), state.rocket, "rocket", pick);
   fill("variants", entry.variants.map((variant) => ({ id: variant.id, label: variant.name })), state.variant, "variant", (id) => {
     state.variant = id;
     state.show = "together";

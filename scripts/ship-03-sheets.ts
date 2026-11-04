@@ -1,5 +1,5 @@
 // The catalogue sheets of ISV Miyamoto, SPX-452, from the real model: `node scripts/ship-03-sheets.ts <folder>`. It builds the .glb files the ship's code makes (stowed, deployed, cutaway, exploded, each insets' sub-part, the engine
-// cards), draws them with scripts/ship-03-render.ts, and lays the pictures out with the numbers from `specs.ts` as eight sheets: a three-quarter view with callouts, the general arrangement (front, side and top at one scale
+// cards), draws them with scripts/ship-03-render.ts, and lays the pictures out with the numbers from `specs.ts` as nine sheets: a three-quarter view with callouts, the general arrangement (front, side and top at one scale
 // with a length ruler), the exploded assembly, the variants and the pods, the hull layers, the engine cards, the insets, and the specification with the decks and the legend. The title block is the one every sheet of the fleet has.
 // One browser at a time (the caller holds the lock); server ports 7903 (pictures) and 7905 (sheets).
 import { spawnSync } from "node:child_process";
@@ -11,7 +11,7 @@ import { toGlb } from "../src/build/glb.ts";
 import { FLEET_PALETTE } from "../src/model/fleet/ship-03/adapter.ts";
 import { parts, type MiyamotoPart } from "../src/model/fleet/ship-03/index.ts";
 import { CARDS, SHIP_INSETS } from "../src/model/fleet/ship-03/insets.ts";
-import { ANCESTORS, deckSummary, ENGINES, HULL, IDENTITY, labels, OPERATOR, specification, STATUS, TITLE_BLOCK } from "../src/model/fleet/ship-03/specs.ts";
+import { ANCESTORS, asBuilt, CLASS_TABLE, deckSummary, ENGINES, HULL, IDENTITY, labels, OPERATOR, specification, STATUS, TITLE_BLOCK } from "../src/model/fleet/ship-03/specs.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { MATERIALS } from "../src/model/materials.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
@@ -49,6 +49,7 @@ const explodedAt = (part: MiyamotoPart, i: number): V3 => {
   if (part.id.includes("collar")) return [x, y + 9, z];
   if (part.id.startsWith("hangar")) return [x + Math.sign(x) * 34, y, z];
   if (part.id.startsWith("pod")) return [x, y + 40, z + 46];
+  if (part.id.startsWith("array")) return [x + 56, y, z];
   return [x, y, z + (part.id.includes("ventral") ? -52 : 52)];
 };
 
@@ -57,10 +58,11 @@ const files = {
   stowed: glb("stowed", slots("miyamoto")),
   deployed: glb("deployed", slots("miyamoto-deployed")),
   relief: glb("relief", slots("miyamoto-relief")),
+  array: glb("array", slots("miyamoto-array")),
   cut: glb("cut", slots("miyamoto-cutaway")),
   exploded: glb("exploded", slots("miyamoto"), explodedAt),
   ariake: glb("ariake", slots("ariake")),
-  pods: glb("pods", ["pod-relay", "pod-relief"], (_, i) => [i === 0 ? -18 : 18, 0, 0]),
+  pods: glb("pods", ["pod-relay", "pod-relief", "pod-survey"], (_, i) => [(i - 1) * 36, 0, 0]),
 };
 /** A camera that frames a box from a direction, filling about 80% of the picture. */
 function frameOf(min: V3, max: V3, dir: V3, fov = 35, aspect = 1.4): { eye: V3; target: V3 } {
@@ -74,7 +76,22 @@ function frameOf(min: V3, max: V3, dir: V3, fov = 35, aspect = 1.4): { eye: V3; 
 // the pictures ------------------------------------------------------------------------------------------------------------------------------------------------
 const PPM = 6;
 const labelPoints = labels().map((label) => ({ id: label.id, at: label.at }));
-const modulePoints = all.filter((part) => !part.id.endsWith("-cutaway") && !part.id.includes("deployed") && part.id !== "pod-relief" && part.id !== "collar-none" && !part.id.endsWith("-ariake")).map((part, i) => ({ id: part.id, at: ((): V3 => { const [x, y, z] = explodedAt(part, i); return [x, y + part.height / 2, z + 6]; })() }));
+const modulePoints = all.filter((part) => !part.id.endsWith("-cutaway") && !part.id.includes("deployed") && (!part.id.startsWith("pod-") || part.id === "pod-relay") && part.id !== "collar-none" && !part.id.includes("-ariake")).map((part, i) => ({ id: part.id, at: ((): V3 => { const [x, y, z] = explodedAt(part, i); return [x, y + part.height / 2, z + 6]; })() }));
+/** Where each difference of the table shows in the class pair (Miyamoto at the origin, Ariake 172 m to starboard); the number is the row of the table. */
+const pairPoints: { id: string; n: number; at: V3 }[] = [
+  { id: "accent", n: 2, at: [172, 268, 13.6] },
+  { id: "array", n: 3, at: [50.6, 276, -3.2] },
+  { id: "hex", n: 3, at: [194, 20, 22.4] },
+  { id: "nose", n: 4, at: [0, 379, 0] },
+  { id: "box-a1", n: 5, at: [41, 154, 28.3] },
+  { id: "box-m1", n: 5, at: [-41, 270, 28.3] },
+  { id: "box-a2", n: 5, at: [213, 270, 28.3] },
+  { id: "box-a3", n: 5, at: [131, 154, 28.3] },
+  { id: "pod-m", n: 6, at: [0, 204, 36] },
+  { id: "pod-a", n: 6, at: [172, 204, 36] },
+  { id: "mast", n: 7, at: [172, 309, 40] },
+  { id: "solarium", n: 7, at: [159, 322, 18.5] },
+];
 const shots = (name: string, size: [number, number], extra: Record<string, unknown>) => ({ name, size, ...extra });
 const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: string; at: V3 }[] }[] = [
   { glb: files.stowed, shots: [
@@ -85,7 +102,14 @@ const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: strin
     shots("ga-rear", [150 * PPM, 100 * PPM], { eye: [0, -500, -3], target: [0, 0, -3], up: [0, 0, 1], ortho: 100, shadow: 300 }),
     shots("var-stowed", [1300, 560], { fill: 0.8, eye: [560, 190, 120], target: [0, 190, -3], fov: 22, shadow: 300 }),
   ] },
-  { glb: files.stowed, more: [{ glb: files.ariake, at: [172, 0, 0] }], shots: [shots("class-pair", [2400, 1100], { fill: 0.8, eye: [86, 190, 800], target: [86, 190, 0], up: [-1, 0, 0], fov: 24, shadow: 420 })] },
+  { glb: files.array, more: [{ glb: files.ariake, at: [172, 0, 0] }], shots: [
+    shots("class-pair", [2400, 1100], { fill: 0.8, eye: [86, 190, 800], target: [86, 190, 0], up: [-1, 0, 0], fov: 24, shadow: 420 }),
+    shots("class-pair-three-quarter", [2400, 1300], { fill: 0.8, eye: [376, -72, 250], target: [86, 200, 0], fov: 38, shadow: 420, points: pairPoints.map(({ id, at }) => ({ id, at })) }),
+    shots("class-pair-rear", [2000, 1100], { fill: 0.8, eye: [86, -700, 0], target: [86, 0, 0], up: [0, 0, 1], fov: 22, shadow: 420 }),
+  ] },
+  { glb: files.array, more: [{ glb: files.ariake, at: [0, 0, -120] }], shots: [shots("class-pair-side", [2400, 1100], { fill: 0.8, eye: [900, 190, -60], target: [0, 190, -60], fov: 22, shadow: 420 })] },
+  { glb: files.stowed, shots: [shots("var-nose", [1300, 560], { eye: [60, 420, 45], target: [0, 366, 0], fov: 40, shadow: 60 })] },
+  { glb: files.array, shots: [shots("var-array", [1300, 560], { fill: 0.8, eye: [330, 40, 330], target: [40, 276, -2], fov: 30, shadow: 320 })] },
   { glb: files.exploded, shots: [shots("sheet3-exploded", [2400, 1300], { fill: 0.8, eye: [620, 210, 330], target: [0, 215, 20], fov: 40, shadow: 420, points: modulePoints })] },
   { glb: files.deployed, shots: [shots("var-deployed", [1300, 560], { fill: 0.8, eye: [420, 140, 220], target: [0, 215, 0], fov: 26, shadow: 420 })] },
   { glb: files.relief, shots: [shots("var-relief", [1300, 560], { fill: 0.8, eye: [560, 190, 120], target: [0, 190, -3], fov: 22, shadow: 300 })] },
@@ -94,7 +118,7 @@ const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: strin
     shots("sheet5-edge", [1300, 800], { eye: [48, 322, 32], target: [8, 326, 16], fov: 45, shadow: 30 }),
     shots("sheet5-edge2", [1300, 800], { eye: [40, 110, 24], target: [-4, 126, 6], fov: 45, shadow: 30 }),
   ] },
-  { glb: files.pods, shots: [shots("pods", [1500, 800], { eye: [0, 30, 120], target: [0, 30, 22], up: [0, 1, 0], fov: 42, shadow: 90 })] },
+  { glb: files.pods, shots: [shots("pods", [1800, 800], { eye: [0, 30, 150], target: [0, 30, 22], up: [0, 1, 0], fov: 42, shadow: 110 })] },
 ];
 
 // the cards and the insets, each part alone, framed by its own box
@@ -136,7 +160,7 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid #223446
 .sw{display:inline-block;width:26px;height:16px;margin-right:10px;vertical-align:-2px;border:1px solid #000}
 .grid{display:grid;gap:18px}
 `;
-const titleBlock = (sheet: number, name: string, scale: string) => `<div class="title"><div><h1>${NAME}</h1><div class="sub">${esc(TITLE_BLOCK)}</div></div><div class="meta"><div class="status">${esc(STATUS)}</div><div>SHEET ${sheet} OF 8 · ${esc(name)}</div><div>${esc(scale)} · REVISION A · 2026-11-04 · ${OPERATOR} FLEET DRAWING OFFICE</div></div></div>`;
+const titleBlock = (sheet: number, name: string, scale: string) => `<div class="title"><div><h1>${NAME}</h1><div class="sub">${esc(TITLE_BLOCK)}</div></div><div class="meta"><div class="status">${esc(STATUS)}</div><div>SHEET ${sheet} OF 9 · ${esc(name)}</div><div>${esc(scale)} · REVISION A · 2026-11-04 · ${OPERATOR} DRAWING OFFICE</div></div></div>`;
 const foot = (note: string) => `<div class="foot"><div>${esc(IDENTITY.designation)} · ${esc(IDENTITY.prefix)} (${esc(IDENTITY.prefixMeans)}) · ${esc(IDENTITY.class)} class (${esc(IDENTITY.classKanji)}, ${esc(IDENTITY.classMeaning)}) · ${esc(IDENTITY.type)} (${esc(IDENTITY.typeMeans)}) · ${esc(IDENTITY.drive)}: ${esc(IDENTITY.driveMeans)} · ${esc(IDENTITY.computer)}</div><div>${esc(note)}</div></div>`;
 const page = (sheet: number, name: string, scale: string, body: string, note = "Dimensions in metres, mass in tonnes. A design for reference; every date is a plan.") => `<!doctype html><meta charset="utf-8"><style>${CSS}</style><div class="sheet">${titleBlock(sheet, name, scale)}${body}${foot(note)}</div>`;
 
@@ -174,13 +198,21 @@ try {
   await shoot("2-general-arrangement.png", page(2, "GENERAL ARRANGEMENT: SIDE, TOP, FRONT AND REAR AT ONE SCALE", `1 : ${Math.round(1000 / PPM)} · ${PPM} PX PER METRE`, `<div class="grid"><div><h2>SIDE (STARBOARD ELEVATION, BOW TO THE RIGHT)</h2><div class="panel" style="padding:0"><img src="${img("ga-side")}"/></div>${ruler(380, "380 m")}</div><div><h2>TOP (PORT UP, BOW TO THE RIGHT)</h2><div class="panel" style="padding:0"><img src="${img("ga-top")}"/></div>${ruler(380, "380 m · BEAM 118 m")}</div><div style="display:flex;gap:24px"><div><h2>FRONT (LOOKING AT THE BOW)</h2><div class="panel" style="padding:0"><img src="${img("ga-front")}"/></div></div><div><h2>REAR (LOOKING AT THE DRIVE)</h2><div class="panel" style="padding:0"><img src="${img("ga-rear")}"/></div></div><div class="panel" style="flex:1"><h2>OVERALL</h2><table>${specification().slice(2, 6).map((l) => `<tr><th>${esc(l.name)}</th><td>${esc(l.value)}${l.note ? `<br><small style="color:#8fa6bd">${esc(l.note)}</small>` : ""}</td></tr>`).join("")}</table></div></div></div>`));
 
   // 3: the exploded assembly
-  const mods = all.filter((part) => !part.id.endsWith("-cutaway") && !part.id.includes("deployed") && part.id !== "pod-relief" && part.id !== "collar-none" && !part.id.endsWith("-ariake"));
+  const mods = all.filter((part) => !part.id.endsWith("-cutaway") && !part.id.includes("deployed") && (!part.id.startsWith("pod-") || part.id === "pod-relay") && part.id !== "collar-none" && !part.id.includes("-ariake"));
   const c3 = callouts("sheet3-exploded", 2400, 1300, mods.map((m) => ({ id: m.id, text: m.name })), 200);
   await shoot("3-exploded-assembly.png", page(3, "EXPLODED ASSEMBLY", "PERSPECTIVE · NOT TO SCALE", `<div style="position:relative;width:${W - 88}px;height:1300px"><img src="${img("sheet3-exploded")}" style="position:absolute;left:200px;top:0;width:2400px"/>${c3.svg}${c3.texts}</div><div class="panel" style="margin-top:22px"><h2>MOUNTING</h2>Every stacked module meets the next at a class L spine collar (12 m, 24 bolts, 12 latch dogs); the two hangar shoulders hang from braces to the spine; the mission pod stands on the keyed dorsal collar, whose isolator has its own pressure and power locks; each radiator bank sits on rails along the habitation hull.</div>`));
 
+  // the two ships side by side: what each is as built
+  const sisterTable = ((): string => {
+    const m = asBuilt("miyamoto");
+    const a = asBuilt("ariake");
+    const lines = { miyamoto: Object.fromEntries(specification("miyamoto").map((l) => [l.name, l.value])), ariake: Object.fromEntries(specification("ariake").map((l) => [l.name, l.value])) };
+    const row = (name: string) => `<tr><th>${esc(name)}</th><td>${esc(lines.miyamoto[name])}</td><td>${esc(lines.ariake[name])}</td></tr>`;
+    return `<table><tr><th></th><td><b>ISV MIYAMOTO, SPX-452</b></td><td><b>ISV ARIAKE, SPX-186</b></td></tr><tr><th>Hangar boxes</th><td>${m.hangars} (staggered pair)</td><td>${a.hangars} (all four positions)</td></tr>${["Beam", "Cargo", "Dry mass", "Full mass", "Acceleration", "Range"].map(row).join("")}<tr><th>Engine end</th><td>white and gold shrouds and collar</td><td>near-black hexagonal tile shrouds and collar</td></tr></table>`;
+  })();
   // 4: variants and pods
   const cell = (title: string, name: string, note: string) => `<div class="panel"><h2>${esc(title)}</h2><img src="${img(name)}" style="width:100%"/><div style="color:#9fb4c8;margin-top:6px">${esc(note)}</div></div>`;
-  await shoot("4-variants-and-pods.png", page(4, "VARIANTS AND MISSION PODS", "PERSPECTIVE · NOT TO SCALE", `<div class="grid" style="grid-template-columns:1fr 1fr">${cell("STOWED, RELAY POD", "var-stowed", "Radiators folded on the habitation hull; the relay pod on the collar.")}${cell("RADIATORS OUT", "var-deployed", "Two banks of four leaves, 25 by 60 m, on masts, clear of the bays and the exhaust.")}${cell("RELIEF POD", "var-relief", "Six relief and equipment containers under a gantry replace the relay pod.")}${cell("CUTAWAY, STARBOARD", "var-cut", "Stepped armour layers at the cut, the rooms inside.")}</div><div class="panel" style="margin-top:18px"><h2>THE ROMURUSU CLASS: ISV MIYAMOTO, SPX-452 (ABOVE) AND ITS SISTER ISV <ruby>有明<rt>ありあけ</rt></ruby> ARIAKE, SPX-186 (BELOW)</h2><img src="${img("class-pair")}" style="width:100%"/><div style="color:#9fb4c8">One model, two ships: each its own name, registry, hull marks and mission pod (Miyamoto the relay pod, Ariake the relief pod).</div></div><div class="panel" style="margin-top:18px"><h2>THE SWAPPABLE POD: RELAY (LEFT) AND RELIEF (RIGHT) ON ONE COLLAR</h2><img src="${img("pods")}" style="width:100%"/><div style="color:#9fb4c8">${esc(ANCESTORS.pod)}.</div></div>`));
+  await shoot("4-variants-and-pods.png", page(4, "VARIANTS AND MISSION PODS", "PERSPECTIVE · NOT TO SCALE", `<div class="grid" style="grid-template-columns:1fr 1fr">${cell("STOWED, RELAY POD", "var-stowed", "Radiators folded on the habitation hull; the relay pod on the collar.")}${cell("RADIATORS OUT", "var-deployed", "Two banks of four leaves, 25 by 60 m, on masts, clear of the bays and the exhaust.")}${cell("SOLAR ARRAY OUT", "var-array", "Ten bays of gold cell blankets on lattice masts along the starboard side, the wing turned to face the star. For time near a star; fusion is the main power (about 2.1 MW(e) at one astronomical unit).")}${cell("ROUNDED NOSE", "var-nose", "Three round shield layers under a dome, every round surface in gold solar cells, an orange removable rim round each layer.")}${cell("RELIEF POD", "var-relief", "Six relief and equipment containers under a gantry replace the relay pod.")}${cell("CUTAWAY, STARBOARD", "var-cut", "Stepped armour layers at the cut, the rooms inside.")}</div><div class="panel" style="margin-top:18px"><h2>THE ROMURUSU CLASS: ISV MIYAMOTO, SPX-452 (ABOVE, SOLAR ARRAY OUT) AND ITS SISTER ISV <ruby>有明<rt>ありあけ</rt></ruby> ARIAKE, SPX-186 (BELOW)</h2><img src="${img("class-pair")}" style="width:100%"/><div class="grid" style="grid-template-columns:1fr 1fr;margin-top:12px"><img src="${img("class-pair-three-quarter")}" style="width:100%"/><img src="${img("class-pair-rear")}" style="width:100%"/></div>${sisterTable}<div style="color:#9fb4c8">One model, two ships: each its own name, registry and hull marks. Ariake wears the dawn-gold livery (a band and two pinstripes) over near-black hexagonal tiles on her drive shrouds and collar, carries the survey pod by default, has four hangar boxes in place of Miyamoto's staggered two (double the cargo), and after her refit has a sensor mast and a solarium on each side of the dome.</div></div><div class="panel" style="margin-top:18px"><h2>THE SWAPPABLE POD: RELAY (LEFT), RELIEF (MIDDLE) AND SURVEY (RIGHT) ON ONE COLLAR</h2><img src="${img("pods")}" style="width:100%"/><div style="color:#9fb4c8">${esc(ANCESTORS.pod)}.</div></div>`));
 
   // 5: hull layers
   const total = HULL.layers.reduce((s, l) => s + l.mm, 0);
@@ -197,7 +229,12 @@ try {
 
   // 8: specification, decks, legend
   const legend = [["shield", "Removable shield or shutter"], ["protected", "Protected volume (white blanket)"], ["structure", "Structure and plating"], ["coolant", "Coolant and feed line"], ["coil", "Copper field coil, gold foil"], ["service", "Service access, rail"], ["heatSink", "Heat sink, blast door"], ["farm", "Farm"], ["propellant", "Propellant, water"], ["light", "Light, window"]] as const;
-  await shoot("8-specification-decks-legend.png", page(8, "SPECIFICATION, DECKS AND LEGEND", "—", `<div class="grid" style="grid-template-columns:1.1fr 1fr"><div class="panel"><h2>SPECIFICATION</h2><table>${specification().map((l) => `<tr><th>${esc(l.name)}</th><td>${esc(l.value)}${l.note ? `<br><small style="color:#8fa6bd">${esc(l.note)}</small>` : ""}</td></tr>`).join("")}</table></div><div><div class="panel"><h2>DECKS, BOW TO TAIL</h2><table>${deckSummary().map((d) => `<tr><th style="width:60px">${d.number}</th><td>${esc(d.name)} <small style="color:#8fa6bd">${esc(d.module)}, ${d.from}–${d.to} m</small></td></tr>`).join("")}</table></div><div class="panel" style="margin-top:18px"><h2>LEGEND</h2>${legend.map(([k, t]) => `<div><span class="sw" style="background:${FLEET_PALETTE[k]}"></span>${t}</div>`).join("")}<div style="margin-top:8px;color:#9fb4c8">— leader to part · <b style="color:#f0b44c">n</b> numbered deck or sub-part</div></div></div></div><div class="panel" style="margin-top:18px"><h2>REAL ANCESTORS</h2><table>${Object.entries(ANCESTORS).map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</table></div>`));
+  await shoot("8-specification-decks-legend.png", page(8, "SPECIFICATION, DECKS AND LEGEND", "—", `<div class="grid" style="grid-template-columns:1.1fr 1fr"><div class="panel"><h2>SPECIFICATION</h2><table>${specification().map((l) => `<tr><th>${esc(l.name)}</th><td>${esc(l.value)}${l.note ? `<br><small style="color:#8fa6bd">${esc(l.note)}</small>` : ""}</td></tr>`).join("")}</table><h2 style="margin-top:14px">THE SISTER SHIP, AS BUILT</h2>${sisterTable}</div><div><div class="panel"><h2>DECKS, BOW TO TAIL</h2><table>${deckSummary().map((d) => `<tr><th style="width:60px">${d.number}</th><td>${esc(d.name)} <small style="color:#8fa6bd">${esc(d.module)}, ${d.from}–${d.to} m</small></td></tr>`).join("")}</table></div><div class="panel" style="margin-top:18px"><h2>LEGEND</h2>${legend.map(([k, t]) => `<div><span class="sw" style="background:${FLEET_PALETTE[k]}"></span>${t}</div>`).join("")}<div style="margin-top:8px;color:#9fb4c8">— leader to part · <b style="color:#f0b44c">n</b> numbered deck or sub-part</div></div></div></div><div class="panel" style="margin-top:18px"><h2>REAL ANCESTORS</h2><table>${Object.entries(ANCESTORS).map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</table></div>`));
+  // 9: the class sheet: both ships side by side, a numbered callout at each difference of the table
+  const marks = points("class-pair-three-quarter").filter((p) => !p.behind && p.x > 0 && p.x < 2400 && p.y > 0 && p.y < 1300).map((p) => ({ ...p, n: pairPoints.find((one) => one.id === p.id)?.n })).filter((p) => p.n);
+  const dots = marks.map((p) => `<div style="position:absolute;left:${p.x - 15}px;top:${p.y - 15}px;width:30px;height:30px;border-radius:15px;background:#f0b44c;color:#071018;border:2px solid #fff;font:700 17px/26px system-ui,sans-serif;text-align:center">${p.n}</div>`).join("");
+  const rows = CLASS_TABLE.map((r, i) => `<tr><th><span style="display:inline-block;min-width:24px;margin-right:8px;text-align:center;border-radius:12px;background:${marks.some((m) => m.n === i + 1) ? "#f0b44c" : "#33485c"};color:#071018;font-weight:700">${i + 1}</span>${esc(r.row)}</th><td>${esc(r.miyamoto)}</td><td>${esc(r.ariake)}</td></tr>`).join("");
+  await shoot("9-romurusu-class.png", page(9, "THE ROMURUSU CLASS: MIYAMOTO AND ARIAKE", "PERSPECTIVE · NOT TO SCALE", `<div class="panel"><h2>ISV <ruby>宮本<rt>みやもと</rt></ruby> MIYAMOTO, SPX-452 (BEHIND, SOLAR ARRAY OUT) AND ISV <ruby>有明<rt>ありあけ</rt></ruby> ARIAKE, SPX-186 (IN FRONT): THE NUMBERS ARE THE ROWS OF THE TABLE</h2><div style="position:relative;width:${W - 88}px"><img src="${img("class-pair-three-quarter")}" style="width:100%;display:block"/><div style="position:absolute;inset:0;transform-origin:0 0;transform:scale(${(W - 88) / 2400})">${dots}</div></div></div><div class="grid" style="grid-template-columns:1fr 1fr;margin-top:18px"><div class="panel"><h2>FROM ABOVE</h2><img src="${img("class-pair")}" style="width:100%"/></div><div class="panel"><h2>FROM THE SIDE (ARIAKE BELOW)</h2><img src="${img("class-pair-side")}" style="width:100%"/></div></div><div class="grid" style="grid-template-columns:1fr 1fr;margin-top:18px"><div class="panel"><h2>FROM ASTERN: THE ENGINE ENDS</h2><img src="${img("class-pair-rear")}" style="width:100%"/></div><div class="panel"><h2>MIYAMOTO'S ROUNDED NOSE, IN SOLAR CELLS</h2><img src="${img("var-nose")}" style="width:100%"/></div></div><div class="panel" style="margin-top:18px"><h2>HOW THEY DIFFER</h2><table><tr><th></th><td><b>ISV MIYAMOTO, SPX-452</b></td><td><b>ISV ARIAKE, SPX-186</b></td></tr>${rows}</table></div>`));
 } finally {
   await browser.close();
 }

@@ -1,10 +1,12 @@
 // Rockets and what to compare them with, side by side on one baseline at one scale, as one drawing with a ruler. Orthographic, so a metre is the same on every one. Pure.
+import { BESIDE_NAME } from "../beside.ts";
 import { build, type Built, drawnPieces } from "./index.ts";
 import { check } from "../fit.ts";
 import { axesOf, cleanView, directionOf, VIEWS, type ViewName } from "../framing.ts";
 import { DEFAULT_LOOK, LOOKS, type LookName } from "../looks.ts";
 import { type Camera, defsOf, drawPart, orthographic } from "../draw/svg.ts";
 import { MATERIALS } from "../model/materials.ts";
+import type { Bounds } from "../model/pieces.ts";
 import { variantOf } from "../rockets.ts";
 
 /**
@@ -33,6 +35,24 @@ export const COMPARES = {
  * ```
  */
 export type CompareId = keyof typeof COMPARES;
+
+/**
+ * The real craft that lie in the fleet band for scale: Starship with Super Heavy, Saturn V, SLS and the International Space Station. Each is a variant of the package, so its length is the sourced figure, `axis` is the way its length runs in its own model
+ * (`y` up the stack, nose up; `x` along the station's long axis), and a rocket points its nose right. They are never scaled: they are drawn at the lineup's own scale.
+ *
+ * @example
+ * ```ts
+ * import { REAL_CRAFT } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * console.log(REAL_CRAFT.map((craft) => craft.name));
+ * ```
+ */
+export const REAL_CRAFT = [
+  { key: "starship:v3", name: BESIDE_NAME, axis: "y" },
+  { key: "saturn-v:saturn-v", name: "Saturn V", axis: "y" },
+  { key: "sls:block-1", name: "SLS Block 1", axis: "y" },
+  { key: "iss:iss", name: "ISS", axis: "x" },
+] as const;
 
 /**
  * One thing standing in a lineup: its key (`starship:v3` or a comparison's name), its label and its height in metres.
@@ -83,6 +103,8 @@ export interface LineupOptions {
   show?: string;
   ruler?: boolean;
   labels?: boolean;
+  /** Real craft for scale: Starship with Super Heavy, Saturn V, SLS and the ISS lie sideways in the fleet band, at the same scale as the fleet ships, nose right, each labelled with its name and length. Left out: not drawn. Only where the fleet band is. */
+  real?: boolean;
   /** `rockets` or `fleet` leaves out the other kind; `all` (the default) draws both. A fleet ship (a rocket whose id starts with `fleet-`) lies lengthwise in its own band below the rockets. */
   filter?: "all" | "rockets" | "fleet";
   /** Shrinks the scale, never grows it, until the whole drawing fits this many pixels across and down (either may be left out). Without it the scale is `unit`, as it always was. */
@@ -108,7 +130,7 @@ function comparison(id: CompareId, x: number, base: number, unit: number, line: 
  * The whole picture as SVG text. Unknown items are left out.
  *
  * @param options The items and how they are drawn.
- * @returns The picture as SVG text, the items it holds, its width and height and the scale it was drawn at (pixels a metre: less than `unit` when `fit` shrank it).
+ * @returns The picture as SVG text, the items it holds, the real craft lying beside the fleet (`real`, with their lengths), its width and height and the scale it was drawn at (pixels a metre: less than `unit` when `fit` shrank it).
  * @example
  * ```ts
  * import { lineupSvg } from "@johnmorrisdotca/uchusen-rockets/build";
@@ -117,7 +139,7 @@ function comparison(id: CompareId, x: number, base: number, unit: number, line: 
  * console.log(picture.items.length, picture.svg.startsWith("<svg"));
  * ```
  */
-export function lineupSvg(options: LineupOptions): { svg: string; items: LineupItem[]; width: number; height: number; unit: number } {
+export function lineupSvg(options: LineupOptions): { svg: string; items: LineupItem[]; real: LineupItem[]; width: number; height: number; unit: number } {
   const filter = options.filter ?? "all";
   const keys = options.items.map((raw) => raw.trim()).filter((key) => (isFleet(key) ? filter !== "rockets" : filter !== "fleet" || false));
   const fleetKeys = keys.filter(isFleet);
@@ -140,7 +162,21 @@ function lying(built: Built): { length: number; beam: number; height: number; fr
   return { length: b.max[1] - b.min[1], beam: b.max[0] - b.min[0], height: b.max[2] - b.min[2], from: b.min[1], low: b.min[2] };
 }
 
-function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number): { svg: string; items: LineupItem[]; width: number; height: number } {
+/**
+ * The camera of a real craft lying in the fleet band, square on to its windward side: a rocket (`y`) points its nose right with its windward side towards us, and the station (`x`) runs along its long axis with y up. Orthographic at the lineup's scale, so
+ * a metre is the same on it as on every ship.
+ */
+export function lyingCamera(axis: "x" | "y", b: Bounds, x0: number, baseY: number, unit: number): Camera {
+  const along = axis === "y" ? 1 : 0;
+  return {
+    project: (p) => [x0 + (p[along] - b.min[along]) * unit, axis === "y" ? baseY + (p[0] - b.max[0]) * unit : baseY - (p[1] - b.min[1]) * unit],
+    depth: (p) => -p[2],
+    toward: () => [0, 0, 1],
+    above: false,
+  };
+}
+
+function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number): { svg: string; items: LineupItem[]; real: LineupItem[]; width: number; height: number } {
   const { items, look = DEFAULT_LOOK, view = "front", ruler = true, labels = true } = options;
   const angle = VIEWS[cleanView(view)];
   const known: { key: string; built?: Built; compare?: CompareId; height: number; width: number; label: string }[] = [];
@@ -227,8 +263,41 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
     longest = Math.max(longest, length);
     fleetY = baseY + (labels ? 26 : 12);
   }
+  // the real craft for scale lie in the same band, one row each, at the same scale: a rocket nose right, the station along its long axis
+  const real: LineupItem[] = [];
+  let realEnd = 0;
+  if (ships.length && options.real)
+    for (const craft of REAL_CRAFT) {
+      const [rocket, variant] = craft.key.split(":");
+      const named = variantOf(rocket, variant);
+      if (!named || !check({ rocket, variant: named.id }).ok) continue;
+      const built = build({ rocket, variant: named.id });
+      const b = built.boundsOf("together");
+      // a rocket's long axis is y and the picture's up is -x (its windward side faces us); the station's is x, with y up
+      const along = craft.axis === "y" ? 1 : 0;
+      const length = b.max[along] - b.min[along];
+      const tall = craft.axis === "y" ? b.max[0] - b.min[0] : b.max[1] - b.min[1];
+      const baseY = fleetY + 6 + tall * unit;
+      const x0 = rulerRoom;
+      const cam = lyingCamera(craft.axis, b, x0, baseY, unit);
+      const show = built.shows[0];
+      const edge = edgeOf(built, look);
+      for (const place of built.placesOf(show).filter((one) => one.shown).sort((a, c) => a.at[2] - c.at[2])) {
+        const part = built.parts.find((p) => p.slot === place.slot);
+        if (part) fleetBody.push(drawPart(drawnPieces(part, show === "together"), place.at, cam, look, 0.7, edge));
+      }
+      fleetBody.push(`<path d="M${n(x0)} ${n(baseY)}H${n(x0 + length * unit)}" stroke="currentColor" stroke-width=".6" opacity=".4"/>`);
+      // the length is the sourced one: a rocket's height, the station's overall length
+      const sourced = craft.axis === "y" ? named.facts.height.value : named.facts.diameter.value;
+      const metres = typeof sourced === "number" ? sourced : Math.round(length * 10) / 10;
+      const text = `${craft.name}, ${metres.toLocaleString("en-US")} m`;
+      if (labels) fleetBody.push(`<text x="${n(x0 + length * unit + 8)}" y="${n(baseY - 2)}" font-size="11" fill="currentColor">${xmlText(text)}</text>`);
+      real.push({ key: craft.key, label: craft.name, height: metres });
+      realEnd = Math.max(realEnd, x0 + length * unit + (labels ? 8 + text.length * 6.2 : 0));
+      fleetY = baseY + 10;
+    }
   if (ships.length) {
-    width = Math.max(width, rulerRoom + longest * unit + 8);
+    width = Math.max(width, rulerRoom + longest * unit + 8, realEnd + 8);
     if (ruler) {
       // the metres, along the ground of the fleet band, the same scale as the rockets' ruler
       const steps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000];
@@ -249,5 +318,5 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
     rule += `<text x="${rulerRoom - 16}" y="${n(base - tallest * unit - 10)}" text-anchor="end" font-size="10" fill="currentColor" opacity=".85">m</text><path d="M${rulerRoom - 8} ${n(base)}H${n(width)}" stroke="currentColor" stroke-width=".6" opacity=".4"/>`;
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n(width)} ${n(height)}" width="${n(width)}" height="${n(height)}" role="img" aria-label="${xmlText(`To scale: ${[...known.map((item) => item.label), ...ships.map((ship) => ship.label)].join(", ")}`)}">${defsOf(look)}${rule}${body.join("")}${fleetBody.join("")}</svg>`;
-  return { svg, width, height, items: [...known.map(({ key, label, height: h }) => ({ key, label, height: h })), ...ships.map((ship) => ({ key: ship.key, label: ship.label, height: ship.size.length }))] };
+  return { svg, width, height, real, items: [...known.map(({ key, label, height: h }) => ({ key, label, height: h })), ...ships.map((ship) => ({ key: ship.key, label: ship.label, height: ship.size.length }))] };
 }

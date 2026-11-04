@@ -54,6 +54,11 @@
               <h2 id="engines-title" data-say="engines">Engines</h2>
               <div class="chips" id="engines" role="group" aria-labelledby="engines-title"></div>
             </div>
+            <div class="field" id="beside-field">
+              <h2 id="beside-title" data-say="besideTitle">Scale</h2>
+              <div class="chips" id="beside" role="group" aria-labelledby="beside-title"></div>
+            </div>
+            <p class="note" id="beside-note" data-testid="beside-note" data-say="besideNote" hidden>Starship with Super Heavy, at true size.</p>
             <p class="note" id="engines-note" data-testid="engines-note" hidden></p>
             <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
           </div>
@@ -84,6 +89,7 @@
         <p data-say="compareIntro">The same metre on every one, with a ruler, a person and a ten-storey building. The person and the building are round numbers, there for scale.</p>
         <div class="chips" id="compare-picks" role="group" aria-label="Which variants to compare" data-say-label="comparePicks"></div>
         <div class="chips" id="compare-filter" role="group" aria-label="Which kind to show" data-say-label="compareFilter"></div>
+        <div class="chips" id="compare-real" role="group" aria-label="Real craft for scale" data-say-label="compareRealLabel"></div>
         <div class="compare-frame" id="compare-view" data-testid="compare-view" tabindex="0">
           <uchusen-lineup id="lineup" data-testid="lineup" unit="3.4" ruler labels view="front"></uchusen-lineup>
         </div>

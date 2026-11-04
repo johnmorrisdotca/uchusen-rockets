@@ -28,7 +28,15 @@ function portholes(y: number, n: number, start: number): Piece[] {
   return out;
 }
 
-function inside(seed: string): Piece[] {
+/** The colours of the rooms: the class's own, and Ariake's dawn theme (warm wood and dawn-gold in place of blue). */
+const THEMES = {
+  plain: { bunk: ["hull-blue", "hull-white-worn"], table: "hull-white", bench: "hull-blue", trim: "lamp-blue" },
+  dawn: { bunk: ["hull-dawn", "wood"], table: "wood", bench: "hull-dawn", trim: "lamp-amber" },
+} as const;
+export type Theme = keyof typeof THEMES;
+
+function inside(seed: string, theme: Theme): Piece[] {
+  const t = THEMES[theme];
   const random = rng(`${seed}/inside`);
   const out: Piece[] = [];
   const disc = (y: number): Piece => ({ kind: "lathe", material: "deck", segs: 40, only: "mesh", profile: [[0.01, y], [INNER, y], [INNER, y + 0.35], [0.01, y + 0.35]] });
@@ -52,13 +60,13 @@ function inside(seed: string): Piece[] {
       for (const tier of [0, 1]) {
         const x = -6.6 + k * 3.3;
         const z = row * 6.2;
-        out.push(cub(random() < 0.5 ? "hull-blue" : "hull-white-worn", [x - 1.4, x + 1.4], [c0 + tier * 4.2 + 0.4, c0 + tier * 4.2 + 0.9], [z - 1.1, z + 1.1]), cub("hull-grey-dark", [x - 1.5, x + 1.5], [c0 + tier * 4.2 + 0.2, c0 + tier * 4.2 + 1.1], [z + row * 1.1 - 0.1, z + row * 1.1 + 0.1]), cub("lamp-amber", [x - 0.2, x + 0.2], [c0 + tier * 4.2 + 1.3, c0 + tier * 4.2 + 1.45], [z - row * 0.9 - 0.1, z - row * 0.9 + 0.1]));
+        out.push(cub(random() < 0.5 ? t.bunk[0] : t.bunk[1], [x - 1.4, x + 1.4], [c0 + tier * 4.2 + 0.4, c0 + tier * 4.2 + 0.9], [z - 1.1, z + 1.1]), cub("hull-grey-dark", [x - 1.5, x + 1.5], [c0 + tier * 4.2 + 0.2, c0 + tier * 4.2 + 1.1], [z + row * 1.1 - 0.1, z + row * 1.1 + 0.1]), cub("lamp-amber", [x - 0.2, x + 0.2], [c0 + tier * 4.2 + 1.3, c0 + tier * 4.2 + 1.45], [z - row * 0.9 - 0.1, z - row * 0.9 + 0.1]));
         if (tier === 0) out.push(rod("hull-grey", [x + 1.6, c0, z], [x + 1.6, c0 + 8.6, z], 0.1, 12));
       }
-  out.push(cub("lamp-blue", [-8, 8], [c0 + 0.02, c0 + 0.1], [-0.15, 0.15]));
+  out.push(cub(t.trim, [-8, 8], [c0 + 0.02, c0 + 0.1], [-0.15, 0.15]));
   // deck 3, mess and the hydroponics rack: four long tables with benches; racks of green trays under strip lights
   const e0 = DECKS.mess + 0.35;
-  for (let k = 0; k < 4; k++) out.push(cub("hull-white", [-7.2 + k * 2.6, -6 + k * 2.6], [e0 + 0.95, e0 + 1.1], [-7, -1]), cub("hull-grey-dark", [-7 + k * 2.6, -6.2 + k * 2.6], [e0, e0 + 0.95], [-6.6, -6.2]), cub("hull-grey-dark", [-7 + k * 2.6, -6.2 + k * 2.6], [e0, e0 + 0.95], [-1.8, -1.4]), cub("hull-blue", [-7.6 + k * 2.6, -7.3 + k * 2.6], [e0 + 0.45, e0 + 0.55], [-7, -1]));
+  for (let k = 0; k < 4; k++) out.push(cub(t.table, [-7.2 + k * 2.6, -6 + k * 2.6], [e0 + 0.95, e0 + 1.1], [-7, -1]), cub("hull-grey-dark", [-7 + k * 2.6, -6.2 + k * 2.6], [e0, e0 + 0.95], [-6.6, -6.2]), cub("hull-grey-dark", [-7 + k * 2.6, -6.2 + k * 2.6], [e0, e0 + 0.95], [-1.8, -1.4]), cub(t.bench, [-7.6 + k * 2.6, -7.3 + k * 2.6], [e0 + 0.45, e0 + 0.55], [-7, -1]));
   for (let t = 0; t < 4; t++) for (let k = 0; k < 4; k++) out.push(cub("plant", [1.5, 8.2], [e0 + 0.6 + t * 2.2, e0 + 0.85 + t * 2.2], [-7.4 + k * 3.4, -4.8 + k * 3.4]), cub("lamp-blue", [1.7, 8], [e0 + 1.7 + t * 2.2, e0 + 1.78 + t * 2.2], [-7.4 + k * 3.4, -4.8 + k * 3.4]), rod("hull-grey-dark", [1.5, e0, -7.5 + k * 3.4], [1.5, e0 + 8.8, -7.5 + k * 3.4], 0.07, 12));
   out.push(cub("hull-grey", [-5, 5], [e0, e0 + 5.2], [9.8, 10.4], { only: "mesh" }), cub("hull-orange", [-6, -2], [e0, e0 + 3], [7, 9.8]), cub("hull-grey-dark", [-6, -2], [e0 + 3, e0 + 3.2], [7, 9.8]));
   // deck 4, recycling: four upright tanks (two water, two air), scrubbers, a heat exchanger and a gallery of pipes along the ceiling
@@ -70,11 +78,12 @@ function inside(seed: string): Piece[] {
   return out;
 }
 
-export function habitat(cut: boolean, detail = 1, seed = "habitat"): Piece[] {
-  const ctx = contextOf(`${seed}`, "science", { cutaway: cut, detail, seed }, "command");
+export function habitat(cut: boolean, detail = 1, seed = "habitat", theme: Theme = "plain"): Piece[] {
+  const base = contextOf(`${seed}`, "science", { cutaway: cut, detail, seed }, "command");
+  const ctx = theme === "dawn" ? { ...base, livery: { ...base.livery, accent: "hull-dawn" as const } } : base;
   // the drum is built on the spine's axis from 0 to L and opens towards +Z; turn it a quarter so the cut faces starboard
   const out: Piece[] = [...place(drum(ctx, { R, L, top: "L", bottom: "L", panels: { wide: 2.8, tall: 1.9 }, hatches: 9, roundHatches: true, conduits: 7, trays: 3, vents: 5, ladders: 2, rings: [0.14, 0.3, 0.46, 0.62, 0.78, 0.9], digits: "03", junk: 90 }), { at: [0, Y0, 0], yaw: 90 })];
-  if (cut) out.push(...inside(seed));
+  if (cut) out.push(...inside(seed, theme));
   for (const [y, n, s0] of [[Y0 + 10, 12, 0.1], [Y0 + 24, 12, 0.4], [Y0 + 38, 12, 0.2]] as const) if (!cut) out.push(...portholes(y, n, s0));
   else out.push(...portholes(y, n, s0).filter((_, i) => Math.sin(s0 + (Math.PI * 2 * Math.floor(i / 3)) / n) < 0));
   void collar;

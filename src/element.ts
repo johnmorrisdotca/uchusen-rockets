@@ -11,6 +11,7 @@ import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
+import { canBeside } from "./beside.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
@@ -73,11 +74,11 @@ const CSS = `
 .panel { font: 0.85rem/1.4 system-ui, sans-serif; margin-top: 0.5rem; }
 .panel .bar { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .panel button { min-height: 2rem; padding: 0.2rem 0.7rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; cursor: pointer; }
-.panel button[aria-selected="true"], .panel button[aria-pressed="true"] { background: currentColor; }
-.panel button[aria-selected="true"], .panel button[aria-pressed="true"] { color: Canvas; }
+.panel button[aria-selected="true"], .panel button[aria-pressed="true"] { background: color-mix(in srgb, currentColor 22%, transparent); box-shadow: inset 0 0 0 1px currentColor; font-weight: 600; }
 .panel button:disabled { opacity: 0.5; cursor: default; }
 .panel .body { margin-top: 0.5rem; max-height: 14rem; overflow: auto; }
 .panel .body button { margin: 0 0.35rem 0.35rem 0; }
+.panel td button.link { margin: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; text-decoration: underline; text-align: left; }
 .panel table { border-collapse: collapse; width: 100%; }
 .panel th, .panel td { text-align: left; padding: 0.15rem 0.4rem; border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent); vertical-align: top; }
 .panel p { margin: 0 0 0.5rem; }
@@ -144,7 +145,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -467,6 +468,11 @@ export class UchusenRocket extends HTMLBase {
     this.emit("uchusen-flight", this.flightState);
   }
 
+  /** Whether Starship stands beside it: `beside="on"`, and never beside Starship itself. */
+  private besideOn(description: Description): boolean {
+    return this.getAttribute("beside") === "on" && canBeside(description.rocket);
+  }
+
   /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
   private engineLights(): boolean {
     return enginesWanted(this.getAttribute("engines"), media("(prefers-reduced-motion: reduce)"));
@@ -480,11 +486,11 @@ export class UchusenRocket extends HTMLBase {
 
   private update(): void {
     const description = this.descriptionNow();
-    const key = JSON.stringify(description);
+    const key = `${JSON.stringify(description)}|${this.besideOn(description)}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description) });
+        this.builtNow = build(description, { detail: this.detailFor(description), beside: this.besideOn(description) });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -580,6 +586,7 @@ export class UchusenRocket extends HTMLBase {
     const { look, show, viewName } = this.settings(this.builtNow);
     this.dataset.look = look;
     this.dataset.engines = this.engineLights() ? "on" : "off";
+    this.dataset.beside = this.builtNow.beside.length ? "on" : "off";
     this.dataset.flight = this.flight?.id ?? "";
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
@@ -625,7 +632,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.detailFor(description) === "full") return;
     this.fine = true;
     try {
-      this.builtNow = build(description, { detail: "full" });
+      this.builtNow = build(description, { detail: "full", beside: this.besideOn(description) });
     } catch {
       return;
     }
@@ -657,6 +664,10 @@ export class UchusenRocket extends HTMLBase {
         drawn: () => Boolean(this.viewer),
         onLabels: (on) => (on ? this.setAttribute("labels", "on") : this.removeAttribute("labels")),
         download: () => this.downloadModel(),
+        go: (rocket, variant) => {
+          this.setAttribute("rocket", rocket);
+          this.setAttribute("variant", variant);
+        },
       });
       root.appendChild(this.panel.el);
       this.panelFor = inspector;
@@ -870,7 +881,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -887,7 +898,8 @@ export class UchusenLineup extends HTMLBase {
     const raw = Number.parseFloat(this.getAttribute("unit") ?? "3");
     const unit = Number.isFinite(raw) && raw > 0 && raw <= 100 ? raw : 3;
     const items = (this.getAttribute("items") ?? "").split(",").map((item) => item.trim()).filter(Boolean);
-    const { svg, items: shown, unit: drawnUnit } = lineupSvg({
+    const { svg, items: shown, real: shownReal, unit: drawnUnit } = lineupSvg({
+      real: this.getAttribute("real") === "on",
       items,
       unit,
       look: cleanLook(this.getAttribute("look")),
@@ -906,6 +918,7 @@ export class UchusenLineup extends HTMLBase {
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);
     this.dataset.count = String(shown.length);
+    this.dataset.real = String(shownReal.length);
   }
 }
 

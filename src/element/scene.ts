@@ -48,6 +48,7 @@ import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materi
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import type { Spin } from "../spin.ts";
+import { besideLabel } from "../beside.ts";
 import { GroundKit } from "./ground.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
 
@@ -154,6 +155,8 @@ void main() {
 
 interface PartView {
   slot: string;
+  /** It belongs to the rocket standing beside the one on screen. */
+  beside: boolean;
   holder: Group;
   code: Group;
   model: Group | null;
@@ -240,6 +243,8 @@ export class RocketViewer {
   private settled: Promise<void> = Promise.resolve();
   private marks: { mark: ViewerMark; el: HTMLElement }[] = [];
   private markHost: HTMLElement | null = null;
+  /** The words that say what stands beside the craft: its name and length, under its foot. */
+  private besideEl: HTMLElement | null = null;
   private focusing = false;
   private nearSaid = false;
   private nearAt = 0;
@@ -339,7 +344,7 @@ export class RocketViewer {
     this.renderer.shadowMap.enabled = this.shadows;
     this.sun.castShadow = this.shadows;
     const places = built.placesOf(show);
-    for (const part of built.parts) {
+    for (const part of [...built.parts, ...built.beside]) {
       const source = gltf.scene.getObjectByName(part.slot);
       if (!source) continue;
       const holder = new Group();
@@ -348,11 +353,13 @@ export class RocketViewer {
       holder.add(code);
       const view: PartView = {
         slot: part.slot,
+        beside: built.beside.includes(part),
         holder,
         code,
         model: null,
-        modelFile: part.record.painted?.file ?? null,
-        ownNozzle: Boolean(part.record.painted?.ownNozzle),
+        // the stack beside it is this package's own paint in every look: a licensed model shows only with its credit, which is the craft's
+        modelFile: built.beside.includes(part) ? null : (part.record.painted?.file ?? null),
+        ownNozzle: !built.beside.includes(part) && Boolean(part.record.painted?.ownNozzle),
         modelState: "none",
         nozzleShown: false,
         faces: [],
@@ -392,7 +399,8 @@ export class RocketViewer {
       this.setFlight(this.clockNow);
     }
     this.canvas.dataset.ready = "true";
-    this.canvas.dataset.parts = this.parts.map((part) => part.slot).join(" ");
+    this.canvas.dataset.parts = this.parts.filter((part) => !part.beside).map((part) => part.slot).join(" ");
+    this.canvas.dataset.beside = built.beside.length ? "on" : "off";
     this.drivenDirty = this.driven !== null;
     this.wake();
     await this.settled;
@@ -691,6 +699,7 @@ export class RocketViewer {
         this.ground = new GroundKit();
         this.scene.add(this.ground.group);
       }
+      for (const part of this.parts) if (part.beside) part.holder.visible = false;
       const { min, max } = this.boundsNow();
       this.ground.fit(this.built.boundsOf("together").max[0] * 2.4 + 4, Math.max(Math.abs(min[0]), Math.abs(max[0])));
       this.ground.group.visible = true;
@@ -787,7 +796,7 @@ export class RocketViewer {
       this.options.onPainted("");
       return;
     }
-    const states = this.parts.map((part) => (part.modelFile ? part.modelState : "code"));
+    const states = this.parts.filter((part) => !part.beside).map((part) => (part.modelFile ? part.modelState : "code"));
     const state = states.some((s) => s === "loading" || s === "none") ? "loading" : states.every((s) => s === "ready") ? "model" : states.includes("ready") ? "mixed" : "code";
     this.canvas.dataset.painted = state;
     this.options.onPainted(state);
@@ -1171,10 +1180,27 @@ export class RocketViewer {
     for (const { el } of this.marks) el.remove();
     this.marks = [];
     if (!marks || marks.length === 0) {
-      this.markHost?.remove();
-      this.markHost = null;
+      if (!this.besideEl) {
+        this.markHost?.remove();
+        this.markHost = null;
+      }
       return;
     }
+    this.hostOfMarks();
+    for (const mark of marks) {
+      const el = document.createElement("span");
+      el.dataset.mark = mark.id;
+      el.textContent = mark.text;
+      el.style.cssText = mark.numbered
+        ? "position:absolute;left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#f2c14e;color:#0b111b;font-weight:700;text-align:center;line-height:22px;will-change:transform;display:none"
+        : "position:absolute;left:0;top:0;padding:1px 5px;border-left:2px solid #f2c14e;color:#e6edf6;background:rgba(11,17,27,0.72);white-space:nowrap;will-change:transform;display:none";
+      this.hostOfMarks().appendChild(el);
+      this.marks.push({ mark, el });
+    }
+    this.wake();
+  }
+
+  private hostOfMarks(): HTMLElement {
     if (!this.markHost) {
       const host = document.createElement("div");
       host.className = "marks";
@@ -1183,17 +1209,38 @@ export class RocketViewer {
       this.holder.appendChild(host);
       this.markHost = host;
     }
-    for (const mark of marks) {
-      const el = document.createElement("span");
-      el.dataset.mark = mark.id;
-      el.textContent = mark.text;
-      el.style.cssText = mark.numbered
-        ? "position:absolute;left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#f2c14e;color:#0b111b;font-weight:700;text-align:center;line-height:22px;will-change:transform;display:none"
-        : "position:absolute;left:0;top:0;padding:1px 5px;border-left:2px solid #f2c14e;color:#e6edf6;background:rgba(11,17,27,0.72);white-space:nowrap;will-change:transform;display:none";
-      this.markHost.appendChild(el);
-      this.marks.push({ mark, el });
+    return this.markHost;
+  }
+
+  /** What stands beside the craft is named: a caption under its foot, kept inside the picture. */
+  private placeBeside(): void {
+    const view = this.parts.find((part) => part.beside);
+    if (!view) {
+      this.besideEl?.remove();
+      this.besideEl = null;
+      return;
     }
-    this.wake();
+    if (!this.besideEl) {
+      const el = document.createElement("span");
+      el.dataset.besideLabel = "";
+      el.textContent = besideLabel();
+      el.style.cssText = "position:absolute;left:0;top:0;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.72);white-space:nowrap;will-change:transform;display:none";
+      this.hostOfMarks().appendChild(el);
+      this.besideEl = el;
+    }
+    const el = this.besideEl;
+    if (!view.holder.visible || this.clockNow) {
+      el.style.display = "none";
+      return;
+    }
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    const point = new Vector3(view.holder.position.x, view.holder.position.y, view.holder.position.z).project(this.camera);
+    const w = besideLabel().length * 6.2 + 12;
+    const x = Math.min(Math.max(((point.x + 1) / 2) * width - w / 2, 4), Math.max(4, width - w - 4));
+    const y = Math.min(((1 - point.y) / 2) * height + 6, height - 20);
+    el.style.display = point.z < 1 ? "block" : "none";
+    el.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`;
   }
 
   /** Put the labels where their parts are now. */
@@ -1335,6 +1382,7 @@ export class RocketViewer {
       this.syncSizes();
       this.renderer.render(this.scene, this.camera);
       this.placeMarks();
+      this.placeBeside();
       if (this.options.onNear && !this.nearSaid && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {
         this.nearSaid = true;
         this.options.onNear();

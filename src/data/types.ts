@@ -149,6 +149,8 @@ export interface Inspector {
   /** Where each part's origin stands when the ship is together. */
   places: Readonly<Record<string, readonly [number, number, number]>>;
   spec: readonly (readonly [string, string])[];
+  /** Spec rows that are links, by the row's name: a click goes to that rocket and variant (the sister ship). */
+  links?: Readonly<Record<string, { rocket: string; variant: string }>>;
   notes: Readonly<Record<string, readonly string[]>>;
   insets: readonly InspectorInset[];
 }

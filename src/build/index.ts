@@ -1,6 +1,7 @@
 // The builder: one description into one mesh and one drawing. Works in Node and in a browser, with no dependency: the geometry here is this package's own.
 import { propellantOf, type FlameKind } from "../data/propellants.ts";
 import { check, type Description, type FitReport } from "../fit.ts";
+import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../beside.ts";
 import { type Angle, cleanView, DEFAULT_VIEW, PICTURE_H, PICTURE_W, VIEWS, type Vec3, type ViewName } from "../framing.ts";
 import { cleanShow, placesFor, showsOf } from "../layout.ts";
 import { DEFAULT_LOOK, type LookName } from "../looks.ts";
@@ -96,6 +97,8 @@ export interface SvgOptions {
 export interface Built {
   report: FitReport;
   parts: readonly BuiltPart[];
+  /** The parts of the rocket standing beside it, when it was built `beside`; empty otherwise. They are not in `parts`; `placesOf`, `boundsOf`, `glb` and `svg` take them in. Their slots start `beside-`. */
+  beside: readonly BuiltPart[];
   /** What can be shown: together, apart and each part. */
   shows: readonly string[];
   /** The bounds of a choice of what to show, in metres, and with `lit` the flames of its engines at full thrust. */
@@ -163,13 +166,36 @@ function flameKindOf(part: PartRecord): FlameKind {
   return "neutral";
 }
 
-function assembled(report: FitReport): Built {
-  const parts: BuiltPart[] = report.parts.map(({ slot, part }) => {
+function assembled(report: FitReport, other?: Built): Built {
+  const own: BuiltPart[] = report.parts.map(({ slot, part }) => {
     const one = made(part.id);
     return { slot, record: part, pieces: one.pieces, get mesh() { return one.mesh; }, bounds: one.bounds, flame: flameKindOf(part) };
   });
-  const slots = parts.map((part) => part.slot);
-  const placesOf = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id));
+  const slots = own.map((part) => part.slot);
+  const beside: BuiltPart[] = (other?.parts ?? []).map((part) => ({ slot: `beside-${part.slot}`, record: part.record, pieces: part.pieces, get mesh() { return part.mesh; }, bounds: part.bounds, flame: part.flame }));
+  // what is drawn: the rocket's parts, then the ones beside it
+  const parts: BuiltPart[] = [...own, ...beside];
+  const ownPlaces = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id));
+  const boundsOfPlaces = (places: { slot: string; at: Vec3; shown: boolean }[]): Bounds => {
+    const min: Vec3 = [Infinity, Infinity, Infinity];
+    const max: Vec3 = [-Infinity, -Infinity, -Infinity];
+    for (const place of places) {
+      if (!place.shown) continue;
+      const { bounds } = parts.find((part) => part.slot === place.slot) as BuiltPart;
+      for (let c = 0; c < 3; c++) {
+        min[c] = Math.min(min[c], bounds.min[c] + place.at[c]);
+        max[c] = Math.max(max[c], bounds.max[c] + place.at[c]);
+      }
+    }
+    return { min, max };
+  };
+  // the other rocket stands whole, on the ground, clear of whatever of this one shows
+  const placesOf = (show?: string) => {
+    const mine = ownPlaces(show);
+    if (!other) return mine;
+    const { at } = besideLayout(boundsOfPlaces(mine), other.boundsOf("together"));
+    return [...mine, ...other.placesOf("together").map((place) => ({ slot: `beside-${place.slot}`, at: [place.at[0] + at[0], place.at[1] + at[1], place.at[2] + at[2]] as Vec3, shown: true }))];
+  };
   const flamesOf = (show: string | undefined): LitBell[] => {
     const places = placesOf(show);
     return litBells(
@@ -182,16 +208,8 @@ function assembled(report: FitReport): Built {
     );
   };
   const boundsOfShow = (show?: string, lit = false): Bounds => {
-    const min: Vec3 = [Infinity, Infinity, Infinity];
-    const max: Vec3 = [-Infinity, -Infinity, -Infinity];
-    for (const place of placesOf(show)) {
-      if (!place.shown) continue;
-      const { bounds } = parts.find((part) => part.slot === place.slot) as BuiltPart;
-      for (let c = 0; c < 3; c++) {
-        min[c] = Math.min(min[c], bounds.min[c] + place.at[c]);
-        max[c] = Math.max(max[c], bounds.max[c] + place.at[c]);
-      }
-    }
+    const mine = boundsOfPlaces(ownPlaces(show));
+    const { min, max } = other ? besideBounds(mine, besideLayout(mine, other.boundsOf("together")).bounds) : mine;
     if (lit)
       for (const bell of flamesOf(show)) {
         const place = placesOf(show).find((one) => one.slot === bell.slot);
@@ -201,7 +219,8 @@ function assembled(report: FitReport): Built {
   };
   return {
     report,
-    parts,
+    parts: own,
+    beside,
     shows: showsOf(slots),
     boundsOf: boundsOfShow,
     placesOf,
@@ -262,7 +281,7 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * A rocket from a description. Throws FitError when it does not go together.
  *
  * @param description The rocket, its variant and any other part in a slot.
- * @param options `detail`: `"coarse"` leaves out the small 3D-only detail of a very detailed part, for a fast first view; left out, every piece is made.
+ * @param options `detail`: `"coarse"` leaves out the small 3D-only detail of a very detailed part, for a fast first view; left out, every piece is made. `beside`: the real Starship stack (Block 3) stands beside it at true scale, on the same ground, and `boundsOf`, `placesOf`, `glb` and `svg` take it in; Starship itself has nothing beside it.
  * @returns The built rocket. It throws a `FitError` when the description does not go together.
  * @example
  * ```ts
@@ -272,13 +291,13 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * console.log(rocket.report.label, rocket.glb().bytes.length > 1000);
  * ```
  */
-export function build(description: Description, options: { detail?: DetailLevel } = {}): Built {
+export function build(description: Description, options: { detail?: DetailLevel; beside?: boolean } = {}): Built {
   const report = check(description);
   if (!report.ok) throw new FitError(report);
   const before = detail.level;
   detail.level = options.detail ?? "full";
   try {
-    const built = assembled(report);
+    const built = assembled(report, options.beside && canBeside(description.rocket) ? build(BESIDE_ROCKET, { detail: "full" }) : undefined);
     // a part's pieces are made when it is assembled, at this level: the lazy parts of a heavy part keep the level they were made at
     return built;
   } finally {
@@ -317,5 +336,5 @@ export function buildPart(id: string): { record: PartRecord; bounds: Bounds; glb
 
 export { toGlb };
 export type { Glb };
-export { COMPARES, lineupSvg } from "./lineup.ts";
+export { COMPARES, lineupSvg, REAL_CRAFT } from "./lineup.ts";
 export type { CompareId, LineupItem, LineupOptions } from "./lineup.ts";
