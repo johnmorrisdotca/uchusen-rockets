@@ -16,7 +16,7 @@ export const SHIP_03_ENTRIES: readonly PartEntry[] = MIYAMOTO_PARTS.map((part): 
       id: `fleet-ship-03-${part.id}`,
       kind: part.kind,
       name: part.name,
-      rocket: "fleet-ship-03",
+      rocket: part.id.endsWith("-ariake") ? "fleet-ship-ariake" : "fleet-ship-03",
       trueTo,
       height: part.height,
       diameter: part.diameter,

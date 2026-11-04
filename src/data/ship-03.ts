@@ -75,7 +75,7 @@ const cardVariant = (card: (typeof CARDS)[keyof typeof CARDS]): Variant => ({
 });
 
 /** Miyamoto's insets and propulsion cards, as one more row of the picker. */
-export const SHIP_03_INSET_ROCKET = { name: "Miyamoto insets and engine cards", variants: [...Object.values(SHIP_INSETS).map(insetVariant), ...Object.values(CARDS).map(cardVariant)] } as const;
+export const SHIP_03_INSET_ROCKET = { name: "Romurusu class insets and engine cards", variants: [...Object.values(SHIP_INSETS).map(insetVariant), ...Object.values(CARDS).map(cardVariant)] } as const;
 
 /** What to call each slot of the ship's variants in the picker: a module by its name, a sub-part of an inset with its number. */
 export const SHIP_03_SLOT_NAMES: Readonly<Record<string, string>> = {
