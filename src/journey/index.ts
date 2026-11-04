@@ -2,8 +2,8 @@
 export { AU_KM, AU_M, C, DAY_S, G0, GM_KM3_S2, LY_M, PARKING_ALTITUDE_KM, PERIOD_DAYS, YEAR_S } from "./constants.ts";
 export { circularSpeed, escapeBurn, flipAndBurn, hohmann, kepler, synodicPeriod } from "./physics.ts";
 export type { BodySource, Stop } from "./bodies.ts";
-export { CRAFTS, craftOf } from "./crafts.ts";
-export type { BallisticCraft, ContinuousCraft, Craft, Quantity } from "./crafts.ts";
+export { CRAFTS, craftOf, stageOf } from "./crafts.ts";
+export type { BallisticCraft, ContinuousCraft, Craft, Quantity, Stage } from "./crafts.ts";
 export { bestDate, planTrip, windows } from "./trip.ts";
 export type { Phase, Trip, Verdict, Window } from "./trip.ts";
 export { placeAt, playSeconds, stateAt } from "./timeline.ts";

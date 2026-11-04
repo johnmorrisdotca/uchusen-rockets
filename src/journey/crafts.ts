@@ -33,6 +33,27 @@ export interface Payload {
   dvMs?: Quantity;
   /** Used where no thrust is given: the braking acceleration, in g. */
   brakeG?: Quantity;
+  /** The specific impulse of the braking engine, seconds: what turns a speed change into propellant. */
+  ispS?: Quantity;
+}
+
+/**
+ * What of a rocket is still there at one point of a trip, drawn with the rocket's own parts: the whole rocket, or the slots that are left, of the rocket and variant named.
+ *
+ * @example
+ * ```ts
+ * import type { Stage } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const left: Stage = { rocket: "saturn-v", variant: "saturn-v", slots: ["service-module", "capsule"], name: "Apollo command and service module" };
+ * console.log(left.name);
+ * ```
+ */
+export interface Stage {
+  rocket: string;
+  variant: string;
+  /** The slots that are left, closed up into one stack; null for the whole rocket. */
+  slots: readonly string[] | null;
+  name: string;
 }
 
 /**
@@ -61,6 +82,10 @@ export interface BallisticCraft {
   departureBurnS?: Quantity;
   /** Seconds the craft takes to turn round before the braking burn. */
   flipS: Quantity;
+  /** What is left after each burn: the whole rocket at lift-off, the upper stage with its payload for the departure burn and the coast, the payload alone from the turn round. */
+  stages: { launch: Stage; upper: Stage; payload: Stage };
+  /** Which way the drawing looks: `front` for a rocket with boosters on its sides, so that all of its cores show. */
+  launchView: "side" | "front";
 }
 
 /**
@@ -132,10 +157,17 @@ export const CRAFTS: readonly Craft[] = [
       name: "Apollo command and service module with the lunar module",
       massKg: { value: 43_500, source: "wikipedia-saturn-v", note: "The trans-lunar payload." },
       thrustN: { value: 91_189, source: "wikipedia-apollo-csm", note: "The service propulsion engine, 20,500 lbf." },
+      ispS: { value: 314, source: "wikipedia-apollo-csm", note: "The service propulsion engine's specific impulse." },
     },
     ascentS: { value: 700, source: "wikipedia-saturn-v", note: "The third stage's first cut-off, about 11 minutes 40 seconds after lift-off." },
     departureBurnS: { value: 350, source: "wikipedia-saturn-v", note: "The article says the third stage burned for almost six minutes for trans-lunar injection." },
     flipS: { value: 120, source: null, estimate: "Transposition, docking and extraction took tens of minutes; the turn before a braking burn is taken as two minutes." },
+    launchView: "side",
+    stages: {
+      launch: { rocket: "saturn-v", variant: "saturn-v", slots: null, name: "Saturn V" },
+      upper: { rocket: "saturn-v", variant: "saturn-v", slots: ["third-stage", "adapter", "service-module", "capsule"], name: "S-IVB with the Apollo spacecraft" },
+      payload: { rocket: "saturn-v", variant: "saturn-v", slots: ["service-module", "capsule"], name: "Apollo command and service module" },
+    },
   },
   {
     id: "sls",
@@ -156,6 +188,12 @@ export const CRAFTS: readonly Craft[] = [
     },
     ascentS: ascentEstimate(480),
     flipS: { value: 120, source: null, estimate: "The turn before a braking burn is taken as two minutes." },
+    launchView: "front",
+    stages: {
+      launch: { rocket: "sls", variant: "block-1", slots: null, name: "Space Launch System" },
+      upper: { rocket: "sls", variant: "block-1", slots: ["upper-stage", "service-module", "capsule"], name: "Upper stage with Orion" },
+      payload: { rocket: "sls", variant: "block-1", slots: ["service-module", "capsule"], name: "Orion" },
+    },
   },
   {
     id: "falcon-heavy",
@@ -176,6 +214,12 @@ export const CRAFTS: readonly Craft[] = [
     },
     ascentS: ascentEstimate(540),
     flipS: { value: 120, source: null, estimate: "The turn before a braking burn is taken as two minutes." },
+    launchView: "front",
+    stages: {
+      launch: { rocket: "falcon-heavy", variant: "falcon-heavy", slots: null, name: "Falcon Heavy" },
+      upper: { rocket: "falcon-9", variant: "block-5", slots: ["second-stage", "fairing"], name: "Upper stage with its payload" },
+      payload: { rocket: "falcon-9", variant: "block-5", slots: ["fairing"], name: "The payload in its fairing" },
+    },
   },
   {
     id: "kaminari",
@@ -192,6 +236,27 @@ export const CRAFTS: readonly Craft[] = [
     flipS: { value: 600, source: null, estimate: "A ship 1,820 m long turned end for end by its vernier clusters: ten minutes." },
   },
 ];
+
+/**
+ * What of a craft is left at a phase of its trip, to draw: the whole rocket until the ascent is over, the upper stage with its payload for the departure burn and the coast, and the payload alone from the turn round. A ship that burns all the way is whole throughout.
+ *
+ * @param craft A craft.
+ * @param phase The phase of the trip, such as `coast`.
+ * @returns The rocket, variant and slots to draw, and a name for them.
+ * @example
+ * ```ts
+ * import { craftOf, stageOf } from "@johnmorrisdotca/uchusen-rockets/journey";
+ *
+ * const saturn = craftOf("saturn-v")!;
+ * console.log(stageOf(saturn, "ascent").name, stageOf(saturn, "coast").name, stageOf(saturn, "brake").name);
+ * ```
+ */
+export function stageOf(craft: Craft, phase: string): Stage {
+  if (craft.drive === "continuous") return { rocket: craft.rocket, variant: craft.variant, slots: null, name: craft.name };
+  if (phase === "burn" || phase === "coast") return craft.stages.upper;
+  if (phase === "flip" || phase === "brake" || phase === "flyby" || phase === "arrival") return craft.stages.payload;
+  return craft.stages.launch;
+}
 
 /**
  * A craft by its id.

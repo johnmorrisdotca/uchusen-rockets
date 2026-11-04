@@ -97,6 +97,10 @@ export interface Trip {
   /** The propellant a ship that burns all the way uses, tonnes, and carries. */
   propellantUsedT?: number;
   propellantCarriedT?: number;
+  /** The propellant of the trip: tonnes used (and carried, where it is known), or null with the reason no figure can be given. */
+  fuel: { usedT: number | null; carriedT: number | null; note: string };
+  /** What the craft carries to the end of this trip: kilograms (at least, where only a harder trip is rated), or null with the reason. */
+  payload: { kg: number | null; atLeast: boolean; note: string };
   ballistic?: {
     mu: number;
     r1: number;
@@ -306,6 +310,8 @@ const unavailable = (craft: Craft, from: string, to: string, departMs: number, l
   totalS: 0,
   verdict: { level: "cannot", line, because, playable: false },
   estimated: [],
+  fuel: { usedT: null, carriedT: null, note: "No trip." },
+  payload: { kg: null, atLeast: false, note: "No trip." },
   straightKm: 0,
   pathKm: 0,
   dv: { departure: 0, arrival: 0, total: 0 },
@@ -453,6 +459,17 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
   }
   if (estimated.length > 0) because.push(`Estimated, not from a source: ${[...new Set(estimated)].join(", ")}.`);
 
+  const isp = payload.ispS?.value ?? null;
+  const braking = flyby ? 0 : dv2 * 1000;
+  const fuel =
+    isp !== null && mass !== null && !flyby
+      ? { usedT: (mass * (1 - Math.exp(-braking / (isp * G0)))) / 1000, carriedT: null, note: "the braking burn only, from the engine's specific impulse and the payload's mass" }
+      : { usedT: null, carriedT: null, note: flyby ? "it does not brake, so it burns no propellant at the far end" : "no source gives the specific impulse of this payload's engine" };
+  const toName = stopName(source, to);
+  const carries =
+    verdictCap.kg !== undefined
+      ? { kg: verdictCap.kg, atLeast: verdictCap.level === "at-least", note: `Payload to ${toName}` }
+      : { kg: null, atLeast: false, note: `no published payload figure covers a trip to ${toName}` };
   return {
     from,
     to,
@@ -467,6 +484,8 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     estimated: [...new Set(estimated)],
     straightKm,
     pathKm,
+    fuel,
+    payload: carries,
     dv: { departure: dv1 * 1000, arrival: flyby ? 0 : dv2 * 1000, total: (dv1 + (flyby ? 0 : dv2)) * 1000 },
     peakG,
     peakSpeed,
@@ -553,6 +572,8 @@ function planContinuous(source: BodySource, craft: ContinuousCraft, from: string
     frameS: plan.frameSeconds,
     propellantUsedT: usedT,
     propellantCarriedT: carried,
+    fuel: { usedT, carriedT: carried, note: "the whole trip, from the exhaust speed" },
+    payload: { kg: craft.payloadT.value * 1000, atLeast: false, note: `Payload to ${stopName(source, to)}` },
     continuous: { from: from3, to: to3, a, burnS: tb, flipS, peakRapidity: plan.rapidity, blockedBySun },
   };
 }
