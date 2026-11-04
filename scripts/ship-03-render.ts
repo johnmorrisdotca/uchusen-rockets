@@ -2,7 +2,7 @@
 // is a camera (eye, target, field of view, size) and a look, painted (physically based materials, a key light with a shadow, an environment for the metal) or line (edges over a dark fill). One browser, one WebGL context,
 // the canvas kept to 4096 pixels a side and 6 megapixels, every geometry, material and texture disposed after each job. It starts a small server on port 7903 (or SHOTS_PORT) and stops it by the process it started.
 import { createServer } from "node:http";
-import { readFileSync, mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -24,6 +24,10 @@ interface Shot {
   /** Clip everything on one side of a plane: [nx, ny, nz, d] keeps points with n.p + d >= 0. */
   clip?: [number, number, number, number];
   background?: string;
+  /** A view this many metres high instead of a perspective one: front, side and top at one scale for a drawing sheet. */
+  ortho?: number;
+  /** Points of the model whose place in the picture is written beside it, in pixels, for callouts. */
+  points?: { id: string; at: [number, number, number] }[];
 }
 interface Job {
   glb: string;
@@ -86,7 +90,7 @@ window.draw = async (job, shot) => {
   const [w, h] = shot.size ?? [1600, 900];
   renderer.setPixelRatio(1);
   renderer.setSize(w, h);
-  const camera = new THREE.PerspectiveCamera(shot.fov ?? 35, w / h, 0.05, 3000);
+  const camera = shot.ortho ? new THREE.OrthographicCamera((-shot.ortho * w) / h / 2, (shot.ortho * w) / h / 2, shot.ortho / 2, -shot.ortho / 2, 0.1, 3000) : new THREE.PerspectiveCamera(shot.fov ?? 35, w / h, 0.05, 3000);
   camera.up.set(...(shot.up ?? [0, 0, 1]));
   camera.position.set(...shot.eye);
   camera.lookAt(...shot.target);
@@ -104,7 +108,9 @@ window.draw = async (job, shot) => {
   const rim = new THREE.DirectionalLight("#9fc4ff", shot.look === "line" ? 0 : 0.8); rim.position.set(-0.6, -0.2, -0.8);
   scene.add(sun, sun.target, rim, new THREE.HemisphereLight("#cfe0ff", "#1a1d24", shot.look === "line" ? 0.8 : 0.5));
   renderer.render(scene, camera);
-  const info = { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, geometries: renderer.info.memory.geometries };
+  camera.updateMatrixWorld();
+  const points = (shot.points ?? []).map((p) => { const v = new THREE.Vector3(...p.at).project(camera); return { id: p.id, x: Math.round(((v.x + 1) / 2) * w), y: Math.round(((1 - v.y) / 2) * h), behind: v.z > 1 }; });
+  const info = { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, geometries: renderer.info.memory.geometries, points };
   for (const model of models) dispose(model);
   scene.clear();
   return info;
@@ -150,7 +156,9 @@ try {
       const wire = { glb: `/glb/${resolve(job.glb)}`, more: (job.more ?? []).map((m) => ({ ...m, glb: `/glb/${resolve(m.glb)}` })) };
       const info = await page.evaluate(([j, s]) => (window as unknown as { draw: (a: unknown, b: unknown) => Promise<unknown> }).draw(j, s), [wire, shot] as const);
       await page.locator("canvas").screenshot({ path: join(outDir, `${shot.name}.png`) });
-      console.log(shot.name, JSON.stringify(info));
+      const { points, ...rest } = info as { points: unknown[] } & Record<string, unknown>;
+      if (points.length) writeFileSync(join(outDir, `${shot.name}.points.json`), JSON.stringify(points));
+      console.log(shot.name, JSON.stringify(rest));
     }
 } finally {
   await browser.close();
