@@ -11,7 +11,7 @@ import { blank, type Figure } from "./types.ts";
  * console.log(MAKERS.spacex, Object.keys(MAKERS).length);
  * ```
  */
-export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", russia: "Russia", "us-army": "US Army", fleet: "SPX fleet", sites: "Sites" } as const;
+export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", russia: "Russia", "us-army": "US Army", fleet: "SPX", sites: "Sites" } as const;
 /**
  * The id of a group in `MAKERS`.
  *
@@ -55,6 +55,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   "fleet-ship-03": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-ship-ariake": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kit": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
+  "fleet-02": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-fleet-ship-02", note: "An original design." } },
   droneship: SITE,
   "landing-zone": SITE,
   "launch-tower": SITE,

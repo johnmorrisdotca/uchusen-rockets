@@ -1,7 +1,8 @@
 // The viewer: `<uchusen-rocket rocket="starship" variant="v3" show="together" look="line">` in any page. The drawing first, then, when it comes on screen and the browser can draw WebGL, the 3D view
 // crossfading in over it; drag to turn, keyboard, tilt on phones, a slow spin, reduced motion; the drawing stays on no WebGL, Save-Data or any failure. Importing this file defines the elements. three.js is
 // loaded only when a 3D view is wanted, and a licensed model only when the painted look asks for one.
-import { build, type Built, FitError } from "./build/index.ts";
+import { build, buildPart, type Built, FitError } from "./build/index.ts";
+import type { DetailLevel } from "./model/detail.ts";
 import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
@@ -10,11 +11,14 @@ import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
+import { canBeside } from "./beside.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
 import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
 import type { RocketViewer } from "./element/scene.ts";
+import { Panel } from "./element/panel.ts";
+import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
 
 /**
@@ -67,6 +71,17 @@ const CSS = `
 .canvas:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
 .picture[data-state="3d"] .drawing { opacity: 0; filter: blur(2px); }
 .picture[data-state="3d"] .canvas { opacity: 1; filter: none; }
+.panel { font: 0.85rem/1.4 system-ui, sans-serif; margin-top: 0.5rem; }
+.panel .bar { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.panel button { min-height: 2rem; padding: 0.2rem 0.7rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.panel button[aria-selected="true"], .panel button[aria-pressed="true"] { background: color-mix(in srgb, currentColor 22%, transparent); box-shadow: inset 0 0 0 1px currentColor; font-weight: 600; }
+.panel button:disabled { opacity: 0.5; cursor: default; }
+.panel .body { margin-top: 0.5rem; max-height: 14rem; overflow: auto; }
+.panel .body button { margin: 0 0.35rem 0.35rem 0; }
+.panel td button.link { margin: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; text-decoration: underline; text-align: left; }
+.panel table { border-collapse: collapse; width: 100%; }
+.panel th, .panel td { text-align: left; padding: 0.15rem 0.4rem; border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent); vertical-align: top; }
+.panel p { margin: 0 0 0.5rem; }
 .tilt { position: absolute; right: 0.5rem; bottom: 0.5rem; min-height: 2rem; padding: 0.25rem 0.75rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; font-size: 0.8rem; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .drawing, .canvas { filter: none !important; transition: opacity var(--uchusen-fade, 400ms) ease; }
@@ -130,7 +145,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -267,6 +282,7 @@ export class UchusenRocket extends HTMLBase {
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
     if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
+    else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
       // choosing what to show leaves the flight
       if (name === "show") this.endFlight();
@@ -452,6 +468,11 @@ export class UchusenRocket extends HTMLBase {
     this.emit("uchusen-flight", this.flightState);
   }
 
+  /** Whether Starship stands beside it: `beside="on"`, and never beside Starship itself. */
+  private besideOn(description: Description): boolean {
+    return this.getAttribute("beside") === "on" && canBeside(description.rocket);
+  }
+
   /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
   private engineLights(): boolean {
     return enginesWanted(this.getAttribute("engines"), media("(prefers-reduced-motion: reduce)"));
@@ -465,11 +486,11 @@ export class UchusenRocket extends HTMLBase {
 
   private update(): void {
     const description = this.descriptionNow();
-    const key = JSON.stringify(description);
+    const key = `${JSON.stringify(description)}|${this.besideOn(description)}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description);
+        this.builtNow = build(description, { detail: this.detailFor(description), beside: this.besideOn(description) });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -565,6 +586,7 @@ export class UchusenRocket extends HTMLBase {
     const { look, show, viewName } = this.settings(this.builtNow);
     this.dataset.look = look;
     this.dataset.engines = this.engineLights() ? "on" : "off";
+    this.dataset.beside = this.builtNow.beside.length ? "on" : "off";
     this.dataset.flight = this.flight?.id ?? "";
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
@@ -593,6 +615,82 @@ export class UchusenRocket extends HTMLBase {
       }
       this.emit("uchusen-change", { report: this.builtNow.report });
     }
+    this.syncPanel();
+    this.panel?.refresh();
+  }
+
+  /** A fleet ship is built coarse first (the first picture and the far view) and fine when the camera comes near, an inset opens or one part is shown alone: once per visit, never on a turn or a look change. */
+  private fine = false;
+  private detailFor(description: Description): DetailLevel {
+    const fictional = ROCKETS[description.rocket]?.variants.some((v) => v.status === "fictional");
+    return fictional && !this.fine ? "coarse" : "full";
+  }
+
+  private async upgrade(): Promise<void> {
+    if (this.fine || !this.builtNow) return;
+    const description = this.descriptionNow();
+    if (this.detailFor(description) === "full") return;
+    this.fine = true;
+    try {
+      this.builtNow = build(description, { detail: "full", beside: this.besideOn(description) });
+    } catch {
+      return;
+    }
+    await this.applyRocket();
+  }
+
+  private panel: Panel | null = null;
+  private panelFor: Inspector | null = null;
+
+  /** The panel of a ship that has one: tabs, a Labels toggle and insets that open on a click. `inspector="off"` leaves it out; `labels="on"` starts with the labels showing. */
+  private syncPanel(): void {
+    const root = this.shadowRoot;
+    if (!root) return;
+    const inspector = this.builtNow?.report.variant?.inspector ?? null;
+    if (!inspector || this.getAttribute("inspector") === "off") {
+      this.panel?.el.remove();
+      this.panel = null;
+      this.panelFor = null;
+      this.viewer?.setMarks(null);
+      return;
+    }
+    if (this.panelFor !== inspector || !this.panel || !this.panel.el.isConnected) {
+      this.panel?.el.remove();
+      this.panel = new Panel(inspector, {
+        marks: (marks) => this.viewer?.setMarks(marks),
+        focus: (focus) => {
+          void (focus ? this.upgrade() : Promise.resolve()).then(() => this.viewer?.focusOn(focus));
+        },
+        drawn: () => Boolean(this.viewer),
+        onLabels: (on) => (on ? this.setAttribute("labels", "on") : this.removeAttribute("labels")),
+        download: () => this.downloadModel(),
+        go: (rocket, variant) => {
+          this.setAttribute("rocket", rocket);
+          this.setAttribute("variant", variant);
+        },
+      });
+      root.appendChild(this.panel.el);
+      this.panelFor = inspector;
+    }
+    this.panel.labels(this.getAttribute("labels") === "on");
+  }
+
+  /** Saves the model on screen as a .glb: the whole ship, or the one part shown alone. It is made here, in the browser, from the same parts, because a fleet ship's file is far too big to ship. */
+  private downloadModel(): void {
+    if (!this.builtNow) return;
+    // always the full detail, whatever level is on screen
+    const built = build(this.descriptionNow(), { detail: "full" });
+    const { show } = this.settings(built);
+    const part = built.parts.find((p) => p.slot === show);
+    const glb = part ? buildPart(part.record.id).glb() : built.glb();
+    const bytes = glb.bytes;
+    const blob = new Blob([bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer], { type: "model/gltf-binary" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${built.report.variant?.rocket ?? "rocket"}-${built.report.variant?.id ?? "model"}${part ? `-${part.slot}` : ""}.glb`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+    this.emit("uchusen-download", { triangles: glb.triangles, bytes: bytes.byteLength });
   }
 
   private lastView = "";
@@ -600,6 +698,7 @@ export class UchusenRocket extends HTMLBase {
     if (!this.builtNow) return;
     this.mark();
     const { look, show, viewName, angle } = this.settings(this.builtNow);
+    if (show !== "together" && show !== "apart") void this.upgrade();
     if (this.viewer) {
       this.viewer.setLook(look);
       this.viewer.setShow(show);
@@ -678,6 +777,7 @@ export class UchusenRocket extends HTMLBase {
         label: this.getAttribute("label") ?? built.report.label,
         reducedMotion: reduced,
         onLost: () => this.fallBack("context-lost"),
+        onNear: () => void this.upgrade(),
         assets: assets ? `${assets.replace(/\/$/, "")}/` : defaultBase(),
         onPainted: (state) => {
           this.dataset.painted = state;
@@ -781,7 +881,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -798,7 +898,8 @@ export class UchusenLineup extends HTMLBase {
     const raw = Number.parseFloat(this.getAttribute("unit") ?? "3");
     const unit = Number.isFinite(raw) && raw > 0 && raw <= 100 ? raw : 3;
     const items = (this.getAttribute("items") ?? "").split(",").map((item) => item.trim()).filter(Boolean);
-    const { svg, items: shown } = lineupSvg({
+    const { svg, items: shown, real: shownReal, unit: drawnUnit } = lineupSvg({
+      real: this.getAttribute("real") === "on",
       items,
       unit,
       look: cleanLook(this.getAttribute("look")),
@@ -806,7 +907,10 @@ export class UchusenLineup extends HTMLBase {
       show: this.getAttribute("show") ?? undefined,
       ruler: this.hasAttribute("ruler"),
       labels: this.hasAttribute("labels"),
+      filter: ((value) => (value === "rockets" || value === "fleet" ? value : "all"))(this.getAttribute("filter")),
+      ...((room) => (room.length === 2 && room.every((v) => Number.isFinite(v) && v > 0) ? { fit: { width: room[0], height: room[1] } } : {}))((this.getAttribute("fit") ?? "").split(",").map(Number)),
     });
+    this.dataset.unit = String(Math.round(drawnUnit * 100) / 100);
     const template = document.createElement("template");
     template.innerHTML = svg;
     const node = template.content.firstElementChild;
@@ -814,6 +918,7 @@ export class UchusenLineup extends HTMLBase {
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);
     this.dataset.count = String(shown.length);
+    this.dataset.real = String(shownReal.length);
   }
 }
 

@@ -41,7 +41,7 @@ npm install @johnmorrisdotca/uchusen-rockets three
 <uchusen-rocket rocket="starship" variant="v2" show="booster" look="thick" view="below"></uchusen-rocket>
 ```
 
-That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin. `engines="on"` lights each engine at full thrust, in the painted look and as a drawn flame in the line looks, and a reader who asked for reduced motion has them off. A flame's length and its shock diamonds are a picture, not a measurement. [A flight](docs/flight.md) plays each phase with the engines that burn in it, from published timelines. With no WebGL, under Save-Data, or on any failure, the drawing stays.
+That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin. `engines="on"` lights each engine at full thrust, in the painted look and as a drawn flame in the line looks, and a reader who asked for reduced motion has them off. A flame's length and its shock diamonds are a picture, not a measurement. `beside="on"` stands Starship with Super Heavy next to the rocket at true scale, to see how big it is. [A flight](docs/flight.md) plays each phase with the engines that burn in it, from published timelines. With no WebGL, under Save-Data, or on any failure, the drawing stays.
 
 ## Who it is for
 
@@ -139,6 +139,22 @@ Starship; Falcon 9 in v1.0 (with a fairing, or with Dragon 1 as it flew), v1.1, 
 <uchusen-rocket rocket="dragon" variant="dragon-1" show="capsule"></uchusen-rocket>
 <uchusen-rocket rocket="grasshopper" look="painted"></uchusen-rocket>
 ```
+
+The SPX fleet ships are original designs.
+
+One of them is a class of two, the Romurusu class: ISV Miyamoto, SPX-452, and its sister ISV Ariake, SPX-186. They share one hull and differ like this:
+
+| | ISV Miyamoto, SPX-452 | ISV Ariake, SPX-186 |
+|---|---|---|
+| Role | flagship and command | survey and command |
+| Accent | orange | dawn-gold band and pinstripes |
+| Signature | a long gold solar array along the starboard side, 10 bays over 120 m of her 380 m | near-black hexagonal panelling on the engine end |
+| Nose | more rounded, clad in solar cells | standard |
+| Side box modules | the staggered pair (starboard aft, port fore) | all four (port and starboard, fore and aft): double the capacity |
+| Default pod | relay (the relief pod on request) | survey |
+| Refits | none extra | an extra sensor mast, a second solarium |
+| Interior theme | its own: blue and white | warm wood and dawn-gold |
+| Shared | hull, drive with shadow-shield collar, decks, length 380 m | same |
 
 ## Variants, with their sources
 

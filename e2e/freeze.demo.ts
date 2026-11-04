@@ -6,6 +6,7 @@ import { chromium, expect as plainExpect, type Locator, type Page, test } from "
 import { build } from "../src/build/index.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
 import { ROCKETS } from "../src/rockets.ts";
+import { isListed } from "../demo/listed.ts";
 
 // these draw in software, and a page building a painted material can be busy for many seconds
 const expect = plainExpect.configure({ timeout: 30_000 });
@@ -14,11 +15,13 @@ const URL = "/uchusen-rockets/";
 const real = (rocket: { id: string }) => !rocket.id.startsWith("fleet-");
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
-/** A rocket's button shows under its maker's, so its maker comes first. */
+/** A rocket's button shows under its maker's, so its maker comes first. The fleet kit's boxes of parts are not listed, and are pressed without being seen. */
 const press = async (page: Page, id: string) => {
   const rocket = /^rocket-(.+)$/.exec(id)?.[1];
   if (rocket) await page.locator(`[data-testid="maker-${ROCKETS[rocket].maker}"]`).click();
-  await page.locator(`[data-testid="${id}"]`).click();
+  const button = page.locator(`[data-testid="${id}"]`);
+  if (rocket && !isListed(rocket)) await button.dispatchEvent("click");
+  else await button.click();
 };
 
 test.use({ reducedMotion: "no-preference" });
@@ -147,6 +150,20 @@ const pressAndDraw = async (page: Page, id: string) => {
 };
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 const settle = (page: Page, ms: number) => page.waitForTimeout(ms);
+/**
+ * A reading once the GPU objects have stopped moving: two readings a second apart agree. The pictures the renderer is still giving back after their short linger are not kept ones, and a slow runner reads them
+ * mid-way (24 textures where the first round read 21); a leak never settles lower than it began, and is still caught by the comparison.
+ */
+const levelUsage = async (page: Page) => {
+  let before = await usage(page);
+  for (let tries = 0; tries < 15; tries++) {
+    await page.waitForTimeout(1000);
+    const now = await usage(page);
+    if (now.textures === before.textures && now.buffers === before.buffers && now.programs === before.programs && now.framebuffers === before.framebuffers) return now;
+    before = now;
+  }
+  return before;
+};
 /** Draws and page frames over a stretch long enough for `frames` of the page's own: a slow machine (software WebGL on a runner) has few in a second. */
 const measure = async (page: Page, frames = 12) => {
   const start = { drawn: await drawn(page), page: (await usage(page)).pageFrames };
@@ -592,12 +609,13 @@ test.describe("with the engines lit", () => {
     await pause(page);
     await reach3d(page);
     await press(page, "engines-on");
+    // each rocket is read once it has been drawn: its plumes are counted when it is built, and its buffers are made by its first frame, which a slow runner draws well after (9 buffers just after the plumes, 191 a frame later)
     const round = async () => {
-      await press(page, "rocket-falcon-9");
+      await pressAndDraw(page, "rocket-falcon-9");
       await expect.poll(() => canvasData(page, "plumes")).toBe("9");
-      await press(page, "rocket-falcon-heavy");
+      await pressAndDraw(page, "rocket-falcon-heavy");
       await expect.poll(() => canvasData(page, "plumes")).toBe("27");
-      await press(page, "rocket-starship");
+      await pressAndDraw(page, "rocket-starship");
       await expect.poll(() => canvasData(page, "plumes")).toBe("33");
     };
     await round();
@@ -1270,7 +1288,7 @@ test.describe("50 rounds", () => {
       // every picture at the size it wants and drawn, so a reading with the Earth on can be compared too
       await expect.poll(() => earth(page).evaluate((node) => Object.values((node.querySelector("chikyu-earth-realistic") as unknown as { stats: { tiers: Record<string, number> } }).stats.tiers).every((width) => width === 2048)), { timeout: 90_000 }).toBe(true);
       await settle(page, 400);
-      withEarth = await usage(page);
+      withEarth = await levelUsage(page);
       await pressAndDraw(page, "rocket-falcon-heavy");
       await expect(hero(page)).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
       expect((await usage(page)).contexts).toBe(2);

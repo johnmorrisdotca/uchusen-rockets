@@ -2,7 +2,7 @@
 // one function (`journey`), the table and the cards are derived from it so they cannot disagree, and `test/ship-03.test.ts` pins each figure the bible prints. Pure: no three.js and no DOM.
 import type { EngineCard, HullStack, Section, SectionRole, Vec3 } from "./adapter.ts";
 import { designation, FLEET_MAKER, HULL_STACKS } from "./adapter.ts";
-import { ENVELOPE, MASS, RADIATOR_AREA } from "./dims.ts";
+import { ARRAY, ARRAY_AREA, ENVELOPE, HANGAR_BOX, MASS, MASS_ARIAKE, RADIATOR_AREA } from "./dims.ts";
 
 /** Speed of light, standard gravity, a light year and a Julian year, in SI units. */
 export const C = 299_792_458;
@@ -106,12 +106,18 @@ export function journey(distanceLy: number, g: number = DRIVE.acceleration, exha
 export const ROUTES = { benchmark: 4.37, proxima: 4.25 } as const;
 
 /** What the ship's fuel and its shield allow: the ideal speed at the midpoint if it burned down to the protected reserve, as a fraction of c. */
-export const idealMidpoint = (exhaustOfC: number = DRIVE.exhaustOfC): number => Math.tanh((exhaustOfC * Math.log(MASS.full / (MASS.full - (MASS.propellant - MASS.reserve)))) / 2);
+export const idealMidpoint = (exhaustOfC: number = DRIVE.exhaustOfC, mass: { full: number; propellant: number; reserve: number } = MASS): number => Math.tanh((exhaustOfC * Math.log(mass.full / (mass.full - (mass.propellant - mass.reserve)))) / 2);
 
 /** The longest symmetric start-to-stop burn the shield limit allows at the listed acceleration, in light years. */
 export function longestBurnLy(g: number = DRIVE.acceleration, limit: number = DRIVE.shieldLimitOfC): number {
   const a = g * G0;
   return (2 * C * C * (Math.cosh(Math.atanh(limit)) - 1)) / a / LIGHT_YEAR;
+}
+
+/** The longest start-to-stop burn the fuel allows (down to the protected reserve) at an acceleration, in light years: a heavier ship has less margin. */
+export function fuelLimitedLy(mass: { full: number; propellant: number; reserve: number } = MASS, g: number = DRIVE.acceleration, exhaustOfC: number = DRIVE.exhaustOfC): number {
+  const rapidity = (exhaustOfC * Math.log(mass.full / (mass.full - (mass.propellant - mass.reserve)))) / 2;
+  return (2 * C * C * (Math.cosh(rapidity) - 1)) / (g * G0) / LIGHT_YEAR;
 }
 
 /** The specification table, as lines a sheet prints. */
@@ -123,30 +129,45 @@ export interface Line {
 
 const n = (value: number, digits = 0) => value.toLocaleString("en-US", { maximumFractionDigits: digits });
 
-export function specification(): Line[] {
-  const j = journey(ROUTES.benchmark);
-  const p = journey(ROUTES.proxima);
+/** What a ship of the class is as built: her mass table, her hangar boxes, and the acceleration her mass allows on the same two drives (the thrust is fixed by the drive, so a heavier ship accelerates more slowly). */
+export function asBuilt(ship: keyof typeof SHIPS = "miyamoto"): { mass: { inert: number; propellant: number; full: number; cargo: number; reserve: number }; hangars: number; beam: number; acceleration: number } {
+  const mass = ship === "ariake" ? MASS_ARIAKE : MASS;
+  return { mass, hangars: HANGAR_BOX.count[ship], beam: ENVELOPE.beam, acceleration: ship === "ariake" ? (DRIVE.acceleration * MASS.full) / MASS_ARIAKE.full : DRIVE.acceleration };
+}
+
+const ARRAY_POWER_AU = (ARRAY_AREA * 0.89 * 0.3 * 1361) / 1e6;
+
+export function specification(ship: keyof typeof SHIPS = "miyamoto"): Line[] {
+  const built = asBuilt(ship);
+  const g = built.acceleration;
+  const gText = ship === "ariake" ? g.toFixed(4) : String(g);
+  const j = journey(ROUTES.benchmark, g, DRIVE.exhaustOfC, built.mass.full);
+  const p = journey(ROUTES.proxima, g, DRIVE.exhaustOfC, built.mass.full);
+  const named = ship === "ariake" ? `${IDENTITY.prefix} ${SHIPS.ariake.romaji}, ${SHIPS.ariake.registry}` : `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.designation}`;
   return [
-    { name: "Designation", value: `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.designation}`, note: `${IDENTITY.class} class (${IDENTITY.classKanji}, "${IDENTITY.classMeaning}"), ${IDENTITY.type} type (${IDENTITY.typeMeans}); flagship and command; sister of ISV Ariake, SPX-186` },
-    { name: "Name", value: `${IDENTITY.japanese} ${IDENTITY.romaji}`, note: IDENTITY.meaning },
+    { name: "Designation", value: named, note: ship === "ariake" ? `${IDENTITY.class} class (${IDENTITY.classKanji}, "${IDENTITY.classMeaning}"), ${IDENTITY.type} type (${IDENTITY.typeMeans}); sister of ISV Miyamoto, SPX-452, with four hangar boxes` : `${IDENTITY.class} class (${IDENTITY.classKanji}, "${IDENTITY.classMeaning}"), ${IDENTITY.type} type (${IDENTITY.typeMeans}); flagship and command; sister of ISV Ariake, SPX-186` },
+    { name: "Name", value: ship === "ariake" ? `${SHIPS.ariake.kanji} ${SHIPS.ariake.romaji}` : `${IDENTITY.japanese} ${IDENTITY.romaji}`, note: ship === "ariake" ? SHIPS.ariake.meaning : IDENTITY.meaning },
     { name: "Length", value: `${ENVELOPE.length} m` },
-    { name: "Beam", value: `${ENVELOPE.beam} m`, note: "across both hangar shoulders" },
+    { name: "Beam", value: `${built.beam} m`, note: ship === "ariake" ? "across the hangar boxes: the same 118 m, because the staggered pair already stands at the full beam; the added boxes fill the empty corners" : "across both hangar shoulders" },
     { name: "Height", value: `${ENVELOPE.height} m`, note: "keel to the dorsal pod" },
-    { name: "Dry mass", value: `${n(MASS.inert)} t`, note: `${n(MASS.cargo)} t of cargo inside it` },
-    { name: "Full mass", value: `${n(MASS.full)} t`, note: `${n(MASS.propellant)} t of propellant, ${n(MASS.reserve)} t of it protected reserve` },
+    { name: "Hangar boxes", value: `${built.hangars}`, note: ship === "ariake" ? "all four positions filled: rescue bays aft, survey bays fore, one of each on each side; double Miyamoto's capacity" : "the staggered pair: a rescue bay starboard aft and a survey bay port fore" },
+    { name: "Dry mass", value: `${n(built.mass.inert)} t`, note: ship === "ariake" ? `${n(built.mass.cargo)} t of cargo inside it, and ${n(2 * HANGAR_BOX.structure)} t of added framework for the two extra boxes (${n(HANGAR_BOX.structure)} t each)` : `${n(built.mass.cargo)} t of cargo inside it` },
+    { name: "Cargo", value: `${n(built.mass.cargo)} t`, note: ship === "ariake" ? "twice Miyamoto's 2,800 t" : "relief and equipment containers" },
+    { name: "Full mass", value: `${n(built.mass.full)} t`, note: `${n(built.mass.propellant)} t of propellant, ${n(built.mass.reserve)} t of it protected reserve` },
     { name: "Crew", value: "144 nominal, 216 with the extended-expedition berths", note: "180 evacuees for up to 30 days" },
     { name: "Main drive", value: "2 DCD, Directed Conversion Drives", note: `${n(j.thrust / 1e6, 1)} MN together at departure mass; effective exhaust ${DRIVE.exhaustOfC} c` },
     { name: "Manoeuvring", value: "4 plasma verniers, 24 attitude thrusters", note: "trim, docking and the flip; they cannot brake the ship" },
     { name: "Ship computer", value: IDENTITY.computer, note: "KAZE: Kinetic Autonomous Zonal Executive; its core sits in the communications core of the citadel" },
-    { name: "Small craft", value: "ATC (Auxiliary Transfer Craft) berths in both bays", note: "the starboard bay is the rescue cradle, the port bay three survey cradles; the craft are designed separately" },
-    { name: "Power", value: "2 auxiliary fusion plants of 120 MW(e), 1 fission emergency unit of 12 MW(e)" },
+    { name: "Small craft", value: ship === "ariake" ? "ATC (Auxiliary Transfer Craft) berths in all four bays" : "ATC (Auxiliary Transfer Craft) berths in both bays", note: ship === "ariake" ? "two rescue cradles aft (one a side) and six survey cradles fore (three a side); the craft are designed separately" : "the starboard bay is the rescue cradle, the port bay three survey cradles; the craft are designed separately" },
+    { name: "Power", value: "2 auxiliary fusion plants of 120 MW(e), 1 fission emergency unit of 12 MW(e)", note: "fusion is the main power" },
+    { name: "Solar array", value: ship === "ariake" ? "none" : `${n(ARRAY_AREA)} m2 of gold cells in ${ARRAY.bays} bays: ${ARRAY_POWER_AU.toFixed(1)} MW(e) at one astronomical unit from a Sun-like star`, note: ship === "ariake" ? "Miyamoto carries it; Ariake's side holds a fourth hangar box" : "for time near a star only; it falls with the square of the distance, and it is under 1% of the fusion plants' 240 MW(e)" },
     { name: "Heat rejection", value: `${n(RADIATOR_AREA)} m2 of radiator in eight leaves`, note: "0.8 GW effective" },
-    { name: "Acceleration", value: `${DRIVE.acceleration} g sustained`, note: `${DRIVE.briefPeakG} g for up to ${DRIVE.briefPeakSeconds} s with the thermal buffer charged; not used for journey planning` },
+    { name: "Acceleration", value: `${gText} g sustained`, note: ship === "ariake" ? `the same drive as Miyamoto's (${n(j.thrust / 1e6, 1)} MN) on ${n(built.mass.full - MASS.full)} t more ship; ${DRIVE.briefPeakG} g peaks not used for journey planning` : `${DRIVE.briefPeakG} g for up to ${DRIVE.briefPeakSeconds} s with the thermal buffer charged; not used for journey planning` },
     { name: "Peak speed", value: `${(j.peak * 100).toFixed(2)}% of c on the ${ROUTES.benchmark} light-year route`, note: `shield limit ${DRIVE.shieldLimitOfC} c` },
-    { name: "Theoretical speed", value: `${(idealMidpoint() * 100).toFixed(1)}% of c`, note: "the ideal midpoint with the protected reserve; not permitted by the shield limit" },
+    { name: "Theoretical speed", value: `${(idealMidpoint(DRIVE.exhaustOfC, built.mass) * 100).toFixed(1)}% of c`, note: "the ideal midpoint with the protected reserve; not permitted by the shield limit" },
     { name: `${ROUTES.benchmark} light years`, value: `${j.onboardYears.toFixed(2)} years aboard, ${j.endpointYears.toFixed(2)} years at the ends` },
     { name: `Proxima Centauri, ${ROUTES.proxima} light years`, value: `${p.onboardYears.toFixed(2)} years aboard, ${p.endpointYears.toFixed(2)} years in Earth's frame` },
-    { name: "Range", value: `${longestBurnLy().toFixed(2)} light years`, note: "the longest start-to-stop burn within the shield limit at 0.040 g" },
+    { name: "Range", value: `${Math.min(longestBurnLy(g), fuelLimitedLy(built.mass, g)).toFixed(2)} light years`, note: ship === "ariake" ? `the longest start-to-stop burn: her fuel, not the shield limit (${longestBurnLy(g).toFixed(2)} ly), sets it, at ${g.toFixed(3)} g` : "the longest start-to-stop burn within the shield limit at 0.040 g" },
     { name: "Endurance", value: "32 years aboard at the normal complement" },
   ];
 }
@@ -216,11 +237,11 @@ export const SECTIONS: readonly MiyamotoSection[] = [
   s("hangar-starboard", "racks-s", "Maintenance racks", "cargo", 108, 200, 24, 12, "Shelving with spares along the inner wall.", true),
   s("fuel-fore", "barrel-fore-s", "Fore starboard barrel", "tank", 174, 246, 24, -12, "Fore twin of the aft pair.", true),
   s("fuel-fore", "barrel-fore-p", "Fore port barrel", "tank", 174, 246, -24, -12, "Port twin of the fore pair."),
-  s("fuel-fore", "collar-base", "Keyed dorsal collar", "dock", 174, 234, 0, 14, "The mount that takes a command, relay or relief pod, with capped utility sockets."),
+  s("fuel-fore", "collar-base", "Keyed dorsal collar", "dock", 174, 234, 0, 14, "The mount that takes a command, relay, relief or survey pod, with capped utility sockets."),
   s("fuel-fore", "keel-dock", "Ventral keel and dock", "dock", 188, 212, 0, -38, "A pylon below the spine with a docking collar on its foot.", true),
   s("fuel-fore", "feed-lines-fore", "Feed lines and valves, fore", "line", 175, 245, -8, -10, "The fore pair's lines and isolation valves."),
   s("pod", "isolator", "Collar isolator", "structure", 174, 234, 0, 13, "A drum with pressure and power locks, so a pod swaps at a dock.", true),
-  s("pod", "payload", "Mission pod payload", "cargo", 178, 230, 0, 26, "The relay pod's bay and dishes, or the relief pod's six containers.", true),
+  s("pod", "payload", "Mission pod payload", "cargo", 178, 230, 0, 26, "The relay pod's bay and dishes, the relief pod's six containers, or the survey pod's telescope and probes.", true),
   s("pod", "dishes", "Dishes and arrays", "comms", 180, 228, 6, 32, "Four dishes and three phased arrays on the relay pod."),
   s("hangar-port", "survey-bay", "Survey bay", "lab", 234, 306, -41, 12, "Drones on racks and an access bridge, opening to port.", true),
   s("hangar-port", "survey-door", "Survey bay shutters", "hatch", 234, 306, -59, 12, "Five orange emergency shutter leaves."),
@@ -304,7 +325,7 @@ export const TITLE_BLOCK = `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.de
 /** The ships of the class: one model, each with its own name, ruby, registry, hull marks and mission pod. */
 export const SHIPS = {
   miyamoto: { variant: "miyamoto", romaji: "Miyamoto", kanji: "宮本", ruby: "みやもと", registry: designation("452"), meaning: "at the foot of the shrine", marks: "452", pod: "relay" },
-  ariake: { variant: "ariake", romaji: "Ariake", kanji: "有明", ruby: "ありあけ", registry: designation("186"), meaning: "daybreak", marks: "186", pod: "relief" },
+  ariake: { variant: "ariake", romaji: "Ariake", kanji: "有明", ruby: "ありあけ", registry: designation("186"), meaning: "daybreak", marks: "186", pod: "survey" },
 } as const;
 
 /** The title-block line of a ship of the class. */
@@ -324,7 +345,35 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   bow: "the ISS's Whipple shields and Orion's heat shield: spaced layers held off the hull on struts",
   "hangar-starboard": "the Shuttle's payload bay and its robot arm's rails, with the crane rails, cell guides and lashing points of a container port",
   "hangar-port": "the Shuttle's payload bay and its robot arm's rails, with the crane rails, cell guides and lashing points of a container port",
-  pod: "the ISS's docking ring and the Shuttle's payload pallets; the relay pod carries Hubble-like high-gain dishes and a deep-space network array, the relief pod stacked container racks",
+  "hangar-starboard-fore": "the Shuttle's payload bay and its robot arm's rails, with the crane rails, cell guides and lashing points of a container port",
+  "hangar-port-aft": "the Shuttle's payload bay and its robot arm's rails, with the crane rails, cell guides and lashing points of a container port",
+  pod: "the ISS's docking ring and the Shuttle's payload pallets; the relay pod carries Hubble-like high-gain dishes and a deep-space network array, the relief pod stacked container racks, the survey pod a Hubble-like telescope in a yoke and a rack of probes",
   collar: "the shadow shields of NASA's nuclear thermal rocket and Mars transfer vehicle studies, a round cone between the reactor and the crew",
+  array: "the ISS's solar array wings and iROSA's roll-out blankets: cells on a flexible blanket, a lattice mast, a beta gimbal at each bay and a rotary joint at each end of the beam that turns the wing to face the star",
   radiators: "the ISS's radiator panels on booms, large thin plates set away from the hull, and the folding radiators of the Mars transfer vehicle studies",
 };
+
+/** Miyamoto's solar array in watts: gold cells of 30% efficiency, 89% of the blanket covered, in the 1,361 W per square metre of sunlight at one astronomical unit from a Sun-like star. It is for time near a star; far out it falls with the square of the distance, and the fusion plants are the ship's power. */
+export const ARRAY_POWER = { cellEfficiency: 0.3, packing: 0.89, solarConstant: 1361, area: ARRAY_AREA, bays: ARRAY.bays, auMW: (ARRAY_AREA * 0.89 * 0.3 * 1361) / 1e6, fusionMW: 2 * 120 } as const;
+
+/** What the table of the class says, as facts the data can be checked against: each ship's default pod, how many side boxes she has, and her signature features. */
+export const CLASS_FACTS = {
+  miyamoto: { defaultPod: "relay", sideBoxes: 2, features: ["solar-array", "rounded-solar-nose"] },
+  ariake: { defaultPod: "survey", sideBoxes: 4, features: ["hex-engine-end", "four-boxes"] },
+} as const;
+
+/** The table of how the sister ships differ, the one place its words are written. The bible, the class sheet, the README and the viewer's spec tab all read it, and a test holds the data to it. */
+export const CLASS_TABLE: readonly { row: string; miyamoto: string; ariake: string }[] = [
+  { row: "Role", miyamoto: "flagship and command", ariake: "survey and command" },
+  { row: "Accent", miyamoto: "orange", ariake: "dawn-gold band and pinstripes" },
+  { row: "Signature", miyamoto: `a long gold solar array along the starboard side, ${ARRAY.bays} bays over ${ARRAY.y[1] - ARRAY.y[0]} m of her ${ENVELOPE.length} m`, ariake: "near-black hexagonal panelling on the engine end" },
+  { row: "Nose", miyamoto: "more rounded, clad in solar cells", ariake: "standard" },
+  { row: "Side box modules", miyamoto: "the staggered pair (starboard aft, port fore)", ariake: "all four (port and starboard, fore and aft): double the capacity" },
+  { row: "Default pod", miyamoto: "relay (the relief pod on request)", ariake: "survey" },
+  { row: "Refits", miyamoto: "none extra", ariake: "an extra sensor mast, a second solarium" },
+  { row: "Interior theme", miyamoto: "its own: blue and white", ariake: "warm wood and dawn-gold" },
+  { row: "Shared", miyamoto: `hull, drive with shadow-shield collar, decks, length ${ENVELOPE.length} m`, ariake: "same" },
+];
+
+/** The table as Markdown, for the bible and the README. */
+export const classTableMarkdown = (): string => ["| | ISV Miyamoto, SPX-452 | ISV Ariake, SPX-186 |", "|---|---|---|", ...CLASS_TABLE.map((r) => `| ${r.row} | ${r.miyamoto} | ${r.ariake} |`)].join("\n");

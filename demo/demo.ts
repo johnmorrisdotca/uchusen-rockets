@@ -1,5 +1,7 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
 import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { build } from "../src/build/index.ts";
+import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../src/beside.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
@@ -7,6 +9,7 @@ import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
+import { isListed } from "./listed.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
@@ -46,23 +49,29 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", beside: "off", rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
 const BACKGROUND_NAMES = ["none", "earth"] as const;
 type BackgroundName = (typeof BACKGROUND_NAMES)[number];
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName, beside: address.get("beside") === "on" };
 
 /** A rocket is thin: the controls hold a pan so that a quarter of it stays in view. Its size on the screen: the picture is as wide as the box and a third taller, and the framing leaves 8% round the rocket. */
 function sizeObject() {
   const variant = variantOf(state.rocket, state.variant);
   const box = hero.getBoundingClientRect();
   const height = state.show === "together" ? variant?.facts.height.value : state.show === "apart" ? null : variant?.facts.parts[state.show]?.value;
-  const width = variant?.facts.diameter.value;
-  if (!box.width || typeof height !== "number" || typeof width !== "number") return bar.removeAttribute("object-size");
-  const scale = Math.min(box.width / width, (box.width * 4) / 3 / height) / 1.08;
-  bar.setAttribute("object-size", `${Math.round(width * scale)},${Math.round(height * scale)}`);
+  const diameter = variant?.facts.diameter.value;
+  if (!box.width || typeof height !== "number" || typeof diameter !== "number") return bar.removeAttribute("object-size");
+  // with Starship beside it the picture holds both
+  const beside = state.beside && canBeside(state.rocket) ? variantOf(BESIDE_ROCKET.rocket, BESIDE_ROCKET.variant ?? "")?.facts : null;
+  const craft: Parameters<typeof besideBounds>[0] = { min: [-diameter / 2, 0, -diameter / 2], max: [diameter / 2, height, diameter / 2] };
+  const both = beside && typeof beside.height.value === "number" && typeof beside.diameter.value === "number" ? besideBounds(craft, besideLayout(craft, { min: [-beside.diameter.value / 2, 0, 0], max: [beside.diameter.value / 2, beside.height.value, 0] }).bounds) : craft;
+  const width = both.max[0] - both.min[0];
+  const tall = both.max[1];
+  const scale = Math.min(box.width / width, (box.width * 4) / 3 / tall) / 1.08;
+  bar.setAttribute("object-size", `${Math.round(width * scale)},${Math.round(tall * scale)}`);
 }
 new ResizeObserver(sizeObject).observe(hero);
 
@@ -174,7 +183,18 @@ function renderMain() {
   const shows = showsOf(variant.slots);
   if (!shows.includes(state.show)) state.show = shows[0];
   const showBox = byId("shows");
-  showBox.replaceChildren(...shows.map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))));
+  // a ship of dozens of parts would fill the page with chips: it gets together, apart and one menu for the rest
+  const MANY = 16;
+  if (shows.length > MANY) {
+    const rest = shows.slice(2);
+    const menu = el("select", { className: "chip", ariaLabel: "Show one part alone" }) as HTMLSelectElement;
+    menu.dataset.testid = "show-menu";
+    menu.append(el("option", { value: "", textContent: "One part alone..." }));
+    for (const show of rest) menu.append(el("option", { value: show, textContent: showWord(show) }));
+    menu.value = rest.includes(state.show) ? state.show : "";
+    menu.addEventListener("change", () => (menu.value ? pick({ show: menu.value }) : pick({ show: shows[0] })));
+    showBox.replaceChildren(...shows.slice(0, 2).map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))), menu);
+  } else showBox.replaceChildren(...shows.map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))));
   press(showBox, `show-${state.show}`);
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
@@ -185,6 +205,12 @@ function renderMain() {
   hero.setAttribute("show", state.show);
   hero.setAttribute("look", state.look);
   hero.setAttribute("view", state.view);
+  // Starship beside Starship would say nothing: the control is not offered for it
+  const besideHere = canBeside(state.rocket);
+  byId("beside-field").hidden = !besideHere;
+  hero.setAttribute("beside", besideHere && state.beside ? "on" : "off");
+  byId("beside-note").hidden = !(besideHere && state.beside);
+  press(byId("beside"), state.beside ? "beside-on" : "");
   byId("facts").replaceChildren(...factsFor(variant));
   byId("flight-field").classList.toggle("has-flight", flightOf(state.rocket, state.variant) !== null);
   credit.hidden = state.look !== "painted";
@@ -215,7 +241,10 @@ function renderMain() {
 function drawMakers() {
   press(byId("makers"), `maker-${state.maker}`);
   press(byId("rockets"), `rocket-${state.rocket}`);
-  for (const button of byId("rockets").querySelectorAll("button")) button.hidden = ROCKETS[(button.dataset.testid ?? "").replace("rocket-", "")]?.maker !== state.maker;
+  for (const button of byId("rockets").querySelectorAll("button")) {
+    const id = (button.dataset.testid ?? "").replace("rocket-", "");
+    button.hidden = ROCKETS[id]?.maker !== state.maker || !isListed(id);
+  }
   // the address has the rocket, and the maker only when it is not that rocket's own
   address.set("maker", state.maker === ROCKETS[state.rocket].maker ? null : state.maker);
 }
@@ -225,6 +254,11 @@ function pick(change: Partial<typeof state>) {
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
   if (change.background) address.set("background", change.background);
+  if (change.beside !== undefined) {
+    address.set("beside", change.beside ? "on" : "off");
+    // both craft are to be in the picture
+    bar.fit();
+  }
   renderMain();
   address.set("rocket", state.rocket);
   address.set("variant", state.variant);
@@ -235,7 +269,7 @@ function pick(change: Partial<typeof state>) {
 
 /** A maker with one rocket has one answer, and it is chosen for the reader; otherwise the rocket on screen stays until another is pressed. */
 function pickMaker(maker: MakerId) {
-  const theirs = Object.values(ROCKETS).filter((rocket) => rocket.maker === maker);
+  const theirs = Object.values(ROCKETS).filter((rocket) => rocket.maker === maker && isListed(rocket.id));
   if (theirs.length === 1) {
     if (state.rocket !== theirs[0].id) pick({ rocket: theirs[0].id, variant: theirs[0].defaultVariant });
     return;
@@ -249,6 +283,8 @@ byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.nam
 byId("looks").append(...LOOK_NAMES.map((look) => chip(WORDS.en[`look_${look}`], `look-${look}`, () => pick({ look }), `look_${look}`)));
 byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.replaceAll("-", "_")}`], `view-${view}`, () => pick({ view }), `view_${view.replaceAll("-", "_")}`)));
 byId("backgrounds").append(...BACKGROUND_NAMES.map((background) => chip(WORDS.en[`background_${background}`], `background-${background}`, () => pick({ background }), `background_${background}`)));
+
+byId("beside").append(chip("Beside it", "beside-on", () => pick({ beside: !state.beside }), "beside"));
 
 // ------------------------------------------------------------- which way it turns
 // The family's controls turn it at their `speed` times the speed buttons' `pace` (0.5×, 1×, 2×): positive takes the near side to the right, negative to the left. A press changes the way at once, from where it is, and starts the turn if it had stopped.
@@ -380,16 +416,52 @@ const every = Object.values(ROCKETS).flatMap((rocket) => rocket.variants);
 const keyOf = (variant: Variant) => `${variant.rocket}:${variant.id}`;
 const compared = new Set(["starship:v1-flight1", "starship:v1", "starship:v2", "starship:v3", "starship:v4"]);
 const comparePicks = byId("compare-picks");
+type CompareFilter = "all" | "rockets" | "fleet";
+const FILTERS: readonly CompareFilter[] = ["all", "rockets", "fleet"];
+const askedFilter = new URLSearchParams(location.search).get("cmp") ?? "all";
+let compareFilter: CompareFilter = (FILTERS as readonly string[]).includes(askedFilter) ? (askedFilter as CompareFilter) : "all";
+// real craft for scale lie in the fleet band: on unless the address says `real=off`
+let compareReal = new URLSearchParams(location.search).get("real") !== "off";
+const isFleetVariant = (variant: Variant) => variant.rocket.startsWith("fleet-");
+const compareFrame = byId("compare-view");
+const compareBar = byId<HTMLElement>("compare-bar") as ViewControlsElement;
+// the family's controls zoom and pan the whole lineup; Fit is the lineup fitted to the frame
+compareBar.addEventListener("kazoku-viewchange", (event) => {
+  const { zoom, panX, panY } = (event as CustomEvent).detail as { zoom: number; panX: number; panY: number };
+  lineup.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+});
+/** What a fleet ship measures, from its own model: it lies lengthwise, so its size is a length, a beam and a stowed height. */
+const fleetSize = (variant: Variant): { length: number; beam: number; height: number } => {
+  const b = build({ rocket: variant.rocket, variant: variant.id }).boundsOf("together");
+  return { length: b.max[1] - b.min[1], beam: b.max[0] - b.min[0], height: b.max[2] - b.min[2] };
+};
+const sizeFigure = (variant: Variant, pick: "length" | "beam" | "height"): Figure<number | string> => (isFleetVariant(variant) ? { value: Math.round(fleetSize(variant)[pick]), source: variant.facts.height.source, note: undefined } : { value: null, source: null, brief: say("compareNotFleet") });
 function renderCompare() {
-  for (const button of comparePicks.querySelectorAll("button")) button.setAttribute("aria-pressed", String(compared.has((button.dataset.testid as string).slice(8))));
-  const chosen = every.filter((variant) => compared.has(keyOf(variant)));
-  lineup.setAttribute("items", [...chosen.map(keyOf), "building", "person"].join(","));
+  for (const button of comparePicks.querySelectorAll("button")) {
+    const key = (button.dataset.testid as string).slice(8);
+    button.setAttribute("aria-pressed", String(compared.has(key)));
+    const fleet = key.startsWith("fleet-");
+    (button as HTMLElement).hidden = (compareFilter === "rockets" && fleet) || (compareFilter === "fleet" && !fleet);
+  }
+  press(byId("compare-filter"), `compare-filter-${compareFilter}`);
+  // they lie in the fleet band, which Rockets alone does not have
+  byId("compare-real").hidden = compareFilter === "rockets";
+  press(byId("compare-real"), compareReal ? "compare-real" : "");
+  lineup.setAttribute("real", compareReal ? "on" : "off");
+  const chosen = every.filter((variant) => compared.has(keyOf(variant)) && (compareFilter === "all" || (compareFilter === "fleet") === isFleetVariant(variant)));
+  lineup.setAttribute("items", [...chosen.map(keyOf), ...(compareFilter === "fleet" ? [] : ["building", "person"])].join(","));
+  lineup.setAttribute("filter", compareFilter);
+  // rockets alone keep today's scale; with the fleet in, the scale fits whatever is shown into the frame
+  if (compareFilter === "rockets") lineup.removeAttribute("fit");
+  else lineup.setAttribute("fit", `${Math.max(200, Math.floor(compareFrame.clientWidth) - 16)},${Math.max(200, Math.floor(compareFrame.clientHeight) - 12)}`);
   lineup.setAttribute("look", state.look === "painted" ? "painted" : "line");
   const table = byId("compare-table");
   const head = el("tr", {}, el("th", { textContent: "" }), ...chosen.map((variant) => el("th", { scope: "col", textContent: variant.name })));
   const slots = [...new Set(chosen.flatMap((variant) => variant.slots))];
+  const anyFleet = chosen.some(isFleetVariant);
   const rows: [string, (variant: Variant) => Figure<number | string> | undefined][] = [
-    [say("wholeHeight"), (variant) => variant.facts.height],
+    [say("wholeHeight"), (variant) => (isFleetVariant(variant) ? { value: null, source: null, brief: say("compareLengthwise") } : variant.facts.height)],
+    ...(anyFleet ? ([[say("length"), (variant) => sizeFigure(variant, "length")], [say("beam"), (variant) => sizeFigure(variant, "beam")], [say("heightStowed"), (variant) => sizeFigure(variant, "height")]] as [string, (variant: Variant) => Figure<number | string> | undefined][]) : []),
     ...slots.map((slot): [string, (variant: Variant) => Figure<number | string> | undefined] => [slotWord(slot), (variant) => (variant.slots.includes(slot) ? variant.facts.parts[slot] : { value: null, source: null, brief: say("compareNone") })]),
     [say("diameter"), (variant) => variant.facts.diameter],
     [say("first_first_flew"), (variant) => variant.firstFlight],
@@ -410,6 +482,29 @@ function renderCompare() {
   );
   table.replaceChildren(el("thead", {}, head), el("tbody", {}, ...body));
 }
+byId("compare-filter").replaceChildren(
+  ...FILTERS.map((filter) =>
+    chip("", `compare-filter-${filter}`, () => {
+      compareFilter = filter;
+      const params = new URLSearchParams(location.search);
+      if (filter === "all") params.delete("cmp");
+      else params.set("cmp", filter);
+      history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
+      renderCompare();
+    }, `compare${filter === "all" ? "All" : filter === "rockets" ? "Rockets" : "Fleet"}`),
+  ),
+);
+byId("compare-real").replaceChildren(
+  chip("", "compare-real", () => {
+    compareReal = !compareReal;
+    const params = new URLSearchParams(location.search);
+    if (compareReal) params.delete("real");
+    else params.set("real", "off");
+    history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
+    renderCompare();
+  }, "compareReal"),
+);
+new ResizeObserver(() => renderCompare()).observe(compareFrame);
 comparePicks.append(
   ...every.map((variant) =>
     chip(variant.name, `compare-${keyOf(variant)}`, () => {

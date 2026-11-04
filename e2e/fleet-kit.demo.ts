@@ -113,3 +113,19 @@ test("a label follows its part: the element says when it draws and where a point
   expect(Math.abs((turned?.x ?? 0) - (edge?.x ?? 0)) + Math.abs((turned?.y ?? 0) - (edge?.y ?? 0))).toBeGreaterThan(20);
   expect(Math.abs((middleAfter?.x ?? 0) - (middle?.x ?? 0))).toBeLessThan(8);
 });
+
+test("the spec tab of a sister ship has a Sister ship row that goes to the other ship and back", async ({ page }) => {
+  await page.goto(`${URL}?${new URLSearchParams({ rocket: "fleet-ship-03", variant: "miyamoto", spin: "off" })}`);
+  const rocket = hero(page);
+  const link = rocket.locator(".panel button[data-go]");
+  await expect(link).toHaveText(/Ariake/, { timeout: 120_000 });
+  await expect(rocket.locator(".panel table")).toContainText("Hangar boxes");
+  await expect(rocket.locator(".panel table")).toContainText("Solar array");
+  await link.click();
+  await expect(rocket).toHaveAttribute("rocket", "fleet-ship-ariake");
+  await expect(rocket).toHaveAttribute("variant", "ariake");
+  await expect(rocket.locator(".panel button[data-go]")).toHaveText(/Miyamoto/, { timeout: 120_000 });
+  await expect(rocket.locator(".panel table")).toContainText("none");
+  await rocket.locator(".panel button[data-go]").click();
+  await expect(rocket).toHaveAttribute("variant", "miyamoto");
+});

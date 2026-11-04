@@ -2,13 +2,16 @@
 // tail, Z dorsal); `local` moves a part's pieces so its origin is the middle of its base on the spine, as every part of the package has it. The registry and the data read this table and nothing else. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
 import { isCoarse, type Piece, place } from "./adapter.ts";
+import { type ArrayState, solarArray } from "./solar.ts";
+import { bowLivery, citadelLivery, driveLivery, habitatLivery, hangarLivery } from "./ariake.ts";
 import { bow } from "./bow.ts";
 import { command } from "./command.ts";
-import { HANGAR, RADIATOR, SHADOW_COLLAR, STATION } from "./dims.ts";
+import { ARRAY, type BayId, BAYS, bayBox, RADIATOR, SHADOW_COLLAR, STATION } from "./dims.ts";
 import { driveFrame, noCollar, shadowCollar } from "./drive.ts";
 import { engineering } from "./engineering.ts";
+import { noseRounded } from "./nose.ts";
 import { ANCESTORS, SHIPS } from "./specs.ts";
-import { hangar } from "./hangar.ts";
+import { BAY_OF, hangar } from "./hangar.ts";
 import { habitat } from "./habitat.ts";
 import { pod, type PodKind } from "./pod.ts";
 import { radiators } from "./radiators.ts";
@@ -58,35 +61,55 @@ const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [num
   diameter: Math.max(width, depth),
   ...(first ? {} : { bottom: true }),
   ...(last ? {} : { top: true }),
-  note: note.includes("hull marks") ? note : `${note} Descends from ${ANCESTORS[id]}.`,
+  note: note.includes("Descends from") ? note : `${note} Descends from ${ANCESTORS[id.replace("-ariake", "")]}.`,
   pieces: (o) => local(build(cut, o?.detail ?? 1), 0, y0, 0, o?.level),
 });
 
-const shoulder = (side: "starboard" | "port", cut: boolean): MiyamotoPart => {
-  const h = HANGAR[side];
+const BAY_NOTE = { rescue: "a rescue bay with a gantry, racks, a pressure vestibule, a cradle with clamp arms for an ATC (Auxiliary Transfer Craft) rescue cutter and guide rails to the door", survey: "a survey bay with three cradles, an access bridge and emergency shutters" } as const;
+
+/** One hangar box. Miyamoto has two (starboard aft, port fore); Ariake has all four, and her four carry her pinstripes. */
+const shoulder = (bay: BayId, cut: boolean, ariake = false): MiyamotoPart => {
+  const { side, kind } = BAYS[bay];
+  const h = bayBox(bay);
+  const stationed = bay !== BAY_OF[side];
+  const id = `hangar-${stationed ? bay : side}${ariake ? "-ariake" : ""}${cut ? "-cutaway" : ""}`;
+  const where = side === "starboard" ? "Starboard" : "Port";
+  const fore = h.y[0] > 200 ? "fore" : "aft";
   return {
-    id: `hangar-${side}${cut ? "-cutaway" : ""}`,
-    name: `${side === "starboard" ? "Starboard rescue hangar" : "Port survey hangar"}${cut ? ", cutaway" : ""}`,
+    id,
+    name: `${stationed ? `${where} ${fore}` : where} ${kind} hangar${ariake ? ", Ariake" : ""}${cut ? ", cutaway" : ""}`,
     kind: "module",
     y0: h.y[0],
     place: { x: h.centre, z: 0 },
     height: h.y[1] - h.y[0],
     diameter: h.x[1] - h.x[0],
-    note: `${side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule, a cradle with clamp arms for an ATC (Auxiliary Transfer Craft) rescue cutter and guide rails to the door, opening to starboard." : "The forward shoulder: a survey bay with three cradles, an access bridge and emergency shutters, opening to port."} Descends from ${ANCESTORS[`hangar-${side}`]}.`,
-    pieces: (o) => local(hangar(side, cut, o?.detail ?? 1), h.centre, h.y[0], 0, o?.level),
+    note: `The ${fore} shoulder on the ${side} side: ${BAY_NOTE[kind]}, opening to ${side}. Descends from ${ANCESTORS[`hangar-${side}`]}.`,
+    pieces: (o) => local([...hangar(ariake || stationed ? bay : side, cut, o?.detail ?? 1, ariake ? `hangar-${stationed ? bay : side}-ariake` : stationed ? `hangar-${bay}` : undefined), ...(ariake ? hangarLivery(bay) : [])], h.centre, h.y[0], 0, o?.level),
   };
 };
 
 const missionPod = (kind: PodKind): MiyamotoPart => ({
   id: `pod-${kind}`,
-  name: kind === "relay" ? "Mission pod, relay" : "Mission pod, relief",
+  name: kind === "relay" ? "Mission pod, relay" : kind === "relief" ? "Mission pod, relief" : "Mission pod, survey",
   kind: "module",
   y0: 174,
   place: { x: 0, z: 0 },
   height: 60,
   diameter: 28,
-  note: `${kind === "relay" ? "A communications bay under a tower of dishes and phased arrays, on the keyed dorsal collar." : "Six relief and equipment containers under a gantry, on the keyed dorsal collar."} Descends from ${ANCESTORS.pod}.`,
+  note: `${kind === "relay" ? "A communications bay under a tower of dishes and phased arrays, on the keyed dorsal collar." : kind === "relief" ? "Six relief and equipment containers under a gantry, on the keyed dorsal collar." : "A survey bay on the keyed dorsal collar: a telescope in a yoke, a rack of six probes, a radar dish, a lidar drum, a magnetometer boom and two instrument containers."} Descends from ${ANCESTORS.pod}.`,
   pieces: (o) => local(pod(kind, o?.detail ?? 1), 0, 174, 0, o?.level),
+});
+
+const solarPart = (state: ArrayState): MiyamotoPart => ({
+  id: `array-${state}`,
+  name: `Solar array, ${state}`,
+  kind: "module",
+  y0: ARRAY.y[0],
+  place: { x: 0, z: 0 },
+  height: ARRAY.y[1] - ARRAY.y[0],
+  diameter: state === "deployed" ? 100 : 14,
+  note: `${state === "stowed" ? "Ten gold-foil canisters of folded cell blankets on a root beam along the starboard side, with a rotary joint at each end, a beta gimbal and a hinge to each bay. For time near a star; the fusion plants are the ship's power." : "Ten bays of lattice masts 56 m long, a gold cell blanket each side of each mast (5,800 square metres of cells), the wing turned 35 degrees about its root beam, cells up and out, to face the star. For time near a star; the fusion plants are the ship's power."} Descends from ${ANCESTORS.array}.`,
+  pieces: (o) => local(solarArray(state, o?.detail ?? 1), 0, ARRAY.y[0], 0, o?.level),
 });
 
 const bank = (which: "dorsal" | "ventral", open: boolean): MiyamotoPart => ({
@@ -109,33 +132,41 @@ export const STACK = (cut: boolean): MiyamotoPart[] => [
   stack("fuel-fore", "Fore fuel section", "tank", STATION.fuelFore, 62, 66, "The spine and the fore pair of barrels, the keyed dorsal collar's base and the ventral keel with its dock.", (c, d) => fuelSection("fore", c, d), cut),
   stack("habitat", "Habitation and medical", "module", STATION.habitat, 26, 28, "Four decks across the beam: triage and quarantine, crew bunks, mess and hydroponics, water and air recycling.", habitat, cut),
   stack("command", "Armoured command citadel", "module", STATION.command, 42, 32, "An operations ring round a communications core, a navigation desk, a medical link and two escape passages, behind armour.", command, cut),
-  stack("bow", "Bow defence and navigation", "module", STATION.bow, 36, 40, "Three staggered shield layers, ranging apertures, optical heads and two debris-intercept mounts.", bow, cut, false, true),
+  stack("bow", "Bow defence and navigation", "module", STATION.bow, 38, 38, "A rounded nose: three staggered round shield layers under a domed front, all in gold solar cells, with ranging apertures, optical heads and two debris-intercept mounts.", (c, d) => noseRounded(c, d), cut, false, true),
 ];
 
-/** The shadow-shield collar, or none: two parts for one slot, so the viewer can swap them. */
-const collarPart = (none: boolean): MiyamotoPart => ({
-  id: none ? "collar-none" : "shield-collar",
-  name: none ? "Drive collar, none (bare neck)" : "Shadow-shield collar",
+/** The shadow-shield collar, or none: two parts for one slot, so the viewer can swap them. Ariake's is clad in near-black hexagonal tiles in place of the white and gold bands. */
+const collarPart = (kind: "plain" | "none" | "ariake"): MiyamotoPart => ({
+  id: kind === "none" ? "collar-none" : kind === "ariake" ? "shield-collar-ariake" : "shield-collar",
+  name: kind === "none" ? "Drive collar, none (bare neck)" : kind === "ariake" ? "Shadow-shield collar, Ariake" : "Shadow-shield collar",
   kind: "module",
   y0: SHADOW_COLLAR.y,
   place: { x: 0, z: 0 },
-  height: none ? 1 : SHADOW_COLLAR.length,
-  diameter: none ? 24 : SHADOW_COLLAR.r * 2,
-  note: none ? `The drive's neck meets the hull at a plain flange ring, as the neck of a bare engine section does in ${ANCESTORS.collar}. Descends from ${ANCESTORS.collar}.` : `A round ceramic-tile cone that steps from the engines to the hull. Descends from ${ANCESTORS.collar}.`,
-  pieces: (o) => (none ? noCollar() : local(shadowCollar(false, o?.detail ?? 1), 0, SHADOW_COLLAR.y, 0, o?.level)),
+  height: kind === "none" ? 1 : SHADOW_COLLAR.length,
+  diameter: kind === "none" ? 24 : SHADOW_COLLAR.r * 2,
+  note: kind === "none" ? `The drive's neck meets the hull at a plain flange ring, as the neck of a bare engine section does in ${ANCESTORS.collar}. Descends from ${ANCESTORS.collar}.` : kind === "ariake" ? `A round cone clad in rows of raised near-black hexagonal tiles, with the orange removable panels left as on Miyamoto's. Descends from ${ANCESTORS.collar}.` : `A round ceramic-tile cone that steps from the engines to the hull. Descends from ${ANCESTORS.collar}.`,
+  pieces: (o) => (kind === "none" ? noCollar() : local(shadowCollar(false, o?.detail ?? 1, kind === "ariake" ? "shield-collar-ariake" : undefined, kind === "ariake"), 0, SHADOW_COLLAR.y, 0, o?.level)),
 });
 
-/** The parts that differ for the sister ship: the drive and the bow carry its registry marks. */
+/** The parts that differ for the sister ship: the drive and the bow carry its registry marks and its dawn-gold pinstripes, the habitation drum and the hangars its pinstripes (and the drum a warm interior), the citadel its refit. */
 const sister = (): MiyamotoPart[] => [
-  stack("drive-ariake", "Main drive and shrouds, Ariake", "engine", STATION.drive, 90, 46, `The sister ship's drive. Descends from ${ANCESTORS.drive}.`, (c, d) => driveFrame(c, d, "drive-ariake"), false, true),
-  stack("bow-ariake", "Bow defence and navigation, Ariake", "module", STATION.bow, 36, 40, `The sister ship's bow, with its hull marks 186. Descends from ${ANCESTORS.bow}.`, (c, d) => bow(c, d, "bow-ariake", SHIPS.ariake.marks), false, false, true),
+  stack("drive-ariake", "Main drive and shrouds, Ariake", "engine", STATION.drive, 90, 46, `The sister ship's drive: the shrouds clad in rows of raised near-black hexagonal tiles in place of Miyamoto's white and gold bands, with the nozzle lips and the service windows left bare, and a pair of dawn-gold pinstripes on the neck. Descends from ${ANCESTORS.drive}.`, (c, d) => [...driveFrame(c, d, "drive-ariake", true), ...driveLivery()], false, true),
+  stack("drive-ariake", "Main drive and shrouds, Ariake", "engine", STATION.drive, 90, 46, `The sister ship's drive: the shrouds clad in rows of raised near-black hexagonal tiles in place of Miyamoto's white and gold bands, with the nozzle lips and the service windows left bare, and a pair of dawn-gold pinstripes on the neck. Descends from ${ANCESTORS.drive}.`, (c, d) => [...driveFrame(c, d, "drive-ariake", true), ...driveLivery()], true, true),
+  stack("habitat-ariake", "Habitation and medical, Ariake", "module", STATION.habitat, 26, 28, "The sister ship's habitation drum: two dawn-gold bands with their pinstripes, and rooms in warm wood and dawn-gold in place of blue.", (c, d) => [...habitat(c, d, "habitat-ariake", "dawn"), ...habitatLivery(false)], false),
+  stack("habitat-ariake", "Habitation and medical, Ariake", "module", STATION.habitat, 26, 28, "The sister ship's habitation drum: two dawn-gold bands with their pinstripes, and rooms in warm wood and dawn-gold in place of blue.", (c, d) => [...habitat(c, d, "habitat-ariake", "dawn"), ...habitatLivery(true)], true),
+  stack("command-ariake", "Armoured command citadel, Ariake", "module", STATION.command, 42, 32, "The sister ship's citadel after its refit: a lattice sensor mast aft of the dome, a solarium on each side of it, and dawn-gold pinstripes and bands.", (c, d) => [...command(c, d, "command-ariake", true), ...citadelLivery()], false),
+  stack("bow-ariake", "Bow defence and navigation, Ariake", "module", STATION.bow, 36, 40, `The sister ship's bow, with its hull marks 186 and a dawn-gold pinstripe on each shield layer. Descends from ${ANCESTORS.bow}.`, (c, d) => [...bow(c, d, "bow-ariake", SHIPS.ariake.marks), ...bowLivery()], false, false, true),
+  shoulder("starboard-aft", false, true),
+  shoulder("port-fore", false, true),
+  shoulder("starboard-fore", false, true),
+  shoulder("port-aft", false, true),
 ];
 
 /** Every part of the ship, each once. */
 export function parts(): MiyamotoPart[] {
   const out: MiyamotoPart[] = [...STACK(false), ...STACK(true)];
-  for (const cut of [false, true]) out.push(shoulder("starboard", cut), shoulder("port", cut));
-  out.push(...sister(), collarPart(false), collarPart(true), missionPod("relay"), missionPod("relief"));
+  for (const cut of [false, true]) out.push(shoulder("starboard-aft", cut), shoulder("port-fore", cut));
+  out.push(...sister(), collarPart("plain"), collarPart("none"), collarPart("ariake"), missionPod("relay"), missionPod("relief"), missionPod("survey"), solarPart("stowed"), solarPart("deployed"));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   return out;
 }

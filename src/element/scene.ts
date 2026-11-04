@@ -48,13 +48,33 @@ import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materi
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import type { Spin } from "../spin.ts";
+import { besideLabel } from "../beside.ts";
 import { GroundKit } from "./ground.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
+
+/** A label on a part: its text, where it points in the ship's own metres, the part it follows and where that part stands at rest (so the label moves with it). `number` draws a numbered disc. */
+export interface ViewerMark {
+  id: string;
+  text: string;
+  at: Vec3;
+  slot: string;
+  rest?: Vec3;
+  numbered?: boolean;
+}
+
+export interface ViewerFocus {
+  slots: readonly string[];
+  target: Vec3;
+  direction: Vec3;
+  distance: number;
+}
 
 export interface ViewerOptions {
   label: string;
   reducedMotion: boolean;
   onLost: () => void;
+  /** Said once, when the camera first comes near what is on screen: the page may then build the fine detail. */
+  onNear?: () => void;
   /** Where the licensed models are. */
   assets: string;
   /** Tells the page which painted parts have come in, or "" when the look is not painted. */
@@ -135,6 +155,8 @@ void main() {
 
 interface PartView {
   slot: string;
+  /** It belongs to the rocket standing beside the one on screen. */
+  beside: boolean;
   holder: Group;
   code: Group;
   model: Group | null;
@@ -219,6 +241,13 @@ export class RocketViewer {
   private compiling = 0;
   private compiled = new Set<string>();
   private settled: Promise<void> = Promise.resolve();
+  private marks: { mark: ViewerMark; el: HTMLElement }[] = [];
+  private markHost: HTMLElement | null = null;
+  /** The words that say what stands beside the craft: its name and length, under its foot. */
+  private besideEl: HTMLElement | null = null;
+  private focusing = false;
+  private nearSaid = false;
+  private nearAt = 0;
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
     this.holder = holder;
@@ -315,7 +344,7 @@ export class RocketViewer {
     this.renderer.shadowMap.enabled = this.shadows;
     this.sun.castShadow = this.shadows;
     const places = built.placesOf(show);
-    for (const part of built.parts) {
+    for (const part of [...built.parts, ...built.beside]) {
       const source = gltf.scene.getObjectByName(part.slot);
       if (!source) continue;
       const holder = new Group();
@@ -324,11 +353,13 @@ export class RocketViewer {
       holder.add(code);
       const view: PartView = {
         slot: part.slot,
+        beside: built.beside.includes(part),
         holder,
         code,
         model: null,
-        modelFile: part.record.painted?.file ?? null,
-        ownNozzle: Boolean(part.record.painted?.ownNozzle),
+        // the stack beside it is this package's own paint in every look: a licensed model shows only with its credit, which is the craft's
+        modelFile: built.beside.includes(part) ? null : (part.record.painted?.file ?? null),
+        ownNozzle: !built.beside.includes(part) && Boolean(part.record.painted?.ownNozzle),
         modelState: "none",
         nozzleShown: false,
         faces: [],
@@ -368,7 +399,8 @@ export class RocketViewer {
       this.setFlight(this.clockNow);
     }
     this.canvas.dataset.ready = "true";
-    this.canvas.dataset.parts = this.parts.map((part) => part.slot).join(" ");
+    this.canvas.dataset.parts = this.parts.filter((part) => !part.beside).map((part) => part.slot).join(" ");
+    this.canvas.dataset.beside = built.beside.length ? "on" : "off";
     this.drivenDirty = this.driven !== null;
     this.wake();
     await this.settled;
@@ -667,6 +699,7 @@ export class RocketViewer {
         this.ground = new GroundKit();
         this.scene.add(this.ground.group);
       }
+      for (const part of this.parts) if (part.beside) part.holder.visible = false;
       const { min, max } = this.boundsNow();
       this.ground.fit(this.built.boundsOf("together").max[0] * 2.4 + 4, Math.max(Math.abs(min[0]), Math.abs(max[0])));
       this.ground.group.visible = true;
@@ -763,7 +796,7 @@ export class RocketViewer {
       this.options.onPainted("");
       return;
     }
-    const states = this.parts.map((part) => (part.modelFile ? part.modelState : "code"));
+    const states = this.parts.filter((part) => !part.beside).map((part) => (part.modelFile ? part.modelState : "code"));
     const state = states.some((s) => s === "loading" || s === "none") ? "loading" : states.every((s) => s === "ready") ? "model" : states.includes("ready") ? "mixed" : "code";
     this.canvas.dataset.painted = state;
     this.options.onPainted(state);
@@ -901,6 +934,7 @@ export class RocketViewer {
   }
 
   private limits(distance: number): void {
+    if (!this.focusing) this.nearAt = Math.max(this.nearAt, distance * 0.3);
     this.fitGlow();
     this.camera.near = Math.max(0.2, distance / 40);
     this.camera.far = distance * 8;
@@ -1141,6 +1175,141 @@ export class RocketViewer {
     if (!this.frame && this.visible && !document.hidden && !this.disposed) this.frame = requestAnimationFrame(this.tick);
   }
 
+  /** Labels on the parts: each follows its part as the model turns, hides with its part, and gives way to a label drawn before it that it would cover. Null takes them away. */
+  setMarks(marks: readonly ViewerMark[] | null): void {
+    for (const { el } of this.marks) el.remove();
+    this.marks = [];
+    if (!marks || marks.length === 0) {
+      if (!this.besideEl) {
+        this.markHost?.remove();
+        this.markHost = null;
+      }
+      return;
+    }
+    this.hostOfMarks();
+    for (const mark of marks) {
+      const el = document.createElement("span");
+      el.dataset.mark = mark.id;
+      el.textContent = mark.text;
+      el.style.cssText = mark.numbered
+        ? "position:absolute;left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#f2c14e;color:#0b111b;font-weight:700;text-align:center;line-height:22px;will-change:transform;display:none"
+        : "position:absolute;left:0;top:0;padding:1px 5px;border-left:2px solid #f2c14e;color:#e6edf6;background:rgba(11,17,27,0.72);white-space:nowrap;will-change:transform;display:none";
+      this.hostOfMarks().appendChild(el);
+      this.marks.push({ mark, el });
+    }
+    this.wake();
+  }
+
+  private hostOfMarks(): HTMLElement {
+    if (!this.markHost) {
+      const host = document.createElement("div");
+      host.className = "marks";
+      host.setAttribute("aria-hidden", "true");
+      host.style.cssText = "position:absolute;inset:0;overflow:hidden;pointer-events:none;font:11px/1.2 system-ui,sans-serif";
+      this.holder.appendChild(host);
+      this.markHost = host;
+    }
+    return this.markHost;
+  }
+
+  /** What stands beside the craft is named: a caption under its foot, kept inside the picture. */
+  private placeBeside(): void {
+    const view = this.parts.find((part) => part.beside);
+    if (!view) {
+      this.besideEl?.remove();
+      this.besideEl = null;
+      return;
+    }
+    if (!this.besideEl) {
+      const el = document.createElement("span");
+      el.dataset.besideLabel = "";
+      el.textContent = besideLabel();
+      el.style.cssText = "position:absolute;left:0;top:0;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.72);white-space:nowrap;will-change:transform;display:none";
+      this.hostOfMarks().appendChild(el);
+      this.besideEl = el;
+    }
+    const el = this.besideEl;
+    if (!view.holder.visible || this.clockNow) {
+      el.style.display = "none";
+      return;
+    }
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    const point = new Vector3(view.holder.position.x, view.holder.position.y, view.holder.position.z).project(this.camera);
+    const w = besideLabel().length * 6.2 + 12;
+    const x = Math.min(Math.max(((point.x + 1) / 2) * width - w / 2, 4), Math.max(4, width - w - 4));
+    const y = Math.min(((1 - point.y) / 2) * height + 6, height - 20);
+    el.style.display = point.z < 1 ? "block" : "none";
+    el.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`;
+  }
+
+  /** Put the labels where their parts are now. */
+  private placeMarks(): void {
+    if (this.marks.length === 0) return;
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    const taken: { x: number; y: number; w: number; h: number }[] = [];
+    const world = new Vector3();
+    for (const { mark, el } of this.marks) {
+      const part = this.parts.find((p) => p.slot === mark.slot);
+      if (part && !part.holder.visible) {
+        el.style.display = "none";
+        continue;
+      }
+      world.set(...mark.at);
+      if (part && mark.rest) world.add(new Vector3(part.holder.position.x - mark.rest[0], part.holder.position.y - mark.rest[1], part.holder.position.z - mark.rest[2]));
+      world.project(this.camera);
+      const x = ((world.x + 1) / 2) * width;
+      const y = ((1 - world.y) / 2) * height;
+      const w = mark.numbered ? 22 : mark.text.length * 6.2 + 12;
+      const h = mark.numbered ? 22 : 16;
+      const ok = world.z < 1 && x > -w && x < width + w && y > -h && y < height + h && !taken.some((r) => Math.abs(r.x - x) < (r.w + w) / 2 && Math.abs(r.y - y) < (r.h + h) / 2);
+      if (!ok) {
+        el.style.display = "none";
+        continue;
+      }
+      taken.push({ x, y, w, h });
+      el.style.display = "block";
+      el.style.transform = `translate(${Math.round(x + (mark.numbered ? 0 : 6))}px,${Math.round(y - (mark.numbered ? 0 : 8))}px)`;
+    }
+  }
+
+  /** Show only some slots and fly to look at them: an inset. Null puts the ship back as it was. */
+  focusOn(focus: ViewerFocus | null): void {
+    if (!this.built || this.clockNow) return;
+    if (!focus) {
+      if (!this.focusing) return;
+      this.focusing = false;
+      const places = this.built.placesOf(this.show);
+      for (const part of this.parts) {
+        const place = places.find((p) => p.slot === part.slot);
+        if (place) {
+          part.holder.position.set(...place.at);
+          part.holder.visible = place.shown;
+        }
+      }
+      this.startPose(this.framingFor(this.currentAngle()), MOVE_MS, false);
+      this.relight();
+      return;
+    }
+    this.focusing = true;
+    const places = this.built.placesOf("together");
+    for (const part of this.parts) {
+      const place = places.find((p) => p.slot === part.slot);
+      if (place) part.holder.position.set(...place.at);
+      part.holder.visible = focus.slots.includes(part.slot);
+    }
+    const dir = new Vector3(...focus.direction).normalize().multiplyScalar(focus.distance);
+    this.startPose({ target: focus.target, position: [focus.target[0] + dir.x, focus.target[1] + dir.y, focus.target[2] + dir.z], distance: focus.distance } as ReturnType<RocketViewer["framingFor"]>, MOVE_MS, false);
+    this.controls.minDistance = focus.distance * 0.04;
+    this.controls.maxDistance = Math.max(focus.distance * 3, this.camera.position.distanceTo(this.controls.target));
+    this.camera.near = Math.max(0.2, focus.distance / 80);
+    this.camera.far = Math.max(focus.distance * 10, this.camera.position.distanceTo(this.controls.target) * 4);
+    this.camera.updateProjectionMatrix();
+    this.relight();
+    this.wake();
+  }
+
   private tick = (now: number) => {
     this.frame = 0;
     if (!this.visible || document.hidden || this.disposed) return;
@@ -1212,6 +1381,12 @@ export class RocketViewer {
     if (this.needsDraw || changed || this.pose) {
       this.syncSizes();
       this.renderer.render(this.scene, this.camera);
+      this.placeMarks();
+      this.placeBeside();
+      if (this.options.onNear && !this.nearSaid && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {
+        this.nearSaid = true;
+        this.options.onNear();
+      }
       this.needsDraw = false;
       this.frames++;
       this.canvas.dataset.frames = String(this.frames);

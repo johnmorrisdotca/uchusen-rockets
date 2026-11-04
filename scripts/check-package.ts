@@ -53,7 +53,8 @@ let assets = 0;
 for (const rocket of Object.values(ROCKETS))
   for (const variant of rocket.variants) {
     const stem = `${rocket.id}-${variant.id}`;
-    if (!rocket.id.startsWith("fleet-ship-") && !inTarball.has(`dist/assets/${stem}.glb`)) fail(`no ${stem}.glb`);
+    // the fictional fleet's meshes are built in code at run time, so only their drawings ship
+    if (variant.status !== "fictional" && !inTarball.has(`dist/assets/${stem}.glb`)) fail(`no ${stem}.glb`);
     for (const look of LOOK_NAMES) if (!inTarball.has(`dist/assets/${stem}${look === "line" ? "" : `.${look}`}.svg`)) fail(`no ${stem}.${look}.svg`);
     assets++;
   }

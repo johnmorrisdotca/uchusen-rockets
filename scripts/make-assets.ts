@@ -17,7 +17,6 @@ const outAt = args.indexOf("--out");
 const out = outAt >= 0 ? args[outAt + 1] : join(root, "dist", "assets");
 export const MESH_LIMIT = 600 * 1024;
 /** The fleet's sample ships are far bigger than any real rocket; their parts still keep to MESH_LIMIT. */
-export const FLEET_MESH_LIMIT = 12 * 1024 * 1024;
 /** A fleet module on its own: the fleet ships are built in the browser and shipped as no prebuilt file, so a module may hold the detail of a full engineering model. */
 export const FLEET_PART_LIMIT = 1024 * 1024;
 export const DRAWING_LIMIT = 80 * 1024;
@@ -43,10 +42,10 @@ for (const rocket of Object.values(ROCKETS)) {
   for (const variant of rocket.variants) {
     const built = build({ rocket: rocket.id, variant: variant.id });
     const stem = `${rocket.id}-${variant.id}`;
-    // a fleet ship builds in the visitor's browser and exports its .glb on request: none is prebuilt
-    const prebuilt = !rocket.id.startsWith("fleet-ship-");
-    if (prebuilt) {
-      writeMesh(join(out, `${stem}.glb`), built.glb().bytes, rocket.id.startsWith("fleet-") ? FLEET_MESH_LIMIT : MESH_LIMIT);
+    // the fictional fleet's meshes are built in code at run time: their .glb would be tens of megabytes, so only their drawings ship
+    const mesh = variant.status !== "fictional";
+    if (mesh) {
+      writeMesh(join(out, `${stem}.glb`), built.glb().bytes);
       meshes++;
     }
     for (const show of built.shows) {
@@ -56,7 +55,7 @@ for (const rocket of Object.values(ROCKETS)) {
         drawings++;
       }
     }
-    if (prebuilt && built.parts.length > 1)
+    if (mesh && built.parts.length > 1)
       for (const part of built.parts) {
         writeMesh(join(out, `${stem}-${part.slot}.glb`), buildPart(part.record.id).glb().bytes, rocket.id.startsWith("fleet-") ? FLEET_PART_LIMIT : MESH_LIMIT);
         meshes++;

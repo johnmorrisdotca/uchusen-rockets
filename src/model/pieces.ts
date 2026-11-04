@@ -506,6 +506,39 @@ export interface Bounds {
   max: Vec3;
 }
 
+/**
+ * The box a part's pieces fill, worked from the pieces and not from a mesh, so a part with a very large number of pieces can be measured without building its triangles. A lathe counts as its full circle (its mesh is a polygon inside
+ * that circle, so this is never smaller than the mesh's box and at most a percent or two larger).
+ */
+export function boundsOfPieces(pieces: readonly Piece[]): Bounds {
+  const min: Vec3 = [Infinity, Infinity, Infinity];
+  const max: Vec3 = [-Infinity, -Infinity, -Infinity];
+  const add = (x: number, y: number, z: number) => {
+    if (x < min[0]) min[0] = x;
+    if (x > max[0]) max[0] = x;
+    if (y < min[1]) min[1] = y;
+    if (y > max[1]) max[1] = y;
+    if (z < min[2]) min[2] = z;
+    if (z > max[2]) max[2] = z;
+  };
+  for (const piece of pieces) {
+    if (piece.only === "drawing") continue;
+    if (piece.kind === "plate") {
+      const half = piece.thickness / 2;
+      for (const [a, b] of piece.outline) for (const c of [-half, half]) add(...pointOf(piece.frame, a, b, c));
+    } else if (piece.kind === "lathe") {
+      const [cx, cz] = piece.at ?? [0, 0];
+      for (const [r, y] of piece.profile) {
+        const lx = (piece.lean?.[0] ?? 0) * y;
+        const lz = (piece.lean?.[1] ?? 0) * y;
+        add(cx + lx - r, y, cz + lz - r);
+        add(cx + lx + r, y, cz + lz + r);
+      }
+    } else for (const path of piece.paths) for (const p of path) add(p[0], p[1], p[2]);
+  }
+  return { min, max };
+}
+
 /** The box a part's triangles fill. */
 export function boundsOf(mesh: PartMesh): Bounds {
   const min: Vec3 = [Infinity, Infinity, Infinity];
