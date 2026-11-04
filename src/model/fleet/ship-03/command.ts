@@ -64,7 +64,7 @@ function inside(seed: string): Piece[] {
 
 export function command(cut: boolean, detail = 1, seed = "command"): Piece[] {
   const out: Piece[] = [];
-  const o = { seed, scheme: ARMOUR, detail, density: 0.32 };
+  const o = { seed, scheme: ARMOUR, detail, density: 0.55 };
   const outline = chamfered(HX, HZ, C);
   const f = facesOf(BOX);
   if (!cut) {
