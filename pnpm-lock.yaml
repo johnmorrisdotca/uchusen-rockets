@@ -34,10 +34,10 @@ importers:
         version: 4.5.1(@types/node@24.10.1)
       '@johnmorrisdotca/chikyu-earth':
         specifier: 0.10.0
-        version: 0.10.0(@johnmorrisdotca/kazoku-ui@0.14.0(three@0.186.1))(three@0.186.1)
+        version: 0.10.0(@johnmorrisdotca/kazoku-ui@0.15.1(three@0.186.1))(three@0.186.1)
       '@johnmorrisdotca/kazoku-ui':
-        specifier: ^0.14.0
-        version: 0.14.0(three@0.186.1)
+        specifier: ^0.15.1
+        version: 0.15.1(three@0.186.1)
       '@playwright/test':
         specifier: 1.64.0
         version: 1.64.0
@@ -566,8 +566,8 @@ packages:
     resolution: {integrity: sha512-h4FL4u99l4qKrZ1SPtQydC3PS3eswM8TZ0eH+wSCPchfZeW9CMfyNWjhXfx3EivDHIllfzC3e270PsKhj0ZYjg==}
     engines: {node: '>=22'}
 
-  '@johnmorrisdotca/kazoku-ui@0.14.0':
-    resolution: {integrity: sha512-KFN0XowCn6Va7mrWasQluQEGvpANRFUSjoB4CvLBWsk9Uw9wv0uKllOgXlpsqYVSNNN1DDIMKkruNXgNPQf3WA==}
+  '@johnmorrisdotca/kazoku-ui@0.15.1':
+    resolution: {integrity: sha512-vRsEPyrvJEattAkumncfifHpGo0pd0/KnmJXo0F9RRgc1l0qzdmAYjZYLln7hQWgrlk1tft6B2Umw3Z0llLatA==}
     engines: {node: '>=22'}
     peerDependencies:
       three: '>=0.160.0'
@@ -2166,17 +2166,17 @@ snapshots:
   '@img/sharp-win32-x64@0.35.5':
     optional: true
 
-  '@johnmorrisdotca/chikyu-earth@0.10.0(@johnmorrisdotca/kazoku-ui@0.14.0(three@0.186.1))(three@0.186.1)':
+  '@johnmorrisdotca/chikyu-earth@0.10.0(@johnmorrisdotca/kazoku-ui@0.15.1(three@0.186.1))(three@0.186.1)':
     dependencies:
       '@johnmorrisdotca/chizu': 1.6.1
       d3-geo: 3.1.1
     optionalDependencies:
-      '@johnmorrisdotca/kazoku-ui': 0.14.0(three@0.186.1)
+      '@johnmorrisdotca/kazoku-ui': 0.15.1(three@0.186.1)
       three: 0.186.1
 
   '@johnmorrisdotca/chizu@1.6.1': {}
 
-  '@johnmorrisdotca/kazoku-ui@0.14.0(three@0.186.1)':
+  '@johnmorrisdotca/kazoku-ui@0.15.1(three@0.186.1)':
     optionalDependencies:
       three: 0.186.1
 

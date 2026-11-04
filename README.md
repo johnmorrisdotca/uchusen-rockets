@@ -124,7 +124,7 @@ embedCode({ rocket: "starship", variant: "v3", look: "line" }, "element").includ
 
 Changing `look` keeps the angle. Changing `show` is an animated move, and a cut under reduced motion. Each part alone fills the frame and has its own listed size. Every look works for every variant and every choice of parts. Front is the windward, tiled side; back is the steel side.
 
-<p align="center"><img alt="The code builder: a row of makers, rockets, variants, parts, looks and views beside the rocket, and the code to copy below." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/builder.jpg" width="820"></p>
+<p align="center"><img alt="The code builder: a row of makers, rockets, variants, parts, looks and views beside the rocket, and under it the embed panel: a size, ten tabs from HTML to Image link, the drawing beside the code, and Copy code, Open the embed page and Read the docs." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/builder.jpg" width="820"></p>
 
 <p align="center"><img alt="The demo on a phone, the rocket on a screen 390 pixels wide." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/phone.jpg" width="320"></p>
 
@@ -297,7 +297,7 @@ Anything from outside is treated as text: an attribute that is not in its list f
 
 ## The code builder
 
-[The code builder](https://johnmorrisdotca.github.io/uchusen-rockets/builder.html) is one screen: choose the maker, the rocket, the variant, the parts, the look, the view and the engines, see the rocket, and copy the code for any of the six ways. A painted rocket's credit is under the code. It is built from `ROCKETS`, `showsOf`, `embedCode` and `paintedCredit`, so it offers every rocket the package has, as it gains them.
+[The code builder](https://johnmorrisdotca.github.io/uchusen-rockets/builder.html) is one screen: choose the maker, the rocket, the variant, the parts, the look, the view and the engines, see the rocket, and copy the code for any of the six ways, or for React, Vue, Angular and Svelte. The demo's "Put this rocket on your site" is the same panel (the family's `<kazoku-embed-panel>`): a size, the drawing beside the code, Save SVG and Save PNG, Open the embed page and Read the docs. A painted rocket's credit is under the code. It is built from `ROCKETS`, `showsOf`, `embedCode` and `paintedCredit`, so it offers every rocket the package has, as it gains them.
 
 ## Lit engines and flights
 

@@ -48,6 +48,8 @@ export interface EmbedSettings {
   site?: string;
   /** The CDN or package path the element is loaded from. */
   cdn?: string;
+  /** Pixels across for the `iframe` (its largest width) and the `link` picture (its width; the height follows). 480 when left out. */
+  size?: number;
 }
 
 /**
@@ -227,6 +229,7 @@ const creditHtml = (credit: string): string => (credit === "" ? "" : `\n<p>${esc
 export function embedCode(options: RocketOptions, kind: EmbedKind = "element", settings: EmbedSettings = {}): string {
   const site = settings.site ?? SITE;
   const cdn = settings.cdn ?? CDN;
+  const across = Number.isFinite(settings.size) && (settings.size as number) > 0 ? Math.round(settings.size as number) : 480;
   const credit = paintedCredit(options);
   if (kind === "svg") return drawingOf(options);
   if (kind === "data") return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(drawingOf(options))}`;
@@ -234,13 +237,13 @@ export function embedCode(options: RocketOptions, kind: EmbedKind = "element", s
     const path = assetPathOf(options);
     const alt = esc(options.label ?? "Rocket");
     const src = path === null ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(drawingOf(options))}` : `${cdn}/dist/assets/${path}`;
-    return `<img src="${esc(src)}" alt="${alt}" width="480" height="640" loading="lazy">${creditHtml(credit)}`;
+    return `<img src="${esc(src)}" alt="${alt}" width="${across}" height="${Math.round((across * 4) / 3)}" loading="lazy">${creditHtml(credit)}`;
   }
   if (kind === "iframe") {
     const query = rocketToParams(options).toString();
     const src = `${site}embed.html${query === "" ? "" : `?${query}`}`;
     const title = options.label ?? "Rocket";
-    return `<iframe\n  src="${esc(src)}"\n  title="${esc(title)}"\n  loading="lazy"\n  style="width:100%;max-width:480px;aspect-ratio:3 / 4;border:0"\n></iframe>${creditHtml(credit)}`;
+    return `<iframe\n  src="${esc(src)}"\n  title="${esc(title)}"\n  loading="lazy"\n  style="width:100%;max-width:${across}px;aspect-ratio:3 / 4;border:0"\n></iframe>${creditHtml(credit)}`;
   }
   if (kind === "module") {
     const description = descriptionOf(options);

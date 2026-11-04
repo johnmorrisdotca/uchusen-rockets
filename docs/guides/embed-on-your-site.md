@@ -5,7 +5,7 @@ order: 7
 description: Six ways to copy a rocket into a page, from a script tag to a plain image, and how a painted rocket's credit travels with it.
 ---
 
-The drawings are made to be used. A page of yours can show the same rocket the demo shows, in any of six ways. The demo has a panel that copies the code for whatever is on the screen, and saves it as an SVG or a PNG.
+The drawings are made to be used. A page of yours can show the same rocket the demo shows, in any of six ways. The demo has a panel (the family's embed panel) that copies the code for whatever is on the screen, with tabs for the six ways and for React, Vue, Angular and Svelte, a size, the drawing beside the code, Open the embed page, Read the docs, and Save SVG and Save PNG.
 
 ![The embed page: a rocket drawn from its address, with nothing else.](../images/embed.jpg)
 
@@ -20,7 +20,7 @@ The drawings are made to be used. A page of yours can show the same rocket the d
 
 ## Write the code
 
-`embedCode(options, kind)` writes the snippet.
+`embedCode(options, kind, settings)` writes the snippet. `settings.size` sets the iframe's largest width and the linked picture's width (480 by default).
 
 ```ts
 import { EMBED_KINDS, embedCode } from "@johnmorrisdotca/uchusen-rockets";

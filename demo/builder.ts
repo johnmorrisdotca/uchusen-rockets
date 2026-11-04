@@ -1,16 +1,19 @@
 // The code builder: choose a rocket, its look, its view and its parts, and copy the code that puts exactly that on a page. One screen, choices in rows. It draws with the package's own element and writes with `embedCode`.
-import { EMBED_KINDS, embedCode, embedNote, LOOK_NAMES, MAKERS, OPTION_ATTRIBUTES, ROCKETS, VIEW_NAMES, attributesFromOptions, paintedCredit, rocketToParams, showsOf, variantOf, type EmbedKind, type MakerId, type RocketOptions } from "../src/index.ts";
+import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
+import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
+import { embedCode, embedNote, LOOK_NAMES, MAKERS, OPTION_ATTRIBUTES, ROCKETS, VIEW_NAMES, attributesFromOptions, paintedCredit, rocketToParams, showsOf, variantOf, type MakerId, type RocketOptions } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
+import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
-const KIND_WORDS: Readonly<Record<EmbedKind, string>> = { element: "CDN script", iframe: "Iframe", module: "Module", svg: "SVG", data: "Data address", link: "Image link" };
 const byId = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 const rocketNode = byId<UchusenRocket>("rocket");
 
 const first = Object.values(ROCKETS)[0];
-const state = { maker: (first?.maker ?? "spacex") as MakerId, rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", engines: "off", kind: "element" as EmbedKind };
-let full = "";
+const state = { maker: (first?.maker ?? "spacex") as MakerId, rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", engines: "off" };
+const panel = byId<EmbedPanelElement>("embed-panel");
+const here = new URL(".", location.href).href;
 
 function chip(label: string, testid: string, on: () => void): HTMLButtonElement {
   const button = document.createElement("button");
@@ -66,15 +69,6 @@ function draw(): void {
     state.engines = id;
     draw();
   });
-  fill("kinds", EMBED_KINDS.map((id) => ({ id, label: KIND_WORDS[id] })), state.kind, "kind", (id) => {
-    state.kind = id as EmbedKind;
-    draw();
-  });
-  for (const button of byId("kinds").querySelectorAll("button")) {
-    button.setAttribute("role", "tab");
-    button.setAttribute("aria-selected", String(button.getAttribute("aria-pressed") === "true"));
-    button.removeAttribute("aria-pressed");
-  }
   const chosen = options();
   const attributes = attributesFromOptions(chosen);
   for (const name of OPTION_ATTRIBUTES) {
@@ -83,16 +77,29 @@ function draw(): void {
   }
   rocketNode.setAttribute("spin", "off");
   byId("builder-label").textContent = `${entry.name}, ${variantOf(state.rocket, state.variant)?.name ?? state.variant}`;
-  full = embedCode(chosen, state.kind);
-  byId("embed-note").textContent = embedNote(state.kind, chosen);
-  byId("code").textContent = full.length > 1600 ? `${full.slice(0, 1600)}…` : full;
-  const credit = paintedCredit(chosen);
-  const creditNode = byId("credit");
-  creditNode.hidden = credit === "";
-  creditNode.textContent = credit === "" ? "" : `Keep this credit with a painted rocket, however you use it. ${credit}`;
-  byId<HTMLAnchorElement>("open").href = `embed.html?${rocketToParams(chosen).toString()}`;
-  byId("status").textContent = "";
+  panel.openHref = `embed.html?${rocketToParams(chosen).toString()}`;
+  panel.update();
 }
+
+panel.kinds = KINDS;
+panel.labels = LABELS;
+panel.sizes = SIZES;
+panel.size = 480;
+panel.generate = ({ kind, size, preview }) => panelCode(kind as Kind, options(), { size, ...(preview ? { site: here } : {}) });
+// The picture is the drawing itself, never the 3D view or an iframe: it adds no WebGL context and no frame loop to the page.
+panel.preview = () => {
+  const holder = document.createElement("div");
+  holder.innerHTML = embedCode(options(), "svg");
+  return pictureOf(holder);
+};
+panel.note = ({ kind }) => {
+  const own = kind === "html" || kind === "iframe" || kind === "module" || kind === "svg" || kind === "data" || kind === "link";
+  return own ? embedNote(packageKind(kind as Kind), options()) : "The rocket's element from the package, for a page built with a bundler. The 3D view needs three.js; the drawing does not.";
+};
+panel.credits = () => {
+  const credit = paintedCredit(options());
+  return credit === "" ? "" : `Keep this credit with a painted rocket, however you use it. ${credit}`;
+};
 
 function pick(rocket: string): void {
   const entry = ROCKETS[rocket];
@@ -102,15 +109,6 @@ function pick(rocket: string): void {
   state.show = "together";
   draw();
 }
-
-byId("copy").addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(full);
-    byId("status").textContent = "Copied.";
-  } catch {
-    byId("status").textContent = "Your browser would not copy. Select the code and copy it.";
-  }
-});
 
 draw();
 queueMicrotask(() => {

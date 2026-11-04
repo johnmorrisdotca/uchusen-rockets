@@ -112,3 +112,11 @@ test("a phase goes into the iframe's address and the element's attributes, and t
   assert.match(embedCode(options, "element"), /phase="hot-staging"/);
   assert.equal(rocketFromParams(rocketToParams(options)).phase, "hot-staging");
 });
+
+test("a size sets the iframe's largest width and the linked picture's width and height, and 480 is the default", () => {
+  assert.match(embedCode(OPTIONS, "iframe", { size: 240 }), /max-width:240px/);
+  assert.match(embedCode(OPTIONS, "iframe"), /max-width:480px/);
+  assert.match(embedCode(OPTIONS, "link", { size: 240 }), /width="240" height="320"/);
+  assert.equal(embedCode(OPTIONS, "link", { size: 480 }), embedCode(OPTIONS, "link"));
+  assert.match(embedCode(OPTIONS, "link", { size: 0 }), /width="480" height="640"/);
+});

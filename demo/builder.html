@@ -56,15 +56,7 @@
       </section>
       <section aria-label="The code">
         <h2>The code</h2>
-        <div class="chips" id="kinds" role="tablist" aria-label="Which way to put it on a page"></div>
-        <p id="embed-note" data-testid="builder-note"></p>
-        <pre class="code"><code id="code" data-testid="builder-code"></code></pre>
-        <div class="embed-actions">
-          <button type="button" class="chip" id="copy" data-testid="builder-copy">Copy the code</button>
-          <a class="chip" id="open" data-testid="builder-open" href="embed.html">Open the embed page</a>
-          <span id="status" role="status" aria-live="polite"></span>
-        </div>
-        <p id="credit" data-testid="builder-credit" hidden></p>
+        <kazoku-embed-panel id="embed-panel" data-testid="embed-panel" aspect="1.3333" docs-href="docs/" theme="dark"></kazoku-embed-panel>
       </section>
     </main>
     <script type="module" src="js/builder.js"></script>

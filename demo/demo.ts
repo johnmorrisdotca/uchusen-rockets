@@ -1,10 +1,13 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, EMBED_KINDS, embedNote, type EmbedKind, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
+import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
+import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
 import { WORDS } from "./words.js";
@@ -291,22 +294,9 @@ enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false), "engine
 press(enginesBox, "engines-off");
 
 // ------------------------------------------------------------- copy the rocket that is on screen
-let embedKind: EmbedKind = "element";
-let embedFull = "";
-const embedTabs = byId("embed-tabs");
-const embedCodeNode = byId("embed-code");
 const embedStatus = byId("embed-status");
-for (const kind of EMBED_KINDS) {
-  const button = el("button", { type: "button", className: "chip", textContent: say(`embed_${kind}`) });
-  button.dataset.testid = `tab-${kind}`;
-  button.dataset.say = `embed_${kind}`;
-  button.setAttribute("role", "tab");
-  button.addEventListener("click", () => {
-    embedKind = kind;
-    drawEmbed();
-  });
-  embedTabs.append(button);
-}
+const panel = byId<EmbedPanelElement>("embed-panel");
+const here = new URL(".", location.href).href;
 function embedOptions(): RocketOptions {
   const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
@@ -314,35 +304,42 @@ function embedOptions(): RocketOptions {
   const turning = bar.state.turning ? { spin: String(Math.round(360 / (TURN_SPEED * (Number(bar.getAttribute("pace")) || 1)))), way: turnWay === "left" ? "cw" : "ccw" } : {};
   return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
-function drawEmbed() {
+panel.kinds = KINDS;
+panel.labels = LABELS;
+panel.sizes = SIZES;
+panel.size = 480;
+panel.generate = ({ kind, size, preview }) => panelCode(kind as Kind, embedOptions(), { size, ...(preview ? { site: here } : {}) });
+// The picture is the drawing itself, never the 3D view or an iframe: it adds no WebGL context and no frame loop to the page.
+panel.preview = () => {
+  const holder = document.createElement("div");
+  holder.innerHTML = embedCode(embedOptions(), "svg");
+  return pictureOf(holder);
+};
+panel.note = ({ kind }) => {
   const options = embedOptions();
-  embedFull = embedCode(options, embedKind);
-  // the Earth is this page's own and is not in the package: what is copied is the rocket
-  // the note is the package's English; the page says it again in its own language, from the same kinds
-  const noteKey = embedKind === "link" && options.view && options.view !== "three-quarter" ? "note_linkView" : `note_${embedKind}`;
-  byId("embed-note").textContent = `${japanese() ? say(noteKey) : embedNote(embedKind, options)}${state.background === "earth" ? say("embedEarth") : ""}`;
-  const credit = paintedCredit(options);
-  const creditNode = byId("embed-credit");
-  creditNode.hidden = credit === "";
-  creditNode.textContent = credit === "" ? "" : `${say("embedKeep")}${credit}`;
-  byId<HTMLAnchorElement>("embed-open").href = `embed.html?${rocketToParams(options).toString()}`;
+  const own = kind === "html" || kind === "iframe" || kind === "module" || kind === "svg" || kind === "data" || kind === "link";
+  const noteKey = kind === "link" && options.view && options.view !== "three-quarter" ? "note_linkView" : own ? `note_${packageKind(kind as Kind)}` : "note_framework";
+  const text = japanese() || !own ? say(noteKey) : embedNote(packageKind(kind as Kind), options);
+  return `${text}${state.background === "earth" ? say("embedEarth") : ""}`;
+};
+panel.credits = () => {
+  const credit = paintedCredit(embedOptions());
+  return credit === "" ? "" : `${say("embedKeep")}${credit}`;
+};
+// The drawing beside the code is made when the panel is near the screen: a page of 3D views changes the code often (every phase of a flight), and nothing is drawn for a section nobody can see.
+panel.setAttribute("no-preview", "");
+new IntersectionObserver((seen, watch) => {
+  if (!seen.some((one) => one.isIntersecting)) return;
+  watch.disconnect();
+  panel.removeAttribute("no-preview");
+  drawEmbed();
+}, { rootMargin: "400px" }).observe(panel);
+function drawEmbed() {
+  panel.setAttribute("lang", japanese() ? "ja" : "en");
+  panel.openHref = `embed.html?${rocketToParams(embedOptions()).toString()}`;
   embedStatus.textContent = "";
-  embedCodeNode.textContent = embedFull.length > 1400 ? `${embedFull.slice(0, 1400)}…` : embedFull;
-  for (const button of embedTabs.querySelectorAll("button")) button.setAttribute("aria-selected", String(button.dataset.testid === `tab-${embedKind}`));
+  panel.update();
 }
-byId("embed-copy").addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(embedFull);
-  } catch {
-    const area = el("textarea");
-    area.value = embedFull;
-    document.body.append(area);
-    area.select();
-    document.execCommand("copy");
-    area.remove();
-  }
-  embedStatus.textContent = say("copied");
-});
 const fileName = () => ["uchusen", state.rocket, state.variant, state.show === "together" ? "" : state.show, state.look].filter(Boolean).join("-");
 const drawingText = () => embedCode(embedOptions(), "svg");
 byId("embed-svg").addEventListener("click", () => {

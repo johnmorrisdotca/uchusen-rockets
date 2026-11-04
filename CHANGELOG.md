@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+"Put this rocket on your site" is the family's embed panel (MODULES-379).
+
+- **The demo's copy panel and the code builder are kazoku-ui's `<kazoku-embed-panel>`** (kazoku-ui ^0.15.1). Nothing they had is gone, and a test counts it: the six ways (CDN script as the HTML tab, iframe, module, SVG, data address, image link), the note for each (in English and Japanese), Copy (now "Copy code"), Save SVG, Save PNG, Open the embed page, and the credit line, which shows only for a painted rocket whose parts need one.
+- **Added by the panel**: React, Vue, Angular and Svelte tabs (the element, with a painted rocket's credit beside it), a size (240, 320, 480, 640), the drawing beside the code, and Read the docs. The picture is the drawing itself, never the 3D view or an iframe, so it adds no WebGL context and no frame loop.
+- **`EmbedSettings.size`**: the iframe's largest width and the linked picture's width and height (480 by default, so the old text is unchanged).
+- `demo/embed-code.ts` writes the framework tabs; `test/embed-panel.test.ts` holds the six ways to the package's own `embedCode`, the attributes to ones the element reads, the credit to every tab, and compiles the React, Vue, Angular and Svelte code.
+- `scripts/check-standard.mjs` is kazoku-ui 0.15's (the `embed-panel` item); the demo moves to `@johnmorrisdotca/kazoku-ui` ^0.15.1.
+
 ## [0.8.0] - 2026-11-04
 
 - **The wheel zooms the view.** The element's own hands (the ones a page without the family's view controls gets) now zoom with the wheel over the 3D view, as a pinch did; before, the wheel zoomed only once the view had focus. With the pointer anywhere else the page scrolls, and a wheel that starts with the zoom already at its end scrolls the page too, so the page is never trapped. A sideways swipe, or Shift and the wheel, is left to the page. Under the family's view controls (`drive()`) nothing changes: they already zoomed with the wheel (kazoku-ui 0.13).
