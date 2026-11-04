@@ -16,6 +16,8 @@ const args = process.argv.slice(2);
 const outAt = args.indexOf("--out");
 const out = outAt >= 0 ? args[outAt + 1] : join(root, "dist", "assets");
 export const MESH_LIMIT = 600 * 1024;
+/** The fleet's sample ships are far bigger than any real rocket; their parts still keep to MESH_LIMIT. */
+export const FLEET_MESH_LIMIT = 6 * 1024 * 1024;
 export const DRAWING_LIMIT = 80 * 1024;
 export const MODEL_LIMIT = 8 * 1024 * 1024;
 mkdirSync(join(out, "parts"), { recursive: true });
@@ -23,8 +25,8 @@ mkdirSync(join(out, "models"), { recursive: true });
 
 const lookSuffix = (look: LookName) => (look === DEFAULT_LOOK ? "" : `.${look}`);
 
-function writeMesh(path: string, bytes: Uint8Array): void {
-  if (bytes.byteLength > MESH_LIMIT) throw new Error(`${path} is ${bytes.byteLength} bytes, over ${MESH_LIMIT}`);
+function writeMesh(path: string, bytes: Uint8Array, limit = MESH_LIMIT): void {
+  if (bytes.byteLength > limit) throw new Error(`${path} is ${bytes.byteLength} bytes, over ${limit}`);
   writeFileSync(path, bytes);
 }
 
@@ -39,7 +41,7 @@ for (const rocket of Object.values(ROCKETS)) {
   for (const variant of rocket.variants) {
     const built = build({ rocket: rocket.id, variant: variant.id });
     const stem = `${rocket.id}-${variant.id}`;
-    writeMesh(join(out, `${stem}.glb`), built.glb().bytes);
+    writeMesh(join(out, `${stem}.glb`), built.glb().bytes, rocket.id.startsWith("fleet-") ? FLEET_MESH_LIMIT : MESH_LIMIT);
     meshes++;
     for (const show of built.shows) {
       const name = show === built.shows[0] ? stem : `${stem}-${show}`;

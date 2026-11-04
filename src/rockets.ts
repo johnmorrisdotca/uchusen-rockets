@@ -20,6 +20,7 @@ import { JUPITER_C_VARIANTS } from "./data/jupiterc.ts";
 import { ISS_VARIANTS } from "./data/iss.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
+import { FLEET_KIT_ROCKETS } from "./data/fleet.ts";
 import { MADE_BY, type MakerId } from "./data/makers.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -114,6 +115,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   droneship: { id: "droneship", name: "Drone ships", status: "built", ...MADE_BY["droneship"], variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", ...MADE_BY["landing-zone"], variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", ...MADE_BY["launch-tower"], variants: TOWER_VARIANTS, defaultVariant: "stack" },
+  ...Object.fromEntries(Object.entries(FLEET_KIT_ROCKETS).map(([id, rocket]) => [id, { id, name: rocket.name, status: "built" as const, ...MADE_BY["fleet-kit"], variants: rocket.variants, defaultVariant: rocket.variants[0].id }])),
   starbase: { id: "starbase", name: "Starbase", status: "built", ...MADE_BY["starbase"], variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
 };
 

@@ -33,6 +33,7 @@ export interface Source {
  * ```
  */
 export const SOURCES = {
+  "uchusen-design": { title: "The fleet of this package: fictional ships and modules, drawn by its own code", publisher: "uchusen-rockets", url: "https://github.com/johnmorrisdotca/uchusen-rockets", date: "2026-11-04", read: "direct", licence: "MIT" },
   "wikipedia-starship": { title: "SpaceX Starship (the block table and infobox, read as raw wikitext)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Starship", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-super-heavy": { title: "SpaceX Super Heavy", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Super_Heavy", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-ship": { title: "SpaceX Starship (spacecraft)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX_Starship_(spacecraft)", date: "2026-10-31", read: "direct", licence: "CC BY-SA 4.0" },

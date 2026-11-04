@@ -85,7 +85,7 @@ export function figureWords(figure: Figure<number | string> | undefined, unit = 
  * console.log(status);
  * ```
  */
-export type VariantStatus = "flown" | "announced" | "artist-model" | "test-vehicle" | "support";
+export type VariantStatus = "flown" | "announced" | "artist-model" | "test-vehicle" | "support" | "fictional";
 
 /**
  * The sourced numbers of a variant: its height and diameter, each part's height by slot, its engines, other facts and any sizes that are not a height or a width.

@@ -43,3 +43,15 @@ export { OPTION_ATTRIBUTES, attributesFromOptions, optionsFromAttributes, rocket
 export type { RocketOptions } from "./attrs.ts";
 export { assetPathOf, CDN, EMBED_KINDS, SITE, THREE_VERSION, embedCode, embedNote, paintedCredit } from "./embed.ts";
 export type { EmbedKind, EmbedSettings } from "./embed.ts";
+export { assemble, COLLAR_CLASSES, COLLARS, INSETS, KIT, LIVERY, mates, SAMPLE_SHIPS, shipParts, shipPieces, swapsFor } from "./model/fleet/kit.ts";
+export type { Assembly, CollarClass, CollarSpec, Inset, InsetPart, KitModule, Livery, LiveryName, ModuleKind, ModuleOptions, Placed, Port, ShipIssue, ShipList, ShipParts, ShipPlace } from "./model/fleet/kit.ts";
+export { ENGINE_CARDS, engineTable, G0, performanceOf, PROXIMA_LY, rocketSpeed, trip } from "./model/fleet/engines.ts";
+export type { EngineCard, EngineRole, EngineRow, Performance, Trip } from "./model/fleet/engines.ts";
+export { HULL_STACKS, stackDepth } from "./model/fleet/layers.ts";
+export type { HullLayer, HullStack, HullStackName } from "./model/fleet/layers.ts";
+export { SECTIONS } from "./model/fleet/sections.ts";
+export type { Section, SectionRole } from "./model/fleet/sections.ts";
+export { arrangement, deckSummary, exploded, labelDensity, labelsOf, LEGEND, scaleBar, specBlock } from "./model/fleet/sheet.ts";
+export type { Arrangement, Deck, ExplodedModule, Label, LegendSymbol, ScaleBar, SpecLine } from "./model/fleet/sheet.ts";
+export { FLEET_PALETTE } from "./model/fleet/palette.ts";
+export type { FleetColour } from "./model/fleet/palette.ts";
