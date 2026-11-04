@@ -2,12 +2,14 @@
 // tail, Z dorsal); `local` moves a part's pieces so its origin is the middle of its base on the spine, as every part of the package has it. The registry and the data read this table and nothing else. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
 import { isCoarse, type Piece, place } from "./adapter.ts";
+import { type ArrayState, solarArray } from "./solar.ts";
 import { bowLivery, citadelLivery, driveLivery, habitatLivery, hangarLivery } from "./ariake.ts";
 import { bow } from "./bow.ts";
 import { command } from "./command.ts";
-import { type BayId, BAYS, bayBox, RADIATOR, SHADOW_COLLAR, STATION } from "./dims.ts";
+import { ARRAY, type BayId, BAYS, bayBox, RADIATOR, SHADOW_COLLAR, STATION } from "./dims.ts";
 import { driveFrame, noCollar, shadowCollar } from "./drive.ts";
 import { engineering } from "./engineering.ts";
+import { noseRounded } from "./nose.ts";
 import { ANCESTORS, SHIPS } from "./specs.ts";
 import { BAY_OF, hangar } from "./hangar.ts";
 import { habitat } from "./habitat.ts";
@@ -98,6 +100,18 @@ const missionPod = (kind: PodKind): MiyamotoPart => ({
   pieces: (o) => local(pod(kind, o?.detail ?? 1), 0, 174, 0, o?.level),
 });
 
+const solarPart = (state: ArrayState): MiyamotoPart => ({
+  id: `array-${state}`,
+  name: `Solar array, ${state}`,
+  kind: "module",
+  y0: ARRAY.y[0],
+  place: { x: 0, z: 0 },
+  height: ARRAY.y[1] - ARRAY.y[0],
+  diameter: state === "deployed" ? 100 : 14,
+  note: `${state === "stowed" ? "Ten gold-foil canisters of folded cell blankets on a root beam along the starboard side, with a rotary joint at each end, a beta gimbal and a hinge to each bay. For time near a star; the fusion plants are the ship's power." : "Ten bays of lattice masts 56 m long, a gold cell blanket each side of each mast (5,800 square metres of cells), the wing turned 35 degrees about its root beam, cells up and out, to face the star. For time near a star; the fusion plants are the ship's power."} Descends from ${ANCESTORS.array}.`,
+  pieces: (o) => local(solarArray(state, o?.detail ?? 1), 0, ARRAY.y[0], 0, o?.level),
+});
+
 const bank = (which: "dorsal" | "ventral", open: boolean): MiyamotoPart => ({
   id: `radiators-${which}-${open ? "deployed" : "stowed"}`,
   name: `Radiator bank, ${which}, ${open ? "deployed" : "stowed"}`,
@@ -118,7 +132,7 @@ export const STACK = (cut: boolean): MiyamotoPart[] => [
   stack("fuel-fore", "Fore fuel section", "tank", STATION.fuelFore, 62, 66, "The spine and the fore pair of barrels, the keyed dorsal collar's base and the ventral keel with its dock.", (c, d) => fuelSection("fore", c, d), cut),
   stack("habitat", "Habitation and medical", "module", STATION.habitat, 26, 28, "Four decks across the beam: triage and quarantine, crew bunks, mess and hydroponics, water and air recycling.", habitat, cut),
   stack("command", "Armoured command citadel", "module", STATION.command, 42, 32, "An operations ring round a communications core, a navigation desk, a medical link and two escape passages, behind armour.", command, cut),
-  stack("bow", "Bow defence and navigation", "module", STATION.bow, 36, 40, "Three staggered shield layers, ranging apertures, optical heads and two debris-intercept mounts.", bow, cut, false, true),
+  stack("bow", "Bow defence and navigation", "module", STATION.bow, 38, 38, "A rounded nose: three staggered round shield layers under a domed front, all in gold solar cells, with ranging apertures, optical heads and two debris-intercept mounts.", (c, d) => noseRounded(c, d), cut, false, true),
 ];
 
 /** The shadow-shield collar, or none: two parts for one slot, so the viewer can swap them. Ariake's is clad in near-black hexagonal tiles in place of the white and gold bands. */
@@ -152,7 +166,7 @@ const sister = (): MiyamotoPart[] => [
 export function parts(): MiyamotoPart[] {
   const out: MiyamotoPart[] = [...STACK(false), ...STACK(true)];
   for (const cut of [false, true]) out.push(shoulder("starboard-aft", cut), shoulder("port-fore", cut));
-  out.push(...sister(), collarPart("plain"), collarPart("none"), collarPart("ariake"), missionPod("relay"), missionPod("relief"), missionPod("survey"));
+  out.push(...sister(), collarPart("plain"), collarPart("none"), collarPart("ariake"), missionPod("relay"), missionPod("relief"), missionPod("survey"), solarPart("stowed"), solarPart("deployed"));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   return out;
 }

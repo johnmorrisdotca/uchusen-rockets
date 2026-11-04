@@ -136,7 +136,7 @@ table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid #223446
 .sw{display:inline-block;width:26px;height:16px;margin-right:10px;vertical-align:-2px;border:1px solid #000}
 .grid{display:grid;gap:18px}
 `;
-const titleBlock = (sheet: number, name: string, scale: string) => `<div class="title"><div><h1>${NAME}</h1><div class="sub">${esc(TITLE_BLOCK)}</div></div><div class="meta"><div class="status">${esc(STATUS)}</div><div>SHEET ${sheet} OF 8 · ${esc(name)}</div><div>${esc(scale)} · REVISION A · 2026-11-04 · ${OPERATOR} FLEET DRAWING OFFICE</div></div></div>`;
+const titleBlock = (sheet: number, name: string, scale: string) => `<div class="title"><div><h1>${NAME}</h1><div class="sub">${esc(TITLE_BLOCK)}</div></div><div class="meta"><div class="status">${esc(STATUS)}</div><div>SHEET ${sheet} OF 8 · ${esc(name)}</div><div>${esc(scale)} · REVISION A · 2026-11-04 · ${OPERATOR} DRAWING OFFICE</div></div></div>`;
 const foot = (note: string) => `<div class="foot"><div>${esc(IDENTITY.designation)} · ${esc(IDENTITY.prefix)} (${esc(IDENTITY.prefixMeans)}) · ${esc(IDENTITY.class)} class (${esc(IDENTITY.classKanji)}, ${esc(IDENTITY.classMeaning)}) · ${esc(IDENTITY.type)} (${esc(IDENTITY.typeMeans)}) · ${esc(IDENTITY.drive)}: ${esc(IDENTITY.driveMeans)} · ${esc(IDENTITY.computer)}</div><div>${esc(note)}</div></div>`;
 const page = (sheet: number, name: string, scale: string, body: string, note = "Dimensions in metres, mass in tonnes. A design for reference; every date is a plan.") => `<!doctype html><meta charset="utf-8"><style>${CSS}</style><div class="sheet">${titleBlock(sheet, name, scale)}${body}${foot(note)}</div>`;
 
