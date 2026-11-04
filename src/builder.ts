@@ -34,7 +34,8 @@ const fitsOn = (part: PartRecord, below: PartRecord | undefined): boolean => {
   return Boolean(top && bottom && top.kind === bottom.kind && Math.abs(top.diameter - bottom.diameter) <= JOINT_TOLERANCE);
 };
 
-const REAL_PARTS = (): readonly PartRecord[] => PART_ENTRIES.map(({ record }) => record).filter((record) => record.trueTo.length > 0);
+/** The fleet kit has its own way of building ships, so the builder of real rockets leaves it out. */
+const REAL_PARTS = (): readonly PartRecord[] => PART_ENTRIES.map(({ record }) => record).filter((record) => record.trueTo.length > 0 && !record.rocket.startsWith("fleet-"));
 
 /**
  * One part a row of the builder offers: its id, its name and the rocket it comes from.

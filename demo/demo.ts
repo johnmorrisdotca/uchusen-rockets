@@ -109,7 +109,8 @@ function factsFor(variant: Variant): HTMLElement[] {
   const rows2: [string, string, Figure<number | string> | undefined][] = [];
   if (show === "together" || show === "apart") {
     rows2.push(["Whole height", say("wholeHeight"), variant.facts.height]);
-    for (const slot of variant.slots) rows2.push([`${SLOT_NAMES[slot] ?? slot} height`, say("partHeight", { name: name(slot) }), variant.facts.parts[slot]]);
+    // a ship of many modules has its heights in the apart view and its parts list, not a row each: the facts stay on the screen
+    if (variant.slots.length <= 12) for (const slot of variant.slots) rows2.push([`${SLOT_NAMES[slot] ?? slot} height`, say("partHeight", { name: name(slot) }), variant.facts.parts[slot]]);
   } else rows2.push([`${SLOT_NAMES[show] ?? show} height`, say("partHeight", { name: name(show) }), variant.facts.parts[show]]);
   rows2.push(["Diameter", say("diameter"), variant.facts.diameter]);
   for (const [label, figure] of Object.entries(variant.facts.sizes ?? {})) rows2.push([label, knownWord("size", label), figure]);

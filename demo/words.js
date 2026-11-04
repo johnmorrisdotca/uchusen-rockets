@@ -24,7 +24,7 @@ export const WORDS = {
     flight: "Flight",
     dataNote: "Notes, quotations and flight steps from a source are shown as the source gave them, in English.",
     maker_spacex: "SpaceX",
-    maker_nasa: "NASA and partners",
+    maker_nasa: "NASA",
     "maker_blue-origin": "Blue Origin",
     "maker_rocket-lab": "Rocket Lab",
     maker_russia: "Russia",

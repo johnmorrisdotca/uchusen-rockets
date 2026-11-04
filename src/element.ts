@@ -186,6 +186,17 @@ export class UchusenRocket extends HTMLBase {
     return this.viewer?.currentAngle() ?? null;
   }
 
+  /**
+   * Where a point of the model, in metres, is on the picture now: in CSS pixels from the element's top left, and whether it is in front and inside. A page's label that follows a part calls it each time the element
+   * says `uchusen-draw`, so the label moves as the model turns and stands still when it does not. Without a 3D view it gives null.
+   *
+   * @param point A point of the model in metres, as `labelsOf` gives them.
+   * @returns The place on the picture, or null.
+   */
+  screenPoint(point: readonly [number, number, number]): { x: number; y: number; visible: boolean } | null {
+    return this.viewer?.screenPoint([point[0], point[1], point[2]]) ?? null;
+  }
+
   /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
   drive(choice: Partial<ViewChoice> | null): void {
     const before = this.driven;
@@ -673,6 +684,7 @@ export class UchusenRocket extends HTMLBase {
           if (state) this.emit("uchusen-painted", { state });
         },
         onFlight: () => this.noteFlight(!this.clock?.playing),
+        onDraw: () => this.dispatchEvent(new CustomEvent("uchusen-draw")),
       });
       this.viewer = made;
       window.cancelAnimationFrame(this.flightFrame);

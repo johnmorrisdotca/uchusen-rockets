@@ -10,6 +10,8 @@ import { ROCKETS } from "../src/rockets.ts";
 // these draw in software, and a page building a painted material can be busy for many seconds
 const expect = plainExpect.configure({ timeout: 30_000 });
 const URL = "/uchusen-rockets/";
+/** The walks of every variant leave the fleet to its own walk (below): it holds more than seventy, each far bigger than a rocket. */
+const real = (rocket: { id: string }) => !rocket.id.startsWith("fleet-");
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
 /** A rocket's button shows under its maker's, so its maker comes first. */
@@ -285,7 +287,7 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
   await reach3d(page);
   const walk = async (look: string) => {
     await press(page, `look-${look}`);
-    for (const rocket of Object.values(ROCKETS))
+    for (const rocket of Object.values(ROCKETS).filter(real))
       for (const variant of rocket.variants) {
         await press(page, `rocket-${rocket.id}`);
         await press(page, `variant-${variant.id}`);
@@ -312,6 +314,54 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
   const { drew, frames } = await measure(page);
   expect(drew).toBeLessThanOrEqual(frames + 3);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+});
+
+test("the fleet kit: every module and the sample ship drawn painted, then contexts and graphics memory stay flat as they are walked again, and it still draws once a frame", async ({ page }) => {
+  test.setTimeout(30 * 60_000);
+  await page.goto(URL);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  await reach3d(page);
+  await press(page, "look-painted");
+  const fleet = Object.values(ROCKETS).filter((rocket) => !real(rocket));
+  expect(fleet.length).toBeGreaterThan(5);
+  const walk = async (stride: number) => {
+    for (const rocket of fleet)
+      for (const variant of rocket.variants.filter((_, i) => i % stride === 0)) {
+        await press(page, `rocket-${rocket.id}`);
+        await press(page, `variant-${variant.id}`);
+        await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
+        await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+        await settle(page, 80);
+      }
+  };
+  await walk(1);
+  const first = await usage(page);
+  console.log(`fleet walk 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}`);
+  // the opened ones and the apart view too: the shapes that are only built when chosen
+  await walk(2);
+  await press(page, "rocket-fleet-samples");
+  await press(page, "show-apart");
+  await settle(page, 600);
+  await press(page, "show-together");
+  await walk(1);
+  const last = await usage(page);
+  console.log(`fleet walk 2: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
+  expect(last.contexts).toBe(1);
+  expect(last.buffers).toBeLessThanOrEqual(first.buffers);
+  expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+  expect(last.textures).toBeLessThanOrEqual(first.textures);
+  await bar(page).evaluate((node) => (node as HTMLElement & { play(): void }).play());
+  await settle(page, 800);
+  const { drew, frames } = await measure(page);
+  expect(drew).toBeLessThanOrEqual(frames + 3);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  // a canvas past its budget is never made: the fleet's ships are far bigger than a rocket, the pixels are the same
+  const side = await hero(page).evaluate((node) => {
+    const canvas = node.shadowRoot?.querySelector("canvas");
+    return canvas ? [canvas.width, canvas.height] : [0, 0];
+  });
+  expect(side[0] * side[1]).toBeLessThanOrEqual(MAX_PIXELS);
+  expect(Math.max(...side)).toBeLessThanOrEqual(MAX_SIDE);
 });
 
 test("a scene with many objects draws few things a frame, and its graphics memory stays flat over repeated switching", async ({ page }) => {
@@ -1296,7 +1346,7 @@ test("every variant of every rocket lit, with the Earth behind: line and painted
   const walk = async (look: "line" | "painted") => {
     await press(page, `look-${look}`);
     await expect(earth(page)).toHaveAttribute("data-form", look === "line" ? "line" : "realistic", { timeout: 60_000 });
-    for (const rocket of Object.values(ROCKETS))
+    for (const rocket of Object.values(ROCKETS).filter(real))
       for (const variant of rocket.variants) {
         const named = `${rocket.id} ${variant.id} ${look}`;
         await press(page, `rocket-${rocket.id}`);

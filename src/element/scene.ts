@@ -20,6 +20,7 @@ import {
   type Object3D,
   PerspectiveCamera,
   PlaneGeometry,
+  PCFSoftShadowMap,
   PMREMGenerator,
   RepeatWrapping,
   Scene,
@@ -60,6 +61,8 @@ export interface ViewerOptions {
   onPainted: (state: string) => void;
   /** Tells the page a timeline moved. */
   onFlight?: () => void;
+  /** Tells the page the view was drawn, so labels that follow a part can move with it. */
+  onDraw?: () => void;
 }
 
 const IDLE_STOP_MS = 90_000;
@@ -173,6 +176,9 @@ export class RocketViewer {
   private built: Built | null = null;
   private look: LookName = "line";
   private show = "together";
+  private sun: DirectionalLight;
+  /** The fleet is lit with a shadow: its ships are big enough for one part to fall on another. A rocket is not, so it keeps the one light it has. */
+  private shadows = false;
   private plumes: PlumeKit;
   private lit: { readonly [slot: string]: number } | "full" | null = null;
   /** What was lit before a flight took over the engines. */
@@ -218,6 +224,7 @@ export class RocketViewer {
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.canvas = this.renderer.domElement;
     this.canvas.className = "canvas";
     this.canvas.setAttribute("part", "canvas");
@@ -246,12 +253,13 @@ export class RocketViewer {
     this.scene.environmentIntensity = 0.95;
     const key = new DirectionalLight("#fff6e6", 1.6);
     key.position.set(3, 5, 4);
+    this.sun = key;
     const rim = new DirectionalLight("#cfe2ff", 1.1);
     rim.position.set(-4, 1, -5);
     const low = new DirectionalLight("#ffffff", 0.35);
     low.position.set(1, -4, 2);
     this.plumes = new PlumeKit();
-    this.scene.add(key, rim, low, new HemisphereLight("#d7e6ff", "#22252b", 0.35), this.plumes.light, this.root);
+    this.scene.add(key, key.target, rim, low, new HemisphereLight("#d7e6ff", "#22252b", 0.35), this.plumes.light, this.root);
 
     this.outlineMaterial = new ShaderMaterial({
       vertexShader: OUTLINE_VERTEX,
@@ -300,6 +308,9 @@ export class RocketViewer {
     this.parts = [];
     this.built = built;
     this.show = show;
+    this.shadows = built.parts.some((part) => part.record.rocket.startsWith("fleet-"));
+    this.renderer.shadowMap.enabled = this.shadows;
+    this.sun.castShadow = this.shadows;
     const places = built.placesOf(show);
     for (const part of built.parts) {
       const source = gltf.scene.getObjectByName(part.slot);
@@ -345,6 +356,7 @@ export class RocketViewer {
       this.parts.push(view);
     }
     this.addGlow();
+    this.fitShadow();
     this.setLook(look);
     this.frameTo(angle ?? this.currentAngle(), false);
     if (this.clockNow) {
@@ -381,6 +393,8 @@ export class RocketViewer {
         const mesh = new Mesh(node.geometry);
         const name = (node.material as Material).name;
         mesh.name = name;
+        mesh.castShadow = this.shadows;
+        mesh.receiveShadow = this.shadows;
         carrier.add(mesh);
         view.faces.push({ mesh, name, hasUv: Boolean(node.geometry.getAttribute("uv")) });
         const outline = new Mesh(node.geometry, this.outlineMaterial);
@@ -789,10 +803,34 @@ export class RocketViewer {
     this.canvas.dataset.nozzle = this.parts.some((one) => one.nozzleShown) ? "own" : "";
   }
 
+  /** The key light looks at the middle of what shows, from far enough to take in all of it, and its shadow map covers just that. */
+  private fitShadow(): void {
+    if (!this.shadows || !this.built) return;
+    const { min, max } = this.built.boundsOf(this.show);
+    const centre = new Vector3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
+    const radius = Math.max(1, Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) / 2);
+    const direction = new Vector3(3, 5, 4).normalize();
+    this.sun.position.copy(centre).addScaledVector(direction, radius * 2);
+    this.sun.target.position.copy(centre);
+    const shadow = this.sun.shadow;
+    shadow.mapSize.set(2048, 2048);
+    shadow.camera.left = -radius;
+    shadow.camera.right = radius;
+    shadow.camera.top = radius;
+    shadow.camera.bottom = -radius;
+    shadow.camera.near = radius * 0.5;
+    shadow.camera.far = radius * 4;
+    shadow.bias = -0.0004;
+    shadow.normalBias = radius * 0.0006;
+    shadow.camera.updateProjectionMatrix();
+    this.sun.target.updateMatrixWorld();
+  }
+
   /** Together, apart, or one part alone: an animated move, or a cut under reduced motion. */
   setShow(show: string): void {
     if (!this.built || show === this.show || this.clockNow) return;
     this.show = show;
+    this.fitShadow();
     for (const part of this.parts) if (part.model) this.showCode(part, this.look === "painted");
     const places = this.built.placesOf(show);
     const fromAngle = this.currentAngle();
@@ -889,6 +927,14 @@ export class RocketViewer {
   }
 
   /** Where the camera is looking from. */
+  /** Where a point of what shows, in metres, falls on the canvas in CSS pixels, and whether it is in front of the camera and inside the picture. A label that follows a part asks for it each time the view is drawn. */
+  screenPoint(point: Vec3): { x: number; y: number; visible: boolean } {
+    this.camera.updateMatrixWorld();
+    const p = new Vector3(point[0], point[1], point[2]).project(this.camera);
+    const box = this.canvas.getBoundingClientRect();
+    return { x: (p.x * 0.5 + 0.5) * box.width, y: (-p.y * 0.5 + 0.5) * box.height, visible: p.z < 1 && Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1 };
+  }
+
   currentAngle(): Angle {
     const offset = this.camera.position.clone().sub(this.controls.target);
     if (offset.lengthSq() === 0) return this.homeAngle;
@@ -1154,6 +1200,7 @@ export class RocketViewer {
       this.needsDraw = false;
       this.frames++;
       this.canvas.dataset.frames = String(this.frames);
+      this.options.onDraw?.();
       const angle = this.currentAngle();
       this.canvas.dataset.azimuth = angle.az.toFixed(2);
       this.canvas.dataset.elevation = angle.el.toFixed(2);

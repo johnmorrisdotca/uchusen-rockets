@@ -1,6 +1,7 @@
 // One material naming scheme for every part from every source: this package's code and the licensed models alike. The viewer reads these names, so a part from anywhere looks as if it belongs, in the
 // painted look and in the two line looks. Colours are sRGB.
 import type { FillName } from "../looks.ts";
+import { FLEET_PALETTE as P } from "./fleet/palette.ts";
 
 /**
  * One material: its colour, how metal and how rough it is in a 3D view, and the fill group it takes in a drawing.
@@ -56,6 +57,30 @@ export const MATERIALS = {
   sand: { color: "#c3b58c", metal: 0, rough: 1, fill: "white" },
   water: { color: "#27475e", metal: 0.1, rough: 0.4, fill: "dark" },
   red: { color: "#a4322b", metal: 0.1, rough: 0.5, fill: "metal" },
+  "hull-white": { color: P.protected, metal: 0.25, rough: 0.5, fill: "white" },
+  "hull-white-worn": { color: "#b9b7ae", metal: 0.3, rough: 0.62, fill: "white" },
+  "hull-orange": { color: P.shield, metal: 0.35, rough: 0.5, fill: "metal" },
+  "hull-orange-worn": { color: "#a86432", metal: 0.4, rough: 0.62, fill: "metal" },
+  "hull-yellow": { color: P.service, metal: 0.3, rough: 0.5, fill: "metal" },
+  "hull-grey": { color: P.structure, metal: 0.65, rough: 0.45, fill: "metal" },
+  "hull-grey-dark": { color: "#4b5057", metal: 0.7, rough: 0.5, fill: "dark" },
+  "hull-blue": { color: "#55778c", metal: 0.4, rough: 0.5, fill: "metal" },
+  "panel-dark": { color: P.heatSink, metal: 0.55, rough: 0.55, fill: "dark" },
+  coolant: { color: P.coolant, metal: 0.55, rough: 0.4, fill: "metal" },
+  blanket: { color: "#e3e0d8", metal: 0.05, rough: 0.9, fill: "white" },
+  copper: { color: "#b8733a", metal: 1, rough: 0.34, fill: "metal" },
+  coil: { color: P.coil, metal: 1, rough: 0.26, fill: "metal" },
+  radiator: { color: "#e4e2da", metal: 0.15, rough: 0.4, fill: "white" },
+  "radiator-hot": { color: "#9b4b3a", metal: 0.3, rough: 0.5, fill: "metal" },
+  hazard: { color: "#dcb126", metal: 0.1, rough: 0.55, fill: "metal" },
+  frost: { color: "#b9d2de", metal: 0.1, rough: 0.55, fill: "white" },
+  "lamp-amber": { color: "#ffb43a", metal: 0, rough: 0.3, fill: "metal" },
+  "lamp-blue": { color: P.light, metal: 0, rough: 0.2, fill: "white" },
+  "lamp-red": { color: "#d8372f", metal: 0, rough: 0.35, fill: "metal" },
+  deck: { color: "#7b7f84", metal: 0.3, rough: 0.7, fill: "metal" },
+  plant: { color: P.farm, metal: 0, rough: 0.8, fill: "dark" },
+  fuel: { color: P.propellant, metal: 0.1, rough: 0.35, fill: "metal" },
+  core: { color: "#e9f6ff", metal: 0, rough: 0.2, fill: "white" },
 } as const satisfies Record<string, MaterialSpec>;
 
 /**

@@ -43,6 +43,8 @@ import { DRAGON_INSIDE_BUILDS } from "./dragoninside.ts";
 import { STARBASE_VARIANTS } from "../data/starbase.ts";
 import { STARBASE_BUILDS } from "./starbase.ts";
 import type { StackBuild } from "./stacks.ts";
+import { groupOf } from "../data/fleet.ts";
+import { insetEntries, kitEntries, SAMPLE_SHIPS, shipParts } from "./fleet/kit.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
 export interface PartEntry {
@@ -206,6 +208,10 @@ entries.push(
   detail("flap-forward", "flap", "Forward flap, Blocks 2 and 3", 8.1, 4.7, { height: blankFigure, diameter: blankFigure }, () => [flap(b3.forward, 1)]),
   detail("merlin-sea-level", "engine", "Merlin, sea-level", 2, 0.92, { height: blankFigure, diameter: blankFigure }, () => merlin([0, 0], 0, 0.46, 2)),
 );
+
+// The fleet kit: each module alone, with its cutaway, and the sample ships
+entries.push(...kitEntries(groupOf), ...insetEntries());
+for (const id of ["hauler"]) entries.push(...shipParts(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 }, "fleet-samples", id).entries);
 
 /**
  * Every part of every rocket, each with its record: its real size in metres, the joints it mates at, and where its shape came from.
