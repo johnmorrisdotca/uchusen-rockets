@@ -28,7 +28,8 @@ test("every variant, in every look, from every side, in every choice of parts: w
       const built = build({ rocket: rocket.id, variant: variant.id });
       assert.deepEqual(built.shows, showsOf(variant.slots));
       const glb = built.glb();
-      assert.ok(glb.bytes.byteLength < (rocket.id.startsWith("fleet-") ? FLEET_MESH_LIMIT : MESH_LIMIT), `${variant.id}: ${glb.bytes.byteLength}`);
+      // a fleet ship builds on the visitor's computer and exports its .glb on request: no prebuilt file, so no size limit
+      if (!rocket.id.startsWith("fleet-ship-")) assert.ok(glb.bytes.byteLength < (rocket.id.startsWith("fleet-") ? FLEET_MESH_LIMIT : MESH_LIMIT), `${variant.id}: ${glb.bytes.byteLength}`);
       for (const show of built.shows)
         for (const look of LOOK_NAMES)
           for (const view of VIEW_NAMES) {

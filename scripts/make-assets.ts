@@ -41,8 +41,12 @@ for (const rocket of Object.values(ROCKETS)) {
   for (const variant of rocket.variants) {
     const built = build({ rocket: rocket.id, variant: variant.id });
     const stem = `${rocket.id}-${variant.id}`;
-    writeMesh(join(out, `${stem}.glb`), built.glb().bytes, rocket.id.startsWith("fleet-") ? FLEET_MESH_LIMIT : MESH_LIMIT);
-    meshes++;
+    // a fleet ship builds in the visitor's browser and exports its .glb on request: none is prebuilt
+    const prebuilt = !rocket.id.startsWith("fleet-ship-");
+    if (prebuilt) {
+      writeMesh(join(out, `${stem}.glb`), built.glb().bytes, rocket.id.startsWith("fleet-") ? FLEET_MESH_LIMIT : MESH_LIMIT);
+      meshes++;
+    }
     for (const show of built.shows) {
       const name = show === built.shows[0] ? stem : `${stem}-${show}`;
       for (const look of LOOK_NAMES) {
@@ -50,7 +54,7 @@ for (const rocket of Object.values(ROCKETS)) {
         drawings++;
       }
     }
-    if (built.parts.length > 1)
+    if (prebuilt && built.parts.length > 1)
       for (const part of built.parts) {
         writeMesh(join(out, `${stem}-${part.slot}.glb`), buildPart(part.record.id).glb().bytes);
         meshes++;

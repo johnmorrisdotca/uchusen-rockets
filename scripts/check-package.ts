@@ -53,7 +53,7 @@ let assets = 0;
 for (const rocket of Object.values(ROCKETS))
   for (const variant of rocket.variants) {
     const stem = `${rocket.id}-${variant.id}`;
-    if (!inTarball.has(`dist/assets/${stem}.glb`)) fail(`no ${stem}.glb`);
+    if (!rocket.id.startsWith("fleet-ship-") && !inTarball.has(`dist/assets/${stem}.glb`)) fail(`no ${stem}.glb`);
     for (const look of LOOK_NAMES) if (!inTarball.has(`dist/assets/${stem}${look === "line" ? "" : `.${look}`}.svg`)) fail(`no ${stem}.${look}.svg`);
     assets++;
   }
