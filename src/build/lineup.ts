@@ -1,4 +1,5 @@
 // Rockets and what to compare them with, side by side on one baseline at one scale, as one drawing with a ruler. Orthographic, so a metre is the same on every one. Pure.
+import { BESIDE_NAME } from "../beside.ts";
 import { build, type Built, drawnPieces } from "./index.ts";
 import { check } from "../fit.ts";
 import { axesOf, cleanView, directionOf, VIEWS, type ViewName } from "../framing.ts";
@@ -47,7 +48,7 @@ export type CompareId = keyof typeof COMPARES;
  * ```
  */
 export const REAL_CRAFT = [
-  { key: "starship:v3", name: "Starship with Super Heavy", axis: "y" },
+  { key: "starship:v3", name: BESIDE_NAME, axis: "y" },
   { key: "saturn-v:saturn-v", name: "Saturn V", axis: "y" },
   { key: "sls:block-1", name: "SLS Block 1", axis: "y" },
   { key: "iss:iss", name: "ISS", axis: "x" },
