@@ -24,7 +24,7 @@ Both bays of Miyamoto (and each of Ariake's four) are empty: the craft that fly 
 
 ## The class and its sister ship
 
-The Romurusu class (ロムルス級) has two ships: ISV Miyamoto, SPX-452, and ISV 有明 Ariake (ありあけ), SPX-186, "daybreak". Ariake is the same model, not a second one: a variant record that shares every part it does not change, with its own name, registry and hull marks (the registry digits on the bow), and it appears in the picker as its own row under SPX fleet. Its title block reads *ISV Ariake, SPX-186 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*.
+The Romurusu class (ロムルス級) has two ships: ISV Miyamoto, SPX-452, and ISV 有明 Ariake (ありあけ), SPX-186, "daybreak". Ariake is the same model, not a second one: a variant record that shares every part it does not change, with its own name, registry and hull marks (the registry digits on the bow), and it appears in the picker as its own row under SPX. Its title block reads *ISV Ariake, SPX-186 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*.
 
 What sets Ariake apart:
 

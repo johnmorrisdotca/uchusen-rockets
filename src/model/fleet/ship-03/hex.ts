@@ -18,6 +18,10 @@ export interface HexSurface {
   tile: number;
   /** How far a tile stands off the surface, in metres. */
   raise?: number;
+  /** Square cells (a solar cell, with its width and height in metres) in plain rows in place of hexagons. */
+  cells?: { w: number; h: number };
+  /** What the tiles are made of, by cumulative share. */
+  tones?: readonly (readonly [number, MaterialName])[];
 }
 
 /** A hexagon of circumradius r, point up the surface. */
@@ -28,12 +32,14 @@ export function hexClad(s: HexSurface, seed: string): Piece[] {
   const random = rng(`${seed}/hex`);
   const raise = s.raise ?? 0.2;
   const R = s.tile;
-  const colPitch = Math.sqrt(3) * R;
-  const rowPitch = 1.5 * R;
-  const outline = hexagon(R * 0.88);
+  const colPitch = s.cells ? s.cells.w : Math.sqrt(3) * R;
+  const rowPitch = s.cells ? s.cells.h : 1.5 * R;
+  const outline: [number, number][] = s.cells ? [[-s.cells.w * 0.46, -s.cells.h * 0.46], [s.cells.w * 0.46, -s.cells.h * 0.46], [s.cells.w * 0.46, s.cells.h * 0.46], [-s.cells.w * 0.46, s.cells.h * 0.46]] : hexagon(R * 0.88);
+  const tones = s.tones ?? TONES;
+  const stagger = s.cells ? 0 : 0.5;
   const out: Piece[] = [];
   let row = 0;
-  for (let y = s.y0 + R; y < s.y1 - R * 0.5; row++) {
+  for (let y = s.y0 + (s.cells ? s.cells.h / 2 : R); y < s.y1 - (s.cells ? s.cells.h / 2 : R * 0.5); row++) {
     const r = s.radius(y);
     const dr = (s.radius(y + 0.25) - s.radius(y - 0.25)) / 0.5;
     const slope = Math.atan(-dr);
@@ -42,12 +48,12 @@ export function hexClad(s: HexSurface, seed: string): Piece[] {
     const half = colPitch / (2 * r) + 0.02;
     const arcs = s.arcs(y);
     for (let k = 0; k < n; k++) {
-      const a = (2 * Math.PI * (k + (row % 2) * 0.5)) / n;
+      const a = (2 * Math.PI * (k + (row % 2) * stagger)) / n;
       const wrapped = a % (2 * Math.PI);
       const inside = arcs.some(([a0, a1]) => (a0 <= 0 && a1 >= 2 * Math.PI) || (wrapped - half >= a0 && wrapped + half <= a1) || (wrapped + 2 * Math.PI - half >= a0 && wrapped + 2 * Math.PI + half <= a1));
       if (!inside) continue;
       const pick = random();
-      const material = TONES.find(([share]) => pick < share)![1];
+      const material = tones.find(([share]) => pick < share)![1];
       const nrm: Vec3 = [Math.sin(a), 0, Math.cos(a)];
       const tangent: Vec3 = [nrm[2], 0, -nrm[0]];
       const up: Vec3 = [-nrm[0] * Math.sin(slope), Math.cos(slope), -nrm[2] * Math.sin(slope)];
