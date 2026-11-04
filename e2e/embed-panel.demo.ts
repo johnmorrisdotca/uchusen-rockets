@@ -28,9 +28,9 @@ test("the index panel has the old six ways and the family's, a note each, Copy, 
   await expect(panel.locator('[part="open"]')).toHaveText("Open the embed page");
   await expect(panel.locator('[part="docs"]')).toHaveText("Read the docs");
   await expect(panel.locator('[part="preview"] svg')).toHaveCount(1);
-  const picture = await panel.locator('[part="preview"] svg').boundingBox();
-  expect(picture!.width).toBeGreaterThan(100);
-  expect(picture!.height).toBeGreaterThan(picture!.width);
+  const size = async () => (await panel.locator('[part="preview"] svg').boundingBox()) ?? { width: 0, height: 0 };
+  await expect.poll(async () => (await size()).width).toBeGreaterThan(100);
+  expect((await size()).height).toBeGreaterThan((await size()).width);
   await expect(panel.locator('[part="preview"] canvas, [part="preview"] iframe, [part="preview"] uchusen-rocket')).toHaveCount(0);
   const code = panel.locator('[part="code"]');
   const note = panel.locator('[part="note"]');
@@ -59,6 +59,7 @@ test("the credit shows only for a painted rocket, and goes in the framework tabs
   const panel = page.locator(PANEL);
   await expect(panel.locator('[part="credits"]')).toBeHidden();
   await page.locator('[data-testid="look-painted"]').click();
+  await panel.scrollIntoViewIfNeeded();
   await expect(panel.locator('[part="credits"]')).toContainText("Clarence365");
   for (const kind of ["react", "vue", "angular", "svelte", "iframe"]) {
     await panel.locator(`button[data-kind="${kind}"]`).click();

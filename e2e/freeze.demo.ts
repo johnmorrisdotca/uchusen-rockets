@@ -1403,6 +1403,7 @@ test("the Earth on the page and the embed page: what is copied carries the lit r
   await expect(earth(page)).toHaveAttribute("data-form", "line", { timeout: 60_000 });
   await expect(page.locator("#embed")).toBeVisible();
   await press(page, "engines-on");
+  await page.locator("#embed-panel").scrollIntoViewIfNeeded();
   await expect(page.locator('#embed-panel [part="note"]')).toContainText("The Earth behind it stays on this page");
   const open = page.locator('#embed-panel [part="open"]');
   await expect(open).toHaveAttribute("href", /engines=on/);

@@ -777,6 +777,9 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   if (browserName === "chromium") await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const problems = watch(page);
   await page.goto(URL);
+  // the panel is kept up to date while it is near the screen, and catches up when it comes near
+  const near = () => page.locator("#embed-panel").scrollIntoViewIfNeeded();
+  await near();
   const code = page.locator('#embed-panel [part="code"]');
   await expect(code).toContainText("uchusen-rocket");
   await expect(code).toContainText('rocket="starship"');
@@ -784,6 +787,7 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   await expect(code).not.toContainText("Clarence365");
   await expect(page.locator('#embed-panel [part="credits"]')).toBeHidden();
   await press(page, "look-painted");
+  await near();
   await expect(code).toContainText("Clarence365");
   await expect(code).toContainText("creativecommons.org/licenses/by/4.0");
   await expect(page.locator('#embed-panel [part="credits"]')).toContainText("Clarence365");
@@ -795,6 +799,7 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   await page.locator('#embed-panel button[data-kind="iframe"]').click();
   await expect(code).toContainText("embed.html?");
   await press(page, "look-line");
+  await near();
   await page.locator('#embed-panel button[data-kind="link"]').click();
   await expect(code).toContainText("dist/assets/starship-v3.svg");
   // the link's file is one the site has too
@@ -802,6 +807,7 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   expect(response.status()).toBe(200);
   // a phase of the flight goes along
   await page.locator('[data-testid="flight"]').locator('[data-testid="flight-next"]').click();
+  await near();
   await page.locator('#embed-panel button[data-kind="iframe"]').click();
   await expect(code).toContainText("phase=liftoff");
   await expect(page.locator('#embed-panel [part="open"]')).toHaveAttribute("href", /embed\.html\?.*phase=liftoff/);
@@ -974,17 +980,20 @@ test.describe("the way it turns", () => {
     expect(page.url()).not.toContain("speed=");
     // 72 seconds a turn at 1× (5 degrees a second), 36 at 2×, 144 at 0.5×; the way is kept
     await expect(button(page, "right")).toHaveAttribute("aria-pressed", "true");
+    await page.locator("#embed-panel").scrollIntoViewIfNeeded();
     await expect(page.locator('#embed-panel [part="code"]')).toContainText('spin="36"');
     await press(page, "turn-left");
     expect(await speed()).toBe(-10);
     await buttons.nth(0).click();
     expect(await speed()).toBe(-2.5);
     await expect.poll(() => paceInAddress(page)).toBe("0.5");
+    await page.locator("#embed-panel").scrollIntoViewIfNeeded();
     await expect(page.locator('#embed-panel [part="code"]')).toContainText('spin="144"');
     await buttons.nth(1).click();
     expect(await speed()).toBe(-5);
     await expect.poll(() => paceInAddress(page)).toBeNull();
     // and it turns, at the speed it says
+    await page.evaluate(() => window.scrollTo(0, 0));
     const from = await yaw(page);
     await expect.poll(() => yaw(page), { timeout: 30_000 }).toBeLessThan(from - 1);
     await stopTurn(page);

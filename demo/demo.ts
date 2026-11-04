@@ -326,15 +326,23 @@ panel.credits = () => {
   const credit = paintedCredit(embedOptions());
   return credit === "" ? "" : `${say("embedKeep")}${credit}`;
 };
-// The drawing beside the code is made when the panel is near the screen: a page of 3D views changes the code often (every phase of a flight), and nothing is drawn for a section nobody can see.
+// The panel is kept up to date only while it is near the screen: a page of 3D views changes the code often (every phase of a flight), and nothing is made for a section nobody can see.
+// It catches up when it comes near. The drawing beside the code appears with it.
+let embedNear = false;
+let embedStale = true;
 panel.setAttribute("no-preview", "");
-new IntersectionObserver((seen, watch) => {
-  if (!seen.some((one) => one.isIntersecting)) return;
-  watch.disconnect();
+new IntersectionObserver((seen) => {
+  embedNear = seen.some((one) => one.isIntersecting);
+  if (!embedNear) return;
   panel.removeAttribute("no-preview");
-  drawEmbed();
+  if (embedStale) drawEmbed();
 }, { rootMargin: "400px" }).observe(panel);
 function drawEmbed() {
+  if (!embedNear) {
+    embedStale = true;
+    return;
+  }
+  embedStale = false;
   panel.setAttribute("lang", japanese() ? "ja" : "en");
   panel.openHref = `embed.html?${rocketToParams(embedOptions()).toString()}`;
   embedStatus.textContent = "";
