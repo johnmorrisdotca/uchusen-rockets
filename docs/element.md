@@ -15,6 +15,7 @@
 | `show` | Which parts | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right` |
 | `look` | How it is drawn | `line`, `thick`, `painted` |
 | `engines` | Full thrust, one flame and a glow at each engine | `off` (the default), `on`. A reader who asked for reduced motion has them off whatever the page says. A flame's length and its shock diamonds are a picture, not a measurement |
+| `beside` | Starship with Super Heavy (Block 3) stands beside the rocket at true scale, on the same ground, and Fit holds both | `off` (the default), `on`. Starship itself has nothing beside it. The stack beside is in this package's own paint, in every look |
 | `phase` | A phase of the rocket's flight, by its id, such as `hot-staging`: which engines burn there, and how the parts stand. See [flight.md](flight.md) | A phase of `element.flight` |
 | `view` | Where from | `three-quarter`, `front`, `back`, `side`, `below` |
 | `build` | A rocket from parts, as JSON | See [parts.md](parts.md) |

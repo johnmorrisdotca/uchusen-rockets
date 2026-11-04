@@ -41,7 +41,7 @@ npm install @johnmorrisdotca/uchusen-rockets three
 <uchusen-rocket rocket="starship" variant="v2" show="booster" look="thick" view="below"></uchusen-rocket>
 ```
 
-That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin. `engines="on"` lights each engine at full thrust, in the painted look and as a drawn flame in the line looks, and a reader who asked for reduced motion has them off. A flame's length and its shock diamonds are a picture, not a measurement. [A flight](docs/flight.md) plays each phase with the engines that burn in it, from published timelines. With no WebGL, under Save-Data, or on any failure, the drawing stays.
+That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin. `engines="on"` lights each engine at full thrust, in the painted look and as a drawn flame in the line looks, and a reader who asked for reduced motion has them off. A flame's length and its shock diamonds are a picture, not a measurement. `beside="on"` stands Starship with Super Heavy next to the rocket at true scale, to see how big it is. [A flight](docs/flight.md) plays each phase with the engines that burn in it, from published timelines. With no WebGL, under Save-Data, or on any failure, the drawing stays.
 
 ## Who it is for
 
