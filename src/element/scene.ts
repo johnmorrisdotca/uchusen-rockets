@@ -154,6 +154,8 @@ void main() {
 
 interface PartView {
   slot: string;
+  /** It belongs to the rocket standing beside the one on screen. */
+  beside: boolean;
   holder: Group;
   code: Group;
   model: Group | null;
@@ -339,7 +341,7 @@ export class RocketViewer {
     this.renderer.shadowMap.enabled = this.shadows;
     this.sun.castShadow = this.shadows;
     const places = built.placesOf(show);
-    for (const part of built.parts) {
+    for (const part of [...built.parts, ...built.beside]) {
       const source = gltf.scene.getObjectByName(part.slot);
       if (!source) continue;
       const holder = new Group();
@@ -348,11 +350,13 @@ export class RocketViewer {
       holder.add(code);
       const view: PartView = {
         slot: part.slot,
+        beside: built.beside.includes(part),
         holder,
         code,
         model: null,
-        modelFile: part.record.painted?.file ?? null,
-        ownNozzle: Boolean(part.record.painted?.ownNozzle),
+        // the stack beside it is this package's own paint in every look: a licensed model shows only with its credit, which is the craft's
+        modelFile: built.beside.includes(part) ? null : (part.record.painted?.file ?? null),
+        ownNozzle: !built.beside.includes(part) && Boolean(part.record.painted?.ownNozzle),
         modelState: "none",
         nozzleShown: false,
         faces: [],
@@ -392,7 +396,8 @@ export class RocketViewer {
       this.setFlight(this.clockNow);
     }
     this.canvas.dataset.ready = "true";
-    this.canvas.dataset.parts = this.parts.map((part) => part.slot).join(" ");
+    this.canvas.dataset.parts = this.parts.filter((part) => !part.beside).map((part) => part.slot).join(" ");
+    this.canvas.dataset.beside = built.beside.length ? "on" : "off";
     this.drivenDirty = this.driven !== null;
     this.wake();
     await this.settled;
@@ -691,6 +696,7 @@ export class RocketViewer {
         this.ground = new GroundKit();
         this.scene.add(this.ground.group);
       }
+      for (const part of this.parts) if (part.beside) part.holder.visible = false;
       const { min, max } = this.boundsNow();
       this.ground.fit(this.built.boundsOf("together").max[0] * 2.4 + 4, Math.max(Math.abs(min[0]), Math.abs(max[0])));
       this.ground.group.visible = true;
@@ -787,7 +793,7 @@ export class RocketViewer {
       this.options.onPainted("");
       return;
     }
-    const states = this.parts.map((part) => (part.modelFile ? part.modelState : "code"));
+    const states = this.parts.filter((part) => !part.beside).map((part) => (part.modelFile ? part.modelState : "code"));
     const state = states.some((s) => s === "loading" || s === "none") ? "loading" : states.every((s) => s === "ready") ? "model" : states.includes("ready") ? "mixed" : "code";
     this.canvas.dataset.painted = state;
     this.options.onPainted(state);

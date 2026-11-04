@@ -11,6 +11,7 @@ import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
+import { canBeside } from "./beside.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
@@ -144,7 +145,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -467,6 +468,11 @@ export class UchusenRocket extends HTMLBase {
     this.emit("uchusen-flight", this.flightState);
   }
 
+  /** Whether Starship stands beside it: `beside="on"`, and never beside Starship itself. */
+  private besideOn(description: Description): boolean {
+    return this.getAttribute("beside") === "on" && canBeside(description.rocket);
+  }
+
   /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
   private engineLights(): boolean {
     return enginesWanted(this.getAttribute("engines"), media("(prefers-reduced-motion: reduce)"));
@@ -480,11 +486,11 @@ export class UchusenRocket extends HTMLBase {
 
   private update(): void {
     const description = this.descriptionNow();
-    const key = JSON.stringify(description);
+    const key = `${JSON.stringify(description)}|${this.besideOn(description)}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description) });
+        this.builtNow = build(description, { detail: this.detailFor(description), beside: this.besideOn(description) });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -580,6 +586,7 @@ export class UchusenRocket extends HTMLBase {
     const { look, show, viewName } = this.settings(this.builtNow);
     this.dataset.look = look;
     this.dataset.engines = this.engineLights() ? "on" : "off";
+    this.dataset.beside = this.builtNow.beside.length ? "on" : "off";
     this.dataset.flight = this.flight?.id ?? "";
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
@@ -625,7 +632,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.detailFor(description) === "full") return;
     this.fine = true;
     try {
-      this.builtNow = build(description, { detail: "full" });
+      this.builtNow = build(description, { detail: "full", beside: this.besideOn(description) });
     } catch {
       return;
     }
