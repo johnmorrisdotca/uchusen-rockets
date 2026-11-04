@@ -2,6 +2,7 @@
 // tail, Z dorsal); `local` moves a part's pieces so its origin is the middle of its base on the spine, as every part of the package has it. The registry and the data read this table and nothing else. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
 import { isCoarse, type Piece, place } from "./adapter.ts";
+import { bowLivery, citadelLivery, driveLivery, habitatLivery, hangarLivery } from "./ariake.ts";
 import { bow } from "./bow.ts";
 import { command } from "./command.ts";
 import { HANGAR, RADIATOR, SHADOW_COLLAR, STATION } from "./dims.ts";
@@ -58,34 +59,34 @@ const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [num
   diameter: Math.max(width, depth),
   ...(first ? {} : { bottom: true }),
   ...(last ? {} : { top: true }),
-  note: note.includes("hull marks") ? note : `${note} Descends from ${ANCESTORS[id]}.`,
+  note: note.includes("Descends from") ? note : `${note} Descends from ${ANCESTORS[id.replace("-ariake", "")]}.`,
   pieces: (o) => local(build(cut, o?.detail ?? 1), 0, y0, 0, o?.level),
 });
 
-const shoulder = (side: "starboard" | "port", cut: boolean): MiyamotoPart => {
+const shoulder = (side: "starboard" | "port", cut: boolean, ariake = false): MiyamotoPart => {
   const h = HANGAR[side];
   return {
-    id: `hangar-${side}${cut ? "-cutaway" : ""}`,
-    name: `${side === "starboard" ? "Starboard rescue hangar" : "Port survey hangar"}${cut ? ", cutaway" : ""}`,
+    id: `hangar-${side}${ariake ? "-ariake" : ""}${cut ? "-cutaway" : ""}`,
+    name: `${side === "starboard" ? "Starboard rescue hangar" : "Port survey hangar"}${ariake ? ", Ariake" : ""}${cut ? ", cutaway" : ""}`,
     kind: "module",
     y0: h.y[0],
     place: { x: h.centre, z: 0 },
     height: h.y[1] - h.y[0],
     diameter: h.x[1] - h.x[0],
     note: `${side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule, a cradle with clamp arms for an ATC (Auxiliary Transfer Craft) rescue cutter and guide rails to the door, opening to starboard." : "The forward shoulder: a survey bay with three cradles, an access bridge and emergency shutters, opening to port."} Descends from ${ANCESTORS[`hangar-${side}`]}.`,
-    pieces: (o) => local(hangar(side, cut, o?.detail ?? 1), h.centre, h.y[0], 0, o?.level),
+    pieces: (o) => local([...hangar(side, cut, o?.detail ?? 1, ariake ? `hangar-${side}-ariake` : undefined), ...(ariake ? hangarLivery(side) : [])], h.centre, h.y[0], 0, o?.level),
   };
 };
 
 const missionPod = (kind: PodKind): MiyamotoPart => ({
   id: `pod-${kind}`,
-  name: kind === "relay" ? "Mission pod, relay" : "Mission pod, relief",
+  name: kind === "relay" ? "Mission pod, relay" : kind === "relief" ? "Mission pod, relief" : "Mission pod, survey",
   kind: "module",
   y0: 174,
   place: { x: 0, z: 0 },
   height: 60,
   diameter: 28,
-  note: `${kind === "relay" ? "A communications bay under a tower of dishes and phased arrays, on the keyed dorsal collar." : "Six relief and equipment containers under a gantry, on the keyed dorsal collar."} Descends from ${ANCESTORS.pod}.`,
+  note: `${kind === "relay" ? "A communications bay under a tower of dishes and phased arrays, on the keyed dorsal collar." : kind === "relief" ? "Six relief and equipment containers under a gantry, on the keyed dorsal collar." : "A survey bay on the keyed dorsal collar: a telescope in a yoke, a rack of six probes, a radar dish, a lidar drum, a magnetometer boom and two instrument containers."} Descends from ${ANCESTORS.pod}.`,
   pieces: (o) => local(pod(kind, o?.detail ?? 1), 0, 174, 0, o?.level),
 });
 
@@ -125,17 +126,22 @@ const collarPart = (none: boolean): MiyamotoPart => ({
   pieces: (o) => (none ? noCollar() : local(shadowCollar(false, o?.detail ?? 1), 0, SHADOW_COLLAR.y, 0, o?.level)),
 });
 
-/** The parts that differ for the sister ship: the drive and the bow carry its registry marks. */
+/** The parts that differ for the sister ship: the drive and the bow carry its registry marks and its dawn-gold pinstripes, the habitation drum and the hangars its pinstripes (and the drum a warm interior), the citadel its refit. */
 const sister = (): MiyamotoPart[] => [
-  stack("drive-ariake", "Main drive and shrouds, Ariake", "engine", STATION.drive, 90, 46, `The sister ship's drive. Descends from ${ANCESTORS.drive}.`, (c, d) => driveFrame(c, d, "drive-ariake"), false, true),
-  stack("bow-ariake", "Bow defence and navigation, Ariake", "module", STATION.bow, 36, 40, `The sister ship's bow, with its hull marks 186. Descends from ${ANCESTORS.bow}.`, (c, d) => bow(c, d, "bow-ariake", SHIPS.ariake.marks), false, false, true),
+  stack("drive-ariake", "Main drive and shrouds, Ariake", "engine", STATION.drive, 90, 46, `The sister ship's drive, with a pair of dawn-gold pinstripes on the neck. Descends from ${ANCESTORS.drive}.`, (c, d) => [...driveFrame(c, d, "drive-ariake"), ...driveLivery()], false, true),
+  stack("habitat-ariake", "Habitation and medical, Ariake", "module", STATION.habitat, 26, 28, "The sister ship's habitation drum: two dawn-gold bands with their pinstripes, and rooms in warm wood and dawn-gold in place of blue.", (c, d) => [...habitat(c, d, "habitat-ariake", "dawn"), ...habitatLivery(false)], false),
+  stack("habitat-ariake", "Habitation and medical, Ariake", "module", STATION.habitat, 26, 28, "The sister ship's habitation drum: two dawn-gold bands with their pinstripes, and rooms in warm wood and dawn-gold in place of blue.", (c, d) => [...habitat(c, d, "habitat-ariake", "dawn"), ...habitatLivery(true)], true),
+  stack("command-ariake", "Armoured command citadel, Ariake", "module", STATION.command, 42, 32, "The sister ship's citadel after its refit: a lattice sensor mast aft of the dome, a solarium on each side of it, and dawn-gold pinstripes and bands.", (c, d) => [...command(c, d, "command-ariake", true), ...citadelLivery()], false),
+  stack("bow-ariake", "Bow defence and navigation, Ariake", "module", STATION.bow, 36, 40, `The sister ship's bow, with its hull marks 186 and a dawn-gold pinstripe on each shield layer. Descends from ${ANCESTORS.bow}.`, (c, d) => [...bow(c, d, "bow-ariake", SHIPS.ariake.marks), ...bowLivery()], false, false, true),
+  shoulder("starboard", false, true),
+  shoulder("port", false, true),
 ];
 
 /** Every part of the ship, each once. */
 export function parts(): MiyamotoPart[] {
   const out: MiyamotoPart[] = [...STACK(false), ...STACK(true)];
   for (const cut of [false, true]) out.push(shoulder("starboard", cut), shoulder("port", cut));
-  out.push(...sister(), collarPart(false), collarPart(true), missionPod("relay"), missionPod("relief"));
+  out.push(...sister(), collarPart(false), collarPart(true), missionPod("relay"), missionPod("relief"), missionPod("survey"));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   return out;
 }
