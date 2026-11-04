@@ -41,7 +41,7 @@ export function ignition(missionS: number): { count: number; ring: number } {
  * @param missionS Mission seconds from lift-off.
  * @returns Which timer, and its seconds; or null when there is none to show.
  * @example
- * ```ts
+ * ```ts no-run
  * import { burnTimer, type Trip } from "@johnmorrisdotca/uchusen-rockets/journey";
  *
  * declare const trip: Trip;

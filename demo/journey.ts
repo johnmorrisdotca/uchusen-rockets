@@ -219,7 +219,7 @@ function setCraft(lit: boolean): void {
 
 function layout(): void {
   const box = stage.getBoundingClientRect();
-  const length = Math.max(120, Math.min(box.width * 0.56, (box.height * 0.6) / 0.75));
+  const length = Math.max(120, Math.min(box.width * 0.86, box.height * 1.45));
   craftBox.style.setProperty("--len", `${Math.round(length)}px`);
   const ratio = Math.min(2, devicePixelRatio || 1);
   const w = Math.round(box.width * ratio);
@@ -281,7 +281,7 @@ function buildMap(): void {
   const W = 1000;
   const H = 560;
   const cx = W / 2;
-  const cy = H / 2;
+  const cy = H * 0.46;
   const sunFrame = !earthFrame;
   const ids = sunFrame ? SOURCE.stops.filter((stop) => stop.kind === "planet" && SOURCE.positionAu(stop.id, trip.departMs).length > 0).map((stop) => stop.id) : ["moon"];
   const orbit = (id: string): [number, number][] => {
@@ -300,7 +300,7 @@ function buildMap(): void {
   const reach = (id: string): number => Math.max(...orbit(id).map(([x, y]) => Math.hypot(x, y)));
   const farthest = Math.max(reach(trip.from), reach(trip.to), ...(earthFrame ? [reach("moon")] : []));
   const shown = sunFrame ? ids.filter((id) => reach(id) <= farthest * 1.02) : ids;
-  const scale = (Math.min(W, H * 1.55) * 0.42) / (earthFrame ? farthest * 1.05 : farthest * 1.04);
+  const scale = Math.min(W * 0.4, H * 0.34) / (farthest * 1.04);
   const bodies = new Map<string, SVGElement>();
   const defs = svgEl("defs");
   const glow = svgEl("radialGradient", { id: "jr-sunglow" });
@@ -316,7 +316,7 @@ function buildMap(): void {
   const centre = point(0, 0);
   if (sunFrame) {
     mapSvg.append(svgEl("circle", { cx: centre[0], cy: centre[1], r: 46, fill: "url(#jr-sunglow)" }), svgEl("circle", { cx: centre[0], cy: centre[1], r: 9, fill: "#fff1c4" }));
-    mapSvg.append(svgEl("text", { x: centre[0], y: centre[1] + 30, "text-anchor": "middle", class: "warm" }, say("jSun")));
+    mapSvg.append(svgEl("text", { x: centre[0], y: centre[1] + 30, "text-anchor": "middle", class: "warm" }, say("jSun").toUpperCase()));
   } else {
     mapSvg.append(svgEl("circle", { cx: centre[0], cy: centre[1], r: 9, fill: "#4c88c4" }), svgEl("circle", { cx: centre[0] - 2.5, cy: centre[1] - 2.5, r: 4, fill: "#9ed0ff", opacity: 0.8 }));
   }
@@ -324,8 +324,8 @@ function buildMap(): void {
   const pathPoints: [number, number][] = [];
   if (trip.ballistic) {
     const b = trip.ballistic;
-    for (let i = 0; i <= 120; i += 1) {
-      const p = transferPoint(b.mu, b.r1, b.r2, b.theta0, (b.transitS * i) / 120);
+    for (let i = 0; i <= 360; i += 1) {
+      const p = transferPoint(b.mu, b.r1, b.r2, b.theta0, (b.transitS * i) / 360);
       const [x, y] = point(p.r * Math.cos(p.theta), p.r * Math.sin(p.theta));
       pathPoints.push([x, y]);
     }
@@ -341,9 +341,10 @@ function buildMap(): void {
   mapSvg.append(ahead, doneLine);
   // a ruler: one astronomical unit from the Sun, or the Moon's distance from the Earth
   const ruleLen = sunFrame ? AU_KM : 384_400;
-  const rule = svgEl("line", { class: "rule", x1: centre[0], y1: H - 38, x2: centre[0] + ruleLen * scale, y2: H - 38 });
-  mapSvg.append(rule, svgEl("line", { class: "rule", x1: centre[0], y1: H - 44, x2: centre[0], y2: H - 32 }), svgEl("line", { class: "rule", x1: centre[0] + ruleLen * scale, y1: H - 44, x2: centre[0] + ruleLen * scale, y2: H - 32 }));
-  const ruleText = svgEl("text", { x: centre[0] + (ruleLen * scale) / 2, y: H - 48, "text-anchor": "middle" }, sunFrame ? `1 AU · ${kilometres(AU_KM)}` : kilometres(384_400));
+  const x0 = 40;
+  const rule = svgEl("line", { class: "rule", x1: x0, y1: H - 40, x2: x0 + ruleLen * scale, y2: H - 40 });
+  mapSvg.append(rule, svgEl("line", { class: "rule", x1: x0, y1: H - 46, x2: x0, y2: H - 34 }), svgEl("line", { class: "rule", x1: x0 + ruleLen * scale, y1: H - 46, x2: x0 + ruleLen * scale, y2: H - 34 }));
+  const ruleText = svgEl("text", { x: x0, y: H - 52, "text-anchor": "start" }, sunFrame ? `1 AU · ${kilometres(AU_KM)}` : kilometres(384_400));
   mapSvg.append(ruleText);
   // the places
   const labelled = new Set([trip.from, trip.to]);
@@ -352,11 +353,11 @@ function buildMap(): void {
     const group = svgEl("g", { class: "body" });
     const r = id === trip.to ? 7 : 5;
     group.append(svgEl("circle", { r, fill: BODY_COLOUR[id] ?? stop?.colour ?? "#aab", stroke: "#05080f", "stroke-width": 1.5 }));
-    if (labelled.has(id)) group.append(svgEl("text", { x: 12, y: -10, class: id === trip.to ? "warm" : "" }, stopName(id)));
+    if (labelled.has(id)) group.append(svgEl("text", { x: 12, y: -10, class: id === trip.to ? "warm" : "" }, stopName(id).toUpperCase()));
     mapSvg.append(group);
     bodies.set(id, group);
   }
-  if (earthFrame) mapSvg.append(svgEl("text", { x: centre[0] + 14, y: centre[1] + 26 }, stopName("earth")));
+  if (earthFrame) mapSvg.append(svgEl("text", { x: centre[0] + 14, y: centre[1] + 26 }, stopName("earth").toUpperCase()));
   const mark = svgEl("g", { class: "craft-mark-group" });
   mark.append(svgEl("path", { class: "craft-mark", d: "M-9 -8L1 0L-9 8M-2 -8L8 0L-2 8" }));
   mapSvg.append(mark);
@@ -374,12 +375,11 @@ function drawMap(state: State): void {
   }
   const [mx, my] = at(state.positionKm[0], state.positionKm[1]);
   const ahead = map.points;
-  const fraction = state.progress;
-  const upTo = Math.max(0, Math.min(ahead.length - 1, fraction * (ahead.length - 1)));
-  const whole = Math.floor(upTo);
-  const done = ahead.slice(0, whole + 1);
-  if (whole < ahead.length - 1) done.push([mx, my]);
-  else done.push(ahead[ahead.length - 1]!);
+  let whole = 0;
+  const arc = trip.ballistic?.arc;
+  if (arc) while (whole < arc.length - 1 && arc[whole + 1]! <= state.doneKm) whole += 1;
+  const done = arc ? ahead.slice(0, whole + 1) : [ahead[0]!];
+  done.push([mx, my]);
   map.doneLine.setAttribute("d", done.length > 1 ? `M${done.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}` : "");
   const next = ahead[Math.min(ahead.length - 1, whole + 1)]!;
   const prev = ahead[Math.min(ahead.length - 1, whole)]!;
@@ -412,15 +412,15 @@ function buildRoute(): void {
   }
   add(svgEl("line", { class: "tick", x1: x(0.5), y1: y - 8, x2: x(0.5), y2: y + 8 }), svgEl("text", { x: x(0.5), y: y + 30, "text-anchor": "middle" }, say("jHalfway")));
   if (trip.ballistic) {
-    add(svgEl("text", { x: ROUTE_X0, y: y + 56, "text-anchor": "start", class: "warm" }, `${say("jPhase_burn")} · ${speedWords(trip.dv.departure)}`));
-    add(svgEl("text", { x: ROUTE_X1, y: y + 56, "text-anchor": "end", class: "warm" }, trip.verdict.level === "flyby" ? say("jPhase_flyby") : `${say("jPhase_brake")} · ${speedWords(trip.dv.arrival)}`));
+    add(svgEl("text", { x: ROUTE_X0, y: y + 56, "text-anchor": "start", class: "warm burn-label" }, `${say("jPhase_burn")} · ${speedWords(trip.dv.departure)}`));
+    add(svgEl("text", { x: ROUTE_X1, y: y + 56, "text-anchor": "end", class: "warm burn-label" }, trip.verdict.level === "flyby" ? say("jPhase_flyby") : `${say("jPhase_brake")} · ${speedWords(trip.dv.arrival)}`));
   }
   add(svgEl("circle", { cx: ROUTE_X0, cy: y, r: 9, fill: SOURCE.stops.find((s) => s.id === trip.from)?.colour ?? "#8fc9ff" }), svgEl("circle", { cx: ROUTE_X1, cy: y, r: 9, fill: SOURCE.stops.find((s) => s.id === trip.to)?.colour ?? "#ffb457" }));
-  add(svgEl("text", { x: ROUTE_X0, y: y + 30, "text-anchor": "middle" }, stopName(trip.from)), svgEl("text", { x: ROUTE_X1, y: y + 30, "text-anchor": "middle", class: "warm" }, stopName(trip.to)));
+  add(svgEl("text", { x: ROUTE_X0, y: y + 30, "text-anchor": "middle" }, stopName(trip.from).toUpperCase()), svgEl("text", { x: ROUTE_X1, y: y + 30, "text-anchor": "middle", class: "warm" }, stopName(trip.to).toUpperCase()));
   routeMarker = svgEl("g", { transform: `translate(${ROUTE_X0} ${y})` });
   routeMarker.append(svgEl("path", { class: "chev", d: "M-9 -10L2 0L-9 10M-1 -10L10 0L-1 10" }));
   add(routeMarker);
-  routeSvg.setAttribute("viewBox", "0 0 1000 118");
+  routeSvg.setAttribute("viewBox", "0 0 1000 138");
 }
 
 function drawRoute(state: State): void {
@@ -473,8 +473,9 @@ function buildPanel(): void {
     ["straight", say("jStraight"), `${kilometres(trip.straightKm)} · ${astronomicalUnits(trip.straightKm)} · ${lightTime(trip.straightKm)}`],
     ["path", say("jPath"), kilometres(trip.pathKm)],
     ["time", say("jDuration"), trip.drive === "continuous" ? `${duration(trip.shipS)} / ${duration(trip.frameS)}` : duration(trip.frameS)],
-    ["dvout", say("jDvOut"), speedWords(trip.dv.departure), trip.estimated.includes("departure burn length")],
+    ["dvout", say("jDvOut"), speedWords(trip.dv.departure)],
     ["dvin", say("jDvIn"), speedWords(trip.dv.arrival)],
+    ...(trip.ballistic ? ([["burnout", say("jBurnOut"), duration(trip.ballistic.burnS), trip.estimated.includes("departure burn length")], ["burnin", say("jBurnIn2"), trip.ballistic.brakeS > 0 ? duration(trip.ballistic.brakeS) : "–", trip.estimated.includes("braking acceleration")]] as [string, string, string, boolean][]) : []),
     ["peakg", say("jPeakG"), gWords(trip.peakG), trip.estimated.includes("departure burn length") || trip.estimated.includes("braking acceleration")],
     ["peak", say("jPeakSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     ["fuel", say("jFuel"), fuelWords()],
@@ -624,12 +625,11 @@ function draw(force = false): void {
   if (id !== lastPhase || force) {
     lastPhase = id;
     stage.dataset.phase = id;
-    setText(byId("phase"), playhead === 0 && !playing ? say("jPhase_ready") : say(`jPhase_${id}`));
   }
-  if (playhead === 0 && !playing) setText(byId("phase"), say("jPhase_ready"));
+  setText(byId("phase"), playhead === 0 && !playing ? say("jPhase_ready") : say(`jPhase_${id}`));
   // the countdown
   const pre = byId("preheat");
-  pre.hidden = id !== "preheat";
+  pre.hidden = id !== "preheat" || (playhead === 0 && !playing);
   if (!pre.hidden) {
     const p = preheat(state.missionS);
     const segments = byId("segments");

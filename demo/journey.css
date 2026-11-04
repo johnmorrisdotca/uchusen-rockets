@@ -3,9 +3,9 @@ body.journey { --bad: #a1262b; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body.journey { --bad: #ff9a9a; } }
 :root[data-theme="dark"] body.journey { --bad: #ff9a9a; }
 
-.jr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 25rem); gap: 1.25rem; align-items: start; margin-top: 1rem; }
-.jr-main { display: grid; gap: 0.6rem; min-width: 0; }
-.jr-side { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
+.jr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 25rem); grid-template-areas: "main side" "panel side"; gap: 1.25rem; align-items: start; margin-top: 1rem; }
+.jr-main { grid-area: main; display: grid; gap: 0.6rem; min-width: 0; }
+.jr-side { grid-area: side; display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
 
 .jr-stage, .jr-route {
   --ground: #05080f; --raised: #0e1626; --line: #27344c; --ink: #dfe9f6; --muted: #93a6c0; --accent: #8fc9ff; --warm: #ffb457; --trace: #5f9bd0;
@@ -19,7 +19,7 @@ body.journey { --bad: #a1262b; }
 .jr-stage[data-view="map"] .jr-sky { opacity: 0.55; }
 
 .jr-craft { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.jr-craft svg { position: absolute; left: 50%; top: 50%; height: var(--len, 300px); width: calc(var(--len, 300px) * 0.75); transform: translate(-50%, -50%) rotate(var(--turn, 90deg)); overflow: visible; }
+.jr-craft svg { filter: brightness(1.6) contrast(1.15) saturate(1.2); position: absolute; left: 50%; top: 50%; height: var(--len, 300px); width: calc(var(--len, 300px) * 0.75); transform: translate(-50%, -50%) rotate(var(--turn, 90deg)); overflow: visible; }
 
 .jr-hud { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .jr-hud > * { position: absolute; }
@@ -51,7 +51,7 @@ body.journey { --bad: #a1262b; }
 .jr-views .chip { min-height: 44px; font-size: 0.85rem; }
 
 .jr-route { width: 100%; height: auto; border: 1px solid #27344c; border-radius: 12px; background: linear-gradient(180deg, #0a1120, #05080f); font-family: inherit; }
-.jr-route text { fill: var(--accent); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+.jr-route text { fill: var(--accent); font-size: 12px; letter-spacing: 0.08em; }
 .jr-route .warm { fill: var(--warm); }
 .jr-route .rail { stroke: var(--trace); stroke-width: 2; fill: none; }
 .jr-route .rail-done { stroke: #bfe0ff; stroke-width: 3; fill: none; }
@@ -71,7 +71,7 @@ body.journey { --bad: #a1262b; }
 .jr-scrub input::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--accent); background: var(--raised); }
 .jr-scrub input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
-.jr-summary { position: absolute; z-index: 4; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(94%, 38rem); max-height: 94%; overflow: auto; padding: 1rem 1.2rem; border: 1px solid var(--accent); border-radius: 14px; background: rgba(5, 10, 20, 0.93); }
+.jr-summary { position: absolute; z-index: 4; left: 50%; top: 56%; transform: translate(-50%, -50%); width: min(94%, 38rem); max-height: 84%; overflow: auto; padding: 1rem 1.2rem; border: 1px solid var(--accent); border-radius: 14px; background: rgba(5, 10, 20, 0.93); }
 .jr-summary[hidden] { display: none; }
 .jr-summary h2 { margin: 0; font-size: 0.8rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
 .jr-route-line { margin: 0.2rem 0 0.7rem; font-size: clamp(1.15rem, 2.6vw, 1.6rem); color: var(--warm); }
@@ -91,10 +91,10 @@ body.journey { --bad: #a1262b; }
 .jr-verdict ul { margin: 0.4rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.82rem; }
 .jr-verdict ul:empty { display: none; }
 
-.jr-panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.7rem 0.8rem; }
-.jr-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem 1rem; }
+.jr-panel { grid-area: panel; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.7rem 0.8rem; }
+.jr-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 0.8rem 1.4rem; }
 .jr-panel h3 { margin: 0 0 0.3rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
-.jr-list { margin: 0; display: grid; gap: 0.3rem; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+.jr-list { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem 0.8rem; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
 .jr-list div { min-width: 0; }
 .jr-list dt { color: var(--muted); font-size: 0.74rem; }
 .jr-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
@@ -105,22 +105,25 @@ body.journey { --bad: #a1262b; }
 .jr-map .orbit-lit { stroke: #4b7aa8; }
 .jr-map .path-ahead { fill: none; stroke: #8fc9ff; stroke-width: 2; stroke-dasharray: 7 6; opacity: 0.85; }
 .jr-map .path-done { fill: none; stroke: #e6f2ff; stroke-width: 3; }
-.jr-map text { fill: #8fc9ff; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; }
+.jr-map text { fill: #8fc9ff; font-size: 14px; letter-spacing: 0.06em; }
 .jr-map .warm { fill: #ffb457; }
 .jr-map .rule { stroke: #8fc9ff; stroke-width: 1.5; }
 .jr-map .craft-mark { fill: none; stroke: #e6f2ff; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 62rem) {
-  .jr { grid-template-columns: minmax(0, 1fr); }
+  .jr { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "side" "panel"; }
   .jr-stage { aspect-ratio: 4 / 3; min-height: 19rem; }
 }
 @media (max-width: 40rem) {
+  .jr-route text { font-size: 26px; }
+  .jr-route .burn-label { display: none; }
   .jr-stage { aspect-ratio: auto; height: 25rem; }
   .jr-phase { max-width: 36%; font-size: 0.66rem; letter-spacing: 0.1em; }
   .jr-accel { top: 3.7rem; }
   .jr-timer { top: 3.7rem; right: 0.8rem; }
   .jr-facts { grid-template-columns: minmax(0, 1fr); }
   .jr-cols { grid-template-columns: minmax(0, 1fr); }
+  .jr-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .jr-controls .chips { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {

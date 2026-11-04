@@ -83,7 +83,7 @@ export interface State extends Place {
  * @param speed The play speed.
  * @returns Seconds.
  * @example
- * ```ts
+ * ```ts no-run
  * import { playSeconds, type Trip } from "@johnmorrisdotca/uchusen-rockets/journey";
  *
  * declare const trip: Trip;
@@ -98,7 +98,7 @@ export const playSeconds = (trip: Trip, speed: PlaySpeed = 1): number => trip.ph
  * @param playbackS Seconds since Play was pressed, at the normal speed (a faster speed multiplies the clock before calling).
  * @returns The phase, how far through it, the mission time and the scale.
  * @example
- * ```ts
+ * ```ts no-run
  * import { placeAt, type Trip } from "@johnmorrisdotca/uchusen-rockets/journey";
  *
  * declare const trip: Trip;
@@ -128,7 +128,7 @@ const mix = (a: number, b: number, f: number): number => a + (b - a) * f;
  * @param playbackS Seconds since Play was pressed, at the normal speed.
  * @returns The state.
  * @example
- * ```ts
+ * ```ts no-run
  * import { stateAt, type BodySource, type Trip } from "@johnmorrisdotca/uchusen-rockets/journey";
  *
  * declare const trip: Trip;

@@ -221,7 +221,7 @@ export interface Window {
  * @param count How many windows.
  * @returns The windows, soonest first.
  * @example
- * ```ts
+ * ```ts no-run
  * import { windows, type BodySource } from "@johnmorrisdotca/uchusen-rockets/journey";
  *
  * declare const source: BodySource;
@@ -325,7 +325,7 @@ const unavailable = (craft: Craft, from: string, to: string, departMs: number, l
  * @param departMs When the departure burn begins, milliseconds since 1970 (for a ballistic trip to a planet, one of `windows`).
  * @returns The planned trip.
  * @example
- * ```ts
+ * ```ts no-run
  * import { craftOf, planTrip, type BodySource } from "@johnmorrisdotca/uchusen-rockets/journey";
  *
  * declare const source: BodySource;
@@ -528,7 +528,7 @@ function planContinuous(source: BodySource, craft: ContinuousCraft, from: string
   let verdict: Verdict;
   if (blockedBySun) verdict = { level: "cannot", line: `The straight path passes too close to the Sun: pick another date.`, because, playable: false };
   else if (usedT > carried) verdict = { level: "cannot", line: `Not enough fuel: this trip needs ${Math.round(usedT).toLocaleString("en-US")} t of propellant and the ship carries ${Math.round(carried).toLocaleString("en-US")} t.`, because, playable: false };
-  else verdict = { level: "ok", line: `Can do it: ${(usedT / carried * 100).toFixed(usedT / carried < 0.1 ? 1 : 0)} per cent of the propellant, at ${craft.g.value} g.`, because, playable: true };
+  else verdict = { level: "ok", line: `Can do it: ${(usedT / carried * 100) >= 1 ? (usedT / carried * 100).toFixed(0) : (usedT / carried * 100).toPrecision(2)} per cent of the propellant, at ${craft.g.value} g.`, because, playable: true };
   if (estimated.length > 0) because.push(`Estimated, not from a source: ${[...new Set(estimated)].join(", ")}.`);
   const peak = accelerating(a, tb);
   return {
@@ -566,7 +566,7 @@ function planContinuous(source: BodySource, craft: ContinuousCraft, from: string
  * @param afterMs The earliest date.
  * @returns The date, milliseconds since 1970.
  * @example
- * ```ts
+ * ```ts no-run
  * import { bestDate, craftOf, type BodySource } from "@johnmorrisdotca/uchusen-rockets/journey";
  *
  * declare const source: BodySource;

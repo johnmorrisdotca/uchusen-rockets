@@ -8,7 +8,8 @@ import type { SourceId } from "../data/sources.ts";
  * ```ts
  * import { CRAFTS } from "@johnmorrisdotca/uchusen-rockets/journey";
  *
- * const tli = CRAFTS.find((craft) => craft.id === "saturn-v")?.capacityKg?.tli;
+ * const saturn = CRAFTS.find((craft) => craft.id === "saturn-v");
+ * const tli = saturn?.drive === "ballistic" ? saturn.capacityKg.tli : undefined;
  * console.log(tli?.value, tli?.source);
  * ```
  */
