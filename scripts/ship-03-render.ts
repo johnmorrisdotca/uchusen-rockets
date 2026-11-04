@@ -113,6 +113,36 @@ window.draw = async (job, shot) => {
   sun.shadow.camera.updateProjectionMatrix();
   const rim = new THREE.DirectionalLight("#9fc4ff", shot.look === "line" ? 0 : 0.8); rim.position.set(-0.6, -0.2, -0.8);
   scene.add(sun, sun.target, rim, new THREE.HemisphereLight("#cfe0ff", "#1a1d24", shot.look === "line" ? 0.8 : 0.5));
+  if (shot.fill && !shot.ortho) {
+    // the silhouette comes from the vertices themselves (a thousand or so from each mesh), not from the box round them
+    const corners = [];
+    for (const m of models) { m.updateMatrixWorld(true); m.traverse((o) => { if (!o.isMesh || !o.visible) return; const pos = o.geometry.attributes.position; const step = Math.max(1, Math.floor(pos.count / 400)); for (let i = 0; i < pos.count; i += step) { const v = new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); corners.push(v); } }); }
+    const q = new THREE.Vector3();
+    for (let n = 0; n < 16; n++) {
+      camera.lookAt(target); camera.updateMatrixWorld(); camera.updateProjectionMatrix();
+      const inv = camera.matrixWorldInverse;
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, behind = false;
+      for (const c of corners) {
+        q.copy(c).applyMatrix4(inv);
+        if (q.z > -0.5) { behind = true; break; }
+        const nx = q.x / -q.z / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / camera.aspect;
+        const ny = q.y / -q.z / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+        if (nx < x0) x0 = nx; if (nx > x1) x1 = nx; if (ny < y0) y0 = ny; if (ny > y1) y1 = ny;
+      }
+      const away = camera.position.clone().sub(target);
+      if (behind) { camera.position.copy(target).add(away.multiplyScalar(1.4)); continue; }
+      const f = Math.max((x1 - x0) / 2, (y1 - y0) / 2) / shot.fill;
+      camera.position.copy(target).add(away.multiplyScalar(f));
+      // slide the picture so the silhouette sits in the middle
+      const dist = camera.position.distanceTo(target);
+      const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist;
+      const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+      const upv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+      const shift = right.multiplyScalar(((x0 + x1) / 2) * half * camera.aspect).add(upv.multiplyScalar(((y0 + y1) / 2) * half));
+      camera.position.add(shift); target.add(shift);
+    }
+    camera.lookAt(target);
+  }
   for (const g of shot.glows ?? []) { const m = new THREE.Mesh(new THREE.SphereGeometry(g.size, 12, 8), new THREE.MeshBasicMaterial({ color: g.color })); m.position.set(...g.at); scene.add(m); const halo = new THREE.Mesh(new THREE.SphereGeometry(g.size * 3, 12, 8), new THREE.MeshBasicMaterial({ color: g.color, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending })); halo.position.set(...g.at); scene.add(halo); }
   for (const p of shot.plumes ?? []) {
     const dir = new THREE.Vector3(...p.dir).normalize();
@@ -126,25 +156,6 @@ window.draw = async (job, shot) => {
   }
   for (const sp of shot.spots ?? []) { const l = new THREE.SpotLight(sp.color, sp.intensity, 0, sp.angle, 0.4, 1); l.position.set(...sp.at); l.target.position.set(...sp.target); scene.add(l, l.target); }
   renderer.render(scene, camera);
-  if (shot.fill && !shot.ortho) {
-    const box = new THREE.Box3();
-    for (const m of models) box.expandByObject(m);
-    const corners = [0, 1].flatMap((i) => [0, 1].flatMap((j) => [0, 1].map((k) => new THREE.Vector3(i ? box.max.x : box.min.x, j ? box.max.y : box.min.y, k ? box.max.z : box.min.z))));
-    for (let n = 0; n < 8; n++) {
-      camera.lookAt(target); camera.updateMatrixWorld(); camera.updateProjectionMatrix();
-      const pr = corners.map((c) => c.clone().project(camera));
-      const spanX = Math.max(...pr.map((q) => q.x)) - Math.min(...pr.map((q) => q.x));
-      const spanY = Math.max(...pr.map((q) => q.y)) - Math.min(...pr.map((q) => q.y));
-      const f = Math.max(spanX / 2, spanY / 2) / shot.fill;
-      const d = camera.position.clone().sub(target).multiplyScalar(f);
-      camera.position.copy(target).add(d);
-    }
-    // centre the models in the picture: move the target and the eye together by what the middle of the box is off by
-    camera.lookAt(target); camera.updateMatrixWorld();
-    const mid = box.getCenter(new THREE.Vector3());
-    const shift = mid.clone().sub(target);
-    camera.position.add(shift); target.add(shift); camera.lookAt(target);
-  }
   camera.updateMatrixWorld();
   const points = (shot.points ?? []).map((p) => { const v = new THREE.Vector3(...p.at).project(camera); return { id: p.id, x: Math.round(((v.x + 1) / 2) * w), y: Math.round(((1 - v.y) / 2) * h), behind: v.z > 1 }; });
   const info = { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, geometries: renderer.info.memory.geometries, points };
