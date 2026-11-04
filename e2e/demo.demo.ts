@@ -1389,6 +1389,7 @@ test("the embed page and the code builder run under a strict policy, in 3D, with
   await policy("embed.html?rocket=starship&variant=v3&look=painted&show=ship");
   await expect(page.locator("uchusen-rocket")).toHaveAttribute("data-state", /^(3d|fallback)$/, { timeout: 90_000 });
   if (is3d(browserName)) await expect(page.locator("uchusen-rocket")).toHaveAttribute("data-state", "3d");
+  await paintedIn(page.locator("uchusen-rocket"));
   await policy("builder.html");
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   expect(problems).toEqual([]);
