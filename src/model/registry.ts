@@ -44,6 +44,7 @@ import { STARBASE_VARIANTS } from "../data/starbase.ts";
 import { STARBASE_BUILDS } from "./starbase.ts";
 import type { StackBuild } from "./stacks.ts";
 import { groupOf } from "../data/fleet.ts";
+import { SHIP_03_ENTRIES } from "./ship-03.ts";
 import { insetEntries, kitEntries, SAMPLE_SHIPS, shipParts } from "./fleet/kit.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
@@ -210,7 +211,7 @@ entries.push(
 );
 
 // The fleet kit: each module alone, with its cutaway, and the sample ships
-entries.push(...kitEntries(groupOf), ...insetEntries());
+entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_03_ENTRIES);
 for (const id of ["hauler"]) entries.push(...shipParts(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 }, "fleet-samples", id).entries);
 
 /**
