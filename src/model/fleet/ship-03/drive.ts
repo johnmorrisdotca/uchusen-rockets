@@ -137,7 +137,7 @@ export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
   for (const b of [-27, 27]) out.push(...hazard(bulk, b, -16, 16, 1.2, 1.8));
   // the aft face: plating round the bores, a frame on each bore, shutters in the orange of removable shields
   const aft = { n: "y" as const, sign: -1 as const, at: 0, a: [-HZ, HZ] as const, b: [-HX, HX] as const };
-  out.push(...skin(aft, WHITE, seed, { detail, cell: [4, 4], raise: 0.3, blocks: 0.25, skip: (a, b) => Math.hypot(b - nx, a) < DRIVE.exitR + 3.4 || Math.hypot(b + nx, a) < DRIVE.exitR + 3.4 }));
+  out.push(...skin(aft, WHITE, seed, { detail, blanket: true, cell: [6, 5], raise: 0.3, blocks: 0.25, skip: (a, b) => Math.hypot(b - nx, a) < DRIVE.exitR + 3.4 || Math.hypot(b + nx, a) < DRIVE.exitR + 3.4 }));
   for (const sx of [-1, 1]) {
     out.push(...frame(aft, 0, sx * nx, DRIVE.exitR * 2 + 7.2, DRIVE.exitR * 2 + 7.2, 1.2, 1.2, "hull-orange"));
     for (let i = 0; i < 8; i++) {
@@ -152,7 +152,7 @@ export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
   const stbd = faceOf({ x: [-HX, HX], y: [0, TAPER], z: [-HZ, HZ] }, "x", 1);
   const port = faceOf({ x: [-HX, HX], y: [0, TAPER], z: [-HZ, HZ] }, "x", -1);
   const faces = cut ? [top, bottom, port] : [top, bottom, stbd, port];
-  for (const f of faces) out.push(...skin(f, WHITE, seed, { detail, cell: f.n === "z" ? [5, 4.5] : [5, 3.5], raise: 0.28, blocks: 0.22 }));
+  for (const f of faces) out.push(...skin(f, WHITE, seed, { detail, blanket: true, cell: f.n === "z" ? [7, 5.5] : [7, 4.5], raise: 0.28, blocks: 0.22 }));
   for (const f of [top, bottom]) {
     for (const x of [-38, -29, -20, 20, 29, 38]) out.push(...vent(f, x, 8, 6, 3.2, 8));
     out.push(...conduit(f, 16, -42, 42, { count: 4, seed }), ...conduit(f, 28, -42, 42, { count: 3, seed }), ...rail(f, 36, -43, 43));

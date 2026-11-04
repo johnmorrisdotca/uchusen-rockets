@@ -1,7 +1,7 @@
 // Miyamoto's parts: each module of the ship as a row of the table below, with where it stands, its joints and how to build its pieces at a level of detail. Every builder works in ship metres (X across the beam, Y from the
 // tail, Z dorsal); `local` moves a part's pieces so its origin is the middle of its base on the spine, as every part of the package has it. The registry and the data read this table and nothing else. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
-import { type Piece, place } from "./adapter.ts";
+import { isCoarse, type Piece, place } from "./adapter.ts";
 import { bow } from "./bow.ts";
 import { command } from "./command.ts";
 import { HANGAR, RADIATOR, STATION } from "./dims.ts";
@@ -19,6 +19,8 @@ export const LEVELS = [0.25, 0.6, 1] as const;
 
 export interface BuildOptions {
   detail?: number;
+  /** `coarse`: only the pieces the kit's `isCoarse` keeps, for a first picture in a moment; `fine` (the default): all of them. */
+  level?: "coarse" | "fine";
 }
 
 export interface MiyamotoPart {
@@ -41,7 +43,10 @@ export interface MiyamotoPart {
   pieces: (options?: BuildOptions) => Piece[];
 }
 
-const local = (pieces: Piece[], x: number, y: number, z: number): Piece[] => place(pieces, { at: [-x, -y, -z] });
+const local = (pieces: Piece[], x: number, y: number, z: number, level?: "coarse" | "fine"): Piece[] => {
+  const moved = place(pieces, { at: [-x, -y, -z] });
+  return level === "coarse" ? moved.filter(isCoarse) : moved;
+};
 const COLLAR_L = 12;
 
 const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [number, number], width: number, depth: number, note: string, build: (cut: boolean, detail: number) => Piece[], cut: boolean, first = false, last = false): MiyamotoPart => ({
@@ -54,7 +59,7 @@ const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [num
   ...(first ? {} : { bottom: true }),
   ...(last ? {} : { top: true }),
   note: `${note} Descends from ${ANCESTORS[id]}.`,
-  pieces: (o) => local(build(cut, o?.detail ?? 1), 0, y0, 0),
+  pieces: (o) => local(build(cut, o?.detail ?? 1), 0, y0, 0, o?.level),
 });
 
 const shoulder = (side: "starboard" | "port", cut: boolean): MiyamotoPart => {
@@ -68,7 +73,7 @@ const shoulder = (side: "starboard" | "port", cut: boolean): MiyamotoPart => {
     height: h.y[1] - h.y[0],
     diameter: h.x[1] - h.x[0],
     note: `${side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule and an ATC (Auxiliary Transfer Craft) cutter, opening to starboard." : "The forward shoulder: a survey bay with drones on racks, an access bridge and emergency shutters, opening to port."} Descends from ${ANCESTORS[`hangar-${side}`]}.`,
-    pieces: (o) => local(hangar(side, cut, o?.detail ?? 1), h.centre, h.y[0], 0),
+    pieces: (o) => local(hangar(side, cut, o?.detail ?? 1), h.centre, h.y[0], 0, o?.level),
   };
 };
 
@@ -81,7 +86,7 @@ const missionPod = (kind: PodKind): MiyamotoPart => ({
   height: 60,
   diameter: 28,
   note: `${kind === "relay" ? "A communications bay under a tower of dishes and phased arrays, on the keyed dorsal collar." : "Six relief and equipment containers under a gantry, on the keyed dorsal collar."} Descends from ${ANCESTORS.pod}.`,
-  pieces: (o) => local(pod(kind, o?.detail ?? 1), 0, 174, 0),
+  pieces: (o) => local(pod(kind, o?.detail ?? 1), 0, 174, 0, o?.level),
 });
 
 const bank = (which: "dorsal" | "ventral", open: boolean): MiyamotoPart => ({
@@ -93,7 +98,7 @@ const bank = (which: "dorsal" | "ventral", open: boolean): MiyamotoPart => ({
   height: RADIATOR.y[1] - RADIATOR.y[0],
   diameter: open ? 125 : 25,
   note: `${open ? "Four leaves of 25 by 60 m on a mast, clear of the hangar corridors and the exhaust." : "Four leaves folded into a box on the habitation hull's rails."} Descends from ${ANCESTORS.radiators}.`,
-  pieces: (o) => local(radiators(which, open, o?.detail ?? 1), 0, RADIATOR.y[0], 0),
+  pieces: (o) => local(radiators(which, open, o?.detail ?? 1), 0, RADIATOR.y[0], 0, o?.level),
 });
 
 /** The stacked modules, tail to bow, in their plain and their cut form. */

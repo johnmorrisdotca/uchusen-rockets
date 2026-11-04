@@ -4,7 +4,7 @@
 import { cub, HULL_STACKS, ibeam, type Lathe, type Piece, prism, rng, rod, roundStrut } from "./adapter.ts";
 import { HANGAR } from "./dims.ts";
 import { dressedFace, pipe, wallShells } from "./hulls.ts";
-import { along, conduit, type Face, faceOf, frame, hazard, ladder, lamp, on, pt, rail, SHUTTER, stencil, WHITE } from "./faces.ts";
+import { along, conduit, type Face, faceOf, frame, hazard, ladder, lamp, on, pt, rail, stencil, WHITE } from "./faces.ts";
 
 type Side = "starboard" | "port";
 
@@ -81,7 +81,7 @@ export function hangar(side: Side, cut: boolean, detail = 1, seed = `hangar-${si
   const sgn = side === "starboard" ? 1 : -1;
   const T = 1.4;
   const out: Piece[] = [];
-  const o = { seed, scheme: WHITE, detail, density: 0.5 };
+  const o = { seed, scheme: WHITE, detail, density: 0.34, blanket: true };
   const openLow = z0 + 5;
   const openHigh = z1 - 7;
   const openY: [number, number] = [y0 + 12, y1 - 12];
@@ -122,14 +122,30 @@ export function hangar(side: Side, cut: boolean, detail = 1, seed = `hangar-${si
         const mid = (openLow + openHigh) / 2;
         const high = openHigh - openLow;
         const lift = 0.7 + (k % 2) * 0.3;
-        const leaf: Face = { ...door, at: door.at + (door.sign as number) * lift, a: [a0 + 0.15, a0 + lw - 0.15], b: [openLow + 0.2, openHigh - 0.2] };
-        out.push(on(door, a0 + lw / 2, mid, lw - 0.2, high, 0.1, lift, k % 2 ? "hull-orange" : "hull-orange-worn"));
-        // the leaf is a frame with panels in it: edge channels, cross ribs, a field of raised panels, rollers on the rails, handles, a hazard edge and a lamp
-        out.push(...dressedFace(leaf, { seed: `${seed}${k}`, scheme: SHUTTER, detail, cell: [2.8, 2.3], slot: [5, 4], density: 0.22, kinds: ["hatch", "lamps", "bolts", "hazard", "number"], raise: 0.22 }));
+        // the leaf: a grey frame on the rails, in which the removable orange panels sit in a grid with a seam between each; hinges, actuators, rollers, stencils and a lamp
+        out.push(on(door, a0 + lw / 2, mid, lw - 0.2, high, 0.1, 0.5, "hull-grey-dark"));
+        const cols = 3;
+        const rows = 4;
+        const pw = (lw - 0.9) / cols;
+        const ph = (high - 0.9) / rows;
+        for (let c = 0; c < cols; c++)
+          for (let r = 0; r < rows; r++) {
+            const pa = a0 + 0.45 + pw * (c + 0.5);
+            const pz = openLow + 0.45 + ph * (r + 0.5);
+            out.push(on(door, pa, pz, pw - 0.3, ph - 0.3, 0.5, 0.78 + ((c + r) % 2) * 0.08, (c + r + k) % 3 === 0 ? "hull-orange-worn" : "hull-orange"), on(door, pa, pz, pw * 0.55, ph * 0.4, 0.86 + ((c + r) % 2) * 0.08, 0.92 + ((c + r) % 2) * 0.08, "hull-grey"));
+            if ((c + r) % 2 === 0) for (const dx of [-0.38, 0.38]) for (const dz of [-0.38, 0.38]) out.push(rod("hull-grey-dark", pt(door, pa + dx * pw, pz + dz * ph, 0.78), pt(door, pa + dx * pw, pz + dz * ph, 0.9), 0.07, 8));
+          }
         for (const e of [a0 + 0.2, a0 + lw - 0.2]) out.push(...ibeam("hull-grey-dark", pt(door, e, openLow + 0.2, lift + 0.2), pt(door, e, openHigh - 0.2, lift + 0.2), 0.7, 0.45, [door.sign as number, 0, 0]));
-        for (const z of [openLow + high / 3, openLow + (2 * high) / 3]) out.push(...ibeam("hull-grey", pt(door, a0 + 0.2, z, lift + 0.2), pt(door, a0 + lw - 0.2, z, lift + 0.2), 0.55, 0.4, [door.sign as number, 0, 0]));
-        for (const z of [openLow + 0.6, openHigh - 0.6]) for (const a of [a0 + 1.2, a0 + lw - 1.2]) out.push(rod("hull-grey", pt(door, a - 0.5, z, 0.3), pt(door, a + 0.5, z, 0.3), 0.32, 12), rod("hull-grey-dark", pt(door, a, z, 0.3), pt(door, a, z, lift), 0.1, 8));
-        out.push(...hazard(along(door), a0 + lw - 0.4, openLow + 0.3, openHigh - 0.3, 0.5, 0.9), ...lamp(door, a0 + lw / 2, openHigh - 0.9, "amber", 0.2), rod("hull-yellow", pt(door, a0 + 0.8, mid - 1.2, lift + 0.8), pt(door, a0 + 0.8, mid + 1.2, lift + 0.8), 0.07, 8));
+        for (const z of [openLow + high / 2]) out.push(...ibeam("hull-grey", pt(door, a0 + 0.2, z, lift + 0.2), pt(door, a0 + lw - 0.2, z, lift + 0.2), 0.55, 0.4, [door.sign as number, 0, 0]));
+        // hinges: three barrels on the rail edge with a knuckle bracket each; actuators: two hydraulic cylinders from the lintel to the leaf with a piston rod and a clevis at each end
+        for (const z of [openLow + 1.2, mid, openHigh - 1.2]) out.push(rod("hull-grey", pt(door, a0 + 0.1, z - 0.7, 0.6), pt(door, a0 + 0.1, z + 0.7, 0.6), 0.28, 12), rod("hull-grey-dark", pt(door, a0 + 0.1, z, 0.2), pt(door, a0 + 0.1, z, 0.6), 0.1, 8));
+        for (const s of [-1, 1]) {
+          const base = pt(door, a0 + lw / 2 + s * 1.2, openHigh + 0.4, 0.9);
+          const tip = pt(door, a0 + lw / 2 + s * 1.2, openHigh - 2.5, lift + 0.2);
+          const mid3: [number, number, number] = [(base[0] + tip[0]) / 2, (base[1] + tip[1]) / 2, (base[2] + tip[2]) / 2];
+          out.push(rod("hull-grey-dark", base, mid3, 0.34, 12), rod("engine-pale", mid3, tip, 0.17, 12), rod("hull-grey", base, [base[0], base[1] + 0.05, base[2]], 0.5, 12), rod("hull-yellow", tip, [tip[0], tip[1], tip[2] + 0.01], 0.3, 12));
+        }
+        out.push(...hazard(along(door), a0 + lw - 0.4, openLow + 0.3, openHigh - 0.3, 0.5, 0.9), ...lamp(door, a0 + lw / 2, openHigh - 0.9, "amber", 0.2), ...stencil(door, `${51 + k}`, a0 + lw / 2, mid, 1.6));
       }
     }
     out.push(...stencil(door, side === "starboard" ? "104" : "222", openY[0] - 3, openLow - 1.4, 1.6), ...conduit(door, openHigh + 2.1, openY[0], openY[1], { count: 3, seed }), ...ladder(along(door), openY[1] + 3, openLow, openHigh), ...lamp(door, openY[0] - 1.5, openHigh, "amber"), ...lamp(door, openY[1] + 1.5, openHigh, "blue"));

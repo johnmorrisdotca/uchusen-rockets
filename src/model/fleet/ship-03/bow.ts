@@ -18,7 +18,7 @@ export function bow(cut: boolean, detail = 1, seed = "bow"): Piece[] {
     const [y0, y1] = layerY(i);
     const { hx, hz } = layer;
     const o = { seed: `${seed}${i}`, scheme: SHUTTER, detail, density: 0.3, cell: [2.4, 2.4] as const, raise: 0.3, kinds: ["hatch", "lamps", "bolts", "hazard", "greeble", "number"] as const };
-    const outline = chamfered(hx, hz, 3 + i);
+    const outline = chamfered(hx, hz, 6 + i * 2);
     if (cut) {
       // starboard half only: the layer cut at x = 0, so its crush cells show
       out.push(prism("hull-grey-dark", outline.map(([x, z]) => [Math.min(x, 0), z] as [number, number]), y0, y1, { only: undefined }));

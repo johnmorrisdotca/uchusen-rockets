@@ -63,7 +63,7 @@ export function faceOf(box: { x: readonly [number, number]; y: readonly [number,
 }
 
 /** Plating: rows and columns of raised panels, a hand's width apart, in the scheme's colours, some worn, some bare, some in the block colour; sizes vary by row so no two walls are the same. */
-export function skin(face: Face, scheme: Scheme, seed: string, o: { cell?: readonly [number, number]; raise?: number; blocks?: number; bare?: number; detail?: number; skip?: (a: number, b: number) => boolean } = {}): Piece[] {
+export function skin(face: Face, scheme: Scheme, seed: string, o: { cell?: readonly [number, number]; raise?: number; blocks?: number; bare?: number; detail?: number; blanket?: boolean; skip?: (a: number, b: number) => boolean } = {}): Piece[] {
   const random = rng(`${seed}/skin/${face.n}${face.sign}`);
   // a lower level of detail plates in bigger cells: a quarter of the detail is a quarter of the plates
   const k = 1 / Math.sqrt(Math.max(0.2, Math.min(1, o.detail ?? 1)));
@@ -87,6 +87,13 @@ export function skin(face: Face, scheme: Scheme, seed: string, o: { cell?: reado
       const roll = random();
       if (roll < (o.bare ?? 0.03)) continue;
       const pick = random();
+      if (o.blanket) {
+        // a quilted blanket: one pillow to a cell, white, now and then worn, now and then gold foil, with a thin seam between and no extra plates
+        const m = pick < 0.07 ? "gold" : pick < 0.25 ? scheme.worn : scheme.main;
+        const hh = raise * (0.8 + random() * 0.4);
+        out.push(on(face, cA, cB, wa - gap, hb - gap, 0, hh * 0.6, m), on(face, cA, cB, wa - gap - 0.5, hb - gap - 0.5, hh * 0.6, hh, m), on(face, cA, cB, wa - gap - 1.2, hb - gap - 1.2, hh, hh * 1.25, m));
+        continue;
+      }
       const material = pick < 0.9 ? rowMain : pick < 0.96 ? scheme.worn : pick < 0.985 ? scheme.main : pick < 0.995 ? scheme.accent : scheme.blockWorn;
       const h = raise * (0.55 + random() * 0.45);
       out.push(on(face, cA, cB, wa - gap, hb - gap, 0, h, material));
@@ -147,15 +154,18 @@ export function conduit(face: Face, b: number, a0: number, a1: number, o: { coun
 
 /** A handrail along the surface axis `a`, at `b`: posts and a top rail in service yellow. */
 export function rail(face: Face, b: number, a0: number, a1: number, height = 1.1): Piece[] {
-  const out: Piece[] = [rod("hull-yellow", pt(face, a0, b, height), pt(face, a1, b, height), 0.04, 6), rod("hull-yellow", pt(face, a0, b, height * 0.55), pt(face, a1, b, height * 0.55), 0.03, 6)];
-  for (let a = a0; a <= a1 + 0.01; a += 2.5) out.push(rod("hull-grey-dark", pt(face, a, b, 0), pt(face, a, b, height), 0.04, 6));
+  // round tubes of twelve sides, posts with a flange at the foot, and a ball at each bend of the end
+  const out: Piece[] = [rod("hull-yellow", pt(face, a0, b, height), pt(face, a1, b, height), 0.06, 12), rod("hull-yellow", pt(face, a0, b, height * 0.55), pt(face, a1, b, height * 0.55), 0.045, 12), rod("hull-yellow", pt(face, a0, b, 0), pt(face, a0, b, height), 0.06, 12), rod("hull-yellow", pt(face, a1, b, 0), pt(face, a1, b, height), 0.06, 12)];
+  for (let a = a0; a <= a1 + 0.01; a += 2.5) out.push(rod("hull-grey-dark", pt(face, a, b, 0), pt(face, a, b, height), 0.05, 12), rod("hull-grey", pt(face, a, b, 0), pt(face, a, b, 0.08), 0.16, 12));
   return out;
 }
 
 /** A ladder along `a`: two rails and rungs. */
 export function ladder(face: Face, b: number, a0: number, a1: number, width = 0.6): Piece[] {
-  const out: Piece[] = [rod("hull-yellow", pt(face, a0, b - width / 2, 0.14), pt(face, a1, b - width / 2, 0.14), 0.03, 6), rod("hull-yellow", pt(face, a0, b + width / 2, 0.14), pt(face, a1, b + width / 2, 0.14), 0.03, 6)];
-  for (let a = a0 + 0.25; a < a1; a += 0.32) out.push(rod("hull-yellow", pt(face, a, b - width / 2, 0.14), pt(face, a, b + width / 2, 0.14), 0.02, 5));
+  // round side rails of twelve sides standing off on stays, round rungs, and a stay with a foot every two metres
+  const out: Piece[] = [rod("hull-yellow", pt(face, a0, b - width / 2, 0.2), pt(face, a1, b - width / 2, 0.2), 0.045, 12), rod("hull-yellow", pt(face, a0, b + width / 2, 0.2), pt(face, a1, b + width / 2, 0.2), 0.045, 12)];
+  for (let a = a0 + 0.25; a < a1; a += 0.32) out.push(rod("hull-yellow", pt(face, a, b - width / 2, 0.2), pt(face, a, b + width / 2, 0.2), 0.03, 10));
+  for (let a = a0 + 0.1; a <= a1; a += 2) for (const s of [-1, 1]) out.push(rod("hull-grey-dark", pt(face, a, b + (s * width) / 2, 0), pt(face, a, b + (s * width) / 2, 0.2), 0.035, 8), rod("hull-grey", pt(face, a, b + (s * width) / 2, 0), pt(face, a, b + (s * width) / 2, 0.05), 0.1, 10));
   return out;
 }
 
