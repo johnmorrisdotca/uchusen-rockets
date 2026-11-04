@@ -1,7 +1,7 @@
 // How Waymark's boxy hulls are dressed. A hull is a box of plated faces; a face is cut into slots, each slot is plated or holds one piece of hardware (a hatch, a vent, a row of windows, a conduit stub, a lamp row, a sensor
 // post, a hazard frame, a number, a cluster of machinery), and a slot with hardware is left unplated so the hardware sits in a recess. Walls of a cutaway are real separate shells, one for each hull layer, stepped back so
 // the stack shows at the cut edge. Pure: no three.js and no DOM.
-import { cub, type MaterialName, type Piece, rng, rod, type Vec3 } from "./adapter.ts";
+import { cub, type MaterialName, type Piece, pipeRun, rng, rod, type Vec3 } from "./adapter.ts";
 import type { Box } from "./dims.ts";
 import { bolts, conduit, type Face, faceOf, frame, hatch, hazard, lamp, on, pt, rail, type Scheme, skin, stencil, vent, windows } from "./faces.ts";
 import type { HullStack } from "./adapter.ts";
@@ -78,6 +78,9 @@ export function dressedFace(face: Face, o: Dress): Piece[] {
       taken.push([a, b]);
       out.push(...hardware(kinds[Math.floor(random() * kinds.length)], base, a, b, wa, wb, random, o.seed));
     }
+  // structural ribs along the slot lines: thin standing bars, so the plating reads in bays with depth between them
+  for (let i = 0; i <= na; i++) out.push(on(base, face.a[0] + i * wa, (face.b[0] + face.b[1]) / 2, 0.22, face.b[1] - face.b[0], 0, lift * 1.9, "hull-grey"));
+  for (let j = 0; j <= nb; j++) out.push(on(base, (face.a[0] + face.a[1]) / 2, face.b[0] + j * wb, face.a[1] - face.a[0], 0.22, 0, lift * 1.7, "hull-grey-dark"));
   const inSlot = (a: number, b: number) => taken.some(([ta, tb]) => Math.abs(a - ta) < wa * 0.5 && Math.abs(b - tb) < wb * 0.5);
   out.push(...skin(face, o.scheme, o.seed, { detail, cell: o.cell ?? [Math.max(2.5, wa / 2), Math.max(2, wb / 2)], raise: lift, skip: (a, b) => inSlot(a, b) || Boolean(o.avoid?.(a, b)) }));
   return out;
@@ -91,6 +94,11 @@ export function hullBox(box: Box, core: MaterialName, faces: readonly (keyof Ret
   const out: Piece[] = [cub(core, box.x, box.y, box.z, { only: undefined })];
   const all = facesOf(box);
   for (const key of faces) out.push(...dressedFace(all[key], o));
+  // the twelve edges of the box carry a corner beam, with a bolt every few metres
+  const edge = 0.7;
+  for (const x of box.x) for (const z of box.z) out.push(cub("hull-grey", [x - edge / 2, x + edge / 2], box.y, [z - edge / 2, z + edge / 2]));
+  for (const x of box.x) for (const y of box.y) out.push(cub("hull-grey", [x - edge / 2, x + edge / 2], [y - edge / 2, y + edge / 2], box.z));
+  for (const z of box.z) for (const y of box.y) out.push(cub("hull-grey", box.x, [y - edge / 2, y + edge / 2], [z - edge / 2, z + edge / 2]));
   return out;
 }
 
@@ -123,10 +131,11 @@ export function catwalk(y0: number, y1: number, x: number, z: number, width = 1.
   return out;
 }
 
-/** A pipe run from a to b with a clamp at each end and a valve block part way: for the feed lines. */
+/** A pipe run from a to b: a round tube with a bend half way, flanges at the ends and a valve block on it, for the feed lines. */
 export function pipe(a: Vec3, b: Vec3, r: number, material: MaterialName = "coolant"): Piece[] {
   const mid: Vec3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
-  return [rod(material, a, b, r, 8), rod("hull-grey-dark", [mid[0], mid[1] - 0.5 * r * 2, mid[2]], [mid[0], mid[1] + 0.5 * r * 2, mid[2]], r * 1.7, 8), rod("lamp-amber", [mid[0], mid[1] + r * 1.7, mid[2]], [mid[0], mid[1] + r * 2.2, mid[2]], r * 0.6, 6)];
+  const bend: Vec3 = [b[0], a[1] * 0.5 + mid[1] * 0.5, a[2]];
+  return [...pipeRun(material, [a, bend, b], r, { clampEvery: 3.5 }), rod("hull-grey-dark", [mid[0], mid[1] - r * 1.1, mid[2]], [mid[0], mid[1] + r * 1.1, mid[2]], r * 1.7, 12), rod("lamp-amber", [mid[0], mid[1] + r * 1.1, mid[2]], [mid[0], mid[1] + r * 1.5, mid[2]], r * 0.6, 8)];
 }
 
 export { rail };
