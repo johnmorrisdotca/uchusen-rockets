@@ -1399,7 +1399,7 @@ test("the code builder is one screen of choices, and writes the code for exactly
   const problems = watch(page);
   await page.goto(`${URL}builder.html`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
-  const code = page.locator('[data-testid="builder-code"]');
+  const code = page.locator('#embed-panel [part="code"]');
   await expect(code).toContainText('rocket="starship"');
   await page.locator('[data-testid="rocket-falcon-9"]').click();
   await page.locator('[data-testid="variant-block-5"]').click();
@@ -1409,13 +1409,13 @@ test("the code builder is one screen of choices, and writes the code for exactly
   await expect(code).toContainText('variant="block-5"');
   await expect(code).toContainText('look="thick"');
   await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-show", "apart");
-  await expect(page.locator('[data-testid="builder-credit"]')).toBeHidden();
-  await page.locator('[data-testid="kind-iframe"]').click();
+  await expect(page.locator('#embed-panel [part="credits"]')).toBeHidden();
+  await page.locator('#embed-panel button[data-kind="iframe"]').click();
   await expect(code).toContainText("embed.html?");
-  await expect(page.locator('[data-testid="builder-open"]')).toHaveAttribute("href", /embed\.html\?.*look=thick/);
+  await expect(page.locator('#embed-panel [part="open"]')).toHaveAttribute("href", /embed\.html\?.*look=thick/);
   // a painted rocket carries its credit into the page
   await page.locator('[data-testid="look-painted"]').click();
-  await expect(page.locator('[data-testid="builder-credit"]')).toBeVisible();
+  await expect(page.locator('#embed-panel [part="credits"]')).toBeVisible();
   // a maker's rockets are a row of their own, and nothing scrolls sideways
   await page.locator('[data-testid="maker-nasa"]').click();
   await expect(page.locator('[data-testid="rocket-saturn-v"]')).toBeVisible();
