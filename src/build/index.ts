@@ -336,5 +336,5 @@ export function buildPart(id: string): { record: PartRecord; bounds: Bounds; glb
 
 export { toGlb };
 export type { Glb };
-export { COMPARES, lineupSvg } from "./lineup.ts";
+export { COMPARES, lineupSvg, REAL_CRAFT } from "./lineup.ts";
 export type { CompareId, LineupItem, LineupOptions } from "./lineup.ts";
