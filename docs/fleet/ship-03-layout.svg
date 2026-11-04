@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="755" viewBox="0 0 1160 755" role="img" aria-labelledby="title desc">
+  <title id="title">ICV-03 Waymark — design stations</title>
+  <desc id="desc">Original design-review drawing. A straight narrow spine connects two offset hangar shoulders, a blunt armoured bow and a tail with twin recessed drive nozzles. A separate schematic shows fuel, medical and command spaces.</desc>
+  <defs>
+    <style>
+      .bg{fill:#111f2a}.card{fill:#172a37;stroke:#36505d}.hull{fill:#e4e8dc;stroke:#91a6a9;stroke-width:1.1}.frame{fill:#3c5560;stroke:#77939c;stroke-width:1.1}.hot{fill:#d7885a;stroke:#f2b792;stroke-width:1}.service{fill:#d9b55d;stroke:#f0d68f;stroke-width:1}.fuel{fill:#40636e;stroke:#81b6be;stroke-width:1}.line{fill:none;stroke:#7b9da9;stroke-width:1}.axis{fill:none;stroke:#557480;stroke-width:1;stroke-dasharray:5 5}.dark{fill:#132633;stroke:#8aabae;stroke-width:1}.title{font:700 34px system-ui,sans-serif;fill:#f4f0de}.sub{font:14px system-ui,sans-serif;fill:#b7c9cc}.label{font:700 13px system-ui,sans-serif;fill:#f1df9f;letter-spacing:1.7px}.small{font:12px system-ui,sans-serif;fill:#c6d5d5}.micro{font:11px system-ui,sans-serif;fill:#c6d5d5}
+    </style>
+    <g id="tail"><path class="frame" d="M0-28H27L58-18V18L27 28H0Z"/><path class="hot" d="M1-24H12V24H1Z"/></g>
+    <g id="bow"><path class="hull" d="M348-17L367-25H374L380-18V18L374 25H367L348 17Z"/><path class="hot" d="M367-25H374L380-18V18L374 25H367L372 18V-18Z"/></g>
+  </defs>
+  <rect width="1160" height="755" class="bg"/>
+  <text x="36" y="48" class="title">ICV–03 / WAYMARK</text>
+  <text x="38" y="74" class="sub">Expedition command vessel · Layout for design review · Stowed envelope 380 × 118 × 74 m</text>
+  <text x="1124" y="50" text-anchor="end" class="label">FLEET STUDY / 03</text>
+
+  <rect x="32" y="99" width="720" height="229" rx="9" class="card"/>
+  <text x="50" y="124" class="label">01 / TOP PLAN</text>
+  <path d="M80 208H713" class="axis"/>
+  <g transform="translate(92 208) scale(1.56)">
+    <path class="frame" d="M0-9H356V9H0Z"/><use href="#tail"/><use href="#bow"/>
+    <path class="hull" d="M104 19L113 24H122V59H193L204 49V24L197 19Z"/>
+    <path class="hull" d="M222-19L229-24V-48L240-59H307L318-48V-24L310-19Z"/>
+    <path class="hot" d="M122 41H131V58H122Z M248-59H281V-52H248Z"/>
+    <path class="line" d="M140 25V55 M158 25V55 M177 25V55 M195 25V49 M242-55V-25 M260-51V-25 M281-51V-25 M302-55V-25"/>
+    <path class="frame" d="M58-16H92V16H58Z M92-13H169V13H92Z M235-14H303V14H235Z"/>
+    <path class="service" d="M174-12H234V12H174Z"/>
+    <path class="hull" d="M302-16L310-21H341L350-15V15L341 21H310L302 16Z"/>
+    <path class="line" d="M62-14V14 M90-14V14 M181-10V10 M227-10V10 M313-16V16 M337-16V16"/>
+  </g>
+  <text x="51" y="316" class="small">Two offset shoulders · open service recess · rectangular shield nose</text>
+  <text x="708" y="316" class="small" text-anchor="end">BOW → +Y</text>
+
+  <rect x="32" y="342" width="720" height="191" rx="9" class="card"/>
+  <text x="50" y="367" class="label">02 / STARBOARD ELEVATION</text>
+  <path d="M80 439H713" class="axis"/>
+  <g transform="translate(92 439) scale(1.56)">
+    <path class="frame" d="M0-8H356V10H0Z"/><use href="#tail" transform="scale(1 .67)"/><use href="#bow" transform="scale(1 .72)"/>
+    <rect class="fuel" x="92" y="4" width="72" height="20" rx="8"/><rect class="fuel" x="174" y="4" width="72" height="20" rx="8"/>
+    <path class="hull" d="M104 0V-21L114-30H194L204-21V0Z"/>
+    <path class="hull" d="M222 0V-18L234-26H304L318-18V0Z"/>
+    <path class="service" d="M174-12V-31H234V-14L222-12Z"/>
+    <path class="hull" d="M302-10V-22L316-33H340L350-20V-10Z"/>
+    <path class="line" d="M123-24V-3 M144-24V-3 M166-24V-3 M189-24V-3 M238-22V-3 M259-22V-3 M281-22V-3 M301-22V-3"/>
+    <path class="hot" d="M104-20H115V-4H104Z"/>
+    <path class="axis" d="M0-37H380 M0 37H380"/>
+  </g>
+  <g class="micro">
+    <text x="92" y="518">0 / TAIL</text><text x="232" y="518">90</text><text x="363" y="518">174</text><text x="482" y="518">250</text><text x="685" y="518" text-anchor="end">380 m / BOW</text>
+  </g>
+
+  <rect x="768" y="99" width="360" height="204" rx="9" class="card"/>
+  <text x="787" y="124" class="label">03 / FRONT</text>
+  <g transform="translate(948 212) scale(1.7)">
+    <path class="axis" d="M-68 0H68M0-44V44"/>
+    <path class="hull" d="M-59-18H-18V14H-55L-59 9Z M18-21H54L59-16V13H18Z"/>
+    <path class="frame" d="M-30 7H30V29H-30Z"/>
+    <path class="hot" d="M-25-12L-15-24H15L25-12V11L16 21H-16L-25 11Z"/>
+    <path class="hull" d="M-17-8L-10-16H10L17-8V8L11 14H-11L-17 8Z"/>
+    <path class="dark" d="M-24-28H-12V-21H-24Z M12-28H24V-21H12Z"/>
+    <path class="line" d="M-47-15V10 M-36-15V10 M37-16V10 M48-16V10"/>
+  </g>
+  <text x="787" y="285" class="small">Spaced shield layers and paired ranging apertures</text>
+
+  <rect x="768" y="317" width="360" height="216" rx="9" class="card"/>
+  <text x="787" y="343" class="label">04 / REAR</text>
+  <g transform="translate(948 431) scale(1.7)">
+    <path class="axis" d="M-68 0H68M0-44V44"/>
+    <path class="hull" d="M-59-16H-19V10H-59Z M19-17H59V9H19Z"/>
+    <path class="frame" d="M-40-14L-26-25H26L40-14V14L28 23H-28L-40 14Z"/>
+    <circle class="hot" cx="-22" cy="0" r="14"/><circle class="hot" cx="22" cy="0" r="14"/>
+    <circle class="dark" cx="-22" cy="0" r="10"/><circle class="dark" cx="22" cy="0" r="10"/>
+    <circle class="line" cx="-22" cy="0" r="6"/><circle class="line" cx="22" cy="0" r="6"/>
+    <g class="service"><circle cx="-42" cy="-15" r="4"/><circle cx="42" cy="-15" r="4"/><circle cx="-42" cy="15" r="4"/><circle cx="42" cy="15" r="4"/></g>
+  </g>
+  <text x="787" y="512" class="small">Two main throats · four plasma verniers</text>
+
+  <rect x="32" y="548" width="1096" height="164" rx="9" class="card"/>
+  <text x="50" y="574" class="label">05 / INTERIOR STATIONS — PLANNED CUTAWAY</text>
+  <g transform="translate(71 613) scale(2.63)">
+    <path class="axis" d="M0 0H380"/>
+    <rect class="hot" x="0" y="-7" width="58" height="14" rx="2"/>
+    <rect class="frame" x="58" y="-7" width="32" height="14" rx="2"/>
+    <rect class="fuel" x="92" y="1" width="72" height="7" rx="2"/>
+    <rect class="fuel" x="174" y="1" width="72" height="7" rx="2"/>
+    <rect class="hull" x="104" y="-10" width="100" height="8" rx="2"/>
+    <rect class="hull" x="222" y="-10" width="96" height="8" rx="2"/>
+    <rect class="service" x="174" y="-19" width="60" height="7" rx="2"/>
+    <rect class="hull" x="252" y="0" width="50" height="8" rx="2"/>
+    <rect class="service" x="302" y="0" width="48" height="8" rx="2"/>
+    <rect class="hot" x="350" y="-7" width="30" height="14" rx="2"/>
+  </g>
+  <g class="small">
+    <text x="71" y="664">Main drive</text><text x="224" y="664">Power</text><text x="329" y="664">Lower tanks / two pairs</text>
+    <text x="734" y="664">Hab + medical</text><text x="881" y="664">Command</text><text x="994" y="664">Shield</text>
+    <text x="344" y="690">Starboard rescue bay</text><text x="536" y="690">Mission collar</text><text x="656" y="690">Port survey bay</text>
+  </g>
+  <text x="35" y="738" class="sub">Original schematic · proposed dimensions · no external artwork · no 3D geometry approved at this stage</text>
+</svg>
