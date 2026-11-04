@@ -100,7 +100,7 @@ window.draw = async (job, shot) => {
   camera.lookAt(...shot.target);
   const target = new THREE.Vector3(...shot.target);
   const dir = new THREE.Vector3(0.5, 0.7, 0.6).normalize();
-  const sun = new THREE.DirectionalLight("#fff3e0", shot.look === "line" ? 0 : shot.look === "lit" ? 0.55 : 2.6);
+  const sun = new THREE.DirectionalLight("#fff3e0", shot.look === "line" ? 0 : shot.look === "lit" ? 0.3 : 2.6);
   const r = shot.shadow ?? 200;
   sun.position.copy(target).addScaledVector(dir, r * 3);
   sun.target.position.copy(target);
@@ -114,13 +114,13 @@ window.draw = async (job, shot) => {
   for (const g of shot.glows ?? []) { const m = new THREE.Mesh(new THREE.SphereGeometry(g.size, 12, 8), new THREE.MeshBasicMaterial({ color: g.color })); m.position.set(...g.at); scene.add(m); const halo = new THREE.Mesh(new THREE.SphereGeometry(g.size * 3, 12, 8), new THREE.MeshBasicMaterial({ color: g.color, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending })); halo.position.set(...g.at); scene.add(halo); }
   for (const p of shot.plumes ?? []) {
     const dir = new THREE.Vector3(...p.dir).normalize();
-    for (const [k, c, o] of [[1, '#4aa8ff', 0.28], [0.62, '#b8e4ff', 0.42], [0.3, '#ffffff', 0.7]]) {
+    for (const [k, c, o] of [[1, '#4aa8ff', 0.16], [0.62, '#b8e4ff', 0.26], [0.3, '#ffffff', 0.5]]) {
       const cone = new THREE.Mesh(new THREE.ConeGeometry(p.r * k, p.len * (0.55 + 0.45 * k), 28, 1, true), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
       cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
       cone.position.set(...p.at).addScaledVector(dir, (p.len * (0.55 + 0.45 * k)) / 2);
       scene.add(cone);
     }
-    const light = new THREE.PointLight('#7fc4ff', 40000, p.len * 3, 1.6); light.position.set(...p.at).addScaledVector(dir, p.r * 0.6); scene.add(light);
+    const light = new THREE.PointLight('#7fc4ff', 1800, p.len * 3, 1.6); light.position.set(...p.at).addScaledVector(dir, p.r * 0.6); scene.add(light);
   }
   for (const sp of shot.spots ?? []) { const l = new THREE.SpotLight(sp.color, sp.intensity, 0, sp.angle, 0.4, 1); l.position.set(...sp.at); l.target.position.set(...sp.target); scene.add(l, l.target); }
   renderer.render(scene, camera);
