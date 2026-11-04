@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { BESIDE_GAP } from "../src/beside.ts";
-import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside, check, partEntry, ROCKETS, variantOf } from "../src/index.ts";
+import { BESIDE_ROCKET, besideBounds, besideLabel, besideLayout, canBeside, check, partEntry, ROCKETS, variantOf } from "../src/index.ts";
 import { build } from "../src/build/index.ts";
 
 const alone = (rocket: string, variant?: string) => build({ rocket, ...(variant ? { variant } : {}) });
@@ -115,4 +115,12 @@ test("beside costs a tenth of the build budget at most: a heavy craft is built b
   const start = performance.now();
   build({ rocket: "saturn-v" }, { beside: true }).glb();
   assert.ok(performance.now() - start <= 1000, "one craft and its file, inside a second");
+});
+
+test("the label names what stands beside the craft and says its sourced length", () => {
+  const height = variantOf("starship", "v3")?.facts.height.value;
+  assert.equal(height, 124.4);
+  assert.equal(besideLabel(), "Starship with Super Heavy, 124.4 m");
+  // it is the stack the build puts there, at that height
+  assert.ok(Math.abs(build({ rocket: "saturn-v" }, { beside: true }).boundsOf("together").max[1] - (height as number)) < 1e-6);
 });

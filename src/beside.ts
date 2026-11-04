@@ -2,6 +2,7 @@
 import type { Description } from "./fit.ts";
 import type { Vec3 } from "./framing.ts";
 import type { Bounds } from "./model/pieces.ts";
+import { variantOf } from "./rockets.ts";
 
 /**
  * The rocket that can stand beside another for scale: the real Starship stack, Super Heavy and the ship, Block 3. Beside another craft it is drawn in this package's own paint, so no licensed model comes in unseen.
@@ -14,6 +15,25 @@ import type { Bounds } from "./model/pieces.ts";
  * ```
  */
 export const BESIDE_ROCKET: Readonly<Description> = { rocket: "starship", variant: "v3" };
+
+/** What the stack beside is called. */
+export const BESIDE_NAME = "Starship with Super Heavy";
+
+/**
+ * The words that say what the craft beside it is: its name and its sourced length, such as "Starship with Super Heavy, 124.4 m".
+ *
+ * @returns The label the 3D view puts under the stack.
+ * @example
+ * ```ts
+ * import { besideLabel } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(besideLabel());
+ * ```
+ */
+export function besideLabel(): string {
+  const height = variantOf(BESIDE_ROCKET.rocket, BESIDE_ROCKET.variant)?.facts.height.value;
+  return typeof height === "number" ? `${BESIDE_NAME}, ${height.toLocaleString("en-US")} m` : BESIDE_NAME;
+}
 
 /** The least room between the two, in metres. */
 export const BESIDE_GAP = 4;

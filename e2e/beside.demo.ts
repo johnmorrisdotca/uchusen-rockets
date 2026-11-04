@@ -57,6 +57,17 @@ test("Beside it: Starship stands beside the craft, the toggle is in the address 
     await bothInView(page, "saturn-v");
   }
 
+  if (is3d(browserName)) {
+    // what stands beside it is named, under its foot and inside the picture
+    const label = hero(page).locator("[data-beside-label]");
+    await expect(label).toHaveText("Starship with Super Heavy, 124.4 m");
+    await expect(label).toBeVisible();
+    const [canvas, words] = await Promise.all([hero(page).locator("canvas").boundingBox(), label.boundingBox()]);
+    expect(words!.x).toBeGreaterThanOrEqual(canvas!.x - 1);
+    expect(words!.x + words!.width).toBeLessThanOrEqual(canvas!.x + canvas!.width + 1);
+    expect(words!.y + words!.height).toBeLessThanOrEqual(canvas!.y + canvas!.height + 1);
+  }
+
   // a reload keeps it
   await page.reload();
   await expect(toggle(page)).toHaveAttribute("aria-pressed", "true");
@@ -79,6 +90,7 @@ test("Beside it: Starship stands beside the craft, the toggle is in the address 
   await toggle(page).click();
   await expect(hero(page)).toHaveAttribute("data-beside", "off");
   await expect.poll(() => param(page, "beside")).toBeNull();
+  if (is3d(browserName)) await expect(hero(page).locator("[data-beside-label]")).toHaveCount(0);
   await page.goto(`${URL}?rocket=starship&beside=on`);
   await expect(toggle(page)).toBeHidden();
   await expect(hero(page)).toHaveAttribute("data-beside", "off");
