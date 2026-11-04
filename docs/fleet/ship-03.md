@@ -1,17 +1,17 @@
-# SPX-03 WAYMARK
+# SPX-03 宮本 MIYAMOTO
 
-**道標（みちしるべ） · Michishirube · Waymark** — literally a marker that shows the way. The kanji have another reading, so the reading is kept at first mention. A language review passed; a native reader's check is still to come.
+**宮本 · Miyamoto** — "at the foot of the shrine". Flagship. The stately ship that commands the whole fleet.
 
 | | |
 |---|---|
-| Designation | SPX-ICV-03 (fleet number 03), the Waymark-class expedition command vessel |
+| Designation | SPX-ICV-03 (fleet number 03), the flagship and command vessel |
 | Maker | SPX |
 | Status | PLANNED · FIRST FLIGHT 2456 |
 | Programme | Approved 2448 · keel laid at the orbital yard 2452 (planned) · first flight 2456 (planned) · entry into service 2459 (planned) |
 
-![Waymark exterior catalogue: top, side, front, rear and radiator deployment](ship-03-layout.svg)
+![Miyamoto exterior catalogue: top, side, front, rear and radiator deployment](ship-03-layout.svg)
 
-![Waymark offset longitudinal cutaway with medical and nozzle detail](ship-03-cutaway.svg)
+![Miyamoto offset longitudinal cutaway with medical and nozzle detail](ship-03-cutaway.svg)
 
 Every number on this page is a design target of the programme. The ship is built in code from tables of metres in `src/model/fleet/ship-03/` and joins the other craft of the package as four variants: stowed, radiators out, relief pod, and cutaway.
 
@@ -126,7 +126,7 @@ Every deck and section is its own part group in the registry and can be shown al
 
 ## System insets
 
-The fleet's four (reactor core, navigation and sensor suite, life support, docking port) are shared by every ship. Waymark adds three of its own, each with six numbered sub-parts that come apart: the command citadel (communications core, operations ring, navigation desk, medical link, escape passage, armour laminate), the hangars (bay door and shutters, gantry crane, rescue cutter, maintenance racks, pressure vestibule, drone rack) and the medical bay (triage berth, monitor arm and curtain rail, quarantine room, transfer lock, air and power isolation, medical stores).
+The fleet's four (reactor core, navigation and sensor suite, life support, docking port) are shared by every ship. Miyamoto adds three of its own, each with six numbered sub-parts that come apart: the command citadel (communications core, operations ring, navigation desk, medical link, escape passage, armour laminate), the hangars (bay door and shutters, gantry crane, rescue cutter, maintenance racks, pressure vestibule, drone rack) and the medical bay (triage berth, monitor arm and curtain rail, quarantine room, transfer lock, air and power isolation, medical stores).
 
 ## Real ancestors
 

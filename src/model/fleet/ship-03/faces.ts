@@ -1,4 +1,4 @@
-// Detail on the flat faces of Waymark's boxy hull: plating in rows with a gap between, hatches, vents, conduits, rails, ladders, lamps, bolts and our own stencils. A face is one side of an axis-aligned box. Its two
+// Detail on the flat faces of Miyamoto's boxy hull: plating in rows with a gap between, hatches, vents, conduits, rails, ladders, lamps, bolts and our own stencils. A face is one side of an axis-aligned box. Its two
 // surface axes follow the cycle x -> y -> z: on an X face they are Y then Z, on a Y face Z then X, on a Z face X then Y. Everything stands off the surface by a few centimetres up to a metre, so a close view has depth.
 // All of it is plain pieces, mesh only unless said, and the same description gives the same bytes. Pure: no three.js and no DOM.
 import { beam, cub, type MaterialName, type Piece, rng, rod, type Vec3 } from "./adapter.ts";

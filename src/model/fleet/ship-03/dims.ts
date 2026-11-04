@@ -1,4 +1,4 @@
-// Waymark's numbers in metres: every station and every box of the hull, in one place, so the parts, the sheets and the tests read the same table. X is across the beam (starboard +), Y is up the spine from the
+// Miyamoto's numbers in metres: every station and every box of the hull, in one place, so the parts, the sheets and the tests read the same table. X is across the beam (starboard +), Y is up the spine from the
 // tail to the bow, Z is dorsal (up from the keel). The stowed envelope is 380 x 118 x 74 m. Pure: no three.js and no DOM.
 
 /** The stowed envelope: length (Y), beam (X, both hangar shoulders) and height (Z, keel to the dorsal collar's payload). */

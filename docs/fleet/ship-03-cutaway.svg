@@ -1,0 +1,389 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1060" viewBox="0 0 1440 1060" role="img">
+<title>ICV–03 / MIYAMOTO</title>
+<defs>
+<pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+<path d="M20 0H0V20" fill="none" stroke="#283b49" stroke-width=".65"/>
+</pattern>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse">
+<path d="M0 4L4 0" fill="none" stroke="#90a6a9" stroke-width=".5"/>
+</pattern>
+<pattern id="fin" width="3" height="3" patternUnits="userSpaceOnUse">
+<path d="M0 1.5H3" fill="none" stroke="#799fa8" stroke-width=".32"/>
+</pattern>
+<pattern id="tile" width="6" height="5" patternUnits="userSpaceOnUse">
+<path d="M0 0H6V5" fill="none" stroke="#653d35" stroke-width=".35"/>
+</pattern>
+<marker id="arrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto-start-reverse">
+<path d="M1 1L6 3.5L1 6" fill="none" stroke="#83afbc"/>
+</marker>
+<style>
+.bg{fill:#101b26}.pane{fill:#152632;stroke:#38505a}.grid{fill:url(#grid)}.hull{fill:#c9d6cf;stroke:#b3d4d4;stroke-width:.65}.shadow{fill:#819fa4;stroke:#b3d4d4;stroke-width:.55}.structure{fill:#496571;stroke:#a0c5cd;stroke-width:.65}.dark{fill:#203744;stroke:#8bafba;stroke-width:.6}.heat{fill:#cf835d;stroke:#f7bd8a;stroke-width:.6}.service{fill:#dbb86f;stroke:#f1d28a;stroke-width:.6}.glass{fill:#326779;stroke:#a1d6da;stroke-width:.55}.seam{fill:none;stroke:#496875;stroke-width:.42}.wire{fill:none;stroke:#8ac4d0;stroke-width:.6}.fine{fill:none;stroke:#e0bb7f;stroke-width:.58}.bolt{fill:#385664}.pin{fill:#c4e3df}.axis,.guide{fill:none;stroke:#658796;stroke-width:.65;stroke-dasharray:4 4}.cut{fill:url(#hatch);stroke:#bed3cd;stroke-width:.6}.fin{fill:url(#fin);stroke:#97bac1;stroke-width:.65}.tile{fill:url(#tile);stroke:#eab088;stroke-width:.6}.dim{stroke:#83afbc;stroke-width:1;marker-start:url(#arrow);marker-end:url(#arrow)}.lead{stroke:#86abb5;stroke-width:1;fill:none}.t{font:700 41px system-ui,sans-serif;fill:#f2ecd7}.sub{font:16px system-ui,sans-serif;fill:#bfccd0}.id{font:700 14px system-ui,sans-serif;fill:#edcf8e;letter-spacing:2px}.txt{font:15px system-ui,sans-serif;fill:#d3e2de}.small{font:13px system-ui,sans-serif;fill:#abc4c9}.num{font:700 13px system-ui,sans-serif;fill:#10242d}.badge{fill:#f1d594}
+</style>
+<g id="hatch-unit">
+<rect width="8" height="4.8" rx="1" class="shadow"/>
+<rect x="1" y=".8" width="6" height="3.2" rx=".7" class="seam"/>
+<path d="M2 2.4H4.4" class="seam"/>
+<circle cx="6" cy="2.4" r=".45" class="bolt"/>
+</g>
+<g id="vents">
+<rect width="8.5" height="3.5" rx=".5" class="dark"/>
+<path d="M1.4.7V2.8M3.3.7V2.8M5.2.7V2.8M7.1.7V2.8" class="wire"/>
+</g>
+<g id="collar">
+<circle r="11" class="dark"/>
+<circle r="9.4" class="service"/>
+<circle r="7.5" class="structure"/>
+<circle r="5.7" class="dark"/>
+<path d="M-6 0H6M0-6V6" class="wire"/>
+<path d="M-2-9H2M-2 9H2M9-2V2M-9-2V2" class="seam"/>
+<g class="bolt">
+<circle cx="6.3" cy="-6.3" r=".85"/>
+<circle cx="-6.3" cy="-6.3" r=".85"/>
+<circle cx="6.3" cy="6.3" r=".85"/>
+<circle cx="-6.3" cy="6.3" r=".85"/>
+</g>
+</g>
+<g id="vernier">
+<circle r="4.2" class="structure"/>
+<circle r="3" class="service"/>
+<circle r="1.7" class="dark"/>
+</g>
+</defs>
+<rect width="1440" height="1060" class="bg"/>
+<text x="37" y="57" class="t" text-anchor="start">ICV–03 / MIYAMOTO</text>
+<text x="40" y="86" class="sub" text-anchor="start">Longitudinal section and interior details · bow to the right</text>
+<text x="1400" y="55" class="id" text-anchor="end">FLEET CATALOGUE / 03-B</text>
+<rect x="32" y="109" width="1376" height="428" rx="10" class="pane"/>
+<rect x="39" y="141" width="1362" height="388" rx="0" class="grid"/>
+<text x="50" y="132" class="id" text-anchor="start">01 / OFFSET SECTION A–A   ·   STARBOARD RESCUE BAY OPEN</text>
+<line x1="180" y1="185" x2="1282" y2="185" class="dim"/>
+<text x="731" y="174" class="small" text-anchor="middle">380 m between tail and bow datum</text>
+<g transform="translate(180 346) scale(2.9)">
+<path d="M0-22L9-26H29L57-14H88L99-10H287L303-19L315-31H341L352-17H363L371-22L380-14V14L372 21H361L349 13H58L30 24H6L0 19Z" class="cut"/>
+<path d="M2-19L10-23H28L56-11H89L100-7H289L306-17L316-28H340L352-14H364L371-19L378-13V13L371 18H362L349 10H57L29 21H7L2 17Z" class="dark"/>
+<path d="M0-14L19-5H36L45-10H56V10H45L36 5H19L0 14Z" class="structure"/>
+<path d="M0-12L19-3H36L45-8H54V8H45L36 3H19L0 12Z" class="glass"/>
+<path d="M10 -11v5M10 6v5" class="fine"/>
+<path d="M15 -11v5M15 6v5" class="fine"/>
+<path d="M20 -11v5M20 6v5" class="fine"/>
+<path d="M25 -11v5M25 6v5" class="fine"/>
+<path d="M30 -11v5M30 6v5" class="fine"/>
+<path d="M35 -11v5M35 6v5" class="fine"/>
+<path d="M41 -11v5M41 6v5" class="fine"/>
+<path d="M46 -11v5M46 6v5" class="fine"/>
+<path d="M51 -11v5M51 6v5" class="fine"/>
+<rect x="55" y="-11" width="3" height="22" rx="0" class="cut"/>
+<path d="M45-9l6-5h8v-5h18M45 9l6 5h8v5h18" class="wire"/>
+<path d="M60-12H88L93-7V8H60Z" class="structure"/>
+<rect x="62" y="-9" width="22" height="14" rx="2" class="heat"/>
+<rect x="64" y="-7" width="18" height="10" rx="2" class="dark"/>
+<rect x="68" y="-5.5" width="10" height="7" rx="3" class="glass"/>
+<path d="M66 -8v3m0 6v3" class="fine"/>
+<path d="M70 -8v3m0 6v3" class="fine"/>
+<path d="M74 -8v3m0 6v3" class="fine"/>
+<path d="M78 -8v3m0 6v3" class="fine"/>
+<path d="M82 -8v3m0 6v3" class="fine"/>
+<rect x="67" y="7" width="8" height="4" rx="1" class="service"/>
+<circle cx="70" cy="9" r="1.1" class="dark"/>
+<rect x="80" y="7" width="8" height="4" rx="1" class="service"/>
+<circle cx="83" cy="9" r="1.1" class="dark"/>
+<rect x="89" y="-10" width="2" height="21" rx="0" class="cut"/>
+<rect x="89.1" y="-2.4400000000000004" width="1.8" height="6.72" rx="0" class="service"/>
+<path d="M86-4H98L101-2H280L289 3H346" class="wire"/>
+<path d="M87 4H97L103 7H283L290 6H345" class="fine"/>
+<path d="M103 -2v9" class="seam"/>
+<path d="M115 -2v9" class="seam"/>
+<path d="M127 -2v9" class="seam"/>
+<path d="M139 -2v9" class="seam"/>
+<path d="M151 -2v9" class="seam"/>
+<path d="M163 -2v9" class="seam"/>
+<path d="M175 -2v9" class="seam"/>
+<path d="M187 -2v9" class="seam"/>
+<path d="M199 -2v9" class="seam"/>
+<path d="M211 -2v9" class="seam"/>
+<path d="M223 -2v9" class="seam"/>
+<path d="M235 -2v9" class="seam"/>
+<path d="M247 -2v9" class="seam"/>
+<path d="M259 -2v9" class="seam"/>
+<path d="M271 -2v9" class="seam"/>
+<path d="M283 -2v9" class="seam"/>
+<path d="M295 -2v9" class="seam"/>
+<path d="M307 -2v9" class="seam"/>
+<path d="M319 -2v9" class="seam"/>
+<path d="M331 -2v9" class="seam"/>
+<path d="M343 -2v9" class="seam"/>
+<rect x="92" y="11" width="72" height="13" rx="6" class="cut"/>
+<rect x="94" y="12" width="68" height="11" rx="5" class="glass"/>
+<path d="M97 16H159M97 20H159" class="wire"/>
+<rect x="101" y="11" width="1.8" height="13" rx="0.3" class="structure"/>
+<rect x="114" y="11" width="1.8" height="13" rx="0.3" class="structure"/>
+<rect x="142" y="11" width="1.8" height="13" rx="0.3" class="structure"/>
+<rect x="155" y="11" width="1.8" height="13" rx="0.3" class="structure"/>
+<path d="M109 11V8h7m36 3V8h-7" class="fine"/>
+<circle cx="126" cy="16" r="1.4" class="service"/>
+<rect x="174" y="11" width="72" height="13" rx="6" class="cut"/>
+<rect x="176" y="12" width="68" height="11" rx="5" class="glass"/>
+<path d="M179 16H241M179 20H241" class="wire"/>
+<rect x="183" y="11" width="1.8" height="13" rx="0.3" class="structure"/>
+<rect x="196" y="11" width="1.8" height="13" rx="0.3" class="structure"/>
+<rect x="224" y="11" width="1.8" height="13" rx="0.3" class="structure"/>
+<rect x="237" y="11" width="1.8" height="13" rx="0.3" class="structure"/>
+<path d="M191 11V8h7m36 3V8h-7" class="fine"/>
+<circle cx="208" cy="16" r="1.4" class="service"/>
+<path d="M104 3V-18L114-28H193L204-20V3H201V-18L192-25H115L107-17V3Z" class="cut"/>
+<path d="M107-17L115-25H192L201-18V1H107Z" class="dark"/>
+<path d="M110 -2V-19H159V-2M111 -17H158M139.4 -17v7.31l-1.7 1.6h3.4" class="fine"/>
+<path d="M111 -19l2 2l2 -2" class="fine"/>
+<path d="M115 -19l2 2l2 -2" class="fine"/>
+<path d="M119 -19l2 2l2 -2" class="fine"/>
+<path d="M123 -19l2 2l2 -2" class="fine"/>
+<path d="M127 -19l2 2l2 -2" class="fine"/>
+<path d="M131 -19l2 2l2 -2" class="fine"/>
+<path d="M135 -19l2 2l2 -2" class="fine"/>
+<path d="M139 -19l2 2l2 -2" class="fine"/>
+<path d="M143 -19l2 2l2 -2" class="fine"/>
+<path d="M147 -19l2 2l2 -2" class="fine"/>
+<path d="M151 -19l2 2l2 -2" class="fine"/>
+<path d="M109-3H161M109 0H163" class="fine"/>
+<path d="M115-4l5-2 5-5h9l6 4 11 2v2h-36Z" class="shadow"/>
+<path d="M127-10h6l5 4h-12Z" class="glass"/>
+<use href="#hatch-unit" x="171" y="-9"/>
+<use href="#vents" x="171" y="-21"/>
+<use href="#hatch-unit" x="182" y="-9"/>
+<use href="#vents" x="182" y="-21"/>
+<use href="#hatch-unit" x="193" y="-9"/>
+<use href="#vents" x="193" y="-21"/>
+<rect x="162" y="-21" width="2" height="22" rx="0" class="cut"/>
+<rect x="162.1" y="-13.08" width="1.8" height="7.04" rx="0" class="service"/>
+<rect x="197" y="-16" width="2" height="18" rx="0" class="cut"/>
+<rect x="197.1" y="-9.52" width="1.8" height="5.76" rx="0" class="service"/>
+<path d="M174-26L179-34H229L235-26V-13H174Z" class="cut"/>
+<rect x="180" y="-31" width="48" height="14" rx="2" class="dark"/>
+<rect x="197" y="-37" width="16" height="6" rx="1" class="service"/>
+<rect x="201" y="-37" width="8" height="20" rx="1" class="structure"/>
+<path d="M198 -37v4m0 11v5" class="fine"/>
+<path d="M212 -37v4m0 11v5" class="fine"/>
+<rect x="198" y="-17" width="14" height="4" rx="0" class="cut"/>
+<path d="M207-20v7l-5 6M203-21v8l-7 7" class="wire"/>
+<path d="M225-8V-17L237-27H301L317-17V-7H314V-16L300-24H238L228-16V-8Z" class="cut"/>
+<path d="M228-16L238-24H300L314-16V-8H228Z" class="structure"/>
+<path d="M236 -10V-21H293V-10M237 -19H292M270.2 -19v4.7299999999999995l-1.7 1.6h3.4" class="fine"/>
+<path d="M237 -21l2 2l2 -2" class="fine"/>
+<path d="M241 -21l2 2l2 -2" class="fine"/>
+<path d="M245 -21l2 2l2 -2" class="fine"/>
+<path d="M249 -21l2 2l2 -2" class="fine"/>
+<path d="M253 -21l2 2l2 -2" class="fine"/>
+<path d="M257 -21l2 2l2 -2" class="fine"/>
+<path d="M261 -21l2 2l2 -2" class="fine"/>
+<path d="M265 -21l2 2l2 -2" class="fine"/>
+<path d="M269 -21l2 2l2 -2" class="fine"/>
+<path d="M273 -21l2 2l2 -2" class="fine"/>
+<path d="M277 -21l2 2l2 -2" class="fine"/>
+<path d="M281 -21l2 2l2 -2" class="fine"/>
+<path d="M285 -21l2 2l2 -2" class="fine"/>
+<path d="M237-11H301M239-14H297" class="wire"/>
+<path d="M248-8V-3H302V10H248Z" class="dark"/>
+<path d="M250 8H300" class="wire"/>
+<path d="M253 -5v14" class="cut"/>
+<path d="M259 -5v14" class="cut"/>
+<path d="M265 -5v14" class="cut"/>
+<path d="M271 -5v14" class="cut"/>
+<path d="M277 -5v14" class="cut"/>
+<path d="M283 -5v14" class="cut"/>
+<path d="M289 -5v14" class="cut"/>
+<path d="M295 -5v14" class="cut"/>
+<path d="M301 -5v14" class="cut"/>
+<rect x="254" y="2" width="3.8" height="2" rx="0.4" class="service"/>
+<rect x="260" y="2" width="3.8" height="2" rx="0.4" class="service"/>
+<rect x="266" y="2" width="3.8" height="2" rx="0.4" class="service"/>
+<rect x="272" y="2" width="3.8" height="2" rx="0.4" class="service"/>
+<rect x="278" y="2" width="3.8" height="2" rx="0.4" class="service"/>
+<rect x="284" y="2" width="3.8" height="2" rx="0.4" class="service"/>
+<rect x="290" y="2" width="3.8" height="2" rx="0.4" class="service"/>
+<rect x="296" y="2" width="3.8" height="2" rx="0.4" class="service"/>
+<path d="M302-8V-20L316-32H341L352-17V10H348V-16L340-29H317L306-18V-8Z" class="cut"/>
+<path d="M306-17L318-29H339L348-16V9H306Z" class="dark"/>
+<path d="M308 7H346M311-4H345M318-15H342" class="wire"/>
+<path d="M312 5v-3h4v2h-2" class="glass"/>
+<circle cx="311.4" cy="5.4" r="0.7" class="service"/>
+<path d="M322 5v-3h4v2h-2" class="glass"/>
+<circle cx="321.4" cy="5.4" r="0.7" class="service"/>
+<path d="M331 5v-3h4v2h-2" class="glass"/>
+<circle cx="330.4" cy="5.4" r="0.7" class="service"/>
+<path d="M340 5v-3h4v2h-2" class="glass"/>
+<circle cx="339.4" cy="5.4" r="0.7" class="service"/>
+<path d="M315 -6v-3h4v2h-2" class="glass"/>
+<circle cx="314.4" cy="-5.6" r="0.7" class="service"/>
+<path d="M324 -6v-3h4v2h-2" class="glass"/>
+<circle cx="323.4" cy="-5.6" r="0.7" class="service"/>
+<path d="M335 -6v-3h4v2h-2" class="glass"/>
+<circle cx="334.4" cy="-5.6" r="0.7" class="service"/>
+<path d="M324 -17v-3h4v2h-2" class="glass"/>
+<circle cx="323.4" cy="-16.6" r="0.7" class="service"/>
+<path d="M332 -17v-3h4v2h-2" class="glass"/>
+<circle cx="331.4" cy="-16.6" r="0.7" class="service"/>
+<rect x="308" y="-5" width="2" height="14" rx="0" class="cut"/>
+<rect x="308.1" y="0.040000000000000036" width="1.8" height="4.48" rx="0" class="service"/>
+<rect x="344" y="-5" width="2" height="14" rx="0" class="cut"/>
+<rect x="344.1" y="0.040000000000000036" width="1.8" height="4.48" rx="0" class="service"/>
+<path d="M327-30v-6h5M339-28l5-7h6M350-11l7-3v-5h4" class="wire"/>
+<circle cx="333" cy="-36" r="1.4" class="glass"/>
+<circle cx="351" cy="-35" r="1.7" class="glass"/>
+<rect x="352" y="-12" width="5" height="24" rx="0.65" class="heat"/>
+<rect x="352.45" y="-11" width="4.1" height="22" rx="0.4" class="tile"/>
+<rect x="360" y="-16" width="5" height="32" rx="0.65" class="heat"/>
+<rect x="360.45" y="-15" width="4.1" height="30" rx="0.4" class="tile"/>
+<rect x="368" y="-18" width="5" height="36" rx="0.65" class="heat"/>
+<rect x="368.45" y="-17" width="4.1" height="34" rx="0.4" class="tile"/>
+<rect x="376" y="-13" width="4" height="26" rx="0.65" class="heat"/>
+<rect x="376.45" y="-12" width="3.1" height="24" rx="0.4" class="tile"/>
+<path d="M189 24L194 37H208L213 24Z" class="cut"/>
+<path d="M193 25L196 34H206L209 25Z" class="dark"/>
+</g>
+<path d="M243 321L194 252" class="lead"/>
+<circle cx="194" cy="252" r="11" class="badge"/>
+<text x="194" y="256" class="num" text-anchor="middle">1</text>
+<path d="M393 329L373 245" class="lead"/>
+<circle cx="373" cy="245" r="11" class="badge"/>
+<text x="373" y="249" class="num" text-anchor="middle">2</text>
+<path d="M557 303L540 225" class="lead"/>
+<circle cx="540" cy="225" r="11" class="badge"/>
+<text x="540" y="229" class="num" text-anchor="middle">3</text>
+<path d="M774 240L775 208" class="lead"/>
+<circle cx="775" cy="208" r="11" class="badge"/>
+<text x="775" y="212" class="num" text-anchor="middle">4</text>
+<path d="M994 281L1006 211" class="lead"/>
+<circle cx="1006" cy="211" r="11" class="badge"/>
+<text x="1006" y="215" class="num" text-anchor="middle">5</text>
+<path d="M1128 295L1130 233" class="lead"/>
+<circle cx="1130" cy="233" r="11" class="badge"/>
+<text x="1130" y="237" class="num" text-anchor="middle">6</text>
+<path d="M1256 313L1276 244" class="lead"/>
+<circle cx="1276" cy="244" r="11" class="badge"/>
+<text x="1276" y="248" class="num" text-anchor="middle">7</text>
+<path d="M615 394L631 473" class="lead"/>
+<circle cx="631" cy="473" r="11" class="badge"/>
+<text x="631" y="477" class="num" text-anchor="middle">8</text>
+<path d="M982 349L950 452" class="lead"/>
+<circle cx="950" cy="452" r="11" class="badge"/>
+<text x="950" y="456" class="num" text-anchor="middle">9</text>
+<path d="M1177 368L1121 459" class="lead"/>
+<circle cx="1121" cy="459" r="11" class="badge"/>
+<text x="1121" y="463" class="num" text-anchor="middle">10</text>
+<text x="50" y="510" class="small" text-anchor="start">Section jogs from the starboard drive and fuel line through the rescue bay to the centreline at the collar. The far bay roof is shown in elevation.</text>
+<rect x="32" y="556" width="680" height="325" rx="10" class="pane"/>
+<rect x="39" y="588" width="666" height="285" rx="0" class="grid"/>
+<text x="50" y="579" class="id" text-anchor="start">02 / MEDICAL AND QUARANTINE   ·   DECK PLAN</text>
+<g transform="translate(103 620) scale(1.66 1.48)">
+<rect x="0" y="0" width="315" height="130" rx="6" class="cut"/>
+<rect x="4" y="4" width="307" height="122" rx="4" class="dark"/>
+<rect x="14" y="16" width="162" height="99" rx="4" class="structure"/>
+<rect x="185" y="16" width="83" height="99" rx="4" class="shadow"/>
+<path d="M276 9V121M178 9V121M12 66H169" class="wire"/>
+<rect x="26" y="23" width="34" height="24" rx="4" class="dark"/>
+<rect x="28" y="25" width="30" height="20" rx="3" class="glass"/>
+<rect x="30" y="29" width="8" height="12" rx="2" class="hull"/>
+<rect x="53" y="27" width="4" height="4" rx="1" class="service"/>
+<rect x="26" y="78" width="34" height="24" rx="4" class="dark"/>
+<rect x="28" y="80" width="30" height="20" rx="3" class="glass"/>
+<rect x="30" y="84" width="8" height="12" rx="2" class="hull"/>
+<rect x="53" y="82" width="4" height="4" rx="1" class="service"/>
+<rect x="73" y="23" width="34" height="24" rx="4" class="dark"/>
+<rect x="75" y="25" width="30" height="20" rx="3" class="glass"/>
+<rect x="77" y="29" width="8" height="12" rx="2" class="hull"/>
+<rect x="100" y="27" width="4" height="4" rx="1" class="service"/>
+<rect x="73" y="78" width="34" height="24" rx="4" class="dark"/>
+<rect x="75" y="80" width="30" height="20" rx="3" class="glass"/>
+<rect x="77" y="84" width="8" height="12" rx="2" class="hull"/>
+<rect x="100" y="82" width="4" height="4" rx="1" class="service"/>
+<rect x="120" y="23" width="34" height="24" rx="4" class="dark"/>
+<rect x="122" y="25" width="30" height="20" rx="3" class="glass"/>
+<rect x="124" y="29" width="8" height="12" rx="2" class="hull"/>
+<rect x="147" y="27" width="4" height="4" rx="1" class="service"/>
+<rect x="120" y="78" width="34" height="24" rx="4" class="dark"/>
+<rect x="122" y="80" width="30" height="20" rx="3" class="glass"/>
+<rect x="124" y="84" width="8" height="12" rx="2" class="hull"/>
+<rect x="147" y="82" width="4" height="4" rx="1" class="service"/>
+<rect x="199" y="29" width="49" height="23" rx="4" class="dark"/>
+<rect x="204" y="32" width="40" height="17" rx="3" class="glass"/>
+<rect x="206" y="35" width="10" height="11" rx="2" class="hull"/>
+<rect x="199" y="78" width="49" height="23" rx="4" class="dark"/>
+<rect x="204" y="81" width="40" height="17" rx="3" class="glass"/>
+<rect x="206" y="84" width="10" height="11" rx="2" class="hull"/>
+<rect x="256" y="54" width="7" height="25" rx="1" class="service"/>
+<rect x="284" y="42" width="19" height="46" rx="3" class="dark"/>
+<rect x="286" y="47" width="15" height="7" rx="1" class="service"/>
+<rect x="286" y="76" width="15" height="7" rx="1" class="service"/>
+</g>
+<text x="126" y="848" class="small" text-anchor="start">SIX TRIAGE BERTHS</text>
+<text x="411" y="848" class="small" text-anchor="start">ISOLATION</text>
+<text x="550" y="848" class="small" text-anchor="start">TRANSFER LOCK</text>
+<rect x="726" y="556" width="682" height="325" rx="10" class="pane"/>
+<rect x="733" y="588" width="668" height="285" rx="0" class="grid"/>
+<text x="744" y="579" class="id" text-anchor="start">03 / AFT DRIVE AND BLAST BULKHEAD   ·   LONGITUDINAL DETAIL</text>
+<g transform="translate(781 720) scale(1.9)">
+<path d="M0-47H35L95-22H180L203-36H267L283-17V17L267 36H203L180 22H95L35 47H0Z" class="cut"/>
+<path d="M0-34H32L101-13H181L209-24H262L271-12V12L262 24H209L181 13H101L32 34H0Z" class="dark"/>
+<path d="M0-22H31L103-7H180L210-16H260V16H210L180 7H103L31 22H0Z" class="glass"/>
+<rect x="34" y="-30" width="4" height="4" rx="0.6" class="service"/>
+<rect x="34" y="26" width="4" height="4" rx="0.6" class="service"/>
+<rect x="47" y="-27" width="4" height="4" rx="0.6" class="service"/>
+<rect x="47" y="23" width="4" height="4" rx="0.6" class="service"/>
+<rect x="60" y="-24" width="4" height="4" rx="0.6" class="service"/>
+<rect x="60" y="20" width="4" height="4" rx="0.6" class="service"/>
+<rect x="73" y="-21" width="4" height="4" rx="0.6" class="service"/>
+<rect x="73" y="17" width="4" height="4" rx="0.6" class="service"/>
+<rect x="86" y="-18" width="4" height="4" rx="0.6" class="service"/>
+<rect x="86" y="14" width="4" height="4" rx="0.6" class="service"/>
+<rect x="99" y="-14" width="4" height="4" rx="0.6" class="service"/>
+<rect x="99" y="10" width="4" height="4" rx="0.6" class="service"/>
+<rect x="116" y="-14" width="4" height="4" rx="0.6" class="service"/>
+<rect x="116" y="10" width="4" height="4" rx="0.6" class="service"/>
+<rect x="133" y="-14" width="4" height="4" rx="0.6" class="service"/>
+<rect x="133" y="10" width="4" height="4" rx="0.6" class="service"/>
+<rect x="150" y="-14" width="4" height="4" rx="0.6" class="service"/>
+<rect x="150" y="10" width="4" height="4" rx="0.6" class="service"/>
+<rect x="167" y="-14" width="4" height="4" rx="0.6" class="service"/>
+<rect x="167" y="10" width="4" height="4" rx="0.6" class="service"/>
+<rect x="184" y="-16" width="4" height="4" rx="0.6" class="service"/>
+<rect x="184" y="12" width="4" height="4" rx="0.6" class="service"/>
+<rect x="202" y="-22" width="4" height="4" rx="0.6" class="service"/>
+<rect x="202" y="18" width="4" height="4" rx="0.6" class="service"/>
+<path d="M212-32H262L276-19M212 32H262L276 19" class="fine"/>
+<rect x="282" y="-40" width="9" height="80" rx="0" class="cut"/>
+</g>
+<text x="779" y="848" class="small" text-anchor="start">EXIT COLLAR</text>
+<text x="958" y="848" class="small" text-anchor="start">FIELD COILS</text>
+<text x="1170" y="848" class="small" text-anchor="start">FEED / BULKHEAD</text>
+<circle cx="41" cy="909" r="8" class="badge"/>
+<text x="41" y="913" class="num" text-anchor="middle">1</text>
+<text x="56" y="913" class="small" text-anchor="start">Nozzle liner and field coils</text>
+<circle cx="381" cy="909" r="8" class="badge"/>
+<text x="381" y="913" class="num" text-anchor="middle">2</text>
+<text x="396" y="913" class="small" text-anchor="start">Reactor and independent power</text>
+<circle cx="721" cy="909" r="8" class="badge"/>
+<text x="721" y="913" class="num" text-anchor="middle">3</text>
+<text x="736" y="913" class="small" text-anchor="start">Rescue rails, gantry and cutter</text>
+<circle cx="1061" cy="909" r="8" class="badge"/>
+<text x="1061" y="913" class="num" text-anchor="middle">4</text>
+<text x="1076" y="913" class="small" text-anchor="start">Payload collar and isolator</text>
+<circle cx="41" cy="933" r="8" class="badge"/>
+<text x="41" y="937" class="num" text-anchor="middle">5</text>
+<text x="56" y="937" class="small" text-anchor="start">Port hangar behind section</text>
+<circle cx="381" cy="933" r="8" class="badge"/>
+<text x="381" y="937" class="num" text-anchor="middle">6</text>
+<text x="396" y="937" class="small" text-anchor="start">Command deck and optics</text>
+<circle cx="721" cy="933" r="8" class="badge"/>
+<text x="721" y="937" class="num" text-anchor="middle">7</text>
+<text x="736" y="937" class="small" text-anchor="start">Spaced shield tile stack</text>
+<circle cx="1061" cy="933" r="8" class="badge"/>
+<text x="1061" y="937" class="num" text-anchor="middle">8</text>
+<text x="1076" y="937" class="small" text-anchor="start">Near fuel pair and shutoffs</text>
+<circle cx="41" cy="957" r="8" class="badge"/>
+<text x="41" y="961" class="num" text-anchor="middle">9</text>
+<text x="56" y="961" class="small" text-anchor="start">Crew and medical decks</text>
+<circle cx="381" cy="957" r="8" class="badge"/>
+<text x="381" y="961" class="num" text-anchor="middle">10</text>
+<text x="396" y="961" class="small" text-anchor="start">Two command escape passages</text>
+<text x="38" y="1030" class="small" text-anchor="start">Hatched edges denote the cut shell and bulkheads. Internal fixtures are layout studies. The six triage beds exclude quarantine berths.</text>
+</svg>
