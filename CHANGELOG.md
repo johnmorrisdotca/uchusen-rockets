@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-04
+
 "Put this rocket on your site" is the family's embed panel (MODULES-379).
 
 - **The demo's copy panel and the code builder are kazoku-ui's `<kazoku-embed-panel>`** (kazoku-ui ^0.15.1). Nothing they had is gone, and a test counts it: the six ways (CDN script as the HTML tab, iframe, module, SVG, data address, image link), the note for each (in English and Japanese), Copy (now "Copy code"), Save SVG, Save PNG, Open the embed page, and the credit line, which shows only for a painted rocket whose parts need one.
