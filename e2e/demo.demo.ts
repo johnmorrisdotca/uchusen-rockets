@@ -794,8 +794,16 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   await paintedIn(hero(page));
   await page.locator('#embed-panel button[data-kind="svg"]').click();
   await expect(code).toContainText("<svg");
+  // the panel says "Copied" for 2.5 s and a busy page can miss that window, so the test is told when it copies, and what the status was at that moment
+  await page.evaluate(() => {
+    const panel = document.getElementById("embed-panel") as HTMLElement;
+    const seen = window as unknown as { __copied?: { code: string; status: string } };
+    seen.__copied = undefined;
+    panel.addEventListener("kazoku-embedcopy", (event) => (seen.__copied = { code: (event as CustomEvent<{ code: string }>).detail.code, status: panel.shadowRoot?.querySelector(".status")?.textContent ?? "" }), { once: true });
+  });
   await page.locator('#embed-panel [part="copy"]').click();
-  await expect(page.locator("#embed-panel .status")).toHaveText("Copied");
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __copied?: { status: string } }).__copied?.status)).toBe("Copied");
+  expect(await page.evaluate(() => (window as unknown as { __copied?: { code: string } }).__copied?.code)).toContain("<svg");
   await page.locator('#embed-panel button[data-kind="iframe"]').click();
   await expect(code).toContainText("embed.html?");
   await press(page, "look-line");
