@@ -75,7 +75,7 @@ A straight open truss spine, 16 by 20 m, carries everything. Two rectangular han
 
 | Station (m) | Part |
 |---|---|
-| 0-58 | Main drive and thrust frame: two throats, a blast bulkhead, four verniers |
+| 0-58 | Main drive: two DCD nozzles, each in its own round shroud that narrows aft so the lips stand out past it, with service windows that show the coils, throat rings and feed lines; a neck to the hull; four verniers. The shadow-shield collar (36-58 m) steps from the engines to the hull, and is swappable with none |
 | 58-90 | Engineering and isolators: a round drum with the reactor, two power units, the battery room and the breakers |
 | 90-170 | Aft fuel section: the truss, two barrels, a header tank |
 | 170-250 | Fore fuel section: the truss, two barrels, the collar's base and the ventral keel |
@@ -131,6 +131,22 @@ Every deck and section is its own part group in the registry and can be shown al
 
 The fleet's four (reactor core, navigation and sensor suite, life support, docking port) are shared by every ship. Miyamoto adds three of its own, each with six numbered sub-parts that come apart: the command citadel (communications core, operations ring, navigation desk, medical link, escape passage, armour laminate), the hangars (bay door and shutters, gantry crane, rescue cutter, maintenance racks, pressure vestibule, drone rack) and the medical bay (triage berth, monitor arm and curtain rail, quarantine room, transfer lock, air and power isolation, medical stores).
 
+## Planned separation
+
+The command citadel is the ship's lifeboat. Its aft face carries the separation joint, built as hardware you can see: a separation collar (a split ring with a hazard seam and an armed lamp), twelve latch dogs each with a pyro bolt, eight separation springs, and two umbilical plates with a grid of connector pins, guide pins, a locking lever and a copper line each. The joint is a clean part boundary at 302 m (the plane between the habitation module and the citadel). The viewer's side of separation is a separate ticket.
+
+## The drive's shadow-shield collar, with or without
+
+The collar is a round ceramic-tile cone with orange shield panels, gold foil, hatches, lamps, a hazard band and feed pipes, between the shrouds and the neck, as in the shadow shields of NASA's nuclear thermal studies. It is its own part (`shield-collar`) in the slot `drive-collar`, swappable with `collar-none`: the variants `miyamoto` and `miyamoto-no-collar` differ only there.
+
+## Looks
+
+The line, thick and painted looks work as for every craft. The Lit look uses the viewer's Engines: Lit switch (the bells are drawn as bells, so the flames light) and the review renders add glowing coils and field rings, lit windows, red and green navigation lights, strobes and floodlights at the bays. Colours stay the fleet's.
+
+## The catalogue sheets
+
+Eight sheets are made from the model by `scripts/ship-03-sheets.ts`: the exterior three-quarter view with callouts, the general arrangement (side, top, front and rear at one scale with a length ruler), the exploded assembly, the variants and pods, the hull layers, the engine cards, the system insets, and the specification with the decks and the legend. Every sheet has the title block `ISV 宮本 MIYAMOTO` (ruby みやもと), `ISV Miyamoto, SPX-03 · ICV class · SPX · DCD ×2 · KAZE core v4` and the status line.
+
 ## Real ancestors
 
 Each module descends from real hardware, taken a few centuries on: round pressure volumes with berthing rings, open trusses, white blanket and gold foil, radiators on booms, real plumbing with round pipes, flanges, clamps and bends, and I-beam and round-strut bracing with ball joints.
@@ -144,12 +160,13 @@ Each module descends from real hardware, taken a few centuries on: round pressur
 | Command citadel | Orion's crew module under its shields, enlarged and armoured, with Hubble-style equipment bays |
 | Bow | the ISS's Whipple shields and Orion's heat shield |
 | Hangars | the Shuttle's payload bay and robot arm rails, with a container port's cranes and cell guides |
+| Shadow-shield collar | the shadow shields of NASA's nuclear thermal rocket and Mars transfer vehicle studies |
 | Mission pods | the ISS's docking ring, Hubble's dishes, container racks |
 | Radiators | the ISS's radiator panels on booms |
 
 ## Parts, variants and the build
 
-24 parts: seven stacked modules and their cutaway forms (14), two hangars and their cutaways (4), two pods (relay, relief) and four radiator banks (dorsal and ventral, stowed and deployed), of which a variant uses two, plus 18 inset sub-parts and 2 engine cards. About 21,700 pieces build the stowed ship (19,300 for the cutaway), with about 70 kinds of detail: plating with access plates and rivet strips, structural ribs, corner beams, hatches, louvred vents, window rows, lamp rows, machinery clusters, our own numbers, bolt rows, hazard frames, sensor posts, round conduits with clamps, pipe runs with bends and flanges, valve blocks, handrails, ladders, catwalks, I-beams, round struts with ball joints, truss chords and nodes, docking collars, antennas of five kinds, cameras, thruster blocks, gimbals, field coils, throat rings, nozzle bells and liners, shutter leaves, a gantry crane, a cutter, drones, racks, containers, radiator leaves with heat pipes, hinge blocks, foil blankets, cassettes, level gauges, cradles, a header tank, a keel dock, bow tiles, crush cells, spacer struts, ranging apertures, optical heads, intercept turrets and, inside, a reactor, power units, battery cells, breakers, isolation locks, berths, bunks, tables, hydroponic trays, tanks, scrubbers, consoles, a communications core, a navigation desk, baffles, pumps and the layers of the hull.
+26 parts: seven stacked modules and their cutaway forms (14), two hangars and their cutaways (4), the collar and its none (2), two pods (relay, relief) and four radiator banks (dorsal and ventral, stowed and deployed), of which a variant uses two, plus 18 inset sub-parts and 2 engine cards. About 21,700 pieces build the stowed ship (19,300 for the cutaway), with about 70 kinds of detail: plating with access plates and rivet strips, structural ribs, corner beams, hatches, louvred vents, window rows, lamp rows, machinery clusters, our own numbers, bolt rows, hazard frames, sensor posts, round conduits with clamps, pipe runs with bends and flanges, valve blocks, handrails, ladders, catwalks, I-beams, round struts with ball joints, truss chords and nodes, docking collars, antennas of five kinds, cameras, thruster blocks, gimbals, field coils, throat rings, nozzle bells and liners, shutter leaves, a gantry crane, a cutter, drones, racks, containers, radiator leaves with heat pipes, hinge blocks, foil blankets, cassettes, level gauges, cradles, a header tank, a keel dock, bow tiles, crush cells, spacer struts, ranging apertures, optical heads, intercept turrets and, inside, a reactor, power units, battery cells, breakers, isolation locks, berths, bunks, tables, hydroponic trays, tanks, scrubbers, consoles, a communications core, a navigation desk, baffles, pumps and the layers of the hull.
 
 The ship builds on the visitor's computer, once a visit. No `.glb` is shipped; the viewer exports one on request. On the development computer the coarse level (a quarter of the detail) builds the whole stowed ship in about 50 ms and the full detail in about 80 ms, measured by `test/ship-03.test.ts`, which fails if the first picture would take more than a second or the full detail more than three.
 
