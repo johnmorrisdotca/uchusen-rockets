@@ -150,6 +150,20 @@ const pressAndDraw = async (page: Page, id: string) => {
 };
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 const settle = (page: Page, ms: number) => page.waitForTimeout(ms);
+/**
+ * A reading once the GPU objects have stopped moving: two readings a second apart agree. The pictures the renderer is still giving back after their short linger are not kept ones, and a slow runner reads them
+ * mid-way (24 textures where the first round read 21); a leak never settles lower than it began, and is still caught by the comparison.
+ */
+const levelUsage = async (page: Page) => {
+  let before = await usage(page);
+  for (let tries = 0; tries < 15; tries++) {
+    await page.waitForTimeout(1000);
+    const now = await usage(page);
+    if (now.textures === before.textures && now.buffers === before.buffers && now.programs === before.programs && now.framebuffers === before.framebuffers) return now;
+    before = now;
+  }
+  return before;
+};
 /** Draws and page frames over a stretch long enough for `frames` of the page's own: a slow machine (software WebGL on a runner) has few in a second. */
 const measure = async (page: Page, frames = 12) => {
   const start = { drawn: await drawn(page), page: (await usage(page)).pageFrames };
@@ -1273,7 +1287,7 @@ test.describe("50 rounds", () => {
       // every picture at the size it wants and drawn, so a reading with the Earth on can be compared too
       await expect.poll(() => earth(page).evaluate((node) => Object.values((node.querySelector("chikyu-earth-realistic") as unknown as { stats: { tiers: Record<string, number> } }).stats.tiers).every((width) => width === 2048)), { timeout: 90_000 }).toBe(true);
       await settle(page, 400);
-      withEarth = await usage(page);
+      withEarth = await levelUsage(page);
       await pressAndDraw(page, "rocket-falcon-heavy");
       await expect(hero(page)).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
       expect((await usage(page)).contexts).toBe(2);
