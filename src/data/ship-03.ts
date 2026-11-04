@@ -1,4 +1,4 @@
-// SPX-03 Miyamoto (SPX-ICV-03): a planned interstellar command vessel, this package's own design. It is four variants of one ship: stowed, with its radiators out, with the relief pod on its collar, and cut open to the
+// ISV Miyamoto (SPX-03): a planned interstellar flagship, this package's own design. It is four variants of one ship: stowed, with its radiators out, with the relief pod on its collar, and cut open to the
 // starboard side. Every figure is blank and says it is a design: no source gives them. The ship's own numbers are in `src/model/fleet/ship-03/specs.ts`.
 import { MIYAMOTO_PARTS, MIYAMOTO_VARIANT_SLOTS } from "../model/fleet/ship-03/variants.ts";
 import { CARDS, SHIP_INSETS } from "../model/fleet/ship-03/insets.ts";
@@ -9,13 +9,13 @@ const fiction = (brief: string) => blank<number>(FICTION, brief);
 const metres = (value: number) => `${Number(value.toFixed(1))} m, as designed`;
 
 const NOTES: Readonly<Record<string, string>> = {
-  miyamoto: "SPX-ICV-03, the flagship and command vessel, stowed, with the relay pod on its keyed collar. A narrow spine, two staggered hangar shoulders, a layered bow and two recessed drives, 380 m by 118 m by 74 m, 105,000 t at departure. Status: planned, first flight 2456. All numbers are design targets; the drive and its limits are described in the ship's bible.",
+  miyamoto: "ISV 宮本 Miyamoto, SPX-03, ICV class, the flagship and command vessel, stowed, with the relay pod on its keyed collar. A narrow spine, two staggered hangar shoulders, a layered bow and two recessed drives, 380 m by 118 m by 74 m, 105,000 t at departure. Status: planned, first flight 2456. All numbers are design targets; the drive and its limits are described in the ship's bible.",
   "miyamoto-deployed": "Miyamoto with both radiator banks out: four leaves of 25 by 60 m on each, clear of the hangar corridors. Sustained main burn needs every leaf out.",
   "miyamoto-relief": "Miyamoto with the relief pod on its collar: six relief and equipment containers under a gantry, in place of the relay pod.",
   "miyamoto-cutaway": "Miyamoto opened to starboard: the layers of its armour at the cut edge, the reactor and power rooms, the barrels, both bays, the decks of the habitat and the operations ring of the citadel.",
 };
 
-const NAMES: Readonly<Record<string, string>> = { miyamoto: "SPX-03 宮本 Miyamoto", "miyamoto-deployed": "SPX-03 宮本 Miyamoto, radiators out", "miyamoto-relief": "SPX-03 宮本 Miyamoto, relief pod", "miyamoto-cutaway": "SPX-03 宮本 Miyamoto, cutaway" };
+const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-03", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-03, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-03, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-03, cutaway" };
 
 /** The ship's variants. */
 export const SHIP_03_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).map(([id, slots]) => {
@@ -34,7 +34,7 @@ export const SHIP_03_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARI
       height: fiction(metres(380)),
       diameter: fiction(metres(118)),
       parts: Object.fromEntries(Object.entries(slots).map(([slot, part]) => [slot, fiction(metres(MIYAMOTO_PARTS.find((one) => one.id === part)?.height ?? 0))])),
-      engines: { drive: blank<string>(FICTION, "2 fusion-triggered directed-conversion drives, 4 plasma verniers") },
+      engines: { drive: blank<string>(FICTION, "2 DCD (Directed Conversion Drives), 4 plasma verniers") },
       more: {},
     },
   };

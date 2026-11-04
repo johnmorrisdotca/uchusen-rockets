@@ -1,11 +1,12 @@
-# SPX-03 宮本 MIYAMOTO
+# ISV 宮本 MIYAMOTO · SPX-03
 
 **宮本 · Miyamoto** — "at the foot of the shrine". Flagship. The stately ship that commands the whole fleet.
 
 | | |
 |---|---|
-| Designation | SPX-ICV-03 (fleet number 03), the flagship and command vessel |
-| Maker | SPX |
+| Designation | ISV Miyamoto, SPX-03 · ICV class (Interstellar Command Vessel), flagship and command |
+| Operator | SPX |
+| Ship computer | KAZE core v4 (Kinetic Autonomous Zonal Executive) |
 | Status | PLANNED · FIRST FLIGHT 2456 |
 | Programme | Approved 2448 · keel laid at the orbital yard 2452 (planned) · first flight 2456 (planned) · entry into service 2459 (planned) |
 
@@ -14,6 +15,8 @@
 ![Miyamoto offset longitudinal cutaway with medical and nozzle detail](ship-03-cutaway.svg)
 
 Every number on this page is a design target of the programme. The ship is built in code from tables of metres in `src/model/fleet/ship-03/` and joins the other craft of the package as four variants: stowed, radiators out, relief pod, and cutaway.
+
+Title block: *ISV Miyamoto, SPX-03 · ICV class · SPX · DCD ×2 · KAZE core v4*
 
 ## The programme
 
@@ -30,7 +33,7 @@ Strengths: independent command and medical systems, protected navigation, two se
 | Full mass | 105,000 t: 84,000 t of propellant, 4,200 t of it a protected reserve |
 | Crew and passengers | 144 crew; 72 more berths on an extended expedition; 180 evacuees for up to 30 days |
 | Endurance | 32 years aboard at the normal complement |
-| Main drive | 2 directed-conversion fusion drives, 20.6 MN each (41.2 MN at departure mass), effective exhaust 0.63 c |
+| Main drive | 2 DCD (Directed Conversion Drive), 20.6 MN each (41.2 MN at departure mass), effective exhaust 0.63 c |
 | Manoeuvring | 4 plasma verniers (0.9 MN each) and 24 attitude thrusters (40 kN each) |
 | Power | 2 auxiliary fusion plants of 120 MW(e) and 1 fission emergency unit of 12 MW(e) |
 | Heat rejection | 8 radiator leaves of 25 by 60 m, two-sided: 24,000 m2; 0.8 GW effective |
@@ -51,7 +54,7 @@ The directed exhaust carries 4.38 PW at launch, 22.3% of the expelled mass-energ
 
 ## Propulsion cards
 
-| | Main drive | Plasma vernier | Attitude thruster |
+| | Main drive (DCD) | Plasma vernier | Attitude thruster |
 |---|---|---|---|
 | Count | 2 | 4 | 24 |
 | Thrust each | 20.59 MN | 0.90 MN | 40 kN |

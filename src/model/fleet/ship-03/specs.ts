@@ -10,12 +10,21 @@ export const G0 = 9.80665;
 export const LIGHT_YEAR = 9_460_730_472_580_800;
 export const YEAR = 31_557_600;
 
+/** Who operates the fleet: just SPX, never spelled out. One line, so it can change if John says so. */
+export const OPERATOR = "SPX";
+
 /** Who and what the ship is. The name is checked by the Japanese reviewer. */
 export const IDENTITY = {
-  designation: "SPX-ICV-03",
+  designation: "SPX-03",
+  class: "ICV",
+  classMeans: "Interstellar Command Vessel",
+  prefix: "ISV",
+  prefixMeans: "Interstellar Service Vehicle",
+  computer: "KAZE core v4",
+  drive: "DCD",
+  driveMeans: "Directed Conversion Drive",
   fleetNumber: 3,
-  class: "flagship and command vessel",
-  maker: "SPX",
+  maker: OPERATOR,
   japanese: "宮本",
   romaji: "Miyamoto",
   english: "Miyamoto",
@@ -115,7 +124,7 @@ export function specification(): Line[] {
   const j = journey(ROUTES.benchmark);
   const p = journey(ROUTES.proxima);
   return [
-    { name: "Designation", value: `${IDENTITY.designation} (fleet number 03)`, note: IDENTITY.class },
+    { name: "Designation", value: `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.designation}`, note: `${IDENTITY.class} class (${IDENTITY.classMeans}), flagship and command` },
     { name: "Name", value: `${IDENTITY.japanese} ${IDENTITY.romaji}`, note: IDENTITY.meaning },
     { name: "Length", value: `${ENVELOPE.length} m` },
     { name: "Beam", value: `${ENVELOPE.beam} m`, note: "across both hangar shoulders" },
@@ -123,8 +132,10 @@ export function specification(): Line[] {
     { name: "Dry mass", value: `${n(MASS.inert)} t`, note: `${n(MASS.cargo)} t of cargo inside it` },
     { name: "Full mass", value: `${n(MASS.full)} t`, note: `${n(MASS.propellant)} t of propellant, ${n(MASS.reserve)} t of it protected reserve` },
     { name: "Crew", value: "144 nominal, 216 with the extended-expedition berths", note: "180 evacuees for up to 30 days" },
-    { name: "Main drive", value: "2 fusion-triggered directed-conversion drives", note: `${n(j.thrust / 1e6, 1)} MN together at departure mass; effective exhaust ${DRIVE.exhaustOfC} c` },
+    { name: "Main drive", value: "2 DCD, Directed Conversion Drives", note: `${n(j.thrust / 1e6, 1)} MN together at departure mass; effective exhaust ${DRIVE.exhaustOfC} c` },
     { name: "Manoeuvring", value: "4 plasma verniers, 24 attitude thrusters", note: "trim, docking and the flip; they cannot brake the ship" },
+    { name: "Ship computer", value: IDENTITY.computer, note: "KAZE: Kinetic Autonomous Zonal Executive; its core sits in the communications core of the citadel" },
+    { name: "Small craft", value: "2 ATC (Auxiliary Transfer Craft) cutters and 6 drones", note: "one rescue cutter in the starboard bay, six survey drones in the port bay" },
     { name: "Power", value: "2 auxiliary fusion plants of 120 MW(e), 1 fission emergency unit of 12 MW(e)" },
     { name: "Heat rejection", value: `${n(RADIATOR_AREA)} m2 of radiator in eight leaves`, note: "0.8 GW effective" },
     { name: "Acceleration", value: `${DRIVE.acceleration} g sustained`, note: `${DRIVE.briefPeakG} g for up to ${DRIVE.briefPeakSeconds} s with the thermal buffer charged; not used for journey planning` },
@@ -150,7 +161,7 @@ export const ENGINES: Readonly<Record<string, EngineCard>> = (() => {
   };
   return {
     "miyamoto-main": card(
-      { id: "miyamoto-main", name: "Directed-conversion fusion drive, main", role: "main", module: "drive", count: 2, thrust: mainThrust, isp: exhaust / G0, fuel: "deuterium-helium-3 slurry, converted to a directed beam", fuelCapacity: MASS.propellant, operation: "continuous", note: "Proposed. A fusion-triggered conversion process that turns about 22% of the expelled mass-energy into a directed beam at 0.63 c. Two nozzles, recessed in the tail, with coil-lined throats. It also does the braking burn, after the ship turns end for end." },
+      { id: "miyamoto-main", name: "Directed Conversion Drive (DCD), main", role: "main", module: "drive", count: 2, thrust: mainThrust, isp: exhaust / G0, fuel: "deuterium-helium-3 slurry, converted to a directed beam", fuelCapacity: MASS.propellant, operation: "continuous", note: "Proposed. A fusion-triggered conversion process that turns about 22% of the expelled mass-energy into a directed beam at 0.63 c. Two nozzles, recessed in the tail, with coil-lined throats. It also does the braking burn, after the ship turns end for end." },
       true,
     ),
     "miyamoto-vernier": card({ id: "miyamoto-vernier", name: "Plasma vernier, manoeuvring", role: "manoeuvring", module: "drive", count: 4, thrust: 0.9e6, isp: 60_000, fuel: "hydrogen plasma", fuelCapacity: 600, operation: "continuous", note: "Proposed. Four low-power plasma thrusters at the aft corners that trim, dock and turn the ship. Too weak to brake it." }),
@@ -174,7 +185,7 @@ const s = (module: string, id: string, name: string, role: SectionRole, y0: numb
 /** Every named section of the ship, tail to bow. More than one for every 3 to 5% of its 380 m, with the sub-parts inside each module. */
 export const SECTIONS: readonly MiyamotoSection[] = [
   s("drive", "vernier-pods", "Vernier pods", "engine", 0, 9, 41, 17, "Four plasma verniers at the aft corners that steer and dock.", true),
-  s("drive", "nozzles", "Main nozzles, port and starboard", "engine", 2, 31, 22, 0, "Shape the directed-conversion exhaust into a beam."),
+  s("drive", "nozzles", "Main nozzles, port and starboard", "engine", 2, 31, 22, 0, "Shape the DCD exhaust into a beam."),
   s("drive", "field-coils", "Field coils", "power", 4, 34, -22, 8, "Copper rings, one every 1.8 m, that hold the plasma off the throat."),
   s("drive", "throat-rings", "Throat rings", "structure", 28, 34, -22, 0, "Steel collars at the narrowest part."),
   s("drive", "exit-shutters", "Exit lips and shutter leaves", "hatch", 0, 3, 0, 20, "Orange shutters that close over each bore at rest."),
@@ -195,7 +206,7 @@ export const SECTIONS: readonly MiyamotoSection[] = [
   s("fuel-aft", "header-tank", "Header tank", "tank", 146, 166, 0, -14, "Holds a few minutes of fuel so the drive never starves while a barrel is isolated.", true),
   s("fuel-aft", "spine-aft", "Spine, aft section", "structure", 90, 170, 0, 10, "The load-bearing box with conduit bundles and ring frames."),
   s("fuel-aft", "cassettes-aft", "Vented fuel cassettes", "hatch", 100, 156, 35, -12, "Removable orange cassettes that vent boil-off."),
-  s("hangar-starboard", "rescue-bay", "Rescue bay and gantry", "cargo", 116, 192, 41, 12, "The aft shoulder's bay: gantry crane, racks, and a cutter on its cradle.", true),
+  s("hangar-starboard", "rescue-bay", "Rescue bay and gantry", "cargo", 116, 192, 41, 12, "The aft shoulder's bay: gantry crane, racks, and an ATC rescue cutter on its cradle.", true),
   s("hangar-starboard", "rescue-door", "Rescue bay door and shutters", "hatch", 116, 192, 59, 12, "Three of five orange shutter leaves open."),
   s("hangar-starboard", "vestibule", "Pressure vestibule", "hatch", 105, 111, 41, 5, "Where crews pass from the bay to the spine.", true),
   s("hangar-starboard", "racks-s", "Maintenance racks", "cargo", 108, 200, 24, 12, "Shelving with spares along the inner wall.", true),
@@ -217,7 +228,7 @@ export const SECTIONS: readonly MiyamotoSection[] = [
   s("habitat", "transfer-lock", "Medical transfer lock", "hatch", 251, 258, -11, 8, "Where casualties come in from the bays."),
   s("habitat", "radiator-seat", "Radiator seats", "thermal", 252, 300, 0, 14, "Rails for the dorsal and ventral banks."),
   s("command", "ops-ring", "Operations ring", "nav", 316, 332, 0, 0, "Fourteen consoles round the communications core.", true),
-  s("command", "comms-core", "Communications core", "comms", 304, 348, 0, 0, "The tall tube through every deck.", true),
+  s("command", "comms-core", "Communications core and KAZE core v4", "comms", 304, 348, 0, 0, "The tall tube through every deck, with the ship computer KAZE in it.", true),
   s("command", "nav-desk", "Navigation desk", "nav", 330, 340, 0, 4, "A star-map table and three seats.", true),
   s("command", "medical-link", "Medical link and escape passages", "medical", 304, 330, 0, -12, "A transfer tube to the habitat and two passages to the dorsal and ventral hatches.", true),
   s("command", "armour", "Armour laminate", "shield", 302, 350, 21, 0, "Eight layers, 1.1 m in all.", true),
@@ -279,6 +290,9 @@ export const HISTORY = {
   weaknesses: "Moderate acceleration, limited payload for the volume, a high sensitivity to heat, and a long exposure to the hazards of the route.",
   limits: "0.040 g sustained, 0.400 c, a heat budget of 0.8 GW, and no manoeuvres or thrust on loss of attitude, shield, feed or radiator margin.",
 } as const;
+
+/** The title-block line of every sheet: the prefix and name, the registry number, the class, the operator, the drive and the ship computer. */
+export const TITLE_BLOCK = `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.designation} · ${IDENTITY.class} class · ${OPERATOR} · ${IDENTITY.drive} ×2 · ${IDENTITY.computer}`;
 
 /** The status line of a sheet's title block, in the story: a planned ship with a first flight, never one in service. */
 export const STATUS = `STATUS: ${IDENTITY.status} · FIRST FLIGHT ${IDENTITY.firstFlight}`;
