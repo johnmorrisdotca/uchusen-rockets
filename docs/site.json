@@ -13,6 +13,7 @@
   "entries": {
     ".": { "en": "Rockets, variants, parts and the fit check", "ja": "ロケット・型式・部品・適合チェック" },
     "./build": { "en": "Build a mesh and a drawing", "ja": "メッシュと図面を作る" },
+    "./journey": { "en": "Journey mode: transfers, launch windows and flip-and-burn trips", "ja": "ジャーニーモード：ホーマン遷移・打ち上げ窓・フリップ＆バーンの旅" },
     "./element": { "en": "The web components", "ja": "Webコンポーネント" },
     "./react": { "en": "The React wrapper", "ja": "Reactラッパー" }
   }

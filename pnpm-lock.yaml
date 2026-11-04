@@ -38,6 +38,9 @@ importers:
       '@johnmorrisdotca/kazoku-ui':
         specifier: ^0.15.1
         version: 0.15.1(three@0.186.1)
+      '@johnmorrisdotca/wakusei-planets':
+        specifier: 0.15.0
+        version: 0.15.0(@johnmorrisdotca/chikyu-earth@0.10.0(@johnmorrisdotca/kazoku-ui@0.15.1(three@0.186.1))(three@0.186.1))(three@0.186.1)
       '@playwright/test':
         specifier: 1.64.0
         version: 1.64.0
@@ -572,6 +575,18 @@ packages:
     peerDependencies:
       three: '>=0.160.0'
     peerDependenciesMeta:
+      three:
+        optional: true
+
+  '@johnmorrisdotca/wakusei-planets@0.15.0':
+    resolution: {integrity: sha512-ETxukNFqETYPmwhuMN6GEroVVuAoNSoT7Ggp/y28SM0VFulh1dROOL6ia7PD9FiEI9q9SHXLWldOeg+6UssC/Q==}
+    engines: {node: '>=24'}
+    peerDependencies:
+      '@johnmorrisdotca/chikyu-earth': '>=0.10.0'
+      three: '>=0.160.0'
+    peerDependenciesMeta:
+      '@johnmorrisdotca/chikyu-earth':
+        optional: true
       three:
         optional: true
 
@@ -2178,6 +2193,13 @@ snapshots:
 
   '@johnmorrisdotca/kazoku-ui@0.15.1(three@0.186.1)':
     optionalDependencies:
+      three: 0.186.1
+
+  '@johnmorrisdotca/wakusei-planets@0.15.0(@johnmorrisdotca/chikyu-earth@0.10.0(@johnmorrisdotca/kazoku-ui@0.15.1(three@0.186.1))(three@0.186.1))(three@0.186.1)':
+    dependencies:
+      '@johnmorrisdotca/kazoku-ui': 0.15.1(three@0.186.1)
+    optionalDependencies:
+      '@johnmorrisdotca/chikyu-earth': 0.10.0(@johnmorrisdotca/kazoku-ui@0.15.1(three@0.186.1))(three@0.186.1)
       three: 0.186.1
 
   '@jridgewell/gen-mapping@0.3.13':
