@@ -90,10 +90,11 @@ export function command(cut: boolean, detail = 1, seed = "command", refit = fals
   // dishes and phased arrays dorsal, and a whip each side
   for (const [x, y] of [[-8, Y0 + 14], [8, Y0 + 14], [-8, Y0 + 34], [8, Y0 + 34]] as const) out.push(...antenna("dish", [x, y, HZ], [0, 0, 1], 5.2, `${seed}${x}${y}`));
   out.push(...antenna("phased", [0, Y0 + 38, HZ], [0, 0, 1], 6, `${seed}ph`), ...antenna("whip", [0, Y1 - 6, HZ], [0, 0, 1], 9, `${seed}w`), ...antenna("omni", [-HX - 0.2, Y0 + 4, 0], [-1, 0, 0], 4, `${seed}o`));
-  // aerial booms with beacons: a truss out to each side at the aft end, ending in a ring beacon
+  // aerial booms with beacons (Ariake's stand forward of the hangar boxes beside them): a truss out to each side, ending in a ring beacon
+  const bo = Y0 + (refit ? 19 : 8);
   for (const s of [-1, 1]) {
-    out.push(...roundStrut("hull-grey", [s * HX, Y0 + 8, 2], [s * (HX + 17), Y0 + 12, 2], 0.5), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, -2], [s * (HX + 17), Y0 + 12, -2], 0.35), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, 2], [s * (HX + 17), Y0 + 12, -2], 0.22), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, -2], [s * (HX + 17), Y0 + 12, 2], 0.22));
-    out.push(discX("hull-grey-dark", Y0 + 12, 0, s * (HX + 17), s * (HX + 18.4), 3.4, 16), discX("lamp-blue", Y0 + 12, 0, s * (HX + 18.4), s * (HX + 18.9), 1.6, 12), ...lamp({ n: "x", sign: s as 1 | -1, at: HX, a: [Y0, Y1], b: [-HZ, HZ] }, Y0 + 12, 6, "red", 0.3));
+    out.push(...roundStrut("hull-grey", [s * HX, bo, 2], [s * (HX + 17), bo + 4, 2], 0.5), ...roundStrut("hull-grey-dark", [s * HX, bo, -2], [s * (HX + 17), bo + 4, -2], 0.35), ...roundStrut("hull-grey-dark", [s * HX, bo, 2], [s * (HX + 17), bo + 4, -2], 0.22), ...roundStrut("hull-grey-dark", [s * HX, bo, -2], [s * (HX + 17), bo + 4, 2], 0.22));
+    out.push(discX("hull-grey-dark", bo + 4, 0, s * (HX + 17), s * (HX + 18.4), 3.4, 16), discX("lamp-blue", bo + 4, 0, s * (HX + 18.4), s * (HX + 18.9), 1.6, 12), ...lamp({ n: "x", sign: s as 1 | -1, at: HX, a: [Y0, Y1], b: [-HZ, HZ] }, bo + 4, 6, "red", 0.3));
   }
   // thruster blocks at the four corners of each end: a box of four nozzles
   for (const y of [Y0 + 1.5, Y1 - 1.5])
