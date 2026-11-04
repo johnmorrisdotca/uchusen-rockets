@@ -73,8 +73,7 @@ const CSS = `
 .panel { font: 0.85rem/1.4 system-ui, sans-serif; margin-top: 0.5rem; }
 .panel .bar { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .panel button { min-height: 2rem; padding: 0.2rem 0.7rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; cursor: pointer; }
-.panel button[aria-selected="true"], .panel button[aria-pressed="true"] { background: currentColor; }
-.panel button[aria-selected="true"], .panel button[aria-pressed="true"] { color: Canvas; }
+.panel button[aria-selected="true"], .panel button[aria-pressed="true"] { background: color-mix(in srgb, currentColor 22%, transparent); box-shadow: inset 0 0 0 1px currentColor; font-weight: 600; }
 .panel button:disabled { opacity: 0.5; cursor: default; }
 .panel .body { margin-top: 0.5rem; max-height: 14rem; overflow: auto; }
 .panel .body button { margin: 0 0.35rem 0.35rem 0; }
