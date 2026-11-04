@@ -108,3 +108,13 @@ test("the builder page has the same panel, under its strict policy, with no erro
   await expect(panel.locator('[part="code"]')).toContainText("onMounted");
   expect(found).toEqual([]);
 });
+
+test("the page stays still when it opens and when the language changes, whatever the panel draws", async ({ page }) => {
+  await page.goto(URL);
+  await page.waitForTimeout(800);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  await page.getByRole("button", { name: "日本語", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+});
