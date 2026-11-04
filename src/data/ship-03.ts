@@ -12,10 +12,11 @@ const NOTES: Readonly<Record<string, string>> = {
   miyamoto: "ISV 宮本 Miyamoto, SPX-03, ICV class, the flagship and command vessel, stowed, with the relay pod on its keyed collar. A narrow spine, two staggered hangar shoulders, a layered bow and two recessed drives, 380 m by 118 m by 74 m, 105,000 t at departure. Status: planned, first flight 2456. All numbers are design targets; the drive and its limits are described in the ship's bible.",
   "miyamoto-deployed": "Miyamoto with both radiator banks out: four leaves of 25 by 60 m on each, clear of the hangar corridors. Sustained main burn needs every leaf out.",
   "miyamoto-relief": "Miyamoto with the relief pod on its collar: six relief and equipment containers under a gantry, in place of the relay pod.",
+  "miyamoto-no-collar": "ISV Miyamoto with the drive's neck bare: the shadow-shield collar swapped for none, to compare the two ways the engines meet the hull.",
   "miyamoto-cutaway": "Miyamoto opened to starboard: the layers of its armour at the cut edge, the reactor and power rooms, the barrels, both bays, the decks of the habitat and the operations ring of the citadel.",
 };
 
-const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-03", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-03, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-03, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-03, cutaway" };
+const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-03", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-03, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-03, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-03, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-03, no collar" };
 
 /** The ship's variants. */
 export const SHIP_03_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).map(([id, slots]) => {
@@ -47,10 +48,10 @@ const insetVariant = (inset: (typeof SHIP_INSETS)[string]): Variant => ({
   status: "fictional",
   firstWord: "Planned first flight",
   firstFlight: blank<string>(FICTION, "Planned for 2456"),
-  slots: inset.parts.map((one) => `part-${one.n}`),
-  partIds: Object.fromEntries(inset.parts.map((one) => [`part-${one.n}`, `fleet-ship-03-inset-${inset.id}-${one.n}`])),
+  slots: inset.parts.map((one) => `${inset.id}-${one.n}`),
+  partIds: Object.fromEntries(inset.parts.map((one) => [`${inset.id}-${one.n}`, `fleet-ship-03-inset-${inset.id}-${one.n}`])),
   note: `${inset.note} ${inset.parts.map((one) => `${one.n} ${one.name}`).join(", ")}. Press "apart" to open it.`,
-  facts: { height: fiction("about 6 m, as designed"), diameter: fiction("about 12 m, as designed"), parts: Object.fromEntries(inset.parts.map((one) => [`part-${one.n}`, fiction(metres(one.size[1]))])), engines: {}, more: {} },
+  facts: { height: fiction("about 6 m, as designed"), diameter: fiction("about 12 m, as designed"), parts: Object.fromEntries(inset.parts.map((one) => [`${inset.id}-${one.n}`, fiction(metres(one.size[1]))])), engines: {}, more: {} },
 });
 
 const cardVariant = (card: (typeof CARDS)[keyof typeof CARDS]): Variant => ({
@@ -68,3 +69,10 @@ const cardVariant = (card: (typeof CARDS)[keyof typeof CARDS]): Variant => ({
 
 /** Miyamoto's insets and propulsion cards, as one more row of the picker. */
 export const SHIP_03_INSET_ROCKET = { name: "Miyamoto insets and engine cards", variants: [...Object.values(SHIP_INSETS).map(insetVariant), ...Object.values(CARDS).map(cardVariant)] } as const;
+
+/** What to call each slot of the ship's variants in the picker: a module by its name, a sub-part of an inset with its number. */
+export const SHIP_03_SLOT_NAMES: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(MIYAMOTO_PARTS.filter((part) => !part.id.endsWith("-cutaway")).map((part) => [part.id.replace(/-(stowed|deployed)$/, "").replace(/^(pod|radiators-dorsal|radiators-ventral)-.*/, (m) => (m.startsWith("pod") ? "pod" : m.startsWith("radiators-dorsal") ? "radiators-dorsal" : "radiators-ventral")), part.name.replace(/, (stowed|deployed|relay|relief)$/, "").replace(/^Mission pod.*/, "Mission pod")])),
+  ...Object.fromEntries(Object.values(SHIP_INSETS).flatMap((inset) => inset.parts.map((one) => [`${inset.id}-${one.n}`, `${one.n}. ${one.name}`]))),
+  engine: "Engine",
+};

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
 import { build } from "../src/build/index.ts";
-import { MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
+import { BUILD_BUDGET_MS, MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
 import { ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, TITLE_BLOCK, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
@@ -85,7 +85,7 @@ test("no module has a bare surface: hundreds of pieces and many kinds of detail,
   for (const part of all) {
     const pieces = part.pieces();
     total += pieces.length;
-    if (part.id.startsWith("radiators")) continue;
+    if (part.id.startsWith("radiators") || part.id === "collar-none") continue;
     assert.ok(pieces.length >= 250, `${part.id}: ${pieces.length} pieces`);
     assert.ok(materialsOf(pieces).size >= 9, `${part.id}: ${materialsOf(pieces).size} materials`);
   }
@@ -120,7 +120,7 @@ test("the levels of detail: a quarter of the detail is far fewer pieces, and the
 
 test("Miyamoto is in the registry: four variants, every slot's part exists, the joints fit, and it is in the story, with no visible tag", () => {
   const rocket = ROCKETS["fleet-ship-03"];
-  assert.equal(rocket.variants.length, 4);
+  assert.equal(rocket.variants.length, 5);
   for (const variant of rocket.variants) {
     assert.equal(variant.status, "fictional");
     assert.ok(!/fictional/i.test(variant.name), variant.name);
@@ -132,7 +132,10 @@ test("Miyamoto is in the registry: four variants, every slot's part exists, the 
   for (const entry of PART_ENTRIES) if (entry.record.rocket === "fleet-ship-03") assert.ok(entry.record.trueTo.length > 0, entry.record.id);
   // the same part serves more than one variant
   const shared = PART_ENTRIES.find((entry) => entry.record.id === "fleet-ship-03-drive");
-  assert.deepEqual(shared?.record.trueTo, ["miyamoto", "miyamoto-deployed", "miyamoto-relief"]);
+  assert.deepEqual(shared?.record.trueTo, ["miyamoto", "miyamoto-deployed", "miyamoto-relief", "miyamoto-no-collar"]);
+  // the shadow-shield collar swaps for none in one slot
+  assert.equal(MIYAMOTO_VARIANT_SLOTS.miyamoto["drive-collar"], "shield-collar");
+  assert.equal(MIYAMOTO_VARIANT_SLOTS["miyamoto-no-collar"]["drive-collar"], "collar-none");
   // the mission pod swaps: two parts, one mount
   assert.ok(PART_ENTRIES.some((entry) => entry.record.id === "fleet-ship-03-pod-relay") && PART_ENTRIES.some((entry) => entry.record.id === "fleet-ship-03-pod-relief"));
 });
@@ -162,23 +165,26 @@ test("sections and decks: a label for every few percent of the length, and more 
 
 test("the build budget: the first picture inside a second, the full detail inside three, on this computer", () => {
   const stowed = Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto);
-  const once = (detail: number) => {
+  const once = (level: "coarse" | "fine") => {
     const start = performance.now();
     const list = parts().filter((part) => stowed.includes(part.id));
-    toGlb(list.map((part) => ({ name: part.id, mesh: meshOf(part.pieces({ detail })), at: [0, 0, 0] as const })));
-    return performance.now() - start;
+    let pieces = 0;
+    toGlb(list.map((part) => { const made = part.pieces({ level }); pieces += made.length; return { name: part.id, mesh: meshOf(made), at: [0, 0, 0] as const }; }));
+    return { ms: performance.now() - start, pieces };
   };
-  once(1);
-  const coarse = once(LEVELS[0]);
-  const full = once(1);
-  console.log(`build, coarse ${coarse.toFixed(0)} ms, full ${full.toFixed(0)} ms`);
-  assert.ok(coarse < 1000, `the coarse build took ${coarse.toFixed(0)} ms`);
-  assert.ok(full < 3000, `the full build took ${full.toFixed(0)} ms`);
+  once("fine");
+  const coarse = once("coarse");
+  const full = once("fine");
+  console.log(`build, coarse ${coarse.ms.toFixed(0)} ms (${coarse.pieces} pieces), full ${full.ms.toFixed(0)} ms (${full.pieces} pieces)`);
+  assert.ok(coarse.ms < BUILD_BUDGET_MS.coarse, `the coarse build took ${coarse.ms.toFixed(0)} ms`);
+  assert.ok(full.ms < BUILD_BUDGET_MS.fine, `the full build took ${full.ms.toFixed(0)} ms`);
+  // the first picture is the kit's coarse level: the hulls, the barrels, the bells, the big boxes, a small share of the pieces
+  assert.ok(coarse.pieces > 200 && coarse.pieces < full.pieces * 0.1, `${coarse.pieces} coarse of ${full.pieces}`);
 });
 
 test("every module names the real hardware it descends from, and the pipes and struts are round", () => {
   for (const part of parts()) {
-    const key = part.id.replace(/-cutaway$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod");
+    const key = part.id.replace(/-cutaway$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod").replace(/^(shield-collar|collar-none)$/, "collar");
     assert.ok(ANCESTORS[key], key);
     assert.ok(part.note.includes("Descends from"), `${part.id}: ${part.note}`);
   }

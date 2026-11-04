@@ -1,16 +1,11 @@
-// The main drive and thrust frame, station 0 to 58 m: two flush fusion-triggered nozzles with their throat rings, field coils, feed manifolds and a blast bulkhead behind them, and four smaller plasma verniers at the
-// aft corners. The frame is a ring of plated slabs round the two bores; the funnel of its taper runs in to the engineering module. A cutaway leaves the starboard side open. Pure: no three.js and no DOM.
-import { type Piece, collar, cub, prism, quad, rng, rod, seams, type Vec3 } from "./adapter.ts";
-import { DRIVE } from "./dims.ts";
-import { conduit, faceOf, frame, hatch, hazard, lamp, ladder, on, pt, rail, skin, SPINE, stencil, vent, WHITE } from "./faces.ts";
-import { capsule, collarAt, nozzleProfile, nozzleRadiusAt, OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
+// The main drive, station 0 to 58 m: two DCD nozzles with their throat rings, field coils, feed manifolds and chamber heads, each in its own round shroud that narrows aft so the nozzle lips stand out past it. The shroud is
+// enclosed, with service windows in places that show the field coils, the throat rings and the feed lines; a neck carries the feed lines on to the hull, and four plasma verniers stand at the aft corners. The shadow-shield collar that
+// steps from the engines to the hull is its own part (`shadowCollar`), swappable with none. A cutaway leaves the starboard side open. Pure: no three.js and no DOM.
+import { collar, cub, pipeRun, type Lathe, type Piece, quad, rng, rod, roundStrut, tileShield, type Vec3 } from "./adapter.ts";
+import { DRIVE, SHADOW_COLLAR, SHROUD } from "./dims.ts";
+import { collarAt, nozzleProfile, nozzleRadiusAt, OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
 
-const HX = DRIVE.hx;
-const HZ = DRIVE.hz;
-const WALL = 41;
-const TAPER = 34;
 const H = DRIVE.chamberY;
-const END: readonly [number, number] = [14, 13];
 
 /** One magnetic nozzle at (x, 0): the bell wall and its liner, the throat rings, the field coils with their spars, the feed manifold and the chamber head. */
 export function nozzle(x: number, cut: boolean, seed: string): Piece[] {
@@ -79,92 +74,153 @@ export function vernier(x: number, z: number): Piece[] {
   return out;
 }
 
-/** The plated slopes of the taper from the frame's back to the spine: four quads, each in a grid of raised tiles. */
-function taper(seed: string, detail: number): Piece[] {
-  const out: Piece[] = [];
-  const corner = (sx: number, sz: number, back: boolean): Vec3 => (back ? [sx * END[0], 58, sz * END[1]] : [sx * HX, TAPER, sz * HZ]);
-  const sides: [Vec3, Vec3, Vec3, Vec3, Vec3][] = [
-    [corner(-1, 1, false), corner(1, 1, false), corner(1, 1, true), corner(-1, 1, true), [0, 0.3, 1]],
-    [corner(-1, -1, false), corner(1, -1, false), corner(1, -1, true), corner(-1, -1, true), [0, 0.3, -1]],
-    [corner(1, -1, false), corner(1, 1, false), corner(1, 1, true), corner(1, -1, true), [1, 0.4, 0]],
-    [corner(-1, -1, false), corner(-1, 1, false), corner(-1, 1, true), corner(-1, -1, true), [-1, 0.4, 0]],
-  ];
-  const random = rng(`${seed}/taper`);
-  sides.forEach(([a, b, c, d, out3], s) => {
-    out.push(quad("hull-grey-dark", a, b, c, d, 0.5, { only: undefined }));
-    const cols = Math.max(2, Math.round((s < 2 ? 9 : 5) * Math.sqrt(detail)));
-    const rows = Math.max(1, Math.round(4 * Math.sqrt(detail)));
-    const lerp = (p: Vec3, q: Vec3, t: number): Vec3 => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
-    for (let i = 0; i < cols; i++)
-      for (let j = 0; j < rows; j++) {
-        const f = (u: number, v: number): Vec3 => lerp(lerp(a, b, u), lerp(d, c, u), v);
-        const g = 0.04;
-        const [u0, u1, v0, v1] = [i / cols + g, (i + 1) / cols - g, j / rows + g, (j + 1) / rows - g];
-        const pts = [f(u0, v0), f(u1, v0), f(u1, v1), f(u0, v1)];
-        const n = Math.hypot(...out3);
-        const lift = 0.3;
-        const moved = pts.map((p) => [p[0] + (out3[0] / n) * lift, p[1] + (out3[1] / n) * lift, p[2] + (out3[2] / n) * lift] as Vec3);
-        const roll = random();
-        out.push(quad(roll < 0.12 ? "hull-orange-worn" : roll < 0.4 ? "hull-white-worn" : roll < 0.7 ? "hull-white" : "hull-grey", moved[0], moved[1], moved[2], moved[3], 0.2));
-      }
-  });
+/** The radius of the shroud at a height: a smooth rise from its aft lip to the fore end, so it narrows aft. */
+const shroudAt = (y: number): number => SHROUD.rAft + (SHROUD.rFore - SHROUD.rAft) * Math.sin(((y - SHROUD.start) / (SHROUD.end - SHROUD.start)) * (Math.PI / 2)) ** 1.3;
+
+/** The arcs of a circle left when some windows are cut out of it: each window is a centre and a width, in degrees round from +Z towards +X. */
+function arcsLeft(windows: readonly (readonly [number, number])[]): [number, number][] {
+  const cuts = windows.map(([c, w]) => [((c - w / 2 + 360) % 360), ((c + w / 2 + 360) % 360)] as const).sort((p, q) => p[0] - q[0]);
+  const deg = (v: number) => (v * Math.PI) / 180;
+  if (!cuts.length) return [[0, 2 * Math.PI]];
+  const out: [number, number][] = [];
+  let from = cuts[cuts.length - 1][1];
+  for (const [a, b] of cuts) {
+    const start = from;
+    const end = a < start ? a + 360 : a;
+    if (end > start) out.push([deg(start), deg(end)]);
+    from = b;
+  }
   return out;
 }
 
-/** The aft frame and its taper. */
+/** The shroud of one nozzle: faceted bands in white blanket and gold foil, ring frames and round stringers between, windows cut in some bands. `side` is the nozzle's side (+1 starboard) and the way its outer window faces. */
+function shroud(x: number, side: 1 | -1, cut: boolean, detail: number, seed: string): Piece[] {
+  const out: Piece[] = [];
+  const random = rng(`${seed}/shroud/${side}`);
+  const open = cut && side === 1;
+  const outward = side === 1 ? 90 : 270;
+  // the windows by band: the coils from the side, the throat rings and feed lines from above and below, the chamber heads from above
+  const bands: { y: [number, number]; material: "hull-white" | "gold" | "hull-white-worn"; windows: [number, number][] }[] = [
+    { y: [7, 13], material: "hull-white", windows: [] },
+    { y: [13, 19], material: "gold", windows: [[outward, 84]] },
+    { y: [19, 25], material: "hull-white-worn", windows: [[0, 56], [180, 56]] },
+    { y: [25, 31], material: "gold", windows: [[outward, 70]] },
+    { y: [31, 36], material: "hull-white", windows: [[0, 64]] },
+  ];
+  for (const band of bands) {
+    const ys = Array.from({ length: 4 }, (_, i) => band.y[0] + ((band.y[1] - band.y[0]) * i) / 3);
+    const profile = ys.map((y) => [shroudAt(y) + 0.5, y] as const);
+    const arcs = open ? [[Math.PI, 2 * Math.PI] as [number, number]] : arcsLeft(band.windows);
+    for (const [a0, a1] of arcs) out.push({ kind: "lathe", material: band.material, at: [x, 0], segs: 16, profile, arc: () => [a0, a1], body: true, outline: true });
+    // a window's frame: an axial bar at each edge and a flange ring at each end
+    for (const [c, w] of band.windows) {
+      if (open) continue;
+      for (const e of [c - w / 2, c + w / 2]) {
+        const a = (e * Math.PI) / 180;
+        const p = (y: number): Vec3 => [x + (shroudAt(y) + 0.7) * Math.sin(a), y, (shroudAt(y) + 0.7) * Math.cos(a)];
+        out.push(rod("hull-grey-dark", p(band.y[0]), p(band.y[1]), 0.28, 8));
+      }
+    }
+  }
+  // ring frames between the bands, standing proud, with a row of bolts
+  for (const y of [7.1, 13, 19, 25, 31, 36]) {
+    out.push(ringAt("hull-grey", x, 0, shroudAt(y) + 0.5, y, 0.5, open ? { arc: () => [Math.PI, 2 * Math.PI] } : {}));
+    if (detail > 0.5) for (let k = 0; k < 24; k++) {
+      const a = (Math.PI * 2 * k) / 24;
+      if (open && Math.sin(a) > 0) continue;
+      out.push(rod("hull-grey-dark", [x + (shroudAt(y) + 0.95) * Math.sin(a), y - 0.15, (shroudAt(y) + 0.95) * Math.cos(a)], [x + (shroudAt(y) + 0.95) * Math.sin(a), y + 0.15, (shroudAt(y) + 0.95) * Math.cos(a)], 0.14, 6));
+    }
+  }
+  // stringers: round rods along the shroud between the windows, every twenty degrees
+  for (let a = 5; a < 360; a += 20 / Math.max(0.3, detail)) {
+    const r = (a * Math.PI) / 180;
+    if (open && Math.sin(r) > 0) continue;
+    if (Math.abs(((a - outward + 540) % 360) - 180) < 52 || a < 32 || a > 328 || Math.abs(a - 180) < 32) continue;
+    out.push(rod(random() < 0.3 ? "hull-grey" : "hull-grey-dark", [x + (shroudAt(7) + 0.7) * Math.sin(r), 7, (shroudAt(7) + 0.7) * Math.cos(r)], [x + (shroudAt(36) + 0.7) * Math.sin(r), 36, (shroudAt(36) + 0.7) * Math.cos(r)], 0.2, 8));
+  }
+  // the fore end: a flat cap, and the aft lip where the shroud ends and the nozzle's own lip stands past it
+  out.push({ kind: "lathe", material: "hull-grey-dark", at: [x, 0], segs: 16, profile: [[0.001, 36], [shroudAt(36) + 0.5, 36]], ...(open ? { arc: () => [Math.PI, 2 * Math.PI] as const } : {}) });
+  out.push(ringAt("hull-orange", x, 0, shroudAt(7) + 0.2, 7, 0.45, open ? { arc: () => [Math.PI, 2 * Math.PI] } : {}));
+  return out;
+}
+
+/** The main drive: both nozzles in their shrouds, the neck to the hull with the feed lines, and the verniers. */
 export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
   const out: Piece[] = [];
   const nx = DRIVE.nozzleX;
-  const rim = 7;
-  // the frame: top and bottom slabs, the two side slabs and the web between the bores, from the aft face to the taper
-  out.push(prism("hull-grey-dark", [[-HX + rim, HZ - 7], [HX - rim, HZ - 7], [HX - rim, HZ], [-HX + rim, HZ]], 0, TAPER, { only: undefined }));
-  out.push(prism("hull-grey-dark", [[-HX + rim, -HZ], [HX - rim, -HZ], [HX - rim, -HZ + 7], [-HX + rim, -HZ + 7]], 0, TAPER, { only: undefined }));
-  out.push(prism("hull-grey-dark", [[-HX, -HZ + rim], [-HX + 7, -HZ + rim], [-HX + 7, HZ - rim], [-HX, HZ - rim]], 0, TAPER, { only: undefined }));
-  if (!cut) out.push(prism("hull-grey-dark", [[HX - 7, -HZ + rim], [HX, -HZ + rim], [HX, HZ - rim], [HX - 7, HZ - rim]], 0, TAPER, { only: undefined }));
-  // the corners, cut at 45 degrees
-  for (const sx of [-1, 1])
-    for (const sz of [-1, 1]) if (!(cut && sx > 0)) out.push(prism("hull-grey-dark", [[sx * (HX - rim), sz * HZ], [sx * HX, sz * (HZ - rim)], [sx * HX, sz * (HZ - 7)], [sx * (HX - 7), sz * (HZ - 7)], [sx * (HX - 7), sz * HZ]].map(([x, z]) => [x, z] as [number, number]), 0, TAPER, { only: undefined }));
-  out.push(cub("hull-grey-dark", [-3, 3], [0, TAPER], [-HZ, HZ], { only: undefined }));
-  out.push(cub("hull-grey-dark", [-HX, HX], [TAPER - 1, TAPER + 0.5], [-HZ, HZ], { only: undefined }));
-  // the bores: a socket of tube round each throat
-  for (const sx of [-1, 1]) out.push(tubeAt("hull-grey", sx * nx, 0, DRIVE.exitR + 3.6, 0, 18, { segs: 40, only: undefined, ...(cut && sx > 0 ? { arc: OPEN_STARBOARD } : {}) }));
-  out.push(...nozzle(-nx, cut, seed), ...nozzle(nx, cut, seed));
-  // the blast bulkhead: a slab behind the bores, ribbed, with a hazard band
-  out.push(cub("panel-dark", [-30, 30], [WALL, WALL + 2.4], [-16, 16], { only: undefined }));
-  const bulk = { n: "y" as const, sign: 1 as const, at: WALL + 2.4, a: [-16, 16] as const, b: [-30, 30] as const };
-  for (let b = -26; b < 28; b += 6) out.push(on(bulk, 0, b, 30, 0.6, 0, 0.5, "hull-grey-dark"));
-  for (let a = -12; a < 14; a += 8) out.push(on(bulk, a, 0, 0.7, 56, 0, 0.45, "hull-grey"));
-  for (const b of [-27, 27]) out.push(...hazard(bulk, b, -16, 16, 1.2, 1.8));
-  // the aft face: plating round the bores, a frame on each bore, shutters in the orange of removable shields
-  const aft = { n: "y" as const, sign: -1 as const, at: 0, a: [-HZ, HZ] as const, b: [-HX, HX] as const };
-  out.push(...skin(aft, WHITE, seed, { detail, blanket: true, cell: [6, 5], raise: 0.3, blocks: 0.25, skip: (a, b) => Math.hypot(b - nx, a) < DRIVE.exitR + 3.4 || Math.hypot(b + nx, a) < DRIVE.exitR + 3.4 }));
-  for (const sx of [-1, 1]) {
-    out.push(...frame(aft, 0, sx * nx, DRIVE.exitR * 2 + 7.2, DRIVE.exitR * 2 + 7.2, 1.2, 1.2, "hull-orange"));
-    for (let i = 0; i < 8; i++) {
-      const a = (Math.PI * 2 * i) / 8;
-      out.push(...lamp(aft, (DRIVE.exitR + 4.4) * Math.cos(a), sx * nx + (DRIVE.exitR + 4.4) * Math.sin(a), i % 2 ? "amber" : "blue", 0.22));
-    }
+  out.push(...nozzle(-nx, cut, seed), ...nozzle(nx, cut, seed), ...shroud(-nx, -1, cut, detail, seed), ...shroud(nx, 1, cut, detail, seed));
+  // a web between the shrouds where they meet, so the two read as one body: a faceted lens of white blanket
+  out.push({ kind: "lathe", material: "hull-white", at: [0, 0], segs: 8, profile: [[0.001, 14], [4.6, 18], [5.2, 26], [4.6, 34], [0.001, 36]], ...(cut ? { arc: () => [Math.PI, 2 * Math.PI] as const } : {}) });
+  // the neck: a round tube from the shrouds to the engineering module, with the feed lines running along it in round pipes with bends, flanges and clamps
+  out.push(tubeAt("hull-grey-dark", 0, 0, 9.5, 36, 58, { segs: 20, body: true, outline: true }), ...ringsOn(9.5, [40, 46, 52], 0.35));
+  for (const [sx, mat] of [[-1, "coolant"], [1, "copper"]] as const) {
+    out.push(...pipeRun(mat, [[sx * (nx - 6), 34, 14], [sx * 11, 40, 11.5], [sx * 11, 56, 11.5]], 0.5, { clampEvery: 5, bracket: [0, 0, -1] }));
+    out.push(...pipeRun(sx < 0 ? "copper" : "coolant", [[sx * (nx - 6), 34, -14], [sx * 11, 40, -11.5], [sx * 11, 56, -11.5]], 0.5, { clampEvery: 5, bracket: [0, 0, 1] }));
   }
-  for (const [x, z] of [[-DRIVE.vernier.x, DRIVE.vernier.z], [DRIVE.vernier.x, DRIVE.vernier.z], [-DRIVE.vernier.x, -DRIVE.vernier.z], [DRIVE.vernier.x, -DRIVE.vernier.z]] as const) out.push(...vernier(x, z));
-  // the four flanks: plating, heat-sink louvres, hatches, rails, conduits, ladders and our own stencils
-  const top = faceOf({ x: [-HX, HX], y: [0, TAPER], z: [-HZ, HZ] }, "z", 1);
-  const bottom = faceOf({ x: [-HX, HX], y: [0, TAPER], z: [-HZ, HZ] }, "z", -1);
-  const stbd = faceOf({ x: [-HX, HX], y: [0, TAPER], z: [-HZ, HZ] }, "x", 1);
-  const port = faceOf({ x: [-HX, HX], y: [0, TAPER], z: [-HZ, HZ] }, "x", -1);
-  const faces = cut ? [top, bottom, port] : [top, bottom, stbd, port];
-  for (const f of faces) out.push(...skin(f, WHITE, seed, { detail, blanket: true, cell: f.n === "z" ? [7, 5.5] : [7, 4.5], raise: 0.28, blocks: 0.22 }));
-  for (const f of [top, bottom]) {
-    for (const x of [-38, -29, -20, 20, 29, 38]) out.push(...vent(f, x, 8, 6, 3.2, 8));
-    out.push(...conduit(f, 16, -42, 42, { count: 4, seed }), ...conduit(f, 28, -42, 42, { count: 3, seed }), ...rail(f, 36, -43, 43));
-    out.push(...hatch(f, -8, 22, 2.4), ...hatch(f, 8, 22, 1.6), ...stencil(f, f === top ? "03" : "30", 0, 4, 3));
+  // the verniers at the aft corners, each held to its shroud by two round struts
+  for (const [x, z] of [[-DRIVE.vernier.x, DRIVE.vernier.z], [DRIVE.vernier.x, DRIVE.vernier.z], [-DRIVE.vernier.x, -DRIVE.vernier.z], [DRIVE.vernier.x, -DRIVE.vernier.z]] as const) {
+    out.push(...vernier(x, z));
+    const sx = Math.sign(x);
+    for (const dy of [3, 7]) out.push(...roundStrut("hull-grey-dark", [x, dy + 4, z * 0.8], [sx * nx + sx * Math.hypot(shroudAt(11) - 2, 0) * 0.9, 11, z * 0.45], 0.4));
   }
-  for (const f of [stbd, port]) {
-    out.push(...hatch(f, 12, 6, 2), ...hatch(f, 26, -6, 2), ...conduit(f, 0, 3, TAPER - 3, { count: 3, seed }), ...ladder(f, 12, 4, TAPER - 4), ...rail(f, -14, 3, TAPER - 3));
-  }
-  out.push(...taper(seed, detail));
-  // the spine collar where the frame meets engineering
   out.push(...collar("L", 58, 1));
-  out.push(seams("feature", [[[-HX, 0, HZ], [HX, 0, HZ], [HX, TAPER, HZ], [-HX, TAPER, HZ], [-HX, 0, HZ]], [[-HX, 0, -HZ], [HX, 0, -HZ], [HX, TAPER, -HZ], [-HX, TAPER, -HZ], [-HX, 0, -HZ]]]));
-  void [SPINE, capsule, collarAt, pt];
   return out;
+}
+
+/** Rings of structure round a tube. */
+function ringsOn(r: number, ys: readonly number[], minor: number): Piece[] {
+  return ys.map((y): Lathe => ringAt("hull-grey", 0, 0, r + minor, y, minor));
+}
+
+/** The shadow-shield collar: a round ceramic-tile cone that steps from the engines to the hull, as the shadow shields of the nuclear-thermal studies do, with ring frames, a row of bolts and struts to the shrouds. Its own part: swap it for none. */
+export function shadowCollar(cut: boolean, detail = 1, seed = "shield-collar"): Piece[] {
+  const { y, length, r } = SHADOW_COLLAR;
+  const profile: [number, number][] = [[r, y], [r, y + 3], [r - 3, y + 6], [r * 0.7, y + 13], [r * 0.46, y + 19], [14, y + length]];
+  const shield = tileShield(profile, seed, 24, 20);
+  const out: Piece[] = cut ? shield.map((p) => (p.kind === "lathe" ? { ...p, arc: () => [Math.PI, 2 * Math.PI] as const } : p)).filter((p) => p.kind !== "plate" || p.frame.o[0] <= 0.5) : shield;
+  for (const yy of [y + 3, y + 6, y + 13, y + 19]) out.push(ringAt("hull-grey", 0, 0, (profile.find(([, py]) => py === yy)?.[0] ?? r) + 0.4, yy, 0.45, cut ? { arc: () => [Math.PI, 2 * Math.PI] } : {}));
+  for (let k = 0; k < 32 * Math.min(1, detail + 0.3); k++) {
+    const a = (Math.PI * 2 * k) / 32;
+    if (cut && Math.sin(a) > 0) continue;
+    out.push(rod("hull-grey-dark", [r * Math.sin(a), y + 0.4, r * Math.cos(a)], [r * Math.sin(a), y + 1.4, r * Math.cos(a)], 0.3, 8));
+  }
+  // the cone's dress: removable orange shield panels and gold foil in rows, hatches, lamps, a hazard band, a number, and round pipes with bends from the shrouds to the neck
+  const rows: [number, number, "hull-orange" | "gold" | "hull-white"][] = [[y + 7, y + 11, "hull-orange"], [y + 14, y + 18, "gold"], [y + 19.5, y + 21.5, "hull-white"]];
+  const at = (yy: number, a: number, lift: number): Vec3 => {
+    const f = (yy - y) / length;
+    const seg = profile.findIndex(([, py], i) => i + 1 < profile.length && yy >= py && yy <= profile[i + 1][1]);
+    const [r0, y0] = profile[Math.max(0, seg)];
+    const [r1, y1] = profile[Math.min(profile.length - 1, Math.max(0, seg) + 1)];
+    const rr = (y1 === y0 ? r0 : r0 + ((r1 - r0) * (yy - y0)) / (y1 - y0)) + lift;
+    void f;
+    return [rr * Math.sin(a), yy, rr * Math.cos(a)];
+  };
+  rows.forEach(([ya, yb, mat], ri) => {
+    const n = 20 - ri * 2;
+    for (let k = 0; k < n; k++) {
+      const a0 = (Math.PI * 2 * (k + 0.08)) / n;
+      const a1 = (Math.PI * 2 * (k + 0.92)) / n;
+      if (cut && Math.sin((a0 + a1) / 2) > 0) continue;
+      out.push(quad(k % 5 === 4 ? "hull-orange-worn" : mat, at(ya, a0, 0.25), at(ya, a1, 0.25), at(yb, a1, 0.25), at(yb, a0, 0.25), 0.22), cub("hull-grey-dark", [at((ya + yb) / 2, (a0 + a1) / 2, 0.45)[0] - 0.3, at((ya + yb) / 2, (a0 + a1) / 2, 0.45)[0] + 0.3], [(ya + yb) / 2 - 0.2, (ya + yb) / 2 + 0.2], [at((ya + yb) / 2, (a0 + a1) / 2, 0.45)[2] - 0.3, at((ya + yb) / 2, (a0 + a1) / 2, 0.45)[2] + 0.3]));
+    }
+  });
+  for (let k = 0; k < 8; k++) {
+    const a = (Math.PI * 2 * k) / 8 + 0.2;
+    if (cut && Math.sin(a) > 0) continue;
+    const p = at(y + 4.5, a, 0.3);
+    out.push(rod("hazard", at(y + 4.1, a, 0.2), at(y + 4.9, a, 0.2), 0.4, 8), cub("lamp-amber", [p[0] - 0.2, p[0] + 0.2], [p[1] - 0.2, p[1] + 0.2], [p[2] - 0.2, p[2] + 0.2]), cub("panel-dark", [at(y + 2, a, 0.1)[0] - 0.7, at(y + 2, a, 0.1)[0] + 0.7], [y + 1.4, y + 2.6], [at(y + 2, a, 0.1)[2] - 0.7, at(y + 2, a, 0.1)[2] + 0.7]));
+  }
+  for (let k = 0; k < 6; k++) {
+    const a = (Math.PI * 2 * k) / 6 + 0.5;
+    if (cut && Math.sin(a) > 0) continue;
+    out.push(...pipeRun(k % 2 ? "coolant" : "copper", [at(y + 11, a, 0.9), at(y + 14, a + 0.1, 1.6), at(y + 20, a + 0.1, 1.3)], 0.3, { clampEvery: 4 }));
+  }
+  // struts from the collar's face to the two shrouds, round, with ball joints
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) out.push(...roundStrut("hull-grey-dark", [sx * 14, y + 1, sz * 14], [sx * (DRIVE.nozzleX - 6), y - 2.5, sz * 12], 0.45));
+  return out;
+}
+
+/** The bare joint when the collar is swapped for none: a flange ring where the neck meets the hull, so the part is never empty. */
+export function noCollar(): Piece[] {
+  return [ringAt("hull-grey", 0, 0, 11, 0.5, 0.5), ringAt("hull-grey-dark", 0, 0, 11, 1, 0.3), ...Array.from({ length: 16 }, (_, k) => rod("hull-grey-dark", [11.6 * Math.sin((Math.PI * 2 * k) / 16), 0.2, 11.6 * Math.cos((Math.PI * 2 * k) / 16)], [11.6 * Math.sin((Math.PI * 2 * k) / 16), 1.1, 11.6 * Math.cos((Math.PI * 2 * k) / 16)], 0.2, 6)), cub("lamp-amber", [-0.3, 0.3], [0, 0.4], [11.6, 12.2])];
 }

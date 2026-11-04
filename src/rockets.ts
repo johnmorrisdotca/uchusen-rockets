@@ -21,7 +21,7 @@ import { ISS_VARIANTS } from "./data/iss.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import { FLEET_KIT_ROCKETS, FLEET_SLOT_NAMES } from "./data/fleet.ts";
-import { SHIP_03_INSET_ROCKET, SHIP_03_VARIANTS } from "./data/ship-03.ts";
+import { SHIP_03_INSET_ROCKET, SHIP_03_SLOT_NAMES, SHIP_03_VARIANTS } from "./data/ship-03.ts";
 import { MADE_BY, type MakerId } from "./data/makers.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
@@ -186,6 +186,7 @@ export const partIdOf = (rocket: string, variant: string, slot: string): string 
  */
 export const SLOT_NAMES: Readonly<Record<string, string>> = {
   ...FLEET_SLOT_NAMES,
+  ...SHIP_03_SLOT_NAMES,
   booster: "Super Heavy",
   ship: "Ship",
   "first-stage": "First stage",

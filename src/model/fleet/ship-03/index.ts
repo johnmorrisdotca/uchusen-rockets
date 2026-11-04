@@ -4,8 +4,8 @@ import type { PartKind } from "../../../parts.ts";
 import { isCoarse, type Piece, place } from "./adapter.ts";
 import { bow } from "./bow.ts";
 import { command } from "./command.ts";
-import { HANGAR, RADIATOR, STATION } from "./dims.ts";
-import { driveFrame } from "./drive.ts";
+import { HANGAR, RADIATOR, SHADOW_COLLAR, STATION } from "./dims.ts";
+import { driveFrame, noCollar, shadowCollar } from "./drive.ts";
 import { engineering } from "./engineering.ts";
 import { ANCESTORS } from "./specs.ts";
 import { hangar } from "./hangar.ts";
@@ -112,11 +112,24 @@ export const STACK = (cut: boolean): MiyamotoPart[] => [
   stack("bow", "Bow defence and navigation", "module", STATION.bow, 36, 40, "Three staggered shield layers, ranging apertures, optical heads and two debris-intercept mounts.", bow, cut, false, true),
 ];
 
+/** The shadow-shield collar, or none: two parts for one slot, so the viewer can swap them. */
+const collarPart = (none: boolean): MiyamotoPart => ({
+  id: none ? "collar-none" : "shield-collar",
+  name: none ? "Drive collar, none (bare neck)" : "Shadow-shield collar",
+  kind: "module",
+  y0: SHADOW_COLLAR.y,
+  place: { x: 0, z: 0 },
+  height: none ? 1 : SHADOW_COLLAR.length,
+  diameter: none ? 24 : SHADOW_COLLAR.r * 2,
+  note: none ? `The drive's neck meets the hull at a plain flange ring, as the neck of a bare engine section does in ${ANCESTORS.collar}. Descends from ${ANCESTORS.collar}.` : `A round ceramic-tile cone that steps from the engines to the hull. Descends from ${ANCESTORS.collar}.`,
+  pieces: (o) => (none ? noCollar() : local(shadowCollar(false, o?.detail ?? 1), 0, SHADOW_COLLAR.y, 0, o?.level)),
+});
+
 /** Every part of the ship, each once. */
 export function parts(): MiyamotoPart[] {
   const out: MiyamotoPart[] = [...STACK(false), ...STACK(true)];
   for (const cut of [false, true]) out.push(shoulder("starboard", cut), shoulder("port", cut));
-  out.push(missionPod("relay"), missionPod("relief"));
+  out.push(collarPart(false), collarPart(true), missionPod("relay"), missionPod("relief"));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   return out;
 }

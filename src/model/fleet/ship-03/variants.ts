@@ -7,16 +7,17 @@ const STACKED = ["drive", "engineering", "fuel-aft", "fuel-fore", "habitat", "co
 
 /** For each variant, slot by slot, the id of its part (after `fleet-ship-03-`). */
 export const MIYAMOTO_VARIANT_SLOTS: Readonly<Record<string, Readonly<Record<string, string>>>> = (() => {
-  const make = (o: { cut?: boolean; deployed?: boolean; pod: "relay" | "relief" }): Record<string, string> => {
+  const make = (o: { cut?: boolean; deployed?: boolean; bare?: boolean; pod: "relay" | "relief" }): Record<string, string> => {
     const sfx = o.cut ? "-cutaway" : "";
     return {
       ...Object.fromEntries(STACKED.map((slot) => [slot, `${slot}${sfx}`])),
       "hangar-starboard": `hangar-starboard${sfx}`,
       "hangar-port": `hangar-port${sfx}`,
+      "drive-collar": o.bare ? "collar-none" : "shield-collar",
       pod: `pod-${o.pod}`,
       "radiators-dorsal": `radiators-dorsal-${o.deployed ? "deployed" : "stowed"}`,
       "radiators-ventral": `radiators-ventral-${o.deployed ? "deployed" : "stowed"}`,
     };
   };
-  return { miyamoto: make({ pod: "relay" }), "miyamoto-deployed": make({ pod: "relay", deployed: true }), "miyamoto-relief": make({ pod: "relief" }), "miyamoto-cutaway": make({ pod: "relay", cut: true }) };
+  return { miyamoto: make({ pod: "relay" }), "miyamoto-deployed": make({ pod: "relay", deployed: true }), "miyamoto-relief": make({ pod: "relief" }), "miyamoto-cutaway": make({ pod: "relay", cut: true }), "miyamoto-no-collar": make({ pod: "relay", bare: true }) };
 })();

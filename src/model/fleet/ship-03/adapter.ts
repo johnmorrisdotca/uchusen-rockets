@@ -4,11 +4,12 @@ import { iBeam as kitIBeam, pipeRun as kitPipeRun, strut as kitStrut } from "../
 import type { MaterialName } from "../../materials.ts";
 import type { Frame, Lathe, Piece, Plate, Vec3 } from "../../pieces.ts";
 
-export { annulus, antenna, beam, box, disc, horn, hoop, lamps, LIVERY, place, post, ringOf, rng, rod, seams, stamp } from "../detail.ts";
+export { annulus, antenna, beam, box, disc, horn, hoop, lamps, LIVERY, place, post, ringOf, rng, rod, seams, stamp, tileShield } from "../detail.ts";
 export type { Lamp, Pose, Rng } from "../detail.ts";
 export { collar, COLLARS } from "../collars.ts";
 export { contextOf, drum } from "../hull.ts";
 export { BUILD_BUDGET_MS, isCoarse } from "../levels.ts";
+export { designation, FLEET_MAKER } from "../kit.ts";
 export { HULL_STACKS, layerShells, stackDepth } from "../layers.ts";
 export type { HullLayer, HullStack } from "../layers.ts";
 export { FLEET_PALETTE } from "../palette.ts";

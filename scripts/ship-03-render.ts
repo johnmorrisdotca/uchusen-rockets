@@ -16,7 +16,7 @@ interface Shot {
   /** The way up on the screen; the ship lies along Y, so the default lays it flat with the dorsal side up. */
   up?: [number, number, number];
   size?: [number, number];
-  look?: "painted" | "line";
+  look?: "painted" | "line" | "lit";
   /** Radius round the target the key light's shadow covers, metres. */
   shadow?: number;
   /** Parts of the glb to hide, by node name. */
@@ -28,6 +28,10 @@ interface Shot {
   ortho?: number;
   /** Points of the model whose place in the picture is written beside it, in pixels, for callouts. */
   points?: { id: string; at: [number, number, number] }[];
+  /** The lit look: drive flames (a cone from `at` along `dir`), lights that glow (nav lights, strobes) and floodlights. */
+  plumes?: { at: [number, number, number]; dir: [number, number, number]; r: number; len: number }[];
+  glows?: { at: [number, number, number]; color: string; size: number }[];
+  spots?: { at: [number, number, number]; target: [number, number, number]; color: string; angle: number; intensity: number }[];
 }
 interface Job {
   glb: string;
@@ -65,7 +69,7 @@ window.draw = async (job, shot) => {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(shot.background ?? "#070c17");
   scene.environment = env;
-  scene.environmentIntensity = shot.look === "line" ? 0 : 0.8;
+  scene.environmentIntensity = shot.look === "line" ? 0 : shot.look === "lit" ? 0.08 : 0.8;
   const models = [];
   for (const piece of [{ glb: job.glb, at: [0, 0, 0] }, ...(job.more ?? [])]) {
     const gltf = await load(piece.glb);
@@ -82,7 +86,7 @@ window.draw = async (job, shot) => {
     if (o.isMesh) {
       o.castShadow = shot.look !== "line"; o.receiveShadow = shot.look !== "line";
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
+      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (shot.look === 'lit') { const n = m.name || ''; const glow = /^(lamp-(amber|blue|red)|core)$/.test(n) ? [m.color.clone(), 3.2] : /^(glass)$/.test(n) ? [new THREE.Color('#ffe0a0'), 2.4] : /^(coil|copper)$/.test(n) ? [new THREE.Color('#ff9a30'), 1.1] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
       if (shot.look === "line") { const e = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), new THREE.LineBasicMaterial({ color: "#8fd3ff", clippingPlanes: planes })); o.add(e); }
     } else if (o.material) { o.material.clippingPlanes = planes; }
   });
@@ -96,7 +100,7 @@ window.draw = async (job, shot) => {
   camera.lookAt(...shot.target);
   const target = new THREE.Vector3(...shot.target);
   const dir = new THREE.Vector3(0.5, 0.7, 0.6).normalize();
-  const sun = new THREE.DirectionalLight("#fff3e0", shot.look === "line" ? 0 : 2.6);
+  const sun = new THREE.DirectionalLight("#fff3e0", shot.look === "line" ? 0 : shot.look === "lit" ? 0.55 : 2.6);
   const r = shot.shadow ?? 200;
   sun.position.copy(target).addScaledVector(dir, r * 3);
   sun.target.position.copy(target);
@@ -107,6 +111,18 @@ window.draw = async (job, shot) => {
   sun.shadow.camera.updateProjectionMatrix();
   const rim = new THREE.DirectionalLight("#9fc4ff", shot.look === "line" ? 0 : 0.8); rim.position.set(-0.6, -0.2, -0.8);
   scene.add(sun, sun.target, rim, new THREE.HemisphereLight("#cfe0ff", "#1a1d24", shot.look === "line" ? 0.8 : 0.5));
+  for (const g of shot.glows ?? []) { const m = new THREE.Mesh(new THREE.SphereGeometry(g.size, 12, 8), new THREE.MeshBasicMaterial({ color: g.color })); m.position.set(...g.at); scene.add(m); const halo = new THREE.Mesh(new THREE.SphereGeometry(g.size * 3, 12, 8), new THREE.MeshBasicMaterial({ color: g.color, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending })); halo.position.set(...g.at); scene.add(halo); }
+  for (const p of shot.plumes ?? []) {
+    const dir = new THREE.Vector3(...p.dir).normalize();
+    for (const [k, c, o] of [[1, '#4aa8ff', 0.28], [0.62, '#b8e4ff', 0.42], [0.3, '#ffffff', 0.7]]) {
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(p.r * k, p.len * (0.55 + 0.45 * k), 28, 1, true), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
+      cone.position.set(...p.at).addScaledVector(dir, (p.len * (0.55 + 0.45 * k)) / 2);
+      scene.add(cone);
+    }
+    const light = new THREE.PointLight('#7fc4ff', 40000, p.len * 3, 1.6); light.position.set(...p.at).addScaledVector(dir, p.r * 0.6); scene.add(light);
+  }
+  for (const sp of shot.spots ?? []) { const l = new THREE.SpotLight(sp.color, sp.intensity, 0, sp.angle, 0.4, 1); l.position.set(...sp.at); l.target.position.set(...sp.target); scene.add(l, l.target); }
   renderer.render(scene, camera);
   camera.updateMatrixWorld();
   const points = (shot.points ?? []).map((p) => { const v = new THREE.Vector3(...p.at).project(camera); return { id: p.id, x: Math.round(((v.x + 1) / 2) * w), y: Math.round(((1 - v.y) / 2) * h), behind: v.z > 1 }; });

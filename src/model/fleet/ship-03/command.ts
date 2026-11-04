@@ -1,7 +1,7 @@
 // The armoured command citadel, station 302 to 350 m: an operations ring around a communications core, a local navigation desk, a medical link and two escape passages. There is no exposed bridge window: remote cameras
 // stand on the armour instead. The hull is a chamfered block of thick laminate, plated in grey with white blocks; aerial booms with beacons reach out to port and starboard, and thruster blocks sit at the corners. A cutaway
 // opens the starboard side. Pure: no three.js and no DOM.
-import { antenna, box, chamfered, collar, cub, discX, HULL_STACKS, type Piece, prism, quad, rng, ringOf, rod, roundStrut, stamp, type Vec3 } from "./adapter.ts";
+import { antenna, box, chamfered, collar, cub, discX, HULL_STACKS, type Piece, pipeRun, prism, quad, rng, ringOf, rod, roundStrut, stamp, type Vec3 } from "./adapter.ts";
 import { CITADEL, STATION } from "./dims.ts";
 import { dressedFace, facesOf, wallShells } from "./hulls.ts";
 import { along, ARMOUR, lamp, rail } from "./faces.ts";
@@ -104,7 +104,46 @@ export function command(cut: boolean, detail = 1, seed = "command"): Piece[] {
         out.push(cub("hull-grey-dark", [x - 0.9, x + 0.9], [y - 1.3, y + 1.3], [z - 1.4, z + 1.4]));
         for (const d of [-0.7, 0.7]) out.push(rod("bell", [x, y + d * 1.4, z + d], [x + sx * 0.8, y + d * 1.4, z + d], 0.5, 8), rod("bell-inside", [x + sx * 0.8, y + d * 1.4, z + d], [x + sx * 0.9, y + d * 1.4, z + d], 0.36, 8));
       }
-  out.push(...collar("L", Y0, -1), ...collar("L", Y1, 1));
+  out.push(...collar("L", Y0, -1), ...separationJoint(Y0, cut), ...collar("L", Y1, 1));
   out.push(...rail(along(f.dorsal), -17, Y0 + 2, Y1 - 2), ...rail(along(f.dorsal), 17, Y0 + 2, Y1 - 2));
+  return out;
+}
+
+/** The separation joint at the citadel's aft face: the citadel leaves as a lifeboat, so the joint is hardware you can see. A separation collar (a split ring with a hazard seam), twelve latch dogs with their pyro bolts, eight separation springs, and two umbilical plates with their connector pins and a locking lever each. The part boundary is the plane y = Y0. */
+export function separationJoint(y: number, cut: boolean): Piece[] {
+  const out: Piece[] = [];
+  const R = 15;
+  // the split ring: two half rings standing a hand apart, a hazard seam round the gap, a lamp that says armed
+  out.push(collarAt("hull-grey", 0, 0, R * 0.62, R * 0.98, y - 0.45, y - 0.95), collarAt("hull-grey-dark", 0, 0, R * 0.62, R * 0.98, y - 1.05, y - 1.5), ringAt("hazard", 0, 0, R * 0.99, y - 1, 0.12), ringAt("lamp-red", 0, 0, R * 0.64, y - 1, 0.08));
+  // twelve latch dogs: a hook on a pivot with a pyro bolt through it, a bolt head on the far side and a wire to the next
+  for (let k = 0; k < 12; k++) {
+    const a = (Math.PI * 2 * k) / 12;
+    if (cut && Math.sin(a) > 0.2) continue;
+    const px = (R * 0.8) * Math.sin(a);
+    const pz = (R * 0.8) * Math.cos(a);
+    out.push(cub("hull-grey-dark", [px - 0.45, px + 0.45], [y - 0.5, y - 1.7], [pz - 0.45, pz + 0.45]), rod("hull-orange", [px, y - 0.4, pz], [px, y - 1.9, pz], 0.16, 12), rod("hull-grey", [px, y - 1.9, pz], [px, y - 2.1, pz], 0.28, 12), rod("lamp-amber", [px * 1.15, y - 1.2, pz * 1.15], [px * 1.15, y - 1.45, pz * 1.15], 0.1, 8));
+  }
+  // eight separation springs: a cylinder and a piston on a plate, pushing the citadel clear
+  for (let k = 0; k < 8; k++) {
+    const a = (Math.PI * 2 * k) / 8 + Math.PI / 8;
+    if (cut && Math.sin(a) > 0.2) continue;
+    const sx = (R * 0.7) * Math.sin(a);
+    const sz = (R * 0.7) * Math.cos(a);
+    out.push(rod("hull-grey-dark", [sx, y + 0.2, sz], [sx, y - 0.7, sz], 0.32, 12), rod("engine-pale", [sx, y - 0.7, sz], [sx, y - 1.1, sz], 0.18, 12), rod("hull-grey", [sx, y - 1.1, sz], [sx, y - 1.2, sz], 0.4, 12));
+  }
+  // two umbilical plates on the flat of the face: a plate with a grid of connector pins in round sockets, a guide pin each side and a locking lever, a cover that opens on separation
+  for (const sx of [-1, 1]) {
+    const cx = sx * 17.4;
+    out.push(cub("hull-grey-dark", [cx - 1.9, cx + 1.9], [y - 0.1, y - 0.55], [-3.1, 3.1]), cub("hull-yellow", [cx - 2.05, cx + 2.05], [y - 0.05, y - 0.15], [-3.25, 3.25]));
+    for (let i = 0; i < 4; i++)
+      for (let j = 0; j < 6; j++) {
+        const px = cx - 1.2 + i * 0.8;
+        const pz = -2.3 + j * 0.92;
+        out.push(rod("panel-dark", [px, y - 0.5, pz], [px, y - 0.75, pz], 0.22, 12), rod(i % 2 ? "copper" : "engine-pale", [px, y - 0.7, pz], [px, y - 1.15, pz], 0.07, 8));
+      }
+    for (const gz of [-3.6, 3.6]) out.push(rod("hull-grey", [cx, y - 0.1, gz], [cx, y - 1.9, gz], 0.2, 12), rod("hull-yellow", [cx, y - 1.9, gz], [cx, y - 2.1, gz], 0.12, 8));
+    out.push(rod("hull-grey-dark", [cx - 2.1, y - 0.6, 0], [cx - 2.1, y - 1.8, 0.9], 0.12, 8), rod("red", [cx - 2.1, y - 1.8, 0.9], [cx - 2.1, y - 2.1, 1.2], 0.2, 8));
+    out.push(...pipeRun("copper", [[cx + 2, y - 0.3, 2.6], [cx + 3.4, y - 1.4, 2.6], [cx + 3.4, y - 3.2, 2.6]], 0.14, { clampEvery: 1.5 }));
+  }
   return out;
 }

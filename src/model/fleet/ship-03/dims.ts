@@ -40,7 +40,7 @@ export const BARREL = { r: 11, length: 72, x: 24, z: -12, aft: [92, 164], fore: 
 export const COLLAR = { y: [174, 234], z0: SPINE.hz, zTop: 34, r: 14 } as const;
 
 /** The drive: two throats at X +-22, four verniers at the aft corners. */
-export const DRIVE = { nozzleX: 22, exitR: 16, throatR: 4.6, chamberR: 8.5, exitY: 2, throatY: 20, chamberY: 36, hx: 45, hz: 23, vernier: { x: 41, z: 17, r: 2.4, length: 8 } } as const;
+export const DRIVE = { nozzleX: 22, exitR: 16, throatR: 4.6, chamberR: 8.5, exitY: 1, throatY: 18, chamberY: 30, hx: 45, hz: 23, vernier: { x: 41, z: 17, r: 2.4, length: 8 } } as const;
 
 /** The command citadel: half widths across X and Z, and the chamfer of its corners. */
 export const CITADEL = { hx: 21, hz: 16, chamfer: 7 } as const;
@@ -60,3 +60,7 @@ export const RADIATOR_AREA = RADIATOR.areaEach * RADIATOR.leaves * RADIATOR.bank
 
 /** How many tonnes of propellant, of inert mass and of the protected reserve, and the full mass. */
 export const MASS = { inert: 21_000, propellant: 84_000, full: 105_000, cargo: 2_800, reserve: 4_200 } as const;
+
+/** The aft enclosure: a round shroud over each nozzle, narrowing aft so the lips stand clear of it, and the shadow-shield collar that steps from the engine to the hull. The collar is its own part, swappable with none. */
+export const SHROUD = { start: 7, end: 36, rAft: 18.8, rFore: 22.4 } as const;
+export const SHADOW_COLLAR = { y: 36, length: 22, r: 30 } as const;
