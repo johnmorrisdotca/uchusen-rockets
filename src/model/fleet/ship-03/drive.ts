@@ -3,6 +3,7 @@
 // steps from the engines to the hull is its own part (`shadowCollar`), swappable with none. A cutaway leaves the starboard side open. Pure: no three.js and no DOM.
 import { collar, cub, pipeRun, type Lathe, type Piece, quad, rng, rod, roundStrut, tileShield, type Vec3 } from "./adapter.ts";
 import { DRIVE, SHADOW_COLLAR, SHROUD } from "./dims.ts";
+import { hexClad } from "./hex.ts";
 import { collarAt, nozzleProfile, nozzleRadiusAt, OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
 
 const H = DRIVE.chamberY;
@@ -94,7 +95,7 @@ function arcsLeft(windows: readonly (readonly [number, number])[]): [number, num
 }
 
 /** The shroud of one nozzle: faceted bands in white blanket and gold foil, ring frames and round stringers between, windows cut in some bands. `side` is the nozzle's side (+1 starboard) and the way its outer window faces. */
-function shroud(x: number, side: 1 | -1, cut: boolean, detail: number, seed: string): Piece[] {
+function shroud(x: number, side: 1 | -1, cut: boolean, detail: number, seed: string, hex: boolean): Piece[] {
   const out: Piece[] = [];
   const random = rng(`${seed}/shroud/${side}`);
   const open = cut && side === 1;
@@ -111,7 +112,7 @@ function shroud(x: number, side: 1 | -1, cut: boolean, detail: number, seed: str
     const ys = Array.from({ length: 4 }, (_, i) => band.y[0] + ((band.y[1] - band.y[0]) * i) / 3);
     const profile = ys.map((y) => [shroudAt(y) + 0.5, y] as const);
     const arcs = open ? [[Math.PI, 2 * Math.PI] as [number, number]] : arcsLeft(band.windows);
-    for (const [a0, a1] of arcs) out.push({ kind: "lathe", material: band.material, at: [x, 0], segs: 16, profile, arc: () => [a0, a1], body: true, outline: true });
+    for (const [a0, a1] of arcs) out.push({ kind: "lathe", material: hex ? "tile" : band.material, at: [x, 0], segs: hex ? 48 : 16, profile, arc: () => [a0, a1], body: true, outline: true });
     // a window's frame: an axial bar at each edge and a flange ring at each end
     for (const [c, w] of band.windows) {
       if (open) continue;
@@ -121,6 +122,16 @@ function shroud(x: number, side: 1 | -1, cut: boolean, detail: number, seed: str
         out.push(rod("hull-grey-dark", p(band.y[0]), p(band.y[1]), 0.28, 8));
       }
     }
+  }
+  // Ariake: the bands are clad in rows of raised near-black hexagonal tiles, clear of the ring frames and the window frames
+  if (hex) {
+    const rings = [7.1, 13, 19, 25, 31, 36];
+    out.push(...hexClad({ radius: (y) => shroudAt(y) + 0.5, y0: 7.4, y1: 35.8, at: [x, 0], tile: detail < 0.5 ? 1.5 : 1.05, arcs: (y) => {
+      if (rings.some((r) => Math.abs(y - r) < 1)) return [];
+      if (open) return [[Math.PI, 2 * Math.PI]];
+      const band = bands.find((b) => y >= b.y[0] && y < b.y[1]);
+      return arcsLeft(band?.windows ?? []).map(([a0, a1]) => [a0 + 0.07, a1 - 0.07] as [number, number]).filter(([a0, a1]) => a1 > a0);
+    } }, `${seed}/${side}`));
   }
   // ring frames between the bands, standing proud, with a row of bolts
   for (const y of [7.1, 13, 19, 25, 31, 36]) {
@@ -132,7 +143,7 @@ function shroud(x: number, side: 1 | -1, cut: boolean, detail: number, seed: str
     }
   }
   // stringers: round rods along the shroud between the windows, every twenty degrees
-  for (let a = 5; a < 360; a += 20 / Math.max(0.3, detail)) {
+  for (let a = 5; a < 360 && !hex; a += 20 / Math.max(0.3, detail)) {
     const r = (a * Math.PI) / 180;
     if (open && Math.sin(r) > 0) continue;
     if (Math.abs(((a - outward + 540) % 360) - 180) < 52 || a < 32 || a > 328 || Math.abs(a - 180) < 32) continue;
@@ -145,12 +156,12 @@ function shroud(x: number, side: 1 | -1, cut: boolean, detail: number, seed: str
 }
 
 /** The main drive: both nozzles in their shrouds, the neck to the hull with the feed lines, and the verniers. */
-export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
+export function driveFrame(cut: boolean, detail = 1, seed = "drive", hex = false): Piece[] {
   const out: Piece[] = [];
   const nx = DRIVE.nozzleX;
-  out.push(...nozzle(-nx, cut, seed), ...nozzle(nx, cut, seed), ...shroud(-nx, -1, cut, detail, seed), ...shroud(nx, 1, cut, detail, seed));
+  out.push(...nozzle(-nx, cut, seed), ...nozzle(nx, cut, seed), ...shroud(-nx, -1, cut, detail, seed, hex), ...shroud(nx, 1, cut, detail, seed, hex));
   // a web between the shrouds where they meet, so the two read as one body: a faceted lens of white blanket
-  out.push({ kind: "lathe", material: "hull-white", at: [0, 0], segs: 8, profile: [[0.001, 14], [4.6, 18], [5.2, 26], [4.6, 34], [0.001, 36]], ...(cut ? { arc: () => [Math.PI, 2 * Math.PI] as const } : {}) });
+  out.push({ kind: "lathe", material: hex ? "tile" : "hull-white", at: [0, 0], segs: 8, profile: [[0.001, 14], [4.6, 18], [5.2, 26], [4.6, 34], [0.001, 36]], ...(cut ? { arc: () => [Math.PI, 2 * Math.PI] as const } : {}) });
   // the neck: a round tube from the shrouds to the engineering module, with the feed lines running along it in round pipes with bends, flanges and clamps
   out.push(tubeAt("hull-grey-dark", 0, 0, 9.5, 36, 58, { segs: 20, body: true, outline: true }), ...ringsOn(9.5, [40, 46, 52], 0.35));
   for (const [sx, mat] of [[-1, "coolant"], [1, "copper"]] as const) {
@@ -173,10 +184,10 @@ function ringsOn(r: number, ys: readonly number[], minor: number): Piece[] {
 }
 
 /** The shadow-shield collar: a round ceramic-tile cone that steps from the engines to the hull, as the shadow shields of the nuclear-thermal studies do, with ring frames, a row of bolts and struts to the shrouds. Its own part: swap it for none. */
-export function shadowCollar(cut: boolean, detail = 1, seed = "shield-collar"): Piece[] {
+export function shadowCollar(cut: boolean, detail = 1, seed = "shield-collar", hex = false): Piece[] {
   const { y, length, r } = SHADOW_COLLAR;
   const profile: [number, number][] = [[r, y], [r, y + 3], [r - 3, y + 6], [r * 0.7, y + 13], [r * 0.46, y + 19], [14, y + length]];
-  const shield = tileShield(profile, seed, 24, 20);
+  const shield = hex ? hexShield(profile, seed, detail) : tileShield(profile, seed, 24, 20);
   const out: Piece[] = cut ? shield.map((p) => (p.kind === "lathe" ? { ...p, arc: () => [Math.PI, 2 * Math.PI] as const } : p)).filter((p) => p.kind !== "plate" || p.frame.o[0] <= 0.5) : shield;
   for (const yy of [y + 3, y + 6, y + 13, y + 19]) out.push(ringAt("hull-grey", 0, 0, (profile.find(([, py]) => py === yy)?.[0] ?? r) + 0.4, yy, 0.45, cut ? { arc: () => [Math.PI, 2 * Math.PI] } : {}));
   for (let k = 0; k < 32 * Math.min(1, detail + 0.3); k++) {
@@ -195,7 +206,7 @@ export function shadowCollar(cut: boolean, detail = 1, seed = "shield-collar"): 
     void f;
     return [rr * Math.sin(a), yy, rr * Math.cos(a)];
   };
-  rows.forEach(([ya, yb, mat], ri) => {
+  rows.filter((_, ri) => !hex || ri === 0).forEach(([ya, yb, mat], ri) => {
     const n = 20 - ri * 2;
     for (let k = 0; k < n; k++) {
       const a0 = (Math.PI * 2 * (k + 0.08)) / n;
@@ -223,4 +234,20 @@ export function shadowCollar(cut: boolean, detail = 1, seed = "shield-collar"): 
 /** The bare joint when the collar is swapped for none: a flange ring where the neck meets the hull, so the part is never empty. */
 export function noCollar(): Piece[] {
   return [ringAt("hull-grey", 0, 0, 11, 0.5, 0.5), ringAt("hull-grey-dark", 0, 0, 11, 1, 0.3), ...Array.from({ length: 16 }, (_, k) => rod("hull-grey-dark", [11.6 * Math.sin((Math.PI * 2 * k) / 16), 0.2, 11.6 * Math.cos((Math.PI * 2 * k) / 16)], [11.6 * Math.sin((Math.PI * 2 * k) / 16), 1.1, 11.6 * Math.cos((Math.PI * 2 * k) / 16)], 0.2, 6)), cub("lamp-amber", [-0.3, 0.3], [0, 0.4], [11.6, 12.2])];
+}
+
+/** The shield of Ariake's collar: the dark cone, then rows of raised hexagonal tiles over it, clear of the ring frames, the hazard band, the hatches and the orange panel row (which stay as they are on Miyamoto). */
+function hexShield(profile: readonly (readonly [number, number])[], seed: string, detail: number): Piece[] {
+  const { y } = SHADOW_COLLAR;
+  const radius = (yy: number): number => {
+    const i = profile.findIndex(([, py], k) => k + 1 < profile.length && yy >= py && yy <= profile[k + 1][1]);
+    const [r0, y0] = profile[Math.max(0, i)];
+    const [r1, y1] = profile[Math.min(profile.length - 1, Math.max(0, i) + 1)];
+    return y1 === y0 ? r0 : r0 + ((r1 - r0) * (yy - y0)) / (y1 - y0);
+  };
+  const body: Piece = { kind: "lathe", material: "tile", segs: 48, body: true, outline: true, profile, rings: profile.slice(1, -1).map(([, py]) => py) };
+  const clear = [y + 3, y + 6, y + 13, y + 19].map((r) => [r - 0.8, r + 0.8] as const);
+  const dressed = [[y + 1, y + 3], [y + 3.9, y + 5.1], [y + 6.6, y + 11.4]] as const;
+  const skip = (yy: number): boolean => clear.some(([a, b]) => yy > a && yy < b) || dressed.some(([a, b]) => yy > a && yy < b);
+  return [body, ...hexClad({ radius, y0: y + 1.6, y1: y + SHADOW_COLLAR.length - 0.4, at: [0, 0], tile: detail < 0.5 ? 1.7 : 1.2, arcs: (yy) => (skip(yy) ? [] : [[0, 2 * Math.PI]]) }, seed)];
 }
