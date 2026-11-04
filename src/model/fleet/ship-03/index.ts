@@ -7,6 +7,7 @@ import { command } from "./command.ts";
 import { HANGAR, RADIATOR, STATION } from "./dims.ts";
 import { driveFrame } from "./drive.ts";
 import { engineering } from "./engineering.ts";
+import { ANCESTORS } from "./specs.ts";
 import { hangar } from "./hangar.ts";
 import { habitat } from "./habitat.ts";
 import { pod, type PodKind } from "./pod.ts";
@@ -52,7 +53,7 @@ const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [num
   diameter: Math.max(width, depth),
   ...(first ? {} : { bottom: true }),
   ...(last ? {} : { top: true }),
-  note,
+  note: `${note} Descends from ${ANCESTORS[id]}.`,
   pieces: (o) => local(build(cut, o?.detail ?? 1), 0, y0, 0),
 });
 
@@ -66,7 +67,7 @@ const shoulder = (side: "starboard" | "port", cut: boolean): WaymarkPart => {
     place: { x: h.centre, z: 0 },
     height: h.y[1] - h.y[0],
     diameter: h.x[1] - h.x[0],
-    note: side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule and a cutter, opening to starboard." : "The forward shoulder: a survey bay with drones on racks, an access bridge and emergency shutters, opening to port.",
+    note: `${side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule and a cutter, opening to starboard." : "The forward shoulder: a survey bay with drones on racks, an access bridge and emergency shutters, opening to port."} Descends from ${ANCESTORS[`hangar-${side}`]}.`,
     pieces: (o) => local(hangar(side, cut, o?.detail ?? 1), h.centre, h.y[0], 0),
   };
 };
@@ -79,7 +80,7 @@ const missionPod = (kind: PodKind): WaymarkPart => ({
   place: { x: 0, z: 0 },
   height: 60,
   diameter: 28,
-  note: kind === "relay" ? "A communications bay under a tower of dishes and phased arrays, on the keyed dorsal collar." : "Six relief and equipment containers under a gantry, on the keyed dorsal collar.",
+  note: `${kind === "relay" ? "A communications bay under a tower of dishes and phased arrays, on the keyed dorsal collar." : "Six relief and equipment containers under a gantry, on the keyed dorsal collar."} Descends from ${ANCESTORS.pod}.`,
   pieces: (o) => local(pod(kind, o?.detail ?? 1), 0, 174, 0),
 });
 
@@ -91,7 +92,7 @@ const bank = (which: "dorsal" | "ventral", open: boolean): WaymarkPart => ({
   place: { x: 0, z: 0 },
   height: RADIATOR.y[1] - RADIATOR.y[0],
   diameter: open ? 125 : 25,
-  note: open ? "Four leaves of 25 by 60 m on a mast, clear of the hangar corridors and the exhaust." : "Four leaves folded into a box on the habitation hull's rails.",
+  note: `${open ? "Four leaves of 25 by 60 m on a mast, clear of the hangar corridors and the exhaust." : "Four leaves folded into a box on the habitation hull's rails."} Descends from ${ANCESTORS.radiators}.`,
   pieces: (o) => local(radiators(which, open, o?.detail ?? 1), 0, RADIATOR.y[0], 0),
 });
 

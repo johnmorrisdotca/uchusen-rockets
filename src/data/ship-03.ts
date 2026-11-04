@@ -1,4 +1,4 @@
-// Ship 03, Waymark (SPX-ICV-03): a planned interstellar command vessel, this package's own design. It is four variants of one ship: stowed, with its radiators out, with the relief pod on its collar, and cut open to the
+// SPX-03 Waymark, Waymark (SPX-ICV-03): a planned interstellar command vessel, this package's own design. It is four variants of one ship: stowed, with its radiators out, with the relief pod on its collar, and cut open to the
 // starboard side. Every figure is blank and says it is a design: no source gives them. The ship's own numbers are in `src/model/fleet/ship-03/specs.ts`.
 import { WAYMARK_PARTS, WAYMARK_VARIANT_SLOTS } from "../model/fleet/ship-03/variants.ts";
 import { CARDS, SHIP_INSETS } from "../model/fleet/ship-03/insets.ts";

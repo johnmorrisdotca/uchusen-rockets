@@ -1,7 +1,7 @@
 // The armoured command citadel, station 302 to 350 m: an operations ring around a communications core, a local navigation desk, a medical link and two escape passages. There is no exposed bridge window: remote cameras
 // stand on the armour instead. The hull is a chamfered block of thick laminate, plated in grey with white blocks; aerial booms with beacons reach out to port and starboard, and thruster blocks sit at the corners. A cutaway
 // opens the starboard side. Pure: no three.js and no DOM.
-import { antenna, beam, box, chamfered, collar, cub, discX, HULL_STACKS, type Piece, prism, quad, rng, ringOf, rod, stamp, type Vec3 } from "./adapter.ts";
+import { antenna, box, chamfered, collar, cub, discX, HULL_STACKS, type Piece, prism, quad, rng, ringOf, rod, roundStrut, stamp, type Vec3 } from "./adapter.ts";
 import { CITADEL, STATION } from "./dims.ts";
 import { dressedFace, facesOf, wallShells } from "./hulls.ts";
 import { along, ARMOUR, lamp, rail } from "./faces.ts";
@@ -92,7 +92,7 @@ export function command(cut: boolean, detail = 1, seed = "command"): Piece[] {
   out.push(...antenna("phased", [0, Y0 + 24, HZ], [0, 0, 1], 6, `${seed}ph`), ...antenna("whip", [0, Y1 - 6, HZ], [0, 0, 1], 9, `${seed}w`), ...antenna("omni", [-HX - 0.2, Y0 + 4, 0], [-1, 0, 0], 4, `${seed}o`));
   // aerial booms with beacons: a truss out to each side at the aft end, ending in a ring beacon
   for (const s of [-1, 1]) {
-    out.push(beam("hull-grey", [s * HX, Y0 + 8, 2], [s * (HX + 17), Y0 + 12, 2], 1.1, 1.1), beam("hull-grey-dark", [s * HX, Y0 + 8, -2], [s * (HX + 17), Y0 + 12, -2], 0.7, 0.7), beam("hull-grey-dark", [s * HX, Y0 + 8, 2], [s * (HX + 17), Y0 + 12, -2], 0.4, 0.4));
+    out.push(...roundStrut("hull-grey", [s * HX, Y0 + 8, 2], [s * (HX + 17), Y0 + 12, 2], 0.5), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, -2], [s * (HX + 17), Y0 + 12, -2], 0.35), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, 2], [s * (HX + 17), Y0 + 12, -2], 0.22), ...roundStrut("hull-grey-dark", [s * HX, Y0 + 8, -2], [s * (HX + 17), Y0 + 12, 2], 0.22));
     out.push(discX("hull-grey-dark", Y0 + 12, 0, s * (HX + 17), s * (HX + 18.4), 3.4, 16), discX("lamp-blue", Y0 + 12, 0, s * (HX + 18.4), s * (HX + 18.9), 1.6, 12), ...lamp({ n: "x", sign: s as 1 | -1, at: HX, a: [Y0, Y1], b: [-HZ, HZ] }, Y0 + 12, 6, "red", 0.3));
   }
   // thruster blocks at the four corners of each end: a box of four nozzles
