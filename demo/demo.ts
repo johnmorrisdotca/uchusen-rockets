@@ -174,7 +174,18 @@ function renderMain() {
   const shows = showsOf(variant.slots);
   if (!shows.includes(state.show)) state.show = shows[0];
   const showBox = byId("shows");
-  showBox.replaceChildren(...shows.map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))));
+  // a ship of dozens of parts would fill the page with chips: it gets together, apart and one menu for the rest
+  const MANY = 16;
+  if (shows.length > MANY) {
+    const rest = shows.slice(2);
+    const menu = el("select", { className: "chip", ariaLabel: "Show one part alone" }) as HTMLSelectElement;
+    menu.dataset.testid = "show-menu";
+    menu.append(el("option", { value: "", textContent: "One part alone..." }));
+    for (const show of rest) menu.append(el("option", { value: show, textContent: showWord(show) }));
+    menu.value = rest.includes(state.show) ? state.show : "";
+    menu.addEventListener("change", () => (menu.value ? pick({ show: menu.value }) : pick({ show: shows[0] })));
+    showBox.replaceChildren(...shows.slice(0, 2).map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))), menu);
+  } else showBox.replaceChildren(...shows.map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))));
   press(showBox, `show-${state.show}`);
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);

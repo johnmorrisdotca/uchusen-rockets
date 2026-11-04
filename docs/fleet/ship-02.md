@@ -212,6 +212,18 @@ Heavy radiation shielding. The crew rings' outer wall, outside to inside (real s
 
 Reactor core; navigation and sensor suite; life support; docking ports; cargo handling; farms; habitat ring. See `INSETS` in `specs.ts` and the `inset_*` sheets from `scripts/fleet-render.ts`.
 
+## Detaching at the destination (a later ticket)
+
+For the story, the settlement pod or a habitat ring separates at the destination to become a station while the transport returns. Nothing is built for this yet; this is the plan for the later ticket.
+
+| Joint | What separates | Hardware it needs |
+|---|---|---|
+| The dorsal pod mount (three clamp arms and the 12 m collar) | The settlement pod, 120 m long, with its own supplies | Explosive-free release latches on the three arms and the collar, a collar plug for the transport's side, an umbilical disconnect, and the pod's own attitude thrusters and a header tank to move off |
+| A habitat ring's hub bearings (the ring and its six spokes) | Ring A or ring B, 330 m across, with 12,000 people | A spoke-root separation ring at the hub, the spin brought to a stop first, lift-tube hatches that seal both sides, a power and water coupling, a tug pair to take the ring clear |
+| The cargo stations' clamp girders | A cargo station of 48 containers | Twist-lock releases on the girders and a gantry crane to hand the cells off |
+
+The farm drum and the ring share a spine hub, so the ring goes first and the farm follows only with a second release at the drum's end bearing.
+
 ## Strengths, weaknesses and limits
 
 Strengths: by far the largest hull in the fleet; redundant everything (six reactors, four tanks with crossover lines, two rings); carries a small town and a station's parts at once; swappable mission pod. Weaknesses: slow (decades to anywhere), a heavy shield for a narrow cone, a long fragile spine, and a drive whose heat budget leaves no margin. Operating limits: 0.015 g, 0.30 c, 40 years of nozzle liner, a flip that takes about an hour on the verniers.
