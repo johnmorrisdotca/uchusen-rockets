@@ -10,13 +10,14 @@ export const MIYAMOTO_VARIANT_SLOTS: Readonly<Record<string, Readonly<Record<str
   const make = (o: { cut?: boolean; deployed?: boolean; bare?: boolean; sister?: boolean; pod: "relay" | "relief" | "survey" }): Record<string, string> => {
     const sfx = o.cut ? "-cutaway" : "";
     // the sister has her own drum in both forms and her own drive, citadel and bow whole; her cutaway shows Miyamoto's cut for the rest
-    const own = (slot: string): boolean => !!o.sister && (o.cut ? slot === "habitat" : ["drive", "habitat", "command", "bow"].includes(slot));
+    const own = (slot: string): boolean => !!o.sister && (o.cut ? slot === "habitat" || slot === "drive" : ["drive", "habitat", "command", "bow"].includes(slot));
     const hangarSfx = o.sister && !o.cut ? "-ariake" : "";
     return {
       ...Object.fromEntries(STACKED.map((slot) => [slot, `${slot}${own(slot) ? "-ariake" : ""}${sfx}`])),
       "hangar-starboard": `hangar-starboard${hangarSfx}${sfx}`,
       "hangar-port": `hangar-port${hangarSfx}${sfx}`,
-      "drive-collar": o.bare ? "collar-none" : "shield-collar",
+      "drive-collar": o.bare ? "collar-none" : o.sister ? "shield-collar-ariake" : "shield-collar",
+      ...(o.sister ? { "hangar-starboard-fore": "hangar-starboard-fore-ariake", "hangar-port-aft": "hangar-port-aft-ariake" } : {}),
       pod: `pod-${o.pod}`,
       "radiators-dorsal": `radiators-dorsal-${o.deployed ? "deployed" : "stowed"}`,
       "radiators-ventral": `radiators-ventral-${o.deployed ? "deployed" : "stowed"}`,

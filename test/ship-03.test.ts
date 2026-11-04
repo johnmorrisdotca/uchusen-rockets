@@ -6,7 +6,7 @@ import { build } from "../src/build/index.ts";
 import { BUILD_BUDGET_MS, MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
-import { ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, SHIPS, TITLE_BLOCK, titleBlockOf, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
+import { asBuilt, fuelLimitedLy, ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, SHIPS, TITLE_BLOCK, titleBlockOf, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
@@ -178,8 +178,8 @@ test("sections and decks: a label for every few percent of the length, and more 
   for (const label of labels()) assert.ok(Math.abs(label.at[0]) <= 60 && label.at[1] >= 0 && label.at[1] <= 380 && Math.abs(label.at[2]) <= 45, label.id);
 });
 
-test("the build budget: the first picture inside a second, the full detail inside three, on this computer", () => {
-  const stowed = Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto);
+for (const variant of ["miyamoto", "ariake"] as const) test(`the build budget, ${variant}: the first picture inside a second, the full detail inside three, on this computer`, () => {
+  const stowed = Object.values(MIYAMOTO_VARIANT_SLOTS[variant]);
   const once = (level: "coarse" | "fine") => {
     const start = performance.now();
     const list = parts().filter((part) => stowed.includes(part.id));
@@ -190,7 +190,7 @@ test("the build budget: the first picture inside a second, the full detail insid
   once("fine");
   const coarse = once("coarse");
   const full = once("fine");
-  console.log(`build, coarse ${coarse.ms.toFixed(0)} ms (${coarse.pieces} pieces), full ${full.ms.toFixed(0)} ms (${full.pieces} pieces)`);
+  console.log(`build ${variant}, coarse ${coarse.ms.toFixed(0)} ms (${coarse.pieces} pieces), full ${full.ms.toFixed(0)} ms (${full.pieces} pieces)`);
   assert.ok(coarse.ms < BUILD_BUDGET_MS.coarse, `the coarse build took ${coarse.ms.toFixed(0)} ms`);
   assert.ok(full.ms < BUILD_BUDGET_MS.fine, `the full build took ${full.ms.toFixed(0)} ms`);
   // the first picture is the kit's coarse level: the hulls, the barrels, the bells, the big boxes, a small share of the pieces
@@ -223,4 +223,63 @@ test("Ariake is a variant record of the same model: a dawn-gold livery, a survey
   // orange stays on the removable leaves: Ariake's hangar has the same number of orange pieces as Miyamoto's
   const orange = (pieces: Piece[]) => pieces.filter((piece) => piece.kind !== "lines" && (piece as { material: string }).material === "hull-orange").length;
   assert.equal(orange(get("hangar-starboard-ariake")), orange(get("hangar-starboard")));
+});
+
+test("Ariake's engine end is clad in raised hexagonal tiles, with the nozzle lips and the windows kept", () => {
+  const all = parts();
+  const get = (id: string) => all.find((part) => part.id === id)!.pieces({ detail: 1 });
+  const hexes = (pieces: Piece[]) => pieces.filter((piece) => piece.kind === "plate" && piece.outline.length === 6);
+  const drive = get("drive-ariake");
+  const plain = get("drive");
+  assert.ok(hexes(drive).length - hexes(plain).length > 1000, `${hexes(drive).length} hexagons against ${hexes(plain).length}`);
+  // real geometry: each a raised plate standing 0.1 m or more, of near-black materials, with a seam round it (the six sides are inside the pitch)
+  const raised = hexes(drive).filter((tile) => (tile as { thickness: number }).thickness === 0.2);
+  assert.ok(raised.length > 1000 && raised.every((tile) => ["tile", "panel-dark", "hull-grey-dark"].includes((tile as { material: string }).material)), `${raised.length} raised tiles`);
+  // the white and gold bands are gone, the nozzle lips (orange) and the service windows (the bands' cut-outs) stay
+  const band = (pieces: Piece[], material: string) => pieces.filter((piece) => piece.kind === "lathe" && piece.material === material && piece.body).length;
+  assert.ok(band(plain, "hull-white") > 0 && band(plain, "gold") > 0 && band(drive, "hull-white") === 0 && band(drive, "gold") === 0);
+  const orange = (pieces: Piece[]) => pieces.filter((piece) => piece.kind !== "lines" && (piece as { material: string }).material === "hull-orange").length;
+  assert.equal(orange(drive), orange(plain));
+  assert.equal(band(drive, "tile"), band(plain, "hull-white") + band(plain, "gold") + band(plain, "hull-white-worn"));
+  // the collar too: hexagons, and the orange panel row kept
+  const collar = get("shield-collar-ariake");
+  assert.ok(hexes(collar).filter((tile) => (tile as { thickness: number }).thickness === 0.2).length > 150, `${hexes(collar).length} hexagons on the collar`);
+  assert.ok(orange(collar) > 0 && orange(collar) <= orange(get("shield-collar")));
+});
+
+test("Ariake fills all four hangar positions, each with the door and racks of Miyamoto's, and her spec says so", () => {
+  const all = parts();
+  const get = (id: string) => all.find((part) => part.id === id)!;
+  const ids = ["hangar-starboard-ariake", "hangar-port-ariake", "hangar-starboard-fore-ariake", "hangar-port-aft-ariake"];
+  assert.deepEqual(ids.map((id) => MIYAMOTO_VARIANT_SLOTS.ariake[id.replace(/-ariake$/, "").replace("hangar-starboard", "hangar-starboard").replace(/^hangar-starboard-fore$/, "hangar-starboard-fore")]), ids);
+  // four distinct boxes in four positions
+  const where = new Set(ids.map((id) => `${get(id).place!.x}/${get(id).y0}`));
+  assert.equal(where.size, 4);
+  // the door and the racks: same orange leaves, hazard blocks and net straps as the twin Miyamoto has of the same kind; the boxes are as big
+  const count = (pieces: Piece[], material: string) => pieces.filter((piece) => piece.kind !== "lines" && (piece as { material: string }).material === material).length;
+  const twin = { "hangar-starboard-fore-ariake": "hangar-port", "hangar-port-aft-ariake": "hangar-starboard" } as const;
+  for (const [id, mine] of Object.entries(twin)) {
+    const a = get(id).pieces({ detail: 0.6 });
+    const m = get(mine).pieces({ detail: 0.6 });
+    assert.equal(count(a, "hull-orange"), count(m, "hull-orange"), `${id} orange leaves`);
+    for (const material of ["hazard", "black"]) assert.ok(Math.abs(count(a, material) - count(m, material)) <= count(m, material) * 0.2, `${id} ${material}: ${count(a, material)} against ${count(m, material)}`);
+    assert.ok(Math.abs(a.length - m.length) < m.length * 0.06, `${id}: ${a.length} against ${m.length}`);
+    assert.equal(get(id).height, get(mine).height);
+  }
+  // the spec: four boxes, double the cargo, the same beam (the staggered pair already stands at the full beam), a heavier ship on the same drive, and a route she can still fly
+  const m = asBuilt("miyamoto");
+  const a = asBuilt("ariake");
+  assert.equal(m.hangars, 2);
+  assert.equal(a.hangars, 4);
+  assert.equal(a.mass.cargo, 2 * m.mass.cargo);
+  assert.equal(a.beam, ENVELOPE.beam);
+  assert.equal(a.mass.full, a.mass.inert + a.mass.propellant);
+  assert.ok(a.mass.inert > m.mass.inert + m.mass.cargo);
+  near(journey(ROUTES.benchmark, a.acceleration, DRIVE.exhaustOfC, a.mass.full).thrust, journey(ROUTES.benchmark).thrust, 1, "the same thrust");
+  assert.ok(journey(ROUTES.benchmark, a.acceleration, DRIVE.exhaustOfC, a.mass.full).peak < idealMidpoint(DRIVE.exhaustOfC, a.mass), "she has fuel for the benchmark route");
+  assert.ok(fuelLimitedLy(a.mass, a.acceleration) >= ROUTES.benchmark);
+  const lines = Object.fromEntries(specification("ariake").map((line) => [line.name, line.value]));
+  assert.equal(lines["Hangar boxes"], "4");
+  assert.equal(lines.Cargo, "5,600 t");
+  assert.equal(lines.Beam, "118 m");
 });

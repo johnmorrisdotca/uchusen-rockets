@@ -1,7 +1,7 @@
 // What makes ISV Ariake (SPX-186) a sister and not a copy: the same model with a dawn-gold livery (a broad accent band and a pair of pinstripes in place of the plain hull), a survey pod by default, a refit (a sensor
 // mast, a solarium on each side of the dome) and a warm interior. Every function here only adds pieces to a part the sister shares with Miyamoto. Pure: no three.js and no DOM.
 import { annulus, cub, hoop, type Piece } from "./adapter.ts";
-import { BOW_LAYERS, CITADEL, HANGAR, STATION } from "./dims.ts";
+import { BAYS, bayBox, BOW_LAYERS, type BayId, CITADEL, STATION } from "./dims.ts";
 
 const R_HAB = 13;
 const sorted = (a: number, b: number): [number, number] => (a < b ? [a, b] : [b, a]);
@@ -20,8 +20,9 @@ export function habitatLivery(cut = false): Piece[] {
 }
 
 /** A hangar shoulder: a pair of pinstripes along the roof and the outer wall, above and below the bay door, and across both ends. The leaves of the door stay orange. */
-export function hangarLivery(side: "starboard" | "port"): Piece[] {
-  const h = HANGAR[side];
+export function hangarLivery(bay: BayId): Piece[] {
+  const side = BAYS[bay].side;
+  const h = bayBox(bay);
   const [y0, y1] = h.y;
   const [x0, x1] = h.x;
   const [z0, z1] = h.z;
