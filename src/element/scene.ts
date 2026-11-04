@@ -64,6 +64,8 @@ export interface ViewerOptions {
 
 const IDLE_STOP_MS = 90_000;
 const MOVE_MS = 1400;
+/** Wheel steps closer together than this belong to one turn of the wheel, so a zoom that reaches its end part-way through does not hand the rest to the page. */
+const WHEEL_GESTURE_MS = 300;
 /** Longest a draw waits for shaders to build: a browser that never says they are ready still draws. */
 const COMPILE_MS = 4000;
 const VIEW_MS = 700;
@@ -269,8 +271,7 @@ export class RocketViewer {
     this.canvas.style.touchAction = "pan-y";
     this.controls.addEventListener("start", () => this.touched());
     this.controls.addEventListener("change", () => this.wake());
-    this.canvas.addEventListener("focus", () => (this.controls.enableZoom = true));
-    this.canvas.addEventListener("blur", () => (this.controls.enableZoom = false));
+    this.canvas.addEventListener("wheel", this.onWheel, { passive: false });
     this.canvas.addEventListener("pointerdown", () => this.canvas.focus({ preventScroll: true }));
     this.canvas.addEventListener("dblclick", () => {
       if (!this.driven) this.setAngle(this.homeAngle, true);
@@ -285,7 +286,7 @@ export class RocketViewer {
   private homeAngle: Angle = { az: 32, el: 9 };
 
   setLabel(label: string): void {
-    this.canvas.setAttribute("aria-label", `3D view of ${label}. Drag or use the arrow keys to turn it; double-click or Home puts it back.`);
+    this.canvas.setAttribute("aria-label", `3D view of ${label}. Drag or use the arrow keys to turn it and the wheel to zoom; double-click or Home puts it back.`);
   }
 
   /** Loads a rocket and shows it. The camera's angle stays when a rocket is already showing. */
@@ -1001,6 +1002,7 @@ export class RocketViewer {
     this.disposed = true;
     cancelAnimationFrame(this.frame);
     document.removeEventListener("visibilitychange", this.onVisibility);
+    this.canvas.removeEventListener("wheel", this.onWheel);
     this.resize.disconnect();
     this.controls.dispose();
     this.disposeParts();
@@ -1156,6 +1158,7 @@ export class RocketViewer {
       this.canvas.dataset.azimuth = angle.az.toFixed(2);
       this.canvas.dataset.elevation = angle.el.toFixed(2);
       this.canvas.dataset.moving = this.pose ? "true" : "false";
+      this.canvas.dataset.distance = this.camera.position.distanceTo(this.controls.target).toFixed(2);
       if (this.driven) {
         this.canvas.dataset.zoom = this.driven.zoom.toFixed(2);
         this.canvas.dataset.pan = `${Math.round(this.driven.panX)},${Math.round(this.driven.panY)}`;
@@ -1214,6 +1217,27 @@ export class RocketViewer {
     move();
     this.wake();
   }
+
+  /** The wheel over the view zooms it, as does a pinch (Ctrl or Command and the wheel). A wheel that starts with the zoom already at its end, or a sideways swipe, leaves the page to scroll. */
+  private onWheel = (event: WheelEvent): void => {
+    if (this.driven) return;
+    const pinch = event.ctrlKey || event.metaKey;
+    if (!pinch && (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY))) return;
+    const pixels = event.deltaMode === 1 ? event.deltaY * (pinch ? 5 : 33) : event.deltaMode === 2 ? event.deltaY * 800 : event.deltaY;
+    const factor = pinch ? Math.exp(-pixels * 0.01) : MathUtils.clamp(Math.exp(-pixels * 0.002), 0.5, 2);
+    const length = this.camera.position.distanceTo(this.controls.target);
+    const atEnd = factor >= 1 ? length <= this.controls.minDistance * 1.0001 : length >= this.controls.maxDistance * 0.9999;
+    const now = Number.isFinite(event.timeStamp) ? event.timeStamp : 0;
+    if (!pinch && atEnd && !(now >= this.wheelTaken && now - this.wheelTaken < WHEEL_GESTURE_MS)) return;
+    event.preventDefault();
+    this.wheelTaken = now;
+    if (atEnd) return;
+    this.touched();
+    this.zoom(1 / factor);
+    this.wake();
+  };
+
+  private wheelTaken = Number.NEGATIVE_INFINITY;
 
   private zoom(factor: number): void {
     const offset = this.camera.position.clone().sub(this.controls.target);

@@ -29,7 +29,7 @@
 - The drawing shows first, made by code. When the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. With no WebGL, under Save-Data, or on any failure, the drawing stays, and it still follows `look`, `show` and `view`.
 - **Changing `look` keeps the angle.** It changes materials, not the camera.
 - **Changing `show` is an animated move**, a cut under reduced motion. A part alone fills the frame.
-- Turn it by dragging, by touch, with the arrow keys, or leave it to its slow spin. `+` and `-` zoom, Home or a double-click puts it back. Under reduced motion it does not spin. These are the element's own hands, for a page that adds none; [the family's view controls](#the-familys-view-controls) can take them over.
+- Turn it by dragging, by touch, with the arrow keys, or leave it to its slow spin. The wheel over the view zooms it (so does a pinch, and `+` and `-`); with the pointer elsewhere, or when the zoom is already at its end, the wheel scrolls the page. Home or a double-click puts it back. Under reduced motion it does not spin. These are the element's own hands, for a page that adds none; [the family's view controls](#the-familys-view-controls) can take them over.
 - A licensed model is fetched only when the painted look asks for it. Until it is in, or if it fails, this package's own paint shows.
 - It asks little of the machine. The 3D view draws once a frame while something moves and not at all when it is still, out of sight or in a hidden tab. A spin of its own settles after a minute and a half with no one touching it, and a lit rocket's flames stop moving after 15 seconds; a flame adds no canvas and no context, and lighting or dousing engines makes and frees nothing on the graphics card after a part's first flame. One WebGL context for each element, given back after 30 seconds out of sight and on any change. The canvas is the element's size times the screen's pixel ratio, held to a ratio of 2, to 4096 pixels a side and to 6 million pixels in all, so a view as wide as a 5K screen is drawn a little less sharp, never at a size that can hang the graphics card. If the browser takes the context away, the drawing takes over. The drawing, with no WebGL, is made again at most 20 times a second and only while it is on screen.
 
@@ -39,7 +39,7 @@ A flight, where a page gives one for the variant, plays from a script or from [`
 
 ## The family's view controls
 
-`<kazoku-view-controls>` from [`@johnmorrisdotca/kazoku-ui`](https://www.npmjs.com/package/@johnmorrisdotca/kazoku-ui) is one set of controls for every project in the family: angle and tilt, auto-turn, zoom, Fit, move, and the same drag, pinch, wheel (with Ctrl or Command) and keys everywhere. It never draws; it tells the page what was chosen, and the page hands that to the element with `drive()`. The package does not import it, so it adds nothing to your bundle unless your page uses it.
+`<kazoku-view-controls>` from [`@johnmorrisdotca/kazoku-ui`](https://www.npmjs.com/package/@johnmorrisdotca/kazoku-ui) is one set of controls for every project in the family: angle and tilt, auto-turn, zoom, Fit, move, and the same drag, pinch, wheel (the wheel over the view zooms it) and keys everywhere. It never draws; it tells the page what was chosen, and the page hands that to the element with `drive()`. The package does not import it, so it adds nothing to your bundle unless your page uses it.
 
 ```html
 <uchusen-rocket id="rocket" rocket="starship" variant="v3"></uchusen-rocket>

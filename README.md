@@ -379,7 +379,7 @@ variantOf("starship", "2019").facts.diameter.value; // null
 
 - The element has an accessible name from its `label` attribute, or from the fit report's label (such as "Block 3 (V3)") when there is none. The 3D view's canvas says how to turn it.
 - A reader who asked for reduced motion gets no spin, no flames, no played flight and a cut instead of an animated move. The slider and charts still work.
-- Turning works by drag, touch and the keyboard: the arrow keys turn it, `+` and `-` zoom, Home puts it back.
+- Turning works by drag, touch and the keyboard: the arrow keys turn it, the wheel over the view, a pinch, `+` and `-` zoom, Home puts it back. With the pointer anywhere else the wheel scrolls the page, and so it does when the zoom is already at its end.
 - The demo's controls are at least 44 pixels tall and work with a keyboard.
 
 ```html

@@ -1423,3 +1423,43 @@ test("the code builder is one screen of choices, and writes the code for exactly
   expect(sideways).toBeLessThanOrEqual(0);
   expect(problems).toEqual([]);
 });
+
+test("the wheel over the element's own 3D view zooms it, and a wheel that starts at the end of the zoom is left to the page", async ({ page, browserName }) => {
+  test.skip(!is3d(browserName), "The 3D view is drawn in Chromium");
+  const problems = watch(page);
+  await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&look=line`);
+  const rocket = page.locator('[data-testid="rocket"]');
+  await expect(rocket).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  const distance = () => rocket.evaluate((node) => Number(node.shadowRoot?.querySelector("canvas")?.dataset.distance ?? 0));
+  const box = await rocket.boundingBox();
+  if (!box) throw new Error("the rocket has no box");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.evaluate(() => {
+    const claims: boolean[] = [];
+    (window as unknown as { claims: boolean[] }).claims = claims;
+    document.addEventListener("wheel", (event) => claims.push(event.defaultPrevented));
+  });
+  const claims = () => page.evaluate(() => (window as unknown as { claims: boolean[] }).claims);
+  const before = await distance();
+  await page.mouse.wheel(0, -200);
+  await expect.poll(distance).toBeLessThan(before * 0.9);
+  expect((await claims())[0]).toBe(true);
+  // the wheel down zooms out to the widest, one turn of the wheel at a time
+  for (let turn = 0; turn < 6; turn += 1) {
+    await page.waitForTimeout(350);
+    await page.mouse.wheel(0, 200);
+  }
+  await expect.poll(distance).toBeGreaterThan(before * 1.2);
+  const widest = await distance();
+  await page.waitForTimeout(350);
+  await page.mouse.wheel(0, 200);
+  await page.waitForTimeout(350);
+  expect(await distance()).toBe(widest);
+  expect((await claims()).at(-1)).toBe(false);
+  // a pinch (Ctrl and the wheel) is always the view's
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, -200);
+  await page.keyboard.up("Control");
+  await expect.poll(distance).toBeLessThan(widest);
+  expect(problems).toEqual([]);
+});

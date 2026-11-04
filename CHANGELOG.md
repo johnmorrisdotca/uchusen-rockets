@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-04
+
+- **The wheel zooms the view.** The element's own hands (the ones a page without the family's view controls gets) now zoom with the wheel over the 3D view, as a pinch did; before, the wheel zoomed only once the view had focus. With the pointer anywhere else the page scrolls, and a wheel that starts with the zoom already at its end scrolls the page too, so the page is never trapped. A sideways swipe, or Shift and the wheel, is left to the page. Under the family's view controls (`drive()`) nothing changes: they already zoomed with the wheel (kazoku-ui 0.13).
+- Demo and documentation: the hint under the view, the Element page, the README and the Looks guide (English and Japanese) say that the wheel zooms, not Ctrl or Command with the wheel.
+
 ## [0.7.0] - 2026-11-03
 
 - Demo: the view controls' Auto-turn speeds are the family's speed buttons, 0.5×, 1× and 2× (kazoku-ui 0.14, `^0.14.0`), in place of Slow, Medium and Fast. The reader's choice is the controls' `pace` attribute and `?pace=2` in the address (the address key was `speed`). The base speed stays `speed="5"` degrees a second, which the buttons multiply, and Turn left and Turn right keep their way at any speed. The copied embed code turns at the same speed as the page (`spin` is the seconds a turn: 144, 72 or 36), where it said `slow` whatever the buttons said. Browser tests hold the three buttons, the speed each sets (sign kept), the address and the copied code, and that an old `?speed=fast` opens at 1×.
