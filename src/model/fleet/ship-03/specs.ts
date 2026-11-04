@@ -1,7 +1,7 @@
 // Miyamoto's numbers and names: identity, the specification table, the journey arithmetic, the engine cards, the named sections and decks, and the history. Every number here is a fictional design target. The physics is
 // one function (`journey`), the table and the cards are derived from it so they cannot disagree, and `test/ship-03.test.ts` pins each figure the bible prints. Pure: no three.js and no DOM.
 import type { EngineCard, HullStack, Section, SectionRole, Vec3 } from "./adapter.ts";
-import { HULL_STACKS } from "./adapter.ts";
+import { designation, FLEET_MAKER, HULL_STACKS } from "./adapter.ts";
 import { ENVELOPE, MASS, RADIATOR_AREA } from "./dims.ts";
 
 /** Speed of light, standard gravity, a light year and a Julian year, in SI units. */
@@ -11,11 +11,11 @@ export const LIGHT_YEAR = 9_460_730_472_580_800;
 export const YEAR = 31_557_600;
 
 /** Who operates the fleet: just SPX, never spelled out. One line, so it can change if John says so. */
-export const OPERATOR = "SPX";
+export const OPERATOR = FLEET_MAKER;
 
 /** Who and what the ship is. The name is checked by the Japanese reviewer. */
 export const IDENTITY = {
-  designation: "SPX-03",
+  designation: designation("03"),
   class: "ICV",
   classMeans: "Interstellar Command Vessel",
   prefix: "ISV",
@@ -309,5 +309,6 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   "hangar-starboard": "the Shuttle's payload bay and its robot arm's rails, with the crane rails, cell guides and lashing points of a container port",
   "hangar-port": "the Shuttle's payload bay and its robot arm's rails, with the crane rails, cell guides and lashing points of a container port",
   pod: "the ISS's docking ring and the Shuttle's payload pallets; the relay pod carries Hubble-like high-gain dishes and a deep-space network array, the relief pod stacked container racks",
+  collar: "the shadow shields of NASA's nuclear thermal rocket and Mars transfer vehicle studies, a round cone between the reactor and the crew",
   radiators: "the ISS's radiator panels on booms, large thin plates set away from the hull, and the folding radiators of the Mars transfer vehicle studies",
 };

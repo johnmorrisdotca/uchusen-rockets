@@ -46,6 +46,7 @@ function loose(name: string, pieces: Piece[]): { file: string; min: V3; max: V3 
 const explodedAt = (part: MiyamotoPart, i: number): V3 => {
   const [x, y, z] = placeOf(part);
   if (!part.place) return [x, y + i * 18, z];
+  if (part.id.includes("collar")) return [x, y + 9, z];
   if (part.id.startsWith("hangar")) return [x + Math.sign(x) * 34, y, z];
   if (part.id.startsWith("pod")) return [x, y + 40, z + 46];
   return [x, y, z + (part.id.includes("ventral") ? -52 : 52)];
