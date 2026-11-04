@@ -12,6 +12,7 @@ test("Real craft for scale: on by default with a label each, off and on again th
   page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
   page.on("pageerror", (error) => problems.push(error.message));
   await page.goto(URL);
+  await page.locator('[data-testid="more-compare"]').click();
   await page.locator('[data-testid="compare-fleet-02:fleet-02"]').click();
   await lineup(page).scrollIntoViewIfNeeded();
   await expect(toggle(page)).toHaveAttribute("aria-pressed", "true");
@@ -34,6 +35,7 @@ test("Real craft for scale: on by default with a label each, off and on again th
 
   // a reload keeps it off
   await page.reload();
+  await page.locator('[data-testid="more-compare"]').click();
   await page.locator('[data-testid="compare-fleet-02:fleet-02"]').click();
   await lineup(page).scrollIntoViewIfNeeded();
   await expect(toggle(page)).toHaveAttribute("aria-pressed", "false");
