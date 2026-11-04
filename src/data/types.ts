@@ -113,6 +113,47 @@ export interface VariantFacts {
 }
 
 /**
+ * One inset of the viewer's panel: a system that opens on a click, the slots that show and the numbered parts.
+ *
+ * @example
+ * ```ts
+ * import { variantOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(variantOf("ship-02")?.inspector?.insets[0]?.name);
+ * ```
+ */
+export interface InspectorInset {
+  id: string;
+  name: string;
+  /** The slots that show while it is open. */
+  slots: readonly string[];
+  target: readonly [number, number, number];
+  direction: readonly [number, number, number];
+  distance: number;
+  parts: readonly { n: number; name: string; at: readonly [number, number, number]; slot: string }[];
+}
+
+/**
+ * What the viewer's panel shows for a ship that has one: named sections with leader anchors, a spec table, the notes tabs and the insets that open on a click. Fictional ships only.
+ *
+ * @example
+ * ```ts
+ * import { variantOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(variantOf("ship-02")?.inspector?.sections.length);
+ * ```
+ */
+export interface Inspector {
+  /** Each section: its name, what it does, the part it belongs to and where its label points, in the ship's own metres. */
+  sections: readonly { id: string; name: string; job: string; slot: string; at: readonly [number, number, number]; inside: boolean }[];
+  /** Where each part's origin stands when the ship is together. */
+  places: Readonly<Record<string, readonly [number, number, number]>>;
+  spec: readonly (readonly [string, string])[];
+  notes: Readonly<Record<string, readonly string[]>>;
+  insets: readonly InspectorInset[];
+}
+
+/**
  * One version of a rocket as data: its id, name, status, first flight, its parts from the bottom up, and the sourced facts about it.
  *
  * @example
@@ -143,4 +184,6 @@ export interface Variant {
   note?: string;
   /** The side a to-scale lineup shows of it when asked for the front, because the front hides what it is: the orbiter stands behind the Shuttle's tank. */
   lineupView?: "back" | "side";
+  /** The panel that goes with the viewer: sections, specification, notes and insets. */
+  inspector?: Inspector;
 }

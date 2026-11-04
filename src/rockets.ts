@@ -1,5 +1,6 @@
 // The catalogue: which rockets there are, their variants with sourced sizes, and which are still to be built. All data, all typed. Pure.
 import { DRAGON_VARIANTS } from "./data/dragon.ts";
+import { SHIP_02_VARIANTS } from "./data/ship02.ts";
 import { FALCON_HEAVY_VARIANTS, FALCON_9_VARIANTS } from "./data/falcon.ts";
 import { FALCON_1_VARIANTS } from "./data/falcon1.ts";
 import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
@@ -120,6 +121,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "fleet-ship-03": { id: "fleet-ship-03", name: "ISV 宮本 Miyamoto, SPX-452", status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_VARIANTS, defaultVariant: "miyamoto" },
   "fleet-ship-ariake": { id: "fleet-ship-ariake", name: "ISV 有明 Ariake, SPX-186", status: "built", ...MADE_BY["fleet-ship-ariake"], variants: ARIAKE_VARIANTS, defaultVariant: "ariake" },
   "fleet-insets-ship-03": { id: "fleet-insets-ship-03", name: SHIP_03_INSET_ROCKET.name, status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_INSET_ROCKET.variants, defaultVariant: SHIP_03_INSET_ROCKET.variants[0].id },
+  "fleet-02": { id: "fleet-02", name: "SPX-207 加美鳴 (かみなり) Kaminari, Heavy Transport", status: "built", ...MADE_BY["fleet-02"], variants: SHIP_02_VARIANTS, defaultVariant: "fleet-02" },
   starbase: { id: "starbase", name: "Starbase", status: "built", ...MADE_BY["starbase"], variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
 };
 
@@ -233,4 +235,35 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "booster-2": "Booster 2",
   "booster-3": "Booster 3",
   "booster-4": "Booster 4",
+  spine: "Truss spine",
+  drive: "Drive raft",
+  reactor: "Reactor hall",
+  "tank-1": "Fuel tank 1",
+  "tank-2": "Fuel tank 2",
+  "tank-3": "Fuel tank 3",
+  "tank-4": "Fuel tank 4",
+  "radiator-starboard": "Radiator wing, starboard",
+  "radiator-port": "Radiator wing, port",
+  "radiators-stowed": "Stowed radiator packs",
+  "cargo-1": "Cargo station 1",
+  "cargo-2": "Cargo station 2",
+  "cargo-3": "Cargo station 3",
+  "cargo-4": "Cargo station 4",
+  dock: "Dock and works",
+  farm: "Farm drum",
+  "habitat-a": "Habitat ring A",
+  "habitat-b": "Habitat ring B",
+  command: "Command citadel",
+  shield: "Bow shield",
+  "reactor-inside": "Reactors, inside",
+  "tank-inside": "Propellant and tank works, inside",
+  "cargo-inside": "Cargo, inside the containers",
+  "dock-inside": "Hangar and works, inside",
+  "farm-inside": "Farm terraces, inside",
+  "habitat-inside": "Habitat decks, inside",
+  "command-inside": "Bridge and crew decks, inside",
+  verniers: "Vernier clusters",
+  "shadow-shield": "Shadow shield",
+  "propellant-lines": "Propellant lines",
+  pod: "Mission pod",
 };

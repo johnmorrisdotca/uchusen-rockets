@@ -140,6 +140,8 @@ Starship; Falcon 9 in v1.0 (with a fairing, or with Dragon 1 as it flew), v1.1, 
 <uchusen-rocket rocket="grasshopper" look="painted"></uchusen-rocket>
 ```
 
+The SPX fleet ships are original designs.
+
 ## Variants, with their sources
 
 Sizes changed over time, so each variant lists its own, as data with types. A variant goes in only if a source documents it. A size no source gives is blank, never estimated. Where sources disagree, the data keeps the one chosen and says what else was said.

@@ -4,7 +4,8 @@ import { check, type Description, type FitReport } from "../fit.ts";
 import { type Angle, cleanView, DEFAULT_VIEW, PICTURE_H, PICTURE_W, VIEWS, type Vec3, type ViewName } from "../framing.ts";
 import { cleanShow, placesFor, showsOf } from "../layout.ts";
 import { DEFAULT_LOOK, type LookName } from "../looks.ts";
-import { type PartMesh, boundsOf, type Bounds, meshOf, type Piece } from "../model/pieces.ts";
+import { detail, type DetailLevel } from "../model/detail.ts";
+import { type PartMesh, boundsOf, boundsOfPieces, type Bounds, meshOf, type Piece } from "../model/pieces.ts";
 import { moved } from "../model/moves.ts";
 import { partEntry } from "../model/registry.ts";
 import { partIdOf, variantOf } from "../rockets.ts";
@@ -109,16 +110,34 @@ export interface Built {
   svg(options?: SvgOptions): string;
 }
 
-const memo = new Map<string, { pieces: readonly Piece[]; mesh: PartMesh; bounds: Bounds }>();
+/**
+ * A part with more pieces than this is not meshed until its triangles are asked for, and the mesh is not kept: a fleet ship's parts hold hundreds of thousands of triangles, and keeping them all as arrays of numbers took a gigabyte.
+ *
+ * @example
+ * ```ts
+ * import { HEAVY_PIECES } from "@johnmorrisdotca/uchusen-rockets/build";
+ *
+ * console.log(HEAVY_PIECES);
+ * ```
+ */
+export const HEAVY_PIECES = 2000;
+
+const memo = new Map<string, { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }>();
+const memoKey = (id: string) => `${detail.level}/${id}`;
 function made(id: string) {
-  const known = memo.get(id);
+  const known = memo.get(memoKey(id));
   if (known) return known;
   const entry = partEntry(id);
   if (!entry) throw new Error(`There is no part "${id}".`);
   const pieces = entry.pieces();
+  if (pieces.length > HEAVY_PIECES) {
+    const heavy = { pieces, bounds: boundsOfPieces(pieces), get mesh() { return meshOf(pieces); } };
+    memo.set(memoKey(id), heavy);
+    return heavy;
+  }
   const mesh = meshOf(pieces);
   const result = { pieces, mesh, bounds: boundsOf(mesh) };
-  memo.set(id, result);
+  memo.set(memoKey(id), result);
   return result;
 }
 
@@ -146,8 +165,8 @@ function flameKindOf(part: PartRecord): FlameKind {
 
 function assembled(report: FitReport): Built {
   const parts: BuiltPart[] = report.parts.map(({ slot, part }) => {
-    const { pieces, mesh, bounds } = made(part.id);
-    return { slot, record: part, pieces, mesh, bounds, flame: flameKindOf(part) };
+    const one = made(part.id);
+    return { slot, record: part, pieces: one.pieces, get mesh() { return one.mesh; }, bounds: one.bounds, flame: flameKindOf(part) };
   });
   const slots = parts.map((part) => part.slot);
   const placesOf = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id));
@@ -243,6 +262,7 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * A rocket from a description. Throws FitError when it does not go together.
  *
  * @param description The rocket, its variant and any other part in a slot.
+ * @param options `detail`: `"coarse"` leaves out the small 3D-only detail of a very detailed part, for a fast first view; left out, every piece is made.
  * @returns The built rocket. It throws a `FitError` when the description does not go together.
  * @example
  * ```ts
@@ -252,10 +272,18 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * console.log(rocket.report.label, rocket.glb().bytes.length > 1000);
  * ```
  */
-export function build(description: Description): Built {
+export function build(description: Description, options: { detail?: DetailLevel } = {}): Built {
   const report = check(description);
   if (!report.ok) throw new FitError(report);
-  return assembled(report);
+  const before = detail.level;
+  detail.level = options.detail ?? "full";
+  try {
+    const built = assembled(report);
+    // a part's pieces are made when it is assembled, at this level: the lazy parts of a heavy part keep the level they were made at
+    return built;
+  } finally {
+    detail.level = before;
+  }
 }
 
 /**
@@ -274,11 +302,12 @@ export function build(description: Description): Built {
 export function buildPart(id: string): { record: PartRecord; bounds: Bounds; glb: () => Glb; svg: (options?: SvgOptions) => string } {
   const entry = partEntry(id);
   if (!entry) throw new Error(`There is no part "${id}".`);
-  const { pieces, mesh, bounds } = made(id);
+  const { pieces, bounds } = made(id);
+  const one = made(id);
   return {
     record: entry.record,
     bounds,
-    glb: () => toGlb([{ name: entry.record.id, mesh, at: [0, 0, 0] }]),
+    glb: () => toGlb([{ name: entry.record.id, mesh: one.mesh, at: [0, 0, 0] }]),
     svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW } = {}) => {
       const angle = typeof view === "string" ? VIEWS[cleanView(view)] : view;
       return wrap(drawPart(pieces, [0, 0, 0], perspective(bounds, angle), look, 1), look, PICTURE_W, PICTURE_H, entry.record.name);

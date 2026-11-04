@@ -112,6 +112,7 @@ export const SOURCES = {
   "sfn-cots1-timeline": { title: "Falcon 9/COTS 1 launch timeline", publisher: "Spaceflight Now", url: "https://spaceflightnow.com/falcon9/002/launchtimeline.html", date: "2010-12-06", read: "direct" },
   "sfn-cots1-presskit": { title: "SpaceX COTS Demo Flight 1 press kit (its mission timeline, page 7)", publisher: "SpaceX, as hosted by Spaceflight Now", url: "https://spaceflightnow.com/falcon9/002/cots1_presskit.pdf", date: "2026-11-03", read: "direct" },
   "sfn-flight-35": { title: "Timeline of SpaceX's 35th Falcon 9 launch", publisher: "Spaceflight Now", url: "https://spaceflightnow.com/?p=24998", date: "2017-05-31", read: "direct" },
+  "uchusen-fleet-ship-02": { title: "SPX-207 加美鳴 (かみなり) Kaminari, the Interstellar Heavy Transport: an original SPX fleet design (docs/fleet/ship-02.md)", publisher: "John Morris, uchusen-rockets", url: "https://github.com/johnmorrisdotca/uchusen-rockets/blob/main/docs/fleet/ship-02.md", date: "2026-11-04", read: "direct", licence: "MIT" },
 } as const satisfies Record<string, Source>;
 
 /**
