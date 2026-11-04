@@ -22,29 +22,30 @@ const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=sw
 try {
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${port}/`);
-  const result = await page.evaluate(async () => {
-    const { parts, LEVELS } = await import("/model/fleet/ship-03/index.js");
-    const { MIYAMOTO_VARIANT_SLOTS } = await import("/model/fleet/ship-03/variants.js");
-    const { meshOf } = await import("/model/pieces.js");
-    const { toGlb } = await import("/build/glb.js");
-    const ids = Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto) as string[];
-    const once = (detail: number) => {
-      const start = performance.now();
-      const list = parts().filter((part: { id: string }) => ids.includes(part.id));
-      let pieces = 0;
-      const made = list.map((part: { id: string; pieces: (o: { detail: number }) => unknown[] }) => {
-        const p = part.pieces({ detail });
-        pieces += p.length;
-        return { name: part.id, mesh: meshOf(p), at: [0, 0, 0] };
-      });
-      const glb = toGlb(made);
-      return { ms: Math.round(performance.now() - start), pieces, bytes: glb.bytes.length };
-    };
-    const first = once(LEVELS[0]);
-    const cold = once(1);
-    const warm = once(1);
-    return { coarse: first, fullCold: cold, fullWarm: warm };
+  await page.addScriptTag({
+    type: "module",
+    content: `
+      import { parts, LEVELS } from "/model/fleet/ship-03/index.js";
+      import { MIYAMOTO_VARIANT_SLOTS } from "/model/fleet/ship-03/variants.js";
+      import { meshOf } from "/model/pieces.js";
+      import { toGlb } from "/build/glb.js";
+      const ids = Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto);
+      const once = (detail) => {
+        const start = performance.now();
+        let pieces = 0;
+        const made = parts().filter((part) => ids.includes(part.id)).map((part) => {
+          const p = part.pieces({ detail });
+          pieces += p.length;
+          return { name: part.id, mesh: meshOf(p), at: [0, 0, 0] };
+        });
+        const glb = toGlb(made);
+        return { ms: Math.round(performance.now() - start), pieces, bytes: glb.bytes.length };
+      };
+      window.measure = () => ({ coarse: once(LEVELS[0]), fullCold: once(1), fullWarm: once(1) });
+    `,
   });
+  await page.waitForFunction(() => "measure" in window);
+  const result = await page.evaluate(() => (window as unknown as { measure: () => unknown }).measure());
   console.log(JSON.stringify(result));
 } finally {
   await browser.close();
