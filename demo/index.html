@@ -83,7 +83,11 @@
         <h2 id="compare-title" data-say="compareTitle">Compare, to scale</h2>
         <p data-say="compareIntro">The same metre on every one, with a ruler, a person and a ten-storey building. The person and the building are round numbers, there for scale.</p>
         <div class="chips" id="compare-picks" role="group" aria-label="Which variants to compare" data-say-label="comparePicks"></div>
-        <uchusen-lineup id="lineup" data-testid="lineup" unit="3.4" ruler labels view="front"></uchusen-lineup>
+        <div class="chips" id="compare-filter" role="group" aria-label="Which kind to show" data-say-label="compareFilter"></div>
+        <div class="compare-frame" id="compare-view" data-testid="compare-view" tabindex="0">
+          <uchusen-lineup id="lineup" data-testid="lineup" unit="3.4" ruler labels view="front"></uchusen-lineup>
+        </div>
+        <kazoku-view-controls id="compare-bar" data-testid="compare-bar" for="compare-view" flat address address-keys="zoom:cz,panX:cx,panY:cy,drag:cd,pace:cp" theme="dark" controls="basic"></kazoku-view-controls>
         <div class="table-wrap"><table id="compare-table" data-testid="compare-table"></table></div>
       </section>
 

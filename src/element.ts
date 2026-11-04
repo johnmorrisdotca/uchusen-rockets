@@ -870,7 +870,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -887,7 +887,7 @@ export class UchusenLineup extends HTMLBase {
     const raw = Number.parseFloat(this.getAttribute("unit") ?? "3");
     const unit = Number.isFinite(raw) && raw > 0 && raw <= 100 ? raw : 3;
     const items = (this.getAttribute("items") ?? "").split(",").map((item) => item.trim()).filter(Boolean);
-    const { svg, items: shown } = lineupSvg({
+    const { svg, items: shown, unit: drawnUnit } = lineupSvg({
       items,
       unit,
       look: cleanLook(this.getAttribute("look")),
@@ -895,7 +895,10 @@ export class UchusenLineup extends HTMLBase {
       show: this.getAttribute("show") ?? undefined,
       ruler: this.hasAttribute("ruler"),
       labels: this.hasAttribute("labels"),
+      filter: ((value) => (value === "rockets" || value === "fleet" ? value : "all"))(this.getAttribute("filter")),
+      ...((room) => (room.length === 2 && room.every((v) => Number.isFinite(v) && v > 0) ? { fit: { width: room[0], height: room[1] } } : {}))((this.getAttribute("fit") ?? "").split(",").map(Number)),
     });
+    this.dataset.unit = String(Math.round(drawnUnit * 100) / 100);
     const template = document.createElement("template");
     template.innerHTML = svg;
     const node = template.content.firstElementChild;

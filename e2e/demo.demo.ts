@@ -1482,3 +1482,35 @@ test("the wheel over the element's own 3D view zooms it, and a wheel that starts
   await expect.poll(distance).toBeLessThan(widest);
   expect(problems).toEqual([]);
 });
+
+test("the comparison with the fleet in it: ships lie lengthwise on a scale that fits, the switch picks rockets, the fleet or all, and the view controls zoom and keep it in the address", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once");
+  await page.goto(URL);
+  await press(page, "more-compare");
+  await press(page, "compare-fleet-02:fleet-02");
+  const lineup = page.locator('[data-testid="lineup"]');
+  const frame = page.locator('[data-testid="compare-view"]');
+  const fits = async () => {
+    const [box, svg] = await Promise.all([frame.boundingBox(), lineup.locator("svg").evaluate((node) => node.getBoundingClientRect().toJSON())]);
+    expect(svg.width).toBeLessThanOrEqual(box!.width + 1);
+    expect(svg.height).toBeLessThanOrEqual(box!.height + 1);
+  };
+  await fits();
+  // the ship lies across the page: its drawing is wider than it is tall
+  await expect.poll(() => lineup.locator("svg").evaluate((node) => node.getBoundingClientRect().width / node.getBoundingClientRect().height)).toBeGreaterThan(1.2);
+  await expect(page.locator('[data-testid="compare-table"]')).toContainText("Length");
+  await expect(page.locator('[data-testid="compare-table"]')).toContainText("Height (stowed)");
+  await press(page, "compare-filter-rockets");
+  await expect(lineup).toHaveAttribute("filter", "rockets");
+  await expect(lineup).toHaveAttribute("data-unit", "3.4");
+  await expect(page).toHaveURL(/cmp=rockets/);
+  await press(page, "compare-filter-fleet");
+  await expect(lineup).toHaveAttribute("filter", "fleet");
+  await fits();
+  await press(page, "compare-filter-all");
+  await expect(page).not.toHaveURL(/cmp=/);
+  // the family's controls zoom the lineup, and the zoom stays in the address
+  await page.evaluate(() => (document.getElementById("compare-bar") as unknown as { set: (view: object) => void }).set({ zoom: 2 }));
+  await expect(page).toHaveURL(/cz=2/);
+  await expect(lineup).toHaveCSS("transform", /matrix\(2,/);
+});

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The comparison page with the fleet in it**: a fleet ship lies lengthwise in its own band below the rockets, on the same scale and ruler, and the scale fits whatever is shown (the ruler runs to 2,000 m with Kaminari in); a switch (All, Rockets, SPX fleet) picks the kind, and Rockets alone keeps the rockets' own scale; a fleet ship's table rows are Length, Beam and Height (stowed), not "whole height"; the family's view controls zoom, fit and pan the lineup, and the zoom stays in the address. `<uchusen-lineup>` takes `filter` and `fit`, and `lineupSvg` takes `filter` and `fit` and returns the scale it drew at. The fleet's maker reads "SPX".
 ## [0.10.0] - 2026-11-04
 
 The SPX fleet's first ships: ISV Kaminari SPX-207 and ISV Miyamoto SPX-452, with the viewer panel.

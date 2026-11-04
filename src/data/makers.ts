@@ -11,7 +11,7 @@ import { blank, type Figure } from "./types.ts";
  * console.log(MAKERS.spacex, Object.keys(MAKERS).length);
  * ```
  */
-export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", russia: "Russia", "us-army": "US Army", fleet: "SPX fleet", sites: "Sites" } as const;
+export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", russia: "Russia", "us-army": "US Army", fleet: "SPX", sites: "Sites" } as const;
 /**
  * The id of a group in `MAKERS`.
  *

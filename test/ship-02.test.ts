@@ -138,7 +138,7 @@ test("the parts: each is a part record, each builds finite geometry in its place
   assert.ok(SHIP_02_SLOTS.length >= 30);
   assert.equal(variantOf("fleet-02")?.status, "fictional");
   assert.ok(!/fiction/i.test(ROCKETS["fleet-02"].name), "no fictional label in what the picker shows");
-  assert.equal(MAKERS.fleet, "SPX fleet");
+  assert.equal(MAKERS.fleet, "SPX");
   assert.equal(ROCKETS["fleet-02"].maker, "fleet");
   assert.equal(variantOf("fleet-02")?.facts.more.designation?.value, "SPX-207");
   let pieces = 0;

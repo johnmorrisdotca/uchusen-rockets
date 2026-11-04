@@ -1,5 +1,6 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
 import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { build } from "../src/build/index.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
@@ -391,16 +392,46 @@ const every = Object.values(ROCKETS).flatMap((rocket) => rocket.variants);
 const keyOf = (variant: Variant) => `${variant.rocket}:${variant.id}`;
 const compared = new Set(["starship:v1-flight1", "starship:v1", "starship:v2", "starship:v3", "starship:v4"]);
 const comparePicks = byId("compare-picks");
+type CompareFilter = "all" | "rockets" | "fleet";
+const FILTERS: readonly CompareFilter[] = ["all", "rockets", "fleet"];
+const askedFilter = new URLSearchParams(location.search).get("cmp") ?? "all";
+let compareFilter: CompareFilter = (FILTERS as readonly string[]).includes(askedFilter) ? (askedFilter as CompareFilter) : "all";
+const isFleetVariant = (variant: Variant) => variant.rocket.startsWith("fleet-");
+const compareFrame = byId("compare-view");
+const compareBar = byId<HTMLElement>("compare-bar") as ViewControlsElement;
+// the family's controls zoom and pan the whole lineup; Fit is the lineup fitted to the frame
+compareBar.addEventListener("kazoku-viewchange", (event) => {
+  const { zoom, panX, panY } = (event as CustomEvent).detail as { zoom: number; panX: number; panY: number };
+  lineup.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+});
+/** What a fleet ship measures, from its own model: it lies lengthwise, so its size is a length, a beam and a stowed height. */
+const fleetSize = (variant: Variant): { length: number; beam: number; height: number } => {
+  const b = build({ rocket: variant.rocket, variant: variant.id }).boundsOf("together");
+  return { length: b.max[1] - b.min[1], beam: b.max[0] - b.min[0], height: b.max[2] - b.min[2] };
+};
+const sizeFigure = (variant: Variant, pick: "length" | "beam" | "height"): Figure<number | string> => (isFleetVariant(variant) ? { value: Math.round(fleetSize(variant)[pick]), source: variant.facts.height.source, note: undefined } : { value: null, source: null, brief: say("compareNotFleet") });
 function renderCompare() {
-  for (const button of comparePicks.querySelectorAll("button")) button.setAttribute("aria-pressed", String(compared.has((button.dataset.testid as string).slice(8))));
-  const chosen = every.filter((variant) => compared.has(keyOf(variant)));
-  lineup.setAttribute("items", [...chosen.map(keyOf), "building", "person"].join(","));
+  for (const button of comparePicks.querySelectorAll("button")) {
+    const key = (button.dataset.testid as string).slice(8);
+    button.setAttribute("aria-pressed", String(compared.has(key)));
+    const fleet = key.startsWith("fleet-");
+    (button as HTMLElement).hidden = (compareFilter === "rockets" && fleet) || (compareFilter === "fleet" && !fleet);
+  }
+  press(byId("compare-filter"), `compare-filter-${compareFilter}`);
+  const chosen = every.filter((variant) => compared.has(keyOf(variant)) && (compareFilter === "all" || (compareFilter === "fleet") === isFleetVariant(variant)));
+  lineup.setAttribute("items", [...chosen.map(keyOf), ...(compareFilter === "fleet" ? [] : ["building", "person"])].join(","));
+  lineup.setAttribute("filter", compareFilter);
+  // rockets alone keep today's scale; with the fleet in, the scale fits whatever is shown into the frame
+  if (compareFilter === "rockets") lineup.removeAttribute("fit");
+  else lineup.setAttribute("fit", `${Math.max(200, Math.floor(compareFrame.clientWidth) - 16)},${Math.max(200, Math.floor(compareFrame.clientHeight) - 12)}`);
   lineup.setAttribute("look", state.look === "painted" ? "painted" : "line");
   const table = byId("compare-table");
   const head = el("tr", {}, el("th", { textContent: "" }), ...chosen.map((variant) => el("th", { scope: "col", textContent: variant.name })));
   const slots = [...new Set(chosen.flatMap((variant) => variant.slots))];
+  const anyFleet = chosen.some(isFleetVariant);
   const rows: [string, (variant: Variant) => Figure<number | string> | undefined][] = [
-    [say("wholeHeight"), (variant) => variant.facts.height],
+    [say("wholeHeight"), (variant) => (isFleetVariant(variant) ? { value: null, source: null, brief: say("compareLengthwise") } : variant.facts.height)],
+    ...(anyFleet ? ([[say("length"), (variant) => sizeFigure(variant, "length")], [say("beam"), (variant) => sizeFigure(variant, "beam")], [say("heightStowed"), (variant) => sizeFigure(variant, "height")]] as [string, (variant: Variant) => Figure<number | string> | undefined][]) : []),
     ...slots.map((slot): [string, (variant: Variant) => Figure<number | string> | undefined] => [slotWord(slot), (variant) => (variant.slots.includes(slot) ? variant.facts.parts[slot] : { value: null, source: null, brief: say("compareNone") })]),
     [say("diameter"), (variant) => variant.facts.diameter],
     [say("first_first_flew"), (variant) => variant.firstFlight],
@@ -421,6 +452,19 @@ function renderCompare() {
   );
   table.replaceChildren(el("thead", {}, head), el("tbody", {}, ...body));
 }
+byId("compare-filter").replaceChildren(
+  ...FILTERS.map((filter) =>
+    chip("", `compare-filter-${filter}`, () => {
+      compareFilter = filter;
+      const params = new URLSearchParams(location.search);
+      if (filter === "all") params.delete("cmp");
+      else params.set("cmp", filter);
+      history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
+      renderCompare();
+    }, `compare${filter === "all" ? "All" : filter === "rockets" ? "Rockets" : "Fleet"}`),
+  ),
+);
+new ResizeObserver(() => renderCompare()).observe(compareFrame);
 comparePicks.append(
   ...every.map((variant) =>
     chip(variant.name, `compare-${keyOf(variant)}`, () => {

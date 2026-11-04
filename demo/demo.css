@@ -138,3 +138,8 @@ uchusen-flight { --uchusen-accent: var(--accent); }
   .flight-field.has-flight { order: -1; }
 }
 #credit-list li, #source-list li { overflow-wrap: anywhere; }
+
+/* the comparison: a frame the lineup is fitted to, panned and zoomed by the family's view controls */
+.compare-frame { position: relative; overflow: hidden; height: min(60vh, 560px); display: flex; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 0.5rem; touch-action: none; }
+.compare-frame:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.compare-frame uchusen-lineup { overflow: visible; transform-origin: 50% 50%; flex: none; }
