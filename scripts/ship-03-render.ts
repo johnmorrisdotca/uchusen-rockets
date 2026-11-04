@@ -26,6 +26,8 @@ interface Shot {
   background?: string;
   /** A view this many metres high instead of a perspective one: front, side and top at one scale for a drawing sheet. */
   ortho?: number;
+  /** Fit the camera's distance so the models fill this share of the picture's width or height (0.8 is the review's rule). */
+  fill?: number;
   /** Points of the model whose place in the picture is written beside it, in pixels, for callouts. */
   points?: { id: string; at: [number, number, number] }[];
   /** The lit look: drive flames (a cone from `at` along `dir`), lights that glow (nav lights, strobes) and floodlights. */
@@ -124,6 +126,25 @@ window.draw = async (job, shot) => {
   }
   for (const sp of shot.spots ?? []) { const l = new THREE.SpotLight(sp.color, sp.intensity, 0, sp.angle, 0.4, 1); l.position.set(...sp.at); l.target.position.set(...sp.target); scene.add(l, l.target); }
   renderer.render(scene, camera);
+  if (shot.fill && !shot.ortho) {
+    const box = new THREE.Box3();
+    for (const m of models) box.expandByObject(m);
+    const corners = [0, 1].flatMap((i) => [0, 1].flatMap((j) => [0, 1].map((k) => new THREE.Vector3(i ? box.max.x : box.min.x, j ? box.max.y : box.min.y, k ? box.max.z : box.min.z))));
+    for (let n = 0; n < 8; n++) {
+      camera.lookAt(target); camera.updateMatrixWorld(); camera.updateProjectionMatrix();
+      const pr = corners.map((c) => c.clone().project(camera));
+      const spanX = Math.max(...pr.map((q) => q.x)) - Math.min(...pr.map((q) => q.x));
+      const spanY = Math.max(...pr.map((q) => q.y)) - Math.min(...pr.map((q) => q.y));
+      const f = Math.max(spanX / 2, spanY / 2) / shot.fill;
+      const d = camera.position.clone().sub(target).multiplyScalar(f);
+      camera.position.copy(target).add(d);
+    }
+    // centre the models in the picture: move the target and the eye together by what the middle of the box is off by
+    camera.lookAt(target); camera.updateMatrixWorld();
+    const mid = box.getCenter(new THREE.Vector3());
+    const shift = mid.clone().sub(target);
+    camera.position.add(shift); target.add(shift); camera.lookAt(target);
+  }
   camera.updateMatrixWorld();
   const points = (shot.points ?? []).map((p) => { const v = new THREE.Vector3(...p.at).project(camera); return { id: p.id, x: Math.round(((v.x + 1) / 2) * w), y: Math.round(((1 - v.y) / 2) * h), behind: v.z > 1 }; });
   const info = { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, geometries: renderer.info.memory.geometries, points };

@@ -72,7 +72,7 @@ const shoulder = (side: "starboard" | "port", cut: boolean): MiyamotoPart => {
     place: { x: h.centre, z: 0 },
     height: h.y[1] - h.y[0],
     diameter: h.x[1] - h.x[0],
-    note: `${side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule and an ATC (Auxiliary Transfer Craft) cutter, opening to starboard." : "The forward shoulder: a survey bay with drones on racks, an access bridge and emergency shutters, opening to port."} Descends from ${ANCESTORS[`hangar-${side}`]}.`,
+    note: `${side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule, a cradle with clamp arms for an ATC (Auxiliary Transfer Craft) rescue cutter and guide rails to the door, opening to starboard." : "The forward shoulder: a survey bay with three cradles, an access bridge and emergency shutters, opening to port."} Descends from ${ANCESTORS[`hangar-${side}`]}.`,
     pieces: (o) => local(hangar(side, cut, o?.detail ?? 1), h.centre, h.y[0], 0, o?.level),
   };
 };
@@ -127,7 +127,7 @@ const collarPart = (none: boolean): MiyamotoPart => ({
 
 /** The parts that differ for the sister ship: the drive and the bow carry its registry marks. */
 const sister = (): MiyamotoPart[] => [
-  stack("drive-ariake", "Main drive and shrouds, Ariake", "engine", STATION.drive, 90, 46, `The sister ship's drive, with its hull marks 186. Descends from ${ANCESTORS.drive}.`, (c, d) => driveFrame(c, d, "drive-ariake", SHIPS.ariake.marks), false, true),
+  stack("drive-ariake", "Main drive and shrouds, Ariake", "engine", STATION.drive, 90, 46, `The sister ship's drive. Descends from ${ANCESTORS.drive}.`, (c, d) => driveFrame(c, d, "drive-ariake"), false, true),
   stack("bow-ariake", "Bow defence and navigation, Ariake", "module", STATION.bow, 36, 40, `The sister ship's bow, with its hull marks 186. Descends from ${ANCESTORS.bow}.`, (c, d) => bow(c, d, "bow-ariake", SHIPS.ariake.marks), false, false, true),
 ];
 

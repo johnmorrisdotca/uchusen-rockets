@@ -18,9 +18,13 @@ Every number on this page is a design target of the programme. The ship is built
 
 Title block: *ISV Miyamoto, SPX-452 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*
 
+## The hangar bays
+
+Both bays are empty: the craft that fly from them (the ATC rescue cutter and the survey craft) are designed separately. What stands in the bays is hangar hardware: a cradle with six clamp arms (hydraulic cylinder, column and padded jaw) and hazard chocks, round guide rails on I-beam sleepers from the cradle out through the door, an overhead gantry crane on I-beam rails, an umbilical boom with fuel, coolant and power hoses to a connector head and a hose reel, deck markings, and eight floodlights. The starboard bay has one large cradle, the port bay three smaller ones. The bay door is a roll-up shutter of orange slats drawn into a stack, with guide tracks, hinge barrels, actuators, a roller housing above the door and frame lights.
+
 ## The class and its sister ship
 
-The Romurusu class (ロムルス級) has two ships: ISV Miyamoto, SPX-452, and ISV 有明 Ariake (ありあけ), SPX-186, "daybreak". Ariake is the same model, not a second one: it has its own name, registry, hull marks (the registry digits on the drive shrouds and the bow) and its relief pod, and it appears in the picker as its own row under SPX fleet. Its title block reads *ISV Ariake, SPX-186 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*.
+The Romurusu class (ロムルス級) has two ships: ISV Miyamoto, SPX-452, and ISV 有明 Ariake (ありあけ), SPX-186, "daybreak". Ariake is the same model, not a second one: it has its own name, registry, hull marks (the registry digits on the bow) and its relief pod, and it appears in the picker as its own row under SPX fleet. Its title block reads *ISV Ariake, SPX-186 · Romurusu class · ICV · SPX · DCD ×2 · KAZE core v4*.
 
 ## The programme
 
@@ -106,7 +110,7 @@ A straight open truss spine, 16 by 20 m, carries everything. Two rectangular han
 | 8 | Navigation desk | command | 330-340 |
 | 9 | Operations ring | command | 316-332 |
 | 10 | Medical link and escape passages | command | 304-330 |
-| 11 | Drone racks | port hangar | 230-310 |
+| 11 | Survey cradles | port hangar | 230-310 |
 | 12 | Survey bay | port hangar | 234-306 |
 | 13 | Water and air recycling | habitation | 285-300 |
 | 14 | Mess and hydroponics | habitation | 272-285 |
@@ -133,7 +137,7 @@ Every deck and section is its own part group in the registry and can be shown al
 
 ## System insets
 
-The fleet's four (reactor core, navigation and sensor suite, life support, docking port) are shared by every ship. Miyamoto adds three of its own, each with six numbered sub-parts that come apart: the command citadel (communications core, operations ring, navigation desk, medical link, escape passage, armour laminate), the hangars (bay door and shutters, gantry crane, rescue cutter, maintenance racks, pressure vestibule, drone rack) and the medical bay (triage berth, monitor arm and curtain rail, quarantine room, transfer lock, air and power isolation, medical stores).
+The fleet's four (reactor core, navigation and sensor suite, life support, docking port) are shared by every ship. Miyamoto adds three of its own, each with six numbered sub-parts that come apart: the command citadel (communications core, operations ring, navigation desk, medical link, escape passage, armour laminate), the hangars (bay door and shutters, gantry crane, cradle with clamp arms, maintenance racks, pressure vestibule, umbilical boom) and the medical bay (triage berth, monitor arm and curtain rail, quarantine room, transfer lock, air and power isolation, medical stores).
 
 ## Life aboard
 
@@ -174,7 +178,7 @@ Each module descends from real hardware, taken a few centuries on: round pressur
 
 ## Parts, variants and the build
 
-26 parts: seven stacked modules and their cutaway forms (14), two hangars and their cutaways (4), the collar and its none (2), two pods (relay, relief) and four radiator banks (dorsal and ventral, stowed and deployed), of which a variant uses two, plus 18 inset sub-parts and 2 engine cards. About 21,700 pieces build the stowed ship (19,300 for the cutaway), with about 70 kinds of detail: plating with access plates and rivet strips, structural ribs, corner beams, hatches, louvred vents, window rows, lamp rows, machinery clusters, our own numbers, bolt rows, hazard frames, sensor posts, round conduits with clamps, pipe runs with bends and flanges, valve blocks, handrails, ladders, catwalks, I-beams, round struts with ball joints, truss chords and nodes, docking collars, antennas of five kinds, cameras, thruster blocks, gimbals, field coils, throat rings, nozzle bells and liners, shutter leaves, a gantry crane, a cutter, drones, racks, containers, radiator leaves with heat pipes, hinge blocks, foil blankets, cassettes, level gauges, cradles, a header tank, a keel dock, bow tiles, crush cells, spacer struts, ranging apertures, optical heads, intercept turrets and, inside, a reactor, power units, battery cells, breakers, isolation locks, berths, bunks, tables, hydroponic trays, tanks, scrubbers, consoles, a communications core, a navigation desk, baffles, pumps and the layers of the hull.
+26 parts: seven stacked modules and their cutaway forms (14), two hangars and their cutaways (4), the collar and its none (2), two pods (relay, relief) and four radiator banks (dorsal and ventral, stowed and deployed), of which a variant uses two, plus 18 inset sub-parts and 2 engine cards. About 21,700 pieces build the stowed ship (19,300 for the cutaway), with about 70 kinds of detail: plating with access plates and rivet strips, structural ribs, corner beams, hatches, louvred vents, window rows, lamp rows, machinery clusters, our own numbers, bolt rows, hazard frames, sensor posts, round conduits with clamps, pipe runs with bends and flanges, valve blocks, handrails, ladders, catwalks, I-beams, round struts with ball joints, truss chords and nodes, docking collars, antennas of five kinds, cameras, thruster blocks, gimbals, field coils, throat rings, nozzle bells and liners, shutter leaves, a gantry crane, bay cradles with clamp arms, guide rails, an umbilical boom with hoses, floodlights, racks, containers, radiator leaves with heat pipes, hinge blocks, foil blankets, cassettes, level gauges, cradles, a header tank, a keel dock, bow tiles, crush cells, spacer struts, ranging apertures, optical heads, intercept turrets and, inside, a reactor, power units, battery cells, breakers, isolation locks, berths, bunks, tables, hydroponic trays, tanks, scrubbers, consoles, a communications core, a navigation desk, baffles, pumps and the layers of the hull.
 
 The ship builds on the visitor's computer, once a visit. No `.glb` is shipped; the viewer exports one on request. On the development computer the coarse level (a quarter of the detail) builds the whole stowed ship in about 50 ms and the full detail in about 80 ms, measured by `test/ship-03.test.ts`, which fails if the first picture would take more than a second or the full detail more than three.
 

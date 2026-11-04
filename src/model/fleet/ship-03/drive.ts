@@ -3,7 +3,6 @@
 // steps from the engines to the hull is its own part (`shadowCollar`), swappable with none. A cutaway leaves the starboard side open. Pure: no three.js and no DOM.
 import { collar, cub, pipeRun, type Lathe, type Piece, quad, rng, rod, roundStrut, tileShield, type Vec3 } from "./adapter.ts";
 import { DRIVE, SHADOW_COLLAR, SHROUD } from "./dims.ts";
-import { stencil } from "./faces.ts";
 import { collarAt, nozzleProfile, nozzleRadiusAt, OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
 
 const H = DRIVE.chamberY;
@@ -146,7 +145,7 @@ function shroud(x: number, side: 1 | -1, cut: boolean, detail: number, seed: str
 }
 
 /** The main drive: both nozzles in their shrouds, the neck to the hull with the feed lines, and the verniers. */
-export function driveFrame(cut: boolean, detail = 1, seed = "drive", marks = "452"): Piece[] {
+export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
   const out: Piece[] = [];
   const nx = DRIVE.nozzleX;
   out.push(...nozzle(-nx, cut, seed), ...nozzle(nx, cut, seed), ...shroud(-nx, -1, cut, detail, seed), ...shroud(nx, 1, cut, detail, seed));
@@ -163,11 +162,6 @@ export function driveFrame(cut: boolean, detail = 1, seed = "drive", marks = "45
     out.push(...vernier(x, z));
     const sx = Math.sign(x);
     for (const dy of [3, 7]) out.push(...roundStrut("hull-grey-dark", [x, dy + 4, z * 0.8], [sx * nx + sx * Math.hypot(shroudAt(11) - 2, 0) * 0.9, 11, z * 0.45], 0.4));
-  }
-  // the registry number, our own figures, on a plate on the top of each shroud
-  for (const sx of [-1, 1]) {
-    const zTop = shroudAt(24) + 0.7;
-    out.push(cub("hull-white", [sx * nx - 5.5, sx * nx + 5.5], [20, 28], [zTop - 0.2, zTop]), ...stencil({ n: "z", sign: 1, at: zTop, a: [sx * nx - 5.5, sx * nx + 5.5], b: [20, 28] }, marks, sx * nx, 24, 3));
   }
   out.push(...collar("L", 58, 1));
   return out;

@@ -1,9 +1,9 @@
 // Miyamoto's own system insets, each opening into six numbered sub-parts that come apart: the command citadel, the hangars and the medical bay. (The reactor core, the navigation and sensor suite, life support and the
 // docking port are the fleet kit's four, shared by every ship.) The two propulsion cards, the main nozzle and a vernier, stand here too, each drawn on its own at a size where the throat, the coils and the feed lines
 // show. Every sub-part is its own part of the registry, placed in its inset's assembly. Pure: no three.js and no DOM.
-import { antenna, box, cub, HULL_STACKS, type Inset, type InsetPart, type Piece, rod } from "./adapter.ts";
+import { antenna, box, cub, HULL_STACKS, ibeam, type Inset, type InsetPart, type Piece, pipeRun, rod, roundStrut } from "./adapter.ts";
 import { nozzle, vernier } from "./drive.ts";
-import { cutter, drone } from "./hangar.ts";
+import { cradle } from "./hangar.ts";
 import { pipe } from "./hulls.ts";
 import { capsule, collarAt, ringAt, tubeAt } from "./shapes.ts";
 
@@ -30,10 +30,10 @@ const bays: Inset = {
   parts: [
     part(1, "Bay door and shutters", "Five orange leaves on rails, a hazard sill and a grey frame.", [30, 10, 3], [0, 0, 0], () => [cub("hull-grey", [-15, 15], [0, 10], [-0.5, 0.2]), ...[...Array(5).keys()].map((k) => cub(k % 2 ? "hull-orange" : "hull-orange-worn", [-15 + k * 6 + 0.1, -9 + k * 6 - 0.1 + 6], [0.5, 9.5], [0.2, 0.8 + (k % 2) * 0.3])), cub("hazard", [-15, 15], [0, 0.4], [0.2, 0.7])]),
     part(2, "Gantry crane", "Two rails, a bridge, a trolley and a hook.", [20, 8, 40], [0, 0, 0], () => [cub("hull-yellow", [-10, -9.3], [0, 40], [7, 7.6]), cub("hull-yellow", [9.3, 10], [0, 40], [7, 7.6]), cub("hull-orange", [-10, 10], [19, 20.6], [6, 7.4]), cub("hull-yellow", [-1.6, 1.6], [18.4, 21.6], [4.8, 6]), rod("hull-grey-dark", [0, 20, 4.8], [0, 20, 0.5], 0.08, 6), cub("hazard", [-0.5, 0.5], [19.5, 20.5], [0, 0.8])]),
-    part(3, "Rescue cutter (ATC)", "An Auxiliary Transfer Craft on its cradle, nose to the door.", [14, 32, 6], [0, 0, 0], () => cutter(0, 16, 0, 32, 14)),
+    part(3, "Cradle with clamp arms", "Two I-beams and cross beams on feet, six clamp arms with hydraulic cylinders and padded jaws, and hazard chocks, ready for a craft.", [20, 34, 6], [0, 0, 0], () => cradle(0, 17, 34, 14, 0)),
     part(4, "Maintenance racks", "Four shelves of crates along the wall.", [3, 12, 18], [0, 0, 0], () => [...[0, 1, 2, 3].map((t) => cub("hull-grey-dark", [0, 2.2], [0, 12], [t * 5, t * 5 + 0.25])), ...[0, 1, 2, 3].flatMap((t) => [0, 1, 2].map((k) => cub(k % 2 ? "hull-orange-worn" : "hull-yellow", [0.2, 1.9], [0.2 + k * 3.8, 3.6 + k * 3.8], [t * 5 + 0.25, t * 5 + 1.7])))]),
     part(5, "Pressure vestibule", "A box with two doors and a status lamp between the bay and the spine.", [12, 5, 8], [0, 0, 0], () => [cub("hull-white-worn", [-6, 6], [0, 5], [0, 7]), cub("hull-grey-dark", [-3, 3], [5, 5.2], [0.2, 5.9]), cub("hazard", [-3.3, 3.3], [5.2, 5.35], [5.9, 6.4]), cub("lamp-blue", [-0.3, 0.3], [5.2, 5.4], [6.6, 7])]),
-    part(6, "Drone rack", "Six drones on a rack, three above three.", [14, 44, 14], [0, 0, 0], () => [...[0, 1, 2].flatMap((r) => [cub("hull-grey-dark", [-7, 7], [r * 14 + 2, r * 14 + 14], [0, 0.4]), ...drone(-3, r * 14 + 5, 0.4), ...drone(3, r * 14 + 10, 0.4)])]),
+    part(6, "Umbilical boom", "A pylon and a boom over the cradle, with hoses for fuel, coolant and power hanging to a connector head, and a hose reel.", [16, 12, 6], [0, 0, 0], () => [cub("hull-grey-dark", [0, 1], [-1.4, 1.4], [0, 8]), ...ibeam("hull-yellow", [0.5, 0, 7.2], [14, 0, 7.2], 1, 0.7, [0, 0, 1]), ...roundStrut("hull-grey-dark", [0.5, 0, 5.4], [8, 0, 7.1], 0.3), ...(["fuel", "coolant", "copper"] as const).flatMap((m, k) => pipeRun(m, [[13.5, -0.8 + 0.8 * k, 7.2], [14, -0.8 + 0.8 * k, 5.2], [15.4, -0.8 + 0.8 * k, 2.7], [15.4, -0.8 + 0.8 * k, 3.6]], 0.2, { clampEvery: 2.2 })), cub("hull-grey-dark", [14.6, 16.2], [-1.5, 1.5], [2.8, 3.8]), cub("lamp-amber", [14.9, 15.9], [-1.5, 1.5], [3.8, 3.95])]),
   ],
 };
 
