@@ -1,4 +1,4 @@
-// What the demo says about the SPX fleet: the Rocket list holds the ships by their registry names and no placeholder, and the first tab of a ship's panel under the 3D view is drawn, not a blank pill.
+// What the demo says about the SPX fleet: the Maker row and the Made by line read "SPX" for every fleet ship, the Rocket list holds the ships by their registry names and no placeholder, and the first tab of a ship's panel under the 3D view is drawn, not a blank pill.
 import { expect, type Page, test } from "@playwright/test";
 import { ROCKETS } from "../src/rockets.ts";
 
@@ -6,7 +6,25 @@ const URL = "/uchusen-rockets/";
 const SHIPS = ["fleet-ship-03", "fleet-ship-ariake", "fleet-02"] as const;
 const names = SHIPS.map((id) => ROCKETS[id].name);
 
+const pressed = (page: Page, group: string) => page.locator(`#${group} button[aria-pressed="true"]`).allTextContents();
 const listed = (page: Page) => page.locator('#rockets button:visible').allTextContents();
+
+test("the Maker row and the Made by line read SPX for every fleet ship, by address and by click", async ({ page }) => {
+  for (const id of SHIPS) {
+    await page.goto(`${URL}?rocket=${id}`);
+    expect(await pressed(page, "makers"), id).toEqual(["SPX"]);
+    await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i);
+    await expect(page.locator("#facts")).not.toContainText("SpaceX");
+  }
+  await page.goto(URL);
+  for (const id of SHIPS) {
+    await page.locator('[data-testid="maker-fleet"]').click();
+    await page.locator(`[data-testid="rocket-${id}"]`).click();
+    expect(await pressed(page, "makers"), id).toEqual(["SPX"]);
+    await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i);
+    await expect(page.locator("#facts")).not.toContainText("SpaceX");
+  }
+});
 
 test("the Rocket list under SPX holds the fleet ships by their registry names, and no placeholder, on the demo and on the code builder", async ({ page }) => {
   await page.goto(URL);

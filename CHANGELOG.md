@@ -5,6 +5,7 @@
 - **The comparison page with the fleet in it**: a fleet ship lies lengthwise in its own band below the rockets, on the same scale and ruler, and the scale fits whatever is shown (the ruler runs to 2,000 m with Kaminari in); a switch (All, Rockets, SPX fleet) picks the kind, and Rockets alone keeps the rockets' own scale; a fleet ship's table rows are Length, Beam and Height (stowed), not "whole height"; the family's view controls zoom, fit and pan the lineup, and the zoom stays in the address. `<uchusen-lineup>` takes `filter` and `fit`, and `lineupSvg` takes `filter` and `fit` and returns the scale it drew at. The fleet's maker reads "SPX".
 - **Fix, the chosen tab of a ship's panel under the 3D view**: it was drawn as a blank pill in every theme, because its fill was `currentColor` while its words were set to `Canvas` on the same button, so both were one colour. The chosen tab and the Labels toggle now have a tinted fill, a ring and bold words, in the page's own colours.
 - **Fix, the demo's Rocket list**: under SPX it holds the fleet ships by their registry names (ISV Miyamoto, SPX-452; ISV Ariake, SPX-186; ISV Kaminari, SPX-207) and no longer the kit's "Fleet ..." boxes of parts, on the demo and on the code builder. A kit box still draws when the address names it (`?rocket=fleet-tanks`).
+- Test only: `e2e/fleet-demo.demo.ts` holds the Maker row and the Made by line to "SPX" for every fleet ship, the Rocket list to the ships, and the panel's chosen tab to a readable picture.
 
 ## [0.10.0] - 2026-11-04
 
