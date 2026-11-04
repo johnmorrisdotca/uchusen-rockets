@@ -1,7 +1,23 @@
-// What the demo says about the SPX fleet. The first tab of a ship's panel under the 3D view is drawn, not a blank pill.
+// What the demo says about the SPX fleet: the Rocket list holds the ships by their registry names and no placeholder, and the first tab of a ship's panel under the 3D view is drawn, not a blank pill.
 import { expect, type Page, test } from "@playwright/test";
+import { ROCKETS } from "../src/rockets.ts";
 
 const URL = "/uchusen-rockets/";
+const SHIPS = ["fleet-ship-03", "fleet-ship-ariake", "fleet-02"] as const;
+const names = SHIPS.map((id) => ROCKETS[id].name);
+
+const listed = (page: Page) => page.locator('#rockets button:visible').allTextContents();
+
+test("the Rocket list under SPX holds the fleet ships by their registry names, and no placeholder, on the demo and on the code builder", async ({ page }) => {
+  await page.goto(URL);
+  await page.locator('[data-testid="maker-fleet"]').click();
+  expect(await listed(page)).toEqual(names);
+  await page.goto(`${URL}builder.html`);
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  await page.locator('[data-testid="maker-fleet"]').click();
+  expect(await page.locator("#rockets button").allTextContents()).toEqual(names);
+  expect(names.join(" ")).toContain("Miyamoto, SPX-452");
+});
 
 /** The spread of light in the middle of a picture of the tab: a pill whose fill and words are one colour has none. */
 async function spread(page: Page, png: Buffer): Promise<number> {

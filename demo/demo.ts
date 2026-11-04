@@ -8,6 +8,7 @@ import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
+import { isListed } from "./listed.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
@@ -227,7 +228,10 @@ function renderMain() {
 function drawMakers() {
   press(byId("makers"), `maker-${state.maker}`);
   press(byId("rockets"), `rocket-${state.rocket}`);
-  for (const button of byId("rockets").querySelectorAll("button")) button.hidden = ROCKETS[(button.dataset.testid ?? "").replace("rocket-", "")]?.maker !== state.maker;
+  for (const button of byId("rockets").querySelectorAll("button")) {
+    const id = (button.dataset.testid ?? "").replace("rocket-", "");
+    button.hidden = ROCKETS[id]?.maker !== state.maker || !isListed(id);
+  }
   // the address has the rocket, and the maker only when it is not that rocket's own
   address.set("maker", state.maker === ROCKETS[state.rocket].maker ? null : state.maker);
 }
@@ -247,7 +251,7 @@ function pick(change: Partial<typeof state>) {
 
 /** A maker with one rocket has one answer, and it is chosen for the reader; otherwise the rocket on screen stays until another is pressed. */
 function pickMaker(maker: MakerId) {
-  const theirs = Object.values(ROCKETS).filter((rocket) => rocket.maker === maker);
+  const theirs = Object.values(ROCKETS).filter((rocket) => rocket.maker === maker && isListed(rocket.id));
   if (theirs.length === 1) {
     if (state.rocket !== theirs[0].id) pick({ rocket: theirs[0].id, variant: theirs[0].defaultVariant });
     return;

@@ -3,6 +3,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { flightOf, frameAt } from "../src/flight.ts";
 import { ROCKETS } from "../src/rockets.ts";
+import { isListed } from "../demo/listed.ts";
 
 const URL = "/uchusen-rockets/";
 const is3d = (browserName: string) => browserName === "chromium";
@@ -30,11 +31,13 @@ function watch(page: Page): string[] {
 }
 
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
-/** A rocket's button shows under its maker's, so its maker comes first. */
+/** A rocket's button shows under its maker's, so its maker comes first. The fleet kit's boxes of parts are not listed, and are pressed without being seen. */
 const press = async (page: Page, id: string) => {
   const rocket = /^rocket-(.+)$/.exec(id)?.[1];
   if (rocket) await page.locator(`[data-testid="maker-${ROCKETS[rocket].maker}"]`).click();
-  await page.locator(`[data-testid="${id}"]`).click();
+  const button = page.locator(`[data-testid="${id}"]`);
+  if (rocket && !isListed(rocket)) await button.dispatchEvent("click");
+  else await button.click();
 };
 const canvasData = (page: Page, name: string) => hero(page).evaluate((node, key) => (node as HTMLElement).shadowRoot?.querySelector("canvas")?.dataset[key] ?? "", name);
 /** The 3D view shows a look. The first draw of the painted look compiles its shaders, and in software drawing that holds the page itself (0.3 to 1.1 s on a Mac, more on a hosted runner), so a reading can

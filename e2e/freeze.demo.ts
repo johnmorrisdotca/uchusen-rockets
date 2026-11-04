@@ -6,6 +6,7 @@ import { chromium, expect as plainExpect, type Locator, type Page, test } from "
 import { build } from "../src/build/index.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
 import { ROCKETS } from "../src/rockets.ts";
+import { isListed } from "../demo/listed.ts";
 
 // these draw in software, and a page building a painted material can be busy for many seconds
 const expect = plainExpect.configure({ timeout: 30_000 });
@@ -14,11 +15,13 @@ const URL = "/uchusen-rockets/";
 const real = (rocket: { id: string }) => !rocket.id.startsWith("fleet-");
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
-/** A rocket's button shows under its maker's, so its maker comes first. */
+/** A rocket's button shows under its maker's, so its maker comes first. The fleet kit's boxes of parts are not listed, and are pressed without being seen. */
 const press = async (page: Page, id: string) => {
   const rocket = /^rocket-(.+)$/.exec(id)?.[1];
   if (rocket) await page.locator(`[data-testid="maker-${ROCKETS[rocket].maker}"]`).click();
-  await page.locator(`[data-testid="${id}"]`).click();
+  const button = page.locator(`[data-testid="${id}"]`);
+  if (rocket && !isListed(rocket)) await button.dispatchEvent("click");
+  else await button.click();
 };
 
 test.use({ reducedMotion: "no-preference" });
