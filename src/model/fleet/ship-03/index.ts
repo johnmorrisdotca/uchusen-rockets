@@ -1,4 +1,4 @@
-// Waymark's parts: each module of the ship as a row of the table below, with where it stands, its joints and how to build its pieces at a level of detail. Every builder works in ship metres (X across the beam, Y from the
+// Miyamoto's parts: each module of the ship as a row of the table below, with where it stands, its joints and how to build its pieces at a level of detail. Every builder works in ship metres (X across the beam, Y from the
 // tail, Z dorsal); `local` moves a part's pieces so its origin is the middle of its base on the spine, as every part of the package has it. The registry and the data read this table and nothing else. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
 import { type Piece, place } from "./adapter.ts";
@@ -21,7 +21,7 @@ export interface BuildOptions {
   detail?: number;
 }
 
-export interface WaymarkPart {
+export interface MiyamotoPart {
   /** The slot, and the id after `fleet-ship-03-`. */
   id: string;
   name: string;
@@ -44,7 +44,7 @@ export interface WaymarkPart {
 const local = (pieces: Piece[], x: number, y: number, z: number): Piece[] => place(pieces, { at: [-x, -y, -z] });
 const COLLAR_L = 12;
 
-const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [number, number], width: number, depth: number, note: string, build: (cut: boolean, detail: number) => Piece[], cut: boolean, first = false, last = false): WaymarkPart => ({
+const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [number, number], width: number, depth: number, note: string, build: (cut: boolean, detail: number) => Piece[], cut: boolean, first = false, last = false): MiyamotoPart => ({
   id: cut ? `${id}-cutaway` : id,
   name: cut ? `${name}, cutaway` : name,
   kind,
@@ -57,7 +57,7 @@ const stack = (id: string, name: string, kind: PartKind, [y0, y1]: readonly [num
   pieces: (o) => local(build(cut, o?.detail ?? 1), 0, y0, 0),
 });
 
-const shoulder = (side: "starboard" | "port", cut: boolean): WaymarkPart => {
+const shoulder = (side: "starboard" | "port", cut: boolean): MiyamotoPart => {
   const h = HANGAR[side];
   return {
     id: `hangar-${side}${cut ? "-cutaway" : ""}`,
@@ -72,7 +72,7 @@ const shoulder = (side: "starboard" | "port", cut: boolean): WaymarkPart => {
   };
 };
 
-const missionPod = (kind: PodKind): WaymarkPart => ({
+const missionPod = (kind: PodKind): MiyamotoPart => ({
   id: `pod-${kind}`,
   name: kind === "relay" ? "Mission pod, relay" : "Mission pod, relief",
   kind: "module",
@@ -84,7 +84,7 @@ const missionPod = (kind: PodKind): WaymarkPart => ({
   pieces: (o) => local(pod(kind, o?.detail ?? 1), 0, 174, 0),
 });
 
-const bank = (which: "dorsal" | "ventral", open: boolean): WaymarkPart => ({
+const bank = (which: "dorsal" | "ventral", open: boolean): MiyamotoPart => ({
   id: `radiators-${which}-${open ? "deployed" : "stowed"}`,
   name: `Radiator bank, ${which}, ${open ? "deployed" : "stowed"}`,
   kind: "module",
@@ -97,7 +97,7 @@ const bank = (which: "dorsal" | "ventral", open: boolean): WaymarkPart => ({
 });
 
 /** The stacked modules, tail to bow, in their plain and their cut form. */
-export const STACK = (cut: boolean): WaymarkPart[] => [
+export const STACK = (cut: boolean): MiyamotoPart[] => [
   stack("drive", "Main drive and thrust frame", "engine", STATION.drive, 90, 46, "Two flush fusion-triggered nozzles with throat rings, field coils and feed manifolds, a blast bulkhead and four plasma verniers.", driveFrame, cut, true),
   stack("engineering", "Engineering and isolators", "module", STATION.engineering, 28, 26, "Reactor chambers, a locked-out service corridor, two isolated auxiliary power units, the emergency battery room and the breakers.", engineering, cut),
   stack("fuel-aft", "Aft fuel section", "tank", STATION.fuelAft, 62, 44, "The spine and the aft pair of propellant barrels, with a header tank slung under it.", (c, d) => fuelSection("aft", c, d), cut),
@@ -108,8 +108,8 @@ export const STACK = (cut: boolean): WaymarkPart[] => [
 ];
 
 /** Every part of the ship, each once. */
-export function parts(): WaymarkPart[] {
-  const out: WaymarkPart[] = [...STACK(false), ...STACK(true)];
+export function parts(): MiyamotoPart[] {
+  const out: MiyamotoPart[] = [...STACK(false), ...STACK(true)];
   for (const cut of [false, true]) out.push(shoulder("starboard", cut), shoulder("port", cut));
   out.push(missionPod("relay"), missionPod("relief"));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));

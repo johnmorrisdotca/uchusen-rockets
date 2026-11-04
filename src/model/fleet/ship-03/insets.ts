@@ -1,4 +1,4 @@
-// Waymark's own system insets, each opening into six numbered sub-parts that come apart: the command citadel, the hangars and the medical bay. (The reactor core, the navigation and sensor suite, life support and the
+// Miyamoto's own system insets, each opening into six numbered sub-parts that come apart: the command citadel, the hangars and the medical bay. (The reactor core, the navigation and sensor suite, life support and the
 // docking port are the fleet kit's four, shared by every ship.) The two propulsion cards, the main nozzle and a vernier, stand here too, each drawn on its own at a size where the throat, the coils and the feed lines
 // show. Every sub-part is its own part of the registry, placed in its inset's assembly. Pure: no three.js and no DOM.
 import { antenna, box, cub, HULL_STACKS, type Inset, type InsetPart, type Piece, rod } from "./adapter.ts";
@@ -12,7 +12,7 @@ const part = (n: number, name: string, does: string, size: readonly [number, num
 const citadel: Inset = {
   id: "ship-03-citadel",
   name: "Command citadel",
-  note: "Waymark's command citadel opened into its six working parts.",
+  note: "Miyamoto's command citadel opened into its six working parts.",
   parts: [
     part(1, "Communications core", "A tall tube through every deck, ringed with equipment and a cooling jacket.", [8, 20, 8], [0, 0, 0], () => [tubeAt("hull-grey", 0, 0, 3.6, 0, 20, { segs: 24 }), tubeAt("lamp-blue", 0, 0, 2.4, 0.5, 19.5, { segs: 16 }), ...[...Array(8).keys()].flatMap((k) => [ringAt("hull-grey-dark", 0, 0, 3.7, 1 + k * 2.4, 0.2), ringAt("copper", 0, 0, 4, 1.6 + k * 2.4, 0.12)]), ...antenna("dish", [0, 20, 0], [0, 1, 0], 5, "core")]),
     part(2, "Operations ring", "Fourteen consoles facing the core, a lit display above each.", [26, 4, 26], [0, 0, 0], () => [collarAt("deck", 0, 0, 4.4, 12.2, 0, 0.4), collarAt("hull-yellow", 0, 0, 12.2, 12.5, 0, 0.5), ...[...Array(14).keys()].flatMap((k) => { const a = (Math.PI * 2 * k) / 14; return [box("hull-grey-dark", [10.2 * Math.sin(a), 0.4, 10.2 * Math.cos(a)], 2.4, 1.2, 1.1, (a * 180) / Math.PI), cub("lamp-blue", [11.5 * Math.sin(a) - 0.5, 11.5 * Math.sin(a) + 0.5], [1.7, 3], [11.5 * Math.cos(a) - 0.5, 11.5 * Math.cos(a) + 0.5])]; })]),
@@ -51,7 +51,7 @@ const medical: Inset = {
   ],
 };
 
-/** Waymark's three insets. */
+/** Miyamoto's three insets. */
 export const SHIP_INSETS: Readonly<Record<string, Inset>> = { [citadel.id]: citadel, [bays.id]: bays, [medical.id]: medical };
 
 /** The two propulsion cards: an engine on its own, true to its size, with its bell, throat, chamber, feed manifolds, coils and gimbal. */

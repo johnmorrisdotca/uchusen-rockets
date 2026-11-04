@@ -1,4 +1,4 @@
-// SPX-03 Waymark, Waymark (SPX-ICV-03): the physics the bible prints, its parts in metres, the detail on every module, one mesh for one description, the named sections and decks, and how long it takes to build.
+// SPX-03 Miyamoto (SPX-ICV-03): the physics the bible prints, its parts in metres, the detail on every module, one mesh for one description, the named sections and decks, and how long it takes to build.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
@@ -7,7 +7,7 @@ import { MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
 import { ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, SECTIONS, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
-import { WAYMARK_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
+import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);
@@ -38,21 +38,21 @@ test("the approved profile: 0.040 g at 0.63 c exhaust, and every number of the b
 });
 
 test("the engine cards agree: thrust is mass flow times exhaust speed, and the main drive carries the ship", () => {
-  const main = ENGINES["waymark-main"];
+  const main = ENGINES["miyamoto-main"];
   near(main.thrust * main.count, journey(ROUTES.benchmark).thrust, 1, "two drives give the launch thrust");
   near(main.exhaustOfC, 0.63, 1e-9, "main exhaust");
   const gamma = 1 / Math.sqrt(1 - main.exhaustOfC ** 2);
   near(main.massFlow * gamma * main.exhaust, main.thrust, 1, "relativistic thrust");
-  for (const id of ["waymark-vernier", "waymark-attitude"]) near(ENGINES[id].massFlow * ENGINES[id].exhaust, ENGINES[id].thrust, 1e-3, id);
-  assert.ok(ENGINES["waymark-vernier"].thrust * ENGINES["waymark-vernier"].count < main.thrust * main.count * 0.1, "the verniers cannot brake the ship");
+  for (const id of ["miyamoto-vernier", "miyamoto-attitude"]) near(ENGINES[id].massFlow * ENGINES[id].exhaust, ENGINES[id].thrust, 1e-3, id);
+  assert.ok(ENGINES["miyamoto-vernier"].thrust * ENGINES["miyamoto-vernier"].count < main.thrust * main.count * 0.1, "the verniers cannot brake the ship");
   assert.equal(Object.values(ENGINES).length, 3);
 });
 
 test("the identity and the specification: the SPX designation, the Japanese name with its reading, the numbers", () => {
   assert.equal(IDENTITY.designation, "SPX-ICV-03");
   assert.equal(IDENTITY.maker, "SPX");
-  assert.equal(IDENTITY.japanese, "道標");
-  assert.equal(IDENTITY.reading, "みちしるべ");
+  assert.equal(IDENTITY.japanese, "宮本");
+  assert.equal(IDENTITY.meaning, "at the foot of the shrine");
   assert.deepEqual([ENVELOPE.length, ENVELOPE.beam, ENVELOPE.height], [380, 118, 74]);
   const lines = specification().map((line) => `${line.name}: ${line.value}`).join("\n");
   for (const text of ["SPX-ICV-03", "380 m", "118 m", "105,000 t", "20.42 years aboard", "21.03 years", "0.04 g sustained", "24,000 m2"]) assert.ok(lines.includes(text), text);
@@ -86,7 +86,7 @@ test("no module has a bare surface: hundreds of pieces and many kinds of detail,
     assert.ok(pieces.length >= 250, `${part.id}: ${pieces.length} pieces`);
     assert.ok(materialsOf(pieces).size >= 9, `${part.id}: ${materialsOf(pieces).size} materials`);
   }
-  const stowed = all.filter((part) => Object.values(WAYMARK_VARIANT_SLOTS.waymark).includes(part.id)).reduce((sum, part) => sum + part.pieces().length, 0);
+  const stowed = all.filter((part) => Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto).includes(part.id)).reduce((sum, part) => sum + part.pieces().length, 0);
   assert.ok(stowed >= 15_000, `${stowed} pieces in the stowed ship`);
   assert.ok(total > stowed);
   // the kinds of detail: copper and coils, hatches and lamps, glass, plants, hazard marks, coolant, the foam of the armour and the water of the barrels
@@ -115,7 +115,7 @@ test("the levels of detail: a quarter of the detail is far fewer pieces, and the
   }
 });
 
-test("Waymark is in the registry: four variants, every slot's part exists, the joints fit, and it is in the story, with no visible tag", () => {
+test("Miyamoto is in the registry: four variants, every slot's part exists, the joints fit, and it is in the story, with no visible tag", () => {
   const rocket = ROCKETS["fleet-ship-03"];
   assert.equal(rocket.variants.length, 4);
   for (const variant of rocket.variants) {
@@ -129,7 +129,7 @@ test("Waymark is in the registry: four variants, every slot's part exists, the j
   for (const entry of PART_ENTRIES) if (entry.record.rocket === "fleet-ship-03") assert.ok(entry.record.trueTo.length > 0, entry.record.id);
   // the same part serves more than one variant
   const shared = PART_ENTRIES.find((entry) => entry.record.id === "fleet-ship-03-drive");
-  assert.deepEqual(shared?.record.trueTo, ["waymark", "waymark-deployed", "waymark-relief"]);
+  assert.deepEqual(shared?.record.trueTo, ["miyamoto", "miyamoto-deployed", "miyamoto-relief"]);
   // the mission pod swaps: two parts, one mount
   assert.ok(PART_ENTRIES.some((entry) => entry.record.id === "fleet-ship-03-pod-relay") && PART_ENTRIES.some((entry) => entry.record.id === "fleet-ship-03-pod-relief"));
 });
@@ -158,7 +158,7 @@ test("sections and decks: a label for every few percent of the length, and more 
 });
 
 test("the build budget: the first picture inside a second, the full detail inside three, on this computer", () => {
-  const stowed = Object.values(WAYMARK_VARIANT_SLOTS.waymark);
+  const stowed = Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto);
   const once = (detail: number) => {
     const start = performance.now();
     const list = parts().filter((part) => stowed.includes(part.id));

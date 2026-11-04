@@ -1,4 +1,4 @@
-// How Waymark's boxy hulls are dressed. A hull is a box of plated faces; a face is cut into slots, each slot is plated or holds one piece of hardware (a hatch, a vent, a row of windows, a conduit stub, a lamp row, a sensor
+// How Miyamoto's boxy hulls are dressed. A hull is a box of plated faces; a face is cut into slots, each slot is plated or holds one piece of hardware (a hatch, a vent, a row of windows, a conduit stub, a lamp row, a sensor
 // post, a hazard frame, a number, a cluster of machinery), and a slot with hardware is left unplated so the hardware sits in a recess. Walls of a cutaway are real separate shells, one for each hull layer, stepped back so
 // the stack shows at the cut edge. Pure: no three.js and no DOM.
 import { cub, type MaterialName, type Piece, pipeRun, rng, rod, type Vec3 } from "./adapter.ts";

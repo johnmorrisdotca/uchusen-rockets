@@ -1,16 +1,16 @@
-// Waymark's parts as rows of the registry: each module with its record (real size in metres, its joints and where it stands) and how to build its pieces. All fictional, drawn wholly by this package's code from the tables in
+// Miyamoto's parts as rows of the registry: each module with its record (real size in metres, its joints and where it stands) and how to build its pieces. All fictional, drawn wholly by this package's code from the tables in
 // `fleet/ship-03/`. Pure: no three.js and no DOM.
 import { blank } from "../data/types.ts";
 import type { PartEntry } from "./registry.ts";
 import { COLLAR_L } from "./fleet/ship-03/index.ts";
 import { CARDS, SHIP_INSETS } from "./fleet/ship-03/insets.ts";
-import { WAYMARK_PARTS, WAYMARK_VARIANT_SLOTS } from "./fleet/ship-03/variants.ts";
+import { MIYAMOTO_PARTS, MIYAMOTO_VARIANT_SLOTS } from "./fleet/ship-03/variants.ts";
 
 const NOTE = blank("A design of this package, with no source.");
 
-/** Every part of Waymark, each once, with the variants it is true for. */
-export const SHIP_03_ENTRIES: readonly PartEntry[] = WAYMARK_PARTS.map((part): PartEntry => {
-  const trueTo = Object.entries(WAYMARK_VARIANT_SLOTS).filter(([, slots]) => Object.values(slots).includes(part.id)).map(([variant]) => variant);
+/** Every part of Miyamoto, each once, with the variants it is true for. */
+export const SHIP_03_ENTRIES: readonly PartEntry[] = MIYAMOTO_PARTS.map((part): PartEntry => {
+  const trueTo = Object.entries(MIYAMOTO_VARIANT_SLOTS).filter(([, slots]) => Object.values(slots).includes(part.id)).map(([variant]) => variant);
   return {
     record: {
       id: `fleet-ship-03-${part.id}`,
@@ -30,7 +30,7 @@ export const SHIP_03_ENTRIES: readonly PartEntry[] = WAYMARK_PARTS.map((part): P
   };
 });
 
-/** The sub-parts of Waymark's insets and its two engine cards, each its own part, placed in its assembly. */
+/** The sub-parts of Miyamoto's insets and its two engine cards, each its own part, placed in its assembly. */
 export const SHIP_03_INSET_ENTRIES: readonly PartEntry[] = [
   ...Object.values(SHIP_INSETS).flatMap((inset) =>
     inset.parts.map((one): PartEntry => ({
