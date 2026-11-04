@@ -4,7 +4,7 @@ import { iBeam as kitIBeam, pipeRun as kitPipeRun, strut as kitStrut } from "../
 import type { MaterialName } from "../../materials.ts";
 import type { Frame, Lathe, Piece, Plate, Vec3 } from "../../pieces.ts";
 
-export { annulus, antenna, beam, box, channel, disc, floodlight, horn, hoop, lamps, LIVERY, navLight, observationDome, place, porthole, post, radiator, ringOf, rng, rod, room, seams, separationJoint, stamp, tileShield } from "../detail.ts";
+export { annulus, antenna, ball, beam, box, channel, disc, floodlight, horn, hoop, lamps, LIVERY, navLight, observationDome, place, porthole, post, radiator, ringOf, rng, rod, room, seams, separationJoint, stamp, tileShield } from "../detail.ts";
 export { assemble, BUILDERS, KIT } from "../kit.ts";
 export type { KitModule, ShipList } from "../types.ts";
 export type { Lamp, Pose, Rng } from "../detail.ts";
