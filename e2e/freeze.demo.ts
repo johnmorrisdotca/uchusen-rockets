@@ -609,12 +609,13 @@ test.describe("with the engines lit", () => {
     await pause(page);
     await reach3d(page);
     await press(page, "engines-on");
+    // each rocket is read once it has been drawn: its plumes are counted when it is built, and its buffers are made by its first frame, which a slow runner draws well after (9 buffers just after the plumes, 191 a frame later)
     const round = async () => {
-      await press(page, "rocket-falcon-9");
+      await pressAndDraw(page, "rocket-falcon-9");
       await expect.poll(() => canvasData(page, "plumes")).toBe("9");
-      await press(page, "rocket-falcon-heavy");
+      await pressAndDraw(page, "rocket-falcon-heavy");
       await expect.poll(() => canvasData(page, "plumes")).toBe("27");
-      await press(page, "rocket-starship");
+      await pressAndDraw(page, "rocket-starship");
       await expect.poll(() => canvasData(page, "plumes")).toBe("33");
     };
     await round();
