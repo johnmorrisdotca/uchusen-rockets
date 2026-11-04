@@ -881,7 +881,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -898,7 +898,8 @@ export class UchusenLineup extends HTMLBase {
     const raw = Number.parseFloat(this.getAttribute("unit") ?? "3");
     const unit = Number.isFinite(raw) && raw > 0 && raw <= 100 ? raw : 3;
     const items = (this.getAttribute("items") ?? "").split(",").map((item) => item.trim()).filter(Boolean);
-    const { svg, items: shown, unit: drawnUnit } = lineupSvg({
+    const { svg, items: shown, real: shownReal, unit: drawnUnit } = lineupSvg({
+      real: this.getAttribute("real") === "on",
       items,
       unit,
       look: cleanLook(this.getAttribute("look")),
@@ -917,6 +918,7 @@ export class UchusenLineup extends HTMLBase {
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);
     this.dataset.count = String(shown.length);
+    this.dataset.real = String(shownReal.length);
   }
 }
 
