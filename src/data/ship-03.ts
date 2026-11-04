@@ -13,18 +13,19 @@ const NOTES: Readonly<Record<string, string>> = {
   "miyamoto-deployed": "Miyamoto with both radiator banks out: four leaves of 25 by 60 m on each, clear of the hangar corridors. Sustained main burn needs every leaf out.",
   "miyamoto-relief": "Miyamoto with the relief pod on its collar: six relief and equipment containers under a gantry, in place of the relay pod.",
   "miyamoto-no-collar": "ISV Miyamoto with the drive's neck bare: the shadow-shield collar swapped for none, to compare the two ways the engines meet the hull.",
-  ariake: "ISV 有明 Ariake, SPX-186, \"daybreak\": the sister of ISV Miyamoto in the Romurusu class (ロムルス級), the same model with its own registry, hull marks and its relief pod. Status: planned, first flight 2456.",
+  ariake: "ISV 有明 Ariake, SPX-186, \"daybreak\": the sister of ISV Miyamoto in the Romurusu class (ロムルス級), the same model with its own registry and hull marks, a dawn-gold livery with pinstripes, a survey pod on its collar, a sensor mast and a solarium each side of the dome, and warm rooms. Status: planned, first flight 2456.",
+  "ariake-cutaway": "Ariake opened to starboard at the habitation drum: the four decks in warm wood and dawn-gold.",
   "miyamoto-cutaway": "Miyamoto opened to starboard: the layers of its armour at the cut edge, the reactor and power rooms, the barrels, both bays, the decks of the habitat and the operations ring of the citadel.",
 };
 
-const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", ariake: "ISV 有明 Ariake, SPX-186" };
+const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", ariake: "ISV 有明 Ariake, SPX-186", "ariake-cutaway": "ISV 有明 Ariake, SPX-186, cutaway" };
 
 /** The ship's variants. */
 const variantOf = ([id, slots]: [string, Readonly<Record<string, string>>]): Variant => {
   const stacked = Object.keys(slots);
   return {
     id,
-    rocket: id === "ariake" ? "fleet-ship-ariake" : "fleet-ship-03",
+    rocket: id.startsWith("ariake") ? "fleet-ship-ariake" : "fleet-ship-03",
     name: NAMES[id],
     status: "fictional" as const,
     firstWord: "Planned first flight",
@@ -43,10 +44,10 @@ const variantOf = ([id, slots]: [string, Readonly<Record<string, string>>]): Var
 };
 
 /** Miyamoto's variants. */
-export const SHIP_03_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).filter(([id]) => id !== "ariake").map(variantOf);
+export const SHIP_03_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).filter(([id]) => !id.startsWith("ariake")).map(variantOf);
 
 /** The sister ship: the same model, its own name, registry, hull marks and mission pod. A row of its own in the picker. */
-export const ARIAKE_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).filter(([id]) => id === "ariake").map(variantOf);
+export const ARIAKE_VARIANTS: readonly Variant[] = Object.entries(MIYAMOTO_VARIANT_SLOTS).filter(([id]) => id.startsWith("ariake")).map(variantOf);
 
 const insetVariant = (inset: (typeof SHIP_INSETS)[string]): Variant => ({
   id: inset.id,

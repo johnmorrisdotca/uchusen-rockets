@@ -216,11 +216,11 @@ export const SECTIONS: readonly MiyamotoSection[] = [
   s("hangar-starboard", "racks-s", "Maintenance racks", "cargo", 108, 200, 24, 12, "Shelving with spares along the inner wall.", true),
   s("fuel-fore", "barrel-fore-s", "Fore starboard barrel", "tank", 174, 246, 24, -12, "Fore twin of the aft pair.", true),
   s("fuel-fore", "barrel-fore-p", "Fore port barrel", "tank", 174, 246, -24, -12, "Port twin of the fore pair."),
-  s("fuel-fore", "collar-base", "Keyed dorsal collar", "dock", 174, 234, 0, 14, "The mount that takes a command, relay or relief pod, with capped utility sockets."),
+  s("fuel-fore", "collar-base", "Keyed dorsal collar", "dock", 174, 234, 0, 14, "The mount that takes a command, relay, relief or survey pod, with capped utility sockets."),
   s("fuel-fore", "keel-dock", "Ventral keel and dock", "dock", 188, 212, 0, -38, "A pylon below the spine with a docking collar on its foot.", true),
   s("fuel-fore", "feed-lines-fore", "Feed lines and valves, fore", "line", 175, 245, -8, -10, "The fore pair's lines and isolation valves."),
   s("pod", "isolator", "Collar isolator", "structure", 174, 234, 0, 13, "A drum with pressure and power locks, so a pod swaps at a dock.", true),
-  s("pod", "payload", "Mission pod payload", "cargo", 178, 230, 0, 26, "The relay pod's bay and dishes, or the relief pod's six containers.", true),
+  s("pod", "payload", "Mission pod payload", "cargo", 178, 230, 0, 26, "The relay pod's bay and dishes, the relief pod's six containers, or the survey pod's telescope and probes.", true),
   s("pod", "dishes", "Dishes and arrays", "comms", 180, 228, 6, 32, "Four dishes and three phased arrays on the relay pod."),
   s("hangar-port", "survey-bay", "Survey bay", "lab", 234, 306, -41, 12, "Drones on racks and an access bridge, opening to port.", true),
   s("hangar-port", "survey-door", "Survey bay shutters", "hatch", 234, 306, -59, 12, "Five orange emergency shutter leaves."),
@@ -304,7 +304,7 @@ export const TITLE_BLOCK = `${IDENTITY.prefix} ${IDENTITY.romaji}, ${IDENTITY.de
 /** The ships of the class: one model, each with its own name, ruby, registry, hull marks and mission pod. */
 export const SHIPS = {
   miyamoto: { variant: "miyamoto", romaji: "Miyamoto", kanji: "宮本", ruby: "みやもと", registry: designation("452"), meaning: "at the foot of the shrine", marks: "452", pod: "relay" },
-  ariake: { variant: "ariake", romaji: "Ariake", kanji: "有明", ruby: "ありあけ", registry: designation("186"), meaning: "daybreak", marks: "186", pod: "relief" },
+  ariake: { variant: "ariake", romaji: "Ariake", kanji: "有明", ruby: "ありあけ", registry: designation("186"), meaning: "daybreak", marks: "186", pod: "survey" },
 } as const;
 
 /** The title-block line of a ship of the class. */
@@ -324,7 +324,7 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   bow: "the ISS's Whipple shields and Orion's heat shield: spaced layers held off the hull on struts",
   "hangar-starboard": "the Shuttle's payload bay and its robot arm's rails, with the crane rails, cell guides and lashing points of a container port",
   "hangar-port": "the Shuttle's payload bay and its robot arm's rails, with the crane rails, cell guides and lashing points of a container port",
-  pod: "the ISS's docking ring and the Shuttle's payload pallets; the relay pod carries Hubble-like high-gain dishes and a deep-space network array, the relief pod stacked container racks",
+  pod: "the ISS's docking ring and the Shuttle's payload pallets; the relay pod carries Hubble-like high-gain dishes and a deep-space network array, the relief pod stacked container racks, the survey pod a Hubble-like telescope in a yoke and a rack of probes",
   collar: "the shadow shields of NASA's nuclear thermal rocket and Mars transfer vehicle studies, a round cone between the reactor and the crew",
   radiators: "the ISS's radiator panels on booms, large thin plates set away from the hull, and the folding radiators of the Mars transfer vehicle studies",
 };

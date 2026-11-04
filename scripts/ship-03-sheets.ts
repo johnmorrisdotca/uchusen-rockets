@@ -60,7 +60,7 @@ const files = {
   cut: glb("cut", slots("miyamoto-cutaway")),
   exploded: glb("exploded", slots("miyamoto"), explodedAt),
   ariake: glb("ariake", slots("ariake")),
-  pods: glb("pods", ["pod-relay", "pod-relief"], (_, i) => [i === 0 ? -18 : 18, 0, 0]),
+  pods: glb("pods", ["pod-relay", "pod-relief", "pod-survey"], (_, i) => [(i - 1) * 36, 0, 0]),
 };
 /** A camera that frames a box from a direction, filling about 80% of the picture. */
 function frameOf(min: V3, max: V3, dir: V3, fov = 35, aspect = 1.4): { eye: V3; target: V3 } {
@@ -74,7 +74,7 @@ function frameOf(min: V3, max: V3, dir: V3, fov = 35, aspect = 1.4): { eye: V3; 
 // the pictures ------------------------------------------------------------------------------------------------------------------------------------------------
 const PPM = 6;
 const labelPoints = labels().map((label) => ({ id: label.id, at: label.at }));
-const modulePoints = all.filter((part) => !part.id.endsWith("-cutaway") && !part.id.includes("deployed") && part.id !== "pod-relief" && part.id !== "collar-none" && !part.id.endsWith("-ariake")).map((part, i) => ({ id: part.id, at: ((): V3 => { const [x, y, z] = explodedAt(part, i); return [x, y + part.height / 2, z + 6]; })() }));
+const modulePoints = all.filter((part) => !part.id.endsWith("-cutaway") && !part.id.includes("deployed") && (!part.id.startsWith("pod-") || part.id === "pod-relay") && part.id !== "collar-none" && !part.id.includes("-ariake")).map((part, i) => ({ id: part.id, at: ((): V3 => { const [x, y, z] = explodedAt(part, i); return [x, y + part.height / 2, z + 6]; })() }));
 const shots = (name: string, size: [number, number], extra: Record<string, unknown>) => ({ name, size, ...extra });
 const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: string; at: V3 }[] }[] = [
   { glb: files.stowed, shots: [
@@ -94,7 +94,7 @@ const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: strin
     shots("sheet5-edge", [1300, 800], { eye: [48, 322, 32], target: [8, 326, 16], fov: 45, shadow: 30 }),
     shots("sheet5-edge2", [1300, 800], { eye: [40, 110, 24], target: [-4, 126, 6], fov: 45, shadow: 30 }),
   ] },
-  { glb: files.pods, shots: [shots("pods", [1500, 800], { eye: [0, 30, 120], target: [0, 30, 22], up: [0, 1, 0], fov: 42, shadow: 90 })] },
+  { glb: files.pods, shots: [shots("pods", [1800, 800], { eye: [0, 30, 150], target: [0, 30, 22], up: [0, 1, 0], fov: 42, shadow: 110 })] },
 ];
 
 // the cards and the insets, each part alone, framed by its own box
@@ -174,13 +174,13 @@ try {
   await shoot("2-general-arrangement.png", page(2, "GENERAL ARRANGEMENT: SIDE, TOP, FRONT AND REAR AT ONE SCALE", `1 : ${Math.round(1000 / PPM)} · ${PPM} PX PER METRE`, `<div class="grid"><div><h2>SIDE (STARBOARD ELEVATION, BOW TO THE RIGHT)</h2><div class="panel" style="padding:0"><img src="${img("ga-side")}"/></div>${ruler(380, "380 m")}</div><div><h2>TOP (PORT UP, BOW TO THE RIGHT)</h2><div class="panel" style="padding:0"><img src="${img("ga-top")}"/></div>${ruler(380, "380 m · BEAM 118 m")}</div><div style="display:flex;gap:24px"><div><h2>FRONT (LOOKING AT THE BOW)</h2><div class="panel" style="padding:0"><img src="${img("ga-front")}"/></div></div><div><h2>REAR (LOOKING AT THE DRIVE)</h2><div class="panel" style="padding:0"><img src="${img("ga-rear")}"/></div></div><div class="panel" style="flex:1"><h2>OVERALL</h2><table>${specification().slice(2, 6).map((l) => `<tr><th>${esc(l.name)}</th><td>${esc(l.value)}${l.note ? `<br><small style="color:#8fa6bd">${esc(l.note)}</small>` : ""}</td></tr>`).join("")}</table></div></div></div>`));
 
   // 3: the exploded assembly
-  const mods = all.filter((part) => !part.id.endsWith("-cutaway") && !part.id.includes("deployed") && part.id !== "pod-relief" && part.id !== "collar-none" && !part.id.endsWith("-ariake"));
+  const mods = all.filter((part) => !part.id.endsWith("-cutaway") && !part.id.includes("deployed") && (!part.id.startsWith("pod-") || part.id === "pod-relay") && part.id !== "collar-none" && !part.id.includes("-ariake"));
   const c3 = callouts("sheet3-exploded", 2400, 1300, mods.map((m) => ({ id: m.id, text: m.name })), 200);
   await shoot("3-exploded-assembly.png", page(3, "EXPLODED ASSEMBLY", "PERSPECTIVE · NOT TO SCALE", `<div style="position:relative;width:${W - 88}px;height:1300px"><img src="${img("sheet3-exploded")}" style="position:absolute;left:200px;top:0;width:2400px"/>${c3.svg}${c3.texts}</div><div class="panel" style="margin-top:22px"><h2>MOUNTING</h2>Every stacked module meets the next at a class L spine collar (12 m, 24 bolts, 12 latch dogs); the two hangar shoulders hang from braces to the spine; the mission pod stands on the keyed dorsal collar, whose isolator has its own pressure and power locks; each radiator bank sits on rails along the habitation hull.</div>`));
 
   // 4: variants and pods
   const cell = (title: string, name: string, note: string) => `<div class="panel"><h2>${esc(title)}</h2><img src="${img(name)}" style="width:100%"/><div style="color:#9fb4c8;margin-top:6px">${esc(note)}</div></div>`;
-  await shoot("4-variants-and-pods.png", page(4, "VARIANTS AND MISSION PODS", "PERSPECTIVE · NOT TO SCALE", `<div class="grid" style="grid-template-columns:1fr 1fr">${cell("STOWED, RELAY POD", "var-stowed", "Radiators folded on the habitation hull; the relay pod on the collar.")}${cell("RADIATORS OUT", "var-deployed", "Two banks of four leaves, 25 by 60 m, on masts, clear of the bays and the exhaust.")}${cell("RELIEF POD", "var-relief", "Six relief and equipment containers under a gantry replace the relay pod.")}${cell("CUTAWAY, STARBOARD", "var-cut", "Stepped armour layers at the cut, the rooms inside.")}</div><div class="panel" style="margin-top:18px"><h2>THE ROMURUSU CLASS: ISV MIYAMOTO, SPX-452 (ABOVE) AND ITS SISTER ISV <ruby>有明<rt>ありあけ</rt></ruby> ARIAKE, SPX-186 (BELOW)</h2><img src="${img("class-pair")}" style="width:100%"/><div style="color:#9fb4c8">One model, two ships: each its own name, registry, hull marks and mission pod (Miyamoto the relay pod, Ariake the relief pod).</div></div><div class="panel" style="margin-top:18px"><h2>THE SWAPPABLE POD: RELAY (LEFT) AND RELIEF (RIGHT) ON ONE COLLAR</h2><img src="${img("pods")}" style="width:100%"/><div style="color:#9fb4c8">${esc(ANCESTORS.pod)}.</div></div>`));
+  await shoot("4-variants-and-pods.png", page(4, "VARIANTS AND MISSION PODS", "PERSPECTIVE · NOT TO SCALE", `<div class="grid" style="grid-template-columns:1fr 1fr">${cell("STOWED, RELAY POD", "var-stowed", "Radiators folded on the habitation hull; the relay pod on the collar.")}${cell("RADIATORS OUT", "var-deployed", "Two banks of four leaves, 25 by 60 m, on masts, clear of the bays and the exhaust.")}${cell("RELIEF POD", "var-relief", "Six relief and equipment containers under a gantry replace the relay pod.")}${cell("CUTAWAY, STARBOARD", "var-cut", "Stepped armour layers at the cut, the rooms inside.")}</div><div class="panel" style="margin-top:18px"><h2>THE ROMURUSU CLASS: ISV MIYAMOTO, SPX-452 (ABOVE) AND ITS SISTER ISV <ruby>有明<rt>ありあけ</rt></ruby> ARIAKE, SPX-186 (BELOW)</h2><img src="${img("class-pair")}" style="width:100%"/><div style="color:#9fb4c8">One model, two ships: each its own name, registry and hull marks. Ariake wears the dawn-gold livery (a band and two pinstripes), carries the survey pod by default, and after her refit has a sensor mast and a solarium on each side of the dome.</div></div><div class="panel" style="margin-top:18px"><h2>THE SWAPPABLE POD: RELAY (LEFT), RELIEF (MIDDLE) AND SURVEY (RIGHT) ON ONE COLLAR</h2><img src="${img("pods")}" style="width:100%"/><div style="color:#9fb4c8">${esc(ANCESTORS.pod)}.</div></div>`));
 
   // 5: hull layers
   const total = HULL.layers.reduce((s, l) => s + l.mm, 0);
