@@ -193,7 +193,7 @@ test("Falcon Heavy at lift-off shows all three cores", async ({ page }) => {
 test("the Fuel row is the propellant used or n/a with a reason, and the payload has its own row, named for the target", async ({ page }) => {
   await page.goto(`${URL}&craft=falcon-heavy&to=mars`);
   await expect(page.getByTestId("trip-payload")).toHaveText("16.8 t");
-  await expect(page.getByTestId("trip").getByText("Payload to Mars")).toBeVisible();
+  await expect(page.locator("#trip").getByText("Payload to Mars")).toBeVisible();
   await expect(page.getByTestId("trip-fuel")).toContainText("n/a: no source gives the specific impulse");
   await page.goto(`${URL}&craft=saturn-v&to=moon`);
   await expect(page.getByTestId("trip-payload")).toHaveText("43.5 t");
