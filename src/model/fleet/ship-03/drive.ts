@@ -7,14 +7,15 @@ import { capsule, collarAt, nozzleProfile, nozzleRadiusAt, OPEN_STARBOARD, ringA
 
 const HX = DRIVE.hx;
 const HZ = DRIVE.hz;
-const WALL = 56;
-const TAPER = 40;
+const WALL = 41;
+const TAPER = 34;
+const H = DRIVE.chamberY;
 const END: readonly [number, number] = [14, 13];
 
 /** One magnetic nozzle at (x, 0): the bell wall and its liner, the throat rings, the field coils with their spars, the feed manifold and the chamber head. */
 function nozzle(x: number, cut: boolean, seed: string): Piece[] {
   const out: Piece[] = [];
-  const wall = nozzleProfile(DRIVE.exitY, DRIVE.throatY, 50, DRIVE.exitR, DRIVE.throatR, DRIVE.chamberR);
+  const wall = nozzleProfile(DRIVE.exitY, DRIVE.throatY, H, DRIVE.exitR, DRIVE.throatR, DRIVE.chamberR);
   const arc = cut && x > 0 ? OPEN_STARBOARD : undefined;
   const lathe = (material: "bell" | "bell-inside" | "engine-metal", profile: readonly (readonly [number, number])[], extra = {}): Piece => ({ kind: "lathe", material, at: [x, 0], segs: 40, profile, ...(arc ? { arc } : {}), ...extra });
   out.push(lathe("bell", wall.map(([r, y]) => [r + 0.9, y] as const), { body: true, outline: true }));
@@ -48,20 +49,20 @@ function nozzle(x: number, cut: boolean, seed: string): Piece[] {
     out.push(cub(i % 2 ? "black" : "hazard", [x + r * Math.sin(a) - 0.5, x + r * Math.sin(a) + 0.5], [DRIVE.exitY - 0.9, DRIVE.exitY - 0.82], [r * Math.cos(a) - 0.5, r * Math.cos(a) + 0.5]));
   }
   // chamber head: the injector plate with its ring of feed stubs, and the manifold that carries fuel in from the spine
-  out.push(tubeAt("hull-grey-dark", x, 0, DRIVE.chamberR + 1.1, 50, 55, { segs: 24 }));
+  out.push(tubeAt("hull-grey-dark", x, 0, DRIVE.chamberR + 1.1, H, H + 4, { segs: 24 }));
   for (let k = 0; k < 12; k++) {
     const a = (Math.PI * 2 * k) / 12;
     if (arc && Math.sin(a) > 0) continue;
-    const p0: Vec3 = [x + (DRIVE.chamberR + 1) * Math.sin(a), 53, (DRIVE.chamberR + 1) * Math.cos(a)];
-    out.push(rod("coolant", p0, [x + (DRIVE.chamberR + 3.3) * Math.sin(a), 54.5, (DRIVE.chamberR + 3.3) * Math.cos(a)], 0.34, 6), rod("copper", [p0[0], 50.5, p0[2]], [p0[0], 53, p0[2]], 0.22, 6));
+    const p0: Vec3 = [x + (DRIVE.chamberR + 1) * Math.sin(a), H + 3, (DRIVE.chamberR + 1) * Math.cos(a)];
+    out.push(rod("coolant", p0, [x + (DRIVE.chamberR + 3.3) * Math.sin(a), H + 4.5, (DRIVE.chamberR + 3.3) * Math.cos(a)], 0.34, 6), rod("copper", [p0[0], H + 0.5, p0[2]], [p0[0], H + 3, p0[2]], 0.22, 6));
   }
-  out.push(ringAt("coolant", x, 0, DRIVE.chamberR + 3.3, 54.5, 0.45, arc ? { arc } : {}), ringAt("coolant", x, 0, DRIVE.chamberR + 2.4, 51.5, 0.38, arc ? { arc } : {}));
+  out.push(ringAt("coolant", x, 0, DRIVE.chamberR + 3.3, H + 4.5, 0.45, arc ? { arc } : {}), ringAt("coolant", x, 0, DRIVE.chamberR + 2.4, H + 1.5, 0.38, arc ? { arc } : {}));
   // gimbals: two actuators at right angles, each a cylinder and a rod on a clevis
   for (const az of [Math.PI / 2, Math.PI]) {
     if (arc && Math.sin(az) > 0.01) continue;
-    const base: Vec3 = [x + 15.5 * Math.sin(az), 54.5, 15.5 * Math.cos(az)];
-    const tip: Vec3 = [x + (DRIVE.chamberR + 1.6) * Math.sin(az), 46, (DRIVE.chamberR + 1.6) * Math.cos(az)];
-    out.push(rod("hull-grey-dark", base, [(base[0] + tip[0]) / 2, 50, (base[2] + tip[2]) / 2], 0.7, 8), rod("engine-pale", [(base[0] + tip[0]) / 2, 50, (base[2] + tip[2]) / 2], tip, 0.35, 8), rod("lamp-amber", [base[0], base[1], base[2]], [base[0], base[1] + 0.5, base[2]], 0.3, 6));
+    const base: Vec3 = [x + 15.5 * Math.sin(az), H + 4.5, 15.5 * Math.cos(az)];
+    const tip: Vec3 = [x + (DRIVE.chamberR + 1.6) * Math.sin(az), H - 4, (DRIVE.chamberR + 1.6) * Math.cos(az)];
+    out.push(rod("hull-grey-dark", base, [(base[0] + tip[0]) / 2, H, (base[2] + tip[2]) / 2], 0.7, 8), rod("engine-pale", [(base[0] + tip[0]) / 2, H, (base[2] + tip[2]) / 2], tip, 0.35, 8), rod("lamp-amber", [base[0], base[1], base[2]], [base[0], base[1] + 0.5, base[2]], 0.3, 6));
   }
   void seed;
   return out;
@@ -79,7 +80,7 @@ function vernier(x: number, z: number): Piece[] {
 }
 
 /** The plated slopes of the taper from the frame's back to the spine: four quads, each in a grid of raised tiles. */
-function taper(seed: string): Piece[] {
+function taper(seed: string, detail: number): Piece[] {
   const out: Piece[] = [];
   const corner = (sx: number, sz: number, back: boolean): Vec3 => (back ? [sx * END[0], 58, sz * END[1]] : [sx * HX, TAPER, sz * HZ]);
   const sides: [Vec3, Vec3, Vec3, Vec3, Vec3][] = [
@@ -91,8 +92,8 @@ function taper(seed: string): Piece[] {
   const random = rng(`${seed}/taper`);
   sides.forEach(([a, b, c, d, out3], s) => {
     out.push(quad("hull-grey-dark", a, b, c, d, 0.5, { only: undefined }));
-    const cols = s < 2 ? 9 : 5;
-    const rows = 4;
+    const cols = Math.max(2, Math.round((s < 2 ? 9 : 5) * Math.sqrt(detail)));
+    const rows = Math.max(1, Math.round(4 * Math.sqrt(detail)));
     const lerp = (p: Vec3, q: Vec3, t: number): Vec3 => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
     for (let i = 0; i < cols; i++)
       for (let j = 0; j < rows; j++) {
@@ -112,7 +113,6 @@ function taper(seed: string): Piece[] {
 
 /** The aft frame and its taper. */
 export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
-  void detail;
   const out: Piece[] = [];
   const nx = DRIVE.nozzleX;
   const rim = 7;
@@ -124,20 +124,20 @@ export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
   // the corners, cut at 45 degrees
   for (const sx of [-1, 1])
     for (const sz of [-1, 1]) if (!(cut && sx > 0)) out.push(prism("hull-grey-dark", [[sx * (HX - rim), sz * HZ], [sx * HX, sz * (HZ - rim)], [sx * HX, sz * (HZ - 7)], [sx * (HX - 7), sz * (HZ - 7)], [sx * (HX - 7), sz * HZ]].map(([x, z]) => [x, z] as [number, number]), 0, TAPER, { only: undefined }));
-  out.push(cub("hull-grey-dark", [-3, 3], [0, WALL], [-HZ, HZ], { only: undefined }));
+  out.push(cub("hull-grey-dark", [-3, 3], [0, TAPER], [-HZ, HZ], { only: undefined }));
   out.push(cub("hull-grey-dark", [-HX, HX], [TAPER - 1, TAPER + 0.5], [-HZ, HZ], { only: undefined }));
   // the bores: a socket of tube round each throat
   for (const sx of [-1, 1]) out.push(tubeAt("hull-grey", sx * nx, 0, DRIVE.exitR + 3.6, 0, 18, { segs: 40, only: undefined, ...(cut && sx > 0 ? { arc: OPEN_STARBOARD } : {}) }));
   out.push(...nozzle(-nx, cut, seed), ...nozzle(nx, cut, seed));
   // the blast bulkhead: a slab behind the bores, ribbed, with a hazard band
-  out.push(cub("panel-dark", [-HX + 4, HX - 4], [WALL, WALL + 2.4], [-HZ + 3, HZ - 3], { only: undefined }));
-  const bulk = { n: "y" as const, sign: 1 as const, at: WALL + 2.4, a: [-HZ + 3, HZ - 3] as const, b: [-HX + 4, HX - 4] as const };
-  for (let b = -HX + 8; b < HX - 6; b += 6) out.push(on(bulk, 0, b, 2 * (HZ - 3) - 2, 0.6, 0, 0.5, "hull-grey-dark"));
-  for (let a = -HZ + 6; a < HZ - 4; a += 8) out.push(on(bulk, a, 0, 0.7, 2 * (HX - 4) - 2, 0, 0.45, "hull-grey"));
-  for (const b of [-HX + 6, HX - 6]) out.push(...hazard(bulk, b, -HZ + 3, HZ - 3, 1.2, 1.8));
+  out.push(cub("panel-dark", [-30, 30], [WALL, WALL + 2.4], [-16, 16], { only: undefined }));
+  const bulk = { n: "y" as const, sign: 1 as const, at: WALL + 2.4, a: [-16, 16] as const, b: [-30, 30] as const };
+  for (let b = -26; b < 28; b += 6) out.push(on(bulk, 0, b, 30, 0.6, 0, 0.5, "hull-grey-dark"));
+  for (let a = -12; a < 14; a += 8) out.push(on(bulk, a, 0, 0.7, 56, 0, 0.45, "hull-grey"));
+  for (const b of [-27, 27]) out.push(...hazard(bulk, b, -16, 16, 1.2, 1.8));
   // the aft face: plating round the bores, a frame on each bore, shutters in the orange of removable shields
   const aft = { n: "y" as const, sign: -1 as const, at: 0, a: [-HZ, HZ] as const, b: [-HX, HX] as const };
-  out.push(...skin(aft, WHITE, seed, { cell: [4, 4], raise: 0.3, blocks: 0.25, skip: (a, b) => Math.hypot(b - nx, a) < DRIVE.exitR + 3.4 || Math.hypot(b + nx, a) < DRIVE.exitR + 3.4 }));
+  out.push(...skin(aft, WHITE, seed, { detail, cell: [4, 4], raise: 0.3, blocks: 0.25, skip: (a, b) => Math.hypot(b - nx, a) < DRIVE.exitR + 3.4 || Math.hypot(b + nx, a) < DRIVE.exitR + 3.4 }));
   for (const sx of [-1, 1]) {
     out.push(...frame(aft, 0, sx * nx, DRIVE.exitR * 2 + 7.2, DRIVE.exitR * 2 + 7.2, 1.2, 1.2, "hull-orange"));
     for (let i = 0; i < 8; i++) {
@@ -152,7 +152,7 @@ export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
   const stbd = faceOf({ x: [-HX, HX], y: [0, TAPER], z: [-HZ, HZ] }, "x", 1);
   const port = faceOf({ x: [-HX, HX], y: [0, TAPER], z: [-HZ, HZ] }, "x", -1);
   const faces = cut ? [top, bottom, port] : [top, bottom, stbd, port];
-  for (const f of faces) out.push(...skin(f, WHITE, seed, { cell: f.n === "z" ? [5, 4.5] : [5, 3.5], raise: 0.28, blocks: 0.22 }));
+  for (const f of faces) out.push(...skin(f, WHITE, seed, { detail, cell: f.n === "z" ? [5, 4.5] : [5, 3.5], raise: 0.28, blocks: 0.22 }));
   for (const f of [top, bottom]) {
     for (const x of [-38, -29, -20, 20, 29, 38]) out.push(...vent(f, x, 8, 6, 3.2, 8));
     out.push(...conduit(f, 16, -42, 42, { count: 4, seed }), ...conduit(f, 28, -42, 42, { count: 3, seed }), ...rail(f, 36, -43, 43));
@@ -161,7 +161,7 @@ export function driveFrame(cut: boolean, detail = 1, seed = "drive"): Piece[] {
   for (const f of [stbd, port]) {
     out.push(...hatch(f, 12, 6, 2), ...hatch(f, 26, -6, 2), ...conduit(f, 0, 3, TAPER - 3, { count: 3, seed }), ...ladder(f, 12, 4, TAPER - 4), ...rail(f, -14, 3, TAPER - 3));
   }
-  out.push(...taper(seed));
+  out.push(...taper(seed, detail));
   // the spine collar where the frame meets engineering
   out.push(...collar("L", 58, 1));
   out.push(seams("feature", [[[-HX, 0, HZ], [HX, 0, HZ], [HX, TAPER, HZ], [-HX, TAPER, HZ], [-HX, 0, HZ]], [[-HX, 0, -HZ], [HX, 0, -HZ], [HX, TAPER, -HZ], [-HX, TAPER, -HZ], [-HX, 0, -HZ]]]));

@@ -4,7 +4,7 @@
 import { beam, collar, cub, discZ, HULL_STACKS, layerShells, type Piece, place, rng, rod } from "./adapter.ts";
 import { BARREL, COLLAR, SPINE as S, STATION } from "./dims.ts";
 import { catwalk, pipe } from "./hulls.ts";
-import { conduit, faceOf, hatch, rail, skin, SPINE } from "./faces.ts";
+import { along, conduit, faceOf, hatch, rail, skin, SPINE } from "./faces.ts";
 import { capsule, collarAt, OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
 
 /** The spine from y0 to y1: a box in dark metal with plating, ring frames every 8 m, conduit bundles along the dorsal and ventral faces, hatches, a handrail, and bolted flanges where it meets the next module. */
@@ -13,9 +13,10 @@ export function spine(y0: number, y1: number, seed: string, detail = 1): Piece[]
   const out: Piece[] = [cub("hull-grey-dark", box.x, box.y, box.z, { only: undefined })];
   const random = rng(`${seed}/spine`);
   for (const [n, sign] of [["z", 1], ["z", -1], ["x", 1], ["x", -1]] as const) {
-    const f = faceOf(box, n, sign);
-    out.push(...skin(f, SPINE, seed, { cell: [4, n === "z" ? 3 : 3.5], raise: 0.2, blocks: 0.18 }));
-    const b = n === "z" ? 0 : 0;
+    const own = faceOf(box, n, sign);
+    out.push(...skin(own, SPINE, seed, { detail, cell: [4, 3.5], raise: 0.2, blocks: 0.18 }));
+    const f = n === "z" ? along(own) : own;
+    const b = 0;
     out.push(...conduit(f, b - 3, y0 + 1.5, y1 - 1.5, { count: 3, seed, stand: 0.42 }), ...conduit(f, b + 3, y0 + 1.5, y1 - 1.5, { count: 4, seed, stand: 0.42, materials: ["copper", "coolant", "lamp-red"] }));
     for (let y = y0 + 6; y < y1 - 4; y += 12 + random() * 6) out.push(...hatch(f, y, b + (random() < 0.5 ? -6 : 6) * (n === "z" ? 0.45 : 0.3), 1.6));
     if (sign === 1 && n === "z") out.push(...rail(f, -6.6, y0 + 2, y1 - 2), ...rail(f, 6.6, y0 + 2, y1 - 2));
@@ -26,7 +27,6 @@ export function spine(y0: number, y1: number, seed: string, detail = 1): Piece[]
     out.push(cub("hull-grey", [-S.hx - t, S.hx + t], [y - 0.5, y + 0.5], [-S.hz - t, S.hz + t]), cub("hull-grey-dark", [-S.hx - t * 1.5, S.hx + t * 1.5], [y - 0.14, y + 0.14], [-S.hz - t * 1.5, S.hz + t * 1.5]));
     for (const x of [-5, 0, 5]) out.push(cub("hull-grey-dark", [x - 0.18, x + 0.18], [y - 0.18, y + 0.18], [S.hz + t, S.hz + t + 0.22]), cub("lamp-amber", [x - 0.1, x + 0.1], [y - 0.1, y + 0.1], [-S.hz - t - 0.2, -S.hz - t]));
   }
-  void detail;
   return out;
 }
 

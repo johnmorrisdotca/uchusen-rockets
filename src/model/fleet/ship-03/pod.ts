@@ -3,7 +3,7 @@
 import { antenna, cub, discZ, type Piece, rng, rod } from "./adapter.ts";
 import { COLLAR, SPINE as S } from "./dims.ts";
 import { dressedFace, pipe } from "./hulls.ts";
-import { conduit, hatch, hazard, lamp, rail, stencil, WHITE } from "./faces.ts";
+import { along, conduit, hatch, hazard, lamp, rail, stencil, WHITE } from "./faces.ts";
 
 export type PodKind = "relay" | "relief";
 
@@ -33,6 +33,12 @@ function container(x: number, y: number, z: number, material: "hull-orange" | "h
   for (let k = 1; k < 8; k++) out.push(cub("hull-grey-dark", [x - 3.02, x + 3.02], [y + k * 1.5 - 0.06, y + k * 1.5 + 0.06], [z + 3, z + 3.1]));
   out.push(cub("hull-grey-dark", [x - 2.4, x + 2.4], [y + 12, y + 12.08], [z + 0.4, z + 5.6]), cub("hull-grey", [x - 0.1, x + 0.1], [y + 12.08, y + 12.18], [z + 0.4, z + 5.6]), cub("hazard", [x - 2, x + 2], [y + 12.08, y + 12.14], [z + 0.6, z + 0.9]));
   if (random() < 0.5) out.push(cub("lamp-amber", [x + 2.2, x + 2.5], [y + 12.08, y + 12.2], [z + 5, z + 5.3]));
+  // roof ribs, a vent, an identification plate with a number, tie-down rings and corner lamps
+  for (let k = 1; k < 6; k++) out.push(cub("hull-grey-dark", [x - 3, x + 3], [y + k * 2 - 0.1, y + k * 2 + 0.1], [z + 6, z + 6.12]));
+  out.push(cub("panel-dark", [x - 1.2, x + 1.2], [y + 4.4, y + 6], [z + 6, z + 6.25]), ...[0, 1, 2, 3, 4].map((k) => cub("hull-grey", [x - 1, x + 1], [y + 4.5 + k * 0.3, y + 4.7 + k * 0.3], [z + 6.25, z + 6.32])));
+  out.push(cub("hull-white-worn", [x - 3.1, x - 3], [y + 2, y + 5], [z + 3.4, z + 5.4]), ...stencil({ n: "x", sign: -1, at: x - 3.1, a: [y, y + 12], b: [z, z + 6] }, String(10 + Math.floor(random() * 89)), y + 3.5, z + 4.4, 1));
+  for (const dy of [2, 6, 10]) for (const dx of [-2.6, 2.6]) out.push(cub("hull-grey", [x + dx - 0.25, x + dx + 0.25], [y + dy - 0.25, y + dy + 0.25], [z + 6, z + 6.35]), cub("hull-grey-dark", [x + dx - 0.12, x + dx + 0.12], [y + dy - 0.12, y + dy + 0.12], [z + 6.35, z + 6.5]));
+  for (const [dx, dy] of [[-3, 0], [3, 0], [-3, 12], [3, 12]] as const) out.push(cub("lamp-blue", [x + dx - 0.12, x + dx + 0.12], [y + dy - 0.12, y + dy + 0.12], [z + 6.05, z + 6.3]));
   return out;
 }
 
@@ -50,17 +56,19 @@ export function pod(kind: PodKind, detail = 1, seed = `pod-${kind}`): Piece[] {
     for (const [x, y, d] of [[-6, -14, -1], [6, -14, -1], [-6, 14, 1], [6, 14, 1]] as const) out.push(...antenna("dish", [x, CY + y, bay.z[1]], [0, 0, 1], 9, `${seed}${x}${y}`), rod("hull-grey-dark", [x, CY + y, bay.z[1]], [x, CY + y, bay.z[1] + 5], 0.5, 8), rod("hull-yellow", [x, CY + y, bay.z[1] + 5], [x, CY + y + d * 2.4, bay.z[1] + 5], 0.12, 5));
     for (const y of [-6, 0, 6]) out.push(...antenna("phased", [0, CY + y, bay.z[1] + 18], [0, 0, 1], 5, `${seed}p${y}`));
     out.push(...antenna("whip", [0, CY, bay.z[1] + 18], [0, 0, 1], 14, `${seed}w`), ...antenna("omni", [-2.4, CY, bay.z[1] + 10], [-1, 0, 0], 4, `${seed}o`), ...antenna("horn", [2.4, CY, bay.z[1] + 12], [1, 0, 0], 3.4, `${seed}h`));
-    out.push(...rail({ n: "z", sign: 1, at: bay.z[1], a: bay.x, b: bay.y }, 8.4, bay.y[0] + 1, bay.y[1] - 1), ...rail({ n: "z", sign: 1, at: bay.z[1], a: bay.x, b: bay.y }, -8.4, bay.y[0] + 1, bay.y[1] - 1), ...stencil({ n: "x", sign: 1, at: 10, a: bay.y, b: bay.z }, "03", CY, base + 4, 2.4));
+    out.push(...rail(along({ n: "z", sign: 1, at: bay.z[1], a: bay.x, b: bay.y }), 8.4, bay.y[0] + 1, bay.y[1] - 1), ...rail(along({ n: "z", sign: 1, at: bay.z[1], a: bay.x, b: bay.y }), -8.4, bay.y[0] + 1, bay.y[1] - 1), ...stencil({ n: "x", sign: 1, at: 10, a: bay.y, b: bay.z }, "03", CY, base + 4, 2.4));
     out.push(...conduit({ n: "x", sign: 1, at: 10, a: bay.y, b: bay.z }, base + 6.4, Y0 + 7, Y1 - 7, { count: 3, seed }), ...hatch({ n: "x", sign: 1, at: 10, a: bay.y, b: bay.z }, CY + 10, base + 3, 2));
   } else {
     // six containers in two rows of three on a flat cradle, strapped, with a gantry rail and a hoist above
     const rack = { x: [-10, 10], y: [Y0 + 4, Y1 - 4], z: [base, base + 1.6] } as const;
-    out.push(cub("hull-grey-dark", rack.x, rack.y, rack.z, { only: undefined }), ...hazard({ n: "z", sign: 1, at: rack.z[1], a: rack.x, b: rack.y }, 0, rack.y[0], rack.y[1], 0.5, 1.2));
+    out.push(cub("hull-grey-dark", rack.x, rack.y, rack.z, { only: undefined }), ...hazard(along({ n: "z", sign: 1, at: rack.z[1], a: rack.x, b: rack.y }), 0, rack.y[0], rack.y[1], 0.5, 1.2));
     const mats = ["hull-orange", "hull-white", "hull-yellow", "hull-white", "hull-orange", "hull-grey"] as const;
     let k = 0;
     for (const x of [-4, 4]) for (let r = 0; r < 3; r++) out.push(...container(x, rack.y[0] + 0.5 + r * 12.4, rack.z[1], mats[k++ % mats.length], seed));
     for (const x of [-7.4, 7.4]) for (let r = 0; r < 4; r++) out.push(cub("hull-grey-dark", [x - 0.4, x + 0.4], [rack.y[0] + r * 12.2 - 0.2, rack.y[0] + r * 12.2 + 0.2], [rack.z[1], rack.z[1] + 6.4]));
     for (const y of [rack.y[0] + 6, rack.y[1] - 6]) out.push(cub("hull-orange", [-8, 8], [y - 0.4, y + 0.4], [rack.z[1] + 6.4, rack.z[1] + 6.9]), rod("hull-grey-dark", [0, y, rack.z[1] + 6.9], [0, y, rack.z[1] + 9.4], 0.25, 6), cub("hull-yellow", [-1.2, 1.2], [y - 0.6, y + 0.6], [rack.z[1] + 9.4, rack.z[1] + 10.2]));
+    for (const s of [-1, 1] as const) out.push(cub("hull-grey-dark", [s * 9.4 - 0.5, s * 9.4 + 0.5], [rack.y[0], rack.y[1]], [rack.z[0], rack.z[1] + 0.3]), ...rail(along({ n: "z", sign: 1, at: rack.z[1], a: rack.x, b: rack.y }), s * 9.6, rack.y[0] + 1, rack.y[1] - 1));
+    for (let y = rack.y[0] + 2; y < rack.y[1]; y += 3) for (const x of [-9, -4, 0, 4, 9]) out.push(cub("hull-grey-dark", [x - 0.3, x + 0.3], [y - 0.3, y + 0.3], [rack.z[1], rack.z[1] + 0.3]), cub("lamp-amber", [x - 0.08, x + 0.08], [y - 0.08, y + 0.08], [rack.z[1] + 0.3, rack.z[1] + 0.36]));
     out.push(cub("hull-yellow", [-0.5, 0.5], [rack.y[0] + 3, rack.y[1] - 3], [rack.z[1] + 10.2, rack.z[1] + 10.8]), ...lamp({ n: "z", sign: 1, at: rack.z[1] + 10.8, a: rack.x, b: rack.y }, 0, rack.y[0] + 3, "amber", 0.3));
   }
   return out;

@@ -79,7 +79,7 @@ export function dressedFace(face: Face, o: Dress): Piece[] {
       out.push(...hardware(kinds[Math.floor(random() * kinds.length)], base, a, b, wa, wb, random, o.seed));
     }
   const inSlot = (a: number, b: number) => taken.some(([ta, tb]) => Math.abs(a - ta) < wa * 0.5 && Math.abs(b - tb) < wb * 0.5);
-  out.push(...skin(face, o.scheme, o.seed, { cell: o.cell ?? [Math.max(2.5, wa / 2), Math.max(2, wb / 2)], raise: lift, skip: (a, b) => inSlot(a, b) || Boolean(o.avoid?.(a, b)) }));
+  out.push(...skin(face, o.scheme, o.seed, { detail, cell: o.cell ?? [Math.max(2.5, wa / 2), Math.max(2, wb / 2)], raise: lift, skip: (a, b) => inSlot(a, b) || Boolean(o.avoid?.(a, b)) }));
   return out;
 }
 
