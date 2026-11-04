@@ -420,6 +420,8 @@ type CompareFilter = "all" | "rockets" | "fleet";
 const FILTERS: readonly CompareFilter[] = ["all", "rockets", "fleet"];
 const askedFilter = new URLSearchParams(location.search).get("cmp") ?? "all";
 let compareFilter: CompareFilter = (FILTERS as readonly string[]).includes(askedFilter) ? (askedFilter as CompareFilter) : "all";
+// real craft for scale lie in the fleet band: on unless the address says `real=off`
+let compareReal = new URLSearchParams(location.search).get("real") !== "off";
 const isFleetVariant = (variant: Variant) => variant.rocket.startsWith("fleet-");
 const compareFrame = byId("compare-view");
 const compareBar = byId<HTMLElement>("compare-bar") as ViewControlsElement;
@@ -442,6 +444,10 @@ function renderCompare() {
     (button as HTMLElement).hidden = (compareFilter === "rockets" && fleet) || (compareFilter === "fleet" && !fleet);
   }
   press(byId("compare-filter"), `compare-filter-${compareFilter}`);
+  // they lie in the fleet band, which Rockets alone does not have
+  byId("compare-real").hidden = compareFilter === "rockets";
+  press(byId("compare-real"), compareReal ? "compare-real" : "");
+  lineup.setAttribute("real", compareReal ? "on" : "off");
   const chosen = every.filter((variant) => compared.has(keyOf(variant)) && (compareFilter === "all" || (compareFilter === "fleet") === isFleetVariant(variant)));
   lineup.setAttribute("items", [...chosen.map(keyOf), ...(compareFilter === "fleet" ? [] : ["building", "person"])].join(","));
   lineup.setAttribute("filter", compareFilter);
@@ -487,6 +493,16 @@ byId("compare-filter").replaceChildren(
       renderCompare();
     }, `compare${filter === "all" ? "All" : filter === "rockets" ? "Rockets" : "Fleet"}`),
   ),
+);
+byId("compare-real").replaceChildren(
+  chip("", "compare-real", () => {
+    compareReal = !compareReal;
+    const params = new URLSearchParams(location.search);
+    if (compareReal) params.delete("real");
+    else params.set("real", "off");
+    history.replaceState(null, "", `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`);
+    renderCompare();
+  }, "compareReal"),
 );
 new ResizeObserver(() => renderCompare()).observe(compareFrame);
 comparePicks.append(
