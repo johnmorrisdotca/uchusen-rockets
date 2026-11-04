@@ -23,7 +23,10 @@ export const IDENTITY = {
   meaning: "a marker that shows the way",
   nativeCheck: "needs a native reader's check",
   designed: 2448,
-  commissioned: 2456,
+  keelLaid: 2452,
+  firstFlight: 2456,
+  inService: 2459,
+  status: "PLANNED",
   role: "interstellar command vessel",
 } as const;
 
@@ -148,11 +151,11 @@ export const ENGINES: Readonly<Record<string, EngineCard>> = (() => {
   };
   return {
     "waymark-main": card(
-      { id: "waymark-main", name: "Directed-conversion fusion drive, main", role: "main", module: "drive", count: 2, thrust: mainThrust, isp: exhaust / G0, fuel: "deuterium-helium-3 slurry, converted to a directed beam", fuelCapacity: MASS.propellant, operation: "continuous", note: "Fictional. A fusion-triggered conversion process that turns about 22% of the expelled mass-energy into a directed beam at 0.63 c. Two nozzles, recessed in the tail, with coil-lined throats. It also does the braking burn, after the ship turns end for end." },
+      { id: "waymark-main", name: "Directed-conversion fusion drive, main", role: "main", module: "drive", count: 2, thrust: mainThrust, isp: exhaust / G0, fuel: "deuterium-helium-3 slurry, converted to a directed beam", fuelCapacity: MASS.propellant, operation: "continuous", note: "Proposed. A fusion-triggered conversion process that turns about 22% of the expelled mass-energy into a directed beam at 0.63 c. Two nozzles, recessed in the tail, with coil-lined throats. It also does the braking burn, after the ship turns end for end." },
       true,
     ),
-    "waymark-vernier": card({ id: "waymark-vernier", name: "Plasma vernier, manoeuvring", role: "manoeuvring", module: "drive", count: 4, thrust: 0.9e6, isp: 60_000, fuel: "hydrogen plasma", fuelCapacity: 600, operation: "continuous", note: "Fictional. Four low-power plasma thrusters at the aft corners that trim, dock and turn the ship. Too weak to brake it." }),
-    "waymark-attitude": card({ id: "waymark-attitude", name: "Attitude thruster block", role: "vernier", module: "command", count: 24, thrust: 40_000, isp: 3000, fuel: "nitrogen gas", fuelCapacity: 90, operation: "pulsed", pulseHz: 20, note: "Fictional. Cold-gas blocks at the corners of the citadel and the drive frame for fine pointing and the flip." }),
+    "waymark-vernier": card({ id: "waymark-vernier", name: "Plasma vernier, manoeuvring", role: "manoeuvring", module: "drive", count: 4, thrust: 0.9e6, isp: 60_000, fuel: "hydrogen plasma", fuelCapacity: 600, operation: "continuous", note: "Proposed. Four low-power plasma thrusters at the aft corners that trim, dock and turn the ship. Too weak to brake it." }),
+    "waymark-attitude": card({ id: "waymark-attitude", name: "Attitude thruster block", role: "vernier", module: "command", count: 24, thrust: 40_000, isp: 3000, fuel: "nitrogen gas", fuelCapacity: 90, operation: "pulsed", pulseHz: 20, note: "Proposed. Cold-gas blocks at the corners of the citadel and the drive frame for fine pointing and the flip." }),
   };
 })();
 
@@ -268,12 +271,15 @@ export function deckSummary(): { number: number; id: string; name: string; does:
 /** How many sections for each hundred metres, and the share of the length each stands for. */
 export const labelDensity = (): { labels: number; perHundredMetres: number; shareEach: number } => ({ labels: SECTIONS.length, perHundredMetres: (SECTIONS.length / ENVELOPE.length) * 100, shareEach: 1 / SECTIONS.length });
 
-/** The history, strengths and weaknesses, and the operating limits, as short paragraphs. */
+/** The programme, strengths and weaknesses, and the operating limits, as short paragraphs. Every date is a plan: the ship is in development. */
 export const HISTORY = {
-  development: "Designed in 2448 after an outer-system relay failure showed that an expedition's command ship had to keep working when it was damaged: its command, navigation and medical systems on buses of their own, and two bays that could be used one at a time.",
-  commissioning: "Commissioned in 2456 as the first command ship built to keep an expedition running after a casualty.",
-  service: "During the 2459 outer-system relay failure Waymark switched off its main drive, kept navigation and medical power on the independent buses, and recovered crews through the forward bay while the aft bay handled repairs. That exercise led to separate airlocks and shutters for the two bays and to isolating the medical air and power from both.",
+  development: "The programme was approved in 2448 after a relay failure in the outer system showed that an expedition's command ship must keep working when it is damaged: its command, navigation and medical systems on buses of their own, and two bays that can be used one at a time.",
+  commissioning: "The keel is planned for 2452 at the orbital yard, the first flight for 2456 and entry into service for 2459, as the first command ship built to keep an expedition running after a casualty.",
+  service: "The planned trials include a relay-failure exercise in 2459: the main drive switched off, navigation and medical power kept on the independent buses, crews recovered through the forward bay while the aft bay handles repairs. The exercise is why the two bays have separate airlocks and shutters and why the medical air and power are isolated from both.",
   strengths: "Independent command and medical systems, protected navigation, two separately usable bays, armour.",
   weaknesses: "Moderate acceleration, limited payload for the volume, a high sensitivity to heat, and a long exposure to the hazards of the route.",
   limits: "0.040 g sustained, 0.400 c, a heat budget of 0.8 GW, and no manoeuvres or thrust on loss of attitude, shield, feed or radiator margin.",
 } as const;
+
+/** The status line of a sheet's title block, in the story: a planned ship with a first flight, never one in service. */
+export const STATUS = `STATUS: ${IDENTITY.status} · FIRST FLIGHT ${IDENTITY.firstFlight}`;

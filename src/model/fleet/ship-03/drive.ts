@@ -13,7 +13,7 @@ const H = DRIVE.chamberY;
 const END: readonly [number, number] = [14, 13];
 
 /** One magnetic nozzle at (x, 0): the bell wall and its liner, the throat rings, the field coils with their spars, the feed manifold and the chamber head. */
-function nozzle(x: number, cut: boolean, seed: string): Piece[] {
+export function nozzle(x: number, cut: boolean, seed: string): Piece[] {
   const out: Piece[] = [];
   const wall = nozzleProfile(DRIVE.exitY, DRIVE.throatY, H, DRIVE.exitR, DRIVE.throatR, DRIVE.chamberR);
   const arc = cut && x > 0 ? OPEN_STARBOARD : undefined;
@@ -69,7 +69,7 @@ function nozzle(x: number, cut: boolean, seed: string): Piece[] {
 }
 
 /** A vernier: a small bell with three coils, a feed line, a gimbal box and a pod. */
-function vernier(x: number, z: number): Piece[] {
+export function vernier(x: number, z: number): Piece[] {
   const v = DRIVE.vernier;
   const wall = nozzleProfile(0.2, 4.2, 8, v.r, 0.7, 1.2, 6);
   const out: Piece[] = [{ kind: "lathe", material: "bell", at: [x, z], segs: 20, profile: wall.map(([r, y]) => [r + 0.12, y] as const), body: true, outline: true }, { kind: "lathe", material: "bell-inside", at: [x, z], segs: 20, profile: wall }];
