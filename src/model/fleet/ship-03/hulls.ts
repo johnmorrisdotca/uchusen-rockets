@@ -76,11 +76,16 @@ export function dressedFace(face: Face, o: Dress): Piece[] {
       const b = face.b[0] + (j + 0.5) * wb;
       if (o.avoid?.(a, b) || random() >= density) continue;
       taken.push([a, b]);
-      out.push(...hardware(kinds[Math.floor(random() * kinds.length)], base, a, b, wa, wb, random, o.seed));
+      // a recess: a coaming round the slot's hardware, so it sits in the hull and not on it
+      const kind = kinds[Math.floor(random() * kinds.length)];
+      const small = kind === "sensor" || kind === "lamps" || kind === "greeble" || kind === "number";
+      const k = small ? 0.5 : 0.9;
+      out.push(...frame(base, a, b, wa * k, wb * k * 0.95, 0.22, lift * 1.5, "hull-grey-dark"), on(base, a, b, wa * k, wb * k * 0.95, -0.02, 0.1, o.scheme.worn));
+      out.push(...hardware(kind, base, a, b, wa, wb, random, o.seed));
     }
   // structural ribs along the slot lines: thin standing bars, so the plating reads in bays with depth between them
-  for (let i = 0; i <= na; i++) out.push(on(base, face.a[0] + i * wa, (face.b[0] + face.b[1]) / 2, 0.22, face.b[1] - face.b[0], 0, lift * 1.9, "hull-grey"));
-  for (let j = 0; j <= nb; j++) out.push(on(base, (face.a[0] + face.a[1]) / 2, face.b[0] + j * wb, face.a[1] - face.a[0], 0.22, 0, lift * 1.7, "hull-grey-dark"));
+  for (let i = 0; i <= na; i++) out.push(on(base, face.a[0] + i * wa, (face.b[0] + face.b[1]) / 2, 0.22, face.b[1] - face.b[0], 0, lift * 2.6, "hull-grey"));
+  for (let j = 0; j <= nb; j++) out.push(on(base, (face.a[0] + face.a[1]) / 2, face.b[0] + j * wb, face.a[1] - face.a[0], 0.22, 0, lift * 2.2, "hull-grey-dark"));
   const inSlot = (a: number, b: number) => taken.some(([ta, tb]) => Math.abs(a - ta) < wa * 0.5 && Math.abs(b - tb) < wb * 0.5);
   out.push(...skin(face, o.scheme, o.seed, { detail, cell: o.cell ?? [Math.max(2.5, wa / 2), Math.max(2, wb / 2)], raise: lift, skip: (a, b) => inSlot(a, b) || Boolean(o.avoid?.(a, b)) }));
   return out;
