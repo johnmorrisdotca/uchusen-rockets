@@ -92,9 +92,9 @@ export function skin(face: Face, scheme: Scheme, seed: string, o: { cell?: reado
       out.push(on(face, cA, cB, wa - gap, hb - gap, 0, h, material));
       // an access plate or a rivet strip on some panels, so no panel is blank
       const dress = random();
-      if (dress < 0.16 && wa > 1.2 && hb > 1) out.push(on(face, cA, cB, wa * 0.55, hb * 0.5, h, h + 0.04, material === scheme.main ? scheme.worn : scheme.main), on(face, cA - wa * 0.22, cB, 0.14, hb * 0.5, h + 0.04, h + 0.1, "hull-grey-dark"), on(face, cA + wa * 0.22, cB, 0.14, hb * 0.5, h + 0.04, h + 0.1, "hull-grey-dark"));
-      else if (dress < 0.28 && wa > 1.2) for (const s of [-0.38, -0.13, 0.13, 0.38]) out.push(on(face, cA + wa * s, cB + hb * 0.34, 0.12, 0.12, h, h + 0.07, "hull-grey-dark"));
-      else if (dress < 0.33) out.push(on(face, cA, cB, 0.5, 0.5, h, h + 0.12, "panel-dark"), on(face, cA, cB, 0.32, 0.32, h + 0.12, h + 0.17, "lamp-amber"));
+      if (dress < 0.34 && wa > 1.2 && hb > 1) out.push(on(face, cA, cB, wa * 0.55, hb * 0.5, h, h + 0.04, material === scheme.main ? scheme.worn : scheme.main), on(face, cA - wa * 0.22, cB, 0.14, hb * 0.5, h + 0.04, h + 0.1, "hull-grey-dark"), on(face, cA + wa * 0.22, cB, 0.14, hb * 0.5, h + 0.04, h + 0.1, "hull-grey-dark"));
+      else if (dress < 0.46 && wa > 1.2) for (const s of [-0.38, -0.13, 0.13, 0.38]) out.push(on(face, cA + wa * s, cB + hb * 0.34, 0.12, 0.12, h, h + 0.07, "hull-grey-dark"));
+      else if (dress < 0.52) out.push(on(face, cA, cB, 0.5, 0.5, h, h + 0.12, "panel-dark"), on(face, cA, cB, 0.32, 0.32, h + 0.12, h + 0.17, "lamp-amber"));
     }
     b += hb;
   }

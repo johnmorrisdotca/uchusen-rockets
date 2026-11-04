@@ -66,6 +66,21 @@ function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean, detail: numb
   }
   // orange cassette bands: four bands, each a collar of removable panels
   for (const y of [straight[0] + 6, straight[0] + 20, straight[1] - 20, straight[1] - 6]) out.push(collarAt("hull-orange", x, z, r + 0.02, r + 0.22, y - 2.2, y + 2.2, open ? { arc: OPEN_STARBOARD } : {}), ringAt("hazard", x, z, r + 0.24, y - 2.2, 0.08, open ? { arc: OPEN_STARBOARD } : {}), ringAt("hazard", x, z, r + 0.24, y + 2.2, 0.08, open ? { arc: OPEN_STARBOARD } : {}));
+  // stringers up the barrel as round rods, manhole covers, an instrument line with its clamps, and a gold foil collar at each dome
+  for (let k = 0; k < 24; k++) {
+    const a = (Math.PI * 2 * k) / 24;
+    if (open && Math.sin(a) > 0.05) continue;
+    const px = x + (r + 0.18) * Math.sin(a);
+    const pz = z + (r + 0.18) * Math.cos(a);
+    out.push(rod(k % 3 === 0 ? "hull-grey" : "hull-grey-dark", [px, straight[0] + 0.5, pz], [px, straight[1] - 0.5, pz], 0.14, 8));
+  }
+  for (const y of [straight[0] + 12, straight[1] - 12]) for (const a of [Math.PI * 0.75, Math.PI * 1.25]) {
+    const px = x + (r + 0.1) * Math.sin(a);
+    const pz = z + (r + 0.1) * Math.cos(a);
+    out.push(rod("hull-grey-dark", [px, y - 0.1, pz], [px + 0.5 * Math.sin(a), y - 0.1, pz + 0.5 * Math.cos(a)], 1.1, 14), rod("hull-grey", [px + 0.5 * Math.sin(a), y - 0.1, pz + 0.5 * Math.cos(a)], [px + 0.7 * Math.sin(a), y - 0.1, pz + 0.7 * Math.cos(a)], 0.8, 14));
+  }
+  out.push(...pipeRun("coolant", [[x, straight[0] + 2, z + r + 0.7], [x, straight[1] - 2, z + r + 0.7]], 0.22, { clampEvery: 3, bracket: [0, 0, -0.6] }));
+  for (const [ya, yb] of [[y0 + 0.4, y0 + r * 0.55], [y1 - r * 0.55, y1 - 0.4]] as const) out.push(collarAt("gold", x, z, r - 0.4, r + 0.35, ya, yb, { segs: 12, ...(open ? { arc: OPEN_STARBOARD } : {}) }));
   // vented fuel cassettes on the outer face (facing away from the spine): two columns of six boxes with vent slots
   const outward: 1 | -1 = side;
   for (const dz of [-3, 3]) {
