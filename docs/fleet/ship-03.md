@@ -85,6 +85,12 @@ The faster option gives up about 0.27 light-years of range on the standard full 
 
 The bow stack handles diffuse particles in acceleration. During braking the stern faces the velocity vector, so a spaced stern shield surrounds the nozzle openings and active clearing protects their open corridors; do not assume the bow still leads. Optical elements and rescue doors stay shut through the burn. No shield certifies survival against a large untracked object. Hold pre-surveyed corridors, carry a stop-to-rest fuel allowance, and suspend manoeuvres or thrust on loss of attitude, shield, feed, or radiator margin. Strengths: independent command/medical systems, protected navigation, two separately usable bays. Weaknesses: moderate acceleration, limited payload for the volume, high thermal sensitivity and long exposure to route hazards.
 
+## Package integration after approval
+
+Add Waymark beside the existing craft as a fictional picker entry. Use the same Figure and Variant data shape in `src/data/ship-03.ts`, original project credits in `src/data/credits.ts`, and a small builder entry in `src/model/ship-03.ts` registered through `src/model/registry.ts`. Keep numeric stations and module placement in `src/model/fleet/ship-03/`, with a thin adapter to the landed fleet kit. Register separable assemblies as PartKind/PartRecord so the existing combined, separated and isolated views use the same geometry.
+
+Check the line, thick and painted looks at identical stations and camera angles. Geometry and cutaway visibility must stay consistent across looks. At inspection distance, use Starship Block 3's panel/tile runs, Saturn V's staged thrust-frame detail, and Shuttle's doors, ribs and thermal surfaces as package benchmarks for visible mechanical detail. Journey mode retains the real craft and adds the fictional entry with the approved propulsion parameters.
+
 ## Influence and originality check
 
 The references were reviewed as a group. Use their visible assembly seams, functional layers, colour blocking and multiple orthographic views; no image assets enter this design.
