@@ -4,7 +4,9 @@
 
 **Design review draft, MODULES-402 / MODULES-405.** All dates, specifications and technologies below are fictional design targets. The ship is a fleet command and rescue vessel, designation **ICV-03**, fleet number **03**, classified as a Waymark-class expedition command vessel. Catalogue identifiers belong in the UI, never printed on the mesh.
 
-![Waymark design stations in metres: top, side, ends and interior](ship-03-layout.svg)
+![Waymark exterior catalogue: top, side, front, rear and radiator deployment](ship-03-layout.svg)
+
+![Waymark offset longitudinal cutaway with medical and nozzle detail](ship-03-cutaway.svg)
 
 ## Service history
 
@@ -34,6 +36,8 @@ The cutaway should expose the pressure bulkheads, marked compartment groups (lab
 
 ## Proposed specifications
 
+The propulsion values below describe the original baseline. The faster option is recommended for review and remains provisional.
+
 | Item | Design target |
 | --- | --- |
 | Stowed envelope | 380 m long × 118 m wide × 74 m high (X = width, +Y = bow, Z = dorsal) |
@@ -56,7 +60,28 @@ The cutaway should expose the pressure bulkheads, marked compartment groups (lab
 
 Use an inertial endpoint frame and idealize each leg as constant proper acceleration of magnitude a. At halfway by distance the ship flips; the other half applies the same proper acceleration against the velocity. Endpoints are at rest in the same frame. No instantaneous velocity change at the flip. The numerical model neglects finite flip time, tides and transfers; real mission schedules in the fiction add allowance. Do not insert a cruise segment or silently clamp the computed velocity: if the planned peak exceeds the cap, recompute at a permitted acceleration and check time and propellant.
 
-For length D and speed of light c, midpoint rapidity η = acosh(1 + aD / (2c²)). Peak v = c tanh(η), onboard duration = 2cη/a, endpoint-frame duration = 2c sinh(η)/a. The ideal directed-exhaust mass ratio is exp(2η / 0.45); book 4,200 t of propellant as protected reserve. For a 4.37 light-year test route at 0.020 g: **0.29063 c** peak, **28.989 years aboard**, **29.424 years in the endpoint frame**. Ideal arrival mass is about 27,770 t, retaining 6,770 t of propellant including the 4,200 t reserve. At the shield cap the burn still reaches rest above the protected reserve. The theoretical 0.311 c midpoint uses the full burn allowance above that reserve. Derived values use c = 299,792,458 m/s and the Julian year (31,557,600 s); confirm the same implementation against MODULES-395 before wiring the journey card.
+For length D and speed of light c, midpoint rapidity η = acosh(1 + aD / (2c²)). Peak v = c tanh(η), onboard duration = 2cη/a, and endpoint-frame duration = 2c sinh(η)/a. With effective exhaust speed vₑ, the ideal directed-exhaust mass ratio is exp(2η / (vₑ/c)). Book 4,200 t of propellant as protected reserve. Derived values use c = 299,792,458 m/s and the Julian year (31,557,600 s). Verify the same calculation against MODULES-395 before wiring the journey card.
+
+### Propulsion decision
+
+The original 0.020 g profile intentionally takes about 29 years aboard on the 4.37 light-year test route. For a command vessel expected to redeploy sooner, recommend the 0.040 g profile, which takes about 20.4 years aboard on that route and arrives above the same reserve. It requires new in-world qualification for the main drive, thermal isolation and both ends of the ship.
+
+| Measure | 0.020 g baseline | 0.040 g proposal |
+| --- | ---: | ---: |
+| Effective exhaust speed | 0.45 c | 0.63 c |
+| Operational midpoint speed cap | 0.300 c | 0.400 c |
+| Ideal midpoint speed limit at the protected reserve | 0.311 c | 0.422 c |
+| Peak speed on the 4.37 light-year route | 0.29063 c | 0.39833 c |
+| Onboard time | 28.989 yr | 20.423 yr |
+| Endpoint-frame time | 29.424 yr | 21.034 yr |
+| Arrival mass including protected reserve | 27,770 t | 27,532 t |
+| Launch thrust at 105,000 t | 20.59 MN | 41.19 MN |
+| Directed exhaust kinetic power at launch | 1.47 PW | 4.38 PW |
+| Longest symmetric burn at the speed cap and listed acceleration | 4.68 ly | 4.41 ly |
+
+For Earth to Proxima Centauri at about 4.25 light-years, the baseline gives 28.59 years aboard and 29.01 years in the Earth frame. The faster option gives 20.14 and 20.73 years, respectively. The table retains the 4.37 light-year design benchmark. [NASA distance reference](https://science.nasa.gov/exoplanets/other-stars-other-worlds/our-nearest-celestial-neighbor-an-exotic-3-star-system/)
+
+The faster option gives up about 0.27 light-years of range on the standard full burn. Its exhaust assumes directed kinetic energy equal to about 22.3% of expelled mass-energy. Even if the entire 0.8 GW heat budget went to the drive, less than 1.83 × 10⁻⁷ of jet power could couple back as heat. The hotel load reduces that allowance further. The 0.400 c shield target applies to the stern and exposed nozzle corridors during braking as well as to the bow during acceleration. Keep the baseline if those higher qualification requirements do not fit the fleet bible. The brief 0.050 g rating remains an engineering target under either profile and does not enter the trip calculation.
 
 The bow stack handles diffuse particles in acceleration. During braking the stern faces the velocity vector, so a spaced stern shield surrounds the nozzle openings and active clearing protects their open corridors; do not assume the bow still leads. Optical elements and rescue doors stay shut through the burn. No shield certifies survival against a large untracked object. Hold pre-surveyed corridors, carry a stop-to-rest fuel allowance, and suspend manoeuvres or thrust on loss of attitude, shield, feed, or radiator margin. Strengths: independent command/medical systems, protected navigation, two separately usable bays. Weaknesses: moderate acceleration, limited payload for the volume, high thermal sensitivity and long exposure to route hazards.
 
@@ -71,4 +96,4 @@ The references were reviewed as a group. Use their visible assembly seams, funct
 | Star Trek design tradition | Redundant navigation and mission systems; inspectable interior compartments | Compared with the closest compact armoured reference (Defiant): Waymark has a long uninterrupted spine and longitudinally staggered rectangular shoulders, no rounded blended wedge, outrider nacelles or borrowed deck plan. |
 | Star Wars industrial tradition | Recessed hangars, layered plating and a visible thrust frame | Compared with the reference capital carrier (Venator): Waymark has no triangular plan, split bridge towers, dorsal runway or copied bay arrangement. |
 
-The diagram is an original design review sketch, not a rendered 3D screenshot or dimensioned manufacturing drawing. Approval of MODULES-402 and the landed shared kit are prerequisites for the 3D build, inspection modes and the six screenshot views.
+The two original sheets are 2D catalogue studies for design review. The details and fit tolerances still require verification against the shared kit. Approval of MODULES-402 and the landed shared kit are prerequisites for the 3D build, inspection modes and the six screenshot views.

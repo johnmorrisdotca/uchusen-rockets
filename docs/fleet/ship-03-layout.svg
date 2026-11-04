@@ -1,98 +1,1257 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="755" viewBox="0 0 1160 755" role="img" aria-labelledby="title desc">
-  <title id="title">ICV-03 Waymark — design stations</title>
-  <desc id="desc">Original design-review drawing. A straight narrow spine connects two offset hangar shoulders, a blunt armoured bow and a tail with twin recessed drive nozzles. A separate schematic shows fuel, medical and command spaces.</desc>
-  <defs>
-    <style>
-      .bg{fill:#111f2a}.card{fill:#172a37;stroke:#36505d}.hull{fill:#e4e8dc;stroke:#91a6a9;stroke-width:1.1}.frame{fill:#3c5560;stroke:#77939c;stroke-width:1.1}.hot{fill:#d7885a;stroke:#f2b792;stroke-width:1}.service{fill:#d9b55d;stroke:#f0d68f;stroke-width:1}.fuel{fill:#40636e;stroke:#81b6be;stroke-width:1}.line{fill:none;stroke:#7b9da9;stroke-width:1}.axis{fill:none;stroke:#557480;stroke-width:1;stroke-dasharray:5 5}.dark{fill:#132633;stroke:#8aabae;stroke-width:1}.title{font:700 34px system-ui,sans-serif;fill:#f4f0de}.sub{font:14px system-ui,sans-serif;fill:#b7c9cc}.label{font:700 13px system-ui,sans-serif;fill:#f1df9f;letter-spacing:1.7px}.small{font:12px system-ui,sans-serif;fill:#c6d5d5}.micro{font:11px system-ui,sans-serif;fill:#c6d5d5}
-    </style>
-    <g id="tail"><path class="frame" d="M0-28H27L58-18V18L27 28H0Z"/><path class="hot" d="M1-24H12V24H1Z"/></g>
-    <g id="bow"><path class="hull" d="M348-17L367-25H374L380-18V18L374 25H367L348 17Z"/><path class="hot" d="M367-25H374L380-18V18L374 25H367L372 18V-18Z"/></g>
-  </defs>
-  <rect width="1160" height="755" class="bg"/>
-  <text x="36" y="48" class="title">ICV–03 / WAYMARK</text>
-  <text x="38" y="74" class="sub">Expedition command vessel · Layout for design review · Stowed envelope 380 × 118 × 74 m</text>
-  <text x="1124" y="50" text-anchor="end" class="label">FLEET STUDY / 03</text>
-
-  <rect x="32" y="99" width="720" height="229" rx="9" class="card"/>
-  <text x="50" y="124" class="label">01 / TOP PLAN</text>
-  <path d="M80 208H713" class="axis"/>
-  <g transform="translate(92 208) scale(1.56)">
-    <path class="frame" d="M0-9H356V9H0Z"/><use href="#tail"/><use href="#bow"/>
-    <path class="hull" d="M104 19L113 24H122V59H193L204 49V24L197 19Z"/>
-    <path class="hull" d="M222-19L229-24V-48L240-59H307L318-48V-24L310-19Z"/>
-    <path class="hot" d="M122 41H131V58H122Z M248-59H281V-52H248Z"/>
-    <path class="line" d="M140 25V55 M158 25V55 M177 25V55 M195 25V49 M242-55V-25 M260-51V-25 M281-51V-25 M302-55V-25"/>
-    <path class="frame" d="M58-16H92V16H58Z M92-13H169V13H92Z M235-14H303V14H235Z"/>
-    <path class="service" d="M174-12H234V12H174Z"/>
-    <path class="hull" d="M302-16L310-21H341L350-15V15L341 21H310L302 16Z"/>
-    <path class="line" d="M62-14V14 M90-14V14 M181-10V10 M227-10V10 M313-16V16 M337-16V16"/>
-  </g>
-  <text x="51" y="316" class="small">Two offset shoulders · open service recess · rectangular shield nose</text>
-  <text x="708" y="316" class="small" text-anchor="end">BOW → +Y</text>
-
-  <rect x="32" y="342" width="720" height="191" rx="9" class="card"/>
-  <text x="50" y="367" class="label">02 / STARBOARD ELEVATION</text>
-  <path d="M80 439H713" class="axis"/>
-  <g transform="translate(92 439) scale(1.56)">
-    <path class="frame" d="M0-8H356V10H0Z"/><use href="#tail" transform="scale(1 .67)"/><use href="#bow" transform="scale(1 .72)"/>
-    <rect class="fuel" x="92" y="4" width="72" height="20" rx="8"/><rect class="fuel" x="174" y="4" width="72" height="20" rx="8"/>
-    <path class="hull" d="M104 0V-21L114-30H194L204-21V0Z"/>
-    <path class="hull" d="M222 0V-18L234-26H304L318-18V0Z"/>
-    <path class="service" d="M174-12V-31H234V-14L222-12Z"/>
-    <path class="hull" d="M302-10V-22L316-33H340L350-20V-10Z"/>
-    <path class="line" d="M123-24V-3 M144-24V-3 M166-24V-3 M189-24V-3 M238-22V-3 M259-22V-3 M281-22V-3 M301-22V-3"/>
-    <path class="hot" d="M104-20H115V-4H104Z"/>
-    <path class="axis" d="M0-37H380 M0 37H380"/>
-  </g>
-  <g class="micro">
-    <text x="92" y="518">0 / TAIL</text><text x="232" y="518">90</text><text x="363" y="518">174</text><text x="482" y="518">250</text><text x="685" y="518" text-anchor="end">380 m / BOW</text>
-  </g>
-
-  <rect x="768" y="99" width="360" height="204" rx="9" class="card"/>
-  <text x="787" y="124" class="label">03 / FRONT</text>
-  <g transform="translate(948 212) scale(1.7)">
-    <path class="axis" d="M-68 0H68M0-44V44"/>
-    <path class="hull" d="M-59-18H-18V14H-55L-59 9Z M18-21H54L59-16V13H18Z"/>
-    <path class="frame" d="M-30 7H30V29H-30Z"/>
-    <path class="hot" d="M-25-12L-15-24H15L25-12V11L16 21H-16L-25 11Z"/>
-    <path class="hull" d="M-17-8L-10-16H10L17-8V8L11 14H-11L-17 8Z"/>
-    <path class="dark" d="M-24-28H-12V-21H-24Z M12-28H24V-21H12Z"/>
-    <path class="line" d="M-47-15V10 M-36-15V10 M37-16V10 M48-16V10"/>
-  </g>
-  <text x="787" y="285" class="small">Spaced shield layers and paired ranging apertures</text>
-
-  <rect x="768" y="317" width="360" height="216" rx="9" class="card"/>
-  <text x="787" y="343" class="label">04 / REAR</text>
-  <g transform="translate(948 431) scale(1.7)">
-    <path class="axis" d="M-68 0H68M0-44V44"/>
-    <path class="hull" d="M-59-16H-19V10H-59Z M19-17H59V9H19Z"/>
-    <path class="frame" d="M-40-14L-26-25H26L40-14V14L28 23H-28L-40 14Z"/>
-    <circle class="hot" cx="-22" cy="0" r="14"/><circle class="hot" cx="22" cy="0" r="14"/>
-    <circle class="dark" cx="-22" cy="0" r="10"/><circle class="dark" cx="22" cy="0" r="10"/>
-    <circle class="line" cx="-22" cy="0" r="6"/><circle class="line" cx="22" cy="0" r="6"/>
-    <g class="service"><circle cx="-42" cy="-15" r="4"/><circle cx="42" cy="-15" r="4"/><circle cx="-42" cy="15" r="4"/><circle cx="42" cy="15" r="4"/></g>
-  </g>
-  <text x="787" y="512" class="small">Two main throats · four plasma verniers</text>
-
-  <rect x="32" y="548" width="1096" height="164" rx="9" class="card"/>
-  <text x="50" y="574" class="label">05 / INTERIOR STATIONS — PLANNED CUTAWAY</text>
-  <g transform="translate(71 613) scale(2.63)">
-    <path class="axis" d="M0 0H380"/>
-    <rect class="hot" x="0" y="-7" width="58" height="14" rx="2"/>
-    <rect class="frame" x="58" y="-7" width="32" height="14" rx="2"/>
-    <rect class="fuel" x="92" y="1" width="72" height="7" rx="2"/>
-    <rect class="fuel" x="174" y="1" width="72" height="7" rx="2"/>
-    <rect class="hull" x="104" y="-10" width="100" height="8" rx="2"/>
-    <rect class="hull" x="222" y="-10" width="96" height="8" rx="2"/>
-    <rect class="service" x="174" y="-19" width="60" height="7" rx="2"/>
-    <rect class="hull" x="252" y="0" width="50" height="8" rx="2"/>
-    <rect class="service" x="302" y="0" width="48" height="8" rx="2"/>
-    <rect class="hot" x="350" y="-7" width="30" height="14" rx="2"/>
-  </g>
-  <g class="small">
-    <text x="71" y="664">Main drive</text><text x="224" y="664">Power</text><text x="329" y="664">Lower tanks / two pairs</text>
-    <text x="734" y="664">Hab + medical</text><text x="881" y="664">Command</text><text x="994" y="664">Shield</text>
-    <text x="344" y="690">Starboard rescue bay</text><text x="536" y="690">Mission collar</text><text x="656" y="690">Port survey bay</text>
-  </g>
-  <text x="35" y="738" class="sub">Original schematic · proposed dimensions · no external artwork · no 3D geometry approved at this stage</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1270" viewBox="0 0 1440 1270" role="img">
+<title>ICV–03 / WAYMARK</title>
+<defs>
+<pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+<path d="M20 0H0V20" fill="none" stroke="#283b49" stroke-width=".65"/>
+</pattern>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse">
+<path d="M0 4L4 0" fill="none" stroke="#90a6a9" stroke-width=".5"/>
+</pattern>
+<pattern id="fin" width="3" height="3" patternUnits="userSpaceOnUse">
+<path d="M0 1.5H3" fill="none" stroke="#799fa8" stroke-width=".32"/>
+</pattern>
+<pattern id="tile" width="6" height="5" patternUnits="userSpaceOnUse">
+<path d="M0 0H6V5" fill="none" stroke="#653d35" stroke-width=".35"/>
+</pattern>
+<marker id="arrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto-start-reverse">
+<path d="M1 1L6 3.5L1 6" fill="none" stroke="#83afbc"/>
+</marker>
+<style>
+.bg{fill:#101b26}.pane{fill:#152632;stroke:#38505a}.grid{fill:url(#grid)}.hull{fill:#c9d6cf;stroke:#b3d4d4;stroke-width:.65}.shadow{fill:#819fa4;stroke:#b3d4d4;stroke-width:.55}.structure{fill:#496571;stroke:#a0c5cd;stroke-width:.65}.dark{fill:#203744;stroke:#8bafba;stroke-width:.6}.heat{fill:#cf835d;stroke:#f7bd8a;stroke-width:.6}.service{fill:#dbb86f;stroke:#f1d28a;stroke-width:.6}.glass{fill:#326779;stroke:#a1d6da;stroke-width:.55}.seam{fill:none;stroke:#496875;stroke-width:.42}.wire{fill:none;stroke:#8ac4d0;stroke-width:.6}.fine{fill:none;stroke:#e0bb7f;stroke-width:.58}.bolt{fill:#385664}.pin{fill:#c4e3df}.axis,.guide{fill:none;stroke:#658796;stroke-width:.65;stroke-dasharray:4 4}.cut{fill:url(#hatch);stroke:#bed3cd;stroke-width:.6}.fin{fill:url(#fin);stroke:#97bac1;stroke-width:.65}.tile{fill:url(#tile);stroke:#eab088;stroke-width:.6}.dim{stroke:#83afbc;stroke-width:1;marker-start:url(#arrow);marker-end:url(#arrow)}.lead{stroke:#86abb5;stroke-width:1;fill:none}.t{font:700 41px system-ui,sans-serif;fill:#f2ecd7}.sub{font:16px system-ui,sans-serif;fill:#bfccd0}.id{font:700 14px system-ui,sans-serif;fill:#edcf8e;letter-spacing:2px}.txt{font:15px system-ui,sans-serif;fill:#d3e2de}.small{font:13px system-ui,sans-serif;fill:#abc4c9}.num{font:700 13px system-ui,sans-serif;fill:#10242d}.badge{fill:#f1d594}
+</style>
+<g id="hatch-unit">
+<rect width="8" height="4.8" rx="1" class="shadow"/>
+<rect x="1" y=".8" width="6" height="3.2" rx=".7" class="seam"/>
+<path d="M2 2.4H4.4" class="seam"/>
+<circle cx="6" cy="2.4" r=".45" class="bolt"/>
+</g>
+<g id="vents">
+<rect width="8.5" height="3.5" rx=".5" class="dark"/>
+<path d="M1.4.7V2.8M3.3.7V2.8M5.2.7V2.8M7.1.7V2.8" class="wire"/>
+</g>
+<g id="collar">
+<circle r="11" class="dark"/>
+<circle r="9.4" class="service"/>
+<circle r="7.5" class="structure"/>
+<circle r="5.7" class="dark"/>
+<path d="M-6 0H6M0-6V6" class="wire"/>
+<path d="M-2-9H2M-2 9H2M9-2V2M-9-2V2" class="seam"/>
+<g class="bolt">
+<circle cx="6.3" cy="-6.3" r=".85"/>
+<circle cx="-6.3" cy="-6.3" r=".85"/>
+<circle cx="6.3" cy="6.3" r=".85"/>
+<circle cx="-6.3" cy="6.3" r=".85"/>
+</g>
+</g>
+<g id="vernier">
+<circle r="4.2" class="structure"/>
+<circle r="3" class="service"/>
+<circle r="1.7" class="dark"/>
+</g>
+</defs>
+<rect width="1440" height="1270" class="bg"/>
+<text x="37" y="57" class="t" text-anchor="start">ICV–03 / WAYMARK</text>
+<text x="40" y="86" class="sub" text-anchor="start">Exterior engineering · stowed envelope 380 × 118 × 74 m · provisional dimensions</text>
+<text x="1400" y="55" class="id" text-anchor="end">FLEET CATALOGUE / 03-A</text>
+<rect x="32" y="109" width="1376" height="424" rx="10" class="pane"/>
+<rect x="39" y="141" width="1362" height="384" rx="0" class="grid"/>
+<text x="50" y="132" class="id" text-anchor="start">01 / TOP PLAN   ·   BOW →</text>
+<g transform="translate(180 327) scale(2.9)">
+<path d="M0-40L8-46H26L58-18H90L96-12H346L360-19H376L380-13V13L376 19H360L346 12H96L90 18H58L26 46H8L0 40Z" class="structure"/>
+<path d="M5-40H25L54-16H86V16H54L25 40H5Z" class="dark"/>
+<path d="M3-40H8V40H3Z" class="heat"/>
+<path d="M5 -34h12l17 6v12l-17 6H5Z" class="shadow"/>
+<path d="M9 -32v20" class="fine"/>
+<path d="M11 -32v20" class="fine"/>
+<path d="M13 -32v20" class="fine"/>
+<path d="M15 -32v20" class="fine"/>
+<path d="M17 -32v20" class="fine"/>
+<path d="M5 10h12l17 6v12l-17 6H5Z" class="shadow"/>
+<path d="M9 12v20" class="fine"/>
+<path d="M11 12v20" class="fine"/>
+<path d="M13 12v20" class="fine"/>
+<path d="M15 12v20" class="fine"/>
+<path d="M17 12v20" class="fine"/>
+<rect x="60" y="-15" width="6" height="30" rx="0.65" class="seam"/>
+<circle cx="61" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="65" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="61" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="65" cy="14.1" r="0.36" class="bolt"/>
+<rect x="67" y="-15" width="6" height="30" rx="0.65" class="seam"/>
+<circle cx="68" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="72" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="68" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="72" cy="14.1" r="0.36" class="bolt"/>
+<rect x="74" y="-15" width="6" height="30" rx="0.65" class="seam"/>
+<circle cx="75" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="79" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="75" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="79" cy="14.1" r="0.36" class="bolt"/>
+<rect x="81" y="-15" width="6" height="30" rx="0.65" class="seam"/>
+<circle cx="82" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="86" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="82" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="86" cy="14.1" r="0.36" class="bolt"/>
+<rect x="88" y="-15" width="2" height="30" rx="0.65" class="seam"/>
+<circle cx="89" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="89" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="89" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="89" cy="14.1" r="0.36" class="bolt"/>
+<rect x="96" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="97" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="106" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="97" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="106" cy="10.1" r="0.36" class="bolt"/>
+<rect x="108" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="109" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="118" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="109" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="118" cy="10.1" r="0.36" class="bolt"/>
+<rect x="120" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="121" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="130" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="121" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="130" cy="10.1" r="0.36" class="bolt"/>
+<rect x="132" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="133" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="142" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="133" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="142" cy="10.1" r="0.36" class="bolt"/>
+<rect x="144" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="145" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="154" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="145" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="154" cy="10.1" r="0.36" class="bolt"/>
+<rect x="156" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="157" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="166" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="157" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="166" cy="10.1" r="0.36" class="bolt"/>
+<rect x="168" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="169" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="178" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="169" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="178" cy="10.1" r="0.36" class="bolt"/>
+<rect x="180" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="181" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="190" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="181" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="190" cy="10.1" r="0.36" class="bolt"/>
+<rect x="192" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="193" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="202" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="193" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="202" cy="10.1" r="0.36" class="bolt"/>
+<rect x="204" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="205" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="214" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="205" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="214" cy="10.1" r="0.36" class="bolt"/>
+<rect x="216" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="217" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="226" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="217" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="226" cy="10.1" r="0.36" class="bolt"/>
+<rect x="228" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="229" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="238" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="229" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="238" cy="10.1" r="0.36" class="bolt"/>
+<rect x="240" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="241" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="250" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="241" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="250" cy="10.1" r="0.36" class="bolt"/>
+<rect x="252" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="253" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="262" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="253" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="262" cy="10.1" r="0.36" class="bolt"/>
+<rect x="264" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="265" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="274" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="265" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="274" cy="10.1" r="0.36" class="bolt"/>
+<rect x="276" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="277" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="286" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="277" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="286" cy="10.1" r="0.36" class="bolt"/>
+<rect x="288" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="289" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="298" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="289" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="298" cy="10.1" r="0.36" class="bolt"/>
+<rect x="300" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="301" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="310" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="301" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="310" cy="10.1" r="0.36" class="bolt"/>
+<rect x="312" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="313" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="322" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="313" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="322" cy="10.1" r="0.36" class="bolt"/>
+<rect x="324" y="-11" width="11" height="22" rx="0.65" class="seam"/>
+<circle cx="325" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="334" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="325" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="334" cy="10.1" r="0.36" class="bolt"/>
+<rect x="336" y="-11" width="10" height="22" rx="0.65" class="seam"/>
+<circle cx="337" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="345" cy="-10.1" r="0.36" class="bolt"/>
+<circle cx="337" cy="10.1" r="0.36" class="bolt"/>
+<circle cx="345" cy="10.1" r="0.36" class="bolt"/>
+<path d="M34 -9H346M52 -9l9 -3H86" class="wire"/>
+<path d="M34 9H346M52 9l9 3H86" class="wire"/>
+<path d="M100 8H119L123 25H106Z M184 9H200L204 26H188Z" class="dark"/>
+<path d="M104 26L115 20H194L204 28V51L195 59H114L104 51Z" class="hull"/>
+<rect x="117" y="24" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="118" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="126" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="118" cy="54.1" r="0.36" class="bolt"/>
+<circle cx="126" cy="54.1" r="0.36" class="bolt"/>
+<rect x="128" y="24" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="129" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="137" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="129" cy="54.1" r="0.36" class="bolt"/>
+<circle cx="137" cy="54.1" r="0.36" class="bolt"/>
+<rect x="139" y="24" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="140" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="148" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="140" cy="54.1" r="0.36" class="bolt"/>
+<circle cx="148" cy="54.1" r="0.36" class="bolt"/>
+<rect x="150" y="24" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="151" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="159" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="151" cy="54.1" r="0.36" class="bolt"/>
+<circle cx="159" cy="54.1" r="0.36" class="bolt"/>
+<rect x="161" y="24" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="162" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="170" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="162" cy="54.1" r="0.36" class="bolt"/>
+<circle cx="170" cy="54.1" r="0.36" class="bolt"/>
+<rect x="172" y="24" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="173" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="181" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="173" cy="54.1" r="0.36" class="bolt"/>
+<circle cx="181" cy="54.1" r="0.36" class="bolt"/>
+<rect x="183" y="24" width="9" height="31" rx="0.65" class="seam"/>
+<circle cx="184" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="191" cy="24.9" r="0.36" class="bolt"/>
+<circle cx="184" cy="54.1" r="0.36" class="bolt"/>
+<circle cx="191" cy="54.1" r="0.36" class="bolt"/>
+<rect x="120" y="30" width="67" height="15" rx="2" class="shadow"/>
+<rect x="122" y="31" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="123" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="130" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="123" cy="42.1" r="0.36" class="bolt"/>
+<circle cx="130" cy="42.1" r="0.36" class="bolt"/>
+<rect x="132" y="31" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="133" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="140" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="133" cy="42.1" r="0.36" class="bolt"/>
+<circle cx="140" cy="42.1" r="0.36" class="bolt"/>
+<rect x="142" y="31" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="143" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="150" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="143" cy="42.1" r="0.36" class="bolt"/>
+<circle cx="150" cy="42.1" r="0.36" class="bolt"/>
+<rect x="152" y="31" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="153" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="160" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="153" cy="42.1" r="0.36" class="bolt"/>
+<circle cx="160" cy="42.1" r="0.36" class="bolt"/>
+<rect x="162" y="31" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="163" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="170" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="163" cy="42.1" r="0.36" class="bolt"/>
+<circle cx="170" cy="42.1" r="0.36" class="bolt"/>
+<rect x="172" y="31" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="173" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="180" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="173" cy="42.1" r="0.36" class="bolt"/>
+<circle cx="180" cy="42.1" r="0.36" class="bolt"/>
+<rect x="182" y="31" width="4" height="12" rx="0.65" class="seam"/>
+<circle cx="183" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="185" cy="31.9" r="0.36" class="bolt"/>
+<circle cx="183" cy="42.1" r="0.36" class="bolt"/>
+<circle cx="185" cy="42.1" r="0.36" class="bolt"/>
+<use href="#hatch-unit" x="123" y="49"/>
+<use href="#vents" x="123" y="25"/>
+<use href="#hatch-unit" x="143" y="49"/>
+<use href="#vents" x="143" y="25"/>
+<use href="#hatch-unit" x="163" y="49"/>
+<use href="#vents" x="163" y="25"/>
+<rect x="120" y="45" width="10" height="3" rx="0.4" class="service"/>
+<rect x="178" y="45" width="10" height="3" rx="0.4" class="service"/>
+<path d="M118 49H190M118 52H190" class="seam"/>
+<path d="M218 -8H237L241 -25H224Z M298 -9H314L318 -26H302Z" class="dark"/>
+<path d="M222 -53L233 -59H308L318 -51V-28L309 -20H232L222 -28Z" class="hull"/>
+<rect x="235" y="-55" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="236" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="244" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="236" cy="-24.9" r="0.36" class="bolt"/>
+<circle cx="244" cy="-24.9" r="0.36" class="bolt"/>
+<rect x="246" y="-55" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="247" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="255" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="247" cy="-24.9" r="0.36" class="bolt"/>
+<circle cx="255" cy="-24.9" r="0.36" class="bolt"/>
+<rect x="257" y="-55" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="258" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="266" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="258" cy="-24.9" r="0.36" class="bolt"/>
+<circle cx="266" cy="-24.9" r="0.36" class="bolt"/>
+<rect x="268" y="-55" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="269" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="277" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="269" cy="-24.9" r="0.36" class="bolt"/>
+<circle cx="277" cy="-24.9" r="0.36" class="bolt"/>
+<rect x="279" y="-55" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="280" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="288" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="280" cy="-24.9" r="0.36" class="bolt"/>
+<circle cx="288" cy="-24.9" r="0.36" class="bolt"/>
+<rect x="290" y="-55" width="10" height="31" rx="0.65" class="seam"/>
+<circle cx="291" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="299" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="291" cy="-24.9" r="0.36" class="bolt"/>
+<circle cx="299" cy="-24.9" r="0.36" class="bolt"/>
+<rect x="301" y="-55" width="5" height="31" rx="0.65" class="seam"/>
+<circle cx="302" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="305" cy="-54.1" r="0.36" class="bolt"/>
+<circle cx="302" cy="-24.9" r="0.36" class="bolt"/>
+<circle cx="305" cy="-24.9" r="0.36" class="bolt"/>
+<rect x="238" y="-49" width="63" height="15" rx="2" class="shadow"/>
+<rect x="240" y="-48" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="241" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="248" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="241" cy="-36.9" r="0.36" class="bolt"/>
+<circle cx="248" cy="-36.9" r="0.36" class="bolt"/>
+<rect x="250" y="-48" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="251" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="258" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="251" cy="-36.9" r="0.36" class="bolt"/>
+<circle cx="258" cy="-36.9" r="0.36" class="bolt"/>
+<rect x="260" y="-48" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="261" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="268" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="261" cy="-36.9" r="0.36" class="bolt"/>
+<circle cx="268" cy="-36.9" r="0.36" class="bolt"/>
+<rect x="270" y="-48" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="271" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="278" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="271" cy="-36.9" r="0.36" class="bolt"/>
+<circle cx="278" cy="-36.9" r="0.36" class="bolt"/>
+<rect x="280" y="-48" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="281" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="288" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="281" cy="-36.9" r="0.36" class="bolt"/>
+<circle cx="288" cy="-36.9" r="0.36" class="bolt"/>
+<rect x="290" y="-48" width="9" height="12" rx="0.65" class="seam"/>
+<circle cx="291" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="298" cy="-47.1" r="0.36" class="bolt"/>
+<circle cx="291" cy="-36.9" r="0.36" class="bolt"/>
+<circle cx="298" cy="-36.9" r="0.36" class="bolt"/>
+<use href="#hatch-unit" x="241" y="-30"/>
+<use href="#vents" x="241" y="-54"/>
+<use href="#hatch-unit" x="261" y="-30"/>
+<use href="#vents" x="261" y="-54"/>
+<use href="#hatch-unit" x="281" y="-30"/>
+<use href="#vents" x="281" y="-54"/>
+<rect x="238" y="-34" width="10" height="3" rx="0.4" class="service"/>
+<rect x="292" y="-34" width="10" height="3" rx="0.4" class="service"/>
+<path d="M236 -30H304M236 -27H304" class="seam"/>
+<rect x="104" y="30" width="7" height="20" rx="1" class="heat"/>
+<rect x="105" y="32" width="3" height="16" rx="0.65" class="seam"/>
+<circle cx="106" cy="32.9" r="0.36" class="bolt"/>
+<circle cx="107" cy="32.9" r="0.36" class="bolt"/>
+<circle cx="106" cy="47.1" r="0.36" class="bolt"/>
+<circle cx="107" cy="47.1" r="0.36" class="bolt"/>
+<rect x="109" y="32" width="1" height="16" rx="0.65" class="seam"/>
+<circle cx="110" cy="32.9" r="0.36" class="bolt"/>
+<circle cx="109" cy="32.9" r="0.36" class="bolt"/>
+<circle cx="110" cy="47.1" r="0.36" class="bolt"/>
+<circle cx="109" cy="47.1" r="0.36" class="bolt"/>
+<rect x="250" y="-59" width="37" height="5" rx="0.5" class="heat"/>
+<rect x="251" y="-58" width="6" height="3" rx="0.65" class="seam"/>
+<circle cx="252" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="256" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="252" cy="-55.9" r="0.36" class="bolt"/>
+<circle cx="256" cy="-55.9" r="0.36" class="bolt"/>
+<rect x="258" y="-58" width="6" height="3" rx="0.65" class="seam"/>
+<circle cx="259" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="263" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="259" cy="-55.9" r="0.36" class="bolt"/>
+<circle cx="263" cy="-55.9" r="0.36" class="bolt"/>
+<rect x="265" y="-58" width="6" height="3" rx="0.65" class="seam"/>
+<circle cx="266" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="270" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="266" cy="-55.9" r="0.36" class="bolt"/>
+<circle cx="270" cy="-55.9" r="0.36" class="bolt"/>
+<rect x="272" y="-58" width="6" height="3" rx="0.65" class="seam"/>
+<circle cx="273" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="277" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="273" cy="-55.9" r="0.36" class="bolt"/>
+<circle cx="277" cy="-55.9" r="0.36" class="bolt"/>
+<rect x="279" y="-58" width="6" height="3" rx="0.65" class="seam"/>
+<circle cx="280" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="284" cy="-57.1" r="0.36" class="bolt"/>
+<circle cx="280" cy="-55.9" r="0.36" class="bolt"/>
+<circle cx="284" cy="-55.9" r="0.36" class="bolt"/>
+<use href="#hatch-unit" x="96" y="-5"/>
+<use href="#hatch-unit" x="151" y="-5"/>
+<use href="#hatch-unit" x="237" y="-5"/>
+<use href="#hatch-unit" x="278" y="-5"/>
+<rect x="104" y="-16" width="24" height="6" rx="1" class="dark"/>
+<rect x="105" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="106" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="107" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="106" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="107" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="109" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="110" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="111" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="110" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="111" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="113" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="114" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="115" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="114" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="115" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="117" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="118" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="119" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="118" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="119" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="121" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="122" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="123" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="122" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="123" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="125" y="-15" width="2" height="4" rx="0.65" class="seam"/>
+<circle cx="126" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="126" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="126" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="126" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="158" y="10" width="24" height="6" rx="1" class="dark"/>
+<rect x="159" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="160" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="161" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="160" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="161" cy="14.1" r="0.36" class="bolt"/>
+<rect x="163" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="164" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="165" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="164" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="165" cy="14.1" r="0.36" class="bolt"/>
+<rect x="167" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="168" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="169" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="168" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="169" cy="14.1" r="0.36" class="bolt"/>
+<rect x="171" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="172" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="173" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="172" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="173" cy="14.1" r="0.36" class="bolt"/>
+<rect x="175" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="176" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="177" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="176" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="177" cy="14.1" r="0.36" class="bolt"/>
+<rect x="179" y="11" width="2" height="4" rx="0.65" class="seam"/>
+<circle cx="180" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="180" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="180" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="180" cy="14.1" r="0.36" class="bolt"/>
+<rect x="225" y="10" width="24" height="6" rx="1" class="dark"/>
+<rect x="226" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="227" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="228" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="227" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="228" cy="14.1" r="0.36" class="bolt"/>
+<rect x="230" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="231" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="232" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="231" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="232" cy="14.1" r="0.36" class="bolt"/>
+<rect x="234" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="235" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="236" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="235" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="236" cy="14.1" r="0.36" class="bolt"/>
+<rect x="238" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="239" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="240" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="239" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="240" cy="14.1" r="0.36" class="bolt"/>
+<rect x="242" y="11" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="243" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="244" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="243" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="244" cy="14.1" r="0.36" class="bolt"/>
+<rect x="246" y="11" width="2" height="4" rx="0.65" class="seam"/>
+<circle cx="247" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="247" cy="11.9" r="0.36" class="bolt"/>
+<circle cx="247" cy="14.1" r="0.36" class="bolt"/>
+<circle cx="247" cy="14.1" r="0.36" class="bolt"/>
+<rect x="280" y="-16" width="24" height="6" rx="1" class="dark"/>
+<rect x="281" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="282" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="283" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="282" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="283" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="285" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="286" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="287" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="286" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="287" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="289" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="290" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="291" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="290" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="291" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="293" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="294" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="295" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="294" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="295" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="297" y="-15" width="3" height="4" rx="0.65" class="seam"/>
+<circle cx="298" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="299" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="298" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="299" cy="-11.9" r="0.36" class="bolt"/>
+<rect x="301" y="-15" width="2" height="4" rx="0.65" class="seam"/>
+<circle cx="302" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="302" cy="-14.1" r="0.36" class="bolt"/>
+<circle cx="302" cy="-11.9" r="0.36" class="bolt"/>
+<circle cx="302" cy="-11.9" r="0.36" class="bolt"/>
+<path d="M173-14H232L240-7V7L232 14H173L168 9V-9Z" class="structure"/>
+<use href="#collar" x="204" y="0"/>
+<use href="#vents" x="176" y="-4"/>
+<use href="#vents" x="224" y="-4"/>
+<path d="M193 8h6m-6 1.2h3m-3 1.2h5m3 -2.4l1.2 1.2l-1.2 1.2" class="fine"/>
+<path d="M303-15L313-22H339L350-15V15L339 22H313L303 15Z" class="hull"/>
+<rect x="313" y="-19" width="7" height="38" rx="0.65" class="seam"/>
+<circle cx="314" cy="-18.1" r="0.36" class="bolt"/>
+<circle cx="319" cy="-18.1" r="0.36" class="bolt"/>
+<circle cx="314" cy="18.1" r="0.36" class="bolt"/>
+<circle cx="319" cy="18.1" r="0.36" class="bolt"/>
+<rect x="321" y="-19" width="7" height="38" rx="0.65" class="seam"/>
+<circle cx="322" cy="-18.1" r="0.36" class="bolt"/>
+<circle cx="327" cy="-18.1" r="0.36" class="bolt"/>
+<circle cx="322" cy="18.1" r="0.36" class="bolt"/>
+<circle cx="327" cy="18.1" r="0.36" class="bolt"/>
+<rect x="329" y="-19" width="7" height="38" rx="0.65" class="seam"/>
+<circle cx="330" cy="-18.1" r="0.36" class="bolt"/>
+<circle cx="335" cy="-18.1" r="0.36" class="bolt"/>
+<circle cx="330" cy="18.1" r="0.36" class="bolt"/>
+<circle cx="335" cy="18.1" r="0.36" class="bolt"/>
+<rect x="337" y="-19" width="2" height="38" rx="0.65" class="seam"/>
+<circle cx="338" cy="-18.1" r="0.36" class="bolt"/>
+<circle cx="338" cy="-18.1" r="0.36" class="bolt"/>
+<circle cx="338" cy="18.1" r="0.36" class="bolt"/>
+<circle cx="338" cy="18.1" r="0.36" class="bolt"/>
+<rect x="335" y="-15" width="9" height="6" rx="1" class="glass"/>
+<path d="M340 -12l7 -8h9" class="wire"/>
+<circle cx="357" cy="-20" r="2.5" class="glass"/>
+<rect x="335" y="9" width="9" height="6" rx="1" class="glass"/>
+<path d="M340 12l7 8h9" class="wire"/>
+<circle cx="357" cy="20" r="2.5" class="glass"/>
+<rect x="353" y="-14" width="7" height="28" rx="1" class="heat"/>
+<rect x="353.3" y="-13.2" width="6.4" height="26.4" rx="0" class="tile"/>
+<rect x="362" y="-21" width="6" height="42" rx="1" class="heat"/>
+<rect x="362.3" y="-20.2" width="5.4" height="40.4" rx="0" class="tile"/>
+<rect x="370" y="-24" width="6" height="48" rx="1" class="heat"/>
+<rect x="370.3" y="-23.2" width="5.4" height="46.4" rx="0" class="tile"/>
+<rect x="377" y="-19" width="3" height="38" rx="1" class="heat"/>
+<rect x="377.3" y="-18.2" width="2.4" height="36.4" rx="0" class="tile"/>
+<path d="M312 -23v-10l7 0" class="wire"/>
+<circle cx="319" cy="-33" r="1.6" class="glass"/>
+<path d="M324 22v10l7 0" class="wire"/>
+<circle cx="331" cy="32" r="1.6" class="glass"/>
+</g>
+<line x1="180" y1="148" x2="1282" y2="148" class="dim"/>
+<text x="731" y="143" class="small" text-anchor="middle">380 m overall</text>
+<line x1="1326" y1="156" x2="1326" y2="498" class="dim"/>
+<text x="1337" y="335" class="small" text-anchor="start">118 m</text>
+<path d="M210 398L205 460" class="lead"/>
+<circle cx="205" cy="460" r="11" class="badge"/>
+<text x="205" y="464" class="num" text-anchor="middle">1</text>
+<path d="M425 298L405 231" class="lead"/>
+<circle cx="405" cy="231" r="11" class="badge"/>
+<text x="405" y="235" class="num" text-anchor="middle">2</text>
+<path d="M580 446L548 473" class="lead"/>
+<circle cx="548" cy="473" r="11" class="badge"/>
+<text x="548" y="477" class="num" text-anchor="middle">3</text>
+<path d="M772 327L765 225" class="lead"/>
+<circle cx="765" cy="225" r="11" class="badge"/>
+<text x="765" y="229" class="num" text-anchor="middle">4</text>
+<path d="M1009 164L1068 202" class="lead"/>
+<circle cx="1068" cy="202" r="11" class="badge"/>
+<text x="1068" y="206" class="num" text-anchor="middle">5</text>
+<path d="M1144 278L1136 249" class="lead"/>
+<circle cx="1136" cy="249" r="11" class="badge"/>
+<text x="1136" y="253" class="num" text-anchor="middle">6</text>
+<path d="M1250 391L1247 444" class="lead"/>
+<circle cx="1247" cy="444" r="11" class="badge"/>
+<text x="1247" y="448" class="num" text-anchor="middle">7</text>
+<rect x="32" y="550" width="1376" height="292" rx="10" class="pane"/>
+<rect x="39" y="582" width="1362" height="252" rx="0" class="grid"/>
+<text x="50" y="573" class="id" text-anchor="start">02 / STARBOARD ELEVATION   ·   SERVICE SHUTTER OPEN</text>
+<g transform="translate(180 716) scale(2.9)">
+<path d="M0-22L9-26H29L57-14H88L99-10H287L303-19L315-31H341L352-17H363L371-22L380-14V14L372 21H361L349 13H58L30 24H6L0 19Z" class="structure"/>
+<path d="M0-10L15-15H26L49-8V8L26 15H15L0 10Z" class="dark"/>
+<path d="M0-10L17-5H34L46-8V8L34 5H17L0 10" class="heat"/>
+<path d="M19 -9v18" class="fine"/>
+<path d="M22 -9v18" class="fine"/>
+<path d="M25 -9v18" class="fine"/>
+<path d="M28 -9v18" class="fine"/>
+<path d="M31 -9v18" class="fine"/>
+<path d="M34 -9v18" class="fine"/>
+<rect x="92" y="1" width="72" height="23" rx="10" class="shadow"/>
+<rect x="96" y="3" width="64" height="19" rx="7" class="structure"/>
+<path d="M97 9H158M99 16H157" class="wire"/>
+<rect x="103" y="2" width="2.5" height="20" rx="0.45" class="dark"/>
+<rect x="116" y="2" width="2.5" height="20" rx="0.45" class="dark"/>
+<rect x="139" y="2" width="2.5" height="20" rx="0.45" class="dark"/>
+<rect x="152" y="2" width="2.5" height="20" rx="0.45" class="dark"/>
+<rect x="174" y="1" width="72" height="23" rx="10" class="shadow"/>
+<rect x="178" y="3" width="64" height="19" rx="7" class="structure"/>
+<path d="M179 9H240M181 16H239" class="wire"/>
+<rect x="185" y="2" width="2.5" height="20" rx="0.45" class="dark"/>
+<rect x="198" y="2" width="2.5" height="20" rx="0.45" class="dark"/>
+<rect x="221" y="2" width="2.5" height="20" rx="0.45" class="dark"/>
+<rect x="234" y="2" width="2.5" height="20" rx="0.45" class="dark"/>
+<path d="M54-8H345M53-4H344M56 0H290" class="wire"/>
+<rect x="59" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="69" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="79" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="89" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="99" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="109" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="119" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="129" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="139" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="149" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="159" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="169" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="179" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="189" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="199" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="209" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="219" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="229" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="239" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="249" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="259" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="269" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="279" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="289" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="299" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="309" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="319" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="329" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<rect x="339" y="-9" width="1.3" height="11" rx="0.2" class="dark"/>
+<use href="#hatch-unit" x="69" y="-13"/>
+<use href="#hatch-unit" x="91" y="-8"/>
+<use href="#hatch-unit" x="214" y="-8"/>
+<use href="#hatch-unit" x="269" y="-8"/>
+<path d="M222-8V-19L237-27H303L318-18V-7Z" class="shadow"/>
+<rect x="240" y="-24" width="8" height="15" rx="0.65" class="seam"/>
+<circle cx="241" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="247" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="241" cy="-9.9" r="0.36" class="bolt"/>
+<circle cx="247" cy="-9.9" r="0.36" class="bolt"/>
+<rect x="249" y="-24" width="8" height="15" rx="0.65" class="seam"/>
+<circle cx="250" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="256" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="250" cy="-9.9" r="0.36" class="bolt"/>
+<circle cx="256" cy="-9.9" r="0.36" class="bolt"/>
+<rect x="258" y="-24" width="8" height="15" rx="0.65" class="seam"/>
+<circle cx="259" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="265" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="259" cy="-9.9" r="0.36" class="bolt"/>
+<circle cx="265" cy="-9.9" r="0.36" class="bolt"/>
+<rect x="267" y="-24" width="8" height="15" rx="0.65" class="seam"/>
+<circle cx="268" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="274" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="268" cy="-9.9" r="0.36" class="bolt"/>
+<circle cx="274" cy="-9.9" r="0.36" class="bolt"/>
+<rect x="276" y="-24" width="8" height="15" rx="0.65" class="seam"/>
+<circle cx="277" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="283" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="277" cy="-9.9" r="0.36" class="bolt"/>
+<circle cx="283" cy="-9.9" r="0.36" class="bolt"/>
+<rect x="285" y="-24" width="8" height="15" rx="0.65" class="seam"/>
+<circle cx="286" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="292" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="286" cy="-9.9" r="0.36" class="bolt"/>
+<circle cx="292" cy="-9.9" r="0.36" class="bolt"/>
+<rect x="294" y="-24" width="8" height="15" rx="0.65" class="seam"/>
+<circle cx="295" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="301" cy="-23.1" r="0.36" class="bolt"/>
+<circle cx="295" cy="-9.9" r="0.36" class="bolt"/>
+<circle cx="301" cy="-9.9" r="0.36" class="bolt"/>
+<path d="M104 2V-18L114-28H194L204-20V2Z" class="hull"/>
+<rect x="116" y="-25" width="10" height="25" rx="0.65" class="seam"/>
+<circle cx="117" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="125" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="117" cy="-0.9" r="0.36" class="bolt"/>
+<circle cx="125" cy="-0.9" r="0.36" class="bolt"/>
+<rect x="127" y="-25" width="10" height="25" rx="0.65" class="seam"/>
+<circle cx="128" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="136" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="128" cy="-0.9" r="0.36" class="bolt"/>
+<circle cx="136" cy="-0.9" r="0.36" class="bolt"/>
+<rect x="138" y="-25" width="10" height="25" rx="0.65" class="seam"/>
+<circle cx="139" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="147" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="139" cy="-0.9" r="0.36" class="bolt"/>
+<circle cx="147" cy="-0.9" r="0.36" class="bolt"/>
+<rect x="149" y="-25" width="10" height="25" rx="0.65" class="seam"/>
+<circle cx="150" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="158" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="150" cy="-0.9" r="0.36" class="bolt"/>
+<circle cx="158" cy="-0.9" r="0.36" class="bolt"/>
+<rect x="160" y="-25" width="10" height="25" rx="0.65" class="seam"/>
+<circle cx="161" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="169" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="161" cy="-0.9" r="0.36" class="bolt"/>
+<circle cx="169" cy="-0.9" r="0.36" class="bolt"/>
+<rect x="171" y="-25" width="10" height="25" rx="0.65" class="seam"/>
+<circle cx="172" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="180" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="172" cy="-0.9" r="0.36" class="bolt"/>
+<circle cx="180" cy="-0.9" r="0.36" class="bolt"/>
+<rect x="182" y="-25" width="10" height="25" rx="0.65" class="seam"/>
+<circle cx="183" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="191" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="183" cy="-0.9" r="0.36" class="bolt"/>
+<circle cx="191" cy="-0.9" r="0.36" class="bolt"/>
+<rect x="193" y="-25" width="3" height="25" rx="0.65" class="seam"/>
+<circle cx="194" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="195" cy="-24.1" r="0.36" class="bolt"/>
+<circle cx="194" cy="-0.9" r="0.36" class="bolt"/>
+<circle cx="195" cy="-0.9" r="0.36" class="bolt"/>
+<rect x="110" y="-19" width="55" height="17" rx="1" class="dark"/>
+<rect x="111" y="-18" width="53" height="1.8" rx="0.35" class="heat"/>
+<path d="M113 -3V-15H160V-3M114 -13H159M141.2 -13v5.16l-1.7 1.6h3.4" class="fine"/>
+<path d="M114 -15l2 2l2 -2" class="fine"/>
+<path d="M118 -15l2 2l2 -2" class="fine"/>
+<path d="M122 -15l2 2l2 -2" class="fine"/>
+<path d="M126 -15l2 2l2 -2" class="fine"/>
+<path d="M130 -15l2 2l2 -2" class="fine"/>
+<path d="M134 -15l2 2l2 -2" class="fine"/>
+<path d="M138 -15l2 2l2 -2" class="fine"/>
+<path d="M142 -15l2 2l2 -2" class="fine"/>
+<path d="M146 -15l2 2l2 -2" class="fine"/>
+<path d="M150 -15l2 2l2 -2" class="fine"/>
+<path d="M154 -15l2 2l2 -2" class="fine"/>
+<path d="M120-6H150L158-4H120Z" class="shadow"/>
+<rect x="113" y="-3" width="48" height="2" rx="0" class="service"/>
+<path d="M154 -25h6m-6 1.2h3m-3 1.2h5m3 -2.4l1.2 1.2l-1.2 1.2" class="fine"/>
+<use href="#vents" x="170" y="-20"/>
+<use href="#hatch-unit" x="170" y="-11"/>
+<use href="#vents" x="183" y="-20"/>
+<use href="#hatch-unit" x="183" y="-11"/>
+<use href="#vents" x="194" y="-20"/>
+<use href="#hatch-unit" x="194" y="-11"/>
+<path d="M172-27L178-34H230L236-27V-13H172Z" class="service"/>
+<rect x="178" y="-31" width="9" height="16" rx="0.65" class="seam"/>
+<circle cx="179" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="186" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="179" cy="-15.9" r="0.36" class="bolt"/>
+<circle cx="186" cy="-15.9" r="0.36" class="bolt"/>
+<rect x="188" y="-31" width="9" height="16" rx="0.65" class="seam"/>
+<circle cx="189" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="196" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="189" cy="-15.9" r="0.36" class="bolt"/>
+<circle cx="196" cy="-15.9" r="0.36" class="bolt"/>
+<rect x="198" y="-31" width="9" height="16" rx="0.65" class="seam"/>
+<circle cx="199" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="206" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="199" cy="-15.9" r="0.36" class="bolt"/>
+<circle cx="206" cy="-15.9" r="0.36" class="bolt"/>
+<rect x="208" y="-31" width="9" height="16" rx="0.65" class="seam"/>
+<circle cx="209" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="216" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="209" cy="-15.9" r="0.36" class="bolt"/>
+<circle cx="216" cy="-15.9" r="0.36" class="bolt"/>
+<rect x="218" y="-31" width="9" height="16" rx="0.65" class="seam"/>
+<circle cx="219" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="226" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="219" cy="-15.9" r="0.36" class="bolt"/>
+<circle cx="226" cy="-15.9" r="0.36" class="bolt"/>
+<rect x="228" y="-31" width="2" height="16" rx="0.65" class="seam"/>
+<circle cx="229" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="229" cy="-30.1" r="0.36" class="bolt"/>
+<circle cx="229" cy="-15.9" r="0.36" class="bolt"/>
+<circle cx="229" cy="-15.9" r="0.36" class="bolt"/>
+<rect x="198" y="-37" width="15" height="4" rx="1" class="dark"/>
+<path d="M189 24L194 37H208L213 24Z" class="structure"/>
+<path d="M303-12V-22L317-32H341L351-19V-12Z" class="hull"/>
+<rect x="317" y="-28" width="6" height="14" rx="0.65" class="seam"/>
+<circle cx="318" cy="-27.1" r="0.36" class="bolt"/>
+<circle cx="322" cy="-27.1" r="0.36" class="bolt"/>
+<circle cx="318" cy="-14.9" r="0.36" class="bolt"/>
+<circle cx="322" cy="-14.9" r="0.36" class="bolt"/>
+<rect x="324" y="-28" width="6" height="14" rx="0.65" class="seam"/>
+<circle cx="325" cy="-27.1" r="0.36" class="bolt"/>
+<circle cx="329" cy="-27.1" r="0.36" class="bolt"/>
+<circle cx="325" cy="-14.9" r="0.36" class="bolt"/>
+<circle cx="329" cy="-14.9" r="0.36" class="bolt"/>
+<rect x="331" y="-28" width="6" height="14" rx="0.65" class="seam"/>
+<circle cx="332" cy="-27.1" r="0.36" class="bolt"/>
+<circle cx="336" cy="-27.1" r="0.36" class="bolt"/>
+<circle cx="332" cy="-14.9" r="0.36" class="bolt"/>
+<circle cx="336" cy="-14.9" r="0.36" class="bolt"/>
+<rect x="338" y="-28" width="3" height="14" rx="0.65" class="seam"/>
+<circle cx="339" cy="-27.1" r="0.36" class="bolt"/>
+<circle cx="340" cy="-27.1" r="0.36" class="bolt"/>
+<circle cx="339" cy="-14.9" r="0.36" class="bolt"/>
+<circle cx="340" cy="-14.9" r="0.36" class="bolt"/>
+<rect x="327" y="-25" width="12" height="4" rx="0.65" class="glass"/>
+<path d="M331-31V-36h7M339-31l4-5h5" class="wire"/>
+<circle cx="338" cy="-36" r="1.2" class="glass"/>
+<circle cx="349" cy="-36" r="1.5" class="glass"/>
+<path d="M350-12L358-16V16L350 12Z M361-18L366-20V20L361 18Z M370-22L376-20L380-14V14L376 20L370 22Z" class="heat"/>
+<rect x="371" y="-15" width="6" height="30" rx="0" class="tile"/>
+<path d="M10-26L18-30H26L31-26M13 23l6 5h7l5-5" class="wire"/>
+<path d="M48 -10h6m-6 1.2h3m-3 1.2h5m3 -2.4l1.2 1.2l-1.2 1.2" class="fine"/>
+<circle cx="31" cy="-14" r="1.05" class="pin"/>
+</g>
+<line x1="1326" y1="609" x2="1326" y2="824" class="dim"/>
+<text x="1337" y="722" class="small" text-anchor="start">74 m limit</text>
+<path d="M560 690L565 804" class="lead"/>
+<circle cx="565" cy="804" r="11" class="badge"/>
+<text x="565" y="808" class="num" text-anchor="middle">8</text>
+<path d="M771 632L785 605" class="lead"/>
+<circle cx="785" cy="605" r="11" class="badge"/>
+<text x="785" y="609" class="num" text-anchor="middle">9</text>
+<path d="M1153 626L1106 616" class="lead"/>
+<circle cx="1106" cy="616" r="11" class="badge"/>
+<text x="1106" y="620" class="num" text-anchor="middle">10</text>
+<path d="M458 752L411 785" class="lead"/>
+<circle cx="411" cy="785" r="11" class="badge"/>
+<text x="411" y="789" class="num" text-anchor="middle">11</text>
+<rect x="32" y="859" width="341" height="266" rx="10" class="pane"/>
+<rect x="39" y="891" width="327" height="226" rx="0" class="grid"/>
+<text x="50" y="882" class="id" text-anchor="start">03 / FRONT</text>
+<g transform="translate(200 984) scale(2.35)">
+<path d="M-59-15L-51-23H-24L-16-13H16L24-22H51L59-15V17H-59Z" class="hull"/>
+<rect x="-56" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-55" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-51" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-55" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-51" cy="12.1" r="0.36" class="bolt"/>
+<rect x="-49" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-48" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-44" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-48" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-44" cy="12.1" r="0.36" class="bolt"/>
+<rect x="-42" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-41" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-37" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-41" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-37" cy="12.1" r="0.36" class="bolt"/>
+<rect x="-35" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-34" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-30" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-34" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-30" cy="12.1" r="0.36" class="bolt"/>
+<rect x="-28" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-27" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-23" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-27" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-23" cy="12.1" r="0.36" class="bolt"/>
+<rect x="23" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="24" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="28" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="24" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="28" cy="12.1" r="0.36" class="bolt"/>
+<rect x="30" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="31" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="35" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="31" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="35" cy="12.1" r="0.36" class="bolt"/>
+<rect x="37" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="38" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="42" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="38" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="42" cy="12.1" r="0.36" class="bolt"/>
+<rect x="44" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="45" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="49" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="45" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="49" cy="12.1" r="0.36" class="bolt"/>
+<rect x="51" y="-13" width="5" height="26" rx="0.65" class="seam"/>
+<circle cx="52" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="55" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="52" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="55" cy="12.1" r="0.36" class="bolt"/>
+<path d="M-46-12L-30-27H30L46-12V12L31 24H-31L-46 12Z" class="structure"/>
+<rect x="-32" y="21" width="64" height="8" rx="2" class="dark"/>
+<rect x="-30" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-29" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-25" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-29" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-25" cy="26.1" r="0.36" class="bolt"/>
+<rect x="-23" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-22" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-18" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-22" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-18" cy="26.1" r="0.36" class="bolt"/>
+<rect x="-16" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-15" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-11" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-15" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-11" cy="26.1" r="0.36" class="bolt"/>
+<rect x="-9" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-8" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-4" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-8" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-4" cy="26.1" r="0.36" class="bolt"/>
+<rect x="-2" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-1" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="3" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-1" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="3" cy="26.1" r="0.36" class="bolt"/>
+<rect x="5" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="6" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="10" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="6" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="10" cy="26.1" r="0.36" class="bolt"/>
+<rect x="12" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="13" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="17" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="13" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="17" cy="26.1" r="0.36" class="bolt"/>
+<rect x="19" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="20" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="24" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="20" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="24" cy="26.1" r="0.36" class="bolt"/>
+<rect x="26" y="22" width="4" height="5" rx="0.65" class="seam"/>
+<circle cx="27" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="29" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="27" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="29" cy="26.1" r="0.36" class="bolt"/>
+<path d="M-31 -9L-23 -26H23L31 -9V9L23 26H-23L-31 9Z" class="shadow"/>
+<path d="M-25 -9L-17 -22H17L25 -9V9L17 22H-17L-25 9Z" class="heat"/>
+<path d="M-18 -9L-10 -17H10L18 -9V9L10 17H-10L-18 9Z" class="hull"/>
+<rect x="-15" y="-8" width="4" height="16" rx="0.65" class="seam"/>
+<circle cx="-14" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="-12" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="-14" cy="7.1" r="0.36" class="bolt"/>
+<circle cx="-12" cy="7.1" r="0.36" class="bolt"/>
+<rect x="-10" y="-8" width="4" height="16" rx="0.65" class="seam"/>
+<circle cx="-9" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="-7" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="-9" cy="7.1" r="0.36" class="bolt"/>
+<circle cx="-7" cy="7.1" r="0.36" class="bolt"/>
+<rect x="-5" y="-8" width="4" height="16" rx="0.65" class="seam"/>
+<circle cx="-4" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="-2" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="-4" cy="7.1" r="0.36" class="bolt"/>
+<circle cx="-2" cy="7.1" r="0.36" class="bolt"/>
+<rect x="0" y="-8" width="4" height="16" rx="0.65" class="seam"/>
+<circle cx="1" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="3" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="1" cy="7.1" r="0.36" class="bolt"/>
+<circle cx="3" cy="7.1" r="0.36" class="bolt"/>
+<rect x="5" y="-8" width="4" height="16" rx="0.65" class="seam"/>
+<circle cx="6" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="8" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="6" cy="7.1" r="0.36" class="bolt"/>
+<circle cx="8" cy="7.1" r="0.36" class="bolt"/>
+<rect x="10" y="-8" width="4" height="16" rx="0.65" class="seam"/>
+<circle cx="11" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="13" cy="-7.1" r="0.36" class="bolt"/>
+<circle cx="11" cy="7.1" r="0.36" class="bolt"/>
+<circle cx="13" cy="7.1" r="0.36" class="bolt"/>
+<rect x="-32" y="-27" width="10" height="6" rx="1" class="dark"/>
+<circle cx="-27" cy="-24" r="2.3" class="glass"/>
+<rect x="22" y="-27" width="10" height="6" rx="1" class="dark"/>
+<circle cx="27" cy="-24" r="2.3" class="glass"/>
+<use href="#vents" x="-48" y="-11"/>
+<use href="#hatch-unit" x="-48" y="4"/>
+<use href="#vents" x="46" y="-11"/>
+<use href="#hatch-unit" x="46" y="4"/>
+</g>
+<text x="49" y="1105" class="small" text-anchor="start">Stepped shield and ranging apertures</text>
+<rect x="386" y="859" width="341" height="266" rx="10" class="pane"/>
+<rect x="393" y="891" width="327" height="226" rx="0" class="grid"/>
+<text x="404" y="882" class="id" text-anchor="start">04 / REAR</text>
+<g transform="translate(554 984) scale(2.35)">
+<path d="M-59-15L-51-23H-24L-16-13H16L24-22H51L59-15V17H-59Z" class="hull"/>
+<rect x="-56" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-55" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-51" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-55" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-51" cy="12.1" r="0.36" class="bolt"/>
+<rect x="-49" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-48" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-44" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-48" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-44" cy="12.1" r="0.36" class="bolt"/>
+<rect x="-42" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-41" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-37" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-41" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-37" cy="12.1" r="0.36" class="bolt"/>
+<rect x="-35" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-34" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-30" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-34" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-30" cy="12.1" r="0.36" class="bolt"/>
+<rect x="-28" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="-27" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-23" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="-27" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="-23" cy="12.1" r="0.36" class="bolt"/>
+<rect x="23" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="24" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="28" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="24" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="28" cy="12.1" r="0.36" class="bolt"/>
+<rect x="30" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="31" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="35" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="31" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="35" cy="12.1" r="0.36" class="bolt"/>
+<rect x="37" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="38" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="42" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="38" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="42" cy="12.1" r="0.36" class="bolt"/>
+<rect x="44" y="-13" width="6" height="26" rx="0.65" class="seam"/>
+<circle cx="45" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="49" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="45" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="49" cy="12.1" r="0.36" class="bolt"/>
+<rect x="51" y="-13" width="5" height="26" rx="0.65" class="seam"/>
+<circle cx="52" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="55" cy="-12.1" r="0.36" class="bolt"/>
+<circle cx="52" cy="12.1" r="0.36" class="bolt"/>
+<circle cx="55" cy="12.1" r="0.36" class="bolt"/>
+<path d="M-46-12L-30-27H30L46-12V12L31 24H-31L-46 12Z" class="structure"/>
+<rect x="-32" y="21" width="64" height="8" rx="2" class="dark"/>
+<rect x="-30" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-29" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-25" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-29" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-25" cy="26.1" r="0.36" class="bolt"/>
+<rect x="-23" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-22" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-18" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-22" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-18" cy="26.1" r="0.36" class="bolt"/>
+<rect x="-16" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-15" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-11" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-15" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-11" cy="26.1" r="0.36" class="bolt"/>
+<rect x="-9" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-8" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-4" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-8" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-4" cy="26.1" r="0.36" class="bolt"/>
+<rect x="-2" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="-1" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="3" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="-1" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="3" cy="26.1" r="0.36" class="bolt"/>
+<rect x="5" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="6" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="10" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="6" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="10" cy="26.1" r="0.36" class="bolt"/>
+<rect x="12" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="13" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="17" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="13" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="17" cy="26.1" r="0.36" class="bolt"/>
+<rect x="19" y="22" width="6" height="5" rx="0.65" class="seam"/>
+<circle cx="20" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="24" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="20" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="24" cy="26.1" r="0.36" class="bolt"/>
+<rect x="26" y="22" width="4" height="5" rx="0.65" class="seam"/>
+<circle cx="27" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="29" cy="22.9" r="0.36" class="bolt"/>
+<circle cx="27" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="29" cy="26.1" r="0.36" class="bolt"/>
+<circle cx="-22" cy="0" r="14" class="heat"/>
+<circle cx="-22" cy="0" r="12.1" class="structure"/>
+<circle cx="-22" cy="0" r="10.5" class="dark"/>
+<circle cx="-22" cy="0" r="8.5" class="glass"/>
+<circle cx="-22" cy="0" r="5.7" class="dark"/>
+<path d="M-13.20 0.00L-10.40 0.00" class="fine"/>
+<path d="M-14.38 4.40L-11.95 5.80" class="fine"/>
+<path d="M-17.60 7.62L-16.20 10.05" class="fine"/>
+<path d="M-22.00 8.80L-22.00 11.60" class="fine"/>
+<path d="M-26.40 7.62L-27.80 10.05" class="fine"/>
+<path d="M-29.62 4.40L-32.05 5.80" class="fine"/>
+<path d="M-30.80 0.00L-33.60 0.00" class="fine"/>
+<path d="M-29.62 -4.40L-32.05 -5.80" class="fine"/>
+<path d="M-26.40 -7.62L-27.80 -10.05" class="fine"/>
+<path d="M-22.00 -8.80L-22.00 -11.60" class="fine"/>
+<path d="M-17.60 -7.62L-16.20 -10.05" class="fine"/>
+<path d="M-14.38 -4.40L-11.95 -5.80" class="fine"/>
+<circle cx="22" cy="0" r="14" class="heat"/>
+<circle cx="22" cy="0" r="12.1" class="structure"/>
+<circle cx="22" cy="0" r="10.5" class="dark"/>
+<circle cx="22" cy="0" r="8.5" class="glass"/>
+<circle cx="22" cy="0" r="5.7" class="dark"/>
+<path d="M30.80 0.00L33.60 0.00" class="fine"/>
+<path d="M29.62 4.40L32.05 5.80" class="fine"/>
+<path d="M26.40 7.62L27.80 10.05" class="fine"/>
+<path d="M22.00 8.80L22.00 11.60" class="fine"/>
+<path d="M17.60 7.62L16.20 10.05" class="fine"/>
+<path d="M14.38 4.40L11.95 5.80" class="fine"/>
+<path d="M13.20 0.00L10.40 0.00" class="fine"/>
+<path d="M14.38 -4.40L11.95 -5.80" class="fine"/>
+<path d="M17.60 -7.62L16.20 -10.05" class="fine"/>
+<path d="M22.00 -8.80L22.00 -11.60" class="fine"/>
+<path d="M26.40 -7.62L27.80 -10.05" class="fine"/>
+<path d="M29.62 -4.40L32.05 -5.80" class="fine"/>
+<use href="#vernier" x="-42" y="-15"/>
+<use href="#vernier" x="-42" y="15"/>
+<use href="#vernier" x="42" y="-15"/>
+<use href="#vernier" x="42" y="15"/>
+<path d="M-8-15H8V15H-8Z" class="shadow"/>
+<rect x="-7" y="-12" width="4" height="24" rx="0.65" class="seam"/>
+<circle cx="-6" cy="-11.1" r="0.36" class="bolt"/>
+<circle cx="-4" cy="-11.1" r="0.36" class="bolt"/>
+<circle cx="-6" cy="11.1" r="0.36" class="bolt"/>
+<circle cx="-4" cy="11.1" r="0.36" class="bolt"/>
+<rect x="-2" y="-12" width="4" height="24" rx="0.65" class="seam"/>
+<circle cx="-1" cy="-11.1" r="0.36" class="bolt"/>
+<circle cx="1" cy="-11.1" r="0.36" class="bolt"/>
+<circle cx="-1" cy="11.1" r="0.36" class="bolt"/>
+<circle cx="1" cy="11.1" r="0.36" class="bolt"/>
+<rect x="3" y="-12" width="4" height="24" rx="0.65" class="seam"/>
+<circle cx="4" cy="-11.1" r="0.36" class="bolt"/>
+<circle cx="6" cy="-11.1" r="0.36" class="bolt"/>
+<circle cx="4" cy="11.1" r="0.36" class="bolt"/>
+<circle cx="6" cy="11.1" r="0.36" class="bolt"/>
+</g>
+<text x="403" y="1105" class="small" text-anchor="start">Two coil-lined throats and four verniers</text>
+<rect x="740" y="859" width="668" height="266" rx="10" class="pane"/>
+<rect x="747" y="891" width="654" height="226" rx="0" class="grid"/>
+<text x="758" y="882" class="id" text-anchor="start">05 / RADIATOR PACKS   ·   SCHEMATIC</text>
+<g transform="translate(820 984) scale(2.2)">
+<path d="M-12-28H12V28H-12Z" class="structure"/>
+<rect x="-10" y="-26" width="4" height="52" rx="0.65" class="seam"/>
+<circle cx="-9" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="-7" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="-9" cy="25.1" r="0.36" class="bolt"/>
+<circle cx="-7" cy="25.1" r="0.36" class="bolt"/>
+<rect x="-5" y="-26" width="4" height="52" rx="0.65" class="seam"/>
+<circle cx="-4" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="-2" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="-4" cy="25.1" r="0.36" class="bolt"/>
+<circle cx="-2" cy="25.1" r="0.36" class="bolt"/>
+<rect x="0" y="-26" width="4" height="52" rx="0.65" class="seam"/>
+<circle cx="1" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="3" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="1" cy="25.1" r="0.36" class="bolt"/>
+<circle cx="3" cy="25.1" r="0.36" class="bolt"/>
+<rect x="5" y="-26" width="4" height="52" rx="0.65" class="seam"/>
+<circle cx="6" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="8" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="6" cy="25.1" r="0.36" class="bolt"/>
+<circle cx="8" cy="25.1" r="0.36" class="bolt"/>
+<rect x="-14.0" y="-27" width="2" height="54" rx="0.3" class="fin"/>
+<rect x="-16.1" y="-27" width="2" height="54" rx="0.3" class="fin"/>
+<path d="M-12 -23H-21M-12 23H-21" class="fine"/>
+<rect x="12.0" y="-27" width="2" height="54" rx="0.3" class="fin"/>
+<rect x="14.1" y="-27" width="2" height="54" rx="0.3" class="fin"/>
+<path d="M12 -23H21M12 23H21" class="fine"/>
+</g>
+<g transform="translate(1151 984) scale(2.15)">
+<path d="M-12-28H12V28H-12Z" class="structure"/>
+<rect x="-10" y="-26" width="4" height="52" rx="0.65" class="seam"/>
+<circle cx="-9" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="-7" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="-9" cy="25.1" r="0.36" class="bolt"/>
+<circle cx="-7" cy="25.1" r="0.36" class="bolt"/>
+<rect x="-5" y="-26" width="4" height="52" rx="0.65" class="seam"/>
+<circle cx="-4" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="-2" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="-4" cy="25.1" r="0.36" class="bolt"/>
+<circle cx="-2" cy="25.1" r="0.36" class="bolt"/>
+<rect x="0" y="-26" width="4" height="52" rx="0.65" class="seam"/>
+<circle cx="1" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="3" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="1" cy="25.1" r="0.36" class="bolt"/>
+<circle cx="3" cy="25.1" r="0.36" class="bolt"/>
+<rect x="5" y="-26" width="4" height="52" rx="0.65" class="seam"/>
+<circle cx="6" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="8" cy="-25.1" r="0.36" class="bolt"/>
+<circle cx="6" cy="25.1" r="0.36" class="bolt"/>
+<circle cx="8" cy="25.1" r="0.36" class="bolt"/>
+<rect x="-29" y="-27" width="16" height="54" rx="1" class="dark"/>
+<rect x="-28" y="-25.5" width="14" height="51" rx="0" class="fin"/>
+<path d="M-13 -23h-16" class="wire"/>
+<path d="M-13 0h-16" class="wire"/>
+<path d="M-13 23h-16" class="wire"/>
+<rect x="-47" y="-27" width="16" height="54" rx="1" class="dark"/>
+<rect x="-46" y="-25.5" width="14" height="51" rx="0" class="fin"/>
+<path d="M-31 -23h-16" class="wire"/>
+<path d="M-31 0h-16" class="wire"/>
+<path d="M-31 23h-16" class="wire"/>
+<path d="M-12 0H-47" class="fine"/>
+<rect x="13" y="-27" width="16" height="54" rx="1" class="dark"/>
+<rect x="14" y="-25.5" width="14" height="51" rx="0" class="fin"/>
+<path d="M13 -23h16" class="wire"/>
+<path d="M13 0h16" class="wire"/>
+<path d="M13 23h16" class="wire"/>
+<rect x="31" y="-27" width="16" height="54" rx="1" class="dark"/>
+<rect x="32" y="-25.5" width="14" height="51" rx="0" class="fin"/>
+<path d="M31 -23h16" class="wire"/>
+<path d="M31 0h16" class="wire"/>
+<path d="M31 23h16" class="wire"/>
+<path d="M12 0H47" class="fine"/>
+</g>
+<text x="820" y="1082" class="small" text-anchor="middle">STOWED</text>
+<text x="1151" y="1082" class="small" text-anchor="middle">ONE BANK DEPLOYED</text>
+<text x="758" y="1105" class="small" text-anchor="start">Four leaves per bank; dorsal and ventral clearance from bays and exhaust.</text>
+<circle cx="41" cy="1154" r="8" class="badge"/>
+<text x="41" y="1158" class="num" text-anchor="middle">1</text>
+<text x="56" y="1158" class="small" text-anchor="start">Recessed drive collars</text>
+<circle cx="381" cy="1154" r="8" class="badge"/>
+<text x="381" y="1158" class="num" text-anchor="middle">2</text>
+<text x="396" y="1158" class="small" text-anchor="start">Spine conduits and valves</text>
+<circle cx="721" cy="1154" r="8" class="badge"/>
+<text x="721" y="1158" class="num" text-anchor="middle">3</text>
+<text x="736" y="1158" class="small" text-anchor="start">Starboard rescue shoulder</text>
+<circle cx="1061" cy="1154" r="8" class="badge"/>
+<text x="1061" y="1158" class="num" text-anchor="middle">4</text>
+<text x="1076" y="1158" class="small" text-anchor="start">Keyed dorsal mission collar</text>
+<circle cx="41" cy="1178" r="8" class="badge"/>
+<text x="41" y="1182" class="num" text-anchor="middle">5</text>
+<text x="56" y="1182" class="small" text-anchor="start">Port survey bay shutters</text>
+<circle cx="381" cy="1178" r="8" class="badge"/>
+<text x="381" y="1182" class="num" text-anchor="middle">6</text>
+<text x="396" y="1182" class="small" text-anchor="start">Command armour and aerials</text>
+<circle cx="721" cy="1178" r="8" class="badge"/>
+<text x="721" y="1182" class="num" text-anchor="middle">7</text>
+<text x="736" y="1182" class="small" text-anchor="start">Replaceable shield tiles</text>
+<circle cx="1061" cy="1178" r="8" class="badge"/>
+<text x="1061" y="1182" class="num" text-anchor="middle">8</text>
+<text x="1076" y="1182" class="small" text-anchor="start">Rescue gantry and bay rails</text>
+<circle cx="41" cy="1202" r="8" class="badge"/>
+<text x="41" y="1206" class="num" text-anchor="middle">9</text>
+<text x="56" y="1206" class="small" text-anchor="start">Collar isolation lock</text>
+<circle cx="381" cy="1202" r="8" class="badge"/>
+<text x="381" y="1206" class="num" text-anchor="middle">10</text>
+<text x="396" y="1206" class="small" text-anchor="start">Optics and navigation heads</text>
+<circle cx="721" cy="1202" r="8" class="badge"/>
+<text x="721" y="1206" class="num" text-anchor="middle">11</text>
+<text x="736" y="1206" class="small" text-anchor="start">Vented fuel cassettes</text>
+<text x="38" y="1250" class="small" text-anchor="start">Review drawing · dimensions and hinge clearances to be verified against the common kit · original geometry only</text>
 </svg>
