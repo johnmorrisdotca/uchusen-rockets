@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img"><title>Miyamoto crest</title>
+<circle cx="100" cy="100" r="98" fill="#2a2d32"/>
+<circle cx="100" cy="100" r="92" fill="#dad8d0"/>
+<circle cx="100" cy="100" r="84" fill="#2a2d32"/>
+<g stroke="#2a2d32" stroke-width="4" stroke-linejoin="round"><g transform="translate(100 145) rotate(115) scale(0.62)"><path d="M-6-26H6V54L0 70L-6 58Z" fill="#dad8d0"/><path d="M-15-30H15V-21H-15Z" fill="#dad8d0"/><path d="M-6.5-64H6.5V-30H-6.5Z" fill="#d17a3c"/><circle cy="-68" r="8" fill="#dad8d0"/></g><g transform="translate(100 145) rotate(245) scale(0.62)"><path d="M-6-26H6V54L0 70L-6 58Z" fill="#dad8d0"/><path d="M-15-30H15V-21H-15Z" fill="#dad8d0"/><path d="M-6.5-64H6.5V-30H-6.5Z" fill="#d17a3c"/><circle cy="-68" r="8" fill="#dad8d0"/></g></g>
+<g fill="#d17a3c" stroke="#2a2d32" stroke-width="4" stroke-linejoin="round"><path d="M46 56Q100 74 154 56L149 36Q100 52 51 36Z"/><path d="M60 64H140V72H60Z"/><path d="M96 72H104V88H96Z"/><path d="M62 84H138V93H62Z"/><path d="M68 72H82L84 126H66Z"/><path d="M118 72H132L134 126H116Z"/></g>
+</svg>

@@ -98,6 +98,7 @@
     "check:standard": "node scripts/check-standard.mjs",
     "screenshots": "pnpm site && node scripts/docs-site.mjs build && node scripts/screenshots.ts",
     "models": "node scripts/reduce-models.ts",
+    "badges": "node scripts/make-badges.ts",
     "models:nasa": "node scripts/reduce-nasa.ts",
     "docs:site": "pnpm build && node scripts/docs-site.mjs build",
     "docs:check": "pnpm build && node scripts/docs-site.mjs check",

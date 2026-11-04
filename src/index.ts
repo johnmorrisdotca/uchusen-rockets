@@ -57,3 +57,5 @@ export { FLEET_PALETTE } from "./model/fleet/palette.ts";
 export type { FleetColour } from "./model/fleet/palette.ts";
 export { FLEET_OPERATOR, GLOSSARY } from "./model/fleet/glossary.ts";
 export type { GlossaryCode } from "./model/fleet/glossary.ts";
+export { badge, badgesOf, badgeSvg, badgeUri, FLEET_BADGE_SHIPS, FLEET_BADGES, HANABUSA_REGISTRY } from "./data/fleet/badges.ts";
+export type { Badge, BadgeKind, BadgeShip, BadgeShipInfo } from "./data/fleet/badges.ts";

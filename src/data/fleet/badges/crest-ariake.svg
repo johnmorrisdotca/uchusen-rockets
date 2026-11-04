@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img"><title>Ariake crest</title>
+<circle cx="100" cy="100" r="98" fill="#2a2d32"/>
+<circle cx="100" cy="100" r="92" fill="#dad8d0"/>
+<circle cx="100" cy="100" r="84" fill="#2a2d32"/>
+<path d="M55.3 139.2L24.9 128.8L26.8 123.1L57.5 132.5ZM60.8 125.9L35.2 106.6L38.7 101.8L65 120.2ZM70.2 115L51.8 88.7L56.6 85.2L75.9 110.8ZM82.5 107.5L73.1 76.8L78.8 74.9L89.2 105.3ZM96.5 104.1L97 72.1L103 72.1L103.5 104.1ZM110.8 105.3L121.2 74.9L126.9 76.8L117.5 107.5ZM124.1 110.8L143.4 85.2L148.2 88.7L129.8 115ZM135 120.2L161.3 101.8L164.8 106.6L139.2 125.9ZM142.5 132.5L173.2 123.1L175.1 128.8L144.7 139.2Z" fill="#d3a34a"/>
+<path d="M73.8 99.7A32 32 0 1 0 126.2 99.7A27 27 0 1 1 73.8 99.7Z" fill="#dad8d0" stroke="#2a2d32" stroke-width="4"/>
+<path d="M46 154H154M60 164H140M76 174H124" fill="none" stroke="#dad8d0" stroke-width="6"/>
+</svg>

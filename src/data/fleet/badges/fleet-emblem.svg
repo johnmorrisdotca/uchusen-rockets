@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 244" width="200" height="244" role="img"><title>SPX fleet emblem</title>
+<circle cx="100" cy="100" r="98" fill="#2a2d32"/>
+<circle cx="100" cy="100" r="92" fill="#dad8d0"/>
+<circle cx="100" cy="100" r="84" fill="#2a2d32"/>
+<g transform="rotate(-24 100 100)" fill="none" stroke="#dad8d0" stroke-width="6"><path d="M28 100A72 24 0 0 1 172 100"/></g>
+<path d="M100 38Q104 96 162 100Q104 104 100 162Q96 104 38 100Q96 96 100 38Z" fill="#d17a3c" stroke="#2a2d32" stroke-width="4" stroke-linejoin="miter"/>
+<g transform="rotate(-24 100 100)" fill="none" stroke="#dad8d0" stroke-width="6"><path d="M28 100A72 24 0 0 0 172 100"/></g>
+<rect x="42" y="198" width="116" height="40" rx="7" fill="#2a2d32"/>
+<rect x="46" y="202" width="108" height="32" rx="4" fill="none" stroke="#dad8d0" stroke-width="2.5"/>
+<path d="M89.3 213.3L86 210L82 210L78.7 213.3L78.7 215.3L81.3 218L86.7 218L89.3 220.7L89.3 222.7L86 226L82 226L78.7 222.7M94.7 226L94.7 210L102 210L105.3 213.3L105.3 216L102 219.3L94.7 219.3M110.7 210L121.3 226M121.3 210L110.7 226" fill="none" stroke="#dad8d0" stroke-width="3.4" stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>
