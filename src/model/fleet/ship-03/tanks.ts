@@ -1,37 +1,57 @@
 // Fuel and water shielding, station 90 to 250 m: the narrow spine with four propellant barrels under it, two to a side, each 22 m across and 72 m long, in a water jacket, on cradles, with its own isolation valves and a
 // feed line to the spine so the four draw down symmetrically. The aft pair stands in the aft module, the fore pair in the fore module with the keyed dorsal collar's base and the ventral keel. A cutaway opens the
 // starboard barrel to show its baffles, its pumps and the propellant. Pure: no three.js and no DOM.
-import { beam, collar, cub, discZ, HULL_STACKS, layerShells, type Piece, place, rng, rod } from "./adapter.ts";
+import { collar, cub, discZ, HULL_STACKS, ibeam, layerShells, type Piece, pipeRun, place, rod, roundStrut } from "./adapter.ts";
 import { BARREL, COLLAR, SPINE as S, STATION } from "./dims.ts";
 import { catwalk, pipe } from "./hulls.ts";
-import { along, conduit, faceOf, hatch, rail, skin, SPINE } from "./faces.ts";
+import { faceOf, rail } from "./faces.ts";
 import { capsule, collarAt, OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
 
-/** The spine from y0 to y1: a box in dark metal with plating, ring frames every 8 m, conduit bundles along the dorsal and ventral faces, hatches, a handrail, and bolted flanges where it meets the next module. */
-export function spine(y0: number, y1: number, seed: string, detail = 1): Piece[] {
-  const box = { x: [-S.hx, S.hx], y: [y0, y1], z: [-S.hz, S.hz] } as const;
-  const out: Piece[] = [cub("hull-grey-dark", box.x, box.y, box.z, { only: undefined })];
-  const random = rng(`${seed}/spine`);
-  for (const [n, sign] of [["z", 1], ["z", -1], ["x", 1], ["x", -1]] as const) {
-    const own = faceOf(box, n, sign);
-    out.push(...skin(own, SPINE, seed, { detail, cell: [4, 3.5], raise: 0.2, blocks: 0.18 }));
-    const f = n === "z" ? along(own) : own;
-    const b = 0;
-    out.push(...conduit(f, b - 3, y0 + 1.5, y1 - 1.5, { count: 3, seed, stand: 0.42 }), ...conduit(f, b + 3, y0 + 1.5, y1 - 1.5, { count: 4, seed, stand: 0.42, materials: ["copper", "coolant", "lamp-red"] }));
-    for (let y = y0 + 6; y < y1 - 4; y += 12 + random() * 6) out.push(...hatch(f, y, b + (random() < 0.5 ? -6 : 6) * (n === "z" ? 0.45 : 0.3), 1.6));
-    if (sign === 1 && n === "z") out.push(...rail(f, -6.6, y0 + 2, y1 - 2), ...rail(f, 6.6, y0 + 2, y1 - 2));
+/** The spine from y0 to y1: an open truss, as the integrated truss of the ISS and the long spines of the Mars transfer vehicle studies are. Four round chords with ball joints at the nodes, a box frame of I-beams at every bay, round diagonals, and the services (conduit bundles, a valve skid, a ladder) strung inside it. */
+export function spine(y0: number, y1: number, detail = 1): Piece[] {
+  const out: Piece[] = [];
+  const X = S.hx;
+  const Z = S.hz;
+  const bay = 8;
+  const n = Math.round((y1 - y0) / bay);
+  const step = (y1 - y0) / n;
+  const corners: readonly (readonly [number, number])[] = [[-X, -Z], [X, -Z], [X, Z], [-X, Z]];
+  // the four chords, each a tube with a collar at every node
+  for (const [x, z] of corners) out.push(rod("hull-grey", [x, y0, z], [x, y1, z], 0.7, 12, { only: "mesh" }), rod("hull-grey-dark", [x, y0, z], [x, y1, z], 0.45, 12));
+  for (let k = 0; k <= n; k++) {
+    const y = y0 + k * step;
+    for (const [x, z] of corners) out.push({ kind: "lathe", material: "hull-white", at: [x, z], segs: 12, profile: [[0.001, y - 1.05], [0.9, y - 0.7], [1.15, y], [0.9, y + 0.7], [0.001, y + 1.05]], only: "mesh" });
+    // the frame at the node: four I-beams round the square, and a gusset at each corner
+    for (let i = 0; i < 4; i++) {
+      const [x0, z0] = corners[i];
+      const [x1, z1] = corners[(i + 1) % 4];
+      out.push(...ibeam("hull-grey", [x0, y, z0], [x1, y, z1], 0.9, 0.5, i % 2 ? [1, 0, 0] : [0, 0, 1]));
+    }
+    out.push(...ibeam("hull-grey-dark", [-X, y, 0], [X, y, 0], 0.6, 0.35, [0, 0, 1]));
   }
-  // ring frames: a box ring round the spine every 8 m, with bolts and a lamp
-  for (let y = y0 + 4; y < y1 - 2; y += 8) {
-    const t = 0.5;
-    out.push(cub("hull-grey", [-S.hx - t, S.hx + t], [y - 0.5, y + 0.5], [-S.hz - t, S.hz + t]), cub("hull-grey-dark", [-S.hx - t * 1.5, S.hx + t * 1.5], [y - 0.14, y + 0.14], [-S.hz - t * 1.5, S.hz + t * 1.5]));
-    for (const x of [-5, 0, 5]) out.push(cub("hull-grey-dark", [x - 0.18, x + 0.18], [y - 0.18, y + 0.18], [S.hz + t, S.hz + t + 0.22]), cub("lamp-amber", [x - 0.1, x + 0.1], [y - 0.1, y + 0.1], [-S.hz - t - 0.2, -S.hz - t]));
+  // the diagonals of each bay: a round strut across each of the four faces, alternating the way they lean
+  for (let k = 0; k < n; k++) {
+    const ya = y0 + k * step;
+    const yb = ya + step;
+    const lean = k % 2 === 0;
+    out.push(...roundStrut("hull-grey-dark", [-X, lean ? ya : yb, -Z], [-X, lean ? yb : ya, Z], 0.22), ...roundStrut("hull-grey-dark", [X, lean ? yb : ya, -Z], [X, lean ? ya : yb, Z], 0.22), ...roundStrut("hull-grey-dark", [-X, lean ? ya : yb, Z], [X, lean ? yb : ya, Z], 0.22), ...roundStrut("hull-grey-dark", [-X, lean ? yb : ya, -Z], [X, lean ? ya : yb, -Z], 0.22));
   }
+  // the services inside: two bundles of round pipes with flanges and clamps, a valve skid every other bay, a cable tray, a ladder
+  for (const [x, z, mats] of [[-3.5, -6, ["coolant", "copper"]], [3.5, -6, ["copper", "lamp-red"]], [-3.5, 6, ["coolant", "hull-white-worn"]], [3.5, 6, ["copper", "coolant"]]] as const) {
+    for (let i = 0; i < 2; i++) out.push(...pipeRun(mats[i], [[x + (i - 0.5) * 1.1, y0 + 0.5, z], [x + (i - 0.5) * 1.1, y1 - 0.5, z]], 0.34, { clampEvery: 4 / detail, bracket: [0, 0, z > 0 ? 1 : -1] }));
+  }
+  for (let k = 1; k < n; k += 2) {
+    const y = y0 + k * step;
+    out.push(cub("hull-grey-dark", [-2.2, 2.2], [y - 1.2, y + 1.2], [-1.2, 1.2]), cub("hull-orange", [-2.2, 2.2], [y - 1.2, y + 1.2], [1.2, 1.5]), rod("hull-yellow", [-1.4, y, 1.5], [1.4, y, 1.5], 0.18, 12), rod("lamp-amber", [1.6, y - 0.4, 1.5], [1.6, y - 0.4, 1.9], 0.14, 8));
+    for (const x of [-1.6, 0, 1.6]) out.push(rod("hull-grey", [x, y - 1.2, -1.2], [x, y - 1.2, -2.2], 0.12, 8), rod("hull-grey", [x, y + 1.2, -1.2], [x, y + 1.2, -2.2], 0.12, 8));
+  }
+  out.push(cub("hull-grey-dark", [-1, 1], [y0 + 1, y1 - 1], [-Z + 0.5, -Z + 0.7]), ...[...Array(Math.floor((y1 - y0 - 2) / (0.4 / detail))).keys()].map((k) => rod("hull-yellow", [-0.7, y0 + 1 + k * (0.4 / detail), -Z + 0.9], [0.7, y0 + 1 + k * (0.4 / detail), -Z + 0.9], 0.03, 6)));
+  out.push(...rail({ n: "z", sign: 1, at: Z + 0.6, a: [-X, X], b: [y0, y1], swap: true }, -6, y0 + 2, y1 - 2));
   return out;
 }
 
 /** One barrel: a capsule in a water jacket, with ring frames, orange cassette bands, vented fuel cassettes on the outer face, level gauges, valve blocks at each dome and the cradles that hold it to the spine. */
-function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean): Piece[] {
+function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean, detail: number): Piece[] {
   const x = side * BARREL.x;
   const z = BARREL.z;
   const r = BARREL.r;
@@ -40,7 +60,7 @@ function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean): Piece[] {
   const out: Piece[] = [];
   out.push(capsule("hull-white", x, z, r, y0, y1, { only: undefined, body: true, outline: true, ...(open ? { arc: OPEN_STARBOARD } : {}) }));
   // ring frames and water-jacket sleeves, every 6 m along the barrel
-  for (let y = straight[0] + 1; y < straight[1]; y += 6) {
+  for (let y = straight[0] + 1; y < straight[1]; y += 6 / detail) {
     out.push(ringAt("hull-grey-dark", x, z, r + 0.15, y, 0.42, open ? { arc: OPEN_STARBOARD } : {}));
     out.push(collarAt("fuel", x, z, r + 0.02, r + 0.3, y + 0.8, y + 2.4, open ? { arc: OPEN_STARBOARD } : {}));
   }
@@ -49,8 +69,9 @@ function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean): Piece[] {
   // vented fuel cassettes on the outer face (facing away from the spine): two columns of six boxes with vent slots
   const outward: 1 | -1 = side;
   for (const dz of [-3, 3]) {
-    for (let k = 0; k < 6; k++) {
-      const y = straight[0] + 4 + k * ((straight[1] - straight[0] - 8) / 5);
+    const cassettes = Math.max(2, Math.round(6 * detail));
+    for (let k = 0; k < cassettes; k++) {
+      const y = straight[0] + 4 + k * ((straight[1] - straight[0] - 8) / (cassettes - 1));
       const cx = x + outward * Math.sqrt(Math.max(0, r * r - dz * dz)) * (open ? 0 : 1);
       if (open) continue;
       out.push(cub("hull-orange-worn", outward === 1 ? [cx, cx + 0.8] : [cx - 0.8, cx], [y - 1.6, y + 1.6], [z + dz - 1.2, z + dz + 1.2]));
@@ -68,7 +89,7 @@ function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean): Piece[] {
   // cradles: three ring beams from the spine to the barrel, with a clevis at each end
   for (const y of [straight[0] + 2, (straight[0] + straight[1]) / 2, straight[1] - 2]) {
     const sx = side * (S.hx + 0.6);
-    out.push(beam("hull-grey", [sx, y, 0], [x - side * (r - 1), y, z + 3], 1.4, 1.1), beam("hull-grey", [sx, y, -S.hz + 1], [x - side * (r - 1), y, z - 3], 1.4, 1.1), cub("hull-yellow", side === 1 ? [x - r - 0.5, x - r + 0.8] : [x + r - 0.8, x + r + 0.5], [y - 0.9, y + 0.9], [z - 1.2, z + 1.2]));
+    out.push(...roundStrut("hull-grey-dark", [sx, y, 0], [x - side * (r - 1), y, z + 3], 0.5), ...roundStrut("hull-grey-dark", [sx, y, -S.hz + 1], [x - side * (r - 1), y, z - 3], 0.5), cub("hull-yellow", side === 1 ? [x - r - 0.5, x - r + 0.8] : [x + r - 0.8, x + r + 0.5], [y - 0.9, y + 0.9], [z - 1.2, z + 1.2]));
   }
   // the feed line: from the dome's valve block along the spine's flank to a manifold on the spine, with a crossfeed to the opposite barrel
   out.push(...pipe([x - side * 3, y0 + 1.6, z + 2.8], [side * S.hx, y0 + 1.6, -S.hz + 1], 0.42), ...pipe([x - side * 3, y1 - 1.6, z + 2.8], [side * S.hx, y1 - 1.6, -S.hz + 1], 0.42));
@@ -85,11 +106,11 @@ function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean): Piece[] {
 }
 
 /** A pair of barrels and the spine between them: `aft` or `fore`. */
-export function fuelSection(which: "aft" | "fore", cut: boolean, detail = 1, seed = which === "aft" ? "fuel-aft" : "fuel-fore"): Piece[] {
+export function fuelSection(which: "aft" | "fore", cut: boolean, detail = 1): Piece[] {
   const [Y0, Y1] = which === "aft" ? STATION.fuelAft : STATION.fuelFore;
   const span = which === "aft" ? BARREL.aft : BARREL.fore;
-  const out: Piece[] = [...spine(Y0, Y1, seed, detail)];
-  for (const side of [-1, 1] as const) out.push(...barrel(side, span[0], span[1], cut));
+  const out: Piece[] = [...spine(Y0, Y1, detail)];
+  for (const side of [-1, 1] as const) out.push(...barrel(side, span[0], span[1], cut, detail));
   out.push(...collar("L", Y0, -1), ...collar("L", Y1, 1));
   if (which === "aft") {
     // a header tank slung under the spine's end, with its own feed
@@ -108,7 +129,8 @@ export function fuelSection(which: "aft" | "fore", cut: boolean, detail = 1, see
     // the keel: a trapezoid pylon down from the spine with a ventral docking collar
     const k0 = 188;
     const k1 = 212;
-    out.push(beam("hull-grey-dark", [0, k0, -S.hz], [0, k0 + 4, -S.hz - 24], 14, 1.4), beam("hull-grey-dark", [0, k1, -S.hz], [0, k1 - 4, -S.hz - 24], 14, 1.4), cub("hull-grey-dark", [-7, 7], [k0 + 4, k1 - 4], [-S.hz - 30, -S.hz - 24], { only: undefined }));
+    for (const x of [-6.5, 6.5]) out.push(...roundStrut("hull-grey-dark", [x, k0, -S.hz], [x, k0 + 4, -S.hz - 24], 0.7), ...roundStrut("hull-grey-dark", [x, k1, -S.hz], [x, k1 - 4, -S.hz - 24], 0.7));
+    out.push( cub("hull-grey-dark", [-7, 7], [k0 + 4, k1 - 4], [-S.hz - 30, -S.hz - 24], { only: undefined }));
     out.push(discZ("hull-grey", 0, (k0 + k1) / 2, -S.hz - 31, -S.hz - 30, 8, 24), discZ("hull-orange", 0, (k0 + k1) / 2, -S.hz - 31.4, -S.hz - 31, 6.6, 24), discZ("black", 0, (k0 + k1) / 2, -S.hz - 31.6, -S.hz - 31.4, 4.2, 24));
     for (let k = 0; k < 12; k++) {
       const a = (Math.PI * 2 * k) / 12;

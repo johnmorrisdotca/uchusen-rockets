@@ -1,4 +1,4 @@
-// Ship 03, Waymark (SPX-ICV-03): the physics the bible prints, its parts in metres, the detail on every module, one mesh for one description, the named sections and decks, and how long it takes to build.
+// SPX-03 Waymark, Waymark (SPX-ICV-03): the physics the bible prints, its parts in metres, the detail on every module, one mesh for one description, the named sections and decks, and how long it takes to build.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
@@ -6,7 +6,7 @@ import { build } from "../src/build/index.ts";
 import { MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
-import { DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, SECTIONS, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
+import { ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, SECTIONS, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
 import { WAYMARK_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
@@ -171,4 +171,17 @@ test("the build budget: the first picture inside a second, the full detail insid
   console.log(`build, coarse ${coarse.toFixed(0)} ms, full ${full.toFixed(0)} ms`);
   assert.ok(coarse < 1000, `the coarse build took ${coarse.toFixed(0)} ms`);
   assert.ok(full < 3000, `the full build took ${full.toFixed(0)} ms`);
+});
+
+test("every module names the real hardware it descends from, and the pipes and struts are round", () => {
+  for (const part of parts()) {
+    const key = part.id.replace(/-cutaway$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod");
+    assert.ok(ANCESTORS[key], key);
+    assert.ok(part.note.includes("Descends from"), `${part.id}: ${part.note}`);
+  }
+  // round, not square: every rod in a part has at least a hexagon's sides, and the I-beams and ball joints are there
+  const pieces = parts().flatMap((part) => part.pieces());
+  const rods = pieces.filter((piece) => piece.kind === "plate" && piece.outline.length >= 5);
+  const lathes = pieces.filter((piece) => piece.kind === "lathe" && piece.segs >= 10);
+  assert.ok(rods.length > 1500 && lathes.length > 800, `${rods.length} round rods, ${lathes.length} round lathes`);
 });

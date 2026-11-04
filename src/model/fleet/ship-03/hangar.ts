@@ -1,7 +1,7 @@
 // The two hangar shoulders: starboard aft (104 to 204 m, the rescue bay with its gantry, maintenance racks, a pressure vestibule and a rescue cutter on its cradle) and port forward (222 to 318 m, the survey bay with its drones
 // on racks, an access bridge and emergency shutters). Each is a rectangular shoulder braced to the spine, its outer wall open to a bay door with orange shutter leaves. A cutaway opens the face towards the spine and, on the
 // starboard shoulder, the outer wall. Pure: no three.js and no DOM.
-import { beam, cub, HULL_STACKS, type Lathe, type Piece, prism, rng, rod } from "./adapter.ts";
+import { cub, HULL_STACKS, ibeam, type Lathe, type Piece, prism, rng, rod, roundStrut } from "./adapter.ts";
 import { HANGAR } from "./dims.ts";
 import { dressedFace, pipe, wallShells } from "./hulls.ts";
 import { along, conduit, type Face, faceOf, frame, hazard, ladder, lamp, on, rail, stencil, WHITE } from "./faces.ts";
@@ -50,9 +50,9 @@ function inside(side: Side, seed: string): Piece[] {
   for (let y = y0 + 6; y < y1 - 4; y += 6) for (const x of [x0 + 3, x1 - 3]) out.push(cub("lamp-blue", [x - 0.2, x + 0.2], [y - 0.2, y + 0.2], [z0 + 1.7, z0 + 1.8]));
   // the ceiling: two rails along the bay, a gantry bridge across them with a trolley, hook and cable
   const rz = z1 - 3.4;
-  for (const x of [x0 + 5, x1 - 5]) out.push(beam("hull-yellow", [x, y0 + 3, rz], [x, y1 - 3, rz], 0.7, 0.6), beam("hull-grey-dark", [x, y0 + 3, rz + 0.6], [x, y1 - 3, rz + 0.6], 0.3, 0.8));
+  for (const x of [x0 + 5, x1 - 5]) out.push(...ibeam("hull-yellow", [x, y0 + 3, rz], [x, y1 - 3, rz], 1.0, 0.6, [0, 0, 1]));
   const gy = cy + (side === "starboard" ? 6 : -4);
-  out.push(beam("hull-orange", [x0 + 5, gy, rz - 0.8], [x1 - 5, gy, rz - 0.8], 1.6, 1.4), beam("hull-grey-dark", [x0 + 5, gy - 1.4, rz - 0.3], [x1 - 5, gy - 1.4, rz - 0.3], 0.4, 0.4), cub("hull-yellow", [cx - 1.6, cx + 1.6], [gy - 1.6, gy + 1.6], [rz - 2.3, rz - 1.4]), rod("hull-grey-dark", [cx, gy, rz - 2.3], [cx, gy, z0 + 6], 0.08, 6), cub("hazard", [cx - 0.5, cx + 0.5], [gy - 0.5, gy + 0.5], [z0 + 5.4, z0 + 6.2]));
+  out.push(...ibeam("hull-orange", [x0 + 5, gy, rz - 0.8], [x1 - 5, gy, rz - 0.8], 1.6, 0.9, [0, 0, 1]), ...roundStrut("hull-grey-dark", [x0 + 5, gy - 1.4, rz - 0.3], [x1 - 5, gy - 1.4, rz - 0.3], 0.18), cub("hull-yellow", [cx - 1.6, cx + 1.6], [gy - 1.6, gy + 1.6], [rz - 2.3, rz - 1.4]), rod("hull-grey-dark", [cx, gy, rz - 2.3], [cx, gy, z0 + 6], 0.08, 6), cub("hazard", [cx - 0.5, cx + 0.5], [gy - 0.5, gy + 0.5], [z0 + 5.4, z0 + 6.2]));
   // ceiling lamps: a strip of eight, and the sprinkler pipe
   for (let k = 0; k < 8; k++) out.push(cub("lamp-amber", [cx - 0.4, cx + 0.4], [y0 + 6 + k * ((y1 - y0 - 12) / 7) - 0.8, y0 + 6 + k * ((y1 - y0 - 12) / 7) + 0.8], [z1 - 1.5, z1 - 1.4]));
   out.push(...pipe([x0 + 3, y0 + 2, z1 - 2], [x0 + 3, y1 - 2, z1 - 2], 0.22, "lamp-red"));
@@ -66,7 +66,7 @@ function inside(side: Side, seed: string): Piece[] {
   }
   // the pressure vestibule at the aft end: a box with two doors, a hazard frame and a status lamp
   out.push(cub("hull-white-worn", [cx - 6, cx + 6], [y0 + 1.5, y0 + 6], [z0 + 1.7, z0 + 9]), cub("hull-grey-dark", [cx - 3, cx + 3], [y0 + 6, y0 + 6.2], [z0 + 1.9, z0 + 7.6]), cub("hazard", [cx - 3.3, cx + 3.3], [y0 + 6.2, y0 + 6.35], [z0 + 7.6, z0 + 8.1]), cub("lamp-blue", [cx - 0.3, cx + 0.3], [y0 + 6.2, y0 + 6.4], [z0 + 8.3, z0 + 8.7]));
-  if (side === "starboard") out.push(...cutter(cx, cy - 10, z0 + 3.1, 32, 14), ...[-1, 1].flatMap((s) => [beam("hull-yellow", [cx + s * 7.4, cy - 24, z0 + 1.8], [cx + s * 7.4, cy + 4, z0 + 1.8], 0.8, 1.2), cub("hull-grey-dark", [cx + s * 7.4 - 0.9, cx + s * 7.4 + 0.9], [cy - 16, cy - 15], [z0 + 1.8, z0 + 3.2]), cub("hull-grey-dark", [cx + s * 7.4 - 0.9, cx + s * 7.4 + 0.9], [cy - 2, cy - 1], [z0 + 1.8, z0 + 3.2])]));
+  if (side === "starboard") out.push(...cutter(cx, cy - 10, z0 + 3.1, 32, 14), ...[-1, 1].flatMap((s) => [...ibeam("hull-yellow", [cx + s * 7.4, cy - 24, z0 + 1.8], [cx + s * 7.4, cy + 4, z0 + 1.8], 1.2, 0.8, [0, 0, 1]), cub("hull-grey-dark", [cx + s * 7.4 - 0.9, cx + s * 7.4 + 0.9], [cy - 16, cy - 15], [z0 + 1.8, z0 + 3.2]), cub("hull-grey-dark", [cx + s * 7.4 - 0.9, cx + s * 7.4 + 0.9], [cy - 2, cy - 1], [z0 + 1.8, z0 + 3.2])]));
   else
     for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) out.push(cub("hull-grey-dark", [cx - 7 + c * 8, cx - 1 + c * 8], [y0 + 10 + r * 22, y0 + 24 + r * 22], [z0 + 1.7, z0 + 2.1]), ...drone(cx - 4 + c * 8, y0 + 17 + r * 22, z0 + 2.1), ...drone(cx - 4 + c * 8, y0 + 12 + r * 22, z0 + 8));
   return out;
@@ -131,7 +131,7 @@ export function hangar(side: Side, cut: boolean, detail = 1, seed = `hangar-${si
   // the inner face: facing the spine, with the braces that tie the shoulder to it
   const innerFace: Face = { n: "x", sign: (side === "starboard" ? -1 : 1) as 1 | -1, at: side === "starboard" ? x0 : x1, a: [y0, y1], b: [z0, z1] };
   if (!(cut && side === "port")) out.push(...dressedFace(innerFace, { ...o, density: 0.25 }));
-  for (let y = y0 + 10; y < y1 - 6; y += 22) for (const z of [z0 + 4, z1 - 4]) out.push(beam("hull-grey", [side === "starboard" ? x0 : x1, y, z], [sgn * 8.6, y + (side === "starboard" ? -8 : 8), z * 0.3], 1.6, 1.2), cub("hull-yellow", sgn === 1 ? [x0 - 0.5, x0 + 0.3] : [x1 - 0.3, x1 + 0.5], [y - 0.7, y + 0.7], [z - 0.7, z + 0.7]));
+  for (let y = y0 + 10; y < y1 - 6; y += 22) for (const z of [z0 + 4, z1 - 4]) out.push(...roundStrut("hull-grey-dark", [side === "starboard" ? x0 : x1, y, z], [sgn * 8.6, y + (side === "starboard" ? -8 : 8), z * 0.3], 0.55), cub("hull-yellow", sgn === 1 ? [x0 - 0.5, x0 + 0.3] : [x1 - 0.3, x1 + 0.5], [y - 0.7, y + 0.7], [z - 0.7, z + 0.7]));
   // the inside, always: it is what shows through the bay door
   out.push(...inside(side, seed));
   return out;

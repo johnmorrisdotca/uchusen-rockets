@@ -1,7 +1,7 @@
 // Two radiator banks, one dorsal and one ventral, four leaves each, every leaf 25 by 60 m and two-sided: 24,000 square metres in all. Stowed, the four leaves fold flat into a box on rails along the habitation hull and
 // stay inside the envelope. Deployed, a mast carries the bank out clear of the hangar approach corridors and the exhaust cones and the leaves fan out to either side. Sustained main burn needs every leaf out; stowed
 // radiators allow short transients only. Pure: no three.js and no DOM.
-import { beam, cub, type Piece, rng, rod } from "./adapter.ts";
+import { cub, type Piece, rng, rod, roundStrut } from "./adapter.ts";
 import { RADIATOR } from "./dims.ts";
 import { lamp, WHITE } from "./faces.ts";
 import { dressedFace } from "./hulls.ts";
@@ -26,7 +26,7 @@ function leaf(x0: number, x1: number, zc: number, seed: string): Piece[] {
   for (const x of [lo, hi]) out.push(cub("hull-grey-dark", [x - 0.18, x + 0.18], [Y0, Y1], [zc - 0.25, zc + 0.25]));
   for (let y = Y0; y <= Y1 + 0.01; y += 10) out.push(cub("hull-grey-dark", [lo, hi], [y - 0.18, y + 0.18], [zc - 0.25, zc + 0.25]));
   // pipes along the leaf, on both faces, every 2 m, with a hot panel at the tip
-  for (let x = lo + 1; x < hi; x += 2) for (const side of [-1, 1]) out.push(cub("copper", [x - 0.06, x + 0.06], [Y0 + 0.6, Y1 - 6], [zc + side * 0.07, zc + side * 0.14]));
+  for (let x = lo + 1; x < hi; x += 2) for (const side of [-1, 1]) out.push(rod("copper", [x, Y0 + 0.6, zc + side * 0.12], [x, Y1 - 6, zc + side * 0.12], 0.07, 12));
   out.push(cub("radiator-hot", [lo + 0.3, hi - 0.3], [Y1 - 6, Y1 - 0.4], [zc - 0.1, zc + 0.1]));
   // a header pipe at the hinge end and tell-tale lamps
   const hinge = dx > 0 ? lo : hi;
@@ -70,7 +70,7 @@ function deployed(bank: Bank, seed: string): Piece[] {
   const seat = SEAT[bank];
   for (const y of [Y0 + 6, Y1 - 6]) {
     out.push(cub("hull-grey", [-1, 1], [y - 1, y + 1], [Math.min(seat, plane), Math.max(seat, plane)]), cub("hull-grey-dark", [-1.6, 1.6], [y - 1.6, y + 1.6], [seat, seat + s * 1]), cub("coolant", [-0.3, 0.3], [y + 1, y + 1.6], [Math.min(seat, plane), Math.max(seat, plane)]));
-    for (let z = seat + s * 4; s * z < s * plane; z += s * 6) out.push(beam("hull-grey-dark", [-1, y - 1, z], [1, y + 1, z + s * 6], 0.28, 0.28), beam("hull-grey-dark", [1, y - 1, z], [-1, y + 1, z + s * 6], 0.28, 0.28));
+    for (let z = seat + s * 4; s * z < s * plane; z += s * 6) out.push(...roundStrut("hull-grey-dark", [-1, y - 1, z], [1, y + 1, z + s * 6], 0.16), ...roundStrut("hull-grey-dark", [1, y - 1, z], [-1, y + 1, z + s * 6], 0.16));
   }
   out.push(cub("hull-grey", [-LEAF.wide / 2, LEAF.wide / 2], [Y0 + 2, Y1 - 2], [plane - 0.9, plane + 0.9]), cub("coolant", [-1.2, 1.2], [Y0, Y1], [plane - 1.4, plane + 1.4]));
   // the leaves: inner pair hinged at the boom's ends, outer pair at the inner pair's edges, a hinge block and a strut at each
@@ -79,8 +79,8 @@ function deployed(bank: Bank, seed: string): Piece[] {
     const b = side * (LEAF.wide / 2 + LEAF.wide);
     const c = side * (LEAF.wide / 2 + 2 * LEAF.wide);
     out.push(...leaf(a, b, plane, `${seed}i${side}`), ...leaf(b, c, plane, `${seed}o${side}`));
-    for (const x of [a, b]) for (const y of [Y0 + 2, Y1 - 2]) out.push(cub("hull-grey-dark", [x - 0.9, x + 0.9], [y - 1.2, y + 1.2], [plane - 0.7, plane + 0.7]), rod("hull-grey", [x, y, plane - 0.7], [x - side * 3, y, plane - s * 5], 0.2, 6));
-    out.push(...[Y0 + 10, CY, Y1 - 10].map((y) => beam("hull-grey-dark", [a, y, plane - 0.2], [c, y, plane - 0.2], 0.3, 0.3)));
+    for (const x of [a, b]) for (const y of [Y0 + 2, Y1 - 2]) out.push(cub("hull-grey-dark", [x - 0.9, x + 0.9], [y - 1.2, y + 1.2], [plane - 0.7, plane + 0.7]), ...roundStrut("hull-grey", [x, y, plane - 0.7], [x - side * 3, y, plane - s * 5], 0.2));
+    out.push(...[Y0 + 10, CY, Y1 - 10].flatMap((y) => roundStrut("hull-grey-dark", [a, y, plane - 0.2], [c, y, plane - 0.2], 0.16)));
   }
   return out;
 }
