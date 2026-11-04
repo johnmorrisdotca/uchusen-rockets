@@ -20,6 +20,8 @@ export interface Dress {
   /** A scale for counts: 1 is full detail. */
   detail?: number;
   raise?: number;
+  /** Quilted blanket pillows in big cells, instead of small panels. */
+  blanket?: boolean;
   /** A slot whose centre this says no to is left plain. */
   avoid?: (a: number, b: number) => boolean;
 }
@@ -87,7 +89,7 @@ export function dressedFace(face: Face, o: Dress): Piece[] {
   for (let i = 0; i <= na; i++) out.push(on(base, face.a[0] + i * wa, (face.b[0] + face.b[1]) / 2, 0.22, face.b[1] - face.b[0], 0, lift * 2.6, "hull-grey"));
   for (let j = 0; j <= nb; j++) out.push(on(base, (face.a[0] + face.a[1]) / 2, face.b[0] + j * wb, face.a[1] - face.a[0], 0.22, 0, lift * 2.2, "hull-grey-dark"));
   const inSlot = (a: number, b: number) => taken.some(([ta, tb]) => Math.abs(a - ta) < wa * 0.5 && Math.abs(b - tb) < wb * 0.5);
-  out.push(...skin(face, o.scheme, o.seed, { detail, cell: o.cell ?? [Math.max(2.5, wa / 2), Math.max(2, wb / 2)], raise: lift, skip: (a, b) => inSlot(a, b) || Boolean(o.avoid?.(a, b)) }));
+  out.push(...skin(face, o.scheme, o.seed, { detail, blanket: o.blanket, cell: o.cell ?? (o.blanket ? [Math.max(4, wa * 0.7), Math.max(3.2, wb * 0.7)] : [Math.max(2.5, wa / 2), Math.max(2, wb / 2)]), raise: lift, skip: (a, b) => inSlot(a, b) || Boolean(o.avoid?.(a, b)) }));
   return out;
 }
 
@@ -129,8 +131,8 @@ export function wallShells(stack: HullStack, o: { axis: "x" | "z"; sign: 1 | -1;
 export function catwalk(y0: number, y1: number, x: number, z: number, width = 1.8): Piece[] {
   const out: Piece[] = [cub("deck", [x - width / 2, x + width / 2], [y0, y1], [z - 0.08, z + 0.08], { only: "mesh" })];
   for (const s of [-1, 1]) {
-    out.push(rod("hull-yellow", [x + (s * width) / 2, y0, z + 1.05], [x + (s * width) / 2, y1, z + 1.05], 0.04, 6));
-    for (let y = y0; y <= y1 + 0.01; y += 2.4) out.push(rod("hull-grey-dark", [x + (s * width) / 2, y, z], [x + (s * width) / 2, y, z + 1.05], 0.035, 5));
+    out.push(rod("hull-yellow", [x + (s * width) / 2, y0, z + 1.05], [x + (s * width) / 2, y1, z + 1.05], 0.05, 12));
+    for (let y = y0; y <= y1 + 0.01; y += 2.4) out.push(rod("hull-grey-dark", [x + (s * width) / 2, y, z], [x + (s * width) / 2, y, z + 1.05], 0.04, 10));
   }
   for (let y = y0 + 0.4; y < y1; y += 0.5) out.push(cub("hull-grey-dark", [x - width / 2, x + width / 2], [y, y + 0.06], [z - 0.14, z - 0.08]));
   return out;

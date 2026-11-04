@@ -43,7 +43,7 @@ export const COLLAR = { y: [174, 234], z0: SPINE.hz, zTop: 34, r: 14 } as const;
 export const DRIVE = { nozzleX: 22, exitR: 16, throatR: 4.6, chamberR: 8.5, exitY: 2, throatY: 20, chamberY: 36, hx: 45, hz: 23, vernier: { x: 41, z: 17, r: 2.4, length: 8 } } as const;
 
 /** The command citadel: half widths across X and Z, and the chamfer of its corners. */
-export const CITADEL = { hx: 21, hz: 16, chamfer: 5 } as const;
+export const CITADEL = { hx: 21, hz: 16, chamfer: 7 } as const;
 
 /** The bow stack: three staggered shield layers, each narrower than the one behind. */
 export const BOW_LAYERS = [

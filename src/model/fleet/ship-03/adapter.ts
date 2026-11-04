@@ -1,6 +1,6 @@
 // The one door between Miyamoto and the fleet kit: everything SPX-03 Miyamoto's parts take from the kit comes through here, and the three shapes the kit has no use for (an axis-aligned box on any axis, a prism up the spine and a planar quad)
 // are made here. When the kit changes, this is the only file of the ship to touch. Pure: no three.js and no DOM.
-import { rod } from "../detail.ts";
+import { iBeam as kitIBeam, pipeRun as kitPipeRun, strut as kitStrut } from "../detail.ts";
 import type { MaterialName } from "../../materials.ts";
 import type { Frame, Lathe, Piece, Plate, Vec3 } from "../../pieces.ts";
 
@@ -8,6 +8,7 @@ export { annulus, antenna, beam, box, disc, horn, hoop, lamps, LIVERY, place, po
 export type { Lamp, Pose, Rng } from "../detail.ts";
 export { collar, COLLARS } from "../collars.ts";
 export { contextOf, drum } from "../hull.ts";
+export { BUILD_BUDGET_MS, isCoarse } from "../levels.ts";
 export { HULL_STACKS, layerShells, stackDepth } from "../layers.ts";
 export type { HullLayer, HullStack } from "../layers.ts";
 export { FLEET_PALETTE } from "../palette.ts";
@@ -68,64 +69,25 @@ export function discX(material: MaterialName, y: number, z: number, x0: number, 
   return { kind: "plate", material, frame: { o: [(x0 + x1) / 2, y, z], u: [0, 1, 0], v: [0, 0, 1], w: [1, 0, 0] }, outline, thickness: Math.abs(x1 - x0), plain: true, only: "mesh", ...extra };
 }
 
-const sub3 = (p: Vec3, q: Vec3): Vec3 => [p[0] - q[0], p[1] - q[1], p[2] - q[2]];
-const len3 = (p: Vec3): number => Math.hypot(p[0], p[1], p[2]);
-const unit3 = (p: Vec3): Vec3 => {
-  const l = len3(p) || 1;
-  return [p[0] / l, p[1] / l, p[2] / l];
+/** An I-beam from a to b, `h` deep (along `up`) and `w` wide: the kit's section. A brace is this, a channel or a round strut; never a plain square bar. */
+export const ibeam = (material: MaterialName, a: Vec3, b: Vec3, h: number, w: number, up: Vec3 = [0, 0, 1]): Plate[] => {
+  const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const l = Math.hypot(d[0], d[1], d[2]) || 1;
+  const k = (up[0] * d[0] + up[1] * d[1] + up[2] * d[2]) / l;
+  // the kit wants an up that is not along the beam: take the part of the hint across it, or any other axis
+  const across: Vec3 = [up[0] - (d[0] / l) * k, up[1] - (d[1] / l) * k, up[2] - (d[2] / l) * k];
+  const n = Math.hypot(...across);
+  const u: Vec3 = n > 1e-6 ? [across[0] / n, across[1] / n, across[2] / n] : Math.abs(d[0] / l) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+  return kitIBeam(material, a, b, u, h, w);
 };
-const cross3 = (p: Vec3, q: Vec3): Vec3 => [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
-const mix3 = (p: Vec3, q: Vec3, t: number): Vec3 => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
 
-/** An I-beam from a to b: two flanges and a web, standing `h` deep (along `up`, a hint of which way is up) and `w` wide, with end plates. A brace is this, a channel or a round strut; never a plain square bar. */
-export function ibeam(material: MaterialName, a: Vec3, b: Vec3, h: number, w: number, up: Vec3 = [0, 0, 1], extra: Extra = {}): Plate[] {
-  const along = sub3(b, a);
-  const L = len3(along);
-  const u = unit3(along);
-  const k = up[0] * u[0] + up[1] * u[1] + up[2] * u[2];
-  let n = unit3([up[0] - u[0] * k, up[1] - u[1] * k, up[2] - u[2] * k]);
-  if (len3([up[0] - u[0] * k, up[1] - u[1] * k, up[2] - u[2] * k]) < 1e-6) n = unit3(cross3(u, Math.abs(u[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0]));
-  const s = unit3(cross3(u, n));
-  const t = Math.max(0.04, h * 0.12);
-  const o = mix3(a, b, 0.5);
-  const at = (c: Vec3, dn: number): Vec3 => [c[0] + n[0] * dn, c[1] + n[1] * dn, c[2] + n[2] * dn];
-  const flange = (dn: number): Plate => ({ kind: "plate", material, frame: { o: at(o, dn), u, v: s, w: n }, outline: [[-L / 2, -w / 2], [L / 2, -w / 2], [L / 2, w / 2], [-L / 2, w / 2]], thickness: t, plain: true, only: "mesh", ...extra });
-  const web: Plate = { kind: "plate", material, frame: { o, u, v: n, w: s }, outline: [[-L / 2, -(h - 2 * t) / 2], [L / 2, -(h - 2 * t) / 2], [L / 2, (h - 2 * t) / 2], [-L / 2, (h - 2 * t) / 2]], thickness: t * 0.9, plain: true, only: "mesh", ...extra };
-  const plate = (c: Vec3): Plate => ({ kind: "plate", material, frame: { o: c, u: s, v: n, w: u }, outline: [[-w * 0.7, -h * 0.7], [w * 0.7, -h * 0.7], [w * 0.7, h * 0.7], [-w * 0.7, h * 0.7]], thickness: t * 0.8, plain: true, only: "mesh", ...extra });
-  return [flange(h / 2 - t / 2), flange(-h / 2 + t / 2), web, plate(a), plate(b)];
-}
+/** A pipe run through a path of points, with the kit's flanges, clamps and round bends. `clampEvery` is the spacing of the clamp brackets and `bracket` the way their legs go. */
+export const pipeRun = (material: MaterialName, points: readonly Vec3[], r: number, o: { sides?: number; clampEvery?: number; bracket?: Vec3 } = {}): Piece[] =>
+  kitPipeRun(points, r, material, { ...(o.sides ? { sides: o.sides } : {}), ...(o.clampEvery ? { bracketEvery: o.clampEvery } : {}), ...(o.bracket ? { support: o.bracket } : {}) });
 
-/** A pipe run through a path of points: round tube between them (twelve sides), a ball joint at every bend, a flange pair at each end and a clamp ring with a bracket every few metres. */
-export function pipeRun(material: MaterialName, points: readonly Vec3[], r: number, o: { sides?: number; clampEvery?: number; bracket?: Vec3 } = {}): Piece[] {
-  const sides = o.sides ?? 12;
-  const out: Piece[] = [];
-  const every = o.clampEvery ?? 4;
-  for (let i = 0; i + 1 < points.length; i++) {
-    const p = points[i];
-    const q = points[i + 1];
-    const d = unit3(sub3(q, p));
-    out.push(rod(material, p, q, r, sides, { only: "mesh" }));
-    for (const f of i === 0 ? [0.15, 0.55] : []) out.push(rod("hull-grey", mix3(p, q, 0), [p[0] + d[0] * f * 0.4, p[1] + d[1] * f * 0.4, p[2] + d[2] * f * 0.4], r * 1.7, sides));
-    if (i + 2 === points.length) out.push(rod("hull-grey", [q[0] - d[0] * 0.3, q[1] - d[1] * 0.3, q[2] - d[2] * 0.3], q, r * 1.7, sides));
-    const L = len3(sub3(q, p));
-    for (let s = every / 2; s < L - 0.2; s += every) {
-      const c = mix3(p, q, s / L);
-      out.push(rod("hull-grey-dark", [c[0] - d[0] * 0.14, c[1] - d[1] * 0.14, c[2] - d[2] * 0.14], [c[0] + d[0] * 0.14, c[1] + d[1] * 0.14, c[2] + d[2] * 0.14], r * 1.4, sides));
-      if (o.bracket) out.push(rod("hull-grey-dark", c, [c[0] + o.bracket[0], c[1] + o.bracket[1], c[2] + o.bracket[2]], r * 0.35, 6));
-    }
-    if (i > 0) out.push({ kind: "lathe", material, at: [p[0], p[2]], segs: sides, profile: [[0.001, p[1] - r * 1.25], [r * 1.0, p[1] - r * 0.75], [r * 1.25, p[1]], [r * 1.0, p[1] + r * 0.75], [0.001, p[1] + r * 1.25]], only: "mesh" });
-  }
-  return out;
-}
-
-/** A round strut from a to b in the manner of a landing leg's: a dark tube with a collar near each end and a white ball joint on each end, so the joint and the cap show. */
+/** A round strut as the lunar module's legs are: the kit's tube with its collars and caps, and a white ball joint on each end. */
 export function roundStrut(material: MaterialName, a: Vec3, b: Vec3, r: number, o: { joint?: MaterialName; sides?: number } = {}): Piece[] {
   const sides = o.sides ?? 12;
-  const d = unit3(sub3(b, a));
-  const L = len3(sub3(b, a));
-  const along = (p: Vec3, t: number): Vec3 => [p[0] + d[0] * t, p[1] + d[1] * t, p[2] + d[2] * t];
   const ball = (p: Vec3): Piece => ({ kind: "lathe", material: o.joint ?? "hull-white", at: [p[0], p[2]], segs: sides, profile: [[0.001, p[1] - r * 1.5], [r * 1.1, p[1] - r * 1.05], [r * 1.5, p[1]], [r * 1.1, p[1] + r * 1.05], [0.001, p[1] + r * 1.5]], only: "mesh" });
-  const out: Piece[] = [rod(material, a, b, r, sides, { only: "mesh" }), ball(a), ball(b)];
-  if (L > r * 10) for (const t of [r * 2.4, L - r * 2.4]) out.push(rod("hull-grey", along(a, t - r * 0.5), along(a, t + r * 0.5), r * 1.3, sides));
-  return out;
+  return [...kitStrut(material, a, b, r, sides), ball(a), ball(b)];
 }
