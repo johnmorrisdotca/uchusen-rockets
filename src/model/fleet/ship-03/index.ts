@@ -67,7 +67,7 @@ const shoulder = (side: "starboard" | "port", cut: boolean): MiyamotoPart => {
     place: { x: h.centre, z: 0 },
     height: h.y[1] - h.y[0],
     diameter: h.x[1] - h.x[0],
-    note: `${side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule and a cutter, opening to starboard." : "The forward shoulder: a survey bay with drones on racks, an access bridge and emergency shutters, opening to port."} Descends from ${ANCESTORS[`hangar-${side}`]}.`,
+    note: `${side === "starboard" ? "The aft shoulder: a rescue bay with a gantry, racks, a pressure vestibule and an ATC (Auxiliary Transfer Craft) cutter, opening to starboard." : "The forward shoulder: a survey bay with drones on racks, an access bridge and emergency shutters, opening to port."} Descends from ${ANCESTORS[`hangar-${side}`]}.`,
     pieces: (o) => local(hangar(side, cut, o?.detail ?? 1), h.centre, h.y[0], 0),
   };
 };

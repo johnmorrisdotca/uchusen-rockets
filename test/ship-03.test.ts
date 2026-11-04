@@ -1,4 +1,4 @@
-// SPX-03 Miyamoto (SPX-ICV-03): the physics the bible prints, its parts in metres, the detail on every module, one mesh for one description, the named sections and decks, and how long it takes to build.
+// ISV Miyamoto (SPX-03): the physics the bible prints, its parts in metres, the detail on every module, one mesh for one description, the named sections and decks, and how long it takes to build.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
@@ -6,7 +6,7 @@ import { build } from "../src/build/index.ts";
 import { MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
-import { ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, SECTIONS, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
+import { ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, TITLE_BLOCK, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
@@ -49,13 +49,16 @@ test("the engine cards agree: thrust is mass flow times exhaust speed, and the m
 });
 
 test("the identity and the specification: the SPX designation, the Japanese name with its reading, the numbers", () => {
-  assert.equal(IDENTITY.designation, "SPX-ICV-03");
+  assert.equal(IDENTITY.designation, "SPX-03");
+  assert.equal(IDENTITY.class, "ICV");
+  assert.equal(OPERATOR, "SPX");
+  assert.equal(TITLE_BLOCK, "ISV Miyamoto, SPX-03 · ICV class · SPX · DCD ×2 · KAZE core v4");
   assert.equal(IDENTITY.maker, "SPX");
   assert.equal(IDENTITY.japanese, "宮本");
   assert.equal(IDENTITY.meaning, "at the foot of the shrine");
   assert.deepEqual([ENVELOPE.length, ENVELOPE.beam, ENVELOPE.height], [380, 118, 74]);
   const lines = specification().map((line) => `${line.name}: ${line.value}`).join("\n");
-  for (const text of ["SPX-ICV-03", "380 m", "118 m", "105,000 t", "20.42 years aboard", "21.03 years", "0.04 g sustained", "24,000 m2"]) assert.ok(lines.includes(text), text);
+  for (const text of ["ISV Miyamoto, SPX-03", "KAZE core v4", "DCD", "380 m", "118 m", "105,000 t", "20.42 years aboard", "21.03 years", "0.04 g sustained", "24,000 m2"]) assert.ok(lines.includes(text), text);
   assert.ok(HISTORY.service.includes("2459") && IDENTITY.firstFlight === 2456 && STATUS === "STATUS: PLANNED · FIRST FLIGHT 2456");
   assert.ok(!/in service|serving|was commissioned/i.test(Object.values(HISTORY).join(" ")), "the history reads as a plan");
   assert.equal(ROCKETS["fleet-ship-03"].madeBy.value, "SPX");
