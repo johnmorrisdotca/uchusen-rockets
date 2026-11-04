@@ -1,4 +1,4 @@
-// SPX-207 加美鳴 (かみなり) Kaminari, the Interstellar Heavy Transport, as data. Its status stays "fictional" in the data (the .glb exemption keys on it) and is shown nowhere; every figure names the design bible (docs/fleet/ship-02.md) as its source and
+// ISV 加美鳴 (かみなり) Kaminari, SPX-207, the Interstellar Heavy Transport, as data. Its status stays "fictional" in the data (the .glb exemption keys on it) and is shown nowhere; every figure names the design bible (docs/fleet/ship-02.md) as its source and
 // none is a measurement of anything real. Sizes are the model's own; the numbers of the voyage are worked out in src/model/fleet/ship-02/journey.ts.
 import { type Figure, type Inspector, type Variant } from "./types.ts";
 import { LENGTH } from "../model/fleet/ship-02/dims.ts";
@@ -25,9 +25,13 @@ const INSPECTOR: Inspector = {
   sections: SECTIONS.map((x) => ({ id: x.id, name: x.name, job: x.job, slot: x.slot, at: x.at, inside: Boolean(x.inside) })),
   places: Object.fromEntries(SHIP_02_SLOTS.map((slot) => [slot.slot, slot.at])),
   spec: [
-    ["Name", "加美鳴 (かみなり) Kaminari, \"thunder\""],
+    ["Name", "ISV 加美鳴 (かみなり) Kaminari, \"thunder\""],
     ["Role", "大型輸送船, large transport ship"],
-    ["Designation", "SPX-207"],
+    ["Designation", "SPX-207 · IHT class (Interstellar Heavy Transport)"],
+    ["Operator", "SPX"],
+    ["Drive", "FTD, Fusion Torch Drive, 8 nozzles"],
+    ["Computer", "KAZE core v4"],
+    ["Small craft", "ATC (Auxiliary Transfer Craft)"],
     ["Status", "Planned: first flight 2520"],
     ["Length", `${SPEC.length.toLocaleString("en-US")} m`],
     ["Beam (radiators out)", `${SPEC.beam} m (${SPEC.beamRadiatorsOut} m)`],
@@ -63,7 +67,7 @@ const INSPECTOR: Inspector = {
 const STANDARD: Variant = {
     id: "fleet-02",
     rocket: "fleet-02",
-    name: "SPX-207 加美鳴 (かみなり) Kaminari, Heavy Transport",
+    name: "ISV 加美鳴 (かみなり) Kaminari, SPX-207",
     status: "fictional",
     firstWord: "Planned first flight",
     firstFlight: { value: "2520", source: S, note: "Planned first flight." },
@@ -87,9 +91,9 @@ const STANDARD: Variant = {
   };
 
 const NAMES: Readonly<Record<string, [string, string]>> = {
-  "fleet-02-survey": ["SPX-207 加美鳴 (かみなり) Kaminari, survey configuration", "Survey pod on the dorsal mount, laboratory pod underneath, relay masts on the wing tips: the same ship for mapping a system."],
-  "fleet-02-tanker": ["SPX-207 加美鳴 (かみなり) Kaminari, tanker configuration", "Tanker pod on the dorsal mount, cargo pod underneath, a tug on each wing tip: the same ship for fuelling a station."],
-  "fleet-02-rescue": ["SPX-207 加美鳴 (かみなり) Kaminari, rescue configuration", "Settlement pod as a refuge on the dorsal mount, rescue pod underneath, a tug on each wing tip: the same ship for an evacuation."],
+  "fleet-02-survey": ["ISV 加美鳴 (かみなり) Kaminari, SPX-207, survey configuration", "Survey pod on the dorsal mount, laboratory pod underneath, relay masts on the wing tips: the same ship for mapping a system."],
+  "fleet-02-tanker": ["ISV 加美鳴 (かみなり) Kaminari, SPX-207, tanker configuration", "Tanker pod on the dorsal mount, cargo pod underneath, a tug on each wing tip: the same ship for fuelling a station."],
+  "fleet-02-rescue": ["ISV 加美鳴 (かみなり) Kaminari, SPX-207, rescue configuration", "Settlement pod as a refuge on the dorsal mount, rescue pod underneath, a tug on each wing tip: the same ship for an evacuation."],
 };
 
 const STANDARD_PARTS = Object.fromEntries(SHIP_02_SLOTS.map((s) => [s.slot, `fleet-02-fleet-02-${s.slot}`]));

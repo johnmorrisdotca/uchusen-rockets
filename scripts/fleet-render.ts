@@ -1,4 +1,4 @@
-// Renders and drawing sheets of SPX-207 加美鳴 (かみなり) Kaminari from the real 3D model, in one headless browser drawing in software (SwiftShader), never on the graphics card. One browser at a time; no port is opened.
+// Renders and drawing sheets of ISV 加美鳴 (かみなり) Kaminari, SPX-207 from the real 3D model, in one headless browser drawing in software (SwiftShader), never on the graphics card. One browser at a time; no port is opened.
 //
 //   node scripts/fleet-render.ts <folder> [name,name,...]
 //
@@ -49,7 +49,7 @@ const RAW: Record<string, Raw> = {
   module_habitat: { spec: { w: 1800, h: 1200, camera: "persp", target: [0, 1625, 0], from: [0.5, -0.9, 0.5], up: Z, fov: 30, dist: 900, shadow: 520, slots: ["spine", "farm", "habitat-a", "habitat-b", "command"] } },
   close_cargo: { spec: { w: 1800, h: 1200, camera: "persp", target: [76, 860, 44], from: [0.8, -0.35, 0.5], up: Z, fov: 36, dist: 24, shadow: 34, slots: ["cargo-1"] } },
   close_drive: { spec: { w: 1800, h: 1200, camera: "persp", target: [-100, 112, 60.5], from: [0.12, -0.5, 1], up: [0, 1, 0], fov: 38, dist: 15, shadow: 22, slots: ["drive"] } },
-  // a pipe run and strut of SPX-207 加美鳴 (かみなり) Kaminari beside the code-drawn Apollo lunar module descent stage, at a similar scale on screen
+  // a pipe run and strut of ISV 加美鳴 (かみなり) Kaminari, SPX-207 beside the code-drawn Apollo lunar module descent stage, at a similar scale on screen
   pipes_beside_lunar_module: { spec: { w: 1800, h: 1200, camera: "persp", target: [-96, 116, 64], from: [0.1, -0.55, 1], up: [0, 1, 0], fov: 38, dist: 22, shadow: 30, slots: ["drive"], extra: [{ id: "lunar-module-lunar-module-descent", at: [-92, 119, 61] }] } },
   close_layers: { spec: { w: 1800, h: 1200, camera: "persp", target: [0, 1610, -180], from: [1, 0, 0.1], up: Z, fov: 32, dist: 34, cut: 0, shadow: 40, slots: ["habitat-a"] } },
   beside_starship: { spec: { w: 2000, h: 1200, camera: "persp", target: [60, 880, 30], from: [1, -0.05, 0.05], up: Z, fov: 36, dist: 300, shadow: 260, slots: ["spine", "cargo-1", "cargo-2"], starship: [150, 860, 0] } },
@@ -106,7 +106,9 @@ const img = (name: string) => `data:image/png;base64,${readFileSync(join(out, `$
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
 const specRows: [string, string][] = [
-  ["Designation", "SPX-207"],
+  ["Designation", "SPX-207 · IHT class"],
+  ["Operator", "SPX"],
+  ["Computer", "KAZE core v4"],
   ["Length", `${SPEC.length.toLocaleString("en-US")} m`],
   ["Beam (radiators out)", `${SPEC.beam} m (${SPEC.beamRadiatorsOut} m)`],
   ["Height", `${SPEC.height} m`],
@@ -116,7 +118,7 @@ const specRows: [string, string][] = [
   ["Passengers", SPEC.passengers.toLocaleString("en-US")],
   ["Cargo", `${t(SPEC.cargoT)}, ${SPEC.containers} containers`],
   ["Propellant", `${t(SPEC.propellantT)} of ${t(SPEC.tankCapacityT)}`],
-  ["Main drive", `8 fusion torch nozzles, ${(SPEC.mainThrustN / 1e9).toFixed(2)} GN`],
+  ["Main drive", `FTD ×8 (Fusion Torch Drive), ${(SPEC.mainThrustN / 1e9).toFixed(2)} GN`],
   ["Manoeuvring", `4 vernier clusters (12 nozzles), ${SPEC.maneuverThrustN / 1e6} MN; 32 attitude thrusters`],
   ["Acceleration", `${SPEC.maxG} g`],
   ["Cruise / top speed", `${SPEC.cruiseC.toFixed(3)} c / ${SPEC.topC} c (shield rating)`],
@@ -130,7 +132,7 @@ const legendItems: [string, string][] = [
 ];
 const legend = `<div class="legend"><b>SYMBOLS</b>${legendItems.map(([c, n]) => `<div><i style="background:${c}"></i>${esc(n)}</div>`).join("")}<div><i class="leader"></i>Leader to part</div><div><i class="num">1</i>Numbered sub-part</div></div>`;
 const notes = `<div class="notes">${(["propulsion", "construction", "history", "equipment"] as const).map((k) => `<div><b>${k === "propulsion" ? "PROPULSION AND LIMITS" : k.toUpperCase()}</b>${NOTES[k].map((p) => `<p>${esc(p)}</p>`).join("")}</div>`).join("")}</div>`;
-const titleBlock = (sheet: string, scale: string) => `<table class="title"><tr><td colspan="2" class="big">SPX DRAWING OFFICE</td></tr><tr><th>Ship</th><td>SPX-207 <ruby>加美鳴<rt>かみなり</rt></ruby> KAMINARI</td></tr><tr><th>Role</th><td>大型輸送船 · LARGE TRANSPORT</td></tr><tr><th>Designation</th><td>SPX-207</td></tr><tr><th>Sheet</th><td>${esc(sheet)}</td></tr><tr><th>Scale</th><td>${esc(scale)}</td></tr><tr><th>Revision</th><td>A · 2026-11-04</td></tr><tr><th>Status</th><td>PLANNED · FIRST FLIGHT 2520</td></tr></table>`;
+const titleBlock = (sheet: string, scale: string) => `<table class="title"><tr><td colspan="2" class="big">SPX FLEET DRAWING OFFICE</td></tr><tr><th>Ship</th><td>ISV <ruby>加美鳴<rt>かみなり</rt></ruby> KAMINARI</td></tr><tr><th>Role</th><td>大型輸送船 · IHT class, Interstellar Heavy Transport</td></tr><tr><th>Operator</th><td>SPX</td></tr><tr><th>Drive</th><td>FTD ×8 (Fusion Torch Drive)</td></tr><tr><th>Computer</th><td>KAZE core v4</td></tr><tr><th>Small craft</th><td>ATC (Auxiliary Transfer Craft)</td></tr><tr><th>Designation</th><td>SPX-207</td></tr><tr><th>Sheet</th><td>${esc(sheet)}</td></tr><tr><th>Scale</th><td>${esc(scale)}</td></tr><tr><th>Revision</th><td>A · 2026-11-04</td></tr><tr><th>Status</th><td>PLANNED · FIRST FLIGHT 2520</td></tr></table>`;
 const CSS = `body{margin:0;background:#0b111b;color:#d5dde8;${FONT}font-size:15px}.sheet{position:relative;padding:28px;background:#0b111b}h1{margin:0 0 6px;font-size:30px;letter-spacing:.08em;font-weight:600}h2{margin:18px 0 6px;font-size:18px;letter-spacing:.1em;color:#f2c14e}table{border-collapse:collapse}.spec th,.spec td,.title th,.title td{border:1px solid #3a4a5e;padding:3px 8px;text-align:left;vertical-align:top}.spec th,.title th{color:#9fb2c8;font-weight:500;white-space:nowrap}.spec caption{text-align:left;color:#f2c14e;padding:4px 0;letter-spacing:.1em}.title .big{font-size:18px;letter-spacing:.12em;background:#16202f}.legend div{margin:3px 0;display:flex;align-items:center;gap:8px}.legend i{width:22px;height:12px;border:1px solid #607085;display:inline-block}.legend i.leader{height:0;border-top:2px solid #f2c14e;border-bottom:0;border-left:0;border-right:0;margin-top:2px}.legend i.num{width:20px;height:20px;border-radius:10px;background:#f2c14e;color:#0b111b;text-align:center;line-height:20px;font-style:normal;font-weight:700;font-size:13px}.legend b,.notes b{display:block;color:#f2c14e;letter-spacing:.1em;margin-bottom:6px}.notes{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}.notes p{margin:0 0 8px;font-size:13px;line-height:1.45}.row{display:flex;gap:30px;align-items:flex-start;margin-top:24px}svg text{${FONT}}`;
 
 function place(items: { id: string; label: string; x: number; y: number }[], W: number, topH: number, bottomH: number, imgY: number, imgH: number) {
@@ -189,40 +191,40 @@ const labelOfSection = (id: string) => SECTIONS.find((s) => s.id === id)?.name ?
 async function sheets(page: Page): Promise<void> {
   if (want("sheet_side") && marksOf.side) {
     const W = 3000;
-    const html = `<div class="sheet" style="width:${W}px"><h1>SPX-207 KAMINARI · INTERSTELLAR HEAVY TRANSPORT · GENERAL ARRANGEMENT, SIDE (STARBOARD)</h1>${annotated("side", W, 700, marksOf.side, labelOfSection)}${ruler(W, 910, PX, 1820)}<div class="row"><div>${specBlock}</div><div>${legend}</div><div style="flex:1">${notes}</div><div>${titleBlock("1 of 8 · exterior with callouts", `${PX} px per metre; 1,820 m length ruler above`)}</div></div></div>`;
+    const html = `<div class="sheet" style="width:${W}px"><h1>ISV KAMINARI · SPX-207 · INTERSTELLAR HEAVY TRANSPORT · GENERAL ARRANGEMENT, SIDE (STARBOARD)</h1>${annotated("side", W, 700, marksOf.side, labelOfSection)}${ruler(W, 910, PX, 1820)}<div class="row"><div>${specBlock}</div><div>${legend}</div><div style="flex:1">${notes}</div><div>${titleBlock("1 of 8 · exterior with callouts", `${PX} px per metre; 1,820 m length ruler above`)}</div></div></div>`;
     await sheetPage(page, "sheet_side", html, W + 56);
   }
   if (want("sheet_cutaway") && marksOf.cutaway_side) {
     const W = 3000;
-    const html = `<div class="sheet" style="width:${W}px"><h1>SPX-207 KAMINARI · CUTAWAY, NAMED ROOMS AND SYSTEMS</h1>${annotated("cutaway_side", W, 700, marksOf.cutaway_side, labelOfSection)}${ruler(W, 910, PX, 1820)}<div class="row"><div>${specBlock}</div><div style="flex:1"><h2>DECKS, BOW TO STERN</h2><table class="spec">${DECKS.map((d) => `<tr><th>${d.n}</th><td>${esc(d.name)}</td><td>${d.from}–${d.to} m</td></tr>`).join("")}</table></div><div style="flex:1"><h2>WALL OF THE CREW RINGS, OUTSIDE TO INSIDE</h2><table class="spec">${HULL_STACK_RING.map((l) => `<tr><th>${l.n}</th><td>${esc(l.name)}</td><td>${l.thicknessM} m</td><td>${esc(l.job)}</td></tr>`).join("")}</table><h2>WALL OF THE TANKS</h2><table class="spec">${HULL_STACK_TANK.map((l) => `<tr><th>${l.n}</th><td>${esc(l.name)}</td><td>${l.thicknessM} m</td></tr>`).join("")}</table></div><div>${titleBlock("2 of 8 · cutaway", `${PX} px per metre`)}</div></div></div>`;
+    const html = `<div class="sheet" style="width:${W}px"><h1>ISV KAMINARI · SPX-207 · CUTAWAY, NAMED ROOMS AND SYSTEMS</h1>${annotated("cutaway_side", W, 700, marksOf.cutaway_side, labelOfSection)}${ruler(W, 910, PX, 1820)}<div class="row"><div>${specBlock}</div><div style="flex:1"><h2>DECKS, BOW TO STERN</h2><table class="spec">${DECKS.map((d) => `<tr><th>${d.n}</th><td>${esc(d.name)}</td><td>${d.from}–${d.to} m</td></tr>`).join("")}</table></div><div style="flex:1"><h2>WALL OF THE CREW RINGS, OUTSIDE TO INSIDE</h2><table class="spec">${HULL_STACK_RING.map((l) => `<tr><th>${l.n}</th><td>${esc(l.name)}</td><td>${l.thicknessM} m</td><td>${esc(l.job)}</td></tr>`).join("")}</table><h2>WALL OF THE TANKS</h2><table class="spec">${HULL_STACK_TANK.map((l) => `<tr><th>${l.n}</th><td>${esc(l.name)}</td><td>${l.thicknessM} m</td></tr>`).join("")}</table></div><div>${titleBlock("2 of 8 · cutaway", `${PX} px per metre`)}</div></div></div>`;
     await sheetPage(page, "sheet_cutaway", html, W + 56);
   }
   for (const [name, raw, title, n] of [["sheet_tq", "three_quarter", "EXTERIOR, THREE-QUARTER VIEW, WITH CALLOUTS", "7 of 8 · exterior three-quarter"], ["sheet_cut_tq", "cutaway_three_quarter", "CUTAWAY, THREE-QUARTER VIEW, NAMED ROOMS", "8 of 8 · cutaway three-quarter"]] as const) {
     if (!want(name) || !marksOf[raw]) continue;
     const W = 2600;
-    const html = `<div class="sheet" style="width:${W}px"><h1>SPX-207 KAMINARI · ${title}</h1>${annotated(raw, W, 1400, marksOf[raw], labelOfSection)}<div class="row"><div>${specBlock}</div><div>${legend}</div><div>${titleBlock(n, "perspective, not to scale")}</div></div></div>`;
+    const html = `<div class="sheet" style="width:${W}px"><h1>ISV KAMINARI · SPX-207 · ${title}</h1>${annotated(raw, W, 1400, marksOf[raw], labelOfSection)}<div class="row"><div>${specBlock}</div><div>${legend}</div><div>${titleBlock(n, "perspective, not to scale")}</div></div></div>`;
     await sheetPage(page, name, html, W + 56);
   }
   if (want("sheet_ga") && marksOf.top) {
     const W = 3000;
     const front = `<div style="width:1400px;height:700px;position:relative"><img src="${img("front")}"/></div>`;
     const rear = `<div style="width:1400px;height:700px;position:relative"><img src="${img("rear")}"/></div>`;
-    const html = `<div class="sheet" style="width:${W}px"><h1>SPX-207 KAMINARI · GENERAL ARRANGEMENT: TOP, SIDE, FRONT AND REAR AT ONE SCALE (${PX} PX PER METRE)</h1><h2>TOP (PORT AT THE TOP)</h2><img src="${img("top")}"/>${ruler(W, 910, PX, 1820)}<h2>SIDE (STARBOARD)</h2><img src="${img("side")}"/>${ruler(W, 910, PX, 1820)}<div class="row"><div><h2>FRONT (FROM THE BOW)</h2>${front}</div><div><h2>REAR (FROM THE STERN)</h2>${rear}</div><div>${specBlock}</div><div>${titleBlock("3 of 8 · general arrangement", `${PX} px per metre; 100 m = ${Math.round(PX * 100)} px`)}</div></div></div>`;
+    const html = `<div class="sheet" style="width:${W}px"><h1>ISV KAMINARI · SPX-207 · GENERAL ARRANGEMENT: TOP, SIDE, FRONT AND REAR AT ONE SCALE (${PX} PX PER METRE)</h1><h2>TOP (PORT AT THE TOP)</h2><img src="${img("top")}"/>${ruler(W, 910, PX, 1820)}<h2>SIDE (STARBOARD)</h2><img src="${img("side")}"/>${ruler(W, 910, PX, 1820)}<div class="row"><div><h2>FRONT (FROM THE BOW)</h2>${front}</div><div><h2>REAR (FROM THE STERN)</h2>${rear}</div><div>${specBlock}</div><div>${titleBlock("3 of 8 · general arrangement", `${PX} px per metre; 100 m = ${Math.round(PX * 100)} px`)}</div></div></div>`;
     await sheetPage(page, "sheet_ga", html, W + 56);
   }
   if (want("sheet_exploded") && marksOf.exploded) {
     const W = 3400;
     const labels = Object.fromEntries(SHIP_02_SLOTS.map((s) => [s.slot, s.name]));
-    const html = `<div class="sheet" style="width:${W}px"><h1>SPX-207 KAMINARI · EXPLODED ASSEMBLY: EVERY MODULE ON ITS MOUNTING AXIS (YELLOW MARKS ARE THE MOUNTING POINTS)</h1>${annotated("exploded", W, 1000, marksOf.exploded, (id) => labels[id] ?? id)}<div class="row"><div>${legend}</div><div>${titleBlock("4 of 8 · exploded assembly", "90 m added between modules; the spine is not exploded")}</div></div></div>`;
+    const html = `<div class="sheet" style="width:${W}px"><h1>ISV KAMINARI · SPX-207 · EXPLODED ASSEMBLY: EVERY MODULE ON ITS MOUNTING AXIS (YELLOW MARKS ARE THE MOUNTING POINTS)</h1>${annotated("exploded", W, 1000, marksOf.exploded, (id) => labels[id] ?? id)}<div class="row"><div>${legend}</div><div>${titleBlock("4 of 8 · exploded assembly", "90 m added between modules; the spine is not exploded")}</div></div></div>`;
     await sheetPage(page, "sheet_exploded", html, W + 56);
   }
   if (want("sheet_pods") && marksOf.pod_survey) {
-    const html = `<div class="sheet" style="width:2900px"><h1>SPX-207 KAMINARI · SWAPPABLE MISSION POD: TWO VARIANTS ON ONE MOUNT</h1><div class="row"><div><h2>SURVEY POD</h2><img src="${img("pod_survey")}"/><p>Three laboratory decks, sample hangar, sensor masts, two dishes and a telescope barrel.</p></div><div><h2>SETTLEMENT POD</h2><img src="${img("pod_settlement")}"/><p>Two decks of round windows, a glazed greenhouse band and two docking ports.</p></div><div>${titleBlock("5 of 8 · mission pod", "same mount, same three clamp arms, same 12 m collar")}</div></div></div>`;
+    const html = `<div class="sheet" style="width:2900px"><h1>ISV KAMINARI · SPX-207 · SWAPPABLE MISSION POD: TWO VARIANTS ON ONE MOUNT</h1><div class="row"><div><h2>SURVEY POD</h2><img src="${img("pod_survey")}"/><p>Three laboratory decks, sample hangar, sensor masts, two dishes and a telescope barrel.</p></div><div><h2>SETTLEMENT POD</h2><img src="${img("pod_settlement")}"/><p>Two decks of round windows, a glazed greenhouse band and two docking ports.</p></div><div>${titleBlock("5 of 8 · mission pod", "same mount, same three clamp arms, same 12 m collar")}</div></div></div>`;
     await sheetPage(page, "sheet_pods", html, 2956);
   }
   if (want("sheet_engines") && marksOf.engine_main) {
     const card = (c: (typeof ENGINE_CARDS)[number], image: string) => `<div style="width:1130px"><h2>${esc(c.name.toUpperCase())}</h2><img src="${img(image)}"/><table class="spec"><tr><th>Count</th><td>${c.count}</td></tr><tr><th>Thrust, each</th><td>${(c.thrustEachN / 1e6).toLocaleString("en-US", { maximumFractionDigits: 0 })} MN (${(c.thrustEachN * c.count / 1e6).toLocaleString("en-US", { maximumFractionDigits: 0 })} MN together)</td></tr><tr><th>Specific impulse</th><td>${Math.round(c.isp).toLocaleString("en-US")} s (exhaust ${c.exhaust < 0.001 ? `${(c.exhaust * 299792.458).toFixed(0)} km/s` : `${c.exhaust.toFixed(2)} c`})</td></tr><tr><th>Fuel</th><td>${esc(c.fuel)}</td></tr><tr><th>Fuel capacity</th><td>${t(c.fuelCapacityT)}</td></tr><tr><th>Operation</th><td>${esc(c.operation)}</td></tr><tr><th>Numbered parts</th><td>${c.parts.map((p, i) => `${i + 1}. ${esc(p)}`).join("<br>")}</td></tr></table><p>${esc(c.note)}</p></div>`;
-    const html = `<div class="sheet" style="width:2480px"><h1>SPX-207 KAMINARI · PROPULSION CARDS</h1><div class="row">${card(ENGINE_CARDS[0], "engine_main")}${card(ENGINE_CARDS[1], "engine_vernier")}<div>${titleBlock("6 of 8 · propulsion", "single engines at their own scale")}</div></div></div>`;
+    const html = `<div class="sheet" style="width:2480px"><h1>ISV KAMINARI · SPX-207 · PROPULSION CARDS</h1><div class="row">${card(ENGINE_CARDS[0], "engine_main")}${card(ENGINE_CARDS[1], "engine_vernier")}<div>${titleBlock("6 of 8 · propulsion", "single engines at their own scale")}</div></div></div>`;
     await sheetPage(page, "sheet_engines", html, 2536);
   }
   if (want("sheet_layers") && marksOf.close_layers) {

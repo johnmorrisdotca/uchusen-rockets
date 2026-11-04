@@ -1,14 +1,18 @@
-# SPX-207 加美鳴 (かみなり) Kaminari, the Interstellar Heavy Transport
+# ISV 加美鳴 (かみなり) Kaminari, SPX-207
 
 **加美鳴（かみなり） · Kaminari · "thunder"**. Role: 大型輸送船 (large transport ship). In the programme's words: "Large transport ship. It carries heavy cargo in a giant hull, and its engines' low growl echoes like distant thunder."
 
-SPX-207 加美鳴 (かみなり) Kaminari is a planned ship of the SPX fleet: the dates, figures and technologies here are the programme's planned figures. It is an original design, built in code from tables of metres (`src/model/fleet/ship-02/`).
+ISV 加美鳴 (かみなり) Kaminari, SPX-207 is a planned ship of the SPX fleet: the dates, figures and technologies here are the programme's planned figures. It is an original design, built in code from tables of metres (`src/model/fleet/ship-02/`).
 
 | | |
 |---|---|
-| Designation | SPX-207 (Interstellar Heavy Transport) |
+| Designation | SPX-207 |
+| Operator | SPX |
+| Class | IHT, Interstellar Heavy Transport |
+| Main drive | FTD, Fusion Torch Drive |
+| Computer | KAZE core v4 (Kinetic Autonomous Zonal Executive) |
+| Small craft | ATC (Auxiliary Transfer Craft) |
 | Maker | SPX (no logo or wordmark on the hull, only the designation text) |
-| Class | Settlement and logistics carrier |
 | Design started / keel to be laid / first flight | 2507 / 2511 at the orbital yard / 2520 (planned) |
 | Status | PLANNED · first flight 2520 |
 
@@ -29,7 +33,7 @@ SPX-207 加美鳴 (かみなり) Kaminari is a planned ship of the SPX fleet: th
 | Propellant | 6.35 million t loaded, of 7.29 million t tank capacity (four tanks, 80 m by 440 m) |
 | Endurance | 80 years sealed (closed water and air loops, farms, 60 years of stores) |
 
-Fleet scale: Waymark (SPX-03) is 380 m by 118 m by 74 m and 105,000 t, so SPX-207 加美鳴 (かみなり) Kaminari is about 4.8 times as long and 80 times as heavy. It is about six times the length of a 300 m cruiser of any franchise.
+Fleet scale: Waymark (SPX-03) is 380 m by 118 m by 74 m and 105,000 t, so ISV 加美鳴 (かみなり) Kaminari, SPX-207 is about 4.8 times as long and 80 times as heavy. It is about six times the length of a 300 m cruiser of any franchise.
 
 ## The programme
 

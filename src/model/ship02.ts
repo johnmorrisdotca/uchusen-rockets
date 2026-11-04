@@ -1,4 +1,4 @@
-// SPX-207 加美鳴 (かみなり) Kaminari, the fictional Heavy Transport, as parts for the registry: the same way Saturn V, the Shuttle and SLS are. Every module is a part standing on the ship's axis (y from the tail), placed rather than
+// ISV 加美鳴 (かみなり) Kaminari, SPX-207, the fictional Heavy Transport, as parts for the registry: the same way Saturn V, the Shuttle and SLS are. Every module is a part standing on the ship's axis (y from the tail), placed rather than
 // stacked, so together, apart and one module alone all work. The geometry is in src/model/fleet/ship-02/.
 import { SHIP_02_SLOTS, SHIP_02_VARIANT_PARTS } from "./fleet/ship-02/index.ts";
 import { coarsen, detail } from "./detail.ts";

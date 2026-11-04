@@ -1,4 +1,4 @@
-// SPX-207 加美鳴 (かみなり) Kaminari's numbers as one table, worked from the masses and the voyage arithmetic so that nothing is typed in twice: the spec block, the propulsion cards, the hull-layer stacks, the deck summary and the system
+// ISV 加美鳴 (かみなり) Kaminari, SPX-207's numbers as one table, worked from the masses and the voyage arithmetic so that nothing is typed in twice: the spec block, the propulsion cards, the hull-layer stacks, the deck summary and the system
 // insets. All fictional. The tests check every figure here against the physics.
 import { DRIVE, DRY_T, LENGTH, MASS_T, STATION } from "./dims.ts";
 import { C, G0, jetPowerW, ship02Budget, thrustN } from "./journey.ts";
@@ -70,7 +70,7 @@ const mainIsp = (DESIGN.exhaust * C) / G0;
 export const ENGINE_CARDS: readonly EngineCard[] = [
   {
     id: "fleet-02-nozzle-main",
-    name: "Fusion torch nozzle (main drive)",
+    name: "FTD nozzle, main drive (Fusion Torch Drive)",
     count: DRIVE.nozzles,
     thrustEachN: BUDGET.startThrustN / DRIVE.nozzles,
     isp: mainIsp,
