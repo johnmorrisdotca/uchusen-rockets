@@ -2,7 +2,7 @@
 // one function (`journey`), the table and the cards are derived from it so they cannot disagree, and `test/ship-03.test.ts` pins each figure the bible prints. Pure: no three.js and no DOM.
 import type { EngineCard, HullStack, Section, SectionRole, Vec3 } from "./adapter.ts";
 import { designation, FLEET_MAKER, HULL_STACKS } from "./adapter.ts";
-import { ENVELOPE, HANGAR_BOX, MASS, MASS_ARIAKE, RADIATOR_AREA } from "./dims.ts";
+import { ARRAY, ARRAY_AREA, ENVELOPE, HANGAR_BOX, MASS, MASS_ARIAKE, RADIATOR_AREA } from "./dims.ts";
 
 /** Speed of light, standard gravity, a light year and a Julian year, in SI units. */
 export const C = 299_792_458;
@@ -135,6 +135,8 @@ export function asBuilt(ship: keyof typeof SHIPS = "miyamoto"): { mass: { inert:
   return { mass, hangars: HANGAR_BOX.count[ship], beam: ENVELOPE.beam, acceleration: ship === "ariake" ? (DRIVE.acceleration * MASS.full) / MASS_ARIAKE.full : DRIVE.acceleration };
 }
 
+const ARRAY_POWER_AU = (ARRAY_AREA * 0.89 * 0.3 * 1361) / 1e6;
+
 export function specification(ship: keyof typeof SHIPS = "miyamoto"): Line[] {
   const built = asBuilt(ship);
   const g = built.acceleration;
@@ -157,7 +159,8 @@ export function specification(ship: keyof typeof SHIPS = "miyamoto"): Line[] {
     { name: "Manoeuvring", value: "4 plasma verniers, 24 attitude thrusters", note: "trim, docking and the flip; they cannot brake the ship" },
     { name: "Ship computer", value: IDENTITY.computer, note: "KAZE: Kinetic Autonomous Zonal Executive; its core sits in the communications core of the citadel" },
     { name: "Small craft", value: ship === "ariake" ? "ATC (Auxiliary Transfer Craft) berths in all four bays" : "ATC (Auxiliary Transfer Craft) berths in both bays", note: ship === "ariake" ? "two rescue cradles aft (one a side) and six survey cradles fore (three a side); the craft are designed separately" : "the starboard bay is the rescue cradle, the port bay three survey cradles; the craft are designed separately" },
-    { name: "Power", value: "2 auxiliary fusion plants of 120 MW(e), 1 fission emergency unit of 12 MW(e)" },
+    { name: "Power", value: "2 auxiliary fusion plants of 120 MW(e), 1 fission emergency unit of 12 MW(e)", note: "fusion is the main power" },
+    { name: "Solar array", value: ship === "ariake" ? "none" : `${n(ARRAY_AREA)} m2 of gold cells in ${ARRAY.bays} bays: ${ARRAY_POWER_AU.toFixed(1)} MW(e) at one astronomical unit from a Sun-like star`, note: ship === "ariake" ? "Miyamoto carries it; Ariake's side holds a fourth hangar box" : "for time near a star only; it falls with the square of the distance, and it is under 1% of the fusion plants' 240 MW(e)" },
     { name: "Heat rejection", value: `${n(RADIATOR_AREA)} m2 of radiator in eight leaves`, note: "0.8 GW effective" },
     { name: "Acceleration", value: `${gText} g sustained`, note: ship === "ariake" ? `the same drive as Miyamoto's (${n(j.thrust / 1e6, 1)} MN) on ${n(built.mass.full - MASS.full)} t more ship; ${DRIVE.briefPeakG} g peaks not used for journey planning` : `${DRIVE.briefPeakG} g for up to ${DRIVE.briefPeakSeconds} s with the thermal buffer charged; not used for journey planning` },
     { name: "Peak speed", value: `${(j.peak * 100).toFixed(2)}% of c on the ${ROUTES.benchmark} light-year route`, note: `shield limit ${DRIVE.shieldLimitOfC} c` },
@@ -349,3 +352,28 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   array: "the ISS's solar array wings and iROSA's roll-out blankets: cells on a flexible blanket, a lattice mast, a beta gimbal at each bay and a rotary joint at each end of the beam that turns the wing to face the star",
   radiators: "the ISS's radiator panels on booms, large thin plates set away from the hull, and the folding radiators of the Mars transfer vehicle studies",
 };
+
+/** Miyamoto's solar array in watts: gold cells of 30% efficiency, 89% of the blanket covered, in the 1,361 W per square metre of sunlight at one astronomical unit from a Sun-like star. It is for time near a star; far out it falls with the square of the distance, and the fusion plants are the ship's power. */
+export const ARRAY_POWER = { cellEfficiency: 0.3, packing: 0.89, solarConstant: 1361, area: ARRAY_AREA, bays: ARRAY.bays, auMW: (ARRAY_AREA * 0.89 * 0.3 * 1361) / 1e6, fusionMW: 2 * 120 } as const;
+
+/** What the table of the class says, as facts the data can be checked against: each ship's default pod, how many side boxes she has, and her signature features. */
+export const CLASS_FACTS = {
+  miyamoto: { defaultPod: "relay", sideBoxes: 2, features: ["solar-array", "rounded-solar-nose"] },
+  ariake: { defaultPod: "survey", sideBoxes: 4, features: ["hex-engine-end", "four-boxes"] },
+} as const;
+
+/** The table of how the sister ships differ, the one place its words are written. The bible, the class sheet, the README and the viewer's spec tab all read it, and a test holds the data to it. */
+export const CLASS_TABLE: readonly { row: string; miyamoto: string; ariake: string }[] = [
+  { row: "Role", miyamoto: "flagship and command", ariake: "survey and command" },
+  { row: "Accent", miyamoto: "orange", ariake: "dawn-gold band and pinstripes" },
+  { row: "Signature", miyamoto: `a long gold solar array along the starboard side, ${ARRAY.bays} bays over ${ARRAY.y[1] - ARRAY.y[0]} m of her ${ENVELOPE.length} m`, ariake: "near-black hexagonal panelling on the engine end" },
+  { row: "Nose", miyamoto: "more rounded, clad in solar cells", ariake: "standard" },
+  { row: "Side box modules", miyamoto: "the staggered pair (starboard aft, port fore)", ariake: "all four (port and starboard, fore and aft): double the capacity" },
+  { row: "Default pod", miyamoto: "relay (the relief pod on request)", ariake: "survey" },
+  { row: "Refits", miyamoto: "none extra", ariake: "an extra sensor mast, a second solarium" },
+  { row: "Interior theme", miyamoto: "its own: blue and white", ariake: "warm wood and dawn-gold" },
+  { row: "Shared", miyamoto: `hull, drive with shadow-shield collar, decks, length ${ENVELOPE.length} m`, ariake: "same" },
+];
+
+/** The table as Markdown, for the bible and the README. */
+export const classTableMarkdown = (): string => ["| | ISV Miyamoto, SPX-452 | ISV Ariake, SPX-186 |", "|---|---|---|", ...CLASS_TABLE.map((r) => `| ${r.row} | ${r.miyamoto} | ${r.ariake} |`)].join("\n");

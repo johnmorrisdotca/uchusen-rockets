@@ -16,7 +16,7 @@ const LAYERS = [
 ] as const;
 const DOME = { y: Y0 + 24, r: 11.5, rise: 6 } as const;
 /** The cells: gold, a little varied, the bright of the field coils and the foil of the kapton. */
-const CELLS: readonly (readonly [number, MaterialName])[] = [[0.5, "coil"], [0.85, "gold"], [1, "kapton"]];
+const CELLS: readonly (readonly [number, MaterialName])[] = [[0.2, "coil"], [0.7, "gold"], [1, "kapton"]];
 
 /** The dome's height above its base at a radius. */
 const domeY = (r: number): number => DOME.y + DOME.rise * Math.sqrt(Math.max(0, 1 - (r / DOME.r) ** 2));

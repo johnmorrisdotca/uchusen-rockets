@@ -6,7 +6,8 @@ import { build } from "../src/build/index.ts";
 import { BUILD_BUDGET_MS, MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
-import { asBuilt, fuelLimitedLy, ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, SHIPS, TITLE_BLOCK, titleBlockOf, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
+import { readFileSync } from "node:fs";
+import { ARRAY_POWER, asBuilt, CLASS_FACTS, CLASS_TABLE, classTableMarkdown, fuelLimitedLy, ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, SHIPS, TITLE_BLOCK, titleBlockOf, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
@@ -282,4 +283,55 @@ test("Ariake fills all four hangar positions, each with the door and racks of Mi
   assert.equal(lines["Hangar boxes"], "4");
   assert.equal(lines.Cargo, "5,600 t");
   assert.equal(lines.Beam, "118 m");
+});
+
+test("the class table, the variant records, the docs and the viewer agree: pod, side boxes, signature features, the sister link", () => {
+  const all = parts();
+  const slotsOf = (variant: string) => MIYAMOTO_VARIANT_SLOTS[variant];
+  const piecesOf = (id: string) => all.find((part) => part.id === id)!.pieces({ detail: 0.6 });
+  const cells = (pieces: Piece[]) => pieces.filter((piece) => piece.kind === "plate" && ["coil", "gold", "kapton"].includes((piece as { material: string }).material) && piece.thickness === 0.12).length;
+  const hexes = (pieces: Piece[]) => pieces.filter((piece) => piece.kind === "plate" && piece.outline.length === 6 && piece.thickness === 0.2).length;
+  for (const [ship, facts] of Object.entries(CLASS_FACTS) as [keyof typeof CLASS_FACTS, (typeof CLASS_FACTS)[keyof typeof CLASS_FACTS]][]) {
+    const slots = slotsOf(ship);
+    // the default pod and the side boxes, from the variant record, against the table
+    assert.equal(slots.pod, `pod-${facts.defaultPod}`, `${ship}'s default pod`);
+    assert.equal(SHIPS[ship].pod, facts.defaultPod);
+    assert.equal(Object.keys(slots).filter((slot) => slot.startsWith("hangar-")).length, facts.sideBoxes, `${ship}'s side boxes`);
+    assert.equal(asBuilt(ship).hangars, facts.sideBoxes);
+    const row = (name: string) => CLASS_TABLE.find((r) => r.row === name)![ship];
+    assert.ok(row("Default pod").startsWith(facts.defaultPod), row("Default pod"));
+    assert.ok(row("Side box modules").includes(facts.sideBoxes === 4 ? "all four" : "staggered pair"), row("Side box modules"));
+    // the signature features: present on the ship that has them, and only there
+    const has = (feature: string) => (facts.features as readonly string[]).includes(feature);
+    assert.equal("array" in slots, has("solar-array"), `${ship}: the solar array`);
+    assert.equal(cells(piecesOf(slots.bow)) > 300, has("rounded-solar-nose"), `${ship}: the solar-cell nose`);
+    assert.equal(hexes(piecesOf(slots.drive)) > 1000, has("hex-engine-end"), `${ship}: the hex engine end`);
+    assert.equal(Object.keys(slots).filter((slot) => slot.startsWith("hangar-")).length === 4, has("four-boxes"), `${ship}: four boxes`);
+    assert.equal(row("Signature").includes("solar array"), has("solar-array"));
+    assert.equal(row("Signature").includes("hexagonal"), has("hex-engine-end"));
+    assert.equal(row("Nose").includes("rounded"), has("rounded-solar-nose"));
+  }
+  // the array has two states and its power is on the spec; Ariake's spec says none
+  assert.ok("array-stowed" in Object.fromEntries(all.map((part) => [part.id, 1])) && "array-deployed" in Object.fromEntries(all.map((part) => [part.id, 1])));
+  assert.equal(slotsOf("miyamoto-array").array, "array-deployed");
+  assert.equal(slotsOf("miyamoto").array, "array-stowed");
+  assert.ok(ARRAY_POWER.auMW > 1.5 && ARRAY_POWER.auMW < 3 && ARRAY_POWER.auMW < ARRAY_POWER.fusionMW * 0.01);
+  const power = (ship: "miyamoto" | "ariake") => Object.fromEntries(specification(ship).map((line) => [line.name, `${line.value} ${line.note ?? ""}`]));
+  assert.match(power("miyamoto")["Solar array"], /MW\(e\) at one astronomical unit/);
+  assert.match(power("miyamoto")["Solar array"], /near a star/);
+  assert.match(power("miyamoto").Power, /fusion is the main power/);
+  assert.match(power("ariake")["Solar array"], /^none/);
+  // the table is in the bible and the README, word for word
+  const table = classTableMarkdown();
+  assert.ok(readFileSync("docs/fleet/ship-03.md", "utf8").includes(table), "the bible has the table");
+  assert.ok(readFileSync("README.md", "utf8").includes(table), "the README has the table");
+  assert.match(readFileSync("docs/fleet/ship-03.md", "utf8"), /^## The Romurusu class: Miyamoto and Ariake$/m);
+  // the viewer's spec tab: a "Sister ship" row that links to the other ship, both ways, to a variant that exists
+  for (const [rocket, variant, other, otherVariant] of [["fleet-ship-03", "miyamoto", "fleet-ship-ariake", "ariake"], ["fleet-ship-ariake", "ariake", "fleet-ship-03", "miyamoto"], ["fleet-ship-03", "miyamoto-cutaway", "fleet-ship-ariake", "ariake-cutaway"]] as const) {
+    const inspector = ROCKETS[rocket].variants.find((v) => v.id === variant)!.inspector!;
+    assert.ok(inspector.spec.some(([name]) => name === "Sister ship"), `${variant} has a Sister ship row`);
+    assert.deepEqual(inspector.links?.["Sister ship"], { rocket: other, variant: otherVariant });
+    assert.ok(ROCKETS[other].variants.some((v) => v.id === otherVariant), `${other}/${otherVariant} exists`);
+    assert.ok(inspector.spec.some(([name, value]) => name === "Hangar boxes" && value.startsWith(`${CLASS_FACTS[variant.startsWith("ariake") ? "ariake" : "miyamoto"].sideBoxes} `)));
+  }
 });

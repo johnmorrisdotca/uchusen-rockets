@@ -2,7 +2,9 @@
 // starboard side. Every figure is blank and says it is a design: no source gives them. The ship's own numbers are in `src/model/fleet/ship-03/specs.ts`.
 import { MIYAMOTO_PARTS, MIYAMOTO_VARIANT_SLOTS } from "../model/fleet/ship-03/variants.ts";
 import { CARDS, SHIP_INSETS } from "../model/fleet/ship-03/insets.ts";
-import { blank, type Variant } from "./types.ts";
+import { blank, type Inspector, type Variant } from "./types.ts";
+import { ENGINES, HISTORY, SECTIONS, specification } from "../model/fleet/ship-03/specs.ts";
+import { HULL } from "../model/fleet/ship-03/specs.ts";
 
 const FICTION = "A design of this package, with no source.";
 const fiction = (brief: string) => blank<number>(FICTION, brief);
@@ -20,6 +22,31 @@ const NOTES: Readonly<Record<string, string>> = {
 
 const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", ariake: "ISV 有明 Ariake, SPX-186", "ariake-cutaway": "ISV 有明 Ariake, SPX-186, cutaway" };
 
+/** What the viewer's panel shows for a variant: the labels of every named section, the specification (with the sister ship's row as a link), and the notes. The other ship is one click away. */
+const inspectorOf = (id: string, slots: Readonly<Record<string, string>>): Inspector => {
+  const ship = id.startsWith("ariake") ? "ariake" : "miyamoto";
+  const cut = id.endsWith("cutaway");
+  const other = ship === "ariake" ? { rocket: "fleet-ship-03", variant: cut ? "miyamoto-cutaway" : "miyamoto", name: "ISV 宮本 Miyamoto, SPX-452" } : { rocket: "fleet-ship-ariake", variant: cut ? "ariake-cutaway" : "ariake", name: "ISV 有明 Ariake, SPX-186" };
+  const lines = specification(ship);
+  const pick = (names: readonly string[]) => lines.filter((l) => names.includes(l.name)).map((l) => (l.note ? `${l.name}: ${l.value} (${l.note}).` : `${l.name}: ${l.value}.`));
+  return {
+    sections: SECTIONS.filter((sec) => sec.module in slots).map((sec) => ({ id: `${sec.module}/${sec.id}`, name: sec.name, job: sec.does, slot: sec.module, at: [sec.at[0], (sec.y0 + sec.y1) / 2, sec.at[1]] as const, inside: Boolean(sec.deck) })),
+    places: Object.fromEntries(Object.entries(slots).map(([slot, part]) => {
+      const one = MIYAMOTO_PARTS.find((p) => p.id === part);
+      return [slot, [one?.place?.x ?? 0, one?.y0 ?? 0, one?.place?.z ?? 0] as const];
+    })),
+    spec: [...lines.map((l): [string, string] => [l.name, l.note ? `${l.value} (${l.note})` : l.value]), ["Sister ship", other.name]],
+    links: { "Sister ship": { rocket: other.rocket, variant: other.variant } },
+    notes: {
+      propulsion: [...Object.values(ENGINES).map((c) => `${c.name}: ${c.count} x ${(c.thrust / 1e6).toFixed(c.thrust >= 1e6 ? 1 : 2)} MN, ${c.note}`), ...pick(["Main drive", "Acceleration", "Peak speed", "Range"])],
+      construction: [...HULL.layers.map((l) => `${l.n}. ${l.name}: ${l.made}, ${l.mm} mm.`)],
+      history: Object.values(HISTORY),
+      equipment: pick(["Small craft", "Ship computer", "Power", "Solar array", "Heat rejection", "Manoeuvring", "Crew"]),
+    },
+    insets: [],
+  };
+};
+
 /** The ship's variants. */
 const variantOf = ([id, slots]: [string, Readonly<Record<string, string>>]): Variant => {
   const stacked = Object.keys(slots);
@@ -33,6 +60,7 @@ const variantOf = ([id, slots]: [string, Readonly<Record<string, string>>]): Var
     slots: stacked,
     partIds: Object.fromEntries(Object.entries(slots).map(([slot, part]) => [slot, `fleet-ship-03-${part}`])),
     note: NOTES[id],
+    inspector: inspectorOf(id, slots),
     facts: {
       height: fiction(metres(380)),
       diameter: fiction(metres(118)),
