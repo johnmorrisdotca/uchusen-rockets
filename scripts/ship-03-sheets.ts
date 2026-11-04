@@ -85,14 +85,14 @@ const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: strin
     shots("var-stowed", [1300, 560], { eye: [560, 190, 120], target: [0, 190, -3], fov: 22, shadow: 300 }),
   ] },
   { glb: files.exploded, shots: [shots("sheet3-exploded", [2400, 1300], { eye: [620, 210, 330], target: [0, 215, 20], fov: 40, shadow: 420, points: modulePoints })] },
-  { glb: files.deployed, shots: [shots("var-deployed", [1300, 560], { eye: [520, 120, 300], target: [0, 230, 0], fov: 34, shadow: 420 })] },
+  { glb: files.deployed, shots: [shots("var-deployed", [1300, 560], { eye: [420, 140, 220], target: [0, 215, 0], fov: 26, shadow: 420 })] },
   { glb: files.relief, shots: [shots("var-relief", [1300, 560], { eye: [560, 190, 120], target: [0, 190, -3], fov: 22, shadow: 300 })] },
   { glb: files.cut, shots: [
     shots("var-cut", [1300, 560], { eye: [560, 190, 120], target: [0, 190, -3], fov: 22, shadow: 300 }),
     shots("sheet5-edge", [1300, 800], { eye: [48, 322, 32], target: [8, 326, 16], fov: 45, shadow: 30 }),
     shots("sheet5-edge2", [1300, 800], { eye: [40, 110, 24], target: [-4, 126, 6], fov: 45, shadow: 30 }),
   ] },
-  { glb: files.pods, shots: [shots("pods", [1500, 800], { eye: [0, 30, 70], target: [0, 30, 20], fov: 55, shadow: 70 })] },
+  { glb: files.pods, shots: [shots("pods", [1500, 800], { eye: [0, 30, 120], target: [0, 30, 22], up: [0, 1, 0], fov: 42, shadow: 90 })] },
 ];
 
 // the cards and the insets, each part alone, framed by its own box
