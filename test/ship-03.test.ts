@@ -6,7 +6,7 @@ import { build } from "../src/build/index.ts";
 import { MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
-import { DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, SECTIONS, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification } from "../src/model/fleet/ship-03/specs.ts";
+import { DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, SECTIONS, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
 import { WAYMARK_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
@@ -56,7 +56,8 @@ test("the identity and the specification: the SPX designation, the Japanese name
   assert.deepEqual([ENVELOPE.length, ENVELOPE.beam, ENVELOPE.height], [380, 118, 74]);
   const lines = specification().map((line) => `${line.name}: ${line.value}`).join("\n");
   for (const text of ["SPX-ICV-03", "380 m", "118 m", "105,000 t", "20.42 years aboard", "21.03 years", "0.04 g sustained", "24,000 m2"]) assert.ok(lines.includes(text), text);
-  assert.ok(HISTORY.service.includes("2459") && IDENTITY.commissioned === 2456);
+  assert.ok(HISTORY.service.includes("2459") && IDENTITY.firstFlight === 2456 && STATUS === "STATUS: PLANNED · FIRST FLIGHT 2456");
+  assert.ok(!/in service|serving|was commissioned/i.test(Object.values(HISTORY).join(" ")), "the history reads as a plan");
   assert.equal(ROCKETS["fleet-ship-03"].madeBy.value, "SPX");
 });
 
@@ -114,12 +115,12 @@ test("the levels of detail: a quarter of the detail is far fewer pieces, and the
   }
 });
 
-test("Waymark is in the registry: four variants, every slot's part exists, the joints fit, and it is labelled fictional", () => {
+test("Waymark is in the registry: four variants, every slot's part exists, the joints fit, and it is in the story, with no visible tag", () => {
   const rocket = ROCKETS["fleet-ship-03"];
   assert.equal(rocket.variants.length, 4);
   for (const variant of rocket.variants) {
     assert.equal(variant.status, "fictional");
-    assert.ok(variant.name.includes("fictional"), variant.name);
+    assert.ok(!/fictional/i.test(variant.name), variant.name);
     assert.deepEqual(Object.keys(variant.partIds ?? {}), [...variant.slots]);
     for (const id of Object.values(variant.partIds ?? {})) assert.ok(PART_ENTRIES.some((entry) => entry.record.id === id), id);
     const report = check({ rocket: rocket.id, variant: variant.id });

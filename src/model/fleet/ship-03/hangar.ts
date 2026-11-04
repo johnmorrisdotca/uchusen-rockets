@@ -9,7 +9,7 @@ import { along, conduit, type Face, faceOf, frame, hazard, ladder, lamp, on, rai
 type Side = "starboard" | "port";
 
 /** A small craft on a cradle: a hull of chamfered prisms, a canopy, two engine bells and skids. Its nose points along +Y. */
-function cutter(cx: number, cy: number, cz: number, length: number, wide: number): Piece[] {
+export function cutter(cx: number, cy: number, cz: number, length: number, wide: number): Piece[] {
   const out: Piece[] = [];
   const hy = length / 2;
   const hw = wide / 2;
@@ -27,7 +27,7 @@ function cutter(cx: number, cy: number, cz: number, length: number, wide: number
 }
 
 /** A drone: a core box with four booms and rotors-ish discs, on a rack shelf. */
-function drone(cx: number, cy: number, cz: number): Piece[] {
+export function drone(cx: number, cy: number, cz: number): Piece[] {
   const out: Piece[] = [cub("hull-white", [cx - 1.4, cx + 1.4], [cy - 1.4, cy + 1.4], [cz, cz + 1.2]), cub("glass", [cx - 0.6, cx + 0.6], [cy + 1.4, cy + 1.8], [cz + 0.3, cz + 0.9])];
   for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) out.push(rod("hull-grey-dark", [cx, cy, cz + 0.6], [cx + sx * 2.8, cy + sy * 2.8, cz + 0.6], 0.12, 6), cub("hull-orange", [cx + sx * 2.8 - 0.6, cx + sx * 2.8 + 0.6], [cy + sy * 2.8 - 0.6, cy + sy * 2.8 + 0.6], [cz + 0.6, cz + 0.8]));
   return out;
