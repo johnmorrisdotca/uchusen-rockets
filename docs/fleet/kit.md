@@ -93,13 +93,13 @@ import { assemble, KIT, shipParts, shipPieces, SAMPLE_SHIPS, COLLARS } from "@jo
 ```
 
 - `KIT: Record<string, KitModule>`. A `KitModule` has `id`, `name`, `kind`, `note`, `mass`, `propellant`, `length`, `width`, `depth`, `top?`, `bottom?` (collar classes), `ports`, `inside`, `livery` and `pieces(options?)`.
-- `pieces({ detail?, cutaway?, livery?, seed? })` returns the module's pieces (`Piece[]` of `src/model/pieces.ts`: lathes, plates and lines, the same pieces every other part is made of). `detail` is 0.25 to 1 (default: the module's own, which keeps each module inside the mesh limit of a part). `seed` changes the weathering, so two of the same module differ. The same arguments always give the same bytes.
-- `ShipList = ShipPlace[]`, `ShipPlace = { module, on?: { place, port }, beside?: { x, z, y? }, turn?, seed? }`. On the spine a module stands on the end of the one before; `on` hangs it from a port of an earlier place; `beside` stands it parallel to the spine at an offset, with clamps.
+- `pieces({ detail?, cutaway?, livery?, seed? })` returns the module's pieces (`Piece[]` of `src/model/pieces.ts`: lathes, plates and lines, the same pieces every other part is made of). `detail` is 0.25 to 1 (default: the module's own, which keeps each module inside the fleet's module limit of 1.25 MB). `separation` (or `true`) puts a separation joint on the module's base. `seed` changes the weathering, so two of the same module differ. The same arguments always give the same bytes.
+- `ShipList = ShipPlace[]`, `ShipPlace = { module, on?: { place, port }, beside?: { x, z, y? }, turn?, seed?, separation? }`; `separation` plans a joint at the place's base (where the ship is to come apart in flight). On the spine a module stands on the end of the one before; `on` hangs it from a port of an earlier place; `beside` stands it parallel to the spine at an offset, with clamps.
 - `assemble(list): Assembly` puts a ship in place and checks every joint: `placed` (where each module stands), `issues` (`collar-mismatch`, `unknown-module`, `no-such-port`, `port-taken`, `no-spine`), `mass`, `propellant`, `length`, `width`, `depth`, `ok`.
 - `shipPieces(list, options?)` is the whole ship as pieces, with clamps. Lower `detail` for a ship of many modules.
 - `shipParts(ship, list, options?, rocket?, variant?)` is how a ship joins the registry: one `PartEntry` for each place (a `PartRecord` with its joints and, for a hung module, `strapOn`), the slot names in stacking order, and the slot-to-part ids. Together, apart and one-part-alone then work as for Saturn V or the Shuttle.
 - `SAMPLE_SHIPS` holds three working lists (`hauler`, `scout`, `bulwark`) to copy.
-- `LIVERY` is the colour language: `industrial` (orange and white), `science` (white and yellow), `command` (grey and blue), `transport` (white and orange), each with worn twins, an accent and a dark structural colour. A ship picks a livery for each module, so the colour blocking runs along the ship.
+- `LIVERY` is the colour language, and it is white: every scheme (`industrial`, `science`, `command`, `foil`, `transport`) is mostly quilted white thermal blanket with a few rigid white or light grey panels, crinkled foil (silver, or gold kapton on the `industrial` and `foil` schemes) on the hardware that wears it, and orange (blue on `command`) only on small removable access panels and hazard stencils, as on the ISS, JWST and Orion's service module. A ship picks a livery for each module. `test/fleet-kit.test.ts` holds the colour to a few per cent of the plating.
 
 ### Modules of a ship's own size
 
@@ -160,7 +160,13 @@ The kit starts from real engineering and says so: every module names its real an
 
 | Function | What it makes |
 |---|---|
-| `hullPanels` | Raised plating in the livery's colours, some worn, some bare, with seam lines for the line drawings |
+| `hullPanels` | Plating with depth: quilted blanket (pillows with a crease between), rigid panels with a raised frame round a sunk field and bolts, patches of crinkled foil, louvres and the odd small orange access panel with a grab handle; some worn, some bare, with seam lines for the line drawings |
+| `blanketPanel`, `framedPanel`, `bolts`, `grabHandle` | The plating's parts: one quilted blanket, one framed panel with its bolt heads, hexagonal bolt heads, a grab handle |
+| `foilBand` | Crinkled foil on a cylinder: a skin of flat triangles with each corner pushed in or out, every facet lit on its own (`Plate.facets` in `pieces.ts`) |
+| `glazing`, `porthole`, `observationDome` | A window in a frame with mullions and a reflective pane that glows when lit; an armoured porthole with a burn shutter, open or closed; an armoured observation dome (the ISS Cupola's descendant) with six shutter petals, open or closed |
+| `room` and `ROOMS` | Ten furnished rooms with names and jobs (cabin, mess, exercise room, green room, observation lounge, medical bay, storm shelter, recreation room, school room, plaza) to place in a cutaway |
+| `navLight`, `floodlight` | A red or green navigation light or a white strobe; a floodlight with its housing and lens, all lit with the engines |
+| `separationJoint` | Where a ship is planned to come apart in flight: a split collar with a groove, hooked latches, pyrotechnic bolt caps and umbilical plates with sockets and strobes (`separation` on a place or a module's options) |
 | `hatch` | An access hatch (square door with hinges, latch, hazard strips) or a round pressure door with a handwheel |
 | `conduitRun`, `pipeRing`, `cableTray` | Pipe bundles on clamps, rings of pipe, cable channels with cables |
 | `vent`, `ladder`, `hazardBand`, `stencil`, `lamps` | Louvres, ladders, hazard stripes, our own seven-bar numbers, navigation lamps |
@@ -169,7 +175,7 @@ The kit starts from real engineering and says so: every module names its real an
 | `antenna` | Whip, dish, yagi, phased array, omni, horn |
 | `greebles` | Junction boxes, valve wheels, sensor posts, pumps, scattered over a patch of hull |
 | `boltRing`, `hoop`, `annulus`, `disc`, `post`, `rod`, `beam`, `box`, `horn`, `panel` | Solids: bolts, torus rings, rings of rectangular section, discs, posts, rods, beams, boxes, cones |
-| `pipeRun` | A pipe along a path: a round twelve-sided tube for each run, a ball at each bend so the bend is round, flanges with a bolt circle at the ends and at an interval, clamp brackets on a leg to the structure |
+| `pipeRun` | A pipe along a path: a round twelve-sided tube for each run, corners rounded to a real bend (a chain of short tubes with a round joint at each), a proper end for each run (a flange bolted to a mating flange, a blind cap, a gland where it goes through the structure, or a valve with its handwheel), bolted flange joints at an interval, a colour-coding band, and clamp brackets that stand off the structure on a post and a base pad. A pipe never ends in a bare cone. |
 | `iBeam`, `channel`, `strut` | Beam sections for braces: an I-beam, a channel, a round strut with a collar, a ball joint and a cap at each end (the lunar module's struts are the benchmark) |
 | `place`, `stamp`, `ringOf` | Move pieces to a pose; put one template at many poses; poses round a circle |
 
@@ -177,7 +183,9 @@ The kit starts from real engineering and says so: every module names its real an
 
 ## The fleet palette
 
-`FLEET_PALETTE` (`src/model/fleet/palette.ts`, a file with no imports) is the one set of colours every ship shares, by what each means on a sheet: orange `shield` (removable shields and shutters), ceramic white `protected` (protected volumes), grey `structure`, teal `coolant` (coolant and feed lines), gold `coil` (copper field coils), yellow `service` (access and rails), near-black `heatSink`, green `farm`, blue `propellant` and pale blue `light`. `materials.ts` builds the fleet's materials from it (`hull-orange`, `hull-white`, `hull-grey`, `coolant`, `coil`, `hull-yellow`, `panel-dark`, `plant`, `fuel`, `lamp-blue`, each with worn twins). A ship asks for a role, never for a colour, so the three ships agree whatever else they change.
+`FLEET_PALETTE` (`src/model/fleet/palette.ts`, a file with no imports) is the one set of colours every ship shares, by what each means on a sheet: orange `shield` (removable shields and shutters), ceramic white `protected` (protected volumes), grey `structure`, teal `coolant` (coolant and feed lines), gold `coil` (copper field coils), yellow `service` (access and rails), near-black `heatSink`, green `farm`, blue `propellant`, pale blue `light`, and the skin of a hull: white thermal `blanket`, silver `foil`, gold `kapton` and stainless `pipe`. `materials.ts` builds the fleet's materials from it (`hull-orange`, `hull-white`, `hull-grey`, `coolant`, `coil`, `hull-yellow`, `panel-dark`, `plant`, `fuel`, `lamp-blue`, each with worn twins). A ship asks for a role, never for a colour, so the three ships agree whatever else they change.
+
+**The Lit look.** The palette also names the colours that glow with the viewer's "Engines: Lit" switch: `coilGlow` (drive coils and field rings, the `coil-lit` material), `windowLit` (the `window` material of windows and portholes), `navRed` and `navGreen` (the `nav-red` and `nav-green` lights), `strobe`, `flood` (floodlights) and `growLamp` (the `grow-lamp` rows of a garden). A material with a `glow` in `MATERIALS` takes an emissive strength when the engines are lit and none when they are not; the amber, blue and red lamps glow too. Glass you can see through (`glass-clear`, with an `opacity`) is the dome and the solarium. Curves are used only where they have a job (fairings, tapered shrouds, rounded habitat ends).
 
 ## Light
 

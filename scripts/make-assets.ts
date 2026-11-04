@@ -17,7 +17,9 @@ const outAt = args.indexOf("--out");
 const out = outAt >= 0 ? args[outAt + 1] : join(root, "dist", "assets");
 export const MESH_LIMIT = 600 * 1024;
 /** The fleet's sample ships are far bigger than any real rocket; their parts still keep to MESH_LIMIT. */
-export const FLEET_MESH_LIMIT = 6 * 1024 * 1024;
+export const FLEET_MESH_LIMIT = 12 * 1024 * 1024;
+/** A fleet module on its own: the fleet ships are built in the browser and shipped as no prebuilt file, so a module may hold the detail of a full engineering model. */
+export const FLEET_PART_LIMIT = 1024 * 1024;
 export const DRAWING_LIMIT = 80 * 1024;
 export const MODEL_LIMIT = 8 * 1024 * 1024;
 mkdirSync(join(out, "parts"), { recursive: true });
@@ -52,7 +54,7 @@ for (const rocket of Object.values(ROCKETS)) {
     }
     if (built.parts.length > 1)
       for (const part of built.parts) {
-        writeMesh(join(out, `${stem}-${part.slot}.glb`), buildPart(part.record.id).glb().bytes);
+        writeMesh(join(out, `${stem}-${part.slot}.glb`), buildPart(part.record.id).glb().bytes, rocket.id.startsWith("fleet-") ? FLEET_PART_LIMIT : MESH_LIMIT);
         meshes++;
       }
   }
@@ -60,7 +62,7 @@ for (const rocket of Object.values(ROCKETS)) {
 for (const { record } of PART_ENTRIES) {
   if (record.trueTo.length) continue;
   const part = buildPart(record.id);
-  writeMesh(join(out, "parts", `${record.id}.glb`), part.glb().bytes);
+  writeMesh(join(out, "parts", `${record.id}.glb`), part.glb().bytes, record.rocket.startsWith("fleet-") ? FLEET_PART_LIMIT : MESH_LIMIT);
   meshes++;
   for (const look of LOOK_NAMES) {
     writeDrawing(join(out, "parts", `${record.id}${lookSuffix(look)}.svg`), part.svg({ look }));

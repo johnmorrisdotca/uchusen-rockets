@@ -27,6 +27,8 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   "common-area-m": "ISS Node 1 Unity and the Cupola",
   "store-drum-m": "ISS Leonardo, the Multi-Purpose Logistics Module",
   "lab-m": "ISS Columbus and Kibo laboratories; Skylab's workshop",
+  "dome-observation-m": "The ISS Cupola, the seven-window observation dome with its hinged shutters, and the Space Shuttle's overhead windows",
+  "solarium-m": "The ISS Veggie and Advanced Plant Habitat gardens, the Biosphere 2 glass halls, and the O'Neill cylinder studies' farm and park lands",
   "eva-lock-m": "ISS Quest airlock and the Space Shuttle's airlock",
   "pod-survey-m": "Orion's service module payload bay and the ISS's Express racks",
   "pod-medical-m": "ISS's crew health care system and Apollo's medical kits, in a Skylab-sized pod",

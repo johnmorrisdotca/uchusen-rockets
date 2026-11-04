@@ -4,7 +4,7 @@ import { deg } from "../../framing.ts";
 import type { MaterialName } from "../materials.ts";
 import type { Lathe, Piece, Vec3 } from "../pieces.ts";
 import { type CollarClass, COLLARS, collar } from "./collars.ts";
-import { annulus, beam, box, cableTray, conduitRun, greebles, hatch, hazardBand, hullPanels, ladder, lamps, type Livery, LIVERY, type LiveryName, patch, pipeRing, post, rng, ringOf, stencil, vent } from "./detail.ts";
+import { annulus, beam, box, cableTray, conduitRun, floodlight, foilBand, greebles, hatch, hazardBand, hullPanels, ladder, lamps, type Livery, LIVERY, type LiveryName, navLight, patch, pipeRing, post, rng, ringOf, sagOf, stencil, vent } from "./detail.ts";
 import { HULL_STACKS, type HullStack, type HullStackName, layerShells, stackDepth } from "./layers.ts";
 import type { ModuleOptions } from "./types.ts";
 
@@ -96,38 +96,56 @@ export function drum(ctx: Ctx, spec: DrumSpec): Piece[] {
   if (ctx.coarse) return out;
   // the shoulders: a stiffening ring and a row of fixings where the hull steps to the collar
   for (const [yy, end] of [[y0, spec.bottom], [y1, spec.top]] as const) if (end && Math.abs(yy - (yy === y0 ? 0 : L)) > 0.3) out.push(...pipeRing("hull-grey-dark", R, yy, 0.1));
-  if (spec.panels !== false) {
-    const size = spec.panels ?? { wide: 2.4, tall: 1.6 };
-    out.push(...hullPanels({ r: R, y0: y0 + 0.15, y1: y1 - 0.15, az: open ? az : undefined, livery: ctx.livery, seed: ctx.seed, wide: size.wide / Math.sqrt(ctx.detail), tall: size.tall / Math.sqrt(ctx.detail), raise: 0.09 }));
-  }
-  // stringers up the hull and ring frames round it stand well proud of the plating, so a close view has depth and the key light throws shadows between them
+  const span = az[1] - az[0];
+  const spot = (i: number, n: number) => az[0] + span * ((i + 0.5 + (random() - 0.5) * 0.3) / n);
+  const mid = (a: number, b: number) => a + (b - a) * (0.15 + random() * 0.7);
+  // what stands on the hull is placed first, and the plating leaves room for it: a flat panel on a curved hull stands proud at its edges by its sag, so a rail, a ring or a pipe stands clear of that
+  const panelSize = spec.panels === false ? null : (spec.panels ?? { wide: 2.4, tall: 1.6 });
+  const proud = 0.22 + (panelSize ? sagOf(R, panelSize.wide / Math.sqrt(ctx.detail)) : 0);
+  const nHatch = some(ctx, spec.hatches ?? 4);
+  const hatches = Array.from({ length: nHatch }, (_, i) => ({ az: spot(i, nHatch), y: mid(y0, y1), size: 0.9 + random() * 0.6 }));
+  const nConduit = some(ctx, spec.conduits ?? 3);
+  const conduits = Array.from({ length: nConduit }, (_, i) => ({ az: spot(i, nConduit) + 0.05, count: 2 + Math.floor(random() * 3), pipe: 0.06 + random() * 0.05 }));
+  const nTray = some(ctx, spec.trays ?? 2);
+  const trays = Array.from({ length: nTray }, (_, i) => spot(i, nTray) + 0.12);
+  const nVent = some(ctx, spec.vents ?? 3);
+  const vents = Array.from({ length: nVent }, (_, i) => ({ az: spot(i, nVent) - 0.08, y: mid(y0, y1) }));
+  const nLadder = some(ctx, spec.ladders ?? 1);
+  const ladders = Array.from({ length: nLadder }, (_, i) => spot(i, nLadder) + 0.2);
+  const stencilAt = az[0] + span * (open ? 0.5 : 0.62);
+  const strip = (a: number, wide: number) => ({ az: a, y: (y0 + y1) / 2, wide, tall: y1 - y0 });
+  const clear = [...hatches.map((h) => ({ az: h.az, y: h.y, wide: h.size * 1.3, tall: h.size * 1.3 })), ...conduits.map((c) => strip(c.az, c.count * c.pipe * 3 + 0.3)), ...trays.map((a) => strip(a, 0.6)), ...vents.map((v) => ({ az: v.az, y: v.y, wide: 1.2, tall: 0.8 })), ...ladders.map((a) => strip(a, 0.6)), { az: stencilAt, y: (y0 + y1) / 2, wide: Math.min(1.6, R * 0.4) * 0.8, tall: Math.min(1.6, R * 0.4) * 1.3 }];
+  if (panelSize) out.push(...hullPanels({ r: R, y0: y0 + 0.15, y1: y1 - 0.15, az: open ? az : undefined, livery: ctx.livery, seed: ctx.seed, wide: panelSize.wide / Math.sqrt(ctx.detail), tall: panelSize.tall / Math.sqrt(ctx.detail), raise: 0.09, clear }));
+  // crinkled foil cuffs where the hull steps down to a collar: multi-layer insulation wrapped round the joint, as on a real service module
+  if (R >= 2) for (const [yy, end, low] of [[y0, spec.bottom, true], [y1, spec.top, false]] as const) if (end) out.push(...foilBand(ctx.livery.foil ?? "foil", R + 0.07, low ? yy + 0.08 : yy - 0.56, low ? yy + 0.6 : yy - 0.04, az[0], az[1], ctx.seed, Math.max(0.3, R * 0.07), 0.035));
+  // stringers up the hull stand well proud of the plating, so a close view has depth and the key light throws shadows between them: each is a T-rail, a web with a flange along its top
   const stringers = some(ctx, Math.max(12, Math.round(R * 3.2)));
   for (let i = 0; i < stringers; i++) {
     const a = az[0] + (span0(az) * (i + 0.5)) / stringers;
     const f = patch(R, a, 0);
-    out.push(beam(i % 3 === 0 ? ctx.livery.dark : "hull-grey-dark", [f.o[0] + f.w[0] * 0.14, y0 + 0.3, f.o[2] + f.w[2] * 0.14], [f.o[0] + f.w[0] * 0.14, y1 - 0.3, f.o[2] + f.w[2] * 0.14], 0.16, 0.2));
+    const at = (lift: number, y: number): Vec3 => [f.o[0] + f.w[0] * lift, y, f.o[2] + f.w[2] * lift];
+    const material = i % 3 === 0 ? "pipe-steel" : "hull-grey";
+    out.push(beam(material, at((proud + 0.12) / 2, y0 + 0.3), at((proud + 0.12) / 2, y1 - 0.3), 0.05, proud + 0.1), beam(material, at(proud + 0.12, y0 + 0.3), at(proud + 0.12, y1 - 0.3), 0.2, 0.05));
   }
-  for (const y of [y0 + 0.1, ...ringYs, y1 - 0.1]) out.push(annulus("hull-grey-dark", R + 0.02, R + 0.24, y - 0.1, y + 0.1, 48, { only: "mesh", ...(open ? { arc: () => az } : {}) }));
-  for (const y of ringYs) out.push(...pipeRing(random() < 0.5 ? "coolant" : "hull-grey", R + 0.2, y, 0.1, 48));
-  const span = az[1] - az[0];
-  const spot = (i: number, n: number) => az[0] + span * ((i + 0.5 + (random() - 0.5) * 0.3) / n);
-  const mid = (a: number, b: number) => a + (b - a) * (0.15 + random() * 0.7);
-  const nHatch = some(ctx, spec.hatches ?? 4);
-  for (let i = 0; i < nHatch; i++) out.push(...hatch({ r: R + 0.04, az: spot(i, nHatch), y: mid(y0, y1), size: 0.9 + random() * 0.6, round: spec.roundHatches ? i % 2 === 0 : false }));
-  const nConduit = some(ctx, spec.conduits ?? 3);
-  for (let i = 0; i < nConduit; i++) out.push(...conduitRun({ r: R + 0.05, az: spot(i, nConduit) + 0.05, y0: y0 + 0.3, y1: y1 - 0.3, count: 2 + Math.floor(random() * 3), pipe: 0.06 + random() * 0.05, seed: ctx.seed }));
-  const nTray = some(ctx, spec.trays ?? 2);
-  for (let i = 0; i < nTray; i++) out.push(...cableTray(R + 0.05, spot(i, nTray) + 0.12, y0 + 0.5, y1 - 0.5, 0.45, ctx.seed));
-  const nVent = some(ctx, spec.vents ?? 3);
-  for (let i = 0; i < nVent; i++) out.push(...vent(R + 0.04, spot(i, nVent) - 0.08, mid(y0, y1), 1.1, 0.7, 6));
-  const nLadder = some(ctx, spec.ladders ?? 1);
-  for (let i = 0; i < nLadder; i++) out.push(...ladder(R + 0.05, spot(i, nLadder) + 0.2, y0 + 0.4, Math.min(y1 - 0.4, y0 + 7)));
-  if (spec.hazard !== false) out.push(...hazardBand(R, y0, y0 + 0.4, 36, az), ...hazardBand(R, y1 - 0.4, y1, 36, az));
-  out.push(...greebles({ r: R + 0.04, y0: y0 + 0.2, y1: y1 - 0.2, az, count: some(ctx, spec.junk ?? Math.round(R * (y1 - y0) * 0.35)), seed: ctx.seed, livery: ctx.livery }));
+  for (const y of [y0 + 0.1, ...ringYs, y1 - 0.1]) out.push(annulus("hull-grey-dark", R + 0.02, R + proud + 0.1, y - 0.1, y + 0.1, 40, { only: "mesh", ...(open ? { arc: () => az } : {}) }));
+  for (const y of ringYs) out.push(...pipeRing(random() < 0.25 ? "coolant" : "pipe-steel", R + proud, y, 0.1, 48));
+  for (const h of hatches) out.push(...hatch({ r: R + 0.04, az: h.az, y: h.y, size: h.size, round: spec.roundHatches ? hatches.indexOf(h) % 2 === 0 : false }));
+  for (const c of conduits) out.push(...conduitRun({ r: R + 0.05, az: c.az, y0: y0 + 0.3, y1: y1 - 0.3, count: c.count, pipe: c.pipe, seed: ctx.seed }));
+  for (const a of trays) out.push(...cableTray(R + 0.05, a, y0 + 0.5, y1 - 0.5, 0.45, ctx.seed));
+  for (const v of vents) out.push(...vent(R + 0.04, v.az, v.y, 1.1, 0.7, 6));
+  for (const a of ladders) out.push(...ladder(R + 0.05, a, y0 + 0.4, Math.min(y1 - 0.4, y0 + 7)));
+  // hazard stencils: a few short stripes by the shoulders, where a person works, not a ring of yellow round the whole hull
+  if (spec.hazard !== false) for (const k of [0.12, 0.45, 0.8]) out.push(...hazardBand(R, y0, y0 + 0.36, 5, [az[0] + span * k, az[0] + span * k + deg(26)]), ...hazardBand(R, y1 - 0.36, y1, 5, [az[0] + span * (k + 0.1), az[0] + span * (k + 0.1) + deg(26)]));
+  out.push(...greebles({ r: R + 0.14, y0: y0 + 0.2, y1: y1 - 0.2, az, count: some(ctx, spec.junk ?? Math.round(R * (y1 - y0) * 0.35)), seed: ctx.seed, livery: ctx.livery }));
   out.push(...stencil(spec.digits ?? "07", R + 0.045, az[0] + span * (open ? 0.5 : 0.62), y0 + (y1 - y0) * 0.5, Math.min(1.6, R * 0.4), "black"));
   // navigation lamps at the shoulders
-  const lampRing = (y: number, colour: "amber" | "red") => ringOf(4, R * 0.98, y, 45).map((p) => ({ at: p.at, colour, size: 0.12 }));
-  if (!open) out.push(...lamps([...lampRing(y1 - 0.5, "amber"), ...lampRing(y0 + 0.5, "red")]));
+  const lampRing = (y: number, colour: "amber" | "red") => ringOf(4, R + proud * 0.6, y, 45).map((p) => ({ at: p.at, colour, size: 0.14 }));
+  if (!open) {
+    out.push(...lamps([...lampRing(y1 - 0.5, "amber"), ...lampRing(y0 + 0.5, "red")]));
+    // red to port, green to starboard, a white strobe on top, and floodlights over the joint, all lit with the engines
+    out.push(...navLight("port", R + proud * 0.8, deg(270), y1 - 1.0), ...navLight("starboard", R + proud * 0.8, deg(90), y1 - 1.0), ...navLight("strobe", R + proud * 0.8, 0, y1 - 1.0));
+    for (const a of [deg(150), deg(210)]) out.push(...floodlight(R + proud * 0.8, a, y1 - 1.3, 0.3));
+  }
   return out;
 }
 

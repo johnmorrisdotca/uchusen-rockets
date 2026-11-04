@@ -3,7 +3,7 @@
 import { deg } from "../../framing.ts";
 import type { Lathe, Piece, Vec3 } from "../pieces.ts";
 import { type CollarClass, COLLARS, collar } from "./collars.ts";
-import { annulus, antenna, beam, box, cableTray, channel, disc, hatch, hazardBand, hoop, horn, iBeam, lamps, type LiveryName, panel, patch, pipeRing, pipeRun, place, post, radiator, ringOf, rng, rod, seams, stamp, stencil, strut, tileShield } from "./detail.ts";
+import { annulus, antenna, beam, box, cableTray, channel, disc, foilBand, framedPanel, glazing, hatch, hazardBand, hoop, horn, iBeam, ladder, lamps, type LiveryName, observationDome, panel, patch, pipeRing, pipeRun, place, porthole, post, radiator, ringOf, rng, rod, room, seams, separationJoint, stamp, stencil, strut, tileShield } from "./detail.ts";
 import { type Ctx, contextOf, CUT, decks, drum, some, straight } from "./hull.ts";
 import { ANCESTORS } from "./ancestors.ts";
 import type { HullStackName } from "./layers.ts";
@@ -51,7 +51,9 @@ const define = (d: Def): KitModule => ({
   livery: d.livery,
   pieces: (options = {}) => {
     const built = d.build(contextOf(d.id, d.livery, { ...options, detail: options.detail ?? d.detail ?? 0.85 }, HULL_OF[d.kind]), options);
+    const joint = options.separation && d.bottom && options.level !== "coarse" ? separationJoint(COLLARS[d.bottom].outer / 2, 0, options.separation === true ? {} : options.separation) : [];
     const all = options.cutaway && options.cutYaw ? place(built, { at: [0, 0, 0], yaw: options.cutYaw }) : built;
+    if (joint.length) all.push(...joint);
     return options.level === "coarse" ? all.filter(isCoarse) : all;
   },
 });
@@ -70,47 +72,86 @@ interface NozzleSpec {
   length: number;
 }
 
-/** One magnetic nozzle: a bell with its throat ring, field coils, stiffening ribs, injector head, feed lines and two gimbal actuators. Its mouth is at y = 0 and its injector at y = `length` + 1. */
+/** The radius of the bell's wall at a fraction `t` of its length from the mouth (0) to the throat (1): a bell contour, flaring hard near the throat and nearly straight at the mouth. */
+const bellRadius = (e: number, t: number): number => e * (0.2 + 0.8 * Math.pow(1 - t, 0.55));
+
+/**
+ * One regeneratively cooled magnetic nozzle, in the manner of Raptor and the RS-25: a bell contour with a fluted, tube-wall jacket over its upper two thirds and a dark radiation-cooled skirt below, coolant manifolds with
+ * feed lines, a throat ring, a combustion chamber wrapped in gold foil with an injector head and propellant ports, a turbopump on its own volute with its discharge and turbine lines, a gimbal bearing and two actuators with
+ * clevis ends, and the glowing field coils. Its mouth is at y = 0 and its injector at y = `length` + 1; the pipes are round with flanges and bends.
+ */
 function nozzle(ctx: Ctx, n: NozzleSpec, plateY: number): Piece[] {
   const [x, z] = n.at;
   const at: readonly [number, number] = [x, z];
   const e = n.exit;
   const l = n.length;
-  const t = [0, 0.18, 0.42, 0.68, 0.88, 1];
-  const rr = [1, 0.93, 0.74, 0.5, 0.3, 0.2];
-  const profile = t.map((f, i) => [e * rr[i], l * f] as const);
+  const fine = ctx.detail >= 0.7;
+  const mid = ctx.detail >= 0.55;
   const out: Piece[] = [];
-  const segs = ctx.detail < 0.8 ? 16 : 22;
-  out.push({ kind: "lathe", material: "bell", at, segs, under: true, outline: true, profile, rings: [0.001, l * 0.42, l * 0.68] });
-  out.push({ kind: "lathe", material: "bell-inside", at, segs, under: true, profile: [[e * 0.15, l - 0.1], [e * 0.26, l * 0.88], [e * 0.46, l * 0.66], [e * 0.7, l * 0.4], [e * 0.9, l * 0.14], [e * 0.985, 0.02]] });
+  const segs = fine ? 40 : mid ? 32 : 20;
+  const stations = fine ? 14 : mid ? 11 : 7;
+  const t = Array.from({ length: stations }, (_, i) => i / (stations - 1));
+  const profile = t.map((f) => [bellRadius(e, f), l * f] as const);
+  const wallAt = (y: number): number => bellRadius(e, Math.min(1, Math.max(0, y / l)));
+  // the bell: dark metal outside and a darker inside; the first station is the mouth, which is where the flame starts
+  out.push({ kind: "lathe", material: "bell", at, segs, under: true, outline: true, profile, rings: [0.001, l * 0.45, l * 0.82] });
+  out.push({ kind: "lathe", material: "bell-inside", at, segs, under: true, profile: [[e * 0.15, l - 0.1], ...t.slice().reverse().slice(1).map((f) => [bellRadius(e, f) * 0.985, l * f] as const)] });
   out.push({ kind: "lathe", material: "lamp-blue", at, segs: 10, only: "mesh", under: true, profile: [[0.001, l - 0.12], [e * 0.15, l - 0.12]] });
-  // stiffening rings round the bell and coolant tubes wound on it
-  const radiusAt = (y: number): number => profile.reduce((acc, [pr, py], i) => (i + 1 < profile.length && y >= py && y <= profile[i + 1][1] ? pr + ((profile[i + 1][0] - pr) * (y - py)) / (profile[i + 1][1] - py) : acc), e);
-  for (const f of ctx.detail < 0.6 ? [0.3, 0.64] : [0.22, 0.5, 0.74]) out.push({ kind: "lathe", material: "hull-grey", at, segs, only: "mesh", under: true, profile: [[radiusAt(l * f) + 0.01, l * f - 0.09], [radiusAt(l * f) + 0.11, l * f - 0.06], [radiusAt(l * f) + 0.11, l * f + 0.06], [radiusAt(l * f) + 0.01, l * f + 0.09]] });
-  for (const f of ctx.detail < 0.6 ? [0.5] : ctx.detail < 0.8 ? [0.34, 0.62] : [0.34, 0.4, 0.62, 0.68]) out.push(hoop("coolant", radiusAt(l * f) + 0.1, l * f, 0.035, ctx.detail < 0.8 ? 12 : 16, 4, { at, under: true }));
-  // the bell's lip and field coils
-  out.push({ kind: "lathe", material: "hull-grey", at, segs, only: "mesh", under: true, profile: [[e * 0.985, 0], [e * 1.04, 0], [e * 1.04, 0.16], [e * 0.985, 0.16]] });
-  const coilYs = (ctx.detail < 0.8 ? [0.38, 0.7] : [0.3, 0.55, 0.78]).map((f) => l * f);
-  for (const y of coilYs) {
-    const r = profile.reduce((acc, [pr, py], i) => (i + 1 < profile.length && y >= py && y <= profile[i + 1][1] ? pr + ((profile[i + 1][0] - pr) * (y - py)) / (profile[i + 1][1] - py) : acc), e);
-    out.push(place([hoop("coil", r + 0.14, y, 0.11 * (e / 1.8 + 0.5), ctx.detail < 0.8 ? 14 : 18, 5, { under: true })], { at: [0, 0, 0] })[0]);
-    (out[out.length - 1] as Lathe).at = at;
+  // the regeneratively cooled jacket: tube walls round the upper two thirds of the bell, fluted so each tube catches the light on its own
+  const j0 = 0.38;
+  const jacket = t.filter((f) => f >= j0).map((f) => [bellRadius(e, f) + 0.045, l * f] as const);
+  out.push({ kind: "lathe", material: "pipe-steel", at, segs: fine ? 80 : mid ? 64 : 40, only: "mesh", under: true, profile: jacket, flutes: fine ? 20 : mid ? 16 : 10, flute: Math.max(0.05, e * 0.045) });
+  // the lip of the mouth, a stiffening band, and the manifold rings where the coolant enters and leaves, with their bolts
+  out.push({ kind: "lathe", material: "hull-grey", at, segs, only: "mesh", under: true, profile: [[e * 1.0, 0], [e * 1.06, 0], [e * 1.06, 0.18], [e * 1.0, 0.18]] });
+  if (mid) out.push({ kind: "lathe", material: "hull-grey-dark", at, segs, only: "mesh", under: true, profile: [[wallAt(l * 0.2) + 0.01, l * 0.2 - 0.1], [wallAt(l * 0.2) + 0.11, l * 0.2 - 0.07], [wallAt(l * 0.2) + 0.11, l * 0.2 + 0.07], [wallAt(l * 0.2) + 0.01, l * 0.2 + 0.1]] });
+  const inlet = l * j0;
+  const outlet = l * 0.9;
+  for (const [y, material] of [[inlet, "copper"], [outlet, "pipe-steel"]] as const) {
+    const r = wallAt(y) + 0.16 + e * 0.02;
+    out.push(hoop(material, r, y, Math.max(0.1, e * 0.07), segs, mid ? 6 : 5, { at, under: true }));
+    if (mid) out.push({ kind: "lathe", material: "hull-grey-dark", at, segs, only: "mesh", under: true, profile: [[r + 0.02, y - e * 0.13], [r + 0.02, y + e * 0.13]] });
+    if (fine) out.push(...ringOf(8, r, y).map((p) => rod("hull-grey", [x + p.at[0] * 0.98, y, z + p.at[2] * 0.98], [x + p.at[0] * 1.07, y, z + p.at[2] * 1.07], 0.06, 6)));
   }
-  // ribs: thin strips that follow the bell
-  for (let k = 0; k < some(ctx, 6); k++) {
-    const a = (TAU * k) / Math.max(1, some(ctx, 6));
-    out.push({ kind: "lathe", material: "hull-grey-dark", at, segs: 2, only: "mesh", under: true, profile: profile.map(([r, y]) => [r + 0.07, y] as const), arc: () => [a - 0.035 / (e * 0.5 + 0.5), a + 0.035 / (e * 0.5 + 0.5)] });
+  // the throat ring and the combustion chamber above it, in gold foil, with an injector dome and propellant ports
+  out.push({ kind: "lathe", material: "hull-grey-dark", at, segs: 24, only: "mesh", profile: [[e * 0.2, l], [e * 0.4, l + 0.1], [e * 0.4, l + 0.2]], welds: [l + 0.1] });
+  out.push(...foilBand("kapton", e * 0.425, l + 0.22, l + 0.78, 0, 2 * Math.PI, ctx.seed + at.join(","), fine ? Math.max(0.16, e * 0.1) : Math.max(0.3, e * 0.16), 0.025).map((p) => place([p], { at: [x, 0, z] })[0]));
+  out.push({ kind: "lathe", material: "hull-grey", at, segs: 24, only: "mesh", profile: [[e * 0.44, l + 0.78], [e * 0.44, l + 0.86], [e * 0.34, l + 0.95], [e * 0.2, l + 1.0]] });
+  if (mid) out.push(hoop("coolant", e * 0.46, l + 0.82, 0.05, 20, 5, { at }));
+  const toward = (deg0: number, radius: number, y: number): Vec3 => [x + radius * Math.sin(deg(deg0)), y, z + radius * Math.cos(deg(deg0))];
+  // the turbopump stands beside the chamber on the nozzle's outer side, with its volute, its inlet line to the plate, its discharge to the inlet manifold and a hot line from the chamber
+  const out0 = Math.atan2(x, z) * (180 / Math.PI);
+  const px = out0 + 25;
+  const pump = toward(px, e * 0.78, l * 0.76);
+  out.push(post("hull-grey-dark", [pump[0], pump[2]], e * 0.2, l * 0.76, e * 0.2, l + 0.7, 12), post("hull-grey", [pump[0], pump[2]], e * 0.26, l * 0.76 + 0.3, e * 0.26, l * 0.76 + 0.9, 12));
+  if (mid) out.push(post("pipe-steel", [pump[0], pump[2]], e * 0.22, l * 0.76 + 0.08, e * 0.22, l * 0.76 + 0.3, 12), post("hull-grey-dark", [pump[0], pump[2]], e * 0.14, l * 0.76 + 0.9, e * 0.14, l + 0.92, 12), hoop("hull-grey", e * 0.3, l * 0.76 + 0.6, 0.05, 20, 5, { at: [pump[0], pump[2]] }), hoop("kapton", e * 0.205, l + 0.4, 0.04, 14, 4, { at: [pump[0], pump[2]] }));
+  if (mid) {
+    out.push(...pipeRun([toward(px, e * 0.84, l + 0.6), toward(px, e * 0.62, l + 0.6), toward(px + 6, e * 0.5, l + 0.6)], Math.max(0.08, e * 0.045), "pipe-steel", { ends: ["flange", "bulkhead"], band: "coolant", flangeEvery: 99, bracketEvery: 99 }));
+    out.push(...pipeRun([toward(px, e * 0.62, l * 0.76 + 0.45), toward(px - 25, e * 0.8, l * 0.76 + 0.45), toward(px - 25, e * 0.8, inlet)], Math.max(0.07, e * 0.04), "copper", { ends: ["flange", "flange"], flangeEvery: 99, bracketEvery: 99 }));
   }
-  // the throat ring and injector head above the bell
-  out.push({ kind: "lathe", material: "hull-grey-dark", at, segs: 20, only: "mesh", profile: [[e * 0.2, l], [e * 0.42, l + 0.1], [e * 0.42, l + 0.62], [e * 0.28, l + 0.7], [e * 0.28, l + 0.95]], welds: [l + 0.4] });
-  out.push(hoop("coolant", e * 0.3, l + 0.45, 0.07, 18, 5));
-  // feed lines up to the plate
-  for (let k = 0; k < 3; k++) {
-    const a = deg(40 + 120 * k);
-    out.push(post("coolant", [x + e * 0.34 * Math.sin(a), z + e * 0.34 * Math.cos(a)], 0.07, l + 0.4, 0.07, plateY, 6));
+  if (fine) {
+    out.push(...pipeRun([toward(px, e * 0.62, l + 0.5), toward(px - 70, e * 0.5, l + 0.5), toward(px - 70, e * 0.4, l + 0.2)], Math.max(0.06, e * 0.032), "hull-grey", { ends: ["cap", "flange"], flangeEvery: 99, bracketEvery: 99 }));
+    out.push(...pipeRun([toward(px + 70, e * 0.44, l + 0.7), toward(px + 70, e * 0.62, l + 0.7), toward(px + 120, e * 0.8, outlet)], Math.max(0.06, e * 0.032), "coolant", { ends: ["flange", "flange"], flangeEvery: 99, bracketEvery: 99 }));
   }
-  // gimbal actuators: a rod from the plate to the bell, on two sides
-  for (const a of [deg(30), deg(120)]) out.push(rod("hull-grey", [x + e * 0.5 * Math.sin(a), plateY, z + e * 0.5 * Math.cos(a)], [x + e * 0.8 * Math.sin(a), l * 0.62, z + e * 0.8 * Math.cos(a)], 0.07, 6), rod("copper", [x + e * 0.5 * Math.sin(a), plateY, z + e * 0.5 * Math.cos(a)], [x + e * 0.6 * Math.sin(a), plateY - (plateY - l * 0.62) * 0.4, z + e * 0.6 * Math.cos(a)], 0.1, 6));
+  // propellant ports: two big flanged inlets on the injector dome
+  for (const a of mid ? [px + 150, px - 150] : [px + 150]) out.push(...pipeRun([toward(a, e * 0.42, l + 0.5), toward(a, e * 0.7, l + 0.5)], Math.max(0.09, e * 0.05), "pipe-steel", { ends: ["flange", "cap"], flangeEvery: 99, bracketEvery: 99 }));
+  // the plate's feed lines
+  for (let k = 0; k < (fine ? 3 : 2); k++) {
+    const a = 40 + 120 * k + out0 * 0.3;
+    out.push(post("copper", [x + e * 0.34 * Math.sin(deg(a)), z + e * 0.34 * Math.cos(deg(a))], 0.07, l + 1.0, 0.07, plateY, 8), post("hull-grey-dark", [x + e * 0.34 * Math.sin(deg(a)), z + e * 0.34 * Math.cos(deg(a))], 0.11, plateY - 0.25, 0.11, plateY - 0.1, 10));
+  }
+  // the gimbal: a bearing ring and ball under the plate, and two actuators, each a cylinder with a piston and clevis ends
+  out.push(hoop("hull-grey-dark", e * 0.48, plateY - 0.12, 0.1, mid ? 24 : 16, mid ? 6 : 5, { at }), { kind: "lathe", material: "hull-grey-dark", at, segs: 16, only: "mesh", profile: [[e * 0.3, plateY - 0.05], [e * 0.34, plateY - 0.4]] });
+  for (const a of [30, 120]) {
+    const top: Vec3 = [x + e * 0.5 * Math.sin(deg(a)), plateY, z + e * 0.5 * Math.cos(deg(a))];
+    const low: Vec3 = [x + e * 0.62 * Math.sin(deg(a)), l * 0.62, z + e * 0.62 * Math.cos(deg(a))];
+    const mid: Vec3 = [top[0] + (low[0] - top[0]) * 0.58, top[1] + (low[1] - top[1]) * 0.58, top[2] + (low[2] - top[2]) * 0.58];
+    out.push(rod("hull-grey-dark", top, mid, Math.max(0.09, e * 0.05), 12), rod("pipe-steel", mid, low, Math.max(0.04, e * 0.022), 8), rod("hull-grey", [mid[0] + (top[0] - mid[0]) * 0.1, mid[1] + (top[1] - mid[1]) * 0.1, mid[2] + (top[2] - mid[2]) * 0.1], [mid[0] + (top[0] - mid[0]) * 0.04, mid[1] + (top[1] - mid[1]) * 0.04, mid[2] + (top[2] - mid[2]) * 0.04], Math.max(0.11, e * 0.06), 12), box("hull-grey-dark", [top[0], top[1] - 0.12, top[2]], 0.26, 0.16, 0.24, a), box("hull-grey-dark", [low[0], low[1] - 0.1, low[2]], 0.24, 0.16, 0.22, a));
+  }
+  // the field coils round the bell: they glow when the engines are lit
+  const coilYs = (fine ? [0.3, 0.55, 0.78] : [0.38, 0.7]).map((f) => l * f);
+  for (const y of coilYs) out.push(hoop("coil-lit", wallAt(y) + 0.24 + e * 0.04, y, 0.075 * (e / 1.8 + 0.5), fine ? 28 : mid ? 20 : 14, fine ? 6 : 5, { at, under: true }));
+  // coolant tubes wound on the skirt's lower part
+  if (mid) for (const f of fine ? [0.12, 0.3] : [0.22]) out.push(hoop("coolant", wallAt(l * f) + 0.1, l * f, 0.035, fine ? 24 : 12, 5, { at, under: true }));
   return out;
 }
 
@@ -141,7 +182,7 @@ function engineCluster(count: 1 | 3 | 4 | 7, id: string, name: string, mass: num
     depth: 2 * (R + 1.1) + 2.2,
     top: "L",
     inside: false,
-    detail: count >= 7 ? 0.4 : count >= 4 ? 0.6 : count >= 3 ? 0.65 : 0.8,
+    detail: count >= 7 ? 0.4 : count >= 4 ? 0.5 : count >= 3 ? 0.6 : 0.8,
     livery: "industrial",
     build: (ctx) => {
       const out: Piece[] = [];
@@ -247,7 +288,7 @@ function tank(id: string, name: string, R: number, L: number, top: CollarClass, 
         const f = patch(R + 0.1, a, y);
         const out1: Vec3 = [f.o[0] + f.w[0] * 0.9, y, f.o[2] + f.w[2] * 0.9];
         const out2: Vec3 = [out1[0] + f.u[0] * 1.6, y, out1[2] + f.u[2] * 1.6];
-        out.push(...pipeRun([f.o, out1, out2], 0.14, k % 2 ? "coolant" : "copper", { support: [-f.w[0], 0, -f.w[2]] }), rod("lamp-red", [out1[0] + f.u[0] * 0.8, y + 0.2, out1[2] + f.u[2] * 0.8], [out1[0] + f.u[0] * 0.8, y + 0.5, out1[2] + f.u[2] * 0.8], 0.22, 12));
+        out.push(...pipeRun([f.o, out1, [out2[0] + f.u[0] * 0.6, y, out2[2] + f.u[2] * 0.6]], 0.14, "pipe-steel", { support: [-f.w[0], 0, -f.w[2]], band: k % 2 ? "coolant" : "copper", ends: ["bulkhead", k % 2 ? "valve" : "cap"], bracketEvery: 1.1 }));
       }
       if (ctx.cutaway) {
         const level = y0 + (y1 - y0) * 0.68;
@@ -426,6 +467,16 @@ function habitatRing(id: string, name: string, major: number, mass: number): Kit
         : [[rIn + 0.4, yc - hy], [rOut - 0.4, yc - hy], [rOut, yc - hy + 0.4], [rOut, yc + hy - 0.4], [rOut - 0.4, yc + hy], [rIn + 0.4, yc + hy], [rIn, yc + hy - 0.4], [rIn, yc - hy + 0.4], [rIn + 0.4, yc - hy]];
       out.push({ kind: "lathe", material: ctx.livery.under, segs: 72, body: true, outline: true, profile: prof, welds: [yc - hy + 0.4, yc + hy - 0.4] });
       out.push(...pipeRing("copper", rOut, yc - hy + 0.5, 0.12, 96), ...pipeRing("copper", rOut, yc + hy - 0.5, 0.12, 96));
+      // the roof and the floor of the ring are plated too: radial seams and bands of fixings, so no broad face is bare, in the line looks as much as the painted one
+      if (!cut) for (const sign of [1, -1]) {
+        const y = yc + sign * (hy + 0.015);
+        const r0 = rIn + 0.4;
+        const r1 = rOut - 0.4;
+        const around = (r: number): Vec3[] => Array.from({ length: 73 }, (_, k) => [r * Math.sin((TAU * k) / 72), y, r * Math.cos((TAU * k) / 72)] as Vec3);
+        out.push({ kind: "lines", weight: "feature", paths: [0, 1, 2, 3, 4].map((k) => around(r0 + ((r1 - r0) * k) / 4)) });
+        out.push({ kind: "lines", weight: "weld", paths: Array.from({ length: 48 }, (_, k) => [[r0 * Math.sin((TAU * k) / 48), y, r0 * Math.cos((TAU * k) / 48)], [r1 * Math.sin((TAU * k) / 48), y, r1 * Math.cos((TAU * k) / 48)]] as Vec3[]) });
+        out.push({ kind: "lines", weight: "weld", paths: Array.from({ length: 48 }, (_, k) => [[(r0 + (r1 - r0) * 0.25) * Math.sin((TAU * (k + 0.5)) / 48), y, (r0 + (r1 - r0) * 0.25) * Math.cos((TAU * (k + 0.5)) / 48)], [(r0 + (r1 - r0) * 0.5) * Math.sin((TAU * (k + 0.5)) / 48), y, (r0 + (r1 - r0) * 0.5) * Math.cos((TAU * (k + 0.5)) / 48)]] as Vec3[]) });
+      }
       // plating and a window band round the outside
       const panelsTop = cut ? yc - 0.2 : yc + hy - 0.7;
       out.push(...drum(ctx, { R: rOut, L: panelsTop - (yc - hy + 0.7), panels: { wide: 3.4, tall: 1.2 }, hatches: 0, conduits: 0, trays: 0, vents: 0, ladders: 0, digits: "09", junk: 0, hazard: false, rings: [] }).filter((p) => p.kind === "plate").map((p) => place([p], { at: [0, yc - hy + 0.7, 0] })[0]));
@@ -434,12 +485,12 @@ function habitatRing(id: string, name: string, major: number, mass: number): Kit
       for (let i = 0; i < windows; i++) {
         const a = (TAU * (i + 0.5)) / windows;
         const wide = (TAU * rOut) / windows - 0.35;
-        out.push(panel("panel-dark", rOut + 0.01, a, yc + 0.0, wide, winH + 0.3, 0.06, { plain: true }), panel("glass", rOut + 0.01, a, yc + 0.0, wide - 0.2, winH, 0.1), panel("lamp-blue", rOut + 0.01, a, yc - winH / 2 + 0.07, wide - 0.4, 0.07, 0.12, { plain: true }));
+        out.push(...glazing(rOut + 0.01, a, yc, wide, winH + 0.3, 0.1));
       }
       // airlocks on the outside, ladders, handrails
       for (let k = 0; k < 6; k++) out.push(...hatch({ r: rOut + 0.04, az: deg(30 + 60 * k + 12), y: yc - hy + 1.0, size: 1.4, round: true }));
       for (let k = 0; k < 3; k++) out.push(...cableTray(rOut + 0.05, deg(40 + 120 * k), yc - hy + 0.8, yc + hy - 0.8, 0.5, ctx.seed));
-      out.push(...hazardBand(rOut, yc - hy + 0.35, yc - hy + 0.7, 72), ...hazardBand(rOut, yc + hy - 0.7, yc + hy - 0.35, 72));
+      for (const k of [0, 120, 240]) out.push(...hazardBand(rOut, yc - hy + 0.35, yc - hy + 0.7, 6, [deg(k + 20), deg(k + 50)]), ...hazardBand(rOut, yc + hy - 0.7, yc + hy - 0.35, 6, [deg(k + 80), deg(k + 110)]));
       out.push(...stencil("09", rOut + 0.05, deg(80), yc - hy + 0.6 + hy, 1.4, "black"));
       // the spokes: six, each a pair of beams with conduits between and a lift car
       for (let k = 0; k < 6; k++) {
@@ -518,7 +569,7 @@ function habitatDrum(id: string, name: string, R: number, L: number, mass: numbe
         for (let i = 0; i < n; i++) {
           const a = az[0] + ((az[1] - az[0]) * (i + 0.5)) / n;
           const wide = ((az[1] - az[0]) * R) / n - 0.3;
-          out.push(panel("panel-dark", R + 0.012, a, y, wide, farm ? 1.7 : 1.0, 0.05, { plain: true }), panel(farm ? "plant" : "glass", R + 0.012, a, y, wide - 0.2, farm ? 1.5 : 0.8, 0.08), panel("lamp-blue", R + 0.012, a, y - (farm ? 0.7 : 0.3), wide - 0.4, 0.06, 0.1, { plain: true }));
+          out.push(...glazing(R + 0.012, a, y, wide, farm ? 1.7 : 1.0, 0.08, farm ? "plant" : "window"));
         }
       }
       if (open) out.push(...decks(ctx, R, y0 + 0.1, y1 - 0.1, farm ? 3.6 : 3.2, farm ? "farm" : "bunks"));
@@ -877,7 +928,7 @@ function bay(o: { id: string; name: string; note: string; R: number; L: number; 
           for (let i = 0; i < n; i++) {
             const a = az[0] + ((az[1] - az[0]) * (i + 0.5)) / n;
             const wide = ((az[1] - az[0]) * o.R) / n - 0.3;
-            out.push(panel("panel-dark", o.R + 0.012, a, y, wide, 1.2, 0.05, { plain: true }), panel(o.glass, o.R + 0.012, a, y, wide - 0.2, 1.0, 0.08), panel("lamp-blue", o.R + 0.012, a, y - 0.45, wide - 0.4, 0.06, 0.1, { plain: true }));
+            out.push(...glazing(o.R + 0.012, a, y, wide, 1.2, 0.08, o.glass === "glass" ? "window" : o.glass === "plant" ? "plant" : "window"));
           }
         }
       }
@@ -942,6 +993,93 @@ const evaLock = define({
       out.push(...decks(ctx, R, 0.9, 7.1, 3.1, "bench"));
       for (let k = 0; k < 6; k++) out.push(box("hull-white", [(R - 1.7) * Math.sin(deg(-60 + 24 * k)), 1.0, (R - 1.7) * Math.cos(deg(-60 + 24 * k))], 0.7, 0.5, 2.0, -60 + 24 * k), box("hull-orange", [(R - 1.7) * Math.sin(deg(-60 + 24 * k)), 1.4, (R - 1.7) * Math.cos(deg(-60 + 24 * k))], 0.55, 0.4, 1.0, -60 + 24 * k));
     }
+    return out;
+  },
+});
+
+/** The observation dome: a lounge drum crowned with an armoured glass dome and six shutter petals, a descendant of the ISS Cupola, with a ring of armoured portholes on its hull, some shuttered. */
+const domeLounge = define({
+  id: "dome-observation-m",
+  name: "Observation dome",
+  kind: "habitat",
+  note: "A crowning lounge: a drum with a ring of armoured portholes with burn shutters, and an armoured glass dome with six shutter petals, a descendant of the ISS Cupola; an M collar below and nothing above.",
+  mass: 74,
+  length: 12.2,
+  width: 10,
+  bottom: "M",
+  inside: true,
+  livery: "science",
+  build: (ctx) => {
+    const R = 4.4;
+    const L = 9;
+    const out = drum(ctx, { R, L, bottom: "M", panels: { wide: 1.8, tall: 1.4 }, hatches: 2, conduits: 2, trays: 1, vents: 2, ladders: 1, digits: "26", junk: 20, rings: [0.5], hazard: true });
+    out.push({ kind: "lathe", material: "hull-grey-dark", segs: 56, body: true, outline: true, profile: [[R, L], [R * 0.74, L + 0.15], [R * 0.74, L + 0.3]] });
+    out.push(...observationDome([0, L + 0.3, 0], R * 0.72, "open"));
+    // armoured portholes round the hull in two rows, the lower row's shutters closed as for a burn
+    for (let k = 0; k < some(ctx, 12); k++) out.push(...porthole(R + 0.05, deg(15 + 30 * k), 5.6, 0.42, k % 3 === 0 ? "closed" : "open"));
+    for (let k = 0; k < some(ctx, 8); k++) out.push(...porthole(R + 0.05, deg(40 + 45 * k), 3.6, 0.36, k % 4 === 0 ? "closed" : "open"));
+    if (ctx.cutaway) {
+      out.push(...decks(ctx, R, 0.9, L - 0.2, 4.0, "bench"));
+      out.push(...place(room("lounge", ctx.seed), { at: [0, L - 0.1, -1.0], yaw: 180 }));
+    }
+    return out;
+  },
+});
+
+/** The solarium: a glazed garden hall between two plated ends, with mullions, hoops, armoured shutters, planters, trees, a pool, benches and rows of grow-lamps that glow when the engines are lit. */
+const solariumModule = define({
+  id: "solarium-m",
+  name: "Solarium",
+  kind: "habitat",
+  note: "A glazed garden hall for plants and people: a long glass drum between plated ends, mullioned and hooped, with armoured shutters that close against a burn, planters, trees, a pool and grow-lamps; M collars.",
+  mass: 210,
+  length: 20,
+  width: 16,
+  top: "M",
+  bottom: "M",
+  inside: true,
+  livery: "science",
+  build: (ctx) => {
+    const R = 7.4;
+    const y0 = 2.4;
+    const y1 = 17.6;
+    const out: Piece[] = [];
+    const ends = (y: number, top: boolean) => drum(ctx, { R, L: 2.4, ...(top ? { top: "M" as const } : { bottom: "M" as const }), panels: { wide: 2.2, tall: 1.3 }, hatches: 2, conduits: 2, trays: 1, vents: 2, ladders: 0, digits: top ? "28" : "27", junk: 12, rings: [0.5], hazard: false }).map((p) => place([p], { at: [0, y, 0] })[0]);
+    out.push(...ends(0, false), ...ends(17.6, true));
+    out.push({ kind: "lathe", material: "hull-grey-dark", segs: 56, only: "mesh", profile: [[R, y0], [R * 0.2, y0]] }, { kind: "lathe", material: "hull-grey-dark", segs: 56, only: "mesh", profile: [[R, y1], [R * 0.2, y1]] });
+    const arc = ctx.cutaway ? CUT : ([0, TAU] as const);
+    out.push({ kind: "lathe", material: "glass-clear", segs: 72, body: true, outline: true, profile: [[R - 0.05, y0], [R - 0.05, y1]], arc: () => arc });
+    const mullions = some(ctx, 36);
+    for (let k = 0; k < mullions; k++) {
+      const a = arc[0] + ((arc[1] - arc[0]) * (k + (ctx.cutaway ? 0.5 : 0))) / mullions;
+      out.push(rod(k % 3 === 0 ? "pipe-steel" : "hull-grey", [R * Math.sin(a), y0, R * Math.cos(a)], [R * Math.sin(a), y1, R * Math.cos(a)], 0.09, 8));
+    }
+    for (const y of [y0 + 0.05, 5.8, 9.2, 12.6, y1 - 0.05]) out.push(hoop("hull-grey", R + 0.02, y, 0.1, 72, 6, { arc: () => arc }));
+    // armoured shutters: panels that fold along the mullions, stowed on most bays and closed on a few
+    for (let k = 0; k < some(ctx, 12); k++) {
+      const a = deg(15 + 30 * k) + (ctx.cutaway ? 0 : 0);
+      const closed = k % 4 === 1;
+      if (ctx.cutaway && (a < CUT[0] || a > CUT[1])) continue;
+      for (const [ya, yb] of closed ? [[y0 + 0.2, 9.8], [9.8, y1 - 0.2]] : [[y1 - 1.6, y1 - 0.2]]) out.push(...framedPanel("hull-grey", "hull-white-worn", R + 0.1, a, (ya + yb) / 2, 2.8, yb - ya - 0.1, 0.12, true));
+    }
+    // inside: the floor, planters, trees, a pool, benches and grow-lamps
+    const random = rng(`${ctx.seed}/solarium`);
+    out.push({ kind: "lathe", material: "deck", segs: 56, only: "mesh", profile: [[0.01, y0 + 0.06], [R - 0.3, y0 + 0.06]] });
+    out.push({ kind: "lathe", material: "soil", segs: 40, only: "mesh", profile: [[0.01, y0 + 0.3], [R * 0.35, y0 + 0.3]] }, annulus("hull-grey", R * 0.35, R * 0.4, y0, y0 + 0.45, 40, { only: "mesh" }), { kind: "lathe", material: "water", segs: 24, only: "mesh", profile: [[0.01, y0 + 0.24], [R * 0.16, y0 + 0.24]] }, annulus("hull-white", R * 0.16, R * 0.2, y0, y0 + 0.4, 24, { only: "mesh" }));
+    for (let k = 0; k < some(ctx, 14); k++) {
+      const a = (TAU * (k + random() * 0.4)) / some(ctx, 14);
+      const rr = R * (0.45 + random() * 0.45);
+      const x = rr * Math.sin(a);
+      const z = rr * Math.cos(a);
+      const tall = 3.5 + random() * 6;
+      out.push(post("wood", [x, z], 0.22, y0 + 0.06, 0.12, y0 + tall * 0.7, 8), ...horn("leaf", [x, y0 + tall * 0.45, z], [x, y0 + tall, z], [1.9 + random(), 2.2, 1.6, 0.9, 0.3], 10));
+    }
+    for (let k = 0; k < some(ctx, 10); k++) {
+      const a = (TAU * (k + 0.5)) / some(ctx, 10);
+      out.push(box("hull-grey", [(R - 1.1) * Math.sin(a), y0 + 0.06, (R - 1.1) * Math.cos(a)], 2.8, 1.1, 0.6, (a * 180) / Math.PI), box("soil", [(R - 1.1) * Math.sin(a), y0 + 0.66, (R - 1.1) * Math.cos(a)], 2.6, 0.9, 0.04), box("leaf", [(R - 1.1) * Math.sin(a), y0 + 0.7, (R - 1.1) * Math.cos(a)], 2.4, 0.8, 0.5, (a * 180) / Math.PI), box("wood", [(R * 0.6) * Math.sin(a + 0.15), y0 + 0.06, (R * 0.6) * Math.cos(a + 0.15)], 1.6, 0.4, 0.45, (a * 180) / Math.PI));
+    }
+    for (const rr of [R * 0.3, R * 0.55, R * 0.8]) out.push(hoop("grow-lamp", rr, y1 - 1.0, 0.16, 48, 6), ...Array.from({ length: 6 }, (_, k) => rod("hull-grey", [rr * Math.sin((k * TAU) / 6), y1 - 1.0, rr * Math.cos((k * TAU) / 6)], [rr * Math.sin((k * TAU) / 6), y1, rr * Math.cos((k * TAU) / 6)], 0.04, 6)));
+    out.push(post("pipe-steel", [0, 0], 0.5, y0, 0.5, y1, 14), ...ladder(0.5, 0, y0 + 0.4, y1 - 0.4, 0.5));
     return out;
   },
 });
@@ -1023,7 +1161,7 @@ const list: KitModule[] = [
         for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]] as const) {
           const px = cx + (sx * 3.2 * Math.cos(a) + sz * 3.2 * Math.sin(a));
           const pz = cz + (-sx * 3.2 * Math.sin(a) + sz * 3.2 * Math.cos(a));
-          out.push(box("hazard", [px, 1.5, pz], 0.6, 0.6, 1.4), box("hull-grey", [px, 2.9, pz], 0.8, 0.8, 0.3), rod("hull-grey", [px, 2.9, pz], [px * 0.98, 14, pz * 0.98], 0.07, 5));
+          out.push(box("hull-white-worn", [px, 1.5, pz], 0.6, 0.6, 1.4), box("hazard", [px, 2.5, pz], 0.62, 0.62, 0.18), box("hull-grey", [px, 2.9, pz], 0.8, 0.8, 0.3), rod("hull-grey", [px, 2.9, pz], [px * 0.98, 14, pz * 0.98], 0.07, 5));
         }
         out.push(beam("hull-grey-dark", [6 * Math.sin(a), 1.2, 6 * Math.cos(a)], [cx, 1.2, cz], 1.1, 0.5), beam("hull-grey-dark", [6 * Math.sin(a), 13.8, 6 * Math.cos(a)], [cx, 13.8, cz], 1.1, 0.5), beam("hull-grey-dark", [6 * Math.sin(a), 7.5, 6 * Math.cos(a)], [cx, 7.5, cz], 0.5, 0.5));
         out.push(hoop("hull-grey", 3.55, 14.0, 0.08, 20, 4, { at: [cx, cz] }));
@@ -1043,6 +1181,8 @@ const list: KitModule[] = [
   bay({ id: "store-drum-m", name: "Stores drum", note: "Stores: racked crates of food, spares and water behind sealed hatches; M collars.", R: 4.4, L: 14, mass: 98, furniture: "cargo", digits: "25", glass: "none", livery: "transport", spacing: 3.4 }),
   commsArray,
   evaLock,
+  domeLounge,
+  solariumModule,
   tank("tank-header-9", "Header tank, 9 m", 3, 9, "M", "M", 24, 160, "A small reserve tank for each propellant, high on the spine so the feed lines run downhill: a header tank, with its own valves and level gauge."),
   missionPod("survey"),
   missionPod("medical"),

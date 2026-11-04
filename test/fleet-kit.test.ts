@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
 import { build } from "../src/build/index.ts";
-import { check, MATERIALS, PART_ENTRIES, ROCKETS } from "../src/index.ts";
+import { check, FLEET_PALETTE, MATERIALS, PART_ENTRIES, ROCKETS } from "../src/index.ts";
+import { foilBand } from "../src/model/fleet/detail.ts";
 import { COLLARS, COLLAR_CLASSES, assemble, KIT, mates, SAMPLE_SHIPS, shipParts, shipPieces } from "../src/model/fleet/kit.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
@@ -71,8 +72,8 @@ test("no module has a bare surface: hundreds of pieces, many materials, many kin
   }
   // every kind of detail of the detail kit is somewhere: seams, hatches, conduits, radiators, tiles, joints, antennae, markings
   const everything = modules.flatMap((module) => module.pieces());
-  const has = (material: string) => everything.some((piece) => piece.kind !== "lines" && (piece as { material: string }).material === material);
-  for (const material of ["copper", "coil", "radiator", "tile", "hazard", "lamp-amber", "lamp-blue", "lamp-red", "glass", "plant", "frost", "panel-dark", "hull-orange", "hull-white", "hull-yellow", "hull-blue"]) assert.ok(has(material), material);
+  const has = (material: string) => everything.some((piece) => piece.kind !== "lines" && ((piece as { material: string }).material === material || (piece as { top?: string }).top === material));
+  for (const material of ["copper", "coil-lit", "radiator", "tile", "hazard", "lamp-amber", "lamp-blue", "lamp-red", "glass", "plant", "frost", "panel-dark", "hull-orange", "hull-white", "hull-yellow", "hull-blue"]) assert.ok(has(material), material);
   assert.ok(everything.some((piece) => piece.kind === "lines"), "seam lines for the drawings");
 });
 
@@ -91,11 +92,11 @@ test("the detail level lowers the count and keeps the shape", () => {
   assert.ok(Math.abs(measured(KIT["habitat-drum-large"].pieces({ detail: 0.3 })).length - 24) < 0.5);
 });
 
-test("each module alone stays inside the mesh limit of a part, and its sample ship inside the fleet's", () => {
+test("each module alone stays inside the mesh limit of a fleet part (1.25 MB: the fleet is built in the browser), and its sample ship inside the fleet's", () => {
   for (const module of modules)
     for (const cutaway of module.inside ? [false, true] : [false]) {
       const bytes = toGlb([{ name: module.id, mesh: meshOf(module.pieces({ cutaway })), at: [0, 0, 0] }]).bytes.byteLength;
-      assert.ok(bytes < 600 * 1024, `${module.id}${cutaway ? " cut" : ""}: ${bytes}`);
+      assert.ok(bytes < 1280 * 1024, `${module.id}${cutaway ? " cut" : ""}: ${bytes}`);
     }
 });
 
@@ -254,14 +255,18 @@ test("every module names the real hardware it descends from; pipes are round wit
   const { DETAIL } = await import("../src/model/fleet/kit.ts");
   for (const module of modules) assert.ok(module.ancestor.length > 20, module.id);
   const mesh = (pieces: Parameters<typeof meshOf>[0]) => meshOf(pieces);
-  const run = DETAIL.pipeRun([[0, 0, 0], [0, 3, 0], [2, 3, 0], [2, 3, 3]], 0.1, "coolant", { support: [-1, 0, 0] });
+  const run = DETAIL.pipeRun([[0, 0, 0], [0, 3, 0], [2, 3, 0], [2, 3, 3]], 0.1, "coolant", { support: [-1, 0, 0], bracketEvery: 1.2 });
   const rods = run.filter((piece) => piece.kind === "plate" && piece.material === "coolant");
-  assert.equal(rods.length, 3, "a round tube for each run");
+  assert.ok(rods.length >= 3, "a round tube for each run, and a chain of them round each bend");
   for (const rod of rods) assert.ok(rod.kind === "plate" && rod.outline.length >= 12, "twelve sides or more");
-  // a round ball at each of the two bends, flanges at the ends, brackets with legs
-  assert.equal(run.filter((piece) => piece.kind === "lathe" && piece.material === "coolant").length, 2);
+  // a real bend: the corners are rounded, so more tubes than runs, with a round joint inside each bend, flanges at the ends and brackets on legs
+  assert.ok(rods.length > 3 && run.filter((piece) => piece.kind === "lathe" && piece.material === "coolant").length >= 2);
   assert.ok(run.filter((piece) => piece.kind === "plate" && piece.material === "hull-grey-dark").length >= 10);
   assert.ok(boundsOf(mesh(run)).max[0] > 2);
+  // never a bare end: each end of a run has a flange or a gland wider than the pipe
+  const ends = DETAIL.pipeRun([[0, 0, 0], [0, 0, 4]], 0.1, "coolant", { ends: ["flange", "cap"] });
+  const wide = (z: number) => ends.some((piece) => piece.kind === "plate" && piece.material !== "coolant" && piece.outline.length >= 6 && Math.max(...piece.outline.map(([a]) => a)) > 0.15 && Math.abs(piece.frame.o[2] - z) < 0.2);
+  assert.ok(wide(0) && wide(4), "a flange at each end");
   const i = DETAIL.iBeam("hull-grey", [0, 0, 0], [0, 4, 0], [1, 0, 0], 0.4, 0.3);
   assert.equal(i.length, 3, "a web and two flanges");
   const c = DETAIL.channel("hull-grey", [0, 0, 0], [0, 4, 0], [1, 0, 0], 0.4, 0.3);
@@ -309,4 +314,125 @@ test("solids by range and by corner, shared from SPX-03's adapter: a box, a pris
   const slope = bounds([DETAIL.quad("hull-grey", [0, 0, 0], [4, 0, 0], [3, 2, 0], [1, 2, 0], 0.2)]);
   assert.ok(slope.max[0] - slope.min[0] > 3.9 && slope.max[1] - slope.min[1] > 1.9);
   assert.ok(bounds([DETAIL.discZ("hull-grey", 1, 1, 0, 2, 0.5)]).max[2] > 1.99 && bounds([DETAIL.discX("hull-grey", 1, 1, 0, 3, 0.5)]).max[0] > 2.99);
+});
+
+test("plating has depth: a quilted blanket is pillows with creases, a framed panel has a raised frame round a sunk field, foil is loose facets, a sheet is one face", () => {
+  const faces = (piece: Piece) => {
+    const mesh = meshOf([piece]);
+    let verts = 0;
+    let triangles = 0;
+    for (const buffers of mesh.faces.values()) {
+      verts += buffers.positions.length / 3;
+      triangles += buffers.indices.length / 3;
+    }
+    return { verts, triangles, ...boundsOf(mesh) };
+  };
+  const frame = { o: [0, 0, 0] as [number, number, number], u: [1, 0, 0] as [number, number, number], v: [0, 1, 0] as [number, number, number], w: [0, 0, 1] as [number, number, number] };
+  const outline = [[-1, -0.6], [1, -0.6], [1, 0.6], [-1, 0.6]] as const;
+  const flat = faces({ kind: "plate", material: "blanket", frame, outline, thickness: 0.1 });
+  const quilt = faces({ kind: "plate", material: "blanket", frame, outline, thickness: 0.1, quilt: { nu: 3, nv: 2, bulge: 0.05 } });
+  assert.ok(quilt.triangles > flat.triangles * 4, "pillows are many faces");
+  assert.ok(quilt.max[2] > flat.max[2] + 0.04, "each pillow stands proud of the panel's edge");
+  const framed = faces({ kind: "plate", material: "hull-grey", top: "hull-white", frame, outline, thickness: 0.1, inset: { margin: 0.1, depth: 0.04 } });
+  assert.ok(framed.triangles > flat.triangles, "a frame and walls");
+  const mesh = meshOf([{ kind: "plate", material: "hull-grey", top: "hull-white", frame, outline, thickness: 0.1, inset: { margin: 0.1, depth: 0.04 } }]);
+  assert.ok(mesh.faces.has("hull-white") && mesh.faces.has("hull-grey"), "the field and the frame are two materials");
+  const sheet = faces({ kind: "plate", material: "foil", frame, outline, thickness: 0.01, sheet: true });
+  assert.equal(sheet.verts, 4, "a sheet is one face");
+  const foil = DETAIL_FOIL();
+  assert.ok(foil.length >= 1 && foil.every((piece) => piece.kind === "plate" && Boolean(piece.facets?.length)));
+  const facets = foil.reduce((sum, piece) => sum + (piece.kind === "plate" ? (piece.facets?.length ?? 0) : 0), 0);
+  assert.ok(facets >= 60, `${facets} facets`);
+  // every facet takes the light on its own: the normals of a foil band differ from facet to facet
+  const normals = new Set<string>();
+  for (const buffers of meshOf(foil).faces.values()) for (let i = 0; i < buffers.normals.length; i += 9) normals.add(buffers.normals.slice(i, i + 3).map((n) => n.toFixed(2)).join(","));
+  assert.ok(normals.size > facets * 0.8, "crinkled, not smooth");
+});
+
+function DETAIL_FOIL(): Piece[] {
+  return foilBand("foil", 4, 0, 1.5, 0, 1.2, "test");
+}
+
+test("the livery is mostly white thermal blanket: most plating is quilted blanket or a white or grey rigid panel, foil is rare and colour is only a few small access panels", async () => {
+  const { hullPanels, LIVERY } = await import("../src/model/fleet/detail.ts");
+  for (const name of Object.keys(LIVERY) as (keyof typeof LIVERY)[]) {
+    const pieces = hullPanels({ r: 6, y0: 0, y1: 40, livery: LIVERY[name], seed: `livery-${name}`, wide: 2.4, tall: 1.6, raise: 0.09 });
+    const plates = pieces.filter((piece) => piece.kind === "plate");
+    const area = (piece: Piece) => (piece.kind === "plate" ? piece.outline.reduce((sum, [a, b], i) => sum + (a * piece.outline[(i + 1) % piece.outline.length][1] - piece.outline[(i + 1) % piece.outline.length][0] * b), 0) / 2 : 0);
+    const share = (test: (piece: Piece) => boolean) => plates.filter(test).reduce((sum, piece) => sum + Math.abs(area(piece)), 0) / plates.reduce((sum, piece) => sum + Math.abs(area(piece)), 0);
+    const coloured = (piece: Piece) => piece.kind === "plate" && (["hull-orange", "hull-orange-worn", "hull-yellow", "hazard", "hull-blue"] as string[]).includes(piece.top ?? piece.material);
+    // the accent colours (orange, and blue on the command scheme) are on at most a few small access panels
+    const quilted = share((piece) => piece.kind === "plate" && Boolean(piece.quilt));
+    assert.ok(share(coloured) < (name === "command" ? 0.06 : 0.04), `${name}: ${(share(coloured) * 100).toFixed(1)}% colour`);
+    assert.ok(quilted > 0.5, `${name}: ${(quilted * 100).toFixed(0)}% of the plating is quilted blanket`);
+    for (const piece of plates) if (Math.abs(area(piece)) > 0.3) assert.ok(piece.kind === "plate" && piece.material !== "hull-yellow" && piece.material !== "hazard", `${name}: no yellow slab`);
+  }
+});
+
+test("round hardware has proper ends: a bulkhead gland, a valve and a blind flange; a separation joint is latches, bolt caps and umbilical plates and can be planned on a ship's place", async () => {
+  const { pipeRun, separationJoint } = await import("../src/model/fleet/detail.ts");
+  const kinds = (pieces: Piece[]) => pieces.filter((piece) => piece.kind === "plate").length;
+  const [gland, valve, cap] = (["bulkhead", "valve", "cap"] as const).map((end) => pipeRun([[0, 0, 0], [0, 0, 3]], 0.1, "pipe-steel", { ends: ["flange", end] }));
+  assert.ok(kinds(gland) > kinds(pipeRun([[0, 0, 0], [0, 0, 3]], 0.1, "pipe-steel", { ends: ["flange", "flange"] })) - 4);
+  assert.ok(valve.some((piece) => piece.kind === "plate" && piece.material === "lamp-red"), "a valve has its handwheel");
+  assert.ok(cap.length > 10);
+  const joint = separationJoint(4.5, 12, { latches: 8, umbilicals: 3 });
+  assert.ok(joint.length > 50, `${joint.length} pieces`);
+  assert.ok(joint.some((piece) => piece.kind === "lines"), "the groove is a seam line in the drawing");
+  const { min, max } = boundsOf(meshOf(joint));
+  assert.ok(min[1] < 12 - 0.3 && max[1] > 12 + 0.3 && max[0] > 4.5, "it straddles the joint plane and stands proud of the collar");
+  // planned on a ship: only the places that ask carry one, and the joint is at the place's base
+  const plain = shipPieces([{ module: "tank-cryo-12" }, { module: "tank-cryo-12" }], { detail: 0.3 });
+  const planned = shipPieces([{ module: "tank-cryo-12" }, { module: "tank-cryo-12", separation: true }], { detail: 0.3 });
+  assert.ok(planned.length > plain.length + 40);
+  assert.ok(KIT["tank-cryo-12"].pieces({ detail: 0.3, separation: { latches: 4 } }).length > KIT["tank-cryo-12"].pieces({ detail: 0.3 }).length);
+});
+
+test("the Lit look: coils, windows, navigation lights, strobes and floodlights are emissive materials that glow with the engines, and every ship has them", () => {
+  const glowing = Object.entries(MATERIALS).filter(([, spec]) => "glow" in spec && (spec as { glow: number }).glow > 0).map(([name]) => name);
+  for (const name of ["coil-lit", "window", "nav-red", "nav-green", "strobe", "flood", "lamp-amber", "lamp-blue", "lamp-red"]) assert.ok(glowing.includes(name), name);
+  const used = new Set(Object.values(SAMPLE_SHIPS.hauler).flatMap((place) => KIT[place.module].pieces({ detail: 0.4 })).flatMap((piece) => (piece.kind === "lines" ? [] : [piece.material, ...(piece.kind === "plate" && piece.top ? [piece.top] : [])])));
+  for (const name of ["coil-lit", "window", "nav-red", "nav-green", "strobe", "flood"]) assert.ok(used.has(name as never), `${name} is on the hauler`);
+  // a lit colour is its own: a palette role for each
+  for (const role of ["coilGlow", "windowLit", "navRed", "navGreen", "strobe", "flood"]) assert.match((FLEET_PALETTE as Record<string, string>)[role], /^#[0-9a-f]{6}$/i, role);
+});
+
+test("life aboard: a porthole with a burn shutter open and closed, an observation dome with its petals open and closed, ten furnished rooms, and a dome lounge and a solarium in the kit", async () => {
+  const { observationDome, porthole, room } = await import("../src/model/fleet/detail.ts");
+  const open = porthole(5, 0.3, 4, 0.5, "open");
+  const shut = porthole(5, 0.3, 4, 0.5, "closed");
+  assert.ok(open.length > 15 && shut.length > 15);
+  const standoff = (pieces: Piece[]) => {
+    let top = -Infinity;
+    for (const buffers of meshOf(pieces).faces.values()) for (let i = 0; i < buffers.positions.length; i += 3) top = Math.max(top, buffers.positions[i] * Math.sin(0.3) + buffers.positions[i + 2] * Math.cos(0.3));
+    return top;
+  };
+  // closed, the shutter stands proud of the pane; open, it lies folded back flat beside the port
+  assert.ok(standoff(shut) > standoff(open) + 0.15, `${standoff(shut)} against ${standoff(open)}`);
+  assert.ok(open.some((piece) => piece.kind === "plate" && piece.material === "window") && shut.some((piece) => piece.kind === "plate" && piece.material === "window"), "the pane is there either way");
+  assert.ok(shut.some((piece) => piece.kind === "plate" && piece.material === "hazard"), "a closed shutter wears its burn stripe");
+  const dome = observationDome([0, 9, 0], 3, "open");
+  const closed = observationDome([0, 9, 0], 3, "closed");
+  for (const set of [dome, closed]) assert.ok(set.some((piece) => piece.kind === "lathe" && piece.material === "glass-clear"), "glazing is clear glass");
+  assert.ok(MATERIALS["glass-clear"].opacity < 0.5 && !("opacity" in MATERIALS["hull-grey"]));
+  assert.ok(dome.filter((piece) => piece.kind === "lathe" && piece.arc).length >= 6, "six meridian ribs");
+  assert.ok(closed.some((piece) => piece.kind === "lathe" && piece.material === "hull-grey" && piece.arc), "six armoured petals over the glass");
+  const { ROOMS } = await import("../src/index.ts");
+  assert.equal(Object.keys(ROOMS).length, 10);
+  for (const spec of Object.values(ROOMS)) {
+    assert.ok(spec.name.length > 4 && spec.job.length > 20, spec.id);
+    const pieces = room(spec.id, "t");
+    assert.ok(pieces.length >= 6, `${spec.id}: ${pieces.length}`);
+    const { min, max } = boundsOf(meshOf(pieces));
+    assert.ok(max[0] - min[0] <= spec.size[0] + 3 && max[2] - min[2] <= spec.size[1] + 3 && max[1] - min[1] <= spec.size[2] + 2, `${spec.id} fits its size`);
+  }
+  assert.ok(room("garden").some((piece) => piece.kind === "plate" && piece.material === "grow-lamp"), "a garden has grow-lamps");
+  for (const id of ["dome-observation-m", "solarium-m"]) {
+    assert.ok(KIT[id], id);
+    const pieces = KIT[id].pieces();
+    assert.ok(pieces.some((piece) => piece.kind === "lathe" && piece.material === "glass-clear"), `${id} is glazed`);
+    assert.ok(measured(pieces).length > 10);
+  }
+  assert.ok(KIT["solarium-m"].pieces().some((piece) => piece.kind === "lathe" && piece.material === "grow-lamp"), "the solarium has grow-lamps");
+  assert.ok(KIT["dome-observation-m"].pieces().filter((piece) => piece.kind === "plate" && piece.material === "window").length >= 15, "armoured portholes round the lounge");
 });

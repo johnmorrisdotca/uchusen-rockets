@@ -9,8 +9,11 @@ test.beforeEach(({ browserName }, info) => {
   test.skip(browserName !== "chromium" || info.project.name !== "chromium-desk", "WebGL is drawn in the desk Chromium here");
 });
 
-/** Draws one choice and reads its picture: how much of the frame is the object, and how many of the object's pixels are edges. */
-async function look(page: Page, query: Record<string, string>) {
+/**
+ * Draws one choice and reads its picture: how much of the frame is the object, and how many of the object's pixels are edges. The line looks have a soft halo behind the object that the painted look has not, so a line look is read
+ * over the painted picture's own footprint (`footprint`), and the two are measured on the same pixels.
+ */
+async function look(page: Page, query: Record<string, string>, footprint?: number[]) {
   await page.setViewportSize({ width: 900, height: 900 });
   await page.goto(`${URL}?${new URLSearchParams({ spin: "off", ...query })}`);
   await page.evaluate(() => {
@@ -22,7 +25,7 @@ async function look(page: Page, query: Record<string, string>) {
   await page.waitForFunction(() => (document.getElementById("rocket") as HTMLElement).dataset.painted !== "loading", undefined, { timeout: 120_000 });
   await page.waitForTimeout(1500);
   const png = await hero(page).screenshot();
-  return page.evaluate(async (data) => {
+  return page.evaluate(async ([data, over]) => {
     const bitmap = await createImageBitmap(new Blob([new Uint8Array(data)], { type: "image/png" }));
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
@@ -34,7 +37,7 @@ async function look(page: Page, query: Record<string, string>) {
     // the background is the page's own colour: the corners
     const bg = [px[0], px[1], px[2]];
     const mask = new Uint8Array(width * height);
-    for (let i = 0; i < width * height; i++) mask[i] = Math.abs(px[i * 4] - bg[0]) + Math.abs(px[i * 4 + 1] - bg[1]) + Math.abs(px[i * 4 + 2] - bg[2]) < 24 ? 0 : 1;
+    for (let i = 0; i < width * height; i++) mask[i] = over ? over[i] : Math.abs(px[i * 4] - bg[0]) + Math.abs(px[i * 4 + 1] - bg[1]) + Math.abs(px[i * 4 + 2] - bg[2]) < 24 ? 0 : 1;
     let object = 0;
     let inside = 0;
     let edges = 0;
@@ -51,8 +54,8 @@ async function look(page: Page, query: Record<string, string>) {
         const gy = luma(i + width * 4) - luma(i - width * 4);
         if (Math.abs(gx) + Math.abs(gy) > 28) edges++;
       }
-    return { object: object / (width * height), edges: inside ? edges / inside : 0 };
-  }, [...png]);
+    return { object: object / (width * height), edges: inside ? edges / inside : 0, footprint: over ? [] : Array.from(mask) };
+  }, [[...png], footprint ?? null] as const);
 }
 
 test("the fleet's pictures are not blank or flat, painted and in the line look", async ({ page }) => {
@@ -74,12 +77,12 @@ test("the fleet's pictures are not blank or flat, painted and in the line look",
   ];
   for (const [rocket, variant, view] of choices) {
     const painted = await look(page, { rocket, variant, look: "painted", view });
-    const lines = await look(page, { rocket, variant, look: "thick", view });
+    const lines = await look(page, { rocket, variant, look: "thick", view }, painted.footprint);
     console.log(`${variant}: painted object ${(painted.object * 100).toFixed(1)}%, edges ${(painted.edges * 100).toFixed(1)}%; lines edges ${(lines.edges * 100).toFixed(1)}%`);
     expect(painted.object, `${variant} is drawn`).toBeGreaterThan(0.02);
-    // a guard against a flat picture (the side by side frame is judged by eye): half of Starship Block 3's inside edges at least, and the line look not much emptier than the painted one (the line look draws a plate's outline, the painted look its shading, so the two are not equal: 0.35 is the floor, and the ratios are printed)
+    // a guard against a flat picture (the side by side frame is judged by eye): half of Starship Block 3's inside edges at least, and the line look not much emptier than the painted one (the line look draws a plate's outline, the painted look its shading, so the two are not equal: 0.6 is the floor, and the ratios are printed)
     expect(painted.edges, `${variant}: detail on the face of it`).toBeGreaterThanOrEqual(starship.edges * 0.5);
-    expect(lines.edges, `${variant}: the line look is as dense as the painted one`).toBeGreaterThanOrEqual(painted.edges * 0.35);
+    expect(lines.edges, `${variant}: the line look is as dense as the painted one`).toBeGreaterThanOrEqual(painted.edges * 0.6);
   }
 });
 

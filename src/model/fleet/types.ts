@@ -1,7 +1,7 @@
 // The kit's small vocabulary: what a module is, what a port is, what a ship is made of. Pure: no three.js and no DOM.
 import type { Piece, Vec3 } from "../pieces.ts";
 import type { CollarClass } from "./collars.ts";
-import type { LiveryName } from "./detail.ts";
+import type { LiveryName, SeparationOptions } from "./detail.ts";
 import type { HullStackName } from "./layers.ts";
 
 /**
@@ -61,6 +61,8 @@ export interface ModuleOptions {
   cutYaw?: number;
   /** `coarse` builds the hull, the collars and the big shapes only: a first picture in a moment. `fine` (the default) adds all the detail; the detail pass of a ship is `fineOnly`. */
   level?: "coarse" | "fine";
+  /** Plan a separation here: the module's base carries a separation joint (a split collar, latches, bolt caps and umbilical plates). `true` takes the defaults. */
+  separation?: boolean | SeparationOptions;
 }
 
 /**
@@ -129,6 +131,8 @@ export interface ShipPlace {
   turn?: number;
   /** A different seed for this one, so its weathering differs. */
   seed?: string;
+  /** Where this module meets the one below, the ship plans to come apart: its base carries a separation joint. */
+  separation?: boolean | SeparationOptions;
 }
 
 /**

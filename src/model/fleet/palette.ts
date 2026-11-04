@@ -33,6 +33,28 @@ export const FLEET_PALETTE = {
   propellant: "#3a68a0",
   /** Lights and windows. */
   light: "#9ad8ff",
+  /** White thermal blanket: the quilted skin of most of a hull. */
+  blanket: "#e6e3db",
+  /** Silver foil. */
+  foil: "#cfd3d8",
+  /** Gold kapton foil. */
+  kapton: "#b9893c",
+  /** Stainless pipe. */
+  pipe: "#b7bcc2",
+  /** The light of drive coils and field rings when the engines are lit. */
+  coilGlow: "#ff9a4d",
+  /** Lit windows. */
+  windowLit: "#ffe3a0",
+  /** Port (left) navigation light, red, lit. */
+  navRed: "#ff2a2a",
+  /** Starboard (right) navigation light, green, lit. */
+  navGreen: "#2aff6a",
+  /** White strobes, lit. */
+  strobe: "#ffffff",
+  /** Floodlights at the ports, lit. */
+  flood: "#fff4d6",
+  /** Grow-lamps over gardens, lit: the pink-violet of a plant light. */
+  growLamp: "#e08cff",
 } as const;
 
 /**

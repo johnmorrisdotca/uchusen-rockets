@@ -44,7 +44,7 @@ import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts
 import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
-import { MATERIALS, type MaterialName } from "../model/materials.ts";
+import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import type { Spin } from "../spin.ts";
@@ -195,6 +195,9 @@ export class RocketViewer {
   private burnSlots: { view: PartView; y: number } | null = null;
   private generation = 0;
   private materialCache = new Map<string, Material>();
+  /** The materials that glow when the engines are lit, and whether they do now. */
+  private glowing = new Map<MeshStandardMaterial, number>();
+  private glowOn = false;
   private outlineMaterial: ShaderMaterial;
   private textures: Texture[] = [];
   private steelMap: CanvasTexture | null = null;
@@ -393,7 +396,7 @@ export class RocketViewer {
         const mesh = new Mesh(node.geometry);
         const name = (node.material as Material).name;
         mesh.name = name;
-        mesh.castShadow = this.shadows;
+        mesh.castShadow = this.shadows && !(name in MATERIALS && "opacity" in MATERIALS[name as MaterialName]);
         mesh.receiveShadow = this.shadows;
         carrier.add(mesh);
         view.faces.push({ mesh, name, hasUv: Boolean(node.geometry.getAttribute("uv")) });
@@ -454,7 +457,7 @@ export class RocketViewer {
     const key = `painted/${name}/${hasUv}`;
     const known = this.materialCache.get(key);
     if (known) return known;
-    const spec = name in MATERIALS ? MATERIALS[name as MaterialName] : MATERIALS.steel;
+    const spec: MaterialSpec = name in MATERIALS ? MATERIALS[name as MaterialName] : MATERIALS.steel;
     const made = new MeshStandardMaterial({ color: spec.color, metalness: spec.metal, roughness: spec.rough, side: DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
     if (name === "steel" && hasUv) {
       this.steelMap ??= this.repeating(paintSteel(8, 8), 2, 100 / (8 * 1.83));
@@ -469,6 +472,16 @@ export class RocketViewer {
       made.color.set("#ffffff");
     }
     this.dullTile(made, name);
+    if (spec.opacity !== undefined) {
+      made.transparent = true;
+      made.opacity = spec.opacity;
+      made.depthWrite = false;
+    }
+    if (spec.glow) {
+      made.emissive.set(spec.glowColor ?? spec.color);
+      made.emissiveIntensity = this.glowOn ? spec.glow : 0;
+      this.glowing.set(made, spec.glow);
+    }
     this.materialCache.set(key, made);
     return made;
   }
@@ -598,6 +611,8 @@ export class RocketViewer {
       if (fired.length > 0 && !lowest) lowest = { view, y: fired[0].y - 1 };
     }
     this.burningNow = burning;
+    this.glowOn = this.lit === "full" || burning > 0;
+    for (const [material, strength] of this.glowing) material.emissiveIntensity = this.glowOn ? strength : 0;
     this.burnSlots = lowest;
     this.plumes.setBurning(burning);
     this.plumes.light.intensity = burning === 0 || this.look !== "painted" ? 0 : Math.min(900, 120 + burning * 40);

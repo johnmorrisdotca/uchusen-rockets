@@ -16,10 +16,10 @@ import type { KitModule, ModuleOptions, ShipList, ShipPlace } from "./types.ts";
 export { COLLARS, COLLAR_CLASSES, collar, mates } from "./collars.ts";
 export type { CollarClass, CollarSpec } from "./collars.ts";
 export * as DETAIL from "./detail.ts";
-export { LIVERY } from "./detail.ts";
+export { LIVERY, ROOMS } from "./detail.ts";
 export { FLEET_PALETTE } from "./palette.ts";
 export type { FleetColour } from "./palette.ts";
-export type { Livery, LiveryName } from "./detail.ts";
+export type { Livery, LiveryName, RoomKind, RoomSpec, SeparationOptions } from "./detail.ts";
 export { BUILDERS, KIT } from "./modules.ts";
 export { BUILD_BUDGET_MS, isCoarse } from "./levels.ts";
 export { INSETS } from "./insets.ts";
@@ -170,7 +170,7 @@ export function shipPieces(ship: ShipList, options: ModuleOptions = {}): Piece[]
   const out: Piece[] = [];
   for (const p of placed) {
     const spot = ship[p.index];
-    out.push(...place(p.module.pieces({ ...options, seed: spot.seed ?? `${options.seed ?? ""}${p.index}` }), { at: p.at, yaw: p.turn }));
+    out.push(...place(p.module.pieces({ ...options, seed: spot.seed ?? `${options.seed ?? ""}${p.index}`, ...(spot.separation ? { separation: spot.separation } : {}) }), { at: p.at, yaw: p.turn }));
     if (p.how !== "spine") out.push(...clamps(p));
   }
   return out;
@@ -279,7 +279,7 @@ export function shipParts(ship: string, list: ShipList, options: ModuleOptions =
     const id = `${ship}-${slot}`;
     const base = recordOf(p.module, id);
     const record: PartRecord = { ...base, ...(p.how !== "spine" ? { strapOn: { x: p.at[0], z: p.at[2], y: p.at[1] } } : {}), rocket, trueTo: [variant] };
-    entries.push({ record, pieces: () => p.module.pieces({ ...options, seed: spot.seed ?? `${options.seed ?? ""}${p.index}` }) });
+    entries.push({ record, pieces: () => p.module.pieces({ ...options, seed: spot.seed ?? `${options.seed ?? ""}${p.index}`, ...(spot.separation ? { separation: spot.separation } : {}) }) });
     slots.push(slot);
     partIds[slot] = id;
   }
@@ -414,7 +414,7 @@ export function shipLevels(ship: ShipList, options: ModuleOptions = {}, order?: 
     *fine() {
       for (const p of sequence) {
         const spot = ship[p.index];
-        const own = p.module.pieces({ ...options, level: "fine", seed: spot.seed ?? `${options.seed ?? ""}${p.index}` }).filter((piece) => !isCoarse(piece));
+        const own = p.module.pieces({ ...options, level: "fine", seed: spot.seed ?? `${options.seed ?? ""}${p.index}`, ...(spot.separation ? { separation: spot.separation } : {}) }).filter((piece) => !isCoarse(piece));
         yield { place: p.index, pieces: place(own, { at: p.at, yaw: p.turn }) };
       }
     },

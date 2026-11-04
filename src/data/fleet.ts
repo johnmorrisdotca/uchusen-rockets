@@ -14,7 +14,7 @@ export const FLEET_GROUPS: readonly { id: string; name: string; kinds: readonly 
   { id: "fleet-tanks", name: "Fleet tanks", kinds: ["tank"] },
   { id: "fleet-cargo", name: "Fleet cargo", kinds: ["cargo"] },
   { id: "fleet-habitats", name: "Fleet habitat rings and drums", kinds: [], ids: ["habitat-ring-16", "habitat-ring-30", "habitat-drum-crew", "habitat-drum-large"] },
-  { id: "fleet-decks", name: "Fleet crew and service decks", kinds: [], ids: ["farm-drum", "common-area-m", "store-drum-m", "eva-lock-m"] },
+  { id: "fleet-decks", name: "Fleet crew and service decks", kinds: [], ids: ["farm-drum", "common-area-m", "store-drum-m", "eva-lock-m", "dome-observation-m", "solarium-m"] },
   { id: "fleet-labs", name: "Fleet labs, pods and bridge", kinds: [], ids: ["lab-m", "pod-survey-m", "pod-medical-m", "deck-nav-m"] },
   { id: "fleet-systems", name: "Fleet reactors, radiators and sensors", kinds: ["reactor", "radiator", "sensor"] },
   { id: "fleet-structure", name: "Fleet nodes, trusses and shields", kinds: ["node", "truss", "adapter", "shield"] },
@@ -50,7 +50,7 @@ export const FLEET_SLOT_NAMES: Readonly<Record<string, string>> = (() => {
 })();
 
 const sample = (rocket: string, id: string, name: string): Variant => {
-  const parts = shipParts(`${rocket}-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 });
+  const parts = shipParts(`${rocket}-${id}`, SAMPLE_SHIPS[id], { detail: 0.4 });
   return {
     id,
     rocket,

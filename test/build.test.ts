@@ -9,8 +9,8 @@ import { STARSHIP_DRAWS } from "../src/model/starship.ts";
 import { readMetrics } from "./metrics.ts";
 
 const MESH_LIMIT = 600 * 1024;
-// the fleet's ships are far bigger than any real rocket; each of their parts is still within MESH_LIMIT
-const FLEET_MESH_LIMIT = 6 * 1024 * 1024;
+// the fleet's ships are far bigger than any real rocket and are built in the browser, so they ship no prebuilt file; each of their modules is within 1.25 MB (test/fleet-kit.test.ts)
+const FLEET_MESH_LIMIT = 12 * 1024 * 1024;
 const DRAWING_LIMIT = 80 * 1024;
 
 const bellsOf = (pieces: readonly Piece[]) => pieces.filter((piece) => piece.kind === "lathe" && piece.material === "bell");

@@ -20,6 +20,12 @@ export interface MaterialSpec {
   rough: number;
   /** The fill it takes in a drawing. */
   fill: FillName;
+  /** How brightly it glows when the engines are lit (the viewer's "Engines: Lit" switch): the emissive strength. Left out: it never glows. */
+  glow?: number;
+  /** The colour of that glow; left out: its own colour. */
+  glowColor?: string;
+  /** How opaque it is in a painted 3D view, 0 to 1: glass you can see through. Left out: solid. */
+  opacity?: number;
 }
 
 /**
@@ -74,13 +80,29 @@ export const MATERIALS = {
   "radiator-hot": { color: "#9b4b3a", metal: 0.3, rough: 0.5, fill: "metal" },
   hazard: { color: "#dcb126", metal: 0.1, rough: 0.55, fill: "metal" },
   frost: { color: "#b9d2de", metal: 0.1, rough: 0.55, fill: "white" },
-  "lamp-amber": { color: "#ffb43a", metal: 0, rough: 0.3, fill: "metal" },
-  "lamp-blue": { color: P.light, metal: 0, rough: 0.2, fill: "white" },
-  "lamp-red": { color: "#d8372f", metal: 0, rough: 0.35, fill: "metal" },
+  "lamp-amber": { color: "#ffb43a", metal: 0, rough: 0.3, fill: "metal", glow: 1.2 },
+  "lamp-blue": { color: P.light, metal: 0, rough: 0.2, fill: "white", glow: 1 },
+  "lamp-red": { color: "#d8372f", metal: 0, rough: 0.35, fill: "metal", glow: 1.5 },
   deck: { color: "#7b7f84", metal: 0.3, rough: 0.7, fill: "metal" },
   plant: { color: P.farm, metal: 0, rough: 0.8, fill: "dark" },
   fuel: { color: P.propellant, metal: 0.1, rough: 0.35, fill: "metal" },
   core: { color: "#e9f6ff", metal: 0, rough: 0.2, fill: "white" },
+  "blanket-worn": { color: "#cfccc2", metal: 0.05, rough: 0.92, fill: "white" },
+  foil: { color: P.foil, metal: 1, rough: 0.3, fill: "metal" },
+  kapton: { color: P.kapton, metal: 0.9, rough: 0.32, fill: "metal" },
+  "pipe-steel": { color: P.pipe, metal: 0.85, rough: 0.36, fill: "metal" },
+  window: { color: "#16202c", metal: 0.1, rough: 0.1, fill: "dark", glow: 1.5, glowColor: P.windowLit },
+  "coil-lit": { color: P.coil, metal: 1, rough: 0.26, fill: "metal", glow: 2.4, glowColor: P.coilGlow },
+  "nav-red": { color: "#9a1f1f", metal: 0, rough: 0.3, fill: "metal", glow: 3, glowColor: P.navRed },
+  "nav-green": { color: "#1f8a46", metal: 0, rough: 0.3, fill: "metal", glow: 3, glowColor: P.navGreen },
+  strobe: { color: "#e8e8e8", metal: 0, rough: 0.25, fill: "white", glow: 4, glowColor: P.strobe },
+  flood: { color: "#e6dfc8", metal: 0, rough: 0.25, fill: "white", glow: 3, glowColor: P.flood },
+  "glass-clear": { color: "#c3dbe8", metal: 0.15, rough: 0.04, fill: "dark", opacity: 0.26 },
+  "grow-lamp": { color: "#7a4a8a", metal: 0, rough: 0.3, fill: "metal", glow: 2.6, glowColor: P.growLamp },
+  leaf: { color: "#3f8f45", metal: 0, rough: 0.7, fill: "dark" },
+  soil: { color: "#4a3a2c", metal: 0, rough: 0.95, fill: "dark" },
+  fabric: { color: "#6f7f93", metal: 0, rough: 0.85, fill: "metal" },
+  wood: { color: "#a77b4e", metal: 0, rough: 0.7, fill: "metal" },
 } as const satisfies Record<string, MaterialSpec>;
 
 /**

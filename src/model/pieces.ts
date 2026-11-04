@@ -47,6 +47,9 @@ export interface Lathe {
   body?: boolean;
   /** Its outline is drawn in a drawing. */
   outline?: boolean;
+  /** Its surface is fluted, `flutes` ridges round it each `flute` metres deep (the tubes of a regeneratively cooled nozzle, the ribs of a sleeve). Needs four segments for each flute. */
+  flutes?: number;
+  flute?: number;
   move?: Move;
 }
 
@@ -64,6 +67,14 @@ export interface Plate {
   only?: "mesh" | "drawing";
   /** No feature lines of its own. */
   plain?: boolean;
+  /** Only its +w face, with no back and no edge walls: a sheet, such as foil or the skin of a blanket. */
+  sheet?: boolean;
+  /** Its +w face stuffed into pillows: a rectangular outline in `nu` by `nv` cells, each standing `bulge` metres proud at its middle, with a crease where two meet. */
+  quilt?: { nu: number; nv: number; bulge: number };
+  /** A rectangular outline with a raised frame `margin` wide round a field sunk `depth` below it (a quilt, when it has one, fills the field). */
+  inset?: { margin: number; depth: number };
+  /** Loose flat triangles in the frame's [u, v, w] coordinates, wound counter-clockwise seen from the front, each lit on its own: crinkled foil. The outline only bounds them. */
+  facets?: readonly (readonly [Vec3, Vec3, Vec3])[];
   move?: Move;
 }
 
@@ -197,8 +208,21 @@ function latheFaces(mesh: PartMesh, piece: Lathe): void {
         const a = a0 + ((a1 - a0) * j) / n;
         const sa = Math.sin(a);
         const ca = Math.cos(a);
-        out.positions.push(cx + r * sa + (piece.lean?.[0] ?? 0) * y, y, cz + r * ca + (piece.lean?.[1] ?? 0) * y);
-        out.normals.push(normal[0] * sa, normal[1], normal[0] * ca);
+        if (piece.flutes && piece.flute) {
+          // ridges round the surface: the radius swings by `flute` and the normal leans along the circle where it climbs
+          const wave = Math.cos(piece.flutes * a);
+          const lean = (-piece.flute * piece.flutes * Math.sin(piece.flutes * a)) / Math.max(r, 0.05);
+          const rr = r + piece.flute * 0.5 * wave;
+          const tangent: [number, number] = [ca, -sa];
+          const nx = normal[0] * sa + tangent[0] * lean;
+          const nz = normal[0] * ca + tangent[1] * lean;
+          const l = Math.hypot(nx, normal[1], nz) || 1;
+          out.positions.push(cx + rr * sa + (piece.lean?.[0] ?? 0) * y, y, cz + rr * ca + (piece.lean?.[1] ?? 0) * y);
+          out.normals.push(nx / l, normal[1] / l, nz / l);
+        } else {
+          out.positions.push(cx + r * sa + (piece.lean?.[0] ?? 0) * y, y, cz + r * ca + (piece.lean?.[1] ?? 0) * y);
+          out.normals.push(normal[0] * sa, normal[1], normal[0] * ca);
+        }
         // u: round the hull; v: height over a hundred metres, so one picture repeats the same on every part
         // an arc that starts on the far side of the windward line is shifted a half turn, so it stays between 0 and 1
         out.uvs.push(a / (2 * Math.PI) + (a0 < 0 ? 0.5 : 0), y / 100);
@@ -236,10 +260,137 @@ export function ringPath(piece: Lathe, y: number, lift = 0.012): Vec3[] {
   return path;
 }
 
+const dot3 = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross3 = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const diff3 = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const unit3 = (a: Vec3): Vec3 => {
+  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  return [a[0] / l, a[1] / l, a[2] / l];
+};
+
+/** One triangle with a normal at each corner, wound so its front faces the way the first normal does. */
+function addTriangle(out: Buffers, points: readonly [Vec3, Vec3, Vec3], normals: readonly [Vec3, Vec3, Vec3]): void {
+  const base = out.positions.length / 3;
+  for (let i = 0; i < 3; i++) {
+    out.positions.push(...points[i]);
+    out.normals.push(...normals[i]);
+    out.uvs.push(0, 0);
+  }
+  const face = cross3(diff3(points[1], points[0]), diff3(points[2], points[0]));
+  if (dot3(face, normals[0]) >= 0) out.indices.push(base, base + 1, base + 2);
+  else out.indices.push(base, base + 2, base + 1);
+}
+
+/** A flat four-cornered face with one normal. */
+function addQuad(out: Buffers, a: Vec3, b: Vec3, c: Vec3, d: Vec3, normal: Vec3): void {
+  addTriangle(out, [a, b, c], [normal, normal, normal]);
+  addTriangle(out, [a, c, d], [normal, normal, normal]);
+}
+
+/** The +w face of a rectangular plate: a raised frame round a sunk field, a quilt of pillows, or both. */
+function relief(mesh: PartMesh, piece: Plate, half: number): void {
+  const { frame, outline } = piece;
+  const field = buffersOf(mesh, piece.top ?? piece.material);
+  const out = buffersOf(mesh, piece.material);
+  const us = outline.map(([a]) => a);
+  const vs = outline.map(([, b]) => b);
+  const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
+  const at = (a: number, b: number, c: number): Vec3 => pointOf(frame, a, b, c);
+  const up = frame.w;
+  const inset = piece.inset;
+  const m = inset ? Math.min(inset.margin, (u1 - u0) / 2 - 0.001, (v1 - v0) / 2 - 0.001) : 0;
+  let floor = half;
+  if (inset) {
+    floor = half - inset.depth;
+    const [i0, i1, j0, j1] = [u0 + m, u1 - m, v0 + m, v1 - m];
+    addQuad(out, at(u0, v0, half), at(u1, v0, half), at(u1, j0, half), at(u0, j0, half), up);
+    addQuad(out, at(u0, j1, half), at(u1, j1, half), at(u1, v1, half), at(u0, v1, half), up);
+    addQuad(out, at(u0, j0, half), at(i0, j0, half), at(i0, j1, half), at(u0, j1, half), up);
+    addQuad(out, at(i1, j0, half), at(u1, j0, half), at(u1, j1, half), at(i1, j1, half), up);
+    const wall = (p: Vec3, q: Vec3, inward: Vec3): void => addQuad(field, p, q, [q[0] - up[0] * inset.depth, q[1] - up[1] * inset.depth, q[2] - up[2] * inset.depth], [p[0] - up[0] * inset.depth, p[1] - up[1] * inset.depth, p[2] - up[2] * inset.depth], inward);
+    wall(at(i0, j0, half), at(i1, j0, half), frame.v);
+    wall(at(i1, j1, half), at(i0, j1, half), [-frame.v[0], -frame.v[1], -frame.v[2]]);
+    wall(at(i0, j1, half), at(i0, j0, half), frame.u);
+    wall(at(i1, j0, half), at(i1, j1, half), [-frame.u[0], -frame.u[1], -frame.u[2]]);
+  }
+  const [f0, f1, g0, g1] = [u0 + m, u1 - m, v0 + m, v1 - m];
+  const quilt = piece.quilt;
+  if (!quilt) {
+    addQuad(field, at(f0, g0, floor), at(f1, g0, floor), at(f1, g1, floor), at(f0, g1, floor), up);
+    return;
+  }
+  const cu = (f1 - f0) / quilt.nu;
+  const cv = (g1 - g0) / quilt.nv;
+  const lean = 1.7;
+  for (let i = 0; i < quilt.nu; i++)
+    for (let j = 0; j < quilt.nv; j++) {
+      const grid: { p: Vec3; n: Vec3 }[][] = [];
+      for (let a = 0; a < 3; a++) {
+        grid.push([]);
+        for (let b = 0; b < 3; b++) {
+          const fu = a / 2;
+          const fv = b / 2;
+          const h = quilt.bulge * Math.sin(Math.PI * fu) * Math.sin(Math.PI * fv);
+          const du = ((quilt.bulge * Math.PI) / cu) * Math.cos(Math.PI * fu) * Math.sin(Math.PI * fv) * lean;
+          const dv = ((quilt.bulge * Math.PI) / cv) * Math.sin(Math.PI * fu) * Math.cos(Math.PI * fv) * lean;
+          const n = unit3([frame.w[0] - frame.u[0] * du - frame.v[0] * dv, frame.w[1] - frame.u[1] * du - frame.v[1] * dv, frame.w[2] - frame.u[2] * du - frame.v[2] * dv]);
+          grid[a].push({ p: at(f0 + (i + fu) * cu, g0 + (j + fv) * cv, floor + h), n });
+        }
+      }
+      const base = field.positions.length / 3;
+      for (const column of grid)
+        for (const { p, n } of column) {
+          field.positions.push(...p);
+          field.normals.push(...n);
+          field.uvs.push(0, 0);
+        }
+      // the nine points are numbered column by column: the middle is 4, and the ring round it goes 0 3 6 7 8 5 2 1
+      const ring = [0, 3, 6, 7, 8, 5, 2, 1];
+      for (let k = 0; k < 8; k++) {
+        const [a, b, c] = [base + 4, base + ring[k], base + ring[(k + 1) % 8]];
+        const pa = grid[1][1].p;
+        const face = cross3(diff3(grid[Math.floor(ring[k] / 3)][ring[k] % 3].p, pa), diff3(grid[Math.floor(ring[(k + 1) % 8] / 3)][ring[(k + 1) % 8] % 3].p, pa));
+        if (dot3(face, up) >= 0) field.indices.push(a, b, c);
+        else field.indices.push(a, c, b);
+      }
+    }
+}
+
+/** The lines of a quilted or framed face, so the line looks read it as the painted look does: the inner rim of a frame, the creases between pillows. */
+function reliefLines(mesh: PartMesh, piece: Plate, half: number): void {
+  const { frame, outline } = piece;
+  const us = outline.map(([a]) => a);
+  const vs = outline.map(([, b]) => b);
+  const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
+  const m = piece.inset ? Math.min(piece.inset.margin, (u1 - u0) / 2 - 0.001, (v1 - v0) / 2 - 0.001) : 0;
+  const [f0, f1, g0, g1] = [u0 + m, u1 - m, v0 + m, v1 - m];
+  const lift = 0.006;
+  if (piece.inset) {
+    addPath(mesh.feature, [[f0, g0], [f1, g0], [f1, g1], [f0, g1], [f0, g0]].map(([a, b]) => pointOf(frame, a, b, half + lift)));
+    const floor = half - piece.inset.depth + lift;
+    addPath(mesh.weld, [[f0, g0], [f1, g0], [f1, g1], [f0, g1], [f0, g0]].map(([a, b]) => pointOf(frame, a, b, floor)));
+  }
+  const quilt = piece.quilt;
+  if (quilt) {
+    const level = (piece.inset ? half - piece.inset.depth : half) + lift;
+    for (let i = 1; i < quilt.nu; i++) addPath(mesh.weld, [pointOf(frame, f0 + ((f1 - f0) * i) / quilt.nu, g0, level), pointOf(frame, f0 + ((f1 - f0) * i) / quilt.nu, g1, level)]);
+    for (let j = 1; j < quilt.nv; j++) addPath(mesh.weld, [pointOf(frame, f0, g0 + ((g1 - g0) * j) / quilt.nv, level), pointOf(frame, f1, g0 + ((g1 - g0) * j) / quilt.nv, level)]);
+  }
+}
+
 function plateFaces(mesh: PartMesh, piece: Plate): void {
   const { frame, outline, thickness } = piece;
   const half = thickness / 2;
   const n = outline.length;
+  if (piece.facets) {
+    const out = buffersOf(mesh, piece.material);
+    for (const [a, b, c] of piece.facets) {
+      const p = [pointOf(frame, ...a), pointOf(frame, ...b), pointOf(frame, ...c)] as const;
+      const normal = unit3(cross3(diff3(p[1], p[0]), diff3(p[2], p[0])));
+      addTriangle(out, [p[0], p[1], p[2]], [normal, normal, normal]);
+    }
+    return;
+  }
   const addFan = (material: MaterialName, c: number, normal: Vec3, reverse: boolean) => {
     const out = buffersOf(mesh, material);
     const base = out.positions.length / 3;
@@ -266,7 +417,9 @@ function plateFaces(mesh: PartMesh, piece: Plate): void {
   const hand2 = frame.u[2] * frame.v[0] - frame.u[0] * frame.v[2];
   const hand3 = frame.u[0] * frame.v[1] - frame.u[1] * frame.v[0];
   const right = hand * frame.w[0] + hand2 * frame.w[1] + hand3 * frame.w[2] > 0;
-  addFan(piece.top ?? piece.material, half, frame.w, ccw !== right);
+  if (piece.quilt || piece.inset) relief(mesh, piece, half);
+  else addFan(piece.top ?? piece.material, half, frame.w, ccw !== right);
+  if (piece.sheet) return;
   addFan(piece.material, -half, [-frame.w[0], -frame.w[1], -frame.w[2]], ccw === right);
   const out = buffersOf(mesh, piece.material);
   for (let i = 0; i < n; i++) {
@@ -339,6 +492,7 @@ function meshOfFixed(pieces: readonly Piece[]): PartMesh {
         const half = piece.thickness / 2 + 0.006;
         for (const c of [half, -half]) addPath(mesh.feature, [...piece.outline, piece.outline[0]].map(([a, b]) => pointOf(piece.frame, a, b, c)));
         for (const [p, q] of piece.ribs ?? []) for (const c of [half, -half]) addPath(mesh.weld, [pointOf(piece.frame, p[0], p[1], c), pointOf(piece.frame, q[0], q[1], c)]);
+        if (piece.quilt || piece.inset) reliefLines(mesh, piece, half);
       }
     } else {
       for (const path of piece.paths) addPath(piece.weight === "feature" ? mesh.feature : mesh.weld, path);

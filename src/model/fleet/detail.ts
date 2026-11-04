@@ -196,10 +196,13 @@ export interface Livery {
   dark: MaterialName;
   /** The colour of the structure under the panels. */
   under: MaterialName;
+  /** The foil on the hardware that wears it: silver by default, gold kapton for the industrial and foil schemes. */
+  foil?: MaterialName;
 }
 
 /**
- * The fleet's liveries: orange and white for industry, white and yellow for science and habitation, grey and blue for command, white and orange for transport.
+ * The fleet's liveries. Every one is mostly white thermal blanket, with a few rigid panels in light grey or white, foil on the hardware that wears it, and orange only on small removable access panels (blue on the command scheme): colour is
+ * small and functional, as on the ISS, JWST and Orion's service module.
  *
  * @example
  * ```ts
@@ -209,11 +212,11 @@ export interface Livery {
  * ```
  */
 export const LIVERY = {
-  industrial: { main: "hull-orange", mainWorn: "hull-orange-worn", block: "hull-white", blockWorn: "hull-white-worn", accent: "hazard", dark: "panel-dark", under: "hull-grey-dark" },
-  science: { main: "hull-white", mainWorn: "hull-white-worn", block: "hull-yellow", blockWorn: "hull-white-worn", accent: "hull-orange", dark: "panel-dark", under: "hull-grey-dark" },
-  command: { main: "hull-grey", mainWorn: "hull-white-worn", block: "hull-blue", blockWorn: "hull-grey-dark", accent: "hull-orange", dark: "panel-dark", under: "hull-grey-dark" },
-  foil: { main: "blanket", mainWorn: "hull-white-worn", block: "gold", blockWorn: "blanket", accent: "hull-orange", dark: "panel-dark", under: "hull-grey-dark" },
-  transport: { main: "hull-white", mainWorn: "hull-white-worn", block: "hull-orange", blockWorn: "hull-orange-worn", accent: "hazard", dark: "panel-dark", under: "hull-grey-dark" },
+  industrial: { main: "blanket", mainWorn: "blanket-worn", block: "hull-white", blockWorn: "hull-white-worn", accent: "hull-orange", dark: "panel-dark", under: "hull-grey", foil: "kapton" },
+  science: { main: "blanket", mainWorn: "blanket-worn", block: "hull-white", blockWorn: "hull-white-worn", accent: "hull-orange", dark: "panel-dark", under: "hull-grey", foil: "foil" },
+  command: { main: "blanket", mainWorn: "blanket-worn", block: "hull-grey", blockWorn: "hull-grey-dark", accent: "hull-blue", dark: "panel-dark", under: "hull-grey", foil: "foil" },
+  foil: { main: "blanket", mainWorn: "blanket-worn", block: "kapton", blockWorn: "foil", accent: "hull-orange", dark: "panel-dark", under: "hull-grey", foil: "kapton" },
+  transport: { main: "blanket", mainWorn: "blanket-worn", block: "hull-white", blockWorn: "hull-white-worn", accent: "hull-orange", dark: "panel-dark", under: "hull-grey", foil: "foil" },
 } as const satisfies Record<string, Livery>;
 
 /**
@@ -247,17 +250,129 @@ export interface PanelOptions {
   raise?: number;
   /** The share of cells left bare, so the dark structure shows through. */
   bare?: number;
+  /** Places to leave bare for hardware that stands on the hull (hatches, vents, ladders, cable channels): the middle's azimuth in radians, its height, and its size in metres along the surface. */
+  clear?: readonly { az: number; y: number; wide: number; tall: number }[];
 }
 
-/** Plating: rows of raised panels in the livery's colours with a gap between, some worn, some bare, and a seam line for each row and column in the drawing. The skin of every hull. */
+/** Hexagonal bolt heads on a frame's face, as flat hexes standing `lift` metres off it: the rows of fixings on a panel's frame. */
+export function bolts(f: Frame, spots: readonly (readonly [number, number])[], size: number, lift: number, material: MaterialName = "hull-grey-dark"): Plate[] {
+  const outline = Array.from({ length: 6 }, (_, i) => [(size / 2) * Math.cos((Math.PI * i) / 3), (size / 2) * Math.sin((Math.PI * i) / 3)] as const);
+  return spots.map(([a, b]) => ({ kind: "plate", material, frame: { o: pointOf(f, a, b, lift), u: f.u, v: f.v, w: f.w }, outline, thickness: 0.004, plain: true, sheet: true, only: "mesh" }));
+}
+
+/** A grab handle: two stanchions and a round bar, standing `lift` off a frame's face, `length` long along u, centred at (a, b). */
+export function grabHandle(f: Frame, a: number, b: number, length: number, lift: number): Piece[] {
+  const at = (p: number, h: number): Vec3 => pointOf(f, a + p, b, h);
+  return [rod("hull-yellow", at(-length / 2, lift + 0.11), at(length / 2, lift + 0.11), 0.026, 8), rod("hull-grey-dark", at(-length / 2, lift), at(-length / 2, lift + 0.11), 0.018, 6), rod("hull-grey-dark", at(length / 2, lift), at(length / 2, lift + 0.11), 0.018, 6)];
+}
+
+/** How many cells a quilt of this size has along a side: about every 0.7 m. */
+const cellsOf = (size: number): number => Math.max(1, Math.min(6, Math.round(size / 0.7)));
+
+/** A quilted thermal blanket on a cylinder: a raised skin of pillows with a crease where two meet, so light and shadow run across it. */
+export function blanketPanel(material: MaterialName, r: number, az: number, y: number, wide: number, tall: number, raise: number): Plate {
+  const nu = cellsOf(wide);
+  const nv = cellsOf(tall);
+  const bulge = Math.min(0.1, 0.16 * Math.min(wide / nu, tall / nv));
+  return panel(material, r, az, y, wide, tall, raise, { quilt: { nu, nv, bulge } });
+}
+
+/** A rigid panel with a raised frame round a sunk field, and bolts in the frame's corners (and along it when it is big): plating, an access panel, a louvre. */
+export function framedPanel(frame: MaterialName, field: MaterialName, r: number, az: number, y: number, wide: number, tall: number, raise: number, bolted = true): Piece[] {
+  const margin = Math.min(0.1, Math.min(wide, tall) * 0.1);
+  const out: Piece[] = [panel(frame, r, az, y, wide, tall, raise, { top: field, inset: { margin, depth: Math.min(0.035, raise * 0.6) } })];
+  if (bolted && Math.min(wide, tall) > 0.5) {
+    const f = patch(r, az, y);
+    const lift = raise + 0.01 - sagOf(r, wide) * 0.5;
+    const hw = wide / 2 - margin / 2;
+    const hh = tall / 2 - margin / 2;
+    const spots: [number, number][] = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]];
+    if (wide > 1.6) spots.push([0, -hh], [0, hh]);
+    out.push(...bolts(f, spots, Math.min(0.07, margin * 0.7), lift));
+  }
+  return out;
+}
+
+/**
+ * A window in a hull of radius `r` at azimuth `az` and height `y`: a framed port with a raised frame and bolts, a pane that reflects the sky (and glows when the engines are lit), mullions across it every metre or so and a lit sill strip under it.
+ * Glass reads as glass: a dark reflective pane held in a frame, never a flat coloured slab.
+ */
+export function glazing(r: number, az: number, y: number, wide: number, tall: number, raise = 0.1, pane: MaterialName = "window"): Piece[] {
+  const out = framedPanel("hull-grey", pane, r, az, y, wide, tall, raise, wide > 0.9);
+  const f = patch(r, az, y);
+  const lift = raise + 0.012 - sagOf(r, wide) * 0.5;
+  const bars = Math.floor(wide / 1.1);
+  for (let k = 1; k <= bars; k++) {
+    const a = (k / (bars + 1) - 0.5) * (wide - 0.2);
+    out.push(beam("hull-grey", pointOf(f, a, -tall / 2 + 0.08, lift), pointOf(f, a, tall / 2 - 0.08, lift), 0.05, 0.04, { plain: false }));
+  }
+  if (tall > 0.7) out.push(beam("hull-grey", pointOf(f, -wide / 2 + 0.12, 0, lift), pointOf(f, wide / 2 - 0.12, 0, lift), 0.035, 0.04, { plain: false }));
+  out.push(panel("lamp-blue", r, az, y - tall / 2 + 0.06, Math.max(0.1, wide - 0.4), 0.05, raise + 0.02));
+  return out;
+}
+
+/**
+ * Crinkled foil on a cylinder: a skin of flat triangles with each corner pushed in or out a little, so every facet takes the light on its own, as the multi-layer insulation of Hubble, JWST and the lunar module does. `cell` is the size of a facet's cell,
+ * `crumple` how far a corner can be pushed.
+ *
+ * @param material `foil` (silver) or `kapton` (gold), or any material.
+ * @param r Radius of the surface under it.
+ * @param y0 Bottom of the band.
+ * @param y1 Top of the band.
+ * @param a0 First azimuth, radians.
+ * @param a1 Last azimuth, radians.
+ * @param seed Any text: the same text gives the same crinkles.
+ * @param cell Size of a facet's cell, metres.
+ * @param crumple How far a corner is pushed in or out, metres.
+ * @returns The pieces: a few plates, each holding a few hundred facets.
+ */
+export function foilBand(material: MaterialName, r: number, y0: number, y1: number, a0: number, a1: number, seed: string, cell = 0.3, crumple = 0.035): Plate[] {
+  const random = rng(`${seed}/foil/${r.toFixed(2)}/${y0.toFixed(2)}/${a0.toFixed(2)}`);
+  const cols = Math.max(2, Math.round(((a1 - a0) * r) / cell));
+  const rows = Math.max(2, Math.round((y1 - y0) / cell));
+  const grid: Vec3[][] = [];
+  for (let i = 0; i <= cols; i++) {
+    grid.push([]);
+    for (let j = 0; j <= rows; j++) {
+      const edgeU = i === 0 || i === cols;
+      const edgeV = j === 0 || j === rows;
+      const a = a0 + ((a1 - a0) * (i + (edgeU ? 0 : (random() - 0.5) * 0.5))) / cols;
+      const y = y0 + ((y1 - y0) * (j + (edgeV ? 0 : (random() - 0.5) * 0.5))) / rows;
+      const h = crumple * (random() * 2 - 1) * (edgeU || edgeV ? 0.5 : 1) + crumple * 0.4 * Math.sin(i * 1.9 + j * 0.7);
+      grid[i].push([(r + h) * Math.sin(a), y, (r + h) * Math.cos(a)]);
+    }
+  }
+  const facets: [Vec3, Vec3, Vec3][] = [];
+  const wind = (a: Vec3, b: Vec3, c: Vec3): [Vec3, Vec3, Vec3] => {
+    const n = cross(sub(b, a), sub(c, a));
+    const centre: Vec3 = [(a[0] + b[0] + c[0]) / 3, 0, (a[2] + b[2] + c[2]) / 3];
+    return n[0] * centre[0] + n[2] * centre[2] >= 0 ? [a, b, c] : [a, c, b];
+  };
+  for (let i = 0; i < cols; i++)
+    for (let j = 0; j < rows; j++) {
+      const [p00, p10, p11, p01] = [grid[i][j], grid[i + 1][j], grid[i + 1][j + 1], grid[i][j + 1]];
+      if (random() < 0.5) facets.push(wind(p00, p10, p11), wind(p00, p11, p01));
+      else facets.push(wind(p00, p10, p01), wind(p10, p11, p01));
+    }
+  const out: Plate[] = [];
+  const per = 300;
+  for (let k = 0; k < facets.length; k += per) out.push({ kind: "plate", material, frame: { o: [0, 0, 0], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, outline: [[-1, -1], [1, -1], [1, 1], [-1, 1]], thickness: 0.01, plain: true, only: "mesh", facets: facets.slice(k, k + per) });
+  return out;
+}
+
+/**
+ * Plating: rows of panels with a gap between, each a quilted thermal blanket (most of them: the hull reads as white blanket), a rigid panel with a raised frame, bolts and sometimes a grab handle, a patch of crinkled foil, a louvre, or, rarely, a small
+ * orange access panel standing on a blanket. Some are worn, some bare, and a seam line for each row and column is in the drawing. The skin of every hull.
+ */
 export function hullPanels(o: PanelOptions): Piece[] {
   const random = rng(`${o.seed}/panels`);
   const [a0, a1] = o.az ?? [0, 2 * Math.PI];
   const wide = o.wide ?? 2.2;
   const tall = o.tall ?? 1.5;
   const raise = o.raise ?? 0.04;
-  const gap = Math.min(0.06, wide * 0.03);
-  const bare = o.bare ?? 0.05;
+  const gap = Math.min(0.07, Math.max(0.04, wide * 0.03));
+  const bare = o.bare ?? 0.03;
+  const L = o.livery;
   const out: Piece[] = [];
   const seamPaths: Vec3[][] = [];
   let y = o.y0;
@@ -275,13 +390,27 @@ export function hullPanels(o: PanelOptions): Piece[] {
       if (width < 0.2 || h - gap < 0.2) continue;
       const roll = random();
       if (roll < bare) continue;
-      const material = roll < 0.45 ? o.livery.main : roll < 0.58 ? o.livery.mainWorn : roll < 0.78 ? o.livery.block : roll < 0.88 ? o.livery.blockWorn : roll < 0.93 ? o.livery.accent : o.livery.dark;
+      const az = (left + right) / 2;
+      const yc = y + h / 2;
+      const ph = h - gap;
+      if (o.clear?.some((c) => Math.abs(az - c.az) * o.r < c.wide / 2 + width * 0.12 && Math.abs(yc - c.y) < c.tall / 2 + ph * 0.12)) continue;
       const lift = raise * (0.6 + random() * 0.9);
-      out.push(panel(material, o.r + 0.005, (left + right) / 2, y + h / 2, width, h - gap, lift));
-      // a big panel carries an inset: a smaller plate in the next colour standing a little further out, so the plating has layers
-      if (width * (h - gap) > 2.2 && random() < 0.45) out.push(panel(random() < 0.5 ? o.livery.dark : o.livery.mainWorn, o.r + 0.005, (left + right) / 2, y + h / 2 + (random() - 0.5) * 0.2, width * 0.6, (h - gap) * 0.55, lift + 0.05));
+      const r = o.r + 0.005;
+      if (roll < 0.5) out.push(blanketPanel(L.main, r, az, yc, width, ph, lift));
+      else if (roll < 0.65) out.push(blanketPanel(L.mainWorn, r, az, yc, width, ph, lift));
+      else if (roll < 0.79) out.push(...framedPanel("hull-grey", L.block, r, az, yc, width, ph, lift));
+      else if (roll < 0.86) out.push(...framedPanel("hull-grey-dark", L.blockWorn, r, az, yc, width, ph, lift));
+      else if (roll < 0.92 && width > 0.5 && ph > 0.5) out.push(...foilBand(L.foil ?? "foil", r + lift * 0.4, yc - ph / 2, yc + ph / 2, az - (width / 2) / o.r, az + (width / 2) / o.r, o.seed, Math.max(0.28, Math.min(0.5, width / 5))));
+      else if (roll < 0.95 && width < 1.5 && ph < 1.1) out.push(...framedPanel("hull-grey", L.dark, r, az, yc, width, ph, lift, false));
+      else out.push(blanketPanel(L.main, r, az, yc, width, ph, lift));
+      // a big rigid panel carries a grab handle; a few blankets carry a small orange access panel with its own frame, bolts and handle
+      if (roll >= 0.65 && roll < 0.86 && width > 1.5 && random() < 0.5) out.push(...grabHandle(patch(r, az, yc), 0, ph * 0.28, Math.min(0.6, width * 0.3), lift + 0.01));
+      if (roll < 0.65 && width > 1.0 && ph > 0.9 && random() < 0.16) {
+        const aw = Math.min(0.9, width * 0.55);
+        const ah = Math.min(0.65, ph * 0.55);
+        out.push(...framedPanel(L.accent, "hull-orange-worn", r, az + (random() - 0.5) * 0.3 * (width / o.r), yc + (random() - 0.5) * 0.2, aw, ah, lift + 0.07));
+      }
     }
-    // the seams: a ring at the row's top, and a vertical seam at each cut, for the line drawing
     const ringPath: Vec3[] = [];
     const steps = Math.max(8, Math.ceil(((a1 - a0) * 24) / (2 * Math.PI)));
     for (let k = 0; k <= steps; k++) {
@@ -350,14 +479,14 @@ export interface ConduitOptions {
   seed: string;
 }
 
-/** A conduit run up a hull: pipes in a bundle held off the surface by clamps, in the colours pipes come in. */
+/** A conduit run up a hull: pipes in a bundle held off the surface by clamps, each leaving the structure through a gland and an elbow at the bottom and going back in at the top, with a flange joint half way. Pipes come in the colours pipes come in: stainless, white, grey and a coloured one. */
 export function conduitRun(o: ConduitOptions): Piece[] {
   const random = rng(`${o.seed}/conduit/${o.az.toFixed(3)}/${o.y0.toFixed(2)}`);
   const count = o.count ?? 3;
   const pr = o.pipe ?? 0.08;
-  const pitch = pr * 2.6;
-  const stand = pr * 1.6;
-  const mats: MaterialName[] = [o.material ?? "coolant", "hull-white-worn", "hull-grey", "lamp-red", "coolant"];
+  const pitch = pr * 3;
+  const stand = pr * 4.2;
+  const mats: MaterialName[] = ["pipe-steel", "hull-white-worn", "pipe-steel", "hull-grey", o.material ?? "coolant"];
   const out: Piece[] = [];
   const f = patch(o.r, o.az, 0);
   for (let i = 0; i < count; i++) {
@@ -365,7 +494,20 @@ export function conduitRun(o: ConduitOptions): Piece[] {
     const base = pointOf(f, side, 0, stand);
     const r = Math.hypot(base[0], base[2]);
     const a = Math.atan2(base[0], base[2]);
-    out.push(post(mats[Math.floor(random() * mats.length)], [r * Math.sin(a), r * Math.cos(a)], pr, o.y0, pr, o.y1, 12));
+    const x = r * Math.sin(a);
+    const z = r * Math.cos(a);
+    const material = mats[Math.floor(random() * mats.length)];
+    const into = pointOf(f, side, 0, -sagOf(o.r, Math.abs(side) * 2));
+    out.push(post(material, [x, z], pr, o.y0, pr, o.y1, 12));
+    for (const [y, down] of [[o.y0, 1], [o.y1, -1]] as const) {
+      const corner: Vec3 = [x, y, z];
+      const wall: Vec3 = [into[0], y, into[2]];
+      out.push(ball(material, corner, pr * 1.08), rod(material, corner, wall, pr, 10), rod("hull-grey-dark", wall, add(wall, mul(unit(sub(corner, wall)), pr * 0.5)), pr * 2.6, 10), rod("hull-grey", add(wall, mul(unit(sub(corner, wall)), pr * 0.5)), add(wall, mul(unit(sub(corner, wall)), pr * 1.6)), pr * 1.6, 10));
+      out.push(post("hull-grey-dark", [x, z], pr * 1.5, y + down * pr * 1.2, pr * 1.5, y + down * pr * 2.6, 12));
+    }
+    const mid = (o.y0 + o.y1) / 2 + (random() - 0.5) * 0.4 * (o.y1 - o.y0);
+    out.push(post("hull-grey-dark", [x, z], pr * 1.75, mid, pr * 1.75, mid + pr * 0.7, 12), post("black", [x, z], pr * 1.6, mid + pr * 0.7, pr * 1.6, mid + pr * 0.95, 12), post("hull-grey-dark", [x, z], pr * 1.75, mid + pr * 0.95, pr * 1.75, mid + pr * 1.65, 12));
+    if (random() < 0.5) out.push(post(random() < 0.5 ? "coolant" : "copper", [x, z], pr * 1.2, mid - pr * 2.2, pr * 1.2, mid - pr * 1.2, 12));
   }
   // clamps
   const clampEvery = 1.4;
@@ -378,7 +520,7 @@ export function conduitRun(o: ConduitOptions): Piece[] {
 
 /** A ring of pipe round a hull at height y: a coolant or cable ring, with a clamp and a valve. */
 export function pipeRing(material: MaterialName, r: number, y: number, pipe = 0.09, segs = 32): Piece[] {
-  return [hoop(material, r + pipe * 1.2, y, pipe, Math.min(segs, 32), 8), annulus("hull-grey-dark", r, r + pipe * 0.9, y - pipe * 1.8, y + pipe * 1.8, 24, { only: "mesh" })];
+  return [hoop(material, r + pipe * 1.2, y, pipe, Math.min(segs, 32), 6), annulus("hull-grey-dark", r, r + pipe * 0.9, y - pipe * 1.8, y + pipe * 1.8, 20, { only: "mesh" })];
 }
 
 /** A cable tray up a hull: a channel with cables lying in it. */
@@ -458,14 +600,80 @@ export function boltRing(r: number, y: number, count: number, size: number, down
 
 export interface Lamp {
   at: Vec3;
-  /** `amber` (work), `blue` (docking), `red` (warning). */
-  colour: "amber" | "blue" | "red";
+  /** `amber` (work), `blue` (docking), `red` (warning), `port` (the red navigation light), `starboard` (the green one), `strobe` (a white flash) or `flood` (a floodlight's lens). All of them light up with the engines ("Engines: Lit"). */
+  colour: "amber" | "blue" | "red" | "port" | "starboard" | "strobe" | "flood";
   size?: number;
 }
 
-/** Lamps: small domes in a bright colour. */
+const LAMP_MATERIAL: Readonly<Record<Lamp["colour"], MaterialName>> = { amber: "lamp-amber", blue: "lamp-blue", red: "lamp-red", port: "nav-red", starboard: "nav-green", strobe: "strobe", flood: "flood" };
+
+/** Lamps: small domes in a bright colour. They glow when the viewer's engines are lit. */
 export function lamps(list: readonly Lamp[]): Piece[] {
-  return list.map(({ at, colour, size = 0.1 }): Piece => ({ kind: "lathe", material: colour === "amber" ? "lamp-amber" : colour === "blue" ? "lamp-blue" : "lamp-red", at: [at[0], at[2]], segs: 8, only: "mesh", profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [size * 0.001, at[1] + size * 0.8]] }));
+  return list.map(({ at, colour, size = 0.1 }): Piece => ({ kind: "lathe", material: LAMP_MATERIAL[colour], at: [at[0], at[2]], segs: 8, only: "mesh", profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [size * 0.001, at[1] + size * 0.8]] }));
+}
+
+/** A navigation light on a hull of radius `r` at azimuth `az` (radians) and height `y`: a housing, a stalk and a lens, red (`port`) or green (`starboard`), or a white `strobe`. Lit with the engines. */
+export function navLight(colour: "port" | "starboard" | "strobe", r: number, az: number, y: number, size = 0.16): Piece[] {
+  const f = patch(r, az, y);
+  const out: Piece[] = [box("hull-grey-dark", pointOf(f, 0, 0, 0.02), size * 2.6, size * 2.2, size * 0.8, (az * 180) / Math.PI)];
+  const tip = pointOf(f, 0, 0, size * 0.8);
+  out.push(rod("hull-grey", pointOf(f, 0, 0, 0.02), tip, size * 0.45, 8), ...lamps([{ at: [tip[0], tip[1] + size * 0.1, tip[2]], colour, size }]));
+  return out;
+}
+
+/** A floodlight on a hull of radius `r` at azimuth `az` and height `y`, aimed along the hull by `tilt` (radians, up positive): a bracket, a round housing with cooling fins and a bright lens. Lit with the engines. */
+export function floodlight(r: number, az: number, y: number, tilt = 0): Piece[] {
+  const f = patch(r, az, y);
+  const out: Piece[] = [box("hull-grey-dark", pointOf(f, 0, -0.1, 0.02), 0.42, 0.3, 0.18, (az * 180) / Math.PI)];
+  const base = pointOf(f, 0, 0.02, 0.2);
+  const dir: Vec3 = unit(add(mul(f.w, Math.cos(tilt)), mul(f.v, Math.sin(tilt))));
+  const mouth = add(base, mul(dir, 0.42));
+  out.push(rod("hull-grey", pointOf(f, 0, -0.1, 0.1), base, 0.04, 6), rod("hull-grey", base, mouth, 0.2, 12), rod("hull-grey-dark", add(base, mul(dir, 0.04)), add(base, mul(dir, 0.1)), 0.23, 12), rod("hull-grey-dark", add(base, mul(dir, 0.16)), add(base, mul(dir, 0.22)), 0.23, 12), rod("flood", mouth, add(mouth, mul(dir, 0.03)), 0.17, 12));
+  return out;
+}
+
+/**
+ * How a separation joint is made: how many latch hooks and umbilical plates it has. Set on a ship's place (`separation`) or a module's options.
+ *
+ * @example
+ * ```ts
+ * import { shipPieces, type SeparationOptions } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const joint: SeparationOptions = { latches: 8, umbilicals: 2 };
+ * console.log(shipPieces([{ module: "tank-cryo-12" }, { module: "tank-cryo-12", separation: joint }], { detail: 0.3 }).length > 0);
+ * ```
+ */
+export interface SeparationOptions {
+  /** Latch hooks round the joint (default 12). */
+  latches?: number;
+  /** Umbilical plates (default 4). */
+  umbilicals?: number;
+}
+
+/**
+ * A separation joint at a module boundary: where a ship is planned to come apart in flight. A split collar ring with a groove between its halves, hooked latches round it, pyrotechnic bolt caps, umbilical plates with their
+ * sockets and strobes, and a hazard stencil along the cut. Place it at the height `y` where two modules meet, on a hull of radius `r` (a collar's outer radius).
+ *
+ * @param r Radius of the joint's ring, metres.
+ * @param y Height of the joint plane.
+ * @param options How many latches and umbilical plates.
+ * @returns The pieces: mesh only, apart from the groove's seam line.
+ */
+export function separationJoint(r: number, y: number, options: SeparationOptions = {}): Piece[] {
+  const latches = options.latches ?? 12;
+  const umbilicals = options.umbilicals ?? 4;
+  const out: Piece[] = [];
+  out.push(annulus("hull-grey", r - 0.1, r + 0.2, y - 0.3, y - 0.04, 56, { only: "mesh" }), annulus("hull-grey", r - 0.1, r + 0.2, y + 0.04, y + 0.3, 56, { only: "mesh" }), annulus("black", r - 0.1, r + 0.17, y - 0.04, y + 0.04, 56, { only: "mesh" }));
+  out.push(seams("weld", [Array.from({ length: 49 }, (_, k) => [(r + 0.21) * Math.sin((2 * Math.PI * k) / 48), y, (r + 0.21) * Math.cos((2 * Math.PI * k) / 48)] as Vec3)]));
+  // a latch: a body across the joint, a hook that closes over the upper ring, its pin and a flag
+  const latch: Piece[] = [box("hull-grey-dark", [0, -0.28, r + 0.2], 0.5, 0.34, 0.56), box("hull-grey", [0, 0.1, r + 0.34], 0.34, 0.2, 0.2), rod("hull-grey", [0, 0.24, r + 0.22], [0, 0.24, r + 0.56], 0.07, 8), rod("hull-yellow", [-0.2, -0.05, r + 0.48], [0.2, -0.05, r + 0.48], 0.035, 6)];
+  out.push(...stamp(place(latch, { at: [0, y, 0] }), ringOf(latches, 0, 0)));
+  // the pyrotechnic bolts: hex caps in two rings either side of the groove
+  out.push(...boltRing(r + 0.08, y + 0.3, latches * 2, 0.16), ...boltRing(r + 0.08, y - 0.3, latches * 2, 0.16, true));
+  // umbilical plates between the latches: a plate, a hazard strip, round sockets and a strobe
+  const plate: Piece[] = [box("hull-grey-dark", [0, -0.55, r + 0.12], 1.1, 0.22, 1.1), box("hazard", [0, -0.55, r + 0.26], 1.0, 0.02, 0.1), ...[-0.3, 0, 0.3].flatMap((x) => [rod("pipe-steel", [x, -0.15, r + 0.14], [x, -0.15, r + 0.34], 0.09, 10), rod("black", [x, -0.15, r + 0.34], [x, -0.15, r + 0.36], 0.06, 10)]), ...lamps([{ at: [0.4, 0.34, r + 0.26], colour: "strobe", size: 0.07 }])];
+  out.push(...stamp(place(plate, { at: [0, y, 0] }), ringOf(umbilicals, 0, 0, 180 / Math.max(1, latches))));
+  return out;
 }
 
 export type AntennaKind = "whip" | "dish" | "yagi" | "phased" | "omni" | "horn";
@@ -638,10 +846,12 @@ export const ball = (material: MaterialName, at: Vec3, radius: number): Lathe =>
   kind: "lathe",
   material,
   at: [at[0], at[2]],
-  segs: 12,
+  segs: 10,
   only: "mesh",
-  profile: Array.from({ length: 9 }, (_, i) => [Math.max(0.001, radius * Math.sin((Math.PI * i) / 8)), at[1] - radius * Math.cos((Math.PI * i) / 8)] as const),
+  profile: Array.from({ length: 7 }, (_, i) => [Math.max(0.001, radius * Math.sin((Math.PI * i) / 6)), at[1] - radius * Math.cos((Math.PI * i) / 6)] as const),
 });
+
+export type PipeEnd = "flange" | "cap" | "bulkhead" | "valve";
 
 export interface PipeOptions {
   /** Sides of the tube: 12 reads as round. */
@@ -650,61 +860,143 @@ export interface PipeOptions {
   flangeEvery?: number;
   /** A clamp bracket every this many metres. */
   bracketEvery?: number;
-  /** The way the structure is from the pipe, as a unit vector: brackets have a leg that way. Left out: no legs. */
+  /** The way the structure is from the pipe, as a unit vector: brackets stand off the structure on a leg that way. Left out: no legs. */
   support?: Vec3;
   /** Material of the flanges and brackets. */
   fittings?: MaterialName;
+  /** How a run ends, at its first and its last point. A `flange` is bolted to a mating flange on a short stub, a `cap` is a bolted blind flange, a `bulkhead` is a gland where the pipe goes through the structure (a pad, a boot and a bolt circle) and a `valve` is a valve body with its handwheel. Default: both ends flanged. */
+  ends?: readonly [PipeEnd, PipeEnd];
+  /** The radius of a bend, in pipe radii: the corner is rounded to it. 0 gives a sharp corner with a round elbow. Default 3. */
+  bend?: number;
+  /** A colour-coding band round the pipe at each joint: teal for coolant, copper for power. */
+  band?: MaterialName;
+}
+
+/** Hexagonal bolt heads in a circle of radius `r` on a flange face at `c` facing `d`: flat hexes, so a bolt costs six vertices. */
+function boltCircle(c: Vec3, d: Vec3, r: number, head: number, count = 6, rotate = 0.4): Plate[] {
+  const [u, v] = across(d);
+  const hex = Array.from({ length: 6 }, (_, i) => [head * Math.cos((Math.PI * i) / 3), head * Math.sin((Math.PI * i) / 3)] as const);
+  return Array.from({ length: count }, (_, k) => {
+    const dir = add(mul(u, Math.cos((k * 2 * Math.PI) / count + rotate)), mul(v, Math.sin((k * 2 * Math.PI) / count + rotate)));
+    return { kind: "plate", material: "hull-grey", frame: { o: add(add(c, mul(dir, r)), mul(d, head * 0.12)), u, v, w: d }, outline: hex, thickness: 0.004, plain: true, sheet: true, only: "mesh" } as Plate;
+  });
+}
+
+/** A bolted flange joint across a pipe at `c` running along `d`: two flange discs with a gasket between and a bolt circle on each face. `blind` closes the far side with a bolted cap and a test boss. */
+function flangeJoint(c: Vec3, d: Vec3, radius: number, fittings: MaterialName, blind: boolean, band?: MaterialName): Piece[] {
+  const t = radius * 0.34;
+  const R = radius * 1.75;
+  const sides = radius < 0.12 ? 10 : 14;
+  const out: Piece[] = [rod(fittings, c, add(c, mul(d, t)), R, sides), rod("black", add(c, mul(d, t)), add(c, mul(d, t * 1.25)), R * 0.93, sides), rod(fittings, add(c, mul(d, t * 1.25)), add(c, mul(d, t * 2.25)), R, sides)];
+  out.push(...boltCircle(c, d, R * 0.78, radius * 0.24, 6, 0.4), ...boltCircle(add(c, mul(d, t * 2.25)), d, R * 0.78, radius * 0.24, 6, 0.4));
+  if (blind) {
+    out.push(rod(fittings, add(c, mul(d, t * 2.25)), add(c, mul(d, t * 2.5)), R * 0.9, sides), rod("hull-grey", add(c, mul(d, t * 2.5)), add(c, mul(d, t * 3.3)), radius * 0.55, 6));
+  } else {
+    out.push(rod("hull-grey", add(c, mul(d, t * 2.25)), add(c, mul(d, t * 2.25 + radius * 1.1)), radius * 1.18, sides));
+  }
+  if (band) out.push(rod(band, add(c, mul(d, -radius * 0.9)), add(c, mul(d, -radius * 0.4)), radius * 1.12, sides));
+  return out;
+}
+
+/** A gland where a pipe passes through the structure at `c`, the pipe running along `d` into it: a pad, a seal boot, a nut ring and a bolt circle. */
+function gland(c: Vec3, d: Vec3, radius: number, fittings: MaterialName): Piece[] {
+  const out: Piece[] = [rod(fittings, c, add(c, mul(d, radius * 0.4)), radius * 3.1, 12), rod("black", add(c, mul(d, radius * 0.4)), add(c, mul(d, radius * 0.62)), radius * 2.1, 12)];
+  out.push(rod("hull-grey", add(c, mul(d, radius * 0.62)), add(c, mul(d, radius * 1.5)), radius * 1.8, 12), rod("hull-grey", add(c, mul(d, radius * 1.5)), add(c, mul(d, radius * 2.7)), radius * 1.4, 12), rod(fittings, add(c, mul(d, radius * 2.7)), add(c, mul(d, radius * 3.3)), radius * 1.5, 12));
+  out.push(...boltCircle(c, d, radius * 2.55, radius * 0.3, 8));
+  return out;
+}
+
+/** A valve in a pipe at `c` along `d`: a round body between two flanges, a stem and a handwheel. */
+function valve(c: Vec3, d: Vec3, radius: number, fittings: MaterialName): Piece[] {
+  const [u] = across(d);
+  const body = add(c, mul(d, radius * 1.4));
+  const out: Piece[] = [rod("hull-grey", c, add(c, mul(d, radius * 2.8)), radius * 1.55, 12), rod(fittings, c, add(c, mul(d, radius * 0.3)), radius * 1.9, 12), rod(fittings, add(c, mul(d, radius * 2.5)), add(c, mul(d, radius * 2.8)), radius * 1.9, 12)];
+  const top = add(body, mul(u, radius * 3.1));
+  out.push(rod("hull-grey-dark", body, top, radius * 0.35, 8), rod("lamp-red", add(top, mul(u, -radius * 0.1)), add(top, mul(u, radius * 0.2)), radius * 1.2, 12), rod("hull-grey-dark", add(top, mul(across(u)[0], -radius * 1.2)), add(top, mul(across(u)[0], radius * 1.2)), radius * 0.14, 6));
+  return out;
+}
+
+/** A clamp bracket on a pipe at `c`: a band round the pipe, a saddle and a stand-off post to a base pad on the structure (`s` is the way the structure lies), with two bolts through the pad. */
+function clamp(c: Vec3, d: Vec3, s: Vec3, radius: number, fittings: MaterialName): Piece[] {
+  const out: Piece[] = [rod(fittings, add(c, mul(d, -radius * 0.45)), add(c, mul(d, radius * 0.45)), radius * 1.28, 12)];
+  const [u] = across(d);
+  out.push(rod(fittings, add(c, mul(u, -radius * 1.45)), add(c, mul(u, radius * 1.45)), radius * 0.2, 6));
+  const foot = add(c, mul(s, radius * 3.4));
+  out.push(rod("hull-grey", add(c, mul(s, radius * 1.2)), foot, radius * 0.4, 8), rod("hull-grey-dark", foot, add(foot, mul(s, radius * 0.3)), radius * 1.3, 8));
+  for (const q of [-1, 1]) out.push(rod("hull-grey", add(add(foot, mul(d, q * radius * 0.85)), mul(s, -radius * 0.1)), add(add(foot, mul(d, q * radius * 0.85)), mul(s, radius * 0.45)), radius * 0.2, 6));
+  return out;
 }
 
 /**
- * A pipe along a path: a round tube for each straight run, a ball at each bend so the bend is round, a flange (a short wide ring with a bolt circle) at each end of a run and at an interval, and a clamp
- * bracket (a band round the pipe on a leg to the structure) at another interval. Round, never square: the tube has twelve sides by default.
+ * A pipe along a path: a round tube for each straight run, corners rounded to a real bend (a chain of short tubes with a round joint at each, `bend` pipe radii of curve), bolted flange joints at an interval, clamp brackets with stand-off
+ * posts, and a proper end for each run: a flange bolted to a mating flange, a blind cap, a gland through the structure or a valve. Never a bare end, never a square bar: the tube has twelve sides by default.
  *
  * @param points The path, in metres: two or more points.
  * @param radius The pipe's radius.
- * @param material The pipe's material: `coolant` for a coolant or feed line, `copper` for a power or coil line.
- * @param options Sides, spacing of flanges and brackets, the way the structure lies, the fittings' material.
+ * @param material The pipe's material: `pipe-steel` for stainless, `coolant` for a coolant or feed line, `copper` for a power or coil line.
+ * @param options Sides, spacing of flanges and brackets, the way the structure is, the fittings' material, the ends, the bend and a colour-coding band.
  * @returns The pieces.
  */
 export function pipeRun(points: readonly Vec3[], radius: number, material: MaterialName, options: PipeOptions = {}): Piece[] {
   const sides = options.sides ?? 12;
   const fittings = options.fittings ?? "hull-grey-dark";
+  const [first, last] = options.ends ?? (["flange", "flange"] as const);
+  const bendK = options.bend ?? 3;
   const out: Piece[] = [];
-  for (let i = 0; i + 1 < points.length; i++) {
-    const a = points[i];
-    const b = points[i + 1];
+  // round the corners: each interior point is replaced by an arc of short straight steps
+  const path: { p: Vec3; joint: boolean }[] = [{ p: points[0], joint: false }];
+  for (let i = 1; i + 1 < points.length; i++) {
+    const [p0, p1, p2] = [points[i - 1], points[i], points[i + 1]];
+    const d1 = unit(sub(p1, p0));
+    const d2 = unit(sub(p2, p1));
+    const turn = Math.acos(Math.max(-1, Math.min(1, d1[0] * d2[0] + d1[1] * d2[1] + d1[2] * d2[2])));
+    if (turn < 0.05) {
+      path.push({ p: p1, joint: false });
+      continue;
+    }
+    const trim = Math.min(bendK * radius * Math.tan(turn / 2), 0.45 * len(sub(p1, p0)), 0.45 * len(sub(p2, p1)));
+    if (bendK <= 0 || trim < radius) {
+      path.push({ p: p1, joint: true });
+      continue;
+    }
+    const a = sub(p1, mul(d1, trim));
+    const b = add(p1, mul(d2, trim));
+    const steps = Math.max(2, Math.ceil(turn / 0.4));
+    for (let k = 0; k <= steps; k++) {
+      const s = k / steps;
+      const q: Vec3 = [(1 - s) * (1 - s) * a[0] + 2 * s * (1 - s) * p1[0] + s * s * b[0], (1 - s) * (1 - s) * a[1] + 2 * s * (1 - s) * p1[1] + s * s * b[1], (1 - s) * (1 - s) * a[2] + 2 * s * (1 - s) * p1[2] + s * s * b[2]];
+      path.push({ p: q, joint: k > 0 && k < steps });
+    }
+  }
+  path.push({ p: points[points.length - 1], joint: false });
+  for (let i = 0; i + 1 < path.length; i++) {
+    const a = path[i].p;
+    const b = path[i + 1].p;
     const length = len(sub(b, a));
     if (length < radius * 0.5) continue;
     const d = unit(sub(b, a));
     out.push(rod(material, a, b, radius, sides));
+    const at = (t: number): Vec3 => add(a, mul(d, t));
     const every = options.flangeEvery ?? Math.max(radius * 40, 2);
     const flanges = Math.floor(length / every);
-    const at = (t: number): Vec3 => add(a, mul(d, t));
-    const ring = (t: number): void => {
-      const c = at(t);
-      out.push(rod(fittings, add(c, mul(d, -radius * 0.18)), add(c, mul(d, radius * 0.18)), radius * 1.55, sides));
-      for (let k = 0; k < 4; k++) {
-        const [u, v] = across(d);
-        const dir = add(mul(u, Math.cos((k * Math.PI) / 2 + 0.4)), mul(v, Math.sin((k * Math.PI) / 2 + 0.4)));
-        const p = add(c, mul(dir, radius * 1.3));
-        out.push(rod("hull-grey", add(p, mul(d, -radius * 0.28)), add(p, mul(d, radius * 0.28)), radius * 0.16, 6));
-      }
-    };
-    ring(radius * 0.4);
-    ring(length - radius * 0.4);
-    for (let k = 1; k <= flanges; k++) ring((length * k) / (flanges + 1));
+    for (let k = 1; k <= flanges; k++) out.push(...flangeJoint(at((length * k) / (flanges + 1) - radius * 0.5), d, radius, fittings, false, options.band));
     const bracketEvery = options.bracketEvery ?? Math.max(radius * 30, 1.5);
     const brackets = Math.floor(length / bracketEvery);
-    for (let k = 1; k <= brackets; k++) {
-      const c = at(((k - 0.5) * length) / brackets);
-      out.push(rod(fittings, add(c, mul(d, -radius * 0.3)), add(c, mul(d, radius * 0.3)), radius * 1.25, sides));
-      if (options.support) {
-        const s = unit(options.support);
-        out.push(rod(fittings, add(c, mul(s, radius)), add(c, mul(s, radius * 3.2)), radius * 0.28, 8), ...[-1, 1].map((q) => rod("hull-grey", add(add(c, mul(s, radius * 3.2)), mul(d, q * radius * 0.5)), add(add(c, mul(s, radius * 3.2)), mul(d, q * radius * 0.5 + 0.0001)), radius * 0.55, 6)));
-      }
-    }
-    // a round elbow at the bend
-    if (i + 2 < points.length) out.push(ball(material, b, radius * 1.02));
+    if (options.support) for (let k = 1; k <= brackets; k++) out.push(...clamp(at(((k - 0.5) * length) / brackets), d, unit(options.support), radius, fittings));
+    else for (let k = 1; k <= brackets; k++) out.push(rod(fittings, add(at(((k - 0.5) * length) / brackets), mul(d, -radius * 0.3)), add(at(((k - 0.5) * length) / brackets), mul(d, radius * 0.3)), radius * 1.25, sides));
+    if (path[i + 1].joint) out.push(ball(material, b, radius * 1.04));
+  }
+  // the ends
+  const finish = (kind: PipeEnd, p: Vec3, away: Vec3): void => {
+    // `away` points from the end back along the pipe, so the fitting stands beyond the end
+    const out_ = mul(away, -1);
+    if (kind === "bulkhead") out.push(...gland(p, away, radius, fittings));
+    else if (kind === "valve") out.push(...valve(p, out_, radius, fittings));
+    else out.push(...flangeJoint(p, out_, radius, fittings, kind === "cap", options.band));
+  };
+  if (path.length >= 2) {
+    finish(first, path[0].p, unit(sub(path[1].p, path[0].p)));
+    finish(last, path[path.length - 1].p, unit(sub(path[path.length - 2].p, path[path.length - 1].p)));
   }
   return out;
 }
@@ -745,6 +1037,223 @@ export function strut(material: MaterialName, a: Vec3, b: Vec3, radius: number, 
   const d = unit(sub(b, a));
   // a tube with a fitting at each end: a collar, a round ball for the joint, and a cap
   return [rod(material, a, b, radius, sides), rod("hull-grey-dark", add(a, mul(d, radius * 0.6)), add(a, mul(d, radius * 2.0)), radius * 1.45, sides), rod("hull-grey-dark", add(b, mul(d, -radius * 2.0)), add(b, mul(d, -radius * 0.6)), radius * 1.45, sides), rod("hull-grey", add(a, mul(d, -radius * 0.1)), add(a, mul(d, radius * 0.6)), radius * 1.7, sides), rod("hull-grey", add(b, mul(d, -radius * 0.6)), add(b, mul(d, radius * 0.1)), radius * 1.7, sides)];
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// life aboard: portholes, observation domes, the rooms people live in
+
+/** A round plate in a frame (a lens, a ring, a shutter): a disc of `radius` standing from `lift` to `lift` + `thick` off the frame's face. */
+function roundPlate(f: Frame, material: MaterialName, radius: number, lift: number, thick: number, sides = 16, at: readonly [number, number] = [0, 0]): Plate {
+  return { kind: "plate", material, frame: { o: pointOf(f, at[0], at[1], lift + thick / 2), u: f.u, v: f.v, w: f.w }, outline: Array.from({ length: sides }, (_, i) => [radius * Math.cos((2 * Math.PI * (i + 0.5)) / sides), radius * Math.sin((2 * Math.PI * (i + 0.5)) / sides)] as const), thickness: thick, plain: true, only: "mesh" };
+}
+
+/**
+ * An armoured porthole in a hull of radius `r` at azimuth `az` and height `y`: a heavy frame ring with a bolt circle, a thick reflective pane in a retaining lip, and a burn shutter on a hinge arm. `open` swings the shutter back
+ * flat against the hull beside the port (the pane glows when the engines are lit); `closed` shuts it over the pane, with four latch dogs, a handwheel and a hazard stripe for the burn.
+ *
+ * @param r Radius of the hull.
+ * @param az Azimuth, radians.
+ * @param y Height.
+ * @param size Outer radius of the frame in metres (default 0.5).
+ * @param shutter `open` or `closed`.
+ * @returns The pieces.
+ */
+export function porthole(r: number, az: number, y: number, size = 0.5, shutter: "open" | "closed" = "open"): Piece[] {
+  const f = patch(r, az, y);
+  const out: Piece[] = [roundPlate(f, "hull-grey-dark", size * 1.28, 0, 0.1, 18), roundPlate(f, "hull-grey", size * 1.05, 0.1, 0.07, 18), roundPlate(f, "hull-grey-dark", size * 0.74, 0.17, 0.04, 16), roundPlate(f, "window", size * 0.62, 0.12, 0.07, 16)];
+  out.push(...bolts(f, Array.from({ length: 8 }, (_, k) => [Math.cos((k * Math.PI) / 4 + 0.2) * size * 0.92, Math.sin((k * Math.PI) / 4 + 0.2) * size * 0.92] as const), size * 0.1, 0.18));
+  // the hinge block and arm on the left of the frame
+  const hinge = pointOf(f, -size * 1.35, 0, 0.1);
+  out.push(box("hull-grey-dark", [hinge[0], hinge[1] - size * 0.3, hinge[2]], size * 0.28, size * 0.3, size * 0.6, (az * 180) / Math.PI));
+  if (shutter === "open") {
+    // folded back flat on the hull beside the port: the disc, its latch ring and the arm to the hinge
+    const at: [number, number] = [-size * 2.6, 0];
+    out.push(roundPlate(f, "hull-grey", size * 1.02, 0.06, 0.1, 18, at), roundPlate(f, "hull-grey-dark", size * 0.78, 0.16, 0.04, 16, at), roundPlate(f, "hazard", size * 0.16, 0.2, 0.012, 8, [at[0] - size * 0.7, at[1] + size * 0.55]));
+    out.push(rod("hull-grey-dark", pointOf(f, -size * 1.35, 0, 0.12), pointOf(f, at[0] + size * 1.0, 0, 0.12), size * 0.1, 8), ...lamps([{ at: pointOf(f, size * 1.2, size * 0.9, 0.12), colour: "amber", size: size * 0.1 }]));
+  } else {
+    const dogs = [0, 90, 180, 270].map((a) => box("hull-grey-dark", pointOf(f, Math.cos(deg(a)) * size * 1.05, Math.sin(deg(a)) * size * 1.05, 0.2), size * 0.26, size * 0.26, size * 0.16, (az * 180) / Math.PI));
+    out.push(roundPlate(f, "hull-grey", size * 1.12, 0.21, 0.13, 18), roundPlate(f, "hull-grey-dark", size * 0.86, 0.34, 0.05, 16), ...dogs);
+    out.push(rod("hull-grey-dark", pointOf(f, 0, 0, 0.38), pointOf(f, 0, 0, 0.5), size * 0.1, 8), rod("hull-yellow", pointOf(f, -size * 0.34, 0, 0.5), pointOf(f, size * 0.34, 0, 0.5), size * 0.05, 6), rod("hull-yellow", pointOf(f, 0, -size * 0.34, 0.5), pointOf(f, 0, size * 0.34, 0.5), size * 0.05, 6));
+    out.push(roundPlate(f, "hazard", size * 0.9, 0.2, 0.016, 18), roundPlate(f, "hull-grey", size * 0.84, 0.215, 0.018, 18), ...lamps([{ at: pointOf(f, size * 1.2, size * 0.9, 0.12), colour: "red", size: size * 0.1 }]));
+  }
+  return out;
+}
+
+/**
+ * An armoured observation dome on a base ring at `base` (the middle of the ring, at its foot), a descendant of the ISS Cupola: a base ring with lamps, a reflective glass dome with six meridian ribs, two latitude hoops and an oculus
+ * on top, and six armoured petals that either lie open round the base (`open`, the dome shows its glass and glows when the engines are lit) or close over the glass (`closed`, as in a burn or a storm).
+ *
+ * @param base The middle of the ring's foot, in metres.
+ * @param radius Radius of the dome at its foot.
+ * @param shutters `open` or `closed`.
+ * @returns The pieces.
+ */
+export function observationDome(base: Vec3, radius: number, shutters: "open" | "closed" = "open"): Piece[] {
+  const [bx, by, bz] = base;
+  const at: [number, number] = [bx, bz];
+  const high = radius * 0.78;
+  const shell = (extra: number): [number, number][] => Array.from({ length: 9 }, (_, i) => {
+    const t = (i / 8) * (Math.PI / 2) * 0.96;
+    return [Math.max(0.001, (radius + extra) * Math.cos(t)), by + 0.35 + (high + extra) * Math.sin(t)] as [number, number];
+  });
+  const out: Piece[] = [annulus("hull-grey-dark", radius * 0.98, radius * 1.22, by, by + 0.38, 36, { at, only: "mesh" }), annulus("hull-grey", radius * 1.0, radius * 1.14, by + 0.38, by + 0.5, 36, { at, only: "mesh" })];
+  out.push({ kind: "lathe", material: "glass-clear", at, segs: 36, only: "mesh", profile: shell(0) });
+  // six meridian ribs, two latitude hoops and the oculus ring
+  for (let k = 0; k < 6; k++) {
+    const a = (k * Math.PI) / 3;
+    out.push({ kind: "lathe", material: "hull-grey", at, segs: 2, only: "mesh", profile: shell(0.06), arc: () => [a - 0.05, a + 0.05] });
+  }
+  for (const f of [0.35, 0.7]) {
+    const t = f * (Math.PI / 2) * 0.96;
+    out.push(hoop("hull-grey", (radius + 0.06) * Math.cos(t), by + 0.35 + (high + 0.06) * Math.sin(t), 0.05, 36, 5, { at }));
+  }
+  out.push(hoop("hull-grey-dark", radius * 0.2, by + 0.35 + high * 0.99, 0.09, 16, 5, { at }), disc("glass-clear", at, radius * 0.17, by + 0.35 + high * 0.99, 0.03, 12));
+  out.push(...lamps(Array.from({ length: 6 }, (_, k) => ({ at: [bx + radius * 1.13 * Math.sin((k * Math.PI) / 3 + 0.5), by + 0.5, bz + radius * 1.13 * Math.cos((k * Math.PI) / 3 + 0.5)] as Vec3, colour: "amber" as const, size: 0.1 }))));
+  // six armoured petals, one over each pane
+  for (let k = 0; k < 6; k++) {
+    const a0 = (k * Math.PI) / 3 + 0.07;
+    const a1 = ((k + 1) * Math.PI) / 3 - 0.07;
+    if (shutters === "closed") {
+      out.push({ kind: "lathe", material: "hull-grey", at, segs: 8, outline: true, profile: shell(0.17), arc: () => [a0, a1] }, { kind: "lathe", material: "hull-grey-dark", at, segs: 8, only: "mesh", profile: shell(0.22).filter((_, i) => i < 7).map(([rr, yy]) => [rr * 0.995, yy] as [number, number]), arc: () => [a0 + 0.06, a1 - 0.06] });
+    } else {
+      // folded back: a plate lying out from the ring, tilted up a little, with its hinge pin
+      const am = (a0 + a1) / 2;
+      const p = (rad: number, a: number, h: number): Vec3 => [bx + rad * Math.sin(a), by + h, bz + rad * Math.cos(a)];
+      out.push(quad("hull-grey", p(radius * 1.2, a0, 0.5), p(radius * 1.2, a1, 0.5), p(radius * 1.6, a1 - 0.04, 0.1), p(radius * 1.6, a0 + 0.04, 0.1), 0.1), rod("hull-grey-dark", p(radius * 1.2, a0, 0.5), p(radius * 1.2, a1, 0.5), 0.06, 6), box("hull-grey-dark", p(radius * 1.35, am, 0.3), 0.3, 0.3, 0.1, (am * 180) / Math.PI));
+    }
+  }
+  return out;
+}
+
+/**
+ * The name of a room in `ROOMS`.
+ *
+ * @example
+ * ```ts
+ * import { ROOMS, type RoomKind } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const kind: RoomKind = "garden";
+ * console.log(ROOMS[kind].name);
+ * ```
+ */
+export type RoomKind = "cabin" | "mess" | "gym" | "garden" | "lounge" | "medical" | "shelter" | "recreation" | "school" | "plaza";
+
+/**
+ * One room: its id, the name a cutaway labels it with, its job, and its size in metres.
+ *
+ * @example
+ * ```ts
+ * import { ROOMS, type RoomSpec } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const mess: RoomSpec = ROOMS.mess;
+ * console.log(mess.name, mess.size);
+ * ```
+ */
+export interface RoomSpec {
+  id: RoomKind;
+  /** The name a cutaway labels it with. */
+  name: string;
+  /** What it is for, in a line. */
+  job: string;
+  /** Floor size in metres: width, depth, and the height of the room. */
+  size: readonly [number, number, number];
+}
+
+/**
+ * The rooms people need, named, each with a job and a size in metres: a cabin, a mess, a gym, a garden, an observation lounge, medical, a storm shelter, a recreation room, a school and a plaza. A ship places them in a cutaway
+ * with `room`.
+ *
+ * @example
+ * ```ts
+ * import { ROOMS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(Object.values(ROOMS).map((room) => room.name).join(", "));
+ * ```
+ */
+export const ROOMS: Readonly<Record<RoomKind, RoomSpec>> = {
+  cabin: { id: "cabin", name: "Crew cabin", job: "A bunk, a desk, a locker and a porthole of one's own: privacy.", size: [3.2, 3.8, 2.6] },
+  mess: { id: "mess", name: "Mess and galley", job: "Long tables, a galley counter and benches where a crew eats together.", size: [7, 5, 2.8] },
+  gym: { id: "gym", name: "Exercise room", job: "Treadmills, a rowing machine and weight racks that keep bones strong.", size: [6, 5, 2.8] },
+  garden: { id: "garden", name: "Green room", job: "Planter beds under grow-lamps: fresh food and something alive to look at.", size: [6, 5, 3] },
+  lounge: { id: "lounge", name: "Observation lounge", job: "Low seats round a big window on the stars.", size: [6, 6, 3] },
+  medical: { id: "medical", name: "Medical bay", job: "Beds, a scanner and a surgical table.", size: [6, 5, 2.8] },
+  shelter: { id: "shelter", name: "Storm shelter", job: "A shielded, padded room for a solar storm, with water and air for days.", size: [5, 5, 2.4] },
+  recreation: { id: "recreation", name: "Recreation room", job: "A library, a games table and soft chairs.", size: [6, 5, 2.8] },
+  school: { id: "school", name: "School room", job: "Rows of desks and a board for the ship's children.", size: [7, 6, 2.8] },
+  plaza: { id: "plaza", name: "Plaza", job: "An open paved square with trees, benches and a fountain: the middle of a ship's town.", size: [14, 14, 6] },
+};
+
+/**
+ * One of the rooms in `ROOMS`, furnished, standing on its floor at the origin (the middle of its floor), ready to `place` in a cutaway. Plain boxes and rods in the fleet's materials: nothing is bare.
+ *
+ * @param kind Which room.
+ * @param seed Any text, so two of the same room differ a little.
+ * @returns The pieces.
+ */
+export function room(kind: RoomKind, seed = "room"): Piece[] {
+  const [w, d, h] = ROOMS[kind].size;
+  const random = rng(`${seed}/${kind}`);
+  const out: Piece[] = [box("deck", [0, 0, 0], w, d, 0.06), box("hull-white", [0, h, 0], w, d, 0.05)];
+  const wall = (x: number, z: number, wide: number, deep: number): void => void out.push(box("hull-white", [x, 0.06, z], wide, deep, h - 0.1));
+  wall(0, -d / 2, w, 0.06);
+  wall(-w / 2, 0, 0.06, d);
+  out.push(box("lamp-blue", [0, h - 0.04, 0], w * 0.5, 0.2, 0.04), box("lamp-blue", [0, h - 0.04, d * 0.3], w * 0.4, 0.14, 0.04));
+  const table = (x: number, z: number, tw: number, td: number, th = 0.75): void => void out.push(box("wood", [x, th - 0.05, z], tw, td, 0.05), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sz]) => rod("hull-grey", [x + (sx * tw) / 2.2, 0.06, z + (sz * td) / 2.2], [x + (sx * tw) / 2.2, th - 0.05, z + (sz * td) / 2.2], 0.025, 6)));
+  const chair = (x: number, z: number, yaw = 0): void => void out.push(box("fabric", [x, 0.4, z], 0.5, 0.5, 0.1, yaw), box("fabric", [x, 0.5, z - 0.22], 0.5, 0.06, 0.45, yaw), rod("hull-grey", [x, 0.06, z], [x, 0.4, z], 0.03, 6));
+  if (kind === "cabin") {
+    out.push(box("hull-blue", [-w / 2 + 0.7, 0.4, -d / 2 + 1.1], 1.0, 2.0, 0.3), box("fabric", [-w / 2 + 0.7, 0.7, -d / 2 + 1.1], 0.95, 1.9, 0.14), box("fabric", [-w / 2 + 0.55, 0.84, -d / 2 + 0.5], 0.5, 0.35, 0.12), box("hull-grey", [w / 2 - 0.5, 0.06, -d / 2 + 0.4], 0.8, 0.5, 2.0));
+    table(w / 2 - 0.9, 0.2, 1.2, 0.6);
+    chair(w / 2 - 1.5, 0.2, 90);
+  } else if (kind === "mess") {
+    for (const z of [-1.2, 0.6]) table(0.2, z, 4.6, 0.8);
+    for (const z of [-1.2, 0.6]) for (const x of [-1.6, 0, 1.6]) {
+      chair(x + 0.2, z - 0.7);
+      chair(x + 0.2, z + 0.7, 180);
+    }
+    out.push(box("pipe-steel", [0, 0.06, d / 2 - 0.5], w * 0.7, 0.6, 0.9), box("hull-grey-dark", [0, 0.96, d / 2 - 0.5], w * 0.7, 0.62, 0.05), box("lamp-amber", [-1.2, 1.2, d / 2 - 0.4], 0.4, 0.05, 0.1), box("lamp-amber", [1.2, 1.2, d / 2 - 0.4], 0.4, 0.05, 0.1));
+  } else if (kind === "gym") {
+    for (const x of [-2, 0, 2]) out.push(box("hull-grey-dark", [x, 0.1, 0.4], 0.7, 1.6, 0.25), box("black", [x, 0.35, 0.4], 0.62, 1.5, 0.04), rod("hull-grey", [x - 0.3, 0.35, -0.4], [x - 0.3, 1.2, -0.5], 0.03, 6), rod("hull-grey", [x + 0.3, 0.35, -0.4], [x + 0.3, 1.2, -0.5], 0.03, 6));
+    out.push(box("hull-grey", [-w / 2 + 0.6, 0.06, -d / 2 + 0.5], 0.7, 2.0, 1.4), rod("hull-grey-dark", [w / 2 - 1.0, 0.9, -d / 2 + 0.3], [w / 2 - 1.0 + 1.2, 0.9, -d / 2 + 0.3], 0.03, 6), rod("black", [w / 2 - 1.5, 0.9, -d / 2 + 0.3], [w / 2 - 1.0, 0.9, -d / 2 + 0.3], 0.07, 8));
+  } else if (kind === "garden") {
+    for (const x of [-1.8, 0, 1.8]) {
+      out.push(box("hull-grey", [x, 0.06, 0.2], 1.3, 3.4, 0.45), box("soil", [x, 0.46, 0.2], 1.2, 3.3, 0.04));
+      for (let k = 0; k < 5; k++) out.push(rod("leaf", [x + (random() - 0.5) * 0.9, 0.5, -1.2 + k * 0.7], [x + (random() - 0.5) * 0.9, 0.9 + random() * 0.5, -1.2 + k * 0.7], 0.12 + random() * 0.1, 7));
+      out.push(box("grow-lamp", [x, h - 0.6, 0.2], 1.0, 3.0, 0.07), rod("hull-grey", [x, h - 0.6, -1.2], [x, h, -1.2], 0.03, 6));
+    }
+  } else if (kind === "lounge") {
+    out.push(box("window", [0, 0.5, d / 2 - 0.03], w * 0.9, 0.05, h * 0.7), ...[-2, -0.7, 0.7, 2].map((x) => beam("hull-grey", [x, 0.5, d / 2 - 0.05], [x, 0.5 + h * 0.7, d / 2 - 0.05], 0.06, 0.06)));
+    for (const x of [-1.8, 0, 1.8]) out.push(box("fabric", [x, 0.25, 0.5], 1.2, 0.9, 0.3), box("fabric", [x, 0.5, 0.15], 1.2, 0.2, 0.35));
+    out.push(box("hull-grey", [0, 0.06, -1.2], 1.6, 0.7, 0.4));
+  } else if (kind === "medical") {
+    for (const x of [-2, 0]) out.push(box("hull-white-worn", [x, 0.5, -0.6], 0.9, 2.0, 0.12), box("hull-grey", [x, 0.06, -0.6], 0.5, 1.4, 0.44), box("lamp-blue", [x, 1.6, -0.6], 0.5, 0.5, 0.05));
+    out.push(box("hull-grey-dark", [2, 0.06, 0.5], 1.2, 2.2, 0.9), rod("hull-white", [2, 0.96, 0.5], [2, 1.9, 0.5], 0.08, 8), ...horn("hull-white", [2, 1.9, 0.5], [2.8, 1.9, 0.5], [0.35, 0.3], 10), box("hull-white", [-w / 2 + 0.5, 0.06, d / 2 - 1.0], 0.5, 1.8, 1.8));
+  } else if (kind === "shelter") {
+    out.push(box("hull-grey-dark", [0, 0.06, -d / 2 + 0.15], w - 0.2, 0.3, h - 0.1), box("hull-grey-dark", [-w / 2 + 0.15, 0.06, 0], 0.3, d - 0.2, h - 0.1));
+    for (const x of [-1.5, 0, 1.5]) out.push(box("fabric", [x, 0.4, -d / 2 + 0.8], 1.2, 0.7, 0.3), box("fabric", [x, 0.9, -d / 2 + 0.8], 1.2, 0.7, 0.3));
+    out.push(box("hull-blue", [w / 2 - 0.7, 0.06, d / 2 - 0.7], 1.0, 0.8, 1.2), box("hazard", [0, h - 0.3, d / 2 - 0.1], 1.6, 0.05, 0.12));
+  } else if (kind === "recreation") {
+    out.push(box("hull-grey", [0, 0.06, -d / 2 + 0.4], w - 0.4, 0.5, 2.2));
+    for (let k = 0; k < 6; k++) out.push(box(k % 2 ? "hull-blue" : "fabric", [-w / 2 + 0.8 + k * 0.9, 0.8 + (k % 3) * 0.6, -d / 2 + 0.7], 0.5, 0.2, 0.4));
+    table(0, 0.5, 1.8, 1.0, 0.7);
+    for (const [x, z, yaw] of [[-1.3, 0.5, 90], [1.3, 0.5, 270], [0, 1.4, 180]] as const) chair(x, z, yaw);
+  } else if (kind === "school") {
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) {
+      table(-2.4 + c * 1.6, -0.3 + r * 1.3, 1.1, 0.6, 0.65);
+      chair(-2.4 + c * 1.6, 0.3 + r * 1.3, 180);
+    }
+    out.push(box("black", [0, 0.9, -d / 2 + 0.06], 4.2, 0.05, 1.3), box("hull-grey", [0, 0.06, -d / 2 + 0.5], 1.4, 0.6, 0.8));
+  } else if (kind === "plaza") {
+    out.push({ kind: "lathe", material: "concrete", segs: 40, only: "mesh", profile: [[0.01, 0.0], [w / 2 - 0.5, 0.0], [w / 2 - 0.5, 0.1], [0.01, 0.1]] }, annulus("hull-grey", w / 2 - 0.5, w / 2, 0, 0.35, 40, { only: "mesh" }));
+    out.push(annulus("hull-white", 0.9, 1.5, 0.1, 0.55, 20, { only: "mesh" }), { kind: "lathe", material: "water", segs: 20, only: "mesh", profile: [[0.01, 0.4], [0.9, 0.4]] }, post("pipe-steel", [0, 0], 0.12, 0.1, 0.1, 1.4, 8), ...horn("hull-white", [0, 1.4, 0], [0, 1.9, 0], [0.5, 0.3], 10));
+    for (let k = 0; k < 6; k++) {
+      const a = (k * Math.PI) / 3 + 0.3;
+      const x = 4.2 * Math.sin(a);
+      const z = 4.2 * Math.cos(a);
+      out.push(post("wood", [x, z], 0.16, 0.1, 0.12, 2.6, 8), ...horn("leaf", [x, 2.2, z], [x, 4.4, z], [1.4, 1.3, 0.9, 0.4], 10), box("wood", [3.2 * Math.sin(a + 0.25), 0.1, 3.2 * Math.cos(a + 0.25)], 1.4, 0.4, 0.45, (a + 0.25) * (180 / Math.PI)));
+    }
+    out.push(...lamps(Array.from({ length: 8 }, (_, k) => ({ at: [5.6 * Math.sin((k * Math.PI) / 4), 0.4, 5.6 * Math.cos((k * Math.PI) / 4)] as Vec3, colour: "flood" as const, size: 0.14 }))));
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------

@@ -113,6 +113,20 @@ export const SECTIONS: Readonly<Record<string, readonly Section[]>> = {
     s("panels", "Phased panels (4)", "comms", 0.8, 0.9, "Talk to nearby craft without moving.", false, 0.8),
     s("whips", "Whips and horn", "comms", 0.95, 1, "Short-range radio.", false, 0.4),
   ],
+  "dome-observation-m": [
+    s("collar", "Spine collar, M", "dock", 0, 0.06, "Mates to the module below."),
+    s("lounge", "Observation lounge", "crew", 0.06, 0.7, "Low seats and a quiet place to look out.", true),
+    s("ports", "Armoured portholes (20)", "crew", 0.2, 0.7, "Small windows with burn shutters.", false, 1),
+    s("dome", "Armoured dome", "crew", 0.7, 1, "A glass dome with six shutter petals, a descendant of the ISS Cupola.", false, 1),
+  ],
+  "solarium-m": [
+    s("lower", "Lower plated end", "structure", 0, 0.12, "A drum end with the lower collar."),
+    s("garden", "Garden hall", "farm", 0.12, 0.88, "Trees, planters and a pool under glass.", true),
+    s("glass", "Mullioned glazing", "structure", 0.12, 0.88, "Clear panes held by mullions and hoops.", false, 1),
+    s("shutters", "Armoured shutters", "shield", 0.12, 0.88, "Fold across the glass against a burn or a storm.", false, 1),
+    s("lamps", "Grow-lamp rings", "farm", 0.82, 0.9, "Light the garden between stars.", false, 1),
+    s("upper", "Upper plated end", "structure", 0.88, 1, "A drum end with the upper collar."),
+  ],
   "eva-lock-m": [
     s("outer", "Outer hatches (2)", "hatch", 0.35, 0.65, "Big round doors to the outside.", false, 1),
     s("suits", "Suit room", "hatch", 0.1, 0.5, "Racks of suits and their air.", true),
