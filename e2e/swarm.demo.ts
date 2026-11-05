@@ -175,19 +175,28 @@ test("builder pictures", async ({ page }, info) => {
   await canvas.screenshot({ path: `${dir}/miyamoto-close.png` });
 });
 
-test("Ariake builder pictures", async ({ page }, info) => {
+test("fleet builder pictures", async ({ page }, info) => {
   test.skip(!process.env.SHOTS || info.project.name !== "chromium-desk", "pictures only when SHOTS is set, on the desk");
-  test.setTimeout(180_000);
+  test.setTimeout(600_000);
   const dir = process.env.SHOTS ?? "";
   const frame = "html,body,main,#main-view{background:#070c17 !important;margin:0 !important}main > :not(#main-view){display:none !important}#view-bar{position:fixed !important;left:-4000px !important;top:0 !important}.stage-row{margin:0 !important;display:block !important;width:100vw !important}.stage-box{padding:0 !important;border:0 !important;background:#070c17 !important;width:100vw !important}uchusen-rocket,.stage-box uchusen-rocket,.stage-box uchusen-rocket[data-panel]{max-width:none !important;width:100vw !important;height:100vh !important;margin:0 !important}uchusen-rocket::part(figure){aspect-ratio:auto !important;width:100% !important;height:100vh !important}";
   await page.setViewportSize({ width: 1440, height: 900 });
-  for (const at of ["0.0684", "0.3", "0.6"]) {
-    await page.goto(`${ariake}&at=${at}`);
-    await page.addStyleTag({ content: frame });
-    const canvas = page.getByTestId("hero").locator("canvas");
-    await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 60_000 });
-    await expect(canvas).toHaveAttribute("data-frame-ms", /\d/, { timeout: 45_000 });
-    await expect.poll(async () => canvas.evaluate((node) => node.clientHeight)).toBeGreaterThan(600);
-    await canvas.screenshot({ path: `${dir}/ariake-${at}.png` });
+  const ships = [
+    { base: ariake, name: "ariake", swarm: "24" },
+    { base: "/uchusen-rockets/?rocket=fleet-kaminari&variant=fleet-kaminari&look=painted&view=three-quarter&build=on", name: "kaminari", swarm: "96" },
+    { base: "/uchusen-rockets/?rocket=fleet-emiake&variant=fleet-emiake&look=painted&view=three-quarter&build=on", name: "emiake", swarm: "96" },
+    { base: "/uchusen-rockets/?rocket=fleet-romaryu&variant=fleet-romaryu&look=painted&view=three-quarter&build=on", name: "romaryu", swarm: "96" },
+    { base: "/uchusen-rockets/?rocket=fleet-ship-01&variant=hanabusa&look=painted&view=three-quarter&build=on", name: "hanabusa", swarm: "48" },
+  ];
+  for (const ship of ships) {
+    for (const at of ["0.0684", "0.3", "0.6"]) {
+      await page.goto(`${ship.base}&at=${at}`);
+      await page.addStyleTag({ content: frame });
+      const canvas = page.getByTestId("hero").locator("canvas");
+      await expect(canvas).toHaveAttribute("data-swarm", ship.swarm, { timeout: 60_000 });
+      await expect(canvas).toHaveAttribute("data-frame-ms", /\d/, { timeout: 45_000 });
+      await expect.poll(async () => canvas.evaluate((node) => node.clientHeight)).toBeGreaterThan(600);
+      await canvas.screenshot({ path: `${dir}/${ship.name}-${at}.png` });
+    }
   }
 });
