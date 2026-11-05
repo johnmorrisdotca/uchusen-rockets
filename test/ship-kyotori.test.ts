@@ -30,7 +30,7 @@ test("every slot of every variant names a part that exists, each part is used, a
   for (const id of ids) assert.ok(used.has(id), `${id} is in no variant`);
   const registry = ROCKETS["fleet-kyotori"];
   assert.equal(registry.variants.length, 4);
-  for (const variant of registry.variants) for (const part of Object.values(variant.partIds)) assert.ok(PART_ENTRIES.some((e) => e.record.id === part), part);
+  for (const variant of registry.variants) for (const part of Object.values(variant.partIds ?? {})) assert.ok(PART_ENTRIES.some((e) => e.record.id === part), part);
 });
 
 test("the ships stand either side of the axis, joined or apart, the apart ones further out and back along the axis", () => {
