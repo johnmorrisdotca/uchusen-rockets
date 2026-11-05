@@ -15,6 +15,7 @@
             <canvas class="jr-sky" id="sky" data-testid="sky" aria-hidden="true"></canvas>
             <svg class="jr-map" id="map" data-testid="map" role="img" aria-label="The route" data-say-label="jMapLabel" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet"></svg>
             <div class="jr-craft" id="craft" data-testid="craft" role="img" aria-label="The craft" data-say-label="jCraftLabel"></div>
+            <div class="jr-painted" id="painted" data-testid="painted" hidden></div>
             <div class="jr-dest" id="dest" data-testid="dest"><span id="dest-name"></span></div>
             <div class="jr-hud" aria-hidden="false">
               <div class="jr-readout jr-accel" id="accel" data-testid="accel" hidden>
@@ -55,13 +56,16 @@
               </div>
             </div>
           </div>
+          <div id="painted-bar" data-testid="painted-bar" hidden></div>
           <svg class="jr-route" id="route" data-testid="route" viewBox="0 0 1000 138" role="img" aria-label="The route from start to end" data-say-label="jRouteLabel" preserveAspectRatio="xMidYMid meet"></svg>
           <div class="jr-controls" id="controls">
             <button type="button" class="chip jr-play" id="play" data-testid="play" aria-pressed="false" data-say="jPlay">Play</button>
             <button type="button" class="chip" id="restart" data-testid="restart" data-say="jRestart">Start again</button>
             <label class="jr-scrub" for="scrub"><span class="jr-visually" data-say="jScrub">Where in the trip</span><input type="range" id="scrub" data-testid="scrub" min="0" max="1000" step="1" value="0" /></label>
             <div class="chips" id="speeds" role="group" aria-label="Playback speed" data-say-label="jSpeedLabel"></div>
+            <div class="chips" id="looks" role="group" aria-label="Look" data-say-label="look"></div>
           </div>
+          <p class="jr-credit" id="painted-credit" data-testid="painted-credit" hidden></p>
         </div>
         <div class="jr-side">
           <div class="field">

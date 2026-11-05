@@ -21,6 +21,11 @@ body.journey { --bad: #a1262b; }
 .jr-map { visibility: hidden; }
 
 .jr-craft { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.jr-stage[data-look="painted"] .jr-craft { visibility: hidden; }
+.jr-painted { position: absolute; inset: 0; z-index: 1; }
+.jr-painted[hidden] { display: none; }
+.jr-painted uchusen-rocket { display: block; position: absolute; left: 50%; top: 50%; height: var(--len, 300px); width: calc(var(--len, 300px) * 0.75); transform: translate(-50%, -50%) rotate(var(--turn, 90deg)); }
+.jr-credit { margin: 0.35rem 0 0; color: var(--muted, #93a6c0); font-size: 0.82rem; }
 .jr-craft svg { filter: brightness(1.6) contrast(1.15) saturate(1.2); position: absolute; left: 50%; top: 50%; height: var(--len, 300px); width: calc(var(--len, 300px) * 0.75); transform: translate(-50%, -50%) rotate(var(--turn, 90deg)); overflow: visible; }
 .jr-stage[data-view="front"] .jr-craft svg,
 .jr-stage[data-view="rear"] .jr-craft svg { transform: translate(-50%, -50%); width: min(92%, 40rem); height: auto; }

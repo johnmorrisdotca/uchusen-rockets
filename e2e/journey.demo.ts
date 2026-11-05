@@ -1,5 +1,5 @@
 // Journey mode in a real browser: the page opens with a trip already shown, the choices are rows of buttons kept in the address, Play reaches the summary, a craft that cannot go says why in one line, no control is left in the
-// browser's own style, nothing scrolls sideways, and the page draws with no WebGL and asks for no frame while nothing moves.
+// browser's own style, nothing scrolls sideways. The line views draw with no WebGL and ask for no frame while nothing moves. The painted side view is the one context, and leaving it lets that context go.
 import { expect, test, type Page } from "@playwright/test";
 
 const URL = "/uchusen-rockets/journey.html?date=2026-11-04";
@@ -252,4 +252,31 @@ test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the p
   await expect(page.getByTestId("dest")).toContainText("Mars");
   await expect(page.getByTestId("craft")).toBeHidden();
   expect(found).toEqual([]);
+});
+
+test("Painted is the one WebGL context, and leaving Side lets it go", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __gl: number };
+    w.__gl = 0;
+    const real = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...rest: unknown[]) {
+      if (/webgl/i.test(kind)) w.__gl += 1;
+      return (real as (...args: unknown[]) => unknown).call(this, kind, ...rest) as never;
+    } as typeof real;
+  });
+  await page.goto(URL);
+  expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(0);
+  await page.getByTestId("look-painted").click();
+  await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  await expect(page.getByTestId("painted-controls")).toBeVisible();
+  await expect.poll(() => page.getByTestId("painted-rocket").getAttribute("data-state")).toBe("3d");
+  expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBeGreaterThan(0);
+  await page.getByTestId("view-front").click();
+  await expect(page.getByTestId("painted-rocket")).toHaveCount(0);
+  const left = await page.evaluate(() => (window as unknown as { __gl: number }).__gl);
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(left);
+  await page.getByTestId("view-side").click();
+  await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  expect(page.url()).toContain("look=painted");
 });

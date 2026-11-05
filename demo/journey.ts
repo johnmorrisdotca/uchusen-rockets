@@ -1,4 +1,4 @@
-// The journey page: choose a start, an end and a craft, then fly the trip. Draws with one 2D canvas, SVG and the package's own line drawing of the craft: no WebGL, so no context to make or let go.
+// The journey page: choose a start, an end and a craft, then fly the trip. The line views draw with one 2D canvas and the package's own line drawing. The painted side view is the package's element, loaded the first time it is asked for and dropped on leaving, so it is the page's one WebGL context.
 // It asks for a frame only while the trip plays and the page can be seen, at most 30 a second, and never when nothing moves.
 import { ROCKETS, SOURCES } from "../src/index.ts";
 import {
@@ -30,7 +30,8 @@ import {
 import { conicPoint } from "../src/journey/lunar.ts";
 import { transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
-import { stagedSvg } from "./journey-craft.ts";
+import { hidePainted, showPainted } from "./journey-painted.ts";
+import { viewOf, stagedSvg } from "./journey-craft.ts";
 import { WORDS } from "./words.js";
 import { destinationGrow, forwardStar } from "../src/journey/forward.ts";
 
@@ -81,6 +82,7 @@ const choice = {
   craft: pickOf("craft", CRAFTS.map((craft) => craft.id), "falcon-heavy"),
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
   view: isView(askedView) ? askedView : "side",
+  look: query.get("look") === "painted" ? "painted" : "line",
   base: todayUtc(),
 };
 if (choice.to === choice.from) choice.to = choice.from === "earth" ? "mars" : "earth";
@@ -94,6 +96,7 @@ function writeAddress(): void {
   if (choice.when > 0) next.set("w", String(choice.when));
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
+  if (choice.look === "painted") next.set("look", "painted");
   if (speed !== 1) next.set("speed", String(speed));
   const text = `${location.pathname}?${next.toString()}`;
   history.replaceState(null, "", text);
@@ -160,6 +163,8 @@ function drawPickers(): void {
   byId("crafts").replaceChildren(...CRAFTS.map((craft) => chip(craftName(craft), `craft-${craft.id}`, craft.id === choice.craft, () => change({ craft: craft.id }))));
   byId("when").replaceChildren(...options.map((option, index) => chip(option.label, `when-${index}`, index === choice.when, () => change({ when: index }))));
   byId("views").replaceChildren(...VIEWS.map((view) => chip(say(VIEW_WORD[view]), `view-${view}`, choice.view === view, () => setView(view))));
+  const painted = choice.look === "painted";
+  byId("looks").replaceChildren(chip(say(painted ? "look_line" : "look_painted"), "look-painted", painted, () => setLook(painted ? "line" : "painted")));
   byId("speeds").replaceChildren(...([0.5, 1, 2, 4] as const).map((value) => chip(`×${value}`, `speed-${value}`, speed === value, () => setSpeed(value))));
 }
 
@@ -189,6 +194,28 @@ function setView(view: JourneyView): void {
   for (const button of byId("views").querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === `view-${view}`));
   writeAddress();
   layout();
+  draw(true);
+}
+
+function syncPainted(turn: string, lit: boolean, phase: string): void {
+  const host = byId("painted");
+  const bar = byId("painted-bar");
+  const credit = byId("painted-credit");
+  const on = choice.look === "painted" && choice.view === "side";
+  stage.dataset.look = on ? "painted" : "line";
+  if (!on) {
+    if (!host.hidden || host.childElementCount > 0) hidePainted(host, bar, credit);
+    return;
+  }
+  const craft = craftNow();
+  const shown = stageOf(craft, phase, onPad());
+  showPainted(host, bar, credit, { rocket: shown.rocket, variant: shown.variant, view: onPad() ? viewOf(craft) : "side", engines: lit ? "on" : "off" }, turn, craft.drive === "continuous" ? 90 : 45);
+}
+
+function setLook(look: "line" | "painted"): void {
+  choice.look = look;
+  for (const button of byId("looks").querySelectorAll("button")) button.setAttribute("aria-pressed", String(choice.look === "painted"));
+  writeAddress();
   draw(true);
 }
 
@@ -231,7 +258,7 @@ function setCraft(lit: boolean, phase = "ascent"): void {
 function layout(): void {
   const box = stage.getBoundingClientRect();
   const length = Math.max(120, Math.min(box.width * 0.86, box.height * 1.45));
-  craftBox.style.setProperty("--len", `${Math.round(length)}px`);
+  stage.style.setProperty("--len", `${Math.round(length)}px`);
   const ratio = Math.min(2, devicePixelRatio || 1);
   const w = Math.round(box.width * ratio);
   const h = Math.round(box.height * ratio);
@@ -650,7 +677,10 @@ let visible = true;
 let lastPhase = "";
 
 function draw(force = false): void {
-  if (!trip.verdict.playable || trip.phases.length === 0) return;
+  if (!trip.verdict.playable || trip.phases.length === 0) {
+    syncPainted("90deg", false, "ascent");
+    return;
+  }
   const state = stateAt(trip, SOURCE, playhead);
   const id = state.phase.id;
   if (id !== lastPhase || force) {
@@ -698,7 +728,9 @@ function draw(force = false): void {
   const lit = state.burn !== "off";
   const facing = choice.view === "front" ? "front" : choice.view === "rear" ? "back" : "side";
   if (lit !== litNow || stageOf(craftNow(), id, onPad()).name !== stageNow || facing !== faceNow) setCraft(lit, id);
-  craftBox.style.setProperty("--turn", `${(90 - 180 * state.turned).toFixed(1)}deg`);
+  const turn = `${(90 - 180 * state.turned).toFixed(1)}deg`;
+  craftBox.style.setProperty("--turn", turn);
+  syncPainted(turn, lit, id);
   drawRoute(state);
   if (choice.view === "map") drawMap(state);
   drawPanel(state);
