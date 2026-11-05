@@ -33,7 +33,7 @@ const write = (name: string, pieces: Piece[]) => {
 const close = (name: string, eye: V3, target: V3, fov: number, shadow = 80, extra: Record<string, unknown> = {}) => ({ name, eye, target, up: [0, 1, 0], size: [1600, 900], fov, shadow, shadowBias: 0.004, look: "painted", sunDir: [0.5, 0.5, 0.8], ...extra });
 const jobs: unknown[] = [];
 if (!only || only === "station") {
-  const dep = write("station-deployed", station({ wings: "deployed", cutQuarter: 1 }));
+  const dep = write("station-deployed", station({ wings: "full", cutQuarter: 1 }));
   jobs.push({ glb: dep.file, shots: [
     close("station-three-quarter", [150, 520, 190], [0, 380, 0], 38, 200),
     close("station-front", [0, 560, 0.1], [0, 362, 0], 36, 160, { up: [0, 0, 1] }),
@@ -48,7 +48,7 @@ if (!only || only === "station") {
   jobs.push({ glb: stow.file, shots: [close("station-stowed-three-quarter", [150, 520, 190], [0, 380, 0], 38, 200)] });
 }
 if (!only || only === "ships") {
-  const j = write("v2-joined", v2("joined", { wings: "deployed" }));
+  const j = write("v2-joined", v2("joined", { wings: "full" }));
   const len = j.max[1] - j.min[1];
   const mid: V3 = [(j.min[0] + j.max[0]) / 2, (j.min[1] + j.max[1]) / 2, (j.min[2] + j.max[2]) / 2];
   const fit = (name: string, dir: V3, up: V3) => ({ name, eye: [mid[0] + dir[0] * len, mid[1] + dir[1] * len, mid[2] + dir[2] * len], target: mid, up, size: [1800, 900], fill: 0.85, shadow: len * 0.7, shadowBias: 0.004, look: "painted", sunDir: [0.35, 1, 0.45] });

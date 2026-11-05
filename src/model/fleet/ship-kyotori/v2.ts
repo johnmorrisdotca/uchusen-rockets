@@ -4,10 +4,11 @@
 import { ibeam, KIT, place, type Piece, type Vec3 } from "./adapter.ts";
 import { bay, bowLong, bowRunner, insulatedTank, latchHalf } from "./hardware.ts";
 import { crewPort, elevator, inlineDrive, mod, truss } from "./parts.ts";
-import { station } from "./station.ts";
+import { station, type WingState } from "./station.ts";
 
 const deg = (a: number): number => (a * Math.PI) / 180;
-export const SHAFT_X = 13.5;
+export { SHAFT_X } from "./cluster.ts";
+import { SHAFT_X } from "./cluster.ts";
 export type Ship = "A" | "B" | "C";
 export interface V2Part {
   id: string;
@@ -44,7 +45,7 @@ const modules = (ids: readonly string[], y0: number): { pieces: Piece[]; end: nu
 const JOINTS: readonly (readonly [number, number, number])[] = [[50, 7, 7], [78, 7, 7], [112, 6.4, 6.4], [160, 6.4, 6.4], [208, 6.4, 8], [244, 6.4, 8], [276, 9.4, 8], [298, 9.4, 8]];
 
 /** The parts of V2, each in its ship's own frame (the shaft up Y, its outer side +X): the long ship A, the ship B and the station C. */
-export function v2Parts(o: { wings?: "stowed" | "deployed"; cutQuarter?: number } = {}): V2Part[] {
+export function v2Parts(o: { wings?: WingState; cutQuarter?: number } = {}): V2Part[] {
   const parts: V2Part[] = [];
   const add = (id: string, ship: Ship, pieces: Piece[]): void => void parts.push({ id: `${ship.toLowerCase()}-${id}`, ship, pieces });
   const seam = -SHAFT_X;
@@ -62,7 +63,7 @@ export function v2Parts(o: { wings?: "stowed" | "deployed"; cutQuarter?: number 
   add("crew", "B", [...crew.pieces, ...crewPort(212)]);
   add("bow", "B", bowRunner(BOW_Y));
   add("joints", "B", JOINTS.flatMap(([y, , wb]) => latchHalf(y, wb, seam, false)));
-  add("station", "C", station({ wings: o.wings ?? "deployed", ...(o.cutQuarter !== undefined ? { cutQuarter: o.cutQuarter } : {}), shaftX: SHAFT_X }));
+  add("station", "C", station({ wings: o.wings ?? "full", ...(o.cutQuarter !== undefined ? { cutQuarter: o.cutQuarter } : {}), shaftX: SHAFT_X }));
   return parts;
 }
 
@@ -70,7 +71,7 @@ export function v2Parts(o: { wings?: "stowed" | "deployed"; cutQuarter?: number 
 export const V2_VARIANTS: Readonly<Record<"joined" | "separated", Partial<Record<Ship, Vec3>>>> = { joined: {}, separated: { A: [56, -50, 0], B: [-56, -50, 0] } };
 
 /** All the pieces of V2 in a state; ship B turned about its axis so its outer side is -X. */
-export function v2(state: "joined" | "separated", o: { wings?: "stowed" | "deployed"; cutQuarter?: number } = {}): Piece[] {
+export function v2(state: "joined" | "separated", o: { wings?: WingState; cutQuarter?: number } = {}): Piece[] {
   const base: Record<Ship, Vec3> = { A: [SHAFT_X, 0, 0], B: [-SHAFT_X, 0, 0], C: [0, 0, 0] };
   return v2Parts(o).flatMap((p) => {
     const b = base[p.ship];

@@ -74,89 +74,112 @@ export function rim(): Piece[] {
   return out;
 }
 
-/** The dock at one quarter: a stub leaving the tower's flank along the ring's axis, a heavy H collar at its end facing forward with four guide petals, a blue ring of approach lamps, two floodlights and a hatch into the tower at its root. */
+/** Where a quarter's dock stands: radius from the axis, the height of the tower's flank where the stub leaves it, and the height of the collar's face. The stub runs AFT (down, away from the mirror), so a ship or a visitor docks from below, nose up, as at the ISS's zenith and nadir ports. */
+export const STUB = { y0: STATION.y - TOWER.r + 1, length: 26, radius: STATION.base - 4 } as const;
+export const STUB_FACE = STUB.y0 - STUB.length;
+
+/** The dock at one quarter: a stub leaving the tower's flank aft along the ring's axis, a heavy H collar at its end facing aft with four guide petals, a blue ring of approach lamps, two floodlights and a hatch into the tower at its root. */
 export function stub(a: number): Piece[] {
-  const rr = STATION.base - TOWER_H * 0.55;
-  const x = rr * Math.sin(deg(a));
-  const z = rr * Math.cos(deg(a));
-  const y0 = STATION.y + TOWER.r - 1;
-  const y1 = y0 + 26;
-  const out: Piece[] = [lathe("hull-white", [[4.4, y0], [4.4, y1]], [x, z], { body: true, outline: true, only: undefined }), lathe("hull-grey-dark", [[4.9, y0 + 1], [4.9, y0 + 3]], [x, z]), lathe("hull-grey-dark", [[4.9, y1 - 6], [4.9, y1 - 4]], [x, z]), hoop("hull-orange", 4.5, y0 + 9, 0.25, 32, 6, { at: [x, z] }), hoop("hull-orange", 4.5, y0 + 17, 0.25, 32, 6, { at: [x, z] })];
-  out.push(...place(collar("H", 0, 1), { at: [x, y1, z] }));
+  const x = STUB.radius * Math.sin(deg(a));
+  const z = STUB.radius * Math.cos(deg(a));
+  const y0 = STUB.y0;
+  const y1 = STUB_FACE;
+  const out: Piece[] = [lathe("hull-white", [[4.4, y1], [4.4, y0]], [x, z], { body: true, outline: true, only: undefined }), lathe("hull-grey-dark", [[4.9, y0 - 3], [4.9, y0 - 1]], [x, z]), lathe("hull-grey-dark", [[4.9, y1 + 4], [4.9, y1 + 6]], [x, z]), hoop("hull-orange", 4.5, y0 - 9, 0.25, 32, 6, { at: [x, z] }), hoop("hull-orange", 4.5, y0 - 17, 0.25, 32, 6, { at: [x, z] })];
+  out.push(...place(collar("H", 0, -1), { at: [x, y1, z] }));
   for (let k = 0; k < 4; k++) {
     const t = deg(45 + 90 * k);
-    const c: Vec3 = [x + 6.2 * Math.sin(t), y1 + 0.6, z + 6.2 * Math.cos(t)];
-    const o: Vec3 = [x + 9.2 * Math.sin(t), y1 + 4.2, z + 9.2 * Math.cos(t)];
-    out.push(quad("hull-grey", [c[0] + 1.6 * Math.cos(t), c[1], c[2] - 1.6 * Math.sin(t)], [c[0] - 1.6 * Math.cos(t), c[1], c[2] + 1.6 * Math.sin(t)], [o[0] - 2.2 * Math.cos(t), o[1], o[2] + 2.2 * Math.sin(t)], [o[0] + 2.2 * Math.cos(t), o[1], o[2] - 2.2 * Math.sin(t)], 0.2, { only: "mesh" }), ...lamps([{ at: [o[0], o[1] + 0.2, o[2]], colour: "blue", size: 0.22 }]));
-    out.push(...lamps(Array.from({ length: 2 }, (_, i) => ({ at: [x + 5.6 * Math.sin(t + (i - 0.5) * 0.4), y1 + 0.5, z + 5.6 * Math.cos(t + (i - 0.5) * 0.4)] as Vec3, colour: "amber" as const, size: 0.15 }))));
+    const c: Vec3 = [x + 6.2 * Math.sin(t), y1 - 0.6, z + 6.2 * Math.cos(t)];
+    const o: Vec3 = [x + 9.2 * Math.sin(t), y1 - 4.2, z + 9.2 * Math.cos(t)];
+    out.push(quad("hull-grey", [c[0] + 1.6 * Math.cos(t), c[1], c[2] - 1.6 * Math.sin(t)], [c[0] - 1.6 * Math.cos(t), c[1], c[2] + 1.6 * Math.sin(t)], [o[0] - 2.2 * Math.cos(t), o[1], o[2] + 2.2 * Math.sin(t)], [o[0] + 2.2 * Math.cos(t), o[1], o[2] - 2.2 * Math.sin(t)], 0.2, { only: "mesh" }), ...lamps([{ at: [o[0], o[1] - 0.2, o[2]], colour: "blue", size: 0.22 }]));
+    out.push(...lamps(Array.from({ length: 2 }, (_, i) => ({ at: [x + 5.6 * Math.sin(t + (i - 0.5) * 0.4), y1 - 0.5, z + 5.6 * Math.cos(t + (i - 0.5) * 0.4)] as Vec3, colour: "amber" as const, size: 0.15 }))));
   }
-  out.push(box("flood", [x + 4.6, y1 - 3.2, z], 0.8, 0.8, 0.7, 0, { only: "mesh", plain: true }), box("flood", [x - 4.6, y1 - 3.2, z], 0.8, 0.8, 0.7, 0, { only: "mesh", plain: true }));
-  // the hatch into the tower: a short walkway tube across to its flank
-  out.push(rod("hull-grey", [x, y0 - 0.3, z], [x, STATION.y + TOWER.r * 0.3, z], 2.2, 14, { only: "mesh" }));
+  out.push(box("flood", [x + 4.6, y1 + 3.2, z], 0.8, 0.8, 0.7, 0, { only: "mesh", plain: true }), box("flood", [x - 4.6, y1 + 3.2, z], 0.8, 0.8, 0.7, 0, { only: "mesh", plain: true }));
+  out.push(rod("hull-grey", [x, y0 + 0.3, z], [x, STATION.y - TOWER.r * 0.3, z], 2.2, 14, { only: "mesh" }));
   return out;
 }
 
+/** The three states of a solar wing: folded in two canisters on the mast, swung out with half the blanket let out ("flared"), and the mast extended so the blanket unfolds to double its length ("full"), as the ISS's wings do. */
+export type WingState = "stowed" | "flared" | "full";
+
 /**
- * The solar wings, four on diagonal masts at the hub's forward shoulder, in the ISS manner: a rotary joint at the root, a long mast, and two blankets of cells either side of it. Stowed, each mast carries two canisters of folded blanket with their
- * hinge brackets; deployed, the blankets stand out flat 9 m wide and 44 m long in four panels with battens. The blankets are one group, `wing-turn`, about the mast, for the viewer's motion.
+ * The solar wings, four on diagonal masts at the hub's forward shoulder, in the ISS manner: a rotary joint at the root, a mast that is an extending lattice (an inner and an outer section, with the outer sliding out of the inner by 22 m when the wing
+ * goes from flared to full), and two blankets of cells either side of it. Stowed, each mast carries two canisters of folded blanket with their hinge brackets; flared, the blankets stand out 22 m long in two panels; full, 44 m in four panels with
+ * battens. The blankets are one group, `wing-turn`, about the mast, for the viewer's motion; the mast's extension needs a translation and is a follow-up of MODULES-450.
  */
-export function wings(state: "stowed" | "deployed"): Piece[] {
+export function wings(state: WingState): Piece[] {
   const out: Piece[] = [];
   const y0 = STATION.y + 8;
-  const L = 44;
+  const L = state === "full" ? 44 : 22;
   for (let k = 0; k < 4; k++) {
     const a = 45 + 90 * k;
     const x = 26 * Math.sin(deg(a));
     const z = 26 * Math.cos(deg(a));
+    const up: Vec3 = [Math.cos(deg(a)), 0, -Math.sin(deg(a))];
     out.push(lathe("hull-grey-dark", [[3.2, y0 - 1.5], [3.2, y0 + 0.5]], [x, z]), hoop("hull-grey", 3.2, y0 - 0.5, 0.35, 32, 6, { at: [x, z] }), box("hull-grey-dark", [x, y0 - 1.5, z], 4.4, 4.4, 1.3, a, { only: "mesh", plain: true }));
-    out.push(...ibeam("hull-grey", [x, y0 + 0.5, z], [x, y0 + L, z], 1.2, 0.9, [Math.cos(deg(a)), 0, -Math.sin(deg(a))]));
-    // the arm from the hub out to the mast: a truss of two beams
+    // the mast: an extending lattice of two sections, the outer one telescoped out by 22 m only when full
+    const mastTop = y0 + (state === "stowed" ? 18 : 22) + (state === "full" ? 22 : 0);
+    out.push(...ibeam("hull-grey", [x, y0 + 0.5, z], [x, y0 + 22, z], 1.2, 0.9, up));
+    for (const [dx, dz] of [[0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5]] as const) out.push(rod("hull-grey", [x + dx, y0 + 0.5, z + dz], [x + dx, y0 + 22, z + dz], 0.09, 6, { only: "mesh" }));
+    for (let q = 0; q < 6; q++) out.push(rod("hull-grey-dark", [x - 0.55, y0 + 2 + q * 3.4, z - 0.55], [x + 0.55, y0 + 5 + q * 3.4, z + 0.55], 0.05, 5, { only: "mesh" }));
+    if (state === "full") {
+      out.push(...ibeam("steel", [x, y0 + 22, z], [x, mastTop, z], 0.9, 0.7, up), hoop("hull-yellow", 0.7, y0 + 22, 0.12, 12, 6, { at: [x, z] }));
+      for (let q = 0; q < 6; q++) out.push(rod("hull-grey", [x - 0.4, y0 + 23 + q * 3.5, z - 0.4], [x + 0.4, y0 + 26 + q * 3.5, z + 0.4], 0.04, 5, { only: "mesh" }));
+    }
+    // the arm from the hub out to the mast
     out.push(...ibeam("hull-grey", [10 * Math.sin(deg(a)), y0 - 1, 10 * Math.cos(deg(a))], [x, y0 - 1, z], 1.0, 0.8, [0, 1, 0]));
     const t: Vec3 = [Math.cos(deg(a)), 0, -Math.sin(deg(a))];
     const turning: Piece[] = [];
     for (const s of [-1, 1]) {
       const c: Vec3 = [x + t[0] * s * 5.6, 0, z + t[2] * s * 5.6];
-      if (state === "deployed") {
-        for (let p = 0; p < 4; p++) {
-          const yp = y0 + 3 + p * ((L - 4) / 4);
-          turning.push(box("solar", [c[0], yp, c[2]], 9, 0.1, (L - 4) / 4 - 0.5, a + 90, { only: "mesh", plain: true }), box("hull-grey", [c[0], yp - 0.1, c[2]], 9.2, 0.06, 0.25, a + 90, { only: "mesh", plain: true }));
+      if (state !== "stowed") {
+        const panels = state === "full" ? 4 : 2;
+        const pl = (L - 4) / panels;
+        for (let p = 0; p < panels; p++) {
+          const yp = y0 + 3 + p * pl;
+          turning.push(box("solar", [c[0], yp, c[2]], 9, 0.1, pl - 0.5, a + 90, { only: "mesh", plain: true }), box("hull-grey", [c[0], yp - 0.1, c[2]], 9.2, 0.06, 0.25, a + 90, { only: "mesh", plain: true }), ...[-3, 0, 3].map((d) => box("hull-grey-dark", [c[0] + t[0] * d, yp + pl / 2 - 0.3, c[2] + t[2] * d], 0.1, 0.1, pl - 0.7, 0, { only: "mesh", plain: true })));
         }
         for (const e of [-1, 1]) turning.push(rod("hull-grey", [c[0] + t[0] * e * 4.4, y0 + 3, c[2] + t[2] * e * 4.4], [c[0] + t[0] * e * 4.4, y0 + L - 1.5, c[2] + t[2] * e * 4.4], 0.14, 6, { only: "mesh" }));
         turning.push(box("hull-grey-dark", [x + t[0] * s * 1.6, y0 + 2, z + t[2] * s * 1.6], 2.6, 0.5, 0.5, a + 90, { only: "mesh", plain: true }), rod("hull-grey", [x + t[0] * s * 0.8, y0 + 2.2, z + t[2] * s * 0.8], [c[0] - t[0] * s * 4.4, y0 + 2.2, c[2] - t[2] * s * 4.4], 0.2, 8, { only: "mesh" }));
+        if (state === "flared") turning.push(box("gold", [x + t[0] * s * 1.6, y0 + L + 2, z + t[2] * s * 1.6], 2.6, 3.0, 4, a + 90, { only: "mesh", plain: true }), box("hull-grey-dark", [x + t[0] * s * 1.6, y0 + L + 0.2, z + t[2] * s * 1.6], 3, 3.4, 0.4, a + 90, { only: "mesh", plain: true }));
       } else {
         turning.push(box("gold", [x + t[0] * s * 1.6, y0 + 9, z + t[2] * s * 1.6], 2.6, 3.4, 12, a + 90, { only: "mesh", plain: true }), box("hull-grey-dark", [x + t[0] * s * 1.6, y0 + 9, z + t[2] * s * 1.6], 2.8, 0.3, 12.2, a + 90, { only: "mesh", plain: true }), rod("hull-grey", [x + t[0] * s * 0.8, y0 + 3.2, z + t[2] * s * 0.8], [x + t[0] * s * 1.6, y0 + 3.2, z + t[2] * s * 1.6], 0.2, 8, { only: "mesh" }));
         for (const dy of [3.6, 14.4]) turning.push(box("hull-grey-dark", [x + t[0] * s * 1.6, y0 + dy, z + t[2] * s * 1.6], 3, 3.6, 0.5, a + 90, { only: "mesh", plain: true }));
       }
     }
     out.push(...moving(turning, { name: "wing-turn", pivot: [x, y0, z], axis: [0, 1, 0] }));
-    out.push(...lamps([{ at: [x, y0 + L + 0.3, z], colour: "red", size: 0.25 }]));
+    out.push(...lamps([{ at: [x, mastTop + 0.3, z], colour: "red", size: 0.25 }]));
   }
   return out;
 }
 
-/** The housing at the stern: a block between the hub and the two docking tunnels, each tunnel a barrel with an L collar facing aft, twelve capture latches and four umbilical plates round it, four guide petals, a ring of blue approach lamps, floodlights and an alignment target cross; with the diagonals that carry the load to the hub. */
+/** The four bays of the housing, at the corners of a square 27 m on a side about the axis: the 2x2 cluster of four ships, or two ships and two empty bays. The same housing carries both arrangements (the other is four ships at the quarters' docks). */
+export const BAYS: readonly (readonly [number, number])[] = [[1, -1], [-1, -1], [1, 1], [-1, 1]];
+
+/** The housing at the stern: a block between the hub and four docking tunnels, each a barrel with an L collar facing aft, twelve capture latches and four umbilical plates round it, four guide petals, a ring of blue approach lamps, floodlights and an alignment target cross; with the diagonals that carry the load to the hub. */
 export function housing(yAft: number, shaftX: number): Piece[] {
   const yTop = STATION.y - STATION.hubHalf - 1.4;
   const len = yTop - yAft;
-  const out: Piece[] = [box("hull-grey-dark", [0, yTop - 4, 0], shaftX * 2 + 14, 22, 5, 0, { only: "mesh", plain: true }), box("hull-white-worn", [0, yTop - 4.1, 12.1], shaftX * 2 + 14, 0.3, 5.1, 0, { only: "mesh", plain: true }), box("hazard", [0, yTop - 4.1, 12.3], shaftX * 2 + 14, 0.08, 0.5, 0, { only: "mesh", plain: true })];
-  for (const x of [-shaftX - 5, -shaftX * 0.5, 0, shaftX * 0.5, shaftX + 5]) out.push(...ibeam("hull-grey", [x, yTop - 4, 11], [x * 0.6, yTop + 0.2, 8], 1.4, 0.8, [0, 0, 1]), ...ibeam("hull-grey", [x, yTop - 4, -11], [x * 0.6, yTop + 0.2, -8], 1.4, 0.8, [0, 0, 1]));
-  for (const s of [-1, 1]) {
-    const x = s * shaftX;
-    out.push(lathe("hull-white", [[8.9, yAft + 2], [8.9, yTop - 4]], [x, 0], { body: true, outline: true, only: undefined }), lathe("hull-grey-dark", [[7.2, yAft], [8.9, yAft + 2]], [x, 0]), hoop("hull-grey", 8.9, yAft + len * 0.45, 0.4, 36, 6, { at: [x, 0] }), hoop("hull-orange", 8.95, yAft + len * 0.7, 0.3, 36, 6, { at: [x, 0] }));
-    out.push(...place(collar("L", 0, -1), { at: [x, yAft + 0.4, 0] }));
-    // capture latches round the ring: a body, a hook and a pin
-    out.push(...stamp([box("hull-grey-dark", [0, yAft + 0.8, 7.9], 1.3, 0.9, 2.2, 0, { only: "mesh", plain: true }), box("hull-yellow", [0, yAft + 0.3, 8.1], 0.9, 0.5, 0.9, 0, { only: "mesh", plain: true }), rod("steel", [0, yAft + 0.1, 7.2], [0, yAft + 0.1, 8.6], 0.12, 8, { only: "mesh" })], ringOf(12, 0, 0).map((p): Pose => ({ at: [x + p.at[0], 0, p.at[2]], yaw: p.yaw }))));
-    // four umbilical plates between the latches
-    out.push(...stamp([box("hull-grey-dark", [0, yAft + 1.3, 8.4], 1.5, 0.3, 1.5, 0, { only: "mesh", plain: true }), ...[-0.4, 0, 0.4].map((dx) => rod("pipe-steel", [dx, yAft + 1.2, 8.55], [dx, yAft + 0.5, 8.55], 0.08, 6, { only: "mesh" })), box("hazard", [0, yAft + 1.4, 8.55], 1.4, 0.02, 0.1, 0, { only: "mesh", plain: true })], Array.from({ length: 4 }, (_, i): Pose => ({ at: [x + 0, 0, 0], yaw: 45 + 90 * i }))));
+  const out: Piece[] = [box("hull-grey-dark", [0, yTop - 4, 0], shaftX * 2 + 19, shaftX * 2 + 19, 5, 0, { only: "mesh", plain: true }), box("hull-white-worn", [0, yTop - 4.1, shaftX + 9.6], shaftX * 2 + 19, 0.3, 5.1, 0, { only: "mesh", plain: true }), box("hazard", [0, yTop - 4.1, shaftX + 9.8], shaftX * 2 + 19, 0.08, 0.5, 0, { only: "mesh", plain: true })];
+  for (const x of [-shaftX - 5, -shaftX * 0.5, 0, shaftX * 0.5, shaftX + 5]) for (const zs of [-1, 1]) out.push(...ibeam("hull-grey", [x, yTop - 4, zs * (shaftX + 8)], [x * 0.6, yTop + 0.2, zs * 8], 1.4, 0.8, [0, 0, 1]));
+  for (const [sx, sz] of BAYS) {
+    const x = sx * shaftX;
+    const zc = sz * shaftX;
+    const P = (px: number, pz: number): [number, number] => [x + px, zc + pz];
+    out.push(lathe("hull-white", [[8.9, yAft + 2], [8.9, yTop - 4]], [x, zc], { body: true, outline: true, only: undefined }), lathe("hull-grey-dark", [[7.2, yAft], [8.9, yAft + 2]], [x, zc]), hoop("hull-grey", 8.9, yAft + len * 0.45, 0.4, 36, 6, { at: [x, zc] }), hoop("hull-orange", 8.95, yAft + len * 0.7, 0.3, 36, 6, { at: [x, zc] }));
+    out.push(...place(collar("L", 0, -1), { at: [x, yAft + 0.4, zc] }));
+    out.push(...stamp([box("hull-grey-dark", [0, yAft + 0.8, 7.9], 1.3, 0.9, 2.2, 0, { only: "mesh", plain: true }), box("hull-yellow", [0, yAft + 0.3, 8.1], 0.9, 0.5, 0.9, 0, { only: "mesh", plain: true }), rod("steel", [0, yAft + 0.1, 7.2], [0, yAft + 0.1, 8.6], 0.12, 8, { only: "mesh" })], ringOf(12, 0, 0).map((p): Pose => ({ at: [x + p.at[0], 0, zc + p.at[2]], yaw: p.yaw }))));
+    out.push(...stamp([box("hull-grey-dark", [0, yAft + 1.3, 8.4], 1.5, 0.3, 1.5, 0, { only: "mesh", plain: true }), ...[-0.4, 0, 0.4].map((dx) => rod("pipe-steel", [dx, yAft + 1.2, 8.55], [dx, yAft + 0.5, 8.55], 0.08, 6, { only: "mesh" })), box("hazard", [0, yAft + 1.4, 8.55], 1.4, 0.02, 0.1, 0, { only: "mesh", plain: true })], Array.from({ length: 4 }, (_, i): Pose => ({ at: [x, 0, zc], yaw: 45 + 90 * i }))));
     for (let k = 0; k < 4; k++) {
       const t = deg(45 + 90 * k + 45);
-      const c: Vec3 = [x + 8.6 * Math.sin(t), yAft + 0.5, 8.6 * Math.cos(t)];
-      const o: Vec3 = [x + 11.6 * Math.sin(t), yAft - 3.4, 11.6 * Math.cos(t)];
+      const [cx, cz] = P(8.6 * Math.sin(t), 8.6 * Math.cos(t));
+      const [ox, oz] = P(11.6 * Math.sin(t), 11.6 * Math.cos(t));
+      const c: Vec3 = [cx, yAft + 0.5, cz];
+      const o: Vec3 = [ox, yAft - 3.4, oz];
       out.push(quad("hull-grey", [c[0] + 1.8 * Math.cos(t), c[1], c[2] - 1.8 * Math.sin(t)], [c[0] - 1.8 * Math.cos(t), c[1], c[2] + 1.8 * Math.sin(t)], [o[0] - 2.4 * Math.cos(t), o[1], o[2] + 2.4 * Math.sin(t)], [o[0] + 2.4 * Math.cos(t), o[1], o[2] - 2.4 * Math.sin(t)], 0.2, { only: "mesh" }), ...lamps([{ at: [o[0], o[1] - 0.2, o[2]], colour: "blue", size: 0.26 }]));
     }
-    out.push(...lamps(Array.from({ length: 8 }, (_, i) => ({ at: [x + 6.4 * Math.sin((Math.PI / 4) * i), yAft - 0.2, 6.4 * Math.cos((Math.PI / 4) * i)] as Vec3, colour: "blue" as const, size: 0.16 }))));
-    out.push(box("hull-white", [x, yAft + 2.2, 0], 5, 0.3, 0.3, 0, { only: "mesh", plain: true }), box("hull-white", [x, yAft + 2.2, 0], 0.3, 0.3, 5, 0, { only: "mesh", plain: true }));
-    out.push(box("flood", [x + 7.4, yAft + 3, 7.6], 0.8, 0.7, 0.7, 0, { only: "mesh", plain: true }), box("flood", [x - 7.4, yAft + 3, -7.6], 0.8, 0.7, 0.7, 0, { only: "mesh", plain: true }));
+    out.push(...lamps(Array.from({ length: 8 }, (_, i) => ({ at: [x + 6.4 * Math.sin((Math.PI / 4) * i), yAft - 0.2, zc + 6.4 * Math.cos((Math.PI / 4) * i)] as Vec3, colour: "blue" as const, size: 0.16 }))));
+    out.push(box("hull-white", [x, yAft + 2.2, zc], 5, 0.3, 0.3, 0, { only: "mesh", plain: true }), box("hull-white", [x, yAft + 2.2, zc], 0.3, 0.3, 5, 0, { only: "mesh", plain: true }));
+    out.push(box("flood", [x + 7.4, yAft + 3, zc + 7.6], 0.8, 0.7, 0.7, 0, { only: "mesh", plain: true }), box("flood", [x - 7.4, yAft + 3, zc - 7.6], 0.8, 0.7, 0.7, 0, { only: "mesh", plain: true }));
   }
   return out;
 }
@@ -173,8 +196,8 @@ export function quarterPart(index: number, o: { cut?: boolean; furnish?: boolean
 }
 
 /** The whole station: core, the four quarters (the one at `cutQuarter`, if any, cut open and furnished), the wings in a state, and the stern housing. */
-export function station(o: { wings?: "stowed" | "deployed"; cutQuarter?: number; shaftX?: number; furnish?: boolean } = {}): Piece[] {
-  const out: Piece[] = [...stationCore(), ...wings(o.wings ?? "deployed"), ...housing(335, o.shaftX ?? 13.5)];
+export function station(o: { wings?: WingState; cutQuarter?: number; shaftX?: number; furnish?: boolean } = {}): Piece[] {
+  const out: Piece[] = [...stationCore(), ...wings(o.wings ?? "full"), ...housing(335, o.shaftX ?? 13.5)];
   STATION.kinds.forEach((_, k) => out.push(...quarterPart(k, { cut: o.cutQuarter === k, furnish: o.furnish !== false })));
   return out;
 }
