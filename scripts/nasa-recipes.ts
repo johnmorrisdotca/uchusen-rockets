@@ -144,6 +144,16 @@ const ISS_STATION: NasaPart = { id: "station", triangles: 58_000, error: 0.03, p
 const HUBBLE_SCALE = 13.2 / 525.49;
 const HUBBLE: NasaPart = { id: "telescope", triangles: 8_000, error: 0.002, place: placer([-1.3, -266.03, 3.4], HUBBLE_SCALE, HUBBLE_SCALE, 0) };
 
+// Cluster II's drum is already metres: 2.9 m across and 1.3 m tall (ESA). Stood with its base on y = 0. The foil and the 44 m booms are not this part.
+const CLUSTER_BODY: NasaPart = {
+  id: "body",
+  triangles: 6_000,
+  error: 0.008,
+  place: (p) => {
+    p[1] += 0.65;
+  },
+};
+
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
     id: "space-shuttle-stack",
@@ -270,5 +280,16 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     patches: { hbltel_wfc_1: [{ to: [0.2, 0.39, 0.16, 0.05], fill: "#2f2d2a" }] },
     atlas: 1536,
     pictureScale: { hbltel_3: 0.6 },
+  },
+  {
+    id: "cluster-ii",
+    files: [`${FOLDER}/cluster-ii.glb`],
+    title: "Cluster II",
+    source: "https://science.nasa.gov/3d-resources/cluster-ii/",
+    changes: "the drum only; the foil, the long booms and every picture left out, so no mark is shipped; stood with its base at y = 0. It was already the sourced 2.9 m across and 1.3 m tall",
+    parts: [CLUSTER_BODY],
+    partOf: (_centre, _material, node) => (node === "shiny_panel" ? CLUSTER_BODY : null),
+    colours: { shiny_panel: [0.75, 0.75, 0.72] },
+    atlas: 64,
   },
 ];

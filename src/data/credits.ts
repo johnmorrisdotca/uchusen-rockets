@@ -137,6 +137,15 @@ export const MODEL_CREDITS = {
   "nasa-jupiter-c": nasa("Jupiter-C", "nasa-3d-models-jupiter-c", "The lettering removed with the two pictures that carried it, which are plain white here; rescaled to the sourced height; its materials made into one picture."),
   "nasa-iss": nasa("ISS", "nasa-3d-models-iss", "Reduced from 174,440 triangles; a ball of stray pieces far above it left out; rescaled to the sourced length; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove."),
   "nasa-hubble": nasa("Hubble Space Telescope", "nasa-3d-models-hubble-space-telescope", "A lettered plate painted out of its picture; rescaled to the sourced length; its materials made into one picture."),
+  "nasa-cluster-ii": {
+    title: "Cluster II",
+    creator: "NASA 3D Resources",
+    creatorUrl: "https://science.nasa.gov/3d-resources/",
+    sourceUrl: "https://science.nasa.gov/3d-resources/cluster-ii/",
+    licence: "Public domain (NASA)",
+    licenceUrl: "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    changes: "The drum only; the foil, the long booms and every picture left out, so no mark is shipped; stood with its base at y = 0. It was already the sourced 2.9 m across and 1.3 m tall.",
+  },
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 
