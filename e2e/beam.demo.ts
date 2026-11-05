@@ -11,5 +11,6 @@ test("the beam page shows the light, the line and the dotted line on a dark grou
   await expect(carry.locator("[data-beam=light]")).toBeVisible();
   await expect(carry.locator("stop[stop-opacity='0']")).toHaveCount(1);
   await expect(page.getByTestId("beam-line").locator("[data-beam=line]")).toBeVisible();
-  await expect(page.getByTestId("beam-dotted").locator("[data-beam=dots]")).toBeVisible();
+  await expect(page.getByTestId("beam-dotted").locator("[data-beam=still]")).toBeVisible();
+  await expect(page.getByTestId("beam-carry").locator("[data-ring]").first()).toBeVisible();
 });

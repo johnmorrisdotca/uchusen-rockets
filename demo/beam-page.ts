@@ -1,5 +1,5 @@
 // The beam page: a cargo container and a stand-in for the drone, on a dark ground, with the beam as light between them.
-import { beamDots, beamLight } from "../src/draw/beamLight.ts";
+import { beamLight } from "../src/draw/beamLight.ts";
 import { defsOf, drawPart, perspective } from "../src/draw/svg.ts";
 import { PICTURE_H, PICTURE_W, VIEWS, type Vec3 } from "../src/framing.ts";
 import type { LookName } from "../src/looks.ts";
@@ -36,4 +36,4 @@ function picture(id: string, look: LookName, beam: string): void {
 
 picture("beam-carry", "painted", beamLight(from, to, 0.4, 6, cam, "painted", "carry"));
 picture("beam-line", "line", beamLight(from, to, 0.4, 6, cam, "line", "line"));
-picture("beam-dotted", "line", beamDots(from, to, cam));
+picture("beam-dotted", "painted", beamLight(from, to, 0.4, 6, cam, "painted", "still", true));

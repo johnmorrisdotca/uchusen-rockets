@@ -47,10 +47,16 @@ test("the painted beam is light that fades out, brighter at the part", () => {
   const cam = perspective({ min: [-2, -1, -2], max: [2, 10, 2] }, VIEWS.side);
   const light = beamLight(ends.from, ends.part, 0.2, 1.2, cam, "painted", "t");
   assert.match(light, /data-beam="light"/);
+  assert.match(light, /data-ring="1"/);
+  assert.match(light, /data-spark="1"/);
+  assert.match(light, /data-emitter="1"/);
   assert.match(light, /mix-blend-mode:screen/);
   assert.match(light, /stop-opacity="0"/);
   assert.match(light, /feGaussianBlur/);
-  assert.equal(light.includes('stroke="'), false);
+  const quiet = beamLight(ends.from, ends.part, 0.2, 1.2, cam, "painted", "q", true);
+  assert.match(quiet, /data-beam="still"/);
+  assert.equal(quiet.includes("data-ring"), false);
+  assert.equal(quiet.includes("data-spark"), false);
   const line = beamLight(ends.from, ends.part, 0.2, 1.2, cam, "line", "t");
   assert.match(line, /data-beam="line"/);
   assert.match(line, /fill="none"/);
