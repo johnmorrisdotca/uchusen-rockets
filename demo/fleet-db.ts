@@ -30,7 +30,12 @@ const byId = (id: string): HTMLElement => {
 const metres = (n: number) => `${n >= 100 ? Math.round(n) : Number(n.toFixed(1))} m`;
 const slotLabel = (slot: string) => (slot === "together" ? say("show_together") : (`slot_${slot}` in WORDS.en ? say(`slot_${slot}`) : (SLOT_NAMES[slot] ?? slot)));
 
-const address = createAddressState({ defaults: { ship: "fleet-ship-01", show: "together", module: "" } });
+const address = createAddressState({ defaults: { ship: "fleet-ship-01", show: "together", module: "", cut: "" } });
+
+const cutawayId = (ship: string) => {
+  const variants = ROCKETS[ship].variants;
+  return variants.find((variant) => variant.id.includes("cutaway"))?.id ?? variants.find((variant) => variant.id.endsWith("-section"))?.id ?? "";
+};
 
 const modulesOf = (variant: ReturnType<typeof variantOf>, show: string) =>
   show === "together" ? [] : (variant?.inspector?.sections.filter((section) => section.slot === show) ?? []);
@@ -40,14 +45,16 @@ const chosen = () => {
   const asked = address.get("ship") ?? "";
   const ship = list.some((rocket) => rocket.id === asked) ? asked : list[0].id;
   const rocket = ROCKETS[ship];
-  const variant = variantOf(ship, rocket.defaultVariant);
+  const cutId = cutawayId(ship);
+  const cut = address.get("cut") === "on" && cutId !== "";
+  const variant = variantOf(ship, cut ? cutId : rocket.defaultVariant);
   const slots = ["together", ...(variant?.slots ?? [])];
   const askedShow = address.get("show") ?? "";
   const show = slots.includes(askedShow) ? askedShow : "together";
   const modules = modulesOf(variant, show);
   const askedModule = address.get("module") ?? "";
   const moduleId = modules.some((section) => section.id === askedModule) ? askedModule : "";
-  return { ship, rocket, variant, show, slots, modules, moduleId };
+  return { ship, rocket, variant, show, slots, modules, moduleId, cut, cutId };
 };
 
 const chip = (label: string, testid: string, pressed: boolean, on: () => void): HTMLButtonElement => {
@@ -62,7 +69,7 @@ const chip = (label: string, testid: string, pressed: boolean, on: () => void): 
 };
 
 const draw = (): void => {
-  const { ship, rocket, variant, show, slots, modules, moduleId } = chosen();
+  const { ship, rocket, variant, show, slots, modules, moduleId, cut, cutId } = chosen();
   const shipsRow = byId("db-ships");
   const sectionsRow = byId("db-sections");
   const modulesRow = byId("db-modules");
@@ -70,6 +77,7 @@ const draw = (): void => {
     address.set("ship", one.id);
     address.set("show", "together");
     address.set("module", "");
+    address.set("cut", "");
     draw();
   })));
   sectionsRow.replaceChildren(...slots.map((slot) => chip(slotLabel(slot), `db-show-${slot}`, slot === show, () => {
@@ -77,7 +85,13 @@ const draw = (): void => {
     address.set("show", slot);
     address.set("module", "");
     draw();
-  })));
+  })), ...(cutId ? [chip(say("dbCutaway"), "db-cutaway", cut, () => {
+    address.set("ship", ship);
+    address.set("cut", cut ? "" : "on");
+    address.set("show", "together");
+    address.set("module", "");
+    draw();
+  })] : []));
   modulesRow.replaceChildren(...modules.map((section) => chip(section.name, `db-module-${section.id}`, section.id === moduleId, () => {
     address.set("ship", ship);
     address.set("show", show);
@@ -97,7 +111,7 @@ const draw = (): void => {
   }));
   const hero = byId("hero") as UchusenRocket;
   hero.setAttribute("rocket", ship);
-  hero.setAttribute("variant", rocket.defaultVariant);
+  hero.setAttribute("variant", variant?.id ?? rocket.defaultVariant);
   hero.setAttribute("show", show);
   if (variant) {
     const size = fleetSize(variant);
@@ -131,7 +145,11 @@ const draw = (): void => {
   if (picked && variant) {
     const box = build({ rocket: variant.rocket, variant: variant.id }).boundsOf(picked.slot);
     const span = Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2], 8);
-    hero.focusAt({ slots: [picked.slot], target: [picked.at[0], picked.at[1], picked.at[2]], direction: [0.35, 0.25, 1], distance: span * 1.6 });
+    const at = picked.at;
+    const flat = Math.hypot(at[0], at[2]);
+    const direction: [number, number, number] = flat > 4 ? [(at[0] / flat) * 0.85, 0.35, (at[2] / flat) * 0.85] : [0.35, 0.45, 1];
+    const distance = Math.max(110, Math.min(span * 0.9, 150));
+    hero.focusAt({ slots: [picked.slot], target: [at[0], at[1], at[2]], direction, distance }, picked.name);
   } else hero.focusAt(null);
 };
 
