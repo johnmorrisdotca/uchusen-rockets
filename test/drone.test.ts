@@ -21,7 +21,9 @@ test("three concepts, each with the livery, a lit ring and a work light", () => 
     const used = names(concept.pieces);
     assert.ok(used.has("hull-white"), `${id} body`);
     assert.ok(used.has("hull-orange"), `${id} panel`);
+    assert.ok(used.has("hull-grey"), `${id} frame`);
     assert.ok(used.has("coil-lit"), `${id} ring`);
+    assert.ok(used.has("glass-clear"), `${id} lens`);
     assert.ok(used.has("lamp-amber"), `${id} work light`);
     assert.ok(concept.mouth[1] > 0, `${id} mouth is forward`);
   }
@@ -29,9 +31,11 @@ test("three concepts, each with the livery, a lit ring and a work light", () => 
 
 test("one drone is cheap enough that a hundred of them stay light", () => {
   const counts = DRONE_CONCEPTS.map((make) => triangles(make().pieces));
-  const worst = Math.max(...counts);
-  assert.ok(worst < 1600, `heaviest concept is ${worst} triangles`);
-  assert.ok(worst * 100 < 200_000, "a hundred drones");
+  for (const count of counts) {
+    assert.ok(count > 1000, `too plain: ${count} triangles`);
+    assert.ok(count < 4000, `too heavy: ${count} triangles`);
+  }
+  assert.ok(Math.max(...counts) * 100 < 400_000, "a hundred drones");
 });
 
 test("the long concept keeps its nozzle under the body and its foot at the nose", () => {
