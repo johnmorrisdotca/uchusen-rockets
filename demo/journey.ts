@@ -201,15 +201,21 @@ function syncPainted(turn: string, lit: boolean, phase: string): void {
   const host = byId("painted");
   const bar = byId("painted-bar");
   const credit = byId("painted-credit");
+  const note = byId("painted-note");
   const on = choice.look === "painted" && choice.view === "side";
   stage.dataset.look = on ? "painted" : "line";
   if (!on) {
     if (!host.hidden || host.childElementCount > 0) hidePainted(host, bar, credit);
+    note.hidden = true;
+    note.textContent = "";
     return;
   }
   const craft = craftNow();
   const shown = stageOf(craft, phase, onPad());
   showPainted(host, bar, credit, { rocket: shown.rocket, variant: shown.variant, view: onPad() ? viewOf(craft) : "side", engines: lit ? "on" : "off" }, turn, craft.drive === "continuous" ? 90 : 45);
+  const whole = shown.slots != null;
+  note.hidden = !whole;
+  note.textContent = whole ? say("jPaintWhole") : "";
 }
 
 function setLook(look: "line" | "painted"): void {
