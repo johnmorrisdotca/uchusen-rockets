@@ -112,7 +112,7 @@ test("each look uses its own kind of picture for the body and for a moon beside 
   const texture = (root: ReturnType<typeof page.locator>) => root.locator("wakusei-body").first().evaluate((node) => (node as unknown as { stats?: { textureWidth?: number } }).stats?.textureWidth ?? 0);
 
   await page.goto(`${URL}?background=mars&look=line`);
-  await expect(sky).toHaveAttribute("data-form", "line");
+  await expect(sky).toHaveAttribute("data-form", "line", { timeout: 30_000 });
   await expect(sky.locator("svg")).toHaveCount(1);
   await expect(sky.locator("wakusei-body")).toHaveCount(0);
 
@@ -123,7 +123,7 @@ test("each look uses its own kind of picture for the body and for a moon beside 
 
   await page.goto(`${URL}?background=mars&look=painted`);
   await hero.scrollIntoViewIfNeeded();
-  await expect(sky).toHaveAttribute("data-form", "painted");
+  await expect(sky).toHaveAttribute("data-form", "painted", { timeout: 30_000 });
   await expect(sky.locator("svg")).toHaveCount(0);
   await expect(sky.locator("wakusei-body")).toHaveCount(1);
   await expect.poll(() => texture(sky), { timeout: 30_000 }).toBeGreaterThan(0);
@@ -147,5 +147,21 @@ test("each look uses its own kind of picture for the body and for a moon beside 
   await expect(moons.locator("wakusei-body")).toHaveCount(1);
   await expect.poll(() => texture(moons), { timeout: 30_000 }).toBeGreaterThan(0);
   await shot(page, "earth-moon-painted");
+  expect(problems).toEqual([]);
+});
+
+test("the Moon stands in a different place on a different date", async ({ page }) => {
+  const problems = watch(page);
+  const moons = page.locator('[data-testid="sky-moons"]');
+  const place = () => moons.locator("[data-moon='moon']").evaluate((node) => `${(node as HTMLElement).style.left} ${(node as HTMLElement).style.top}`);
+  await page.goto(`${URL}?background=earth&time=2026-01-01T00:00:00.000Z`);
+  await page.locator('[data-testid="hero"]').scrollIntoViewIfNeeded();
+  await expect(moons).toHaveAttribute("data-draws", "moon");
+  const first = await place();
+  await page.goto(`${URL}?background=earth&time=2026-01-08T00:00:00.000Z`);
+  await page.locator('[data-testid="hero"]').scrollIntoViewIfNeeded();
+  await expect(moons).toHaveAttribute("data-draws", "moon");
+  await expect.poll(place).not.toBe(first);
+  await expect(page.locator('[data-testid="sky-credit"]')).toContainText("shortened");
   expect(problems).toEqual([]);
 });

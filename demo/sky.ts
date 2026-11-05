@@ -56,6 +56,7 @@ export const companionsFor = (body: string, moon: string, moonsOf: (id: string) 
 };
 
 let ticket = 0;
+let clock = 0;
 
 const clear = (holder: HTMLElement) => {
   holder.replaceChildren();
@@ -64,29 +65,83 @@ const clear = (holder: HTMLElement) => {
   delete holder.dataset.form;
 };
 
-const putSvg = (holder: HTMLElement, markup: string, spot?: { left: string; top: string; width: string }) => {
+const putSvg = (holder: HTMLElement, markup: string): SVGElement | undefined => {
   const host = document.createElement("div");
   host.innerHTML = markup;
   const svg = host.querySelector("svg");
-  if (!svg) return;
-  if (spot) {
-    svg.style.left = spot.left;
-    svg.style.top = spot.top;
-    svg.style.width = spot.width;
-  }
+  if (!svg) return undefined;
   holder.append(svg);
+  return svg;
 };
 
-/** Draw `body` large, and `companions` small beside it. `earth` leaves the Earth's own picture alone. `none` clears both. A chosen moon that would be a speck is drawn larger. */
-export const placeSky = (planet: HTMLElement, moons: HTMLElement, body: string, companions: readonly string[], form: SkyForm, lang: Lang, chosen = "") => {
+type Offset = { id: string; x: number; y: number };
+
+/** Where each moon is from its planet, in planet radii. The Earth's picture is drawn from the Moon, so the Moon's place is its ecliptic offset, not that view. */
+const offsets = async (host: string, ids: readonly string[], ms: number): Promise<Offset[]> => {
+  const { BODIES, moonGeocentric, system } = await import("@johnmorrisdotca/wakusei-planets");
+  if (host === "earth") {
+    const [x, y] = moonGeocentric(ms);
+    const radius = BODIES.earth.radiusKm;
+    return ids.filter((id) => id === "moon").map((id) => ({ id, x: x / radius, y: y / radius }));
+  }
+  const placed = new Map(system(host as "mars", ms).moons.map((moon) => [moon.id, moon]));
+  return ids.flatMap((id) => {
+    const moon = placed.get(id as "moon");
+    return moon ? [{ id, x: moon.x, y: moon.y }] : [];
+  });
+};
+
+/** True direction. A distance that would leave the picture is shortened, the same way for every moon of that planet, so the nearer ones stay nearer. */
+const lay = (found: readonly Offset[], rings: number) => {
+  const discR = (PLANET_WIDTH * (DISC_FILL / Math.max(1, rings))) / 2;
+  const reach = found.map((moon) => Math.hypot(moon.x, moon.y) * discR);
+  const farthest = Math.max(0.001, ...reach);
+  const room = 0.46;
+  const scale = farthest > room ? room / farthest : 1;
+  return {
+    shortened: scale < 1,
+    spots: found.map((moon, index) => {
+      const orbit = (reach[index] ?? 0) * scale;
+      const angle = Math.atan2(-moon.y, moon.x);
+      return { id: moon.id, left: 50 + Math.cos(angle) * orbit * 100, top: 50 + Math.sin(angle) * orbit * 100 };
+    }),
+  };
+};
+
+const shift = async (moons: HTMLElement, host: string, ids: readonly string[], ms: number, rings: number) => {
+  const laid = lay(await offsets(host, ids, ms), rings);
+  moons.dataset.shortened = laid.shortened ? "1" : "0";
+  for (const spot of laid.spots) {
+    const node = [...moons.children].find((child) => child instanceof Element && child.getAttribute("data-moon") === spot.id);
+    if (!(node instanceof Element)) continue;
+    const styled = node as HTMLElement;
+    const width = parseFloat(styled.style.width) || 0;
+    styled.style.left = `${(spot.left - width / 2).toFixed(2)}%`;
+    styled.style.top = `${(spot.top - width / 2).toFixed(2)}%`;
+  }
+};
+
+/** Whether the moons are drawn closer in than they are, so the credit can say so. */
+export const distancesShortened = async (host: string, ids: readonly string[], ms: number): Promise<boolean> => {
+  if (ids.length === 0 || host === "none" || host === "sun") return false;
+  const { BODIES, ringReach } = await import("@johnmorrisdotca/wakusei-planets");
+  const hostFacts = BODIES[host as keyof typeof BODIES];
+  if (!hostFacts) return false;
+  return lay(await offsets(host, ids, ms), ringReach(hostFacts)).shortened;
+};
+
+/** Draw `body` large, and `companions` small beside it at the package's position for `when` (`null` is now, and it keeps moving). `earth` leaves the Earth's own picture alone. `none` clears both. A chosen moon that would be a speck is drawn larger. */
+export const placeSky = (planet: HTMLElement, moons: HTMLElement, body: string, companions: readonly string[], form: SkyForm, lang: Lang, chosen = "", when: number | null = null) => {
   const mine = ++ticket;
+  window.clearInterval(clock);
+  clock = 0;
   clear(planet);
   clear(moons);
   if (body === "none") return;
-  void draw(mine, planet, moons, body, companions, form, lang, chosen);
+  void draw(mine, planet, moons, body, companions, form, lang, chosen, when);
 };
 
-const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, body: string, companions: readonly string[], form: SkyForm, lang: Lang, chosen: string) => {
+const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, body: string, companions: readonly string[], form: SkyForm, lang: Lang, chosen: string, when: number | null) => {
   const { lineSvg, BODIES, ringReach } = await import("@johnmorrisdotca/wakusei-planets");
   if (mine !== ticket) return;
   const known = (id: string) => id in BODIES;
@@ -98,36 +153,42 @@ const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, body:
     planet.dataset.form = form === "painted" ? "painted" : "line";
     planet.hidden = false;
   }
-  const host = BODIES[(body === "earth" ? "earth" : body) as keyof typeof BODIES];
+  const hostId = body === "earth" ? "earth" : body;
+  const host = BODIES[hostId as keyof typeof BODIES];
   const shown = companions.filter(known);
-  for (let index = 0; index < shown.length; index += 1) {
-    const id = shown[index] ?? "";
+  const widths = new Map<string, number>();
+  for (const id of shown) {
     const moon = BODIES[id as keyof typeof BODIES];
     if (!host || !moon) continue;
     const ratio = trueWidth(host, moon, ringReach(host));
-    const enlarge = id === chosen && ratio < ENLARGE_UNDER;
-    const width = enlarge ? ENLARGED_WIDTH : ratio;
-    const spot = enlarge || width > 0.12 ? { left: "64%", top: "6%", width: `${(width * 100).toFixed(2)}%` } : placeAt(index, shown.length, width, ringReach(host));
-    if (form === "painted") {
-      const node = await paint(moons, id, lang, body === "earth" ? undefined : "off");
-      Object.assign(node.style, { position: "absolute", left: spot.left, top: spot.top, width: spot.width });
-    } else putSvg(moons, lineSvg(id as keyof typeof BODIES, { size: 280, labels: false, lang }), spot);
+    widths.set(id, id === chosen && ratio < ENLARGE_UNDER ? ENLARGED_WIDTH : ratio);
+  }
+  for (const id of shown) {
+    const width = widths.get(id);
+    if (width === undefined) continue;
+    const node = form === "painted"
+      ? await paint(moons, id, lang, body === "earth" ? undefined : "off")
+      : putSvg(moons, lineSvg(id as keyof typeof BODIES, { size: 280, labels: false, lang }));
+    if (node) {
+      node.dataset.moon = id;
+      node.style.position = "absolute";
+      node.style.width = `${(width * 100).toFixed(2)}%`;
+    }
     if (mine !== ticket) return clear(moons);
   }
-  if (shown.length === 0) return;
+  if (shown.length === 0 || !host) return;
+  const rings = ringReach(host);
+  await shift(moons, hostId, shown, when ?? Date.now(), rings);
+  if (mine !== ticket) return clear(moons);
   moons.dataset.draws = shown.join(",");
   moons.dataset.form = form === "painted" ? "painted" : "line";
   moons.hidden = false;
-};
-
-/** A moon at true size, just outside the planet's disc. */
-const placeAt = (index: number, count: number, width: number, rings: number) => {
-  const discR = (PLANET_WIDTH * (DISC_FILL / Math.max(1, rings))) / 2;
-  const orbit = discR + width / 2 + 0.03;
-  const angle = -Math.PI / 2 + (index / count) * Math.PI * 2;
-  const left = 50 + Math.cos(angle) * orbit * 100 - (width * 100) / 2;
-  const top = 50 + Math.sin(angle) * orbit * 100 - (width * 100) / 2;
-  return { left: `${left.toFixed(2)}%`, top: `${top.toFixed(2)}%`, width: `${(width * 100).toFixed(2)}%` };
+  if (when === null) {
+    clock = window.setInterval(() => {
+      if (mine !== ticket || document.hidden) return;
+      void shift(moons, hostId, shown, Date.now(), rings);
+    }, 10_000);
+  }
 };
 
 /** The painted look is the package's own element. It fetches its picture itself. A moon beside another painted body does not take the one shared picture (`live` off), so the planet keeps it. */

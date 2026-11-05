@@ -16,7 +16,7 @@ import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
-import { companionsFor, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { companionsFor, distancesShortened, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
 
@@ -43,6 +43,11 @@ const say = (key: string, values: Record<string, string | number> = {}): string 
   return (chooser?.word(key) ?? WORDS.en[key] ?? key).replace(/\{(\w+)\}/g, (all, name: string) => String(values[name] ?? all));
 };
 const japanese = () => document.documentElement.lang === "ja";
+const readWhen = (raw: string | null): number | null => {
+  if (raw === null || raw === "") return null;
+  const parsed = Date.parse(raw);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 const slotWord = (slot: string) => (`slot_${slot}` in WORDS.en ? say(`slot_${slot}`) : (SLOT_NAMES[slot] ?? slot));
 const showWord = (show: string) => (show === "together" || show === "apart" ? say(`show_${show}`) : slotWord(show));
 /** The English name of a slot is what a builder row says; find the slot again to say it in the page's language. */
@@ -56,7 +61,7 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", time: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
@@ -174,19 +179,22 @@ function syncSky() {
   const painted = state.background !== "none" && state.look === "painted" && !realisticBarred;
   const form = painted ? "painted" : "line";
   const companions = skyBodies ? companionsFor(state.background, state.moon, (id) => skyBodies?.moonsOf(id) ?? []) : state.background === "earth" ? ["moon"] : state.moon ? [state.moon] : [];
-  const key = `${state.background}|${companions.join(",")}|${form}|${lang}`;
+  const when = readWhen(address.get("time"));
+  const key = `${state.background}|${companions.join(",")}|${form}|${lang}|${when ?? "now"}`;
   const credit = byId("sky-credit");
   const showCredit = state.background !== "none";
   if (key === skyKey) return;
   skyKey = key;
-  placeSky(byId("sky-back"), byId("sky-moons"), state.background, companions, form, lang, state.moon);
+  placeSky(byId("sky-back"), byId("sky-moons"), state.background, companions, form, lang, state.moon, when);
   credit.hidden = !showCredit;
   credit.textContent = "";
   if (!showCredit) return;
-  void skyCredit(state.background, state.moon, form).then((text) => {
+  void skyCredit(state.background, state.moon, form).then(async (text) => {
     if (skyKey !== key) return;
     const bigger = state.moon !== "" && skyBodies?.enlarged(state.background, state.moon) ? ` ${say("moonsEnlarged")}` : "";
-    credit.textContent = `${text}${bigger}`.trim();
+    const nearer = await distancesShortened(state.background, companions, when ?? Date.now()) ? ` ${say("distancesShortened")}` : "";
+    if (skyKey !== key) return;
+    credit.textContent = `${text}${bigger}${nearer}`.trim();
     credit.hidden = credit.textContent === "";
   });
 }
