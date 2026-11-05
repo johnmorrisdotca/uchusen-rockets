@@ -77,7 +77,7 @@ for (const make of DRONE_CONCEPTS) {
   const eye = (name: string, at: [number, number, number], up: [number, number, number] = [0, 0, 1]) => ({
     name: `${concept.id}-${name}`,
     eye: at,
-    target: (far ? [0, 1.1, 0.2] : [0, 0.3, 0]) as [number, number, number],
+    target: (far ? [0, 1.4, 0.28] : [0, 0.3, 0]) as [number, number, number],
     up,
     fov: 30,
     size: [900, 700] as [number, number],
@@ -88,7 +88,7 @@ for (const make of DRONE_CONCEPTS) {
   jobs.push({
     glb: file,
     shots: far
-      ? [eye("quarter", [2.8, 5.4, 0.7]), eye("side", [5.2, 1.2, 0.5]), eye("top", [0.3, 0.8, 5], [0, 1, 0])]
+      ? [eye("quarter", [2.4, 4.2, -0.15]), eye("side", [5.4, 1.6, 0.2]), eye("top", [0.3, 0.8, 5], [0, 1, 0])]
       : [eye("quarter", [1.8, 0.5, 1.3]), eye("side", [2.4, 0.2, 0.25]), eye("top", [0.1, 0.3, 2.4], [0, 1, 0])],
   });
   jobs.push({
@@ -108,8 +108,8 @@ async function mountDrum(file: string): Promise<void> {
   for (const node of drum.getRoot().listNodes()) node.setRotation(q as [number, number, number, number]);
   const fittings = await io.readBinary(new Uint8Array(readFileSync(file)));
   mergeDocuments(fittings, drum);
-  await hangArm(io, fittings, [1.15, 1.15, -0.05], 1);
-  await hangArm(io, fittings, [-1.15, 1.15, -0.05], -1);
+  await hangArm(io, fittings, [0.82, 1.62, 0.22], 1);
+  await hangArm(io, fittings, [-0.82, 1.62, 0.22], -1);
   const scene = fittings.getRoot().listScenes()[0];
   for (const extra of fittings.getRoot().listScenes()) {
     if (extra === scene) continue;
@@ -137,7 +137,13 @@ async function hangArm(io: NodeIO, fittings: Awaited<ReturnType<NodeIO["readBina
   scene.addChild(parent);
   const down = -Math.PI / 2;
   parent.setRotation([Math.sin(down / 2), 0, 0, Math.cos(down / 2)]);
-  parent.setTranslation(at);
-  parent.setScale([sign * 0.42, 0.42, 0.42]);
+  // the shoulder in the file sits near [-1.2, 0.1, 1.84]; land that point on the socket
+  const sc = 0.9;
+  const shoulder: [number, number, number] = [-1.2, 0.1, 1.84];
+  const sx = sign * sc * shoulder[0];
+  const sy = sc * shoulder[2];
+  const sz = -sc * shoulder[1];
+  parent.setTranslation([at[0] - sx, at[1] - sy, at[2] - sz]);
+  parent.setScale([sign * sc, sc, sc]);
   mergeDocuments(fittings, arm);
 }

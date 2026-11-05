@@ -86,26 +86,57 @@ function repairArm(root: Vec3, elbow: Vec3, wrist: Vec3, grasp: Vec3): Piece[] {
   ];
 }
 
-function repairDrone(): Machine {
-  const grip: Vec3 = [-0.15, 2.7, -1.05];
-  const pieces: Piece[] = [
-    disc(DARK, [0, 0.55], 0.38, 1.4, 0.22, 18),
-    disc(METAL, [0, 0.55], 0.28, 1.58, 0.08, 14),
-    disc(GOLD, [0, 0.55], 0.44, 1.32, 0.04, 18),
-    disc(ORANGE, [0, 0.55], 0.42, 1.36, 0.05, 18),
-    disc(GLASS, [0, 0.55], 0.16, 1.64, 0.04, 12),
-    disc(ORANGE, [0.48, 0.55], 0.14, 1.32, 0.16, 12),
-    disc(DARK, [0.48, 0.55], 0.08, 1.44, 0.04, 8),
-    disc(ORANGE, [-0.48, 0.55], 0.14, 1.32, 0.16, 12),
-    disc(DARK, [-0.48, 0.55], 0.08, 1.44, 0.04, 8),
-    disc(BLUE, [0, 0.08], 0.42, -0.15, 0.04, 16),
-    rod(METAL, [-0.5, 0.25, 1.22], [-0.7, 0.55, 1.95], 0.014, 6),
-    rod(GLOW, [-0.7, 0.55, 1.95], [-0.74, 0.62, 2.08], 0.02, 6),
-    rod(METAL, [0.45, 0.3, 1.22], [0.62, 0.7, 1.9], 0.014, 6),
-    rod(GLOW, [0.62, 0.7, 1.9], [0.66, 0.78, 2.04], 0.02, 6),
-    // the arms are InSight's own arm, merged onto the drum for the picture
+/** A collar on the front of the hull where an arm comes out. */
+function socket(sign: number): Piece[] {
+  const at: Vec3 = [sign * 0.82, 1.62, 0.22];
+  return [
+    disc(DARK, [at[0], at[2]], 0.3, 1.28, 0.16, 14),
+    disc(METAL, [at[0], at[2]], 0.22, 1.42, 0.18, 14),
+    disc(ORANGE, [at[0], at[2]], 0.26, 1.58, 0.045, 14),
   ];
-  return { id: "drone-repair", role: "repair", pieces, mouth: [0, 1.66, 0.55], tool: grip, toolKind: "laser" };
+}
+
+/** A cheek pod: a metal body and a red tip, beside the lens. */
+function pod(sign: number): Piece[] {
+  const x = sign * 0.86;
+  return [
+    disc(DARK, [x, 0.5], 0.16, 1.4, 0.28, 10),
+    disc(METAL, [x, 0.5], 0.12, 1.64, 0.16, 10),
+    disc("lamp-red", [x, 0.5], 0.11, 1.78, 0.08, 8),
+  ];
+}
+
+/** The front camera: a barrel on the solar band, a gold ring, then glass. */
+function lens(): Piece[] {
+  const at: [number, number] = [0, 0.5];
+  return [
+    disc(DARK, at, 0.4, 1.26, 0.14, 18),
+    hoop(GOLD, 0.44, 1.4, 0.04, 22, 6, { at }),
+    disc(METAL, at, 0.32, 1.38, 0.5, 16),
+    disc(DARK, at, 0.36, 1.84, 0.06, 16),
+    hoop(GOLD, 0.4, 1.9, 0.032, 22, 6, { at }),
+    disc(DARK, at, 0.28, 1.92, 0.045, 14),
+    disc(GLASS, at, 0.2, 1.95, 0.03, 14),
+    disc(DARK, at, 0.1, 1.97, 0.02, 12),
+    disc(GLOW, at, 0.04, 1.98, 0.012, 8),
+  ];
+}
+
+function repairDrone(): Machine {
+  const grip: Vec3 = [-0.85, 1.7, -0.7];
+  const pieces: Piece[] = [
+    ...lens(),
+    ...pod(1),
+    ...pod(-1),
+    ...socket(1),
+    ...socket(-1),
+    disc(BLUE, [0, -0.22], 0.36, 1.1, 0.5, 16),
+    rod(METAL, [-0.36, 0.02, 1.22], [-0.55, 0.18, 2.2], 0.02, 6),
+    discZ(BLUE, -0.55, 0.18, 2.16, 2.24, 0.045, 8),
+    rod(METAL, [0.32, 0.08, 1.22], [0.5, 0.28, 2.15], 0.02, 6),
+    discZ(BLUE, 0.5, 0.28, 2.11, 2.19, 0.045, 8),
+  ];
+  return { id: "drone-repair", role: "repair", pieces, mouth: [0, 1.96, 0.5], tool: grip, toolKind: "laser" };
 }
 
 function carrierDrone(): Machine {
