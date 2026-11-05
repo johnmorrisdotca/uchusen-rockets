@@ -138,11 +138,14 @@ test("a ring piece is cut where it stands, so a moved mesh is not kept whole", (
   behind.position.set(0, 0, -40);
   const collar = new Mesh(new BoxGeometry(1, 1, 1));
   collar.position.set(16, 0, 0);
-  holder.add(ahead, behind, collar);
+  const across = new Mesh(new BoxGeometry(2, 2, 80));
+  holder.add(ahead, behind, collar, across);
   growPart(holder, 0.5, true);
   assert.ok((ahead.geometry.getIndex()?.count ?? 0) > 0);
   assert.equal(behind.geometry.getIndex()?.count ?? 0, 0);
   assert.ok((collar.geometry.getIndex()?.count ?? 0) > 0);
+  // a triangle that reaches the unbuilt half is left out, so the box is not kept whole
+  assert.ok((across.geometry.getIndex()?.count ?? 0) < 36);
   growPart(holder, 1, true);
   assert.ok((behind.geometry.getIndex()?.count ?? 0) > 0);
 });

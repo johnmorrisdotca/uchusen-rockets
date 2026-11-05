@@ -1380,17 +1380,21 @@ export class RocketViewer {
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
         for (const lines of part.feature) lines.visible = true;
+        for (const outline of part.outlines) outline.visible = this.look !== "painted";
         part.holder.visible = place.shown;
       } else if (frame.going.includes(step.slot) && seated && fit.grown > 0.02) {
-        // a section grows where it belongs; a ring opens as an arc
+        // a section grows where it belongs; a ring opens as an arc, with no wireframe of the part still to come
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         growPart(part.holder, fit.grown, ring);
-        for (const lines of [...part.feature, ...part.weld]) lines.visible = !(ring && fit.grown < 0.995);
+        const openRing = ring && fit.grown < 0.995;
+        for (const lines of [...part.feature, ...part.weld]) lines.visible = !openRing;
+        for (const outline of part.outlines) outline.visible = !openRing && this.look !== "painted";
         part.holder.visible = place.shown;
       } else {
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
         for (const lines of part.feature) lines.visible = true;
+        for (const outline of part.outlines) outline.visible = this.look !== "painted";
         part.holder.visible = false;
       }
     }

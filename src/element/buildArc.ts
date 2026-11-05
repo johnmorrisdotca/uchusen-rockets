@@ -42,13 +42,16 @@ function wedgeOf(source: BufferGeometry, toHolder: Matrix4, major: number, grown
   const raw = index?.array;
   const count = raw ? raw.length : position.count;
   const keep: number[] = [];
+  const inside = (index: number): boolean => {
+    scratch.fromBufferAttribute(position, index).applyMatrix4(toHolder);
+    return ringPiece(scratch.x, scratch.z, major, grown);
+  };
   for (let i = 0; i + 2 < count; i += 3) {
     const a = raw ? raw[i] ?? 0 : i;
     const b = raw ? raw[i + 1] ?? 0 : i + 1;
     const c = raw ? raw[i + 2] ?? 0 : i + 2;
-    scratch.set((position.getX(a) + position.getX(b) + position.getX(c)) / 3, (position.getY(a) + position.getY(b) + position.getY(c)) / 3, (position.getZ(a) + position.getZ(b) + position.getZ(c)) / 3);
-    scratch.applyMatrix4(toHolder);
-    if (ringPiece(scratch.x, scratch.z, major, grown)) keep.push(a, b, c);
+    // every corner, not the middle: a triangle that reaches the unbuilt arc is left out, so that arc is not drawn as a ghost
+    if (inside(a) && inside(b) && inside(c)) keep.push(a, b, c);
   }
   made.setIndex(keep);
   return made;

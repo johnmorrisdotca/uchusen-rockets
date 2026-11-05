@@ -19,7 +19,6 @@ const DRONE_GLOW = 1.5;
 const ARC_WIDTHS = 3;
 const PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 const UP = new Vector3(0, 1, 0);
-const HOT = new Color("#fff6c0");
 const EMBER = new Color("#ff8a32");
 
 /** A soft round light: white at the middle, warm, and gone at the edge. A drone far off is this point and its halo. */
@@ -260,7 +259,7 @@ export class SwarmRig {
     this.sparks = new InstancedMesh(new SphereGeometry(0.08, 6, 6), spark, CAP * SPARKS);
     const tip = new MeshBasicMaterial({ color: new Color("#fff6c2"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     this.tips = new InstancedMesh(new SphereGeometry(1, 10, 10), tip, CAP);
-    const fleck = new MeshBasicMaterial({ color: new Color("#fff3c4"), transparent: true, opacity: 1, blending: AdditiveBlending, depthWrite: false });
+    const fleck = new MeshBasicMaterial({ color: EMBER, transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     this.spray = new InstancedMesh(new SphereGeometry(0.12, 6, 6), fleck, CAP * SPRAY);
     this.group.add(this.lamps);
     for (const mesh of [this.flares, this.beams, this.cores, this.rings, this.sparks, this.tips, this.spray]) {
@@ -602,14 +601,12 @@ export class SwarmRig {
       const at = this.weldAt[i * 2 + 1] ?? [0, 0, 0];
       for (let spark = 0; spark < SPRAY; spark += 1) {
         const off = sparkAt(i * SPRAY + spark, age);
-        const warm = spark < SPRAY / 2;
-        const reach = warm ? 0.45 : 1;
-        const size = warm ? 3.4 : 2.2;
-        this.scratch.makeScale(size, size, size);
+        const reach = spark < SPRAY / 2 ? 0.45 : 1;
+        this.scratch.makeScale(0.35, 0.35, 0.35);
         this.scratch.setPosition(at[0] + off[0] * reach, at[1] + off[1] * reach, at[2] + off[2] * reach);
         const slot = i * SPRAY + spark;
         this.spray.setMatrixAt(slot, this.scratch);
-        this.spray.setColorAt(slot, warm ? HOT : EMBER);
+        this.spray.setColorAt(slot, EMBER);
       }
     }
     this.spray.instanceMatrix.needsUpdate = true;
