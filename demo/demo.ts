@@ -7,6 +7,7 @@ import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
+import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
@@ -54,6 +55,8 @@ const knownWord = (prefix: string, text: string) => (`${prefix}_${wordsKey(text)
 
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
+// A plain drag turns the craft at every zoom. The package pans a zoomed view unless Turn is chosen, and Move is its start; Turn is this page's start. Move, a second finger, Shift and the other mouse buttons still pan.
+bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => {
   const detail = (event as CustomEvent).detail as { zoom?: number };
@@ -358,6 +361,11 @@ function renderMain() {
     else hero.removeAttribute("progress");
   };
   buildBar.onMove = showProgress;
+  buildBar.onRepeat = (on) => address.set("repeat", on ? "on" : null);
+  if (buildBar.dataset.repeatReady !== "yes") {
+    buildBar.dataset.repeatReady = "yes";
+    buildBar.repeat = new URLSearchParams(location.search).get("repeat") === "on";
+  }
   if (buildBar.dataset.forVariant !== state.variant) {
     const previous = buildBar.dataset.forVariant ?? "";
     buildBar.dataset.forVariant = state.variant;
@@ -411,7 +419,11 @@ function drawMakers() {
 }
 
 function pick(change: Partial<typeof state>) {
-  if (change.view !== undefined && change.view !== state.view) bar.set({ yaw: 0, tilt: 0 });
+  // A new craft, variant or view is a new picture: zoom and pan go back to Fit. The angle stays, except a new view, which is itself the angle. A page opened at a zoom (a shared link) is left as it was until one of these changes.
+  const craft = (change.rocket !== undefined && change.rocket !== state.rocket) || (change.variant !== undefined && change.variant !== state.variant);
+  const viewChanged = change.view !== undefined && change.view !== state.view;
+  if (viewChanged) bar.set({ yaw: 0, tilt: 0, zoom: 1, panX: 0, panY: 0 });
+  else if (craft) bar.set({ zoom: 1, panX: 0, panY: 0 });
   const orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
@@ -866,6 +878,8 @@ function setWords() {
   byId<UchusenBuild>("build-bar").words = {
     play: say("buildPlay"),
     pause: say("buildPause"),
+    start: say("buildStart"),
+    repeat: say("buildRepeat"),
     range: say("buildRange"),
     day: say("buildDay"),
     done: say("buildDone"),
