@@ -42,6 +42,29 @@ export const DOCK = {
   shield: { y0: SPINE_Y.end, radius: 24, depth: 6, stay: 16 },
 } as const;
 
+/** The shield's three plates, front to rear: the radius of each, its thickness and where its rim stands above the shield's base, with the sag the dish rises by at its centre. */
+export const SHIELD_PLATES = [
+  { material: "tile", radius: DOCK.shield.radius, t: 0.7, off: 3.2 },
+  { material: "kapton", radius: DOCK.shield.radius - 0.6, t: 0.4, off: 1.6 },
+  { material: "hull-grey", radius: DOCK.shield.radius - 1.2, t: 0.5, off: 0 },
+] as const;
+export const SHIELD_SAG = 4.8;
+/** Where plate `i` (0 the front, 2 the rear wall) has its front face and its back face at radius `r` from the axis, in ship metres. */
+export function shieldPlateAt(i: number, r: number): { front: number; back: number } {
+  const plate = SHIELD_PLATES[i];
+  const front = DOCK.shield.y0 + DOCK.shield.stay + plate.off + SHIELD_SAG * (1 - (r / plate.radius) ** 2);
+  return { front, back: front - plate.t };
+}
+/** The eight stays hold the stack from the keel side: each runs from the dome to a pad under the rear wall and stops 0.8 m short of the wall's back face (the beam is 1.2 m deep), so no stay reaches the plates. */
+export function shieldStays(): { from: [number, number, number]; to: [number, number, number] }[] {
+  const re = 12;
+  const yEnd = shieldPlateAt(2, re + 0.8).back - 0.8;
+  return Array.from({ length: 8 }, (_, k) => {
+    const a = (Math.PI / 4) * k;
+    return { from: [4.2 * Math.sin(a), DOCK.shield.y0, 4.2 * Math.cos(a)], to: [re * Math.sin(a), yEnd, re * Math.cos(a)] };
+  });
+}
+
 /** Every port and berth of the ship. */
 export const PORTS: readonly DockPort[] = [
   ...KIT["node-four"].ports.map((p, i): DockPort => ({ id: `hub-${i + 1}`, name: `Hub node port ${i + 1}`, kind: "port", collar: "L", at: [p.at[0], SPINE_Y.node + p.at[1], p.at[2]], dir: [0, 1, 0], mount: "node", allows: ["inflatable habitat module, stowed", "SPX ATC small craft", "a small visiting craft for a short call"], longStay: false, services: [], walkway: false, craft: { radius: 2.2, length: 9 } })),
@@ -155,13 +178,12 @@ export function dockingPieces(): Piece[] {
   // the bow dust shield, a whipple stack of three solid plates: a tile bumper, a gold blanket layer and an aluminium rear wall, spaced 1.6 m apart on posts and held by eight stays from the dome, with a rim bumper and tile seams, so the whole crown and the berth sit in its shadow
   const sh = DOCK.shield;
   const base = sh.y0 + sh.stay;
-  const sag = 4.8;
-  const layers: [MaterialName, number, number, number][] = [["tile", sh.radius, 0.7, base + 3.2], ["kapton", sh.radius - 0.6, 0.4, base + 1.6], ["hull-grey", sh.radius - 1.2, 0.5, base]];
-  for (const [m, r, t, yy] of layers) out.push(dish(m, r, sag, t, yy));
+  const sag = SHIELD_SAG;
+  for (const plate of SHIELD_PLATES) out.push(dish(plate.material, plate.radius, sag, plate.t, base + plate.off));
   const at = (r: number, yy: number): number => yy + sag * (1 - (r / sh.radius) ** 2);
   for (const r of [7, 14, 20]) for (let k = 0; k < 12; k++) {
     const a = (Math.PI * 2 * k) / 12 + r * 0.01;
-    out.push(rod("hull-grey-dark", [r * Math.sin(a), at(r, base) - 0.3, r * Math.cos(a)], [r * Math.sin(a), at(r, base + 3.2) - 0.7, r * Math.cos(a)], 0.22, 8, { only: "mesh" }));
+    out.push(rod("hull-grey-dark", [r * Math.sin(a), shieldPlateAt(2, r).front - 0.15, r * Math.cos(a)], [r * Math.sin(a), shieldPlateAt(0, r).back + 0.15, r * Math.cos(a)], 0.22, 8, { only: "mesh" }));
   }
   out.push(hoop("hull-white", sh.radius, at(sh.radius, base + 1.6) + 0.5, 0.9, 64, 10), hoop("hull-grey-dark", sh.radius - 0.2, at(sh.radius, base + 3.2) + 0.1, 0.35, 64, 8));
   for (const r of [4, 8, 12, 16, 20]) out.push(hoop("hull-grey-dark", r, at(r, base + 3.2) + 0.02, 0.05, 64, 5));
@@ -169,10 +191,7 @@ export function dockingPieces(): Piece[] {
     const a = (Math.PI * 2 * k) / 16;
     for (let j = 0; j < 5; j++) out.push(rod("hull-grey-dark", [(3 + j * 4.2) * Math.sin(a), at(3 + j * 4.2, base + 3.2) + 0.02, (3 + j * 4.2) * Math.cos(a)], [(3 + (j + 1) * 4.2) * Math.sin(a), at(3 + (j + 1) * 4.2, base + 3.2) + 0.02, (3 + (j + 1) * 4.2) * Math.cos(a)], 0.05, 5, { only: "mesh" }));
   }
-  for (let k = 0; k < 8; k++) {
-    const a = (Math.PI / 4) * k;
-    out.push(...ibeam("hull-grey-dark", [4.2 * Math.sin(a), sh.y0, 4.2 * Math.cos(a)], [12 * Math.sin(a), at(12, base) - 0.3, 12 * Math.cos(a)], 1.2, 0.7, [0, 1, 0]));
-  }
+  for (const { from, to } of shieldStays()) out.push(...ibeam("hull-grey-dark", from, to, 1.2, 0.7, [0, 1, 0]), cub("hull-grey", [to[0] - 0.9, to[0] + 0.9], [to[1] + 0.8, to[1] + 0.9], [to[2] - 0.9, to[2] + 0.9]));
   return out;
 }
 
