@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
 import { BUILD_BUDGET_MS, FLEET_MARKS, KIT, MATERIALS, PART_ENTRIES, ROCKETS } from "../src/index.ts";
 import { clearGlyphCache, glyphCacheSize, hazardMarking, dockingMarking, layoutOf, marking, markingWidth } from "../src/model/fleet/marking.ts";
+import { HULL_MARKS, hullMarkings } from "../src/model/fleet/hullMarks.ts";
 import { CONCEPT_FACES, conceptHull, conceptStyle, demoHull, heightFor, lockup, markedHauler, miyamotoHull, nameplate } from "../src/model/fleet/markingSets.ts";
 import { areaOf, contains, coverage, simplified, triangulate } from "../src/model/fleet/triangulate.ts";
 import { GOLDMAN, KANJI, LATIN, ORBITRON, TYPEFACE_CREDITS } from "../src/model/fleet/typeface.ts";
@@ -294,7 +295,8 @@ test("the lamps stay a letter clear of the letters, and the letters face out off
   ] as const;
   for (const [name, pieces, height] of hulls) {
     const plates = pieces.filter((piece): piece is Plate => piece.kind === "plate");
-    const letters = plates.filter((piece) => piece.material === "black");
+    const letters = plates.filter((piece) => piece.material === "black" || piece.material === "ink-worn");
+    assert.ok(letters.some((piece) => piece.material === "ink-worn"), `${name} wears`);
     const lamps = plates.filter((piece) => piece.material === "hull-grey-dark" || piece.material === "flood");
     const fieldR = Math.max(...pieces.filter((piece) => piece.kind === "lathe" && piece.material === "hull-white").flatMap((piece) => (piece.kind === "lathe" ? piece.profile.map(([r]) => r) : [])));
     const need = markingWidth("M", height * 0.36, style);
@@ -313,6 +315,24 @@ test("the lamps stay a letter clear of the letters, and the letters face out off
       assert.ok(radial > fieldR + 0.03, `${name} letter is ${(radial - fieldR).toFixed(3)} m off the field`);
     }
   }
+});
+
+test("every ship carries its registry on both sides, in repeats, and on the upper face", () => {
+  for (const ship of Object.keys(FLEET_MARKS.ships)) {
+    const rows = HULL_MARKS[ship];
+    assert.ok(rows, ship);
+    assert.ok(rows.some((mark) => mark.role === "main" && mark.side === "port"), `${ship} port`);
+    assert.ok(rows.some((mark) => mark.role === "main" && mark.side === "starboard"), `${ship} starboard`);
+    assert.ok(rows.some((mark) => mark.side === "dorsal"), `${ship} dorsal`);
+    assert.ok(rows.filter((mark) => mark.role === "repeat").length >= 3, `${ship} repeats`);
+  }
+  const pieces = hullMarkings("kaminari");
+  const plates = pieces.filter((piece): piece is Plate => piece.kind === "plate");
+  assert.ok(plates.some((piece) => piece.material === "ink-worn"));
+  const ys = plates.map((piece) => piece.frame.o[1]);
+  const xs = plates.map((piece) => piece.frame.o[0]);
+  assert.ok(Math.min(...xs) < -40 && Math.max(...xs) > 40);
+  assert.ok(Math.max(...ys) - Math.min(...ys) > 1000);
 });
 
 test("a part with markings stays a mesh a phone can load, and the build stays inside the budget", () => {

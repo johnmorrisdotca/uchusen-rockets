@@ -63,5 +63,7 @@ export type { GlossaryCode } from "./model/fleet/glossary.ts";
 export { dockingMarking, hazardMarking, marking, markingWidth, stripeMarking } from "./model/fleet/marking.ts";
 export type { FlatPlace, MarkingPlace, MarkingStyle, RoundPlace } from "./model/fleet/marking.ts";
 export { FLEET_MARKS, conceptHull, conceptStyle, deckNumber, demoHull, hangarNumber, kanjiPlate, lockup, markedHauler, miyamotoHull, nameplate, noStep, portMarker } from "./model/fleet/markingSets.ts";
+export { HULL_MARKS, hullMarkings } from "./model/fleet/hullMarks.ts";
+export type { HullMark } from "./model/fleet/hullMarks.ts";
 export type { ShipMarks } from "./model/fleet/markingSets.ts";
 export { FLEET_MARKING_ROCKETS } from "./data/fleetMarkings.ts";

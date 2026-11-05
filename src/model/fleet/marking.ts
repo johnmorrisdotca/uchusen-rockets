@@ -120,6 +120,8 @@ export interface MarkingStyle {
   onField?: number;
   /** Floodlights, which glow in the Lit look. `true` stands them above the line; `"beside"` stands one at each end, a capital clear of the letters. */
   flood?: boolean | "beside";
+  /** Faded patches in the letter paint, the same on every letter: a property of the paint, not of the light. */
+  worn?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -350,8 +352,16 @@ function plateOf(tri: readonly number[], map: Mapper, material: MaterialName, li
   return { kind: "plate", material, frame: { o, u, v, w }, outline: [local(flat[0]), local(flat[1]), local(flat[2])], thickness, plain: true, sheet: true, only: "mesh" };
 }
 
-/** Lays shapes on the surface as plates (and their outlines as lines, when `outline` asks). */
-function lay(arts: readonly Art[], map: Mapper, material: MaterialName, lift: number, thickness: number, paint: Paint, outline = false, fill = true): void {
+/** A faded patch of each capital, in the same place on every letter. */
+function wornInk(material: MaterialName, s: number, t: number, cell: number): MaterialName {
+  const u = (((s % cell) + cell) % cell) / cell;
+  const v = (((t % cell) + cell) % cell) / cell;
+  const fade = (u > 0.18 && u < 0.42 && v > 0.5 && v < 0.82) || (u > 0.6 && u < 0.82 && v > 0.08 && v < 0.32);
+  return fade ? "ink-worn" : material;
+}
+
+/** Lays shapes on the surface as plates (and their outlines as lines, when `outline` asks). `worn` is the capital height when the paint carries faded patches. */
+function lay(arts: readonly Art[], map: Mapper, material: MaterialName, lift: number, thickness: number, paint: Paint, outline = false, fill = true, worn = 0): void {
   const axis = map.curved === "t" ? 1 : 0;
   for (const art of arts) {
     const t = fill ? triangulate(art.outer, art.holes) : { points: [] as number[], indices: [] as number[] };
@@ -361,7 +371,9 @@ function lay(arts: readonly Art[], map: Mapper, material: MaterialName, lift: nu
       if (map.curved === "none") parts.push(tri);
       else cutAcross(tri, axis, map.span, parts);
       for (const part of parts) {
-        const plate = plateOf(part, map, material, lift, thickness);
+        const s = (part[0] + part[2] + part[4]) / 3;
+        const h = (part[1] + part[3] + part[5]) / 3;
+        const plate = plateOf(part, map, worn ? wornInk(material, s, h, worn) : material, lift, thickness);
         if (plate) paint.pieces.push(plate);
       }
     }
@@ -559,7 +571,7 @@ export function marking(text: string, place: MarkingPlace, style: MarkingStyle =
     paint.pieces.push(...fieldOf(place, map, field.material, box, Math.min(pad * 0.5, place.height * 0.3), raise, tolerance));
     base += raise;
   }
-  lay(moved, map, ink, base, thickness, paint, style.lines !== false);
+  lay(moved, map, ink, base, thickness, paint, style.lines !== false, true, style.worn ? place.height : 0);
   if (style.inline) lay(shift(inlines), map, style.inline, base + thickness, thickness, paint);
   if (style.outline) lay(shift(outlines), map, style.outline.material, base, thickness, paint);
   if (frame) {

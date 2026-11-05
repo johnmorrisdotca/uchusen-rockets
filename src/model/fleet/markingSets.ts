@@ -350,7 +350,7 @@ export const CONCEPT_TEXT = "SPX-207 KAMINARI";
 export function conceptStyle(id: string): MarkingStyle {
   const concept = CONCEPT_FACES[id];
   if (!concept) throw new Error(`"${id}" is not a concept face.`);
-  return { face: concept.face, ink: concept.ink, weight: 0, lift: 0.12, flood: "beside", lines: false };
+  return { face: concept.face, ink: concept.ink, weight: 0, lift: 0.12, flood: "beside", lines: false, worn: true };
 }
 
 /** The lock-up on one plain field of hull colour, so the plating under the letters is painted out, with the pinstripe on top of that field. */

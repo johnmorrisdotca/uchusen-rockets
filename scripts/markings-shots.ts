@@ -2,7 +2,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { toGlb } from "../src/build/glb.ts";
+import { hullMarkings } from "../src/model/fleet/hullMarks.ts";
 import { CONCEPT_FACES, conceptHull, miyamotoHull } from "../src/model/fleet/markingSets.ts";
+import { SHIP_02_SLOTS } from "../src/model/fleet/ship-02/index.ts";
 import { meshOf } from "../src/model/pieces.ts";
 
 const folder = process.argv[2];
@@ -63,5 +65,21 @@ for (const id of Object.keys(CONCEPT_FACES)) {
     ],
   });
 }
+const keep = new Set(["spine", "tank-1", "tank-2", "tank-3", "tank-4", "dock", "command", "shield", "habitat-a"]);
+const ship = toGlb([
+  ...SHIP_02_SLOTS.filter((slot) => keep.has(slot.slot)).map((slot) => ({ name: slot.slot, mesh: meshOf(slot.pieces()), at: [slot.at[0], slot.at[1], slot.at[2]] as [number, number, number] })),
+  { name: "markings", mesh: meshOf(hullMarkings("kaminari")), at: [0, 0, 0] as [number, number, number] },
+]);
+const shipGlb = join(folder, "kaminari-ship.glb");
+writeFileSync(shipGlb, ship.bytes);
+const side = (x: number) => ({ eye: [x, 910, 280] as [number, number, number], target: [0, 910, 40] as [number, number, number], up: [0, 0, 1] as [number, number, number], fov: 42 });
+jobs.push({
+  glb: shipGlb,
+  shots: [
+    { name: "kaminari-starboard", ...side(1500), size: [1600, 700], look: "painted", shadow: 500 },
+    { name: "kaminari-port", ...side(-1500), size: [1600, 700], look: "painted", shadow: 500 },
+    { name: "kaminari-above", eye: [80, 700, 1400], target: [40, 570, 80], up: [0, 1, 0], fov: 42, size: [1600, 700], look: "painted", shadow: 500 },
+  ],
+});
 writeFileSync(join(folder, "jobs.json"), JSON.stringify(jobs, null, 2));
 console.log(`wrote ${jobs.length} jobs`);
