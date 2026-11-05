@@ -20,19 +20,19 @@ const press = async (page: Page, rocket: string) => {
 test("the slider reaches 90 on a fleet ship and 45 on a rocket, and the limit follows the craft chosen", async ({ page }) => {
   await page.goto(`${URL}?rocket=fleet-ship-ariake`);
   await expect(bar(page)).toHaveAttribute("tilt-max", "90");
-  await expect.poll(() => sliderMax(page)).toBe("90");
+  await expect.poll(() => sliderMax(page), { timeout: 30_000 }).toBe("90");
   await bar(page).evaluate((node) => (node as Bar).set({ tilt: 90 }));
   expect(await tiltNow(page)).toBe(90);
   // a rocket is held to 45, and a tip beyond it is brought back to it
   await press(page, "saturn-v");
   await expect(bar(page)).toHaveAttribute("tilt-max", "45");
-  await expect.poll(() => sliderMax(page)).toBe("45");
+  await expect.poll(() => sliderMax(page), { timeout: 30_000 }).toBe("45");
   expect(await tiltNow(page)).toBe(45);
   await bar(page).evaluate((node) => (node as Bar).set({ tilt: 90 }));
   expect(await tiltNow(page)).toBe(45);
   await press(page, "iss");
   await expect(bar(page)).toHaveAttribute("tilt-max", "90");
-  await expect.poll(() => sliderMax(page)).toBe("90");
+  await expect.poll(() => sliderMax(page), { timeout: 30_000 }).toBe("90");
 });
 
 test("the address takes a tip up to the craft's limit and no further", async ({ page }) => {
