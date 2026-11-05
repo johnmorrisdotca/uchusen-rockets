@@ -70,12 +70,12 @@ const INSPECTOR: Inspector = {
 const STANDARD: Variant = {
     id: "fleet-02",
     rocket: "fleet-02",
-    name: "ISV 加美鳴 Kaminari, SPX-207",
+    name: "ISV 加美鳴 Kaminari, first design",
     status: "fictional",
     firstWord: "Planned first flight",
     firstFlight: { value: "2520", source: S, note: "Planned first flight." },
     slots: SHIP_02_SLOTS.map((slot) => slot.slot),
-    note: "An original SPX fleet design, drawn in code from the table of numbers in docs/fleet/ship-02.md. The inside parts are the cutaway's contents: show one alone to see it.",
+    note: "The first hull, kept by address and not listed in the Rocket picker. Drawn in code from the table of numbers in docs/fleet/ship-02-original.md. The inside parts are the cutaway's contents: show one alone to see it.",
     inspector: INSPECTOR,
     facts: {
       height: SHIP_02_LENGTH,
@@ -94,9 +94,9 @@ const STANDARD: Variant = {
   };
 
 const NAMES: Readonly<Record<string, [string, string]>> = {
-  "fleet-02-survey": ["ISV 加美鳴 Kaminari, SPX-207, survey configuration", "Survey pod on the dorsal mount, laboratory pod underneath, relay masts on the wing tips: the same ship for mapping a system."],
-  "fleet-02-tanker": ["ISV 加美鳴 Kaminari, SPX-207, tanker configuration", "Tanker pod on the dorsal mount, cargo pod underneath, a tug on each wing tip: the same ship for fuelling a station."],
-  "fleet-02-rescue": ["ISV 加美鳴 Kaminari, SPX-207, rescue configuration", "Settlement pod as a refuge on the dorsal mount, rescue pod underneath, a tug on each wing tip: the same ship for an evacuation."],
+  "fleet-02-survey": ["ISV 加美鳴 Kaminari, first design, survey configuration", "Survey pod on the dorsal mount, laboratory pod underneath, relay masts on the wing tips: the same ship for mapping a system."],
+  "fleet-02-tanker": ["ISV 加美鳴 Kaminari, first design, tanker configuration", "Tanker pod on the dorsal mount, cargo pod underneath, a tug on each wing tip: the same ship for fuelling a station."],
+  "fleet-02-rescue": ["ISV 加美鳴 Kaminari, first design, rescue configuration", "Settlement pod as a refuge on the dorsal mount, rescue pod underneath, a tug on each wing tip: the same ship for an evacuation."],
 };
 
 const STANDARD_PARTS = Object.fromEntries(SHIP_02_SLOTS.map((s) => [s.slot, `fleet-02-fleet-02-${s.slot}`]));
@@ -111,3 +111,10 @@ export const SHIP_02_VARIANTS: readonly Variant[] = [
     partIds: { ...STANDARD_PARTS, ...swaps },
   })),
 ];
+
+/** The same hull at `fleet-02-original`, each variant pointing at the parts the first hull already has. */
+export const SHIP_02_ORIGINAL_VARIANTS: readonly Variant[] = SHIP_02_VARIANTS.map((variant) => ({
+  ...variant,
+  rocket: "fleet-02-original",
+  partIds: variant.partIds ?? { ...STANDARD_PARTS },
+}));

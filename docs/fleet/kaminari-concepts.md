@@ -1,10 +1,12 @@
-# ISV 加美鳴 (かみなり) Kaminari, SPX-207: three concept hulls
+# ISV 加美鳴 Kaminari, SPX-207, ISV 笑明 Emiake, SPX-109, and ISV 羅馬龍 Romaryū, SPX-118
 
-Maker and operator SPX. The shipped Kaminari (`docs/fleet/ship-02.md`) stays as it is. These are three concepts for a better hull, in the picker as the rocket "ISV 加美鳴 (かみなり) Kaminari concepts, SPX-207", variants `kaminari-concept-a`, `-b` and `-c`.
+**加美鳴（かみなり） · Kaminari.** **笑明（えみあけ） · Emiake · smiling dawn.** **羅馬龍（ローマりゅう） · Romaryū · dragon of Rome.**
+
+Maker and operator SPX. The Quiver is the public ISV 加美鳴 Kaminari, SPX-207 (`fleet-kaminari`). The keel is ISV 笑明 Emiake, SPX-109 (`fleet-emiake`; smiling dawn), with the outer radiator sails deployed on `fleet-emiake-deployed`. The carrier is ISV 羅馬龍 Romaryū, SPX-118 (`fleet-romaryu`; dragon of Rome). The first hull is kept at `docs/fleet/ship-02-original.md` and opened by address as `fleet-02-original`, not listed in the Rocket picker.
 
 John's brief (2026-11-04): the length of about 1.8 km may stay, the size is open; the beam was wrong, because a wide hull cannot just be a bigger round tube. So: (A) thinner cylinders, (B) a hull that is not a tube, (C) a carrier spine with four Miyamoto-size craft. Every concept has the drive LESSONS 29 asks for: many realistic thrusters, no scaled-up bell. Franchise ships are mood only and nothing is copied; real spacecraft and engineering come first.
 
-Code: `src/model/fleet/kaminari-concepts/` (`a.ts`, `b.ts`, `c.ts`, the shared `common.ts`, `drive.ts`, `scale.ts`, `specs.ts`), the registry rows in `src/model/kaminari-concepts.ts`, the data in `src/data/kaminari-concepts.ts`. Tests: `test/kaminari-concepts.test.ts`, `e2e/kaminari-scale.demo.ts`.
+Code: `src/model/fleet/kaminari-concepts/` (`a.ts`, `b.ts`, `c.ts`, the shared `common.ts`, `drive.ts`, `berth.ts`, `sails.ts`, `scale.ts`, `specs.ts`), the registry rows in `src/model/kaminari-concepts.ts`, the data in `src/data/kaminari-concepts.ts`. Tests: `test/kaminari-concepts.test.ts`, `e2e/kaminari-scale.demo.ts`.
 
 ## The drive, shared by the three
 

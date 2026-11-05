@@ -18,7 +18,7 @@ export const PEOPLE = { crew: 640, passengers: 60_000, kgEach: 100 } as const;
 export const PROXIMA_LY = 4.37;
 
 export interface ConceptSpec {
-  id: "kaminari-concept-a" | "kaminari-concept-b" | "kaminari-concept-c";
+  id: "fleet-kaminari" | "fleet-emiake" | "fleet-romaryu";
   letter: "A" | "B" | "C";
   name: string;
   idea: string;
@@ -76,7 +76,7 @@ void containersB;
 
 export const SPECS: Readonly<Record<"a" | "b" | "c", ConceptSpec>> = {
   a: finish({
-    id: "kaminari-concept-a",
+    id: "fleet-kaminari",
     letter: "A",
     name: "Quiver",
     idea: "Thinner cylinders: many slim tanks, containers and drums in rings round one long truss.",
@@ -94,7 +94,7 @@ export const SPECS: Readonly<Record<"a" | "b" | "c", ConceptSpec>> = {
     ancestors: ["ISS Integrated Truss", "NASA Mars transfer vehicle studies (DRA 5.0)", "Nautilus-X centrifuge", "Daedalus coil-held chamber", "Saturn V ring of engines on a thrust structure"],
   }),
   b: finish({
-    id: "kaminari-concept-b",
+    id: "fleet-emiake",
     letter: "B",
     name: "Keel and frame",
     idea: "A flattened wedge built like a ship's hull: an armoured keel, longerons and ribs, open aft, plated forward.",
@@ -111,7 +111,7 @@ export const SPECS: Readonly<Record<"a" | "b" | "c", ConceptSpec>> = {
     ancestors: ["a ship's keel and frames", "Space Shuttle payload-bay longerons", "ISS pressurised modules' plating", "NASA Mars transfer vehicle studies' radiators"],
   }),
   c: finish({
-    id: "kaminari-concept-c",
+    id: "fleet-romaryu",
     letter: "C",
     name: "Carrier",
     idea: "A carrier spine with four Miyamoto-size craft docked round it in two pairs.",

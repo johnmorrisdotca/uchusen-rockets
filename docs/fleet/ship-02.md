@@ -1,5 +1,7 @@
 # ISV 加美鳴 Kaminari, SPX-207
 
+The public hull is the Quiver. This page is the first design, kept in full at `docs/fleet/ship-02-original.md` and opened by address as `fleet-02-original`.
+
 **加美鳴（かみなり） · Kaminari · "thunder"**. Role: 大型輸送船 (large transport ship). In the programme's words: "Large transport ship. It carries heavy cargo in a giant hull, and its engines' low growl echoes like distant thunder."
 
 ISV 加美鳴 Kaminari, SPX-207 is a planned ship of the SPX fleet: the dates, figures and technologies here are the programme's planned figures. It is an original design, built in code from tables of metres (`src/model/fleet/ship-02/`).

@@ -7,6 +7,7 @@ import { parts as miyamotoParts } from "../ship-03/index.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../ship-03/variants.ts";
 import { habitatPieces } from "../ship-02/habitat.ts";
 import { BUILDERS, cub, deg, hoop, type Piece, place, revolve, rod, type Vec3 } from "./adapter.ts";
+import { berthSlot } from "./berth.ts";
 import { bundle, type ConceptSlot, reactorCells, ringFrame, shieldDisc, stackOf, truss } from "./common.ts";
 import { coilStack, mnThruster, thrusterRings, thrusterSize } from "./drive.ts";
 import { scalePieces } from "./scale.ts";
@@ -134,6 +135,7 @@ export const SLOTS_C: readonly ConceptSlot[] = [
   { slot: "barrels", name: "Propellant barrels: two stations of six", kind: "tank", at: [0, C.barrels.y[0], 0], height: C.barrels.y[1] + C.barrels.L * 1.12 - C.barrels.y[0], diameter: 114, note: "Twelve propellant barrels 30 m across and 110 m long, in two rings of six round the shaft. Descends from the Space Shuttle's external tank and Soyuz's strap-on tanks.", pieces: () => local(barrels(), C.barrels.y[0]) },
   ...C.craft.slots.map((s, i): ConceptSlot => ({ slot: `miyamoto-${i + 1}`, name: `Docked craft ${i + 1}: Miyamoto-size, nose forward`, kind: "module", at: [0, s.y, 0], height: 380, diameter: 124, note: "ISV Miyamoto's own model at its true size, docked by its keel in a cradle. Descends from the Space Shuttle on its carrier aircraft and the ISS's visiting vehicles.", pieces: () => local(craft(s.az, s.y, 1, buildDetail.level === "coarse" ? "coarse" : "fine"), s.y) })),
   ...C.craft.slots.map((s, i): ConceptSlot => ({ slot: `cradle-${i + 1}`, name: `Docking cradle ${i + 1}`, kind: "mount", at: [0, s.y, 0], height: 366, diameter: 19, note: "Two rails, five clamp towers from the shaft, and umbilical lines that hold a docked craft by its keel. Descends from the ISS common berthing mechanism and the Shuttle's payload-bay latches.", pieces: () => local(cradle(s.az, s.y), s.y) })),
+  berthSlot("c"),
   { slot: "rings", name: "Habitat rings (two, counter-rotating)", kind: "ring", at: [0, C.ring.y[0], 0], height: ringsHeight, diameter: 239, note: "Two counter-rotating habitat rings 100 m from the axis, at one turn in 24 s for a little under one Earth gravity. Descends from Von Braun's wheel and NASA's Nautilus-X centrifuge.", pieces: habitatRings },
   { slot: "bow", name: "Crew bow: farms, passenger drums, common area, solarium, laboratory and dome", kind: "spacecraft", at: [0, C.bow.y, 0], height: bowEnd - C.bow.y + 1, diameter: 17, note: "The kit's crew modules end to end: a docking node, two farm drums, two passenger drums, the common area, the solarium, a laboratory, the survey pod, the navigation deck and the observation dome.", pieces: () => local(stackOf(BOW, C.bow.y, 0.7, "bowC").pieces, C.bow.y) },
   { slot: "shield", name: "Forward dust shield", kind: "fairing", at: [0, bowEnd, 0], height: C.length - bowEnd, diameter: 56, note: "A tiled cone ahead of the crew. Descends from Daedalus' dust shield.", pieces: () => local(shieldDisc(28, 8, bowEnd, C.length, "c-bow"), bowEnd) },

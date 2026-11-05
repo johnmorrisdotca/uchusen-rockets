@@ -1,6 +1,6 @@
 // The catalogue: which rockets there are, their variants with sourced sizes, and which are still to be built. All data, all typed. Pure.
 import { DRAGON_VARIANTS } from "./data/dragon.ts";
-import { SHIP_02_SLOT_NAMES, SHIP_02_VARIANTS } from "./data/ship02.ts";
+import { SHIP_02_ORIGINAL_VARIANTS, SHIP_02_SLOT_NAMES, SHIP_02_VARIANTS } from "./data/ship02.ts";
 import { FALCON_HEAVY_VARIANTS, FALCON_9_VARIANTS } from "./data/falcon.ts";
 import { FALCON_1_VARIANTS } from "./data/falcon1.ts";
 import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
@@ -22,7 +22,7 @@ import { ISS_VARIANTS } from "./data/iss.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import { FLEET_KIT_ROCKETS, FLEET_SLOT_NAMES } from "./data/fleet.ts";
-import { CONCEPT_SLOT_NAMES, KAMINARI_CONCEPT_VARIANTS } from "./data/kaminari-concepts.ts";
+import { CONCEPT_SLOT_NAMES, KAMINARI_VARIANTS } from "./data/kaminari-concepts.ts";
 import { ARIAKE_VARIANTS, SHIP_03_INSET_ROCKET, SHIP_03_SLOT_NAMES, SHIP_03_VARIANTS } from "./data/ship-03.ts";
 import { MADE_BY, type MakerId } from "./data/makers.ts";
 import type { Figure, Variant } from "./data/types.ts";
@@ -145,8 +145,11 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "fleet-ship-03": { id: "fleet-ship-03", name: "ISV 宮本 Miyamoto, SPX-452", status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_VARIANTS, defaultVariant: "miyamoto" },
   "fleet-ship-ariake": { id: "fleet-ship-ariake", name: "ISV 有明 Ariake, SPX-186", status: "built", ...MADE_BY["fleet-ship-ariake"], variants: ARIAKE_VARIANTS, defaultVariant: "ariake" },
   "fleet-insets-ship-03": { id: "fleet-insets-ship-03", name: SHIP_03_INSET_ROCKET.name, status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_INSET_ROCKET.variants, defaultVariant: SHIP_03_INSET_ROCKET.variants[0].id },
-  "fleet-02": { id: "fleet-02", name: "ISV 加美鳴 Kaminari, SPX-207", status: "built", ...MADE_BY["fleet-02"], variants: SHIP_02_VARIANTS, defaultVariant: "fleet-02" },
-  "fleet-02-concepts": { id: "fleet-02-concepts", name: "ISV 加美鳴 (かみなり) Kaminari concepts, SPX-207", status: "built", ...MADE_BY["fleet-02-concepts"], variants: KAMINARI_CONCEPT_VARIANTS, defaultVariant: "kaminari-concept-a" },
+  "fleet-02": { id: "fleet-02", name: "ISV 加美鳴 Kaminari, first design", status: "built", ...MADE_BY["fleet-02"], variants: SHIP_02_VARIANTS, defaultVariant: "fleet-02" },
+  "fleet-02-original": { id: "fleet-02-original", name: "ISV 加美鳴 Kaminari, first design", status: "built", ...MADE_BY["fleet-02-original"], variants: SHIP_02_ORIGINAL_VARIANTS, defaultVariant: "fleet-02" },
+  "fleet-kaminari": { id: "fleet-kaminari", name: "ISV 加美鳴 Kaminari, SPX-207", status: "built", ...MADE_BY["fleet-kaminari"], variants: KAMINARI_VARIANTS.a, defaultVariant: "fleet-kaminari" },
+  "fleet-emiake": { id: "fleet-emiake", name: "ISV 笑明 Emiake, SPX-109", status: "built", ...MADE_BY["fleet-emiake"], variants: KAMINARI_VARIANTS.b, defaultVariant: "fleet-emiake" },
+  "fleet-romaryu": { id: "fleet-romaryu", name: "ISV 羅馬龍 Romaryū, SPX-118", status: "built", ...MADE_BY["fleet-romaryu"], variants: KAMINARI_VARIANTS.c, defaultVariant: "fleet-romaryu" },
   starbase: { id: "starbase", name: "Starbase", status: "built", ...MADE_BY["starbase"], variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
 });
 

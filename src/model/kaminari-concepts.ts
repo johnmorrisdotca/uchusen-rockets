@@ -3,7 +3,8 @@
 import { blank } from "../data/types.ts";
 import { coarsen, detail } from "./detail.ts";
 import type { Piece } from "./pieces.ts";
-import { CONCEPT_KEYS, CONCEPT_ROCKET, CONCEPT_SLOTS, SPECS } from "./fleet/kaminari-concepts/index.ts";
+import { CONCEPT_KEYS, CONCEPT_SLOTS, EMIAKE_DEPLOYED, ROCKET_OF, SAIL_DEPLOYED_SLOTS, SPECS } from "./fleet/kaminari-concepts/index.ts";
+import type { ConceptSlot } from "./fleet/kaminari-concepts/common.ts";
 import type { PartEntry } from "./registry.ts";
 
 /** The size of a piece, metres: its longest side. */
@@ -33,26 +34,29 @@ const forDrawing = (pieces: readonly Piece[]): Piece[] => {
 
 const NOTE = blank("A design of this package, with no source.");
 
-/** The id of a concept's part: the rocket, the concept and the slot. */
-export const conceptPartId = (variant: string, slot: string): string => `${CONCEPT_ROCKET}-${variant}-${slot}`;
+/** The id of a ship's part: the rocket, the variant and the slot. */
+export const conceptPartId = (rocket: string, variant: string, slot: string): string => `${rocket}-${variant}-${slot}`;
 
-/** Every part of every concept, each once. */
-export const CONCEPT_ENTRIES: readonly PartEntry[] = CONCEPT_KEYS.flatMap((key) =>
-  CONCEPT_SLOTS[key].map((slot, i): PartEntry => ({
-    record: {
-      id: conceptPartId(SPECS[key].id, slot.slot),
-      kind: slot.kind,
-      name: slot.name,
-      rocket: CONCEPT_ROCKET,
-      trueTo: [SPECS[key].id],
-      height: slot.height,
-      diameter: slot.diameter,
-      sourced: { height: NOTE, diameter: NOTE },
-      joints: {},
-      ...(i === 0 ? {} : { strapOn: { x: slot.at[0], z: slot.at[2], y: slot.at[1] } }),
-      painted: null,
-      drawnFrom: `This package's own design: ${slot.note}`,
-    },
-    pieces: () => forDrawing(detail.level === "coarse" ? coarsen(slot.pieces()) : slot.pieces()),
-  })),
-);
+const entry = (rocket: string, variant: string, slot: ConceptSlot, tail: boolean): PartEntry => ({
+  record: {
+    id: conceptPartId(rocket, variant, slot.slot),
+    kind: slot.kind,
+    name: slot.name,
+    rocket,
+    trueTo: variant === SPECS.b.id ? [variant, EMIAKE_DEPLOYED] : [variant],
+    height: slot.height,
+    diameter: slot.diameter,
+    sourced: { height: NOTE, diameter: NOTE },
+    joints: {},
+    ...(tail ? {} : { strapOn: { x: slot.at[0], z: slot.at[2], y: slot.at[1] } }),
+    painted: null,
+    drawnFrom: `This package's own design: ${slot.note}`,
+  },
+  pieces: () => forDrawing(detail.level === "coarse" ? coarsen(slot.pieces()) : slot.pieces()),
+});
+
+/** Every part of the three ships, and Emiake's deployed sails, each once. */
+export const CONCEPT_ENTRIES: readonly PartEntry[] = [
+  ...CONCEPT_KEYS.flatMap((key) => CONCEPT_SLOTS[key].map((slot, i) => entry(ROCKET_OF[key], SPECS[key].id, slot, i === 0))),
+  ...SAIL_DEPLOYED_SLOTS.map((slot) => entry(ROCKET_OF.b, EMIAKE_DEPLOYED, slot, false)),
+];

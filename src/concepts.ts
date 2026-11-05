@@ -2,11 +2,11 @@
 import type { Inspector } from "./data/types.ts";
 import type { FitReport } from "./fit.ts";
 import type { PartRecord } from "./parts.ts";
-import { CONCEPT_IDS, CONCEPT_ROCKET } from "./model/fleet/kaminari-concepts/index.ts";
+import { CONCEPT_ROCKETS } from "./model/fleet/kaminari-concepts/index.ts";
 import { scalePercent } from "./model/fleet/kaminari-concepts/scale.ts";
 
 export { SCALE_PERCENT, scalePercent, scalePieces } from "./model/fleet/kaminari-concepts/scale.ts";
-export { CONCEPT_IDS, CONCEPT_ROCKET } from "./model/fleet/kaminari-concepts/index.ts";
+export { CONCEPT_IDS, CONCEPT_ROCKETS } from "./model/fleet/kaminari-concepts/index.ts";
 
 /**
  * Whether a craft takes the size slider: the three Kaminari concept hulls.
@@ -18,10 +18,13 @@ export { CONCEPT_IDS, CONCEPT_ROCKET } from "./model/fleet/kaminari-concepts/ind
  * ```ts
  * import { canScale } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(canScale("fleet-02-concepts", "kaminari-concept-a"), canScale("saturn-v", "saturn-v"));
+ * console.log(canScale("fleet-kaminari"), canScale("saturn-v"));
  * ```
  */
-export const canScale = (rocket: string, variant?: string): boolean => rocket === CONCEPT_ROCKET && (variant === undefined || (CONCEPT_IDS as readonly string[]).includes(variant));
+export function canScale(rocket: string, variant?: string): boolean {
+  void variant;
+  return (CONCEPT_ROCKETS as readonly string[]).includes(rocket);
+}
 
 /**
  * The factor a size in per cent asks for: 1 for any craft that does not take the slider, and the size between 60 and 100 per cent, in steps of 5, for a concept.
@@ -34,7 +37,7 @@ export const canScale = (rocket: string, variant?: string): boolean => rocket ==
  * ```ts
  * import { scaleFactor } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(scaleFactor("fleet-02-concepts", "kaminari-concept-b", "80"), scaleFactor("saturn-v", "saturn-v", 80));
+ * console.log(scaleFactor("fleet-emiake", "fleet-emiake", "80"), scaleFactor("saturn-v", "saturn-v", 80));
  * ```
  */
 export const scaleFactor = (rocket: string, variant: string, percent: unknown): number => (canScale(rocket, variant) ? scalePercent(percent) / 100 : 1);
@@ -65,7 +68,7 @@ const scaledPart = (part: PartRecord, k: number): PartRecord => ({
  * ```ts
  * import { check, scaleReport } from "@johnmorrisdotca/uchusen-rockets";
  *
- * const full = check({ rocket: "fleet-02-concepts", variant: "kaminari-concept-a" });
+ * const full = check({ rocket: "fleet-kaminari", variant: "fleet-kaminari" });
  * console.log(scaleReport(full, 0.6).size?.height);
  * ```
  */

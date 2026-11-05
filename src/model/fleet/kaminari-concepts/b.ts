@@ -5,7 +5,9 @@
 import { type Face, facesOf, hatch, PLATE, plating, rng as numRng, stencil as faceStencil, vent } from "../ship-02/adapter.ts";
 import { container } from "../ship-02/cargo.ts";
 import { BUILDERS, cub, iBeam, type Piece, place, prism, rod, stamp, type Vec3 } from "./adapter.ts";
-import { type ConceptSlot, radiatorFin, reactorRows, stackOf } from "./common.ts";
+import { berthSlot } from "./berth.ts";
+import { type ConceptSlot, reactorRows, stackOf } from "./common.ts";
+import { SAIL_SLOTS } from "./sails.ts";
 import { thrusterRings } from "./drive.ts";
 
 /** The hull's numbers, metres. */
@@ -261,12 +263,6 @@ function reactors(): Piece[] {
   return reactorRows(cols, pitch, rows, y, 0.6).pieces;
 }
 
-function fins(): Piece[] {
-  const out: Piece[] = [];
-  [-42, 0, 42].forEach((x, i) => out.push(...place(radiatorFin(0, B.H / 2 + 6, 56, 150, 800, 6, i), { at: [x, 0, 0] })));
-  return out;
-}
-
 const bridgeSlot: ConceptSlot = { slot: "bridge", name: "Bridge tower: docking node, common area, solarium, laboratory, navigation deck and dome", kind: "spacecraft", at: [0, BOW_Y, BOW_Z], height: bowStack(0.25).end, diameter: 21, note: "The crew's command modules end to end on a saddle on the dorsal ridge, forward, as a ship's bridge stands. Descends from the ISS nodes, Columbus and the Cupola.", pieces: bridge };
 
 /** The slots, tail to bow. */
@@ -281,7 +277,8 @@ export const SLOTS_B: readonly ConceptSlot[] = [
   ...Array.from({ length: B.cargo.cells }, (_, i): ConceptSlot => ({ slot: `cargo-${i + 1}`, name: `Cargo cell ${i + 1}`, kind: "mount", at: [0, B.cargo.y + i * B.cargo.deep, 0], height: B.cargo.deep, diameter: containersAcross(B.cargo.y + i * B.cargo.deep) * 24 + 1, note: "Containers 22 by 22 by 40 m lying along the ship in two layers, in cell guides. Descends from container-ship cell guides.", pieces: () => local(cargo(i), B.cargo.y + i * B.cargo.deep) })),
   { slot: "plated-hull", name: "Plated forward hull", kind: "module", at: [0, B.plated[0], 0], height: B.plated[1] - B.plated[0] - 8, diameter: 68, note: "Plating closes the bays of the forward hull: the crew's decks, with rows of lit windows down both flanks. Descends from the ISS pressurised modules' plating.", pieces: () => local(plated(), B.plated[0]) },
   { slot: "gallery", name: "Glazed gallery", kind: "module", at: [0, B.gallery[0], B.H / 2], height: B.gallery[1] - B.gallery[0] + 13, diameter: 22, note: "A long armoured glass roof along the top of the hull, a garden under it and a lit promenade, with shutters at its sides. Descends from the ISS Cupola and arcade roofs.", pieces: () => local(gallery(), B.gallery[0], 0, B.H / 2) },
-  { slot: "fins", name: "Radiator fins (three)", kind: "arms", at: [0, 150, 0], height: 650, diameter: 88, note: "Three flat radiator fins standing from the dorsal ridge and the upper ribs, 500 m long and 56 m high. Seen from above they are edge-on lines; from the side they are the ship's sail. Descends from the Mars transfer vehicle studies' radiators.", pieces: () => local(fins(), 150) },
+  ...SAIL_SLOTS,
+  berthSlot("b"),
   bridgeSlot,
   { slot: "nose", name: "Nose and dust shield", kind: "fairing", at: [0, B.plated[1], 0], height: B.length - B.plated[1] - 2, diameter: 41, note: "Three stepped slabs of tile and a tiled wedge ahead of the crew: at a quarter of the speed of light, dust hits like bullets. Descends from Daedalus' dust shield and Orion's heat shield.", pieces: () => local(nose(), B.plated[1]) },
 ];

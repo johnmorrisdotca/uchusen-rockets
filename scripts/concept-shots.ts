@@ -7,7 +7,7 @@ import process from "node:process";
 import { toGlb } from "../src/build/glb.ts";
 import { build } from "../src/build/index.ts";
 import { coarsen, detail } from "../src/model/detail.ts";
-import { CONCEPT_KEYS, CONCEPT_SLOTS, type ConceptKey, SPECS } from "../src/model/fleet/kaminari-concepts/index.ts";
+import { BERTHS, CONCEPT_KEYS, CONCEPT_SLOTS, type ConceptKey, ROCKET_OF, SPECS } from "../src/model/fleet/kaminari-concepts/index.ts";
 import { miyamoto } from "../src/model/fleet/kaminari-concepts/c.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
@@ -47,7 +47,7 @@ const concepts = CONCEPT_KEYS.map((key) => {
   detail.level = "full";
   const file = join(out, `concept-${key}.glb`);
   writeFileSync(file, toGlb(parts).bytes);
-  const b = build({ rocket: "fleet-02-concepts", variant: SPECS[key].id }, { detail: "coarse" }).boundsOf("together");
+  const b = build({ rocket: ROCKET_OF[key], variant: SPECS[key].id }, { detail: "coarse" }).boundsOf("together");
   return { key, file, min: b.min as V3, max: b.max as V3 };
 });
 
@@ -110,6 +110,22 @@ for (const c of concepts) {
   const view = { eye: [cx + 900, -700, 1100] as V3, target: [cx, mid, 0] as V3, up: [0, 1, 0] as V3, fov: 28, size: [wide(tx0, tx1) + 300, H] as [number, number], shadow: 1300, fill: 0.92 };
   jobs.push({ ...base, more: files(topRow), shots: [{ name: `${c.key}-3q`, ...view, look: "painted", sunDir: [0.5, 0.5, 0.8] }] });
   jobs.push({ ...base, more: files(topRow), shots: [{ name: `${c.key}-lit`, ...view, look: "lit", plumes: lit(c.key), glow: 2.2 }] });
+  // no fill: the fitter would back the camera up until the whole kilometre-long hull fits, and a docked craft would vanish
+  const berth = BERTHS[c.key][0];
+  const face = berth.direction[0] || 1;
+  jobs.push({ ...base, shots: [{ name: `${c.key}-berth`, eye: [berth.at[0] + face * 90, berth.at[1] - 30, berth.at[2] + 150], target: [berth.at[0], berth.at[1], berth.at[2]], up: [0, 1, 0], fov: 42, size: [1400, 900], look: "painted", shadow: 180, sunDir: [0.4, 0.55, 0.7] }] });
+}
+{
+  const deployed = build({ rocket: "fleet-emiake", variant: "fleet-emiake-deployed" }, { detail: "coarse" });
+  const file = join(out, "emiake-deployed.glb");
+  writeFileSync(file, deployed.glb().bytes);
+  const box = deployed.boundsOf("together");
+  const mid = (box.min[1] + box.max[1]) / 2;
+  jobs.push({ glb: file, shots: [
+    { name: "b-sails-deployed", eye: [900, mid - 400, 700], target: [0, mid, 40], up: [0, 1, 0], fov: 28, size: [1600, 1200], look: "painted", shadow: 900, fill: 0.9, sunDir: [0.4, 0.5, 0.8] },
+    { name: "b-sails-end", eye: [0, 1040, 36], target: [0, 480, 36], up: [0, 0, 1], fov: 26, size: [1400, 900], look: "painted", shadow: 240, sunDir: [0.3, -0.5, 0.85] },
+    { name: "b-sail-hinge", eye: [42, 990, 30], target: [42, 640, 30], up: [0, 0, 1], fov: 20, size: [1400, 900], look: "painted", shadow: 90, sunDir: [0.4, -0.3, 0.85] },
+  ] });
 }
 // all three side by side, with the craft beside once, from the dorsal side and from starboard
 {
