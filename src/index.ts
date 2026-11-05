@@ -42,6 +42,8 @@ export { burnsOf, clockWords, FlightClock, flightOf, frameAt, lastPosition, phas
 export { PLAY_RATES, buildOf, playFrame, playFrom, stills } from "./buildPlay.ts";
 export { SWARM_CAP, approachPath, berthRing, carries, grounded, pathClears, swarmCount, swarmJobs } from "./swarm.ts";
 export type { Carry, HullBox, SwarmJob } from "./swarm.ts";
+export { DRONE } from "./model/fleet/drone/index.ts";
+export { DRONE_FILES } from "./model/drone.ts";
 export type { PlayFrame, PlayStep } from "./buildPlay.ts";
 export type { BuildWords } from "./buildbar.ts";
 export { tractorBeam } from "./beam.ts";
