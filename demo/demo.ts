@@ -58,9 +58,11 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // A plain drag turns the craft at every zoom. The package pans a zoomed view unless Turn is chosen, and Move is its start; Turn is this page's start. Move, a second finger, Shift and the other mouse buttons still pan.
 bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
+/** A size change calls `fit()` to hold the new ship. That is not the Fit button, so it must not turn true scale off or replace a concept's percent. */
+let fittingForSize = false;
 bar.addEventListener("kazoku-viewchange", (event) => {
   const detail = (event as CustomEvent).detail as { zoom?: number; reason?: string };
-  if (detail.reason === "fit") setScale(false);
+  if (detail.reason === "fit" && !fittingForSize) setScale(false);
   hero.drive(detail);
   const zoom = Math.max(0.25, detail.zoom ?? 1);
   const sky = byId("sky-back");
@@ -529,8 +531,12 @@ function pick(change: Partial<typeof state>) {
     } else if (state.background === "earth" || orbitCache.has(state.background)) settleOrbit(true);
     orbitAnimate = false;
   }
-  // the ship is a new size: Fit holds it, and Starship beside it, again
-  if (change.kscale !== undefined) bar.fit();
+  // the ship is a new size: Fit holds it, and Starship beside it, again. This fit is the camera, not the Fit button.
+  if (change.kscale !== undefined) {
+    fittingForSize = true;
+    bar.fit();
+    fittingForSize = false;
+  }
   address.set("rocket", state.rocket);
   address.set("variant", state.variant);
   address.set("show", state.show);

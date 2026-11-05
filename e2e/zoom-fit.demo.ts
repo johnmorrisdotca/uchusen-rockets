@@ -42,7 +42,8 @@ test("changing craft at zoom 5 returns to Fit, a shared zoom stays, and the fitt
   await press(page, "rocket-saturn-v");
   await expect(hero(page)).toHaveAttribute("rocket", "saturn-v");
   await expect.poll(() => zoomOf(page)).toBe("1.00");
-  expect(new globalThis.URL(page.url()).searchParams.get("zoom")).toBeNull();
+  // the view controls write the address after a short delay, so the zoom is gone once that write lands
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("zoom")).toBeNull();
 
   await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ zoom: 5 }));
   await expect.poll(() => zoomOf(page)).toBe("5.00");
