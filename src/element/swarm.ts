@@ -4,10 +4,32 @@ import { AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, Color, 
 const CAP = 100;
 const RINGS = 3;
 const SPARKS = 4;
+const SPRAY = 6;
+
+/**
+ * Where one spark sits relative to a weld, in metres. It flies straight out and starts again. Nothing pulls it downward.
+ * @param index Which spark.
+ * @param age Seconds since the weld was shown.
+ * @returns The offset, metres.
+ */
+export function sparkAt(index: number, age: number): readonly [number, number, number] {
+  const angle = (index % 8) * 0.78 + (index % 3) * 0.2;
+  const rise = ((index % 5) - 2) * 0.4;
+  const x = Math.cos(angle);
+  const y = rise;
+  const z = Math.sin(angle);
+  const len = Math.hypot(x, y, z) || 1;
+  const speed = 0.7 + (index % 4) * 0.3;
+  const dist = (Math.max(0, age) * speed) % 2.2;
+  if (dist === 0) return [0, 0, 0];
+  return [(x / len) * dist, (y / len) * dist, (z / len) * dist];
+}
 
 export interface SwarmPose {
   where: [number, number, number];
   part: [number, number, number];
+  /** This drone is fitting a part, so the join shows a weld. */
+  weld?: boolean;
 }
 
 /** The drones, their beams and the placeholder parts stack. */
@@ -20,7 +42,17 @@ export class SwarmRig {
   private readonly beams: InstancedMesh;
   private readonly rings: InstancedMesh;
   private readonly sparks: InstancedMesh;
+  private readonly tips: InstancedMesh;
+  private readonly spray: InstancedMesh;
+  private readonly lasers: LineSegments;
+  private readonly laserPositions = new Float32Array(CAP * 6);
+  private readonly seam: LineSegments;
+  private readonly seamPositions = new Float32Array(CAP * 6);
+  private readonly seamMaterial: LineBasicMaterial;
   private readonly paths: LineSegments;
+  private readonly weldAt: [number, number, number][] = [];
+  private weldCount = 0;
+  private reduced = true;
   private readonly pathPositions = new Float32Array(CAP * 6);
   private readonly scratch = new Matrix4();
   private readonly aim = new Quaternion();
@@ -43,7 +75,11 @@ export class SwarmRig {
     this.beams = new InstancedMesh(new ConeGeometry(1, 1, 12), glow, CAP);
     this.rings = new InstancedMesh(new TorusGeometry(0.8, 0.06, 6, 12), ring.clone(), CAP * RINGS);
     this.sparks = new InstancedMesh(new SphereGeometry(0.28, 6, 6), spark, CAP * SPARKS);
-    for (const mesh of [this.drones, this.emitters, this.lamps, this.glows, this.beams, this.rings, this.sparks]) {
+    const tip = new MeshBasicMaterial({ color: new Color("#e7f6ff"), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false });
+    this.tips = new InstancedMesh(new SphereGeometry(1.1, 10, 10), tip, CAP);
+    const fleck = new MeshBasicMaterial({ color: new Color("#fff4d2"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
+    this.spray = new InstancedMesh(new SphereGeometry(0.22, 6, 6), fleck, CAP * SPRAY);
+    for (const mesh of [this.drones, this.emitters, this.lamps, this.glows, this.beams, this.rings, this.sparks, this.tips, this.spray]) {
       mesh.count = 0;
       mesh.frustumCulled = false;
       this.group.add(mesh);
@@ -53,6 +89,17 @@ export class SwarmRig {
     this.paths = new LineSegments(pathGeo, new LineBasicMaterial({ color: new Color("#b7c6ff"), transparent: true, opacity: 0.45, blending: AdditiveBlending, depthWrite: false }));
     this.paths.frustumCulled = false;
     this.group.add(this.paths);
+    const laserGeo = new BufferGeometry();
+    laserGeo.setAttribute("position", new BufferAttribute(this.laserPositions, 3));
+    this.lasers = new LineSegments(laserGeo, new LineBasicMaterial({ color: new Color("#d7ecff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false }));
+    this.lasers.frustumCulled = false;
+    this.group.add(this.lasers);
+    const seamGeo = new BufferGeometry();
+    seamGeo.setAttribute("position", new BufferAttribute(this.seamPositions, 3));
+    this.seamMaterial = new LineBasicMaterial({ color: new Color("#f3fbff"), transparent: true, opacity: 0.8, blending: AdditiveBlending, depthWrite: false });
+    this.seam = new LineSegments(seamGeo, this.seamMaterial);
+    this.seam.frustumCulled = false;
+    this.group.add(this.seam);
     const steel = new MeshStandardMaterial({ color: new Color("#8b93a1"), roughness: 0.6, metalness: 0.2 });
     const post = new BoxGeometry(2, 36, 2);
     const bar = new BoxGeometry(28, 2, 2);
@@ -71,8 +118,9 @@ export class SwarmRig {
     parent.add(this.group);
   }
 
-  /** Puts the drones on `poses` with a beam to each part, or on `parked` with no beam, and the stack at `dock`. */
-  show(poses: readonly SwarmPose[], parked: readonly [number, number, number][], dock: readonly [number, number, number]): void {
+  /** Puts the drones on `poses` with a beam to each part, or on `parked` with no beam, and the stack at `dock`. A weld is a steady dot, and, unless `reduced` is set, a laser, a seam and a spray. */
+  show(poses: readonly SwarmPose[], parked: readonly [number, number, number][], dock: readonly [number, number, number], reduced = false): void {
+    this.reduced = reduced;
     const points = poses.length ? poses.map((pose) => pose.where) : parked;
     this.place(this.drones, points, (at, i) => {
       this.scratch.makeTranslation(at[0], at[1], at[2]);
@@ -138,13 +186,66 @@ export class SwarmRig {
     this.paths.geometry.setDrawRange(0, points.length * 2);
     const position = this.paths.geometry.getAttribute("position");
     position.needsUpdate = true;
+    this.weldAt.length = 0;
+    for (const pose of poses) if (pose.weld) this.weldAt.push(pose.part);
+    this.weldCount = this.weldAt.length;
+    this.place(this.tips, this.weldAt, (at, i) => {
+      this.scratch.makeTranslation(at[0], at[1], at[2]);
+      this.tips.setMatrixAt(i, this.scratch);
+    });
+    const live = !reduced && this.weldCount > 0;
+    this.spray.count = live ? this.weldCount * SPRAY : 0;
+    if (live) this.placeSpray(0);
+    this.lasers.geometry.setDrawRange(0, live ? this.weldCount * 2 : 0);
+    this.seam.geometry.setDrawRange(0, live ? this.weldCount * 2 : 0);
+    if (live) {
+      for (let i = 0; i < this.weldCount; i += 1) {
+        const pose = poses.filter((one) => one.weld)[i];
+        const at = this.weldAt[i] ?? [0, 0, 0];
+        const from = pose?.where ?? at;
+        const dx = at[0] - from[0];
+        const dy = at[1] - from[1];
+        const dz = at[2] - from[2];
+        const span = Math.hypot(dx, dy, dz) || 1;
+        const ux = dx / span;
+        const uy = dy / span;
+        const uz = dz / span;
+        this.laserPositions[i * 6] = at[0] - ux * Math.min(1.2, span);
+        this.laserPositions[i * 6 + 1] = at[1] - uy * Math.min(1.2, span);
+        this.laserPositions[i * 6 + 2] = at[2] - uz * Math.min(1.2, span);
+        this.laserPositions[i * 6 + 3] = at[0];
+        this.laserPositions[i * 6 + 4] = at[1];
+        this.laserPositions[i * 6 + 5] = at[2];
+        this.seamPositions[i * 6] = at[0] - uz * 0.8;
+        this.seamPositions[i * 6 + 1] = at[1];
+        this.seamPositions[i * 6 + 2] = at[2] + ux * 0.8;
+        this.seamPositions[i * 6 + 3] = at[0] + uz * 0.8;
+        this.seamPositions[i * 6 + 4] = at[1];
+        this.seamPositions[i * 6 + 5] = at[2] - ux * 0.8;
+      }
+      this.lasers.geometry.getAttribute("position").needsUpdate = true;
+      this.seam.geometry.getAttribute("position").needsUpdate = true;
+    }
     const frame = this.group.getObjectByName("dock");
     if (frame) frame.position.set(dock[0], dock[1], dock[2]);
     this.group.visible = true;
   }
 
+  /** Whether the spray and the laser are moving. A reduced-motion view keeps only the dot, so this is false. */
+  live(): boolean {
+    return this.weldCount > 0 && !this.reduced;
+  }
+
+  /** Moves the spray out along its rays and lets the seam fade and return. */
+  step(age: number): void {
+    if (!this.live()) return;
+    this.placeSpray(age);
+    this.seamMaterial.opacity = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(age * 3));
+  }
+
   hide(): void {
     this.group.visible = false;
+    this.weldCount = 0;
   }
 
   dispose(): void {
@@ -156,6 +257,18 @@ export class SwarmRig {
       if (Array.isArray(material)) for (const one of material) one.dispose();
       else material?.dispose();
     });
+  }
+
+  private placeSpray(age: number): void {
+    for (let i = 0; i < this.weldCount; i += 1) {
+      const at = this.weldAt[i] ?? [0, 0, 0];
+      for (let spark = 0; spark < SPRAY; spark += 1) {
+        const off = sparkAt(i * SPRAY + spark, age);
+        this.scratch.makeTranslation(at[0] + off[0], at[1] + off[1], at[2] + off[2]);
+        this.spray.setMatrixAt(i * SPRAY + spark, this.scratch);
+      }
+    }
+    this.spray.instanceMatrix.needsUpdate = true;
   }
 
   private place(mesh: InstancedMesh, points: readonly (readonly [number, number, number])[], put: (at: readonly [number, number, number], index: number) => void): void {

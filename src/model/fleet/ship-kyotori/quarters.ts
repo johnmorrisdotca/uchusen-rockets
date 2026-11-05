@@ -13,13 +13,13 @@ export const TOWER_H = TOWER.floors * TOWER.fh;
 type Room = Parameters<typeof room>[0];
 /** The rooms of each floor, bottom (the rim) to top (the hub): four to a floor, two each side of a corridor. */
 const PLANS: Record<QuarterKind, Room[][]> = {
-  control: [["mess", "mess", "lounge", "recreation"], ["cabin", "cabin", "cabin", "cabin"], ["cabin", "cabin", "cabin", "cabin"], ["medical", "cabin", "gym", "cabin"], ["lounge", "school", "lounge", "recreation"], ["cabin", "cabin", "cabin", "cabin"], ["recreation", "lounge", "lounge", "recreation"], ["lounge", "lounge", "lounge", "lounge"]],
+  control: [["mess", "mess", "lounge", "recreation"], ["cabin", "cabin", "cabin", "cabin"], ["cabin", "cabin", "cabin", "cabin"], ["medical", "quarantine", "gym", "cabin"], ["lounge", "school", "lounge", "recreation"], ["cabin", "cabin", "cabin", "cabin"], ["recreation", "lounge", "lounge", "recreation"], ["bridge", "airlock", "lounge", "lounge"]],
   lab: [["garden", "garden", "garden", "garden"], ["recreation", "lounge", "garden", "shelter"], ["cabin", "cabin", "cabin", "cabin"], ["cabin", "cabin", "cabin", "cabin"], ["medical", "shelter", "gym", "cabin"], ["school", "school", "recreation", "lounge"], ["cabin", "cabin", "cabin", "cabin"], ["lounge", "garden", "garden", "lounge"]],
   observatory: [["lounge", "lounge", "lounge", "lounge"], ["cabin", "cabin", "cabin", "cabin"], ["mess", "recreation", "mess", "lounge"], ["cabin", "cabin", "cabin", "cabin"], ["gym", "gym", "medical", "shelter"], ["cabin", "cabin", "cabin", "cabin"], ["school", "recreation", "lounge", "lounge"], ["lounge", "lounge", "recreation", "recreation"]],
-  engineering: [["shelter", "shelter", "medical", "gym"], ["cabin", "cabin", "cabin", "cabin"], ["mess", "mess", "recreation", "lounge"], ["cabin", "cabin", "cabin", "cabin"], ["cabin", "cabin", "cabin", "cabin"], ["garden", "garden", "recreation", "lounge"], ["school", "cabin", "cabin", "gym"], ["lounge", "recreation", "lounge", "recreation"]],
+  engineering: [["shelter", "shelter", "medical", "gym"], ["cabin", "cabin", "cabin", "cabin"], ["mess", "mess", "recreation", "lounge"], ["engineering", "lifesupport", "stores", "airlock"], ["cabin", "cabin", "cabin", "cabin"], ["garden", "garden", "recreation", "lounge"], ["school", "cabin", "cabin", "gym"], ["lounge", "recreation", "lounge", "recreation"]],
 };
 
-const SHAPE: Record<Room, [number, number]> = { cabin: [4.4, 3.4], mess: [6, 4.6], gym: [5.4, 4.2], garden: [5.8, 4.8], lounge: [5.4, 4.6], medical: [5.4, 4.4], shelter: [4.4, 4.4], recreation: [5.2, 4.6], school: [5.6, 5.0], plaza: [5, 5] };
+const SHAPE: Record<Room, [number, number]> = { cabin: [4.4, 3.4], mess: [6, 4.6], gym: [5.4, 4.2], garden: [5.8, 4.8], lounge: [5.4, 4.6], medical: [5.4, 4.4], shelter: [4.4, 4.4], recreation: [5.2, 4.6], school: [5.6, 5.0], plaza: [5, 5], bridge: [6.2, 5.4], quarantine: [4.2, 3.6], engineering: [6.4, 5.2], lifesupport: [5.6, 4.4], stores: [5.4, 4.6], airlock: [3.6, 4.2] };
 
 /** A Cupola: six trapezoid windows on a low frustum, a round window on top, six shutters folded out. Standing on y at `at`. */
 function cupola(at: Vec3, r: number): Piece[] {
