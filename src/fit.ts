@@ -141,6 +141,10 @@ export function check(description: Description): FitReport {
       if (part.painted) {
         if (!used.has(part.painted.credit)) used.set(part.painted.credit, []);
         (used.get(part.painted.credit) as string[]).push(part.name);
+        for (const other of part.painted.also ?? []) {
+          if (!used.has(other)) used.set(other, []);
+          (used.get(other) as string[]).push(part.name);
+        }
       }
     return {
       ok,

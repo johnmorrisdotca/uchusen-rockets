@@ -87,8 +87,8 @@ export const pipeRun = (material: MaterialName, points: readonly Vec3[], r: numb
   kitPipeRun(points, r, material, { ...(o.sides ? { sides: o.sides } : {}), ...(o.clampEvery ? { bracketEvery: o.clampEvery } : {}), ...(o.bracket ? { support: o.bracket } : {}) });
 
 /** A round strut as the lunar module's legs are: the kit's tube with its collars and caps, and a white ball joint on each end. */
-export function roundStrut(material: MaterialName, a: Vec3, b: Vec3, r: number, o: { joint?: MaterialName; sides?: number } = {}): Piece[] {
+export function roundStrut(material: MaterialName, a: Vec3, b: Vec3, r: number, o: { joint?: MaterialName; sides?: number; outline?: boolean } = {}): Piece[] {
   const sides = o.sides ?? 12;
-  const ball = (p: Vec3): Piece => ({ kind: "lathe", material: o.joint ?? "hull-white", at: [p[0], p[2]], segs: sides, profile: [[0.001, p[1] - r * 1.5], [r * 1.1, p[1] - r * 1.05], [r * 1.5, p[1]], [r * 1.1, p[1] + r * 1.05], [0.001, p[1] + r * 1.5]], only: "mesh" });
+  const ball = (p: Vec3): Piece => ({ kind: "lathe", material: o.joint ?? "hull-white", at: [p[0], p[2]], segs: sides, profile: [[0.001, p[1] - r * 1.5], [r * 1.1, p[1] - r * 1.05], [r * 1.5, p[1]], [r * 1.1, p[1] + r * 1.05], [0.001, p[1] + r * 1.5]], only: "mesh", ...(o.outline ? { outline: true } : {}) });
   return [...kitStrut(material, a, b, r, sides), ball(a), ball(b)];
 }

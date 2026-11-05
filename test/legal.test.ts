@@ -91,6 +91,8 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
     "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
     "space-shuttle-stack-srb.glb": [45.46, 3.71],
+    "fleet-drone-repair-near.glb": [1.337, 1.048],
+    "fleet-drone-repair-far.glb": [1.319, 1.029],
   };
   for (const name of modelFiles) {
     assert.ok(statSync(join("models", name)).size < 8 * 1024 * 1024, name);
@@ -121,7 +123,7 @@ test("NASA's models rest on the owner's decision, which says so, with no suggest
   assert.match(notice, /owner's decision of 2026-11-02/);
   assert.match(notice, /not affiliated with or endorsed by SpaceX, NASA/);
   assert.match(notice, /No NASA logo, insignia, flag or lettering/);
-  for (const c of Object.values(MODEL_CREDITS) as readonly ModelCredit[]) if (c.creator === "NASA") assert.match(c.sourceUrl, /^https:\/\/data\.nasa\.gov\/dataset\//);
+  for (const c of Object.values(MODEL_CREDITS) as readonly ModelCredit[]) if (c.creator === "NASA") assert.match(c.sourceUrl, /^https:\/\/(data\.nasa\.gov\/dataset|science\.nasa\.gov\/3d-resources)\//);
   for (const name of modelFiles) {
     const extras = (JSON.parse(glbJson(new Uint8Array(readFileSync(join("models", name))))) as { asset: { extras: Record<string, string> } }).asset.extras;
     if (extras.author === "NASA") assert.ok(/painted out|removed|no mark/i.test(extras.changes) || NO_MARKS_FOUND.has(name), `${name} says what became of its marks`);

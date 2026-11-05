@@ -3,19 +3,24 @@ import { expect, type Page, test } from "@playwright/test";
 import { ROCKETS } from "../src/rockets.ts";
 
 const URL = "/uchusen-rockets/";
-const SHIPS = ["fleet-ship-03", "fleet-ship-ariake", "fleet-02"] as const;
-const names = SHIPS.map((id) => ROCKETS[id].name);
+const SHIPS = ["fleet-ship-01", "fleet-kyotori", "fleet-ship-03", "fleet-ship-ariake", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"] as const;
+/** What the Rocket row lists for SPX, in the registry's order: the ships, and the repair drone. Kit boxes stay off it. */
+const LISTED = ["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"] as const;
+const names = LISTED.map((id) => ROCKETS[id].name);
 
 const pressed = (page: Page, group: string) => page.locator(`#${group} button[aria-pressed="true"]`).allTextContents();
 const listed = (page: Page) => page.locator('#rockets button:visible').allTextContents();
 
-test("the Maker row and the Made by line read SPX for every fleet ship, by address and by click", async ({ page }) => {
+test("the Maker row and the Made by line read SPX for every fleet ship opened by address", async ({ page }) => {
   for (const id of SHIPS) {
     await page.goto(`${URL}?rocket=${id}`);
     expect(await pressed(page, "makers"), id).toEqual(["SPX"]);
     await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i);
     await expect(page.locator("#facts")).not.toContainText("SpaceX");
   }
+});
+
+test("the Maker row and the Made by line read SPX for every fleet ship chosen from the list", async ({ page }) => {
   await page.goto(URL);
   for (const id of SHIPS) {
     await page.locator('[data-testid="maker-fleet"]').click();
@@ -29,7 +34,9 @@ test("the Maker row and the Made by line read SPX for every fleet ship, by addre
 test("the Rocket list under SPX holds the fleet ships by their registry names, and no placeholder, on the demo and on the code builder", async ({ page }) => {
   await page.goto(URL);
   await page.locator('[data-testid="maker-fleet"]').click();
-  expect(await listed(page)).toEqual(names);
+  const got = await listed(page);
+  expect(got.every((name) => !name.startsWith("Fleet "))).toBe(true);
+  expect(got).toEqual(names);
   await page.goto(`${URL}builder.html`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await page.locator('[data-testid="maker-fleet"]').click();
@@ -69,7 +76,7 @@ async function spread(page: Page, png: Buffer): Promise<number> {
 for (const scheme of ["dark", "light"] as const) {
   test(`the chosen tab of a ship's panel under the 3D view is readable in the ${scheme} theme`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.goto(`${URL}?rocket=fleet-02`);
+    await page.goto(`${URL}?rocket=fleet-kaminari`);
     const tab = page.locator("#hero").locator('.panel [role="tab"][aria-selected="true"]');
     await expect(tab).toHaveText("Specification", { timeout: 60_000 });
     await tab.scrollIntoViewIfNeeded();

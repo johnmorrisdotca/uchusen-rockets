@@ -52,6 +52,7 @@ export const MATERIALS = {
   "fin-dark": { color: "#2a2b2f", metal: 0.4, rough: 0.55, fill: "dark" },
   white: { color: "#cfcfca", metal: 0, rough: 0.5, fill: "white" },
   black: { color: "#141518", metal: 0, rough: 0.45, fill: "dark" },
+  "ink-worn": { color: "#6a6e74", metal: 0.15, rough: 0.72, fill: "dark" },
   gold: { color: "#c8a24c", metal: 1, rough: 0.28, fill: "metal" },
   solar: { color: "#10163a", metal: 0.4, rough: 0.22, fill: "dark" },
   glass: { color: "#141c26", metal: 0.1, rough: 0.08, fill: "dark" },
@@ -105,6 +106,15 @@ export const MATERIALS = {
   soil: { color: "#4a3a2c", metal: 0, rough: 0.95, fill: "dark" },
   fabric: { color: "#6f7f93", metal: 0, rough: 0.85, fill: "metal" },
   wood: { color: "#a77b4e", metal: 0, rough: 0.7, fill: "metal" },
+  lawn: { color: "#5f9f3c", metal: 0, rough: 0.9, fill: "dark" },
+  "lawn-dark": { color: "#3f7a30", metal: 0, rough: 0.95, fill: "dark" },
+  meadow: { color: "#93b349", metal: 0, rough: 0.9, fill: "dark" },
+  shrub: { color: "#2c5f31", metal: 0, rough: 0.9, fill: "dark" },
+  bark: { color: "#5a4330", metal: 0, rough: 0.9, fill: "dark" },
+  flower: { color: "#e58aa8", metal: 0, rough: 0.7, fill: "dark" },
+  "crop-gold": { color: "#d6a93a", metal: 0, rough: 0.8, fill: "dark" },
+  "crop-green": { color: "#6fae3a", metal: 0, rough: 0.8, fill: "dark" },
+  "water-clear": { color: "#3d7ea3", metal: 0.55, rough: 0.06, fill: "dark" },
 } as const satisfies Record<string, MaterialSpec>;
 
 /**

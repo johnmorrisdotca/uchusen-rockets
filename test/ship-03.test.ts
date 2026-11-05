@@ -61,9 +61,9 @@ test("the identity and the specification: the SPX designation, the Japanese name
   assert.equal(IDENTITY.maker, "SPX");
   assert.equal(IDENTITY.japanese, "宮本");
   assert.equal(IDENTITY.meaning, "at the foot of the shrine");
-  assert.deepEqual([ENVELOPE.length, ENVELOPE.beam, ENVELOPE.height], [380, 118, 74]);
+  assert.deepEqual([ENVELOPE.length, ENVELOPE.beam, ENVELOPE.height], [380, 138, 74]);
   const lines = specification().map((line) => `${line.name}: ${line.value} ${line.note ?? ""}`).join("\n");
-  for (const text of ["ISV Miyamoto, SPX-452", "Romurusu class", "KAZE core v4", "DCD", "380 m", "118 m", "105,000 t", "20.42 years aboard", "21.03 years", "0.04 g sustained", "24,000 m2"]) assert.ok(lines.includes(text), text);
+  for (const text of ["ISV Miyamoto, SPX-452", "Romurusu class", "KAZE core v4", "DCD", "380 m", "138 m", "105,000 t", "20.42 years aboard", "21.03 years", "0.04 g sustained", "24,000 m2"]) assert.ok(lines.includes(text), text);
   assert.ok(HISTORY.service.includes("2459") && IDENTITY.firstFlight === 2456 && STATUS === "STATUS: PLANNED · FIRST FLIGHT 2456");
   assert.ok(!/in service|serving|was commissioned/i.test(Object.values(HISTORY).join(" ")), "the history reads as a plan");
   assert.equal(ROCKETS["fleet-ship-03"].madeBy.value, "SPX");
@@ -140,7 +140,7 @@ test("Miyamoto is in the registry: four variants, every slot's part exists, the 
   assert.deepEqual(shared?.record.trueTo, ["miyamoto", "miyamoto-deployed", "miyamoto-array", "miyamoto-relief", "miyamoto-no-collar"]);
   // the sister ship is a variant of the same model: its own row in the picker, its own marks and pod, the rest shared
   const sister = ROCKETS["fleet-ship-ariake"];
-  assert.equal(sister.variants.length, 2);
+  assert.equal(sister.variants.length, 5);
   assert.equal(sister.variants[0].name, "ISV 有明 Ariake, SPX-186");
   assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.drive, "drive-ariake");
   assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.pod, "pod-survey");
@@ -176,7 +176,7 @@ test("sections and decks: a label for every few percent of the length, and more 
   for (const module of ["drive", "engineering", "fuel-aft", "fuel-fore", "habitat", "command", "bow", "hangar-starboard", "hangar-port", "pod"]) assert.ok(SECTIONS.some((section) => section.module === module), module);
   assert.ok(labels().some((label) => label.side === "left") && labels().some((label) => label.side === "right"));
   // the label points stay inside the envelope
-  for (const label of labels()) assert.ok(Math.abs(label.at[0]) <= 60 && label.at[1] >= 0 && label.at[1] <= 380 && Math.abs(label.at[2]) <= 45, label.id);
+  for (const label of labels()) assert.ok(Math.abs(label.at[0]) <= 70 && label.at[1] >= 0 && label.at[1] <= 380 && Math.abs(label.at[2]) <= 45, label.id);
 });
 
 for (const variant of ["miyamoto", "ariake"] as const) test(`the build budget, ${variant}: the first picture inside a second, the full detail inside three, on this computer`, () => {
@@ -200,7 +200,7 @@ for (const variant of ["miyamoto", "ariake"] as const) test(`the build budget, $
 
 test("every module names the real hardware it descends from, and the pipes and struts are round", () => {
   for (const part of parts()) {
-    const key = part.id.replace(/-cutaway$/, "").replace(/-ariake$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod").replace(/^array-.*/, "array").replace(/^(shield-collar|collar-none)$/, "collar");
+    const key = part.id.replace(/-moved$/, "").replace(/-inboard$/, "").replace(/-cutaway$/, "").replace(/-ariake$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod").replace(/^array-.*/, "array").replace(/^(shield-collar|collar-none)$/, "collar").replace(/^stack-berth.*/, "stack-berth");
     assert.ok(ANCESTORS[key], key);
     assert.ok(part.note.includes("Descends from"), `${part.id}: ${part.note}`);
   }
@@ -282,7 +282,7 @@ test("Ariake fills all four hangar positions, each with the door and racks of Mi
   const lines = Object.fromEntries(specification("ariake").map((line) => [line.name, line.value]));
   assert.equal(lines["Hangar boxes"], "4");
   assert.equal(lines.Cargo, "5,600 t");
-  assert.equal(lines.Beam, "118 m");
+  assert.equal(lines.Beam, "138 m");
 });
 
 test("the class table, the variant records, the docs and the viewer agree: pod, side boxes, signature features, the sister link", () => {

@@ -37,6 +37,8 @@ The Romurusu class (ロムルス級) has two ships: ISV Miyamoto, SPX-452, and I
 | Refits | none extra | an extra sensor mast, a second solarium |
 | Interior theme | its own: blue and white | warm wood and dawn-gold |
 | Shared | hull, drive with shadow-shield collar, decks, length 380 m | same |
+| Hangar bodies | two Starship bodies side by side in each box, on cradles | the same, in all four boxes |
+| Service | a collar L for a Starship and a collar M for a Dragon, on the ventral side | the service ship: an open berth for a full stack, drawn in two placements, and a methane and oxygen depot |
 
 What sets Miyamoto apart:
 
@@ -53,7 +55,7 @@ What sets Ariake apart:
   | | Miyamoto | Ariake |
   |---|---|---|
   | Hangar boxes | 2 | 4 |
-  | Beam | 118 m | 118 m (the staggered pair already stands at the full beam; the added boxes fill the empty corners) |
+  | Beam | 138 m | 138 m (each box grew 10 m outward so two Super Heavy bodies sit side by side) |
   | Cargo | 2,800 t | 5,600 t |
   | Dry mass | 21,000 t | 25,000 t (the extra cargo and 600 t of framework for each added box) |
   | Full mass | 105,000 t | 109,000 t (the same 84,000 t of propellant) |
@@ -61,7 +63,7 @@ What sets Ariake apart:
   | 4.37 light years | 20.42 years aboard | 20.81 years aboard |
   | Range | 4.41 ly (the shield limit) | 4.39 ly (her fuel sets it; the benchmark route is still in reach) |
 
-  The beam does not change: the shoulders already stand at x = +-59 m on opposite sides.
+  The beam is 138 m: each box grew 10 m outward, so the shoulders stand at x = +-69 m. Two Super Heavy bodies, 18.3 m across their grid fins, sit side by side inside with 2 m between them and 2 m to each wall.
 - **Dawn-gold livery.** Miyamoto's hull is plain; Ariake wears a broad dawn-gold band and a pair of pinstripes round the habitation drum (twice), a pair along each hangar's roof and outer wall, two pinstripes and bands on the citadel, one on each bow shield layer and a pair on the drive's neck. Orange stays where it means "removable": on the shutter leaves and the shield tiles, and nowhere else.
 - **A survey pod by default.** On the keyed collar she carries the survey pod (a telescope in a yoke, a rack of six probes, a radar dish, a lidar drum, a magnetometer boom with its sensor ball and two instrument containers). It swaps with the relay and relief pods like the others.
 - **A refit.** A lattice sensor mast stands on the citadel aft of the dome (three round legs braced at every level, a telescope, a dish, a lidar turret and a magnetometer boom), and the solarium is twice the size: a glazed hall on each side of the dome.
@@ -78,7 +80,7 @@ Strengths: independent command and medical systems, protected navigation, two se
 
 | | |
 |---|---|
-| Length · beam · height | 380 m (tail to the bow's front layer) · 118 m across both hangar shoulders · 74 m keel to the dorsal pod |
+| Length · beam · height | 380 m (tail to the bow's front layer) · 138 m across both hangar shoulders · 74 m keel to the dorsal pod |
 | Dry mass | 21,000 t, of which 2,800 t is cargo (relief and equipment containers) |
 | Full mass | 105,000 t: 84,000 t of propellant, 4,200 t of it a protected reserve |
 | Crew and passengers | 144 crew; 72 more berths on an extended expedition; 180 evacuees for up to 30 days |
@@ -235,3 +237,7 @@ The ship builds on the visitor's computer, once a visit. No `.glb` is shipped; t
 | Star Wars tradition | Recessed hangars, layered plating, a visible thrust frame | No triangular plan, no split bridge towers, no dorsal runway, no copied bay arrangement |
 
 The reference pictures were mood only. Nothing is traced; every shape is built in code from numbers.
+
+## Motion
+
+With the Motion choice on, the hangar door leaves of Miyamoto and Ariake swing up and back, the deployed gold array turns on its root beam, and the command tower's dishes tilt; see [motion.md](motion.md) for the rates and what a rotation-only move cannot show.

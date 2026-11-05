@@ -6,6 +6,7 @@ import { BARREL, COLLAR, SPINE as S, STATION } from "./dims.ts";
 import { catwalk, pipe } from "./hulls.ts";
 import { faceOf, rail } from "./faces.ts";
 import { capsule, collarAt, OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
+import { miyamotoPorts } from "./service.ts";
 
 /** The spine from y0 to y1: an open truss, as the integrated truss of the ISS and the long spines of the Mars transfer vehicle studies are. Four round chords with ball joints at the nodes, a box frame of I-beams at every bay, round diagonals, and the services (conduit bundles, a valve skid, a ladder) strung inside it. */
 export function spine(y0: number, y1: number, detail = 1): Piece[] {
@@ -51,8 +52,8 @@ export function spine(y0: number, y1: number, detail = 1): Piece[] {
 }
 
 /** One barrel: a capsule in a water jacket, with ring frames, orange cassette bands, vented fuel cassettes on the outer face, level gauges, valve blocks at each dome and the cradles that hold it to the spine. */
-function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean, detail: number): Piece[] {
-  const x = side * BARREL.x;
+function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean, detail: number, xAbs: number = BARREL.x): Piece[] {
+  const x = side * xAbs;
   const z = BARREL.z;
   const r = BARREL.r;
   const straight: [number, number] = [y0 + r, y1 - r];
@@ -129,11 +130,11 @@ function barrel(side: 1 | -1, y0: number, y1: number, cut: boolean, detail: numb
 }
 
 /** A pair of barrels and the spine between them: `aft` or `fore`. */
-export function fuelSection(which: "aft" | "fore", cut: boolean, detail = 1): Piece[] {
+export function fuelSection(which: "aft" | "fore", cut: boolean, detail = 1, xAbs: number = BARREL.x): Piece[] {
   const [Y0, Y1] = which === "aft" ? STATION.fuelAft : STATION.fuelFore;
   const span = which === "aft" ? BARREL.aft : BARREL.fore;
   const out: Piece[] = [...spine(Y0, Y1, detail)];
-  for (const side of [-1, 1] as const) out.push(...barrel(side, span[0], span[1], cut, detail));
+  for (const side of [-1, 1] as const) out.push(...barrel(side, span[0], span[1], cut, detail, xAbs));
   out.push(...collar("L", Y0, -1), ...collar("L", Y1, 1));
   if (which === "aft") {
     // a header tank slung under the spine's end, with its own feed
@@ -160,6 +161,7 @@ export function fuelSection(which: "aft" | "fore", cut: boolean, detail = 1): Pi
       out.push(cub("hull-grey-dark", [5.6 * Math.cos(a) - 0.4, 5.6 * Math.cos(a) + 0.4], [(k0 + k1) / 2 + 5.6 * Math.sin(a) - 0.4, (k0 + k1) / 2 + 5.6 * Math.sin(a) + 0.4], [-S.hz - 31.8, -S.hz - 31.4]), cub("lamp-blue", [5.6 * Math.cos(a) - 0.12, 5.6 * Math.cos(a) + 0.12], [(k0 + k1) / 2 + 5.6 * Math.sin(a) - 0.12, (k0 + k1) / 2 + 5.6 * Math.sin(a) + 0.12], [-S.hz - 32, -S.hz - 31.8]));
     }
     for (const s of [-1, 1]) out.push(...rail(faceOf({ x: [-7, 7], y: [k0, k1], z: [-S.hz - 30, -S.hz - 24] }, "x", s as 1 | -1), -S.hz - 27, k0 + 4, k1 - 4));
+    if (xAbs === BARREL.x) out.push(...miyamotoPorts());
   }
   return out;
 }

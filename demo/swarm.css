@@ -1,0 +1,4 @@
+.swarm-page { background: #070b14; color: #d5e2f2; padding: 16px; }
+.swarm-page figure { margin: 0; max-width: 420px; }
+.swarm-page svg { width: 100%; height: auto; background: #070b14; }
+.swarm-page figcaption { font: 14px sans-serif; margin-top: 6px; }

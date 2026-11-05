@@ -7,10 +7,12 @@ import {
   CanvasTexture,
   Color,
   DirectionalLight,
+  EdgesGeometry,
   DoubleSide,
   Group,
   HemisphereLight,
   LineSegments,
+  LineBasicMaterial,
   LinearMipmapLinearFilter,
   MathUtils,
   type Material,
@@ -41,15 +43,20 @@ import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
-import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
+import { angleAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
+import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
+import { playFrame } from "../buildPlay.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
+import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
+import { SwarmRig } from "./swarm.ts";
 import type { Spin } from "../spin.ts";
 import { besideLabel } from "../beside.ts";
 import { fliesInSpace } from "../rockets.ts";
+import { wrapShift } from "./drift.ts";
 import { GroundKit } from "./ground.ts";
 import { placeNameLabels } from "./namePlace.ts";
 import { plinthGroup, type Footprint } from "./plinth.ts";
@@ -89,6 +96,8 @@ export interface ViewerOptions {
 }
 
 const IDLE_STOP_MS = 90_000;
+/** The moving parts of a fleet ship are drawn at most thirty times a second. */
+const MOTION_GAP_MS = 1000 / 30;
 const MOVE_MS = 1400;
 /** Wheel steps closer together than this belong to one turn of the wheel, so a zoom that reaches its end part-way through does not hand the rest to the page. */
 const WHEEL_GESTURE_MS = 300;
@@ -187,6 +196,11 @@ interface PartView {
 const NOZZLE_MATERIALS: ReadonlySet<string> = new Set(["bell", "bell-inside", "engine-metal"]);
 const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
 /** The pictures a licensed model's material may hold (the shared sky it reflects is not one of them). */
+/** How brightly a painted model's glow picture shines when the lights are on. */
+const MODEL_GLOW = 1.5;
+/** A drone is drawn this many times life size at most, and a ship's longest side over this many metres: a saucer about a fiftieth of the ship across (Miyamoto, 380 m, gets 7.6). */
+const DRONE_SCALE_MAX = 8;
+const DRONE_SHIP_RATIO = 50;
 const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
 export class RocketViewer {
@@ -199,6 +213,10 @@ export class RocketViewer {
   private scene = new Scene();
   private camera = new PerspectiveCamera(FOV_DEG, 3 / 4, 1, 4000);
   private root = new Group();
+  private scaleMode = false;
+  private scaleZoom: { from: number; to: number } | null = null;
+  private ghost: { group: Group; material: LineBasicMaterial; start: number | null } | null = null;
+  private scaleBar: HTMLElement | null = null;
   private parts: PartView[] = [];
   private built: Built | null = null;
   private look: LookName = "line";
@@ -246,6 +264,12 @@ export class RocketViewer {
   private compiling = 0;
   private compiled = new Set<string>();
   private settled: Promise<void> = Promise.resolve();
+  /** The moving parts of the ship on show, whether they move, how fast, when the show began and when a frame of it was last drawn. */
+  private motions: readonly Motion[] = [];
+  private motionOn = false;
+  private motionSpeed: MotionSpeed = 1;
+  private motionT0 = 0;
+  private motionDrawn = 0;
   private marks: { mark: ViewerMark; el: HTMLElement }[] = [];
   private markHost: HTMLElement | null = null;
   /** The words that say what stands beside the craft: its name and length, under its foot. One for each craft named, by craft (-1 is the rocket itself). */
@@ -254,6 +278,17 @@ export class RocketViewer {
   private plinths: Group | null = null;
   /** The words on a plinth. The compare page sets them in the reader's language. */
   private scaleNote = "shown on the ground for scale";
+  /** A floating picture has no plinth, and the names sit in a column at the top right. */
+  private floating = false;
+  /** The page can hide the names without rebuilding the picture. */
+  private nameLabels = true;
+  /** Where a thrown craft has got to, and how fast it is still going, in world metres. */
+  private toss = new Map<number, { offset: Vector3; velocity: Vector3 }>();
+  private grab: { craft: number; x: number; y: number; t: number; sx: number; sy: number; t0: number } | null = null;
+  private swarm: SwarmRig | null = null;
+  private progressAt: number | null = null;
+  private progressFramed = false;
+  private progressSteps: readonly { slot: string; start: number; days: number }[] | null = null;
   private focusing = false;
   private nearSaid = false;
   private nearAt = 0;
@@ -321,7 +356,17 @@ export class RocketViewer {
     this.controls.addEventListener("start", () => this.touched());
     this.controls.addEventListener("change", () => this.wake());
     this.canvas.addEventListener("wheel", this.onWheel, { passive: false });
-    this.canvas.addEventListener("pointerdown", () => this.canvas.focus({ preventScroll: true }));
+    this.canvas.addEventListener(
+      "pointerdown",
+      (event) => {
+        this.canvas.focus({ preventScroll: true });
+        this.grabCraft(event);
+      },
+      true,
+    );
+    this.canvas.addEventListener("pointermove", (event) => this.pullCraft(event));
+    this.canvas.addEventListener("pointerup", (event) => this.releaseCraft(event));
+    this.canvas.addEventListener("pointercancel", (event) => this.releaseCraft(event));
     this.canvas.addEventListener("dblclick", () => {
       if (!this.driven) this.setAngle(this.homeAngle, true);
     });
@@ -346,15 +391,41 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Floating leaves the plinth out and stacks the names at the top right. */
+  setFloating(on: boolean): void {
+    const changed = this.floating !== on;
+    this.floating = on;
+    this.canvas.dataset.float = on ? "on" : "off";
+    this.canvas.style.touchAction = on ? "none" : "pan-y";
+    if (!on) this.stopToss();
+    if (!changed) return;
+    if (this.built) this.fitPlinths();
+    this.placeBeside();
+    this.wake();
+  }
+
+  /** Hides or shows the names on the picture. The model stays as it is. */
+  setNameLabels(on: boolean): void {
+    if (this.nameLabels === on) return;
+    this.nameLabels = on;
+    this.placeBeside();
+    this.wake();
+  }
+
   /** Loads a rocket and shows it. The camera's angle stays when a rocket is already showing. */
   async load(built: Built, show: string, look: LookName, angle: Angle | null): Promise<void> {
     const generation = ++this.generation;
     const bytes = built.glb().bytes;
     const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, "");
     if (this.disposed || generation !== this.generation) return;
+    const old = this.built;
+    const changingCraft = Boolean(this.scaleMode && old && (old.report.variant?.rocket !== built.report.variant?.rocket || old.report.variant?.id !== built.report.variant?.id));
+    if (changingCraft) this.makeGhost();
     this.disposeParts();
     this.root.clear();
     this.parts = [];
+    this.toss.clear();
+    this.grab = null;
     this.built = built;
     this.show = show;
     this.shadows = built.parts.some((part) => part.record.rocket.startsWith("fleet-"));
@@ -366,6 +437,7 @@ export class RocketViewer {
       if (!source) continue;
       const holder = new Group();
       holder.name = part.slot;
+      holder.userData.craft = part.craft ?? -1;
       const code = new Group();
       holder.add(code);
       const view: PartView = {
@@ -408,9 +480,22 @@ export class RocketViewer {
       this.parts.push(view);
     }
     this.addGlow();
+    this.stepMotion(performance.now(), true);
     this.fitShadow();
     this.setLook(look);
-    this.frameTo(angle ?? this.currentAngle(), false);
+    if (changingCraft && !this.options.reducedMotion) {
+      this.homeAngle = angle ?? this.currentAngle();
+      const framing = this.framingFor(this.homeAngle);
+      const offset = this.camera.position.clone().sub(this.controls.target);
+      const oldDistance = offset.length();
+      const reference = transitionReferenceDistance(oldDistance, framing.distance);
+      const zoom = this.camera.zoom;
+      this.camera.position.copy(this.controls.target).add(offset.setLength(reference));
+      this.scaleZoom = { from: zoom * reference / oldDistance, to: zoom };
+      this.camera.zoom = this.scaleZoom.from;
+      this.camera.updateProjectionMatrix();
+      this.startPose(framing, 1000, false);
+    } else this.frameTo(angle ?? this.currentAngle(), false);
     if (this.clockNow) {
       this.flightKey = "";
       this.flightOn = false;
@@ -419,10 +504,69 @@ export class RocketViewer {
     this.canvas.dataset.ready = "true";
     this.canvas.dataset.parts = this.parts.filter((part) => !part.beside).map((part) => part.slot).join(" ");
     this.canvas.dataset.beside = built.beside.length ? "on" : "off";
+    this.applyProgress();
     this.fitPlinths();
     this.drivenDirty = this.driven !== null;
     this.wake();
     await this.settled;
+  }
+
+  setScaleMode(on: boolean): void {
+    this.scaleMode = on;
+    this.canvas.dataset.scale = on ? "true" : "false";
+    if (!on) {
+      this.scaleZoom = null;
+      this.lens();
+      this.clearGhost();
+      this.scaleBar?.remove();
+      this.scaleBar = null;
+    } else if (!this.scaleBar) {
+      const bar = document.createElement("div");
+      bar.dataset.testid = "scale-bar";
+      bar.style.cssText = "position:absolute;left:16px;bottom:16px;color:#fff;font:12px system-ui;text-shadow:0 1px 3px #000;pointer-events:none;border-bottom:2px solid currentColor;text-align:center";
+      this.holder.append(bar);
+      this.scaleBar = bar;
+    }
+    this.updateScaleBar();
+    this.wake();
+  }
+
+  private clearGhost(): void {
+    if (!this.ghost) return;
+    this.ghost.group.traverse((node) => { if (node instanceof LineSegments) node.geometry.dispose(); });
+    this.ghost.material.dispose();
+    this.ghost.group.removeFromParent();
+    this.ghost = null;
+    this.canvas.dataset.ghost = "off";
+  }
+
+  private makeGhost(): void {
+    this.clearGhost();
+    if (!this.built) return;
+    const oldBounds = this.built.boundsOf("together");
+    const group = new Group();
+    const material = new LineBasicMaterial({ color: 0xaec8dc, transparent: true, opacity: 0.65, depthWrite: false, depthTest: false });
+    this.root.updateMatrixWorld(true);
+    for (const part of this.parts) {
+      if (part.beside || !part.holder.visible) continue;
+      for (const { mesh } of part.faces) {
+        const line = new LineSegments(new EdgesGeometry(mesh.geometry, 25), material);
+        line.applyMatrix4(mesh.matrixWorld);
+        group.add(line);
+      }
+    }
+    group.position.x = -(oldBounds.max[0] - oldBounds.min[0]) - 5;
+    this.scene.add(group);
+    this.ghost = { group, material, start: null };
+    this.canvas.dataset.ghost = "on";
+  }
+
+  private updateScaleBar(): void {
+    if (!this.scaleBar) return;
+    const metresPerPixel = 2 * this.camera.position.distanceTo(this.controls.target) * Math.tan(MathUtils.degToRad(FOV_DEG / 2)) / (Math.max(1, this.holder.clientHeight) * this.camera.zoom);
+    const metres = scaleBarMetres(metresPerPixel, this.holder.clientWidth);
+    this.scaleBar.style.width = `${metres / metresPerPixel}px`;
+    this.scaleBar.textContent = metres === 1000 ? "1 km" : `${metres} m`;
   }
 
   /** Moves the parts from the packed nodes into `into`, keeping each mesh's own placement. */
@@ -616,6 +760,43 @@ export class RocketViewer {
     return wait;
   }
 
+  /** The moving parts of the ship: what each named group does and whether it does it now. Off, or under reduced motion, every part stands at rest and the view draws nothing for them. */
+  setMotion(motions: readonly Motion[], on: boolean, speed: MotionSpeed): void {
+    const was = this.motionOn;
+    this.motions = motions;
+    this.motionOn = on && motions.length > 0 && !this.options.reducedMotion;
+    this.motionSpeed = speed;
+    if (this.motionOn && !was) this.motionT0 = performance.now();
+    this.stepMotion(performance.now(), true);
+    this.wake();
+  }
+
+  /** Puts every tagged group at its angle for `now`, or at rest when motion is off. Only a group whose angle changed is touched. */
+  private stepMotion(now: number, force = false): void {
+    if (!this.built) return;
+    if (!force && now - this.motionDrawn < MOTION_GAP_MS) return;
+    this.motionDrawn = now;
+    const seconds = (now - this.motionT0) / 1000;
+    let changed = false;
+    let shown: number | undefined;
+    for (const part of this.parts) {
+      for (const move of part.moves) {
+        const motion = this.motionOn ? this.motions.find((one) => one.group === move.name) : undefined;
+        const angle = motion ? angleAt(motion, seconds, this.motionSpeed) : 0;
+        if (motion && shown === undefined) shown = angle;
+        if (Math.abs(angle - move.angle) < 0.005) continue;
+        move.angle = angle;
+        move.group.quaternion.setFromAxisAngle(move.axis, MathUtils.degToRad(angle));
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.needsDraw = true;
+      this.canvas.dataset.motion = this.motionOn ? `${this.motionSpeed}x` : "off";
+      this.canvas.dataset.motionAngle = shown === undefined ? "" : shown.toFixed(1);
+    } else if (!this.motionOn && this.canvas.dataset.motion !== "off") this.canvas.dataset.motion = "off";
+  }
+
   /** Which engines burn: at full thrust every one that shows, a count for each part, or none. Nothing is made or freed by this after a part's first flame: only which of its flames are drawn changes. */
   setEngines(lit: { readonly [slot: string]: number } | "full" | null): void {
     // a flight keeps its own, and what was asked for comes back after it
@@ -667,6 +848,7 @@ export class RocketViewer {
     this.burningNow = burning;
     this.glowOn = this.lit === "full" || burning > 0;
     for (const [material, strength] of this.glowing) material.emissiveIntensity = this.glowOn ? strength : 0;
+    this.swarm?.setGlow(this.glowOn);
     this.burnSlots = lowest;
     this.plumes.setBurning(burning);
     this.plumes.light.intensity = burning === 0 || this.look !== "painted" ? 0 : Math.min(900, 120 + burning * 40);
@@ -747,10 +929,16 @@ export class RocketViewer {
   /** What the picture must hold: all of a flight while one is on. */
   private boundsNow() {
     if (!this.built) throw new Error("nothing is loaded");
-    if (!this.clockNow) return this.litBounds();
-    const { height, parts } = this.flightParts();
-    const { min, max } = flightBounds(this.clockNow.flight, parts, height);
-    return { min, max };
+    if (this.clockNow) {
+      const { height, parts } = this.flightParts();
+      const { min, max } = flightBounds(this.clockNow.flight, parts, height);
+      return { min, max };
+    }
+    const box = this.litBounds();
+    if (this.progressAt === null) return box;
+    const longest = Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]);
+    const pad = Math.max(6, longest * 0.06);
+    return { min: [box.min[0] - pad, box.min[1] - pad * 0.25, box.min[2] - pad] as Vec3, max: [box.max[0] + pad, box.max[1] + pad * 0.2, box.max[2] + pad] as Vec3 };
   }
 
   private flightParts() {
@@ -848,6 +1036,11 @@ export class RocketViewer {
           if (material.name === "steel") material.roughness = 0.46;
           this.dullTile(material, material.name);
           if (material.name === "tile") material.color.setScalar(0.42);
+          // a model with a glow picture (the repair drone's lights) lights up with the engines, like this package's own lamps
+          if (material.emissiveMap) {
+            material.emissiveIntensity = this.glowOn ? MODEL_GLOW : 0;
+            this.glowing.set(material, MODEL_GLOW);
+          }
         });
         part.holder.add(gltf.scene);
         part.modelState = "ready";
@@ -1115,6 +1308,107 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Shows the build at `at`, or the finished ship when `at` is null. Slots not yet begun are hidden. A slot being built is on its way from the stack, with the drones around it. */
+  setProgress(at: number | null, steps: readonly { slot: string; start: number; days: number }[] | null): void {
+    this.progressAt = at;
+    this.progressSteps = steps;
+    if (this.built && this.parts.length) this.applyProgress();
+  }
+
+  private applyProgress(): void {
+    const built = this.built;
+    if (!built) return;
+    const places = built.placesOf(this.show);
+    const at = this.progressAt;
+    const steps = this.progressSteps;
+    const restore = at === null || !steps || steps.length === 0;
+    if (restore) {
+      for (const part of this.parts) {
+        const place = places.find((one) => one.slot === part.slot);
+        if (!place) continue;
+        part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.visible = place.shown;
+      }
+      this.swarm?.hide();
+      delete this.canvas.dataset.swarm;
+      delete this.canvas.dataset.going;
+      delete this.canvas.dataset.built;
+      delete this.canvas.dataset.showing;
+      delete this.canvas.dataset.weld;
+      delete this.canvas.dataset.swarmNear;
+      if (this.progressFramed) this.setAngle(this.homeAngle, false);
+      this.progressFramed = false;
+      this.wake();
+      return;
+    }
+    const frame = playFrame(steps, at);
+    const shown = places.filter((place) => place.shown && !place.slot.startsWith("beside-"));
+    if (shown.length === 0) return;
+    const dock: [number, number, number] = [Math.max(...shown.map((place) => place.at[0])) + 40, shown.reduce((sum, place) => sum + place.at[1], 0) / shown.length, 0];
+    const slotAt = new Map(shown.map((place) => [place.slot, place.at] as const));
+    for (const part of this.parts) {
+      if (part.beside) continue;
+      const place = places.find((one) => one.slot === part.slot);
+      const step = steps.find((one) => one.slot === part.slot);
+      if (!place || !step) continue;
+      const seated = grounded(step.slot, frame.done);
+      if (frame.done.includes(step.slot) && seated) {
+        part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.visible = place.shown;
+      } else if (frame.going.includes(step.slot) && seated) {
+        const flown = carries([{ drone: 0, slot: step.slot }], at, steps, (slot) => slotAt.get(slot), dock)[0];
+        if (flown) part.holder.position.set(flown.part[0], flown.part[1], flown.part[2]);
+        part.holder.visible = true;
+      } else part.holder.visible = false;
+    }
+    const open = frame.going.filter((slot) => grounded(slot, frame.done));
+    const workSteps = steps.filter((step) => !frame.going.includes(step.slot) || open.includes(step.slot));
+    const count = swarmCount(built.report.variant?.id ?? "") ?? 0;
+    const jobs = open.length === 0 ? [] : swarmJobs(workSteps, count, at);
+    const ys = shown.map((place) => place.at[1]);
+    const poses = carries(jobs, at, workSteps, (slot) => slotAt.get(slot), dock, [Math.min(...ys), Math.max(...ys)]);
+    this.swarm ??= new SwarmRig(this.root, async (file) => (await new GLTFLoader().loadAsync(`${this.options.assets}models/${file}`)).scene, () => this.wake());
+    this.swarm.setGlow(this.glowOn);
+    // a drone is drawn larger than life on a big ship, about a fiftieth of its length across, so it reads at the distance the ship is seen from
+    const bounds = built.boundsOf(this.show);
+    const longest = Math.max(bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]);
+    const boxOf = new Map(built.parts.map((part) => [part.slot, part.bounds]));
+    const shownAt = performance.now();
+    this.swarm.show(
+      poses.map((pose) => {
+        const box = pose.duty === "work" ? boxOf.get(pose.slot) : undefined;
+        return {
+          where: pose.where,
+          part: pose.part,
+          weld: pose.duty === "work",
+          duty: pose.duty,
+          skin: box
+            ? {
+                min: [pose.part[0] + box.min[0], pose.part[1] + box.min[1], pose.part[2] + box.min[2]] as [number, number, number],
+                max: [pose.part[0] + box.max[0], pose.part[1] + box.max[1], pose.part[2] + box.max[2]] as [number, number, number],
+              }
+            : undefined,
+        };
+      }),
+      jobs.length ? [] : berthRing(count, dock),
+      dock,
+      this.options.reducedMotion,
+      Math.min(DRONE_SCALE_MAX, Math.max(1, longest / DRONE_SHIP_RATIO)),
+    );
+    this.canvas.dataset.swarmShow = (performance.now() - shownAt).toFixed(2);
+    if (poses.some((pose) => pose.duty === "work")) this.canvas.dataset.weld = this.options.reducedMotion ? "dot" : "live";
+    else delete this.canvas.dataset.weld;
+    this.canvas.dataset.swarm = String(count);
+    this.canvas.dataset.going = frame.going.join(" ");
+    this.canvas.dataset.built = frame.done.filter((slot) => grounded(slot, frame.done)).join(" ");
+    this.canvas.dataset.showing = this.parts.filter((part) => !part.beside && part.holder.visible).map((part) => part.slot).join(" ");
+    if (!this.progressFramed) {
+      this.progressFramed = true;
+      this.setAngle({ az: this.homeAngle.az, el: -4 }, false);
+    }
+    this.wake();
+  }
+
   dispose(): void {
     this.disposed = true;
     cancelAnimationFrame(this.frame);
@@ -1123,6 +1417,8 @@ export class RocketViewer {
     this.resize.disconnect();
     this.controls.dispose();
     this.disposeParts();
+    this.clearGhost();
+    this.scaleBar?.remove();
     this.plumes.dispose();
     this.ground?.dispose();
     this.glow?.geometry.dispose();
@@ -1138,6 +1434,8 @@ export class RocketViewer {
 
   /** Lets the graphics card have back what the parts took: geometries, the thick lines' materials and a licensed model's own materials and pictures. */
   private disposeParts(): void {
+    this.swarm?.dispose();
+    this.swarm = null;
     this.clearPlinths();
     this.freePlumes();
     for (const part of this.parts) {
@@ -1237,6 +1535,11 @@ export class RocketViewer {
 
   /** What stands beside the craft is named: a caption under its own foot, kept inside the picture. A picture built with names names every craft, the rocket too; otherwise only the one beside it is. A craft that flies in space adds the plinth's words on a second line. */
   private placeBeside(): void {
+    if (!this.nameLabels) {
+      for (const el of this.besideEls.values()) el.remove();
+      this.besideEls.clear();
+      return;
+    }
     const names = this.built?.names ?? [];
     const labels = names.length ? names.map((text, index) => ({ craft: index - 1, text })) : this.parts.some((part) => part.beside) ? [{ craft: 0, text: besideLabel() }] : [];
     for (const [craft, el] of this.besideEls) {
@@ -1258,7 +1561,7 @@ export class RocketViewer {
         this.hostOfMarks().appendChild(el);
         this.besideEls.set(craft, el);
       }
-      const note = foot?.flies && names.length ? this.scaleNote : "";
+      const note = !this.floating && foot?.flies && names.length ? this.scaleNote : "";
       const caption = note ? `${text}\n${note}` : text;
       if (el.dataset.caption !== caption) {
         el.dataset.caption = caption;
@@ -1280,6 +1583,15 @@ export class RocketViewer {
       el.style.display = "block";
       el.style.transform = "translate(0px,0px)";
       spots.push({ el, footX: foot.x, footY: foot.y });
+    }
+    if (this.floating) {
+      let y = 8;
+      for (const spot of spots) {
+        const w = spot.el.offsetWidth;
+        spot.el.style.transform = `translate(${Math.round(width - w - 8)}px,${y}px)`;
+        y += (spot.el.offsetHeight || 16) + 4;
+      }
+      return;
     }
     const placed = placeNameLabels(
       spots.map((spot) => ({ footX: spot.footX, footY: spot.footY, w: spot.el.offsetWidth, h: spot.el.offsetHeight || 16 })),
@@ -1328,10 +1640,10 @@ export class RocketViewer {
     return [...boxes.values()];
   }
 
-  /** Stands a marked plinth under each craft that flies in space, when the picture names the craft. The plinth is not in the camera's box. */
+  /** Stands a marked plinth under each craft that flies in space, when the picture names the craft. The plinth is not in the camera's box. A floating picture has none. */
   private fitPlinths(): void {
     this.clearPlinths();
-    const feet: Footprint[] = this.built?.names.length ? this.craftBoxes().filter((box) => fliesInSpace(box.rocket)).map((box) => ({ min: box.min, max: box.max })) : [];
+    const feet: Footprint[] = this.floating || !this.built?.names.length ? [] : this.craftBoxes().filter((box) => fliesInSpace(box.rocket)).map((box) => ({ min: box.min, max: box.max }));
     this.plinths = plinthGroup(feet);
     if (feet.length) this.root.add(this.plinths);
     this.canvas.dataset.plinth = feet.length ? "on" : "off";
@@ -1443,6 +1755,10 @@ export class RocketViewer {
       if (!this.pose) this.applyDriven();
       this.needsDraw = true;
     }
+    if (this.ghost && this.ghost.start === null) {
+      this.ghost.start = now;
+      if (this.pose) this.pose.start = performance.now();
+    }
     if (this.pose) {
       const { from, to, start, ms, moveParts } = this.pose;
       const k = Math.min(1, (performance.now() - start) / ms);
@@ -1458,6 +1774,10 @@ export class RocketViewer {
       const aim = this.drivenAngle();
       if (aim) s.setFromVector3(new Vector3(...directionOf(aim)).setLength(s.radius));
       this.camera.position.copy(this.controls.target).add(new Vector3().setFromSpherical(s));
+      if (this.scaleZoom) {
+        this.camera.zoom = MathUtils.lerp(this.scaleZoom.from, this.scaleZoom.to, e);
+        this.camera.updateProjectionMatrix();
+      }
       if (moveParts)
         for (const part of this.parts) {
           // lifts clear first, then across, then down: a stage does not slide through another
@@ -1468,6 +1788,8 @@ export class RocketViewer {
       if (k >= 1) {
         const done = this.pose.moveParts;
         this.pose = null;
+        if (this.scaleZoom && this.built) this.limits(this.framingFor(this.currentAngle()).distance);
+        this.scaleZoom = null;
         if (done) this.finishParts();
         this.drivenDirty = this.driven !== null;
       }
@@ -1479,18 +1801,45 @@ export class RocketViewer {
       this.applyFlight();
       this.options.onFlight?.();
     }
+    const motioning = this.motionOn && !this.clockNow;
+    if (motioning) this.stepMotion(now);
+    const welding = (this.swarm?.live() ?? false) && !this.options.reducedMotion;
+    if (welding) {
+      this.swarm?.step(now / 1000);
+      this.needsDraw = true;
+    }
     const flaming = this.burningNow > 0 && !this.options.reducedMotion && (flying || performance.now() < this.flameUntil);
     if (flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
       this.flameDrawn = now;
       this.plumes.setTime(now / 1000);
       this.needsDraw = true;
     }
+    if (this.ghost) {
+      const elapsed = now - (this.ghost.start ?? now);
+      if (elapsed >= 2000) this.clearGhost();
+      else {
+        this.ghost.material.opacity = 0.65 * Math.min(1, (2000 - elapsed) / 500);
+        this.needsDraw = true;
+      }
+    }
+    this.coastDrift(dt);
     const changed = this.controls.update(dt);
     if (this.needsDraw || changed || this.pose) {
       this.syncSizes();
+      if (this.swarm) {
+        const began = performance.now();
+        this.canvas.dataset.swarmNear = String(this.swarm.lod([this.camera.position.x, this.camera.position.y, this.camera.position.z]));
+        this.canvas.dataset.swarmLod = (performance.now() - began).toFixed(3);
+      }
+      const drawn = performance.now();
       this.renderer.render(this.scene, this.camera);
+      const info = this.renderer.info.render;
+      this.canvas.dataset.frameMs = (performance.now() - drawn).toFixed(2);
+      this.canvas.dataset.drawCalls = String(info.calls);
+      this.canvas.dataset.triangles = String(info.triangles);
       this.placeMarks();
       this.placeBeside();
+      this.updateScaleBar();
       if (this.options.onNear && !this.nearSaid && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {
         this.nearSaid = true;
         this.options.onNear();
@@ -1508,10 +1857,16 @@ export class RocketViewer {
         this.canvas.dataset.zoom = this.driven.zoom.toFixed(2);
         this.canvas.dataset.pan = `${Math.round(this.driven.panX)},${Math.round(this.driven.panY)}`;
       }
+      if (this.floating) {
+        const craft = this.craftBoxes().find((one) => one.craft === -1) ?? this.craftBoxes()[0];
+        const screen = craft ? this.screenBox(craft.min, craft.max) : null;
+        this.canvas.dataset.craft = screen ? `${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX)},${Math.round(screen.maxY)}` : "";
+      }
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying)) this.frame = requestAnimationFrame(this.tick);
+    const drifting = this.drifting();
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || drifting || this.ghost)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 
@@ -1564,6 +1919,218 @@ export class RocketViewer {
   }
 
   /** The wheel over the view zooms it, as does a pinch (Ctrl or Command and the wheel). A wheel that starts with the zoom already at its end, or a sideways swipe, leaves the page to scroll. */
+  /** A drag that starts on a craft throws that craft. Empty space still turns the picture. */
+  private grabCraft(event: PointerEvent): void {
+    if (!this.floating || event.button !== 0 || !event.isPrimary) return;
+    const craft = this.craftUnder(event);
+    if (craft === null) {
+      this.canvas.dataset.hit = "miss";
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const toss = this.tossOf(craft);
+    toss.velocity.set(0, 0, 0);
+    const now = performance.now();
+    this.grab = { craft, x: event.clientX, y: event.clientY, t: now, sx: event.clientX, sy: event.clientY, t0: now };
+    this.canvas.dataset.hit = String(craft);
+    window.addEventListener("pointermove", this.onPull);
+    window.addEventListener("pointerup", this.onRelease);
+    window.addEventListener("pointercancel", this.onRelease);
+    this.canvas.dataset.drift = "0";
+    this.touched();
+  }
+
+  private onPull = (event: PointerEvent): void => this.pullCraft(event);
+
+  private onRelease = (event: PointerEvent): void => {
+    window.removeEventListener("pointermove", this.onPull);
+    window.removeEventListener("pointerup", this.onRelease);
+    window.removeEventListener("pointercancel", this.onRelease);
+    this.releaseCraft(event);
+  };
+
+  private pullCraft(event: PointerEvent): void {
+    const grab = this.grab;
+    if (!grab || !event.isPrimary) return;
+    const dx = event.clientX - grab.x;
+    const dy = event.clientY - grab.y;
+    grab.x = event.clientX;
+    grab.y = event.clientY;
+    grab.t = performance.now();
+    this.shiftCraft(grab.craft, dx, dy);
+    this.wrapDrift();
+    this.applyDrift();
+    this.canvas.dataset.moves = String(Number(this.canvas.dataset.moves ?? "0") + 1);
+    this.canvas.dataset.thrown = this.tossOf(grab.craft).offset.length().toFixed(2);
+    this.wake();
+  }
+
+  private releaseCraft(event: PointerEvent): void {
+    const grab = this.grab;
+    if (!grab) return;
+    this.grab = null;
+    if (this.options.reducedMotion) return;
+    const elapsed = Math.max(0.05, (performance.now() - grab.t0) / 1000);
+    const step = this.metresPerPixel(grab.craft);
+    const { right, up } = this.cameraAxes();
+    const toss = this.tossOf(grab.craft);
+    toss.velocity.copy(right).multiplyScalar(((event.clientX - grab.sx) / elapsed) * step).addScaledVector(up, -((event.clientY - grab.sy) / elapsed) * step);
+    this.canvas.dataset.drift = toss.velocity.length().toFixed(2);
+    this.wake();
+  }
+
+  private tossOf(craft: number): { offset: Vector3; velocity: Vector3 } {
+    let toss = this.toss.get(craft);
+    if (!toss) {
+      toss = { offset: new Vector3(), velocity: new Vector3() };
+      this.toss.set(craft, toss);
+    }
+    return toss;
+  }
+
+  private stopToss(): void {
+    this.grab = null;
+    window.removeEventListener("pointermove", this.onPull);
+    window.removeEventListener("pointerup", this.onRelease);
+    window.removeEventListener("pointercancel", this.onRelease);
+    this.toss.clear();
+    this.canvas.dataset.drift = "0";
+    const places = this.built?.placesOf(this.show) ?? [];
+    for (const part of this.parts) {
+      const place = places.find((one) => one.slot === part.slot);
+      if (place) part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+    }
+  }
+
+  /** The craft whose picture the pointer is on. A line drawing has no face to hit, so the craft's box on screen is the target. The smallest box wins where they overlap. */
+  private craftUnder(event: PointerEvent): number | null {
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return null;
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    let best: { craft: number; area: number } | null = null;
+    for (const box of this.craftBoxes()) {
+      const screen = this.screenBox(box.min, box.max);
+      if (!screen || x < screen.minX || x > screen.maxX || y < screen.minY || y > screen.maxY) continue;
+      const area = (screen.maxX - screen.minX) * (screen.maxY - screen.minY);
+      if (!best || area < best.area) best = { craft: box.craft, area };
+    }
+    return best?.craft ?? null;
+  }
+
+  private screenBox(min: Vec3, max: Vec3): { minX: number; minY: number; maxX: number; maxY: number } | null {
+    this.camera.updateMatrixWorld();
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let any = false;
+    for (const x of [min[0], max[0]]) {
+      for (const y of [min[1], max[1]]) {
+        for (const z of [min[2], max[2]]) {
+          const point = new Vector3(x, y, z).project(this.camera);
+          if (point.z > 1) continue;
+          any = true;
+          const sx = ((point.x + 1) / 2) * width;
+          const sy = ((1 - point.y) / 2) * height;
+          minX = Math.min(minX, sx);
+          minY = Math.min(minY, sy);
+          maxX = Math.max(maxX, sx);
+          maxY = Math.max(maxY, sy);
+        }
+      }
+    }
+    return any ? { minX, minY, maxX, maxY } : null;
+  }
+
+  private cameraAxes(): { right: Vector3; up: Vector3 } {
+    this.camera.updateMatrixWorld();
+    return {
+      right: new Vector3().setFromMatrixColumn(this.camera.matrixWorld, 0).normalize(),
+      up: new Vector3().setFromMatrixColumn(this.camera.matrixWorld, 1).normalize(),
+    };
+  }
+
+  private metresPerPixel(craft: number): number {
+    const box = this.craftBoxes().find((one) => one.craft === craft);
+    const center = box
+      ? new Vector3((box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2)
+      : this.controls.target.clone();
+    const distance = Math.max(1, center.distanceTo(this.camera.position));
+    const worldH = 2 * Math.tan((this.camera.fov * Math.PI) / 360) * distance;
+    return worldH / Math.max(1, this.canvas.clientHeight);
+  }
+
+  private shiftCraft(craft: number, dx: number, dy: number): void {
+    const step = this.metresPerPixel(craft);
+    const { right, up } = this.cameraAxes();
+    this.tossOf(craft).offset.addScaledVector(right, dx * step).addScaledVector(up, -dy * step);
+  }
+
+  private drifting(): boolean {
+    if (!this.floating || this.options.reducedMotion || this.clockNow || this.pose) return false;
+    for (const toss of this.toss.values()) if (toss.velocity.lengthSq() > 1e-6) return true;
+    return false;
+  }
+
+  /** Keeps a thrown craft moving, and brings one that has left the picture back at the far edge. A throw left alone stops after the same quiet pause as the rest of the picture. */
+  private coastDrift(dt: number): void {
+    if (!this.floating || this.options.reducedMotion || this.clockNow || this.pose) return;
+    let moving = false;
+    for (const toss of this.toss.values()) if (toss.velocity.lengthSq() > 1e-6) moving = true;
+    if (!moving) return;
+    if (performance.now() - this.lastActive >= IDLE_STOP_MS) {
+      for (const toss of this.toss.values()) toss.velocity.set(0, 0, 0);
+      this.canvas.dataset.drift = "0";
+      return;
+    }
+    if (!this.drifting()) return;
+    for (const toss of this.toss.values()) {
+      if (toss.velocity.lengthSq() < 1e-6) continue;
+      toss.offset.addScaledVector(toss.velocity, dt);
+    }
+    this.wrapDrift();
+    this.applyDrift();
+    let speed = 0;
+    for (const toss of this.toss.values()) speed = Math.max(speed, toss.velocity.length());
+    this.canvas.dataset.drift = speed.toFixed(2);
+    this.needsDraw = true;
+  }
+
+  private wrapDrift(): void {
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    if (width < 1 || height < 1) return;
+    const { right, up } = this.cameraAxes();
+    for (const [craft, toss] of this.toss) {
+      const box = this.craftBoxes().find((one) => one.craft === craft);
+      if (!box) continue;
+      const center = new Vector3((box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2);
+      center.project(this.camera);
+      const sx = ((center.x + 1) / 2) * width;
+      const sy = ((1 - center.y) / 2) * height;
+      const shiftX = wrapShift(sx, width);
+      const shiftY = wrapShift(sy, height);
+      if (shiftX === 0 && shiftY === 0) continue;
+      const step = this.metresPerPixel(craft);
+      toss.offset.addScaledVector(right, shiftX * step).addScaledVector(up, -shiftY * step);
+    }
+  }
+
+  private applyDrift(): void {
+    const places = this.built?.placesOf(this.show) ?? [];
+    for (const part of this.parts) {
+      const toss = this.toss.get(part.craft);
+      if (!toss) continue;
+      const place = places.find((one) => one.slot === part.slot);
+      if (!place) continue;
+      part.holder.position.set(place.at[0] + toss.offset.x, place.at[1] + toss.offset.y, place.at[2] + toss.offset.z);
+    }
+  }
+
   private onWheel = (event: WheelEvent): void => {
     if (this.driven) return;
     const pinch = event.ctrlKey || event.metaKey;

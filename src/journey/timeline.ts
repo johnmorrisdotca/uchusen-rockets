@@ -2,6 +2,7 @@
 // without the ones before it and a test needs no clock.
 import type { BodySource } from "./bodies.ts";
 import { C, G0 } from "./constants.ts";
+import { swingPoint } from "./assist.ts";
 import { conicPoint } from "./lunar.ts";
 import { accelerating, transferPoint } from "./physics.ts";
 import { positionKm, type Phase, type Trip, type Vec3 } from "./trip.ts";
@@ -175,7 +176,7 @@ export function stateAt(trip: Trip, source: BodySource, playbackS: number): Stat
       frameName = b.fromOrbit ? "start" : "earth";
     } else if (id === "coast" || id === "flip") {
       const tau = Math.max(0, Math.min(t - (b.ascentS + b.burnS), b.transitS));
-      const p = b.conic ? conicPoint(b.mu, b.conic, tau) : transferPoint(b.mu, b.r1, b.r2, b.theta0, tau);
+      const p = b.swing ? swingPoint(b.mu, b.swing, tau) : b.conic ? conicPoint(b.mu, b.conic, tau) : transferPoint(b.mu, b.r1, b.r2, b.theta0, tau);
       pos = [p.r * Math.cos(p.theta), p.r * Math.sin(p.theta), 0];
       speed = p.v * 1000;
       frameName = b.conic ? "earth" : trip.frame === "sun" ? "sun" : "earth";

@@ -176,6 +176,39 @@ test("a ship that burns all the way: speed rises, is greatest at the turn, falls
   near(stateAt(trip, S, 1e6).shipS, trip.shipS, 1, "time on board at the end");
 });
 
+test("a rocket's plan names the escape speed of the parking orbit and of the surface", () => {
+  const moon = planTrip(S, craftOf("saturn-v")!, "earth", "moon", NOW);
+  near(moon.escape?.parkingKmS ?? 0, (moon.ballistic?.parkSpeed ?? 0) * Math.SQRT2, 1e-9, "parking escape is the circular speed times sqrt(2)");
+  assert.ok((moon.escape?.surfaceKmS ?? 0) > (moon.escape?.parkingKmS ?? 0), "the surface is deeper in the well");
+  const back = planTrip(S, craftOf("saturn-v")!, "moon", "earth", NOW);
+  assert.ok((back.escape?.surfaceKmS ?? 0) > (back.escape?.parkingKmS ?? 0));
+  assert.ok((back.escape?.surfaceKmS ?? 0) < (moon.escape?.surfaceKmS ?? 0), "the Moon's surface escape is the smaller one");
+  assert.equal(planTrip(S, fleetShip, "earth", "mars", NOW).escape, undefined);
+});
+
+test("the mass ratio is the rocket equation, and a craft with no exhaust speed is not given one", () => {
+  const ship = planTrip(S, fleetShip, "earth", "mars", NOW);
+  const full = fleetShip.dryT.value + fleetShip.payloadT.value + fleetShip.propellantT.value;
+  near(ship.massRatio ?? 0, full / (full - ship.propellantUsedT!), 1e-6, "full mass over what is left");
+  assert.ok((ship.propellantUsedT ?? 0) <= (ship.propellantCarriedT ?? 0), "the tanks hold it");
+  const moon = planTrip(S, craftOf("saturn-v")!, "earth", "moon", NOW);
+  assert.ok((moon.massRatio ?? 0) > 1, "the braking burn has a ratio");
+  assert.equal(planTrip(S, craftOf("falcon-heavy")!, "earth", "mars", NOW).massRatio, null);
+  assert.equal(planTrip(S, craftOf("saturn-v")!, "moon", "earth", NOW).massRatio, null);
+});
+
+test("asking a ship for 1 g shortens the trip and says the ship is not built for it", () => {
+  const rated = planTrip(S, fleetShip, "earth", "mars", NOW);
+  const one = planTrip(S, fleetShip, "earth", "mars", NOW, 1);
+  assert.equal(one.peakG, 1);
+  assert.ok(one.frameS < rated.frameS / 2, `${one.frameS} against ${rated.frameS}`);
+  assert.match(one.verdict.line, /at 1 g/);
+  assert.ok(one.verdict.because.some((line) => line.includes("rated at 0.015 g")));
+  assert.equal(planTrip(S, fleetShip, "earth", "mars", NOW, 0.015).frameS, rated.frameS);
+  const rocket = planTrip(S, craftOf("saturn-v")!, "earth", "moon", NOW);
+  assert.equal(planTrip(S, craftOf("saturn-v")!, "earth", "moon", NOW, 1).peakG, rocket.peakG);
+});
+
 test("the countdown: the preheat bar fills in ten segments, the ignition counts 3, 2, 1, and the burn timer runs down", () => {
   assert.deepEqual(preheat(-13), { percent: 0, full: 0, partial: 0 });
   assert.equal(preheat(-8).percent, 50);

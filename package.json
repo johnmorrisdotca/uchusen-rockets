@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/uchusen-rockets",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Uchusen Rockets 宇宙船: line drawings and 3D views of rockets, as a web component. Every variant with its own sourced sizes, a typed way to assemble a rocket from parts, stack and separate. No logos. three.js is a peer dependency.",
   "keywords": [
     "rocket",
@@ -88,7 +88,8 @@
     "assets": "node scripts/make-assets.ts",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.check.json && tsc -p tsconfig.tools.json && tsc -p tsconfig.demo.json",
-    "test": "node --test test/*.test.ts",
+    "test": "node --test --test-skip-pattern=budget test/*.test.ts && pnpm test:budget",
+    "test:budget": "node --test --test-concurrency=1 --test-name-pattern=budget test/*.test.ts",
     "test:package": "pnpm build && node scripts/check-package.ts",
     "test:readme": "pnpm build && node scripts/check-readme-examples.ts",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && node scripts/check-package.ts",
