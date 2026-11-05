@@ -35,6 +35,7 @@ const DUTY: Readonly<Record<string, LampDuty>> = {
   "halo-strobe-soft": "flash",
   "halo-beacon": "beacon",
   "halo-beacon-soft": "beacon",
+  "halo-window": "running",
   "lamp-blue": "work",
   "lamp-amber": "work",
   "lamp-red": "work",
@@ -101,31 +102,34 @@ export function lampFactor(duty: LampDuty, mode: "off" | "running" | "all", redu
   return 1;
 }
 
-/** A soft coloured bead around a lamp, big enough to read when the whole ship is in frame, and faint so a close look still shows the lamp. Two of them, a bright core and a wider falloff. The wide view is the coarse model, so the bead is marked as a body. */
-const HALO: Readonly<Record<string, { core: MaterialName; soft: MaterialName; radius: number }>> = {
-  port: { core: "halo-port", soft: "halo-port-soft", radius: 12 },
-  starboard: { core: "halo-starboard", soft: "halo-starboard-soft", radius: 12 },
-  strobe: { core: "halo-strobe", soft: "halo-strobe-soft", radius: 12 },
-  beacon: { core: "halo-beacon", soft: "halo-beacon-soft", radius: 12 },
-  "nav-white": { core: "halo-stern", soft: "halo-stern-soft", radius: 12 },
-  work: { core: "halo-stern", soft: "halo-stern-soft", radius: 0.45 },
+/** A bead that only marks where a lamp stands. The wide view keeps it (it is a body). The picture draws the glow as a small soft point, so the bead stays under a metre and never becomes a disc. */
+const HALO: Readonly<Record<string, MaterialName>> = {
+  port: "halo-port",
+  starboard: "halo-starboard",
+  strobe: "halo-strobe",
+  beacon: "halo-beacon",
+  "nav-white": "halo-stern",
+  window: "halo-window",
+  work: "halo-stern",
 };
 
 function bead(material: MaterialName, at: Vec3, radius: number): Piece {
   const profile: [number, number][] = [];
-  for (let i = 0; i <= 10; i++) {
-    const t = (Math.PI * i) / 10;
+  for (let i = 0; i <= 8; i++) {
+    const t = (Math.PI * i) / 8;
     profile.push([Math.max(0.001, Math.sin(t) * radius), at[1] - Math.cos(t) * radius]);
   }
-  return { kind: "lathe", material, at: [at[0], at[2]], segs: 18, only: "mesh", body: true, profile };
+  return { kind: "lathe", material, at: [at[0], at[2]], segs: 10, only: "mesh", body: true, profile };
 }
 
-/** The glow around a running light, a strobe or a beacon. Empty for a colour that has no halo. `scale` grows it for a ship so long that the ordinary bead is a dot. */
+/**
+ * Where a running light, a strobe, a beacon or a window glow stands. Empty for a colour that has no halo.
+ * `scale` is accepted so older calls still compile; the bead stays small either way.
+ */
 export function lampHalo(colour: string, at: Vec3, scale = 1): Piece[] {
   const halo = HALO[colour];
-  if (!halo) return [];
-  const radius = halo.radius * scale;
-  return [bead(halo.soft, at, radius), bead(halo.core, at, radius * 0.22)];
+  if (!halo || !(scale > 0)) return [];
+  return [bead(halo, at, 0.55)];
 }
 
 /** A small dome. `at` is metres; the dome stands up from that point. */
@@ -199,14 +203,6 @@ export function workLamp(at: Vec3, size = 0.08): Piece[] {
  * ```
  */
 export function lightPool(frame: Frame, radius: number): Piece[] {
-  const ring = (material: MaterialName, scale: number, lift: number): Piece => {
-    const outline: [number, number][] = [];
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2;
-      outline.push([Math.cos(a) * radius * scale, Math.sin(a) * radius * scale]);
-    }
-    const o: Vec3 = [frame.o[0] + frame.w[0] * lift, frame.o[1] + frame.w[1] * lift, frame.o[2] + frame.w[2] * lift];
-    return { kind: "plate", material, frame: { ...frame, o }, outline, thickness: 0.02, plain: true, sheet: true, only: "mesh" };
-  };
-  return [ring("light-pool-edge", 1, 0), ring("light-pool-mid", 0.62, 0.015), ring("light-pool", 0.32, 0.03)];
+  const o: Vec3 = [frame.o[0] + frame.w[0] * 0.04, frame.o[1] + frame.w[1] * 0.04, frame.o[2] + frame.w[2] * 0.04];
+  return [{ kind: "plate", material: "light-pool", frame: { ...frame, o }, outline: [[-radius, -radius], [radius, -radius], [radius, radius], [-radius, radius]], thickness: 0.02, plain: true, sheet: true, only: "mesh" }];
 }

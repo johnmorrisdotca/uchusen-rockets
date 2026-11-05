@@ -21,7 +21,7 @@ function portholes(y: number, n: number, start: number): Piece[] {
     const u: [number, number, number] = [Math.cos(a), 0, -Math.sin(a)];
     const w: [number, number, number] = [Math.sin(a), 0, Math.cos(a)];
     const ring = (material: "hull-grey-dark" | "window" | "lamp-blue", rad: number, from: number, thick: number): Piece => ({ kind: "plate", material, frame: { o: [(R + from + thick / 2) * w[0], y, (R + from + thick / 2) * w[2]], u, v: [0, 1, 0], w }, outline: Array.from({ length: 12 }, (_, i) => [rad * Math.cos((Math.PI * 2 * i) / 12), rad * Math.sin((Math.PI * 2 * i) / 12)] as [number, number]), thickness: thick, plain: true, only: "mesh" });
-    out.push(ring("hull-grey-dark", 0.62, 0.0, 0.2), ring("window", 0.55, 0.2, 0.06), ring("lamp-blue", 0.16, 0.26, 0.04));
+    out.push(ring("hull-grey-dark", 0.62, 0.0, 0.2), ring("window", 0.55, 0.2, 0.06), ring("lamp-blue", 0.16, 0.26, 0.04), ...lampHalo("window", [(R + 0.6) * w[0], y, (R + 0.6) * w[2]]));
     // the burn shutter: a plate on a hinge above the window, drawn back, with its actuator
     const at = (a2: number, b2: number, c2: number): [number, number, number] => [(R + c2) * w[0] + b2 * u[0], y + a2, (R + c2) * w[2] + b2 * u[2]];
     out.push(rod("hull-grey-dark", at(0.78, -0.7, 0.3), at(0.78, 0.7, 0.3), 0.07, 8), rod("hull-grey", at(0.8, -0.6, 0.45), at(1.5, -0.6, 0.45), 0.05, 8), rod("hull-orange", at(0.82, -0.62, 0.34), at(0.82, 0.62, 0.34), 0.05, 8));

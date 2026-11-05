@@ -129,8 +129,9 @@ const bowEnd = stackOf(BOW, C.bow.y, 0.25).end;
 function habitatRings(): Piece[] {
   const ring = scalePieces(habitatPieces(0), C.ring.scale);
   const second = scalePieces(habitatPieces(1), C.ring.scale);
-  return [...place(ring, { at: [0, 0, 0] }), ...place(second, { at: [0, 21.5 * 1.7, 0] }), ...lampHalo("port", [-130, 30, 0], 4), ...lampHalo("starboard", [130, 30, 0], 4), ...lampHalo("beacon", [0, 30, 130], 4), ...lampHalo("nav-white", [0, 30, -130], 4)];
+  return [...place(ring, { at: [0, 0, 0] }), ...place(second, { at: [0, 21.5 * 1.7, 0] }), ...lampHalo("port", [-115, 30, 0]), ...lampHalo("starboard", [115, 30, 0]), ...lampHalo("beacon", [0, 30, 115]), ...lampHalo("nav-white", [0, 30, -115])];
 }
+const ringsHeight = 36 * C.ring.scale + 21.5 * 1.7;
 
 /** The slots, tail to bow. */
 export const SLOTS_C: readonly ConceptSlot[] = [
@@ -144,7 +145,7 @@ export const SLOTS_C: readonly ConceptSlot[] = [
   ...C.craft.slots.map((s, i): ConceptSlot => ({ slot: `miyamoto-${i + 1}`, name: s.ship === "miyamoto" ? `Docked craft ${i + 1}: ISV Miyamoto, solar array out` : `Docked craft ${i + 1}: ISV Ariake`, kind: "module", at: [0, s.y, 0], height: 380, diameter: s.ship === "miyamoto" ? 200 : 207, note: s.ship === "miyamoto" ? "ISV Miyamoto's own model at its true size, the gold solar array deployed, docked by its keel in a cradle. Descends from the Space Shuttle on its carrier aircraft and the ISS's visiting vehicles." : "ISV Ariake's own model at its true size, four hangar boxes, the hex engine end and the dawn-gold bands, docked by its keel in a cradle. Descends from the Space Shuttle on its carrier aircraft and the ISS's visiting vehicles.", pieces: () => local(craft(s.az, s.y, s.ship, 1, "coarse"), s.y) })),
   ...C.craft.slots.map((s, i): ConceptSlot => ({ slot: `cradle-${i + 1}`, name: `Docking cradle ${i + 1}`, kind: "mount", at: [0, s.y, 0], height: 366, diameter: 19, note: "Two rails, five clamp towers from the shaft, and umbilical lines that hold a docked craft by its keel. Descends from the ISS common berthing mechanism and the Shuttle's payload-bay latches.", pieces: () => local(cradle(s.az, s.y), s.y) })),
   berthSlot("c"),
-  { slot: "rings", name: "Habitat rings (two, counter-rotating)", kind: "ring", at: [0, C.ring.y[0], 0], height: 80, diameter: 360, note: "Two counter-rotating habitat rings 100 m from the axis, at one turn in 24 s for a little under one Earth gravity, with the running lights outboard of the rims. Descends from Von Braun's wheel and NASA's Nautilus-X centrifuge.", pieces: habitatRings },
+  { slot: "rings", name: "Habitat rings (two, counter-rotating)", kind: "ring", at: [0, C.ring.y[0], 0], height: ringsHeight, diameter: 239, note: "Two counter-rotating habitat rings 100 m from the axis, at one turn in 24 s for a little under one Earth gravity, with running lights on the rims. Descends from Von Braun's wheel and NASA's Nautilus-X centrifuge.", pieces: habitatRings },
   { slot: "bow", name: "Crew bow: farms, passenger drums, common area, solarium, laboratory and dome", kind: "spacecraft", at: [0, C.bow.y, 0], height: bowEnd - C.bow.y + 1, diameter: 17, note: "The kit's crew modules end to end: a docking node, two farm drums, two passenger drums, the common area, the solarium, a laboratory, the survey pod, the navigation deck and the observation dome.", pieces: () => local(stackOf(BOW, C.bow.y, 0.7, "bowC").pieces, C.bow.y) },
   { slot: "shield", name: "Forward dust shield", kind: "fairing", at: [0, bowEnd, 0], height: C.length - bowEnd, diameter: 56, note: "A tiled cone ahead of the crew. Descends from Daedalus' dust shield.", pieces: () => local(shieldDisc(28, 8, bowEnd, C.length, "c-bow"), bowEnd) },
 ];

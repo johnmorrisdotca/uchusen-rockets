@@ -3,12 +3,15 @@
 // something moves, never while out of view or the tab is hidden, and settles after a while with no one touching it.
 import {
   ACESFilmicToneMapping,
+  AdditiveBlending,
   BackSide,
+  BufferGeometry,
   CanvasTexture,
   Color,
   DirectionalLight,
   EdgesGeometry,
   DoubleSide,
+  Float32BufferAttribute,
   Group,
   HemisphereLight,
   LineSegments,
@@ -19,6 +22,8 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  Points,
+  PointsMaterial,
   type Object3D,
   PerspectiveCamera,
   PlaneGeometry,
@@ -261,6 +266,12 @@ export class RocketViewer {
   /** This rocket has a strobe or a beacon, so the view keeps a frame going. */
   private hasPulse = false;
   private lampDrawn = 0;
+  /** Screen-space lamp points. Cleared with each rocket, because they are not in the material cache. */
+  private lampPoints: { material: PointsMaterial; duty: ReturnType<typeof dutyOf> }[] = [];
+  /** The smooth flood sheets. Cached with their material, so a new rocket reuses them. */
+  private poolSheets: MeshBasicMaterial[] = [];
+  private lampTexture: CanvasTexture | null = null;
+  private poolTexture: CanvasTexture | null = null;
   private outlineMaterial: ShaderMaterial;
   private textures: Texture[] = [];
   private steelMap: CanvasTexture | null = null;
@@ -447,6 +458,8 @@ export class RocketViewer {
     this.disposeParts();
     this.root.clear();
     this.parts = [];
+    for (const lamp of this.lampPoints) lamp.material.dispose();
+    this.lampPoints = [];
     this.toss.clear();
     this.grab = null;
     this.built = built;
@@ -612,13 +625,19 @@ export class RocketViewer {
         carrier.add(fat);
         (named === "line-feature" ? view.feature : view.weld).push(fat);
       } else if (node instanceof Mesh) {
-        const mesh = new Mesh(node.geometry);
         const name = (node.material as Material).name;
+        if (name.startsWith("halo-")) {
+          this.addLampPoint(carrier, node.geometry, name);
+          continue;
+        }
+        if (name === "light-pool") stampPoolUv(node.geometry);
+        const mesh = new Mesh(node.geometry);
         mesh.name = name;
         mesh.castShadow = this.shadows && !(name in MATERIALS && "opacity" in MATERIALS[name as MaterialName]);
         mesh.receiveShadow = this.shadows;
         carrier.add(mesh);
         view.faces.push({ mesh, name, hasUv: Boolean(node.geometry.getAttribute("uv")) });
+        if (name === "light-pool") continue;
         const outline = new Mesh(node.geometry, this.outlineMaterial);
         outline.name = "outline";
         carrier.add(outline);
@@ -678,6 +697,12 @@ export class RocketViewer {
     if (known) {
       if (this.pulseMaterials.has(known)) this.hasPulse = true;
       return known;
+    }
+    if (name === "light-pool") {
+      const sheet = new MeshBasicMaterial({ name, map: this.poolWash(), color: "#fff4dc", transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
+      this.poolSheets.push(sheet);
+      this.materialCache.set(key, sheet);
+      return sheet;
     }
     const spec: MaterialSpec = name in MATERIALS ? MATERIALS[name as MaterialName] : MATERIALS.steel;
     const made = new MeshStandardMaterial({ color: spec.color, metalness: spec.metal, roughness: spec.rough, side: DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
@@ -892,6 +917,92 @@ export class RocketViewer {
       material.emissiveIntensity = level;
       if (material.userData.pool) material.opacity = (material.userData.poolOpacity ?? 0.42) * level;
     }
+    const flood = this.lampStrength("work", 0.95, seconds);
+    for (const sheet of this.poolSheets) sheet.opacity = flood;
+    for (const lamp of this.lampPoints) lamp.material.opacity = this.lampStrength(lamp.duty, 1, seconds);
+  }
+
+  /** One soft point per lamp, a few pixels of core and a halo that fades out. The bead in the model only marks the place. */
+  private addLampPoint(carrier: Group, geometry: BufferGeometry, name: string): void {
+    const position = geometry.getAttribute("position");
+    if (!position || position.count === 0) return;
+    const centers = clusterCenters(position, 2);
+    const geo = new BufferGeometry();
+    const data = new Float32Array(centers.length * 3);
+    centers.forEach((center, i) => {
+      data[i * 3] = center.x;
+      data[i * 3 + 1] = center.y;
+      data[i * 3 + 2] = center.z;
+    });
+    geo.setAttribute("position", new Float32BufferAttribute(data, 3));
+    const material = new PointsMaterial({
+      color: LAMP_TINT[name] ?? "#fff6e4",
+      size: 42,
+      sizeAttenuation: false,
+      map: this.lampDisc(),
+      transparent: true,
+      opacity: 0.95,
+      blending: AdditiveBlending,
+      depthWrite: false,
+      depthTest: false,
+    });
+    material.name = name;
+    const duty = dutyOf(name);
+    this.lampPoints.push({ material, duty });
+    if (duty === "flash" || duty === "beacon") this.hasPulse = true;
+    const points = new Points(geo, material);
+    points.renderOrder = 2;
+    carrier.add(points);
+  }
+
+  /** White in the middle, gone at the edge, so a coloured point reads as a lamp and not a disc. */
+  private lampDisc(): CanvasTexture {
+    if (this.lampTexture) return this.lampTexture;
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const pen = canvas.getContext("2d");
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    if (pen) {
+      const wash = pen.createRadialGradient(32, 32, 0, 32, 32, 32);
+      wash.addColorStop(0, "rgba(255,255,255,1)");
+      wash.addColorStop(0.12, "rgba(255,255,255,0.95)");
+      wash.addColorStop(0.34, "rgba(255,255,255,0.28)");
+      wash.addColorStop(0.7, "rgba(255,255,255,0.06)");
+      wash.addColorStop(1, "rgba(255,255,255,0)");
+      pen.fillStyle = wash;
+      pen.fillRect(0, 0, 64, 64);
+      texture.needsUpdate = true;
+    }
+    this.lampTexture = texture;
+    this.textures.push(texture);
+    return texture;
+  }
+
+  /** A smooth warm falloff for a flood sheet. Brightest in the middle, nothing at the corner. */
+  private poolWash(): CanvasTexture {
+    if (this.poolTexture) return this.poolTexture;
+    const canvas = document.createElement("canvas");
+    canvas.width = 128;
+    canvas.height = 128;
+    const pen = canvas.getContext("2d");
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    if (pen) {
+      const wash = pen.createRadialGradient(64, 64, 0, 64, 64, 64);
+      wash.addColorStop(0, "rgba(255,250,235,1)");
+      wash.addColorStop(0.16, "rgba(255,214,140,0.72)");
+      wash.addColorStop(0.38, "rgba(255,176,80,0.22)");
+      wash.addColorStop(0.58, "rgba(255,160,60,0)");
+      wash.addColorStop(1, "rgba(255,160,60,0)");
+      pen.fillStyle = wash;
+      pen.fillRect(0, 0, 128, 128);
+      texture.needsUpdate = true;
+    }
+    this.poolTexture = texture;
+    this.textures.push(texture);
+    return texture;
   }
 
   private relight(): void {
@@ -2247,4 +2358,75 @@ export class RocketViewer {
     const length = MathUtils.clamp(offset.length() * factor, this.controls.minDistance, this.controls.maxDistance);
     this.camera.position.copy(this.controls.target).add(offset.setLength(length));
   }
+}
+
+/** The colour of each lamp point. The texture is white, so this is the colour the eye sees. */
+const LAMP_TINT: Record<string, string> = {
+  "halo-port": "#ff4545",
+  "halo-starboard": "#3dff78",
+  "halo-stern": "#fff8ee",
+  "halo-strobe": "#ffffff",
+  "halo-beacon": "#ff5533",
+  "halo-window": "#ffd9a0",
+};
+
+/** Centres of the beads in one mesh. Beads of one colour that stand apart stay apart. */
+function clusterCenters(position: { readonly count: number; getX(i: number): number; getY(i: number): number; getZ(i: number): number }, join: number): Vector3[] {
+  const used = new Uint8Array(position.count);
+  const out: Vector3[] = [];
+  const join2 = join * join;
+  for (let i = 0; i < position.count; i++) {
+    if (used[i]) continue;
+    const sum = new Vector3();
+    const stack = [i];
+    used[i] = 1;
+    let n = 0;
+    while (stack.length > 0) {
+      const k = stack.pop();
+      if (k === undefined) break;
+      const x = position.getX(k);
+      const y = position.getY(k);
+      const z = position.getZ(k);
+      sum.add(new Vector3(x, y, z));
+      n += 1;
+      for (let j = 0; j < position.count; j++) {
+        if (used[j]) continue;
+        const dx = position.getX(j) - x;
+        const dy = position.getY(j) - y;
+        const dz = position.getZ(j) - z;
+        if (dx * dx + dy * dy + dz * dz < join2) {
+          used[j] = 1;
+          stack.push(j);
+        }
+      }
+    }
+    out.push(sum.multiplyScalar(1 / n));
+  }
+  return out;
+}
+
+/** Spreads a flood sheet's corners across the texture, so the gradient is a circle and not a stack of facets. */
+function stampPoolUv(geometry: BufferGeometry): void {
+  const position = geometry.getAttribute("position");
+  if (!position || position.count === 0) return;
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < position.count; i++) {
+    const p = [position.getX(i), position.getY(i), position.getZ(i)];
+    for (let c = 0; c < 3; c++) {
+      if (p[c] < min[c]) min[c] = p[c];
+      if (p[c] > max[c]) max[c] = p[c];
+    }
+  }
+  const span = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
+  const axes = [0, 1, 2].sort((a, b) => span[b] - span[a]);
+  const u = axes[0];
+  const v = axes[1];
+  const uv = new Float32Array(position.count * 2);
+  for (let i = 0; i < position.count; i++) {
+    const p = [position.getX(i), position.getY(i), position.getZ(i)];
+    uv[i * 2] = span[u] > 0 ? (p[u] - min[u]) / span[u] : 0.5;
+    uv[i * 2 + 1] = span[v] > 0 ? (p[v] - min[v]) / span[v] : 0.5;
+  }
+  geometry.setAttribute("uv", new Float32BufferAttribute(uv, 2));
 }
