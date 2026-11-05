@@ -155,7 +155,10 @@ test("the Japanese page says its words in Japanese and keeps the trip", async ({
   await expect(page.getByTestId("phase")).toHaveText("準備完了");
   await expect(page.getByTestId("play")).toHaveText("再生");
   await expect(page.getByTestId("to-mars")).toHaveText("火星");
-  await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "rated");
+  await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "flyby");
+  await page.getByTestId("craft-saturn-v").click();
+  await page.getByTestId("to-moon").click();
+  await expect(page.getByTestId("trip-fuel")).toContainText("、");
 });
 
 test("after each burn only what is left is drawn: the whole rocket, the upper stage with its payload, then the payload", async ({ page }) => {

@@ -499,7 +499,7 @@ function fuelWords(): string {
   const fuel = trip.fuel;
   if (fuel.usedT === null) return `${say("jNA")}: ${fuel.note}`;
   if (fuel.carriedT !== null) return `${tonnesWords(fuel.usedT)} / ${tonnesWords(fuel.carriedT)}`;
-  return `${tonnesWords(fuel.usedT)}, ${say("jBrakeOnly")}`;
+  return `${tonnesWords(fuel.usedT)}${japanese() ? "、" : ", "}${say("jBrakeOnly")}`;
 }
 
 function payloadWords(): string {
