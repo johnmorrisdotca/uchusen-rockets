@@ -85,7 +85,7 @@ export interface DrawOptions {
   weight?: number;
 }
 
-function latheItem(piece: Lathe, cam: Camera, at: Vec3, style: { line: string; outline: number; feature: number; weld: number }, list: Item[]): void {
+function latheItem(piece: Lathe, cam: Camera, at: Vec3, style: { line: string; outline: number; feature: number; weld: number }, list: Item[], fillOf: (material: keyof typeof MATERIALS) => string): void {
   const [cx, cz] = piece.at ?? [0, 0];
   const profile = piece.profile;
   const steps = piece.segs > 24 ? 36 : 14;
@@ -94,7 +94,7 @@ function latheItem(piece: Lathe, cam: Camera, at: Vec3, style: { line: string; o
   const middle: Vec3 = [at[0] + cx, at[1] + middleY, at[2] + cz];
   const axisHere: Vec3 = [at[0], at[1] + middleY, at[2]];
   const parts: string[] = [];
-  const fill = `url(#${fillId(piece.material)})`;
+  const fill = fillOf(piece.material);
   // which way a station's surface faces, for what shows
   const tilt = profile.map(([r, y], i) => {
     const [r1, y1] = profile[Math.min(i + 1, profile.length - 1)];
@@ -197,7 +197,7 @@ function latheItem(piece: Lathe, cam: Camera, at: Vec3, style: { line: string; o
   list.push({ key: piece.under ? (cam.above ? 1e6 + key : -1e6 + key - middleY * 0.01) : key, svg: parts.join("") });
 }
 
-function plateItem(piece: Plate, cam: Camera, at: Vec3, style: { line: string; outline: number; feature: number; weld: number }, list: Item[]): void {
+function plateItem(piece: Plate, cam: Camera, at: Vec3, style: { line: string; outline: number; feature: number; weld: number }, list: Item[], fillOf: (material: keyof typeof MATERIALS) => string): void {
   const place = (a: number, b: number, c: number): Vec3 => {
     const p = pointOf(piece.frame, a, b, c);
     return [p[0] + at[0], p[1] + at[1], p[2] + at[2]];
@@ -211,7 +211,7 @@ function plateItem(piece: Plate, cam: Camera, at: Vec3, style: { line: string; o
   const seen = cam.toward(c);
   const facing = dot(piece.frame.w, seen);
   const faceMat = facing > 0 && piece.top ? piece.top : piece.material;
-  const parts: string[] = [`<path d="${pathOf(shape, true)}" fill="url(#${fillId(faceMat)})" stroke="${style.line}" stroke-width="${n(piece.plain ? style.weld : style.feature * 1.1)}"/>`];
+  const parts: string[] = [`<path d="${pathOf(shape, true)}" fill="${fillOf(faceMat)}" stroke="${style.line}" stroke-width="${n(piece.plain ? style.weld : style.feature * 1.1)}"/>`];
   if (piece.ribs?.length && Math.abs(facing) > 0.35) {
     const side = facing > 0 ? half : -half;
     let d = "";
@@ -245,14 +245,17 @@ function linesItem(piece: Lines, cam: Camera, at: Vec3, style: { line: string; f
 }
 
 /** One part's picture at `at`, as SVG text in painter's order. */
-export function drawPart(pieces: readonly Piece[], at: Vec3, cam: Camera, look: LookName, weight = 1, line?: string): string {
+export function drawPart(pieces: readonly Piece[], at: Vec3, cam: Camera, look: LookName, weight = 1, line?: string, fillOf?: (material: keyof typeof MATERIALS) => string): string {
   const base = LOOKS[look];
   const style = { line: line ?? base.line, outline: base.outline * weight, feature: base.feature * weight, weld: base.weld * weight };
+  const paint = fillOf ?? ((material: keyof typeof MATERIALS) => `url(#${fillId(material)})`);
   const items: Item[] = [];
   for (const piece of pieces) {
-    if (piece.only === "mesh") continue;
-    if (piece.kind === "lathe") latheItem(piece, cam, at, style, items);
-    else if (piece.kind === "plate") plateItem(piece, cam, at, style, items);
+    // the mesh is the coloured model; a drawing asks for it by passing its own fills, and then the line stand-in is left out
+    if (piece.only === "mesh" && !fillOf) continue;
+    if (piece.only === "drawing" && fillOf) continue;
+    if (piece.kind === "lathe") latheItem(piece, cam, at, style, items, paint);
+    else if (piece.kind === "plate") plateItem(piece, cam, at, style, items, paint);
     else linesItem(piece, cam, at, style, items);
   }
   // far first
