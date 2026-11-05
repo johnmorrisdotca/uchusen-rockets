@@ -63,6 +63,7 @@ section > p { color: var(--muted); margin: 0 0 1rem; max-width: 70ch; }
 .hint { margin: 0.3rem 0.5rem 0.2rem; color: var(--muted); font-size: 0.82rem; text-align: center; }
 .panel { display: flex; flex-direction: column; gap: 0.9rem; }
 .panel-tabs { margin: 0; }
+.panel-tabs .chip[aria-selected="true"] { background: #1c3556; border-color: var(--accent); color: #fff; }
 .panel-group { display: flex; flex-direction: column; gap: 0.9rem; }
 .panel-group[hidden] { display: none; }
 .field h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 0.35rem; font-weight: 600; }
