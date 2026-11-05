@@ -3,6 +3,6 @@
 .fleet-cmp .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .fleet-cmp .cmp-view { position: relative; overflow: hidden; height: min(60vh, 560px); display: flex; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 0.5rem; }
 .fleet-cmp .cmp-view uchusen-lineup { overflow: visible; flex: none; }
-.fleet-cmp .cmp-facts { border-collapse: collapse; width: 100%; }
+.fleet-cmp .cmp-facts { border-collapse: collapse; width: 100%; table-layout: fixed; }
 .fleet-cmp .cmp-facts th,
 .fleet-cmp .cmp-facts td { text-align: left; padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }

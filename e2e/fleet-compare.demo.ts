@@ -18,6 +18,14 @@ test("the three ships stand at one scale, the view stays in the address, and the
   await expect(page.getByTestId("cmp-view-side")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("cmp-view-three-quarter")).toHaveAttribute("aria-pressed", "false");
   await expect.poll(async () => lineup.locator("svg").innerHTML()).not.toBe(before);
+  await expect(page.getByTestId("cmp-dry-mass-fleet-kaminari")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-full-mass-fleet-ship-01")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-crew-fleet-kaminari")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-cargo-fleet-ship-03")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-cargo-fleet-ship-01")).toHaveText("");
+  await expect(page.getByTestId("cmp-main-drive-fleet-kaminari")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-peak-speed-fleet-ship-03")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-peak-speed-fleet-kaminari")).toHaveText("");
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(wide).toBe(false);
 });
