@@ -1,4 +1,4 @@
-// The Moon as a background, and small beside the Earth. Each picture is drawn, and the one before it is taken off the page.
+// Planets and a moon behind the rocket. Each picture is drawn, and the one before it is taken off the page.
 import { expect, type Page, test } from "@playwright/test";
 
 const URL = "/uchusen-rockets/";
@@ -15,46 +15,90 @@ function watch(page: Page): string[] {
   return problems;
 }
 
-test("the Moon stands behind the rocket, beside the Earth, and the picture before it is freed", async ({ page }) => {
+const shot = async (page: Page, name: string) => {
+  if (process.env.SHOTS && test.info().project.name === "chromium-desk") await page.screenshot({ path: `${process.env.SHOTS}/${name}.png` });
+};
+
+test("two planets and a moon stand behind the rocket, and the picture before is freed", async ({ page }) => {
   const problems = watch(page);
   const sky = page.locator('[data-testid="sky"]');
   const moons = page.locator('[data-testid="sky-moons"]');
   const earth = page.locator('[data-testid="earth"]');
+  const moonRow = page.locator('[data-testid="moons"]');
   await page.goto(URL);
   await expect(page.locator('[data-testid="background-none"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('[data-testid="background-mars"]')).toBeVisible();
   await expect(sky).toBeHidden();
-  await expect(moons).toBeHidden();
 
-  await page.locator('[data-testid="background-moon"]').click();
-  await expect(page.locator('[data-testid="background-moon"]')).toHaveAttribute("aria-pressed", "true");
-  await expect(sky).toHaveAttribute("data-draws", "moon");
+  await page.locator('[data-testid="background-mars"]').click();
+  await expect(sky).toHaveAttribute("data-draws", "mars");
   await expect(sky.locator("svg")).toHaveCount(1);
-  if (process.env.SHOTS && test.info().project.name === "chromium-desk") await page.screenshot({ path: `${process.env.SHOTS}/moon-desk.png` });
+  await expect(page.locator('[data-testid="background-mars"] .thumb-name')).toHaveText("Mars");
+  await expect(page.locator('[data-testid="moon-heading"]')).toHaveText("Mars's moons");
+  await expect(moonRow).toBeVisible();
   await expect(earth).toBeHidden();
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("background")).toBe("mars");
+  await shot(page, "mars-desk");
+
+  await page.locator('[data-testid="moon-phobos"]').click();
+  await expect(moons).toHaveAttribute("data-draws", "phobos");
+  await expect(moons.locator("svg")).toHaveCount(1);
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("moon")).toBe("phobos");
   await expect(page.locator('[data-testid="sky-credit"]')).toContainText("Wakusei Planets");
-  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("background")).toBe("moon");
+  await expect(page.locator('[data-testid="sky-credit"]')).toContainText("enlarged");
+  const phobosWidth = await moons.locator("svg").evaluate((node) => parseFloat((node as HTMLElement).style.width));
+  expect(phobosWidth).toBeGreaterThan(8);
+
+  await page.locator('[data-testid="background-jupiter"]').click();
+  await expect(sky).toHaveAttribute("data-draws", "jupiter");
+  await expect(sky.locator("svg")).toHaveCount(1);
+  await expect(page.locator('[data-testid="moon-heading"]')).toHaveText("Jupiter's moons");
+  await expect(moons).toHaveAttribute("data-draws", "io,europa,ganymede,callisto");
+  await expect(moons.locator("svg")).toHaveCount(4);
+  const galilean = await moons.locator("svg").evaluateAll((nodes) => nodes.map((node) => parseFloat((node as HTMLElement).style.width)));
+  expect(Math.max(...galilean)).toBeLessThan(8);
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("moon")).toBeNull();
+  await shot(page, "jupiter-desk");
+
+  await page.locator('[data-testid="background-saturn"]').click();
+  await expect(sky).toHaveAttribute("data-draws", "saturn");
+  await expect(page.locator('[data-testid="moon-heading"]')).toHaveText("Saturn's moons");
+  await expect(moons).toHaveAttribute("data-draws", "titan");
+  await expect(moons.locator("svg")).toHaveCount(1);
+  const titanWidth = await moons.locator("svg").evaluate((node) => parseFloat((node as HTMLElement).style.width));
+  expect(titanWidth).toBeLessThan(8);
+  await shot(page, "saturn-desk");
+
+  await page.locator('[data-testid="background-mars"]').click();
+  await page.locator('[data-testid="look-painted"]').click();
+  await expect(sky).toHaveAttribute("data-form", "painted", { timeout: 30_000 });
+  await expect(sky.locator("wakusei-body")).toHaveCount(1);
+  await expect(sky.locator("svg")).toHaveCount(0);
+  await page.locator('[data-testid="hero"]').scrollIntoViewIfNeeded();
+  await expect.poll(() => sky.locator("wakusei-body").evaluate((node) => (node as unknown as { stats?: { textureWidth?: number } }).stats?.textureWidth ?? 0), { timeout: 30_000 }).toBeGreaterThan(0);
+  await shot(page, "painted-desk");
+
+  await page.goto(`${URL}?background=moon`);
+  await expect(sky).toHaveAttribute("data-draws", "moon");
+  await expect(moons).toBeHidden();
 
   await page.locator('[data-testid="background-earth"]').click();
   await expect(sky).toBeHidden();
   await expect(sky.locator("svg")).toHaveCount(0);
   await expect(moons).toHaveAttribute("data-draws", "moon");
-  await expect(moons.locator("svg")).toHaveCount(1);
   await page.locator('[data-testid="hero"]').scrollIntoViewIfNeeded();
   await expect(earth.locator("svg")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('[data-testid="earth-credit"]')).toContainText("Natural Earth");
-  if (process.env.SHOTS) {
-    const shots = process.env.SHOTS;
-    const project = test.info().project.name;
-    await page.screenshot({ path: `${shots}/earth-moon-${project}.png` });
-    await page.locator("#backgrounds").scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `${shots}/picker-${project}.png` });
-  }
 
   await page.locator('[data-testid="background-none"]').click();
   await expect(moons).toBeHidden();
-  await expect(moons.locator("svg")).toHaveCount(0);
+  await expect(sky).toBeHidden();
   await expect(earth).toBeHidden();
   await expect(earth.locator("svg")).toHaveCount(0);
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("background")).toBeNull();
+  if (process.env.SHOTS) {
+    await page.locator("#backgrounds").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${process.env.SHOTS}/picker-${test.info().project.name}.png` });
+  }
   expect(problems).toEqual([]);
 });
