@@ -165,7 +165,12 @@ export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly P
   const workN = going.length === 0 ? 0 : Math.min(n - parkN, Math.max(1, Math.min(n - parkN, going.length * 3)));
   const cargoOf = (slot: string): [number, number, number] => {
     const place = slotAt(slot) ?? dock;
-    return [place[0], place[1], place[2]];
+    const step = steps.find((one) => one.slot === slot);
+    const span = step && step.days > 0 ? step.days : 1;
+    const done = step ? Math.min(1, Math.max(0, (frame.day - step.start) / span)) : 1;
+    // the part rides from the stack to the slot, and is in the slot for the last part of the step
+    const along = Math.min(1, done / 0.85);
+    return [dock[0] + (place[0] - dock[0]) * along, dock[1] + (place[1] - dock[1]) * along, dock[2] + (place[2] - dock[2]) * along];
   };
   return jobs.map((job, i) => {
     const slot = slotAt(job.slot) ?? dock;
@@ -173,7 +178,7 @@ export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly P
       const mates = jobs.slice(0, workN).filter((one) => one.slot === job.slot);
       const place = Math.max(0, mates.findIndex((one) => one.drone === job.drone));
       const turn = (place / Math.max(1, mates.length)) * Math.PI * 2 + 0.6;
-      const radius = 12 + (place % 3) * 5;
+      const radius = 34 + (place % 3) * 8;
       const cargo = cargoOf(job.slot);
       const where: [number, number, number] = [cargo[0] + Math.cos(turn) * radius, cargo[1] + ((place % 5) - 2) * 3, cargo[2] + Math.sin(turn) * radius];
       return { drone: job.drone, slot: job.slot, part: cargo, where, duty: "work" };

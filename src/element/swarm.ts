@@ -1,5 +1,5 @@
 // The construction swarm in the 3D view. Each drone is the SPX repair drone: the coarse model for every drone, the fine one for the few nearest the camera, both instanced. The tractor beam leaves the lens (DRONE.emitter) and runs to the part, the weld arc leaves the tool (DRONE.weldTip), a working drone faces its part, and a parked one faces away from the stack. One set of instanced meshes, disposed with the view.
-import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, ConeGeometry, DoubleSide, DynamicDrawUsage, Group, InstancedMesh, LineBasicMaterial, LineSegments, type Material, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D, type Texture } from "three";
+import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, CylinderGeometry, DoubleSide, DynamicDrawUsage, Group, InstancedMesh, LineBasicMaterial, LineSegments, type Material, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D, type Texture } from "three";
 import { DRONE_FILES } from "../model/drone.ts";
 import { DRONE } from "../model/fleet/drone/index.ts";
 import { DRONE_SIZE } from "../model/fleet/drone/size.ts";
@@ -7,7 +7,8 @@ import { DRONE_SIZE } from "../model/fleet/drone/size.ts";
 const CAP = 100;
 const RINGS = 3;
 const SPARKS = 4;
-const SPRAY = 6;
+const SPRAY = 8;
+const STREAKS = 8;
 /** How many of the nearest drones are drawn with the fine model. Each is about 120,000 triangles. */
 const NEAR_MAX = 6;
 /** A drone is drawn fine when the camera is within this many saucer widths of it. */
@@ -159,7 +160,9 @@ export class SwarmRig {
   private glowOn = false;
   private readonly flares: InstancedMesh;
   private readonly beams: InstancedMesh;
+  private readonly cores: InstancedMesh;
   private readonly lamps: InstancedMesh;
+  private readonly halos: InstancedMesh;
   private readonly rings: InstancedMesh;
   private readonly sparks: InstancedMesh;
   private readonly tips: InstancedMesh;
@@ -169,6 +172,8 @@ export class SwarmRig {
   private readonly seam: LineSegments;
   private readonly seamPositions = new Float32Array(CAP * 6);
   private readonly seamMaterial: LineBasicMaterial;
+  private readonly streaks: LineSegments;
+  private readonly streakPositions = new Float32Array(CAP * STREAKS * 6);
   private readonly paths: LineSegments;
   private readonly weldAt: [number, number, number][] = [];
   private weldCount = 0;
@@ -199,23 +204,29 @@ export class SwarmRig {
     this.wake = wake;
     this.group.name = "swarm";
     this.shift.makeTranslation(-centre.x, -centre.y, -centre.z);
-    const glow = new MeshBasicMaterial({ color: new Color("#8a78ff"), transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
-    const lamp = new MeshBasicMaterial({ color: new Color("#c9d8ff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
+    const glow = new MeshBasicMaterial({ color: new Color("#8a78ff"), transparent: true, opacity: 0.72, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
+    const core = new MeshBasicMaterial({ color: new Color("#f7f4ff"), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
+    const lamp = new MeshBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 1, blending: AdditiveBlending, depthWrite: false });
+    const halo = new MeshBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false });
     const ring = new MeshBasicMaterial({ color: new Color("#efeaff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     const spark = new MeshBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false });
     const flare = new MeshBasicMaterial({ color: new Color("#bcd8ff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     this.flares = new InstancedMesh(new SphereGeometry(1, 10, 10), flare, CAP);
-    this.lamps = new InstancedMesh(new SphereGeometry(0.55, 12, 12), lamp, CAP);
-    // the cone's point is at +y, at the drone; its base is at the part
-    this.beams = new InstancedMesh(new ConeGeometry(1, 1, 16, 1, true), glow, CAP);
+    this.lamps = new InstancedMesh(new SphereGeometry(0.55, 10, 10), lamp, CAP);
+    this.halos = new InstancedMesh(new SphereGeometry(1, 12, 12), halo, CAP);
+    // a cone that stays wide the whole way: the narrower end (+y) is the lens, the wider end the part
+    this.beams = new InstancedMesh(new CylinderGeometry(0.7, 1, 1, 20, 1, true), glow, CAP);
+    this.cores = new InstancedMesh(new CylinderGeometry(0.22, 0.34, 1, 12, 1, true), core, CAP);
+    this.beams.renderOrder = 4;
+    this.cores.renderOrder = 5;
     // rings stand across the beam: their axis is y, the cone's
     this.rings = new InstancedMesh(new TorusGeometry(1, 0.05, 6, 20).rotateX(Math.PI / 2), ring.clone(), CAP * RINGS);
     this.sparks = new InstancedMesh(new SphereGeometry(0.1, 6, 6), spark, CAP * SPARKS);
     const tip = new MeshBasicMaterial({ color: new Color("#e7f6ff"), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false });
     this.tips = new InstancedMesh(new SphereGeometry(1, 10, 10), tip, CAP);
-    const fleck = new MeshBasicMaterial({ color: new Color("#fff4d2"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
-    this.spray = new InstancedMesh(new SphereGeometry(0.05, 6, 6), fleck, CAP * SPRAY);
-    for (const mesh of [this.flares, this.lamps, this.beams, this.rings, this.sparks, this.tips, this.spray]) {
+    const fleck = new MeshBasicMaterial({ color: new Color("#fff6c2"), transparent: true, opacity: 1, blending: AdditiveBlending, depthWrite: false });
+    this.spray = new InstancedMesh(new SphereGeometry(0.16, 8, 8), fleck, CAP * SPRAY);
+    for (const mesh of [this.flares, this.lamps, this.halos, this.beams, this.cores, this.rings, this.sparks, this.tips, this.spray]) {
       mesh.count = 0;
       mesh.frustumCulled = false;
       this.group.add(mesh);
@@ -227,21 +238,27 @@ export class SwarmRig {
     this.paths.visible = false;
     const laserGeo = new BufferGeometry();
     laserGeo.setAttribute("position", new BufferAttribute(this.laserPositions, 3));
-    this.lasers = new LineSegments(laserGeo, new LineBasicMaterial({ color: new Color("#d7ecff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false }));
+    this.lasers = new LineSegments(laserGeo, new LineBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 1, blending: AdditiveBlending, depthWrite: false }));
     this.lasers.frustumCulled = false;
     this.group.add(this.lasers);
     const seamGeo = new BufferGeometry();
     seamGeo.setAttribute("position", new BufferAttribute(this.seamPositions, 3));
-    this.seamMaterial = new LineBasicMaterial({ color: new Color("#f3fbff"), transparent: true, opacity: 0.8, blending: AdditiveBlending, depthWrite: false });
+    this.seamMaterial = new LineBasicMaterial({ color: new Color("#ffe38a"), transparent: true, opacity: 1, blending: AdditiveBlending, depthWrite: false });
     this.seam = new LineSegments(seamGeo, this.seamMaterial);
     this.seam.frustumCulled = false;
     this.group.add(this.seam);
+    const streakGeo = new BufferGeometry();
+    streakGeo.setAttribute("position", new BufferAttribute(this.streakPositions, 3));
+    this.streaks = new LineSegments(streakGeo, new LineBasicMaterial({ color: new Color("#fff6c2"), transparent: true, opacity: 1, blending: AdditiveBlending, depthWrite: false }));
+    this.streaks.frustumCulled = false;
+    this.streaks.renderOrder = 6;
+    this.group.add(this.streaks);
     parent.add(this.group);
     void this.loadLevel("far");
   }
 
   /**
-   * Puts the drones on `poses` with a beam to each part, or on `parked` with no beam, and the stack at `dock`. A weld is a steady dot, and, unless `reduced` is set, a laser, a seam and a spray.
+   * Puts the drones on `poses` with a beam to each part, or on `parked` with no beam, and the stack at `dock`. A weld shows its seam and its sparks in a still; unless `reduced` is set, the spray also moves.
    * `scale` is how many times life size a drone is drawn: at 1 it is the metre-wide drone itself, and a long ship draws it larger so it reads.
    */
   show(poses: readonly SwarmPose[], parked: readonly [number, number, number][], dock: readonly [number, number, number], reduced = false, scale = 1): void {
@@ -290,9 +307,12 @@ export class SwarmRig {
       this.centres[i * 3] = p.x;
       this.centres[i * 3 + 1] = p.y;
       this.centres[i * 3 + 2] = p.z;
+      this.scratch.makeScale(0.14 * s, 0.14 * s, 0.14 * s);
+      this.scratch.setPosition(p.x, p.y + 0.2 * s, p.z);
+      this.lamps.setMatrixAt(i, this.scratch);
       this.scratch.makeScale(0.28 * s, 0.28 * s, 0.28 * s);
       this.scratch.setPosition(p.x, p.y, p.z);
-      this.lamps.setMatrixAt(i, this.scratch);
+      this.halos.setMatrixAt(i, this.scratch);
       if (duty !== "work") continue;
       // the tractor beam: from the lens to the part's skin, only while this drone is fitting that part
       this.point(DRONE.emitter, p, s, this.mid);
@@ -306,12 +326,16 @@ export class SwarmRig {
       const span = Math.max(0.01, Math.hypot(endX - eX, endY - eY, endZ - eZ));
       const along = this.side.set(eX - endX, eY - endY, eZ - endZ).divideScalar(span);
       this.spin.setFromUnitVectors(UP, along);
-      const base = 0.7 * s * DRONE.diameter;
-      this.scratch.compose(this.one.set((eX + endX) / 2, (eY + endY) / 2, (eZ + endZ) / 2), this.spin, this.mid.set(base, span, base));
-      this.beams.setMatrixAt(beamN, this.scratch);
+      const base = Math.max(0.75 * s * DRONE.diameter, span * 0.22);
+      const placeBeam = (mesh: InstancedMesh, radius: number) => {
+        this.scratch.compose(this.one.set((eX + endX) / 2, (eY + endY) / 2, (eZ + endZ) / 2), this.spin, this.mid.set(radius, span, radius));
+        mesh.setMatrixAt(beamN, this.scratch);
+      };
+      placeBeam(this.beams, base);
+      placeBeam(this.cores, base * 0.42);
       for (let ring = 0; ring < RINGS; ring += 1) {
         const t = (ring + 1) / (RINGS + 1);
-        const r = Math.max(0.05 * s, base * t);
+        const r = Math.max(0.2 * s, base * (0.55 + 0.45 * t));
         this.scratch.compose(this.one.set(eX + (endX - eX) * t, eY + (endY - eY) * t, eZ + (endZ - eZ) * t), this.spin, this.mid.set(r, r, r));
         this.rings.setMatrixAt(beamN * RINGS + ring, this.scratch);
       }
@@ -348,11 +372,13 @@ export class SwarmRig {
       }
     }
     this.beams.count = beamN;
+    this.cores.count = beamN;
     this.rings.count = beamN * RINGS;
     this.sparks.count = beamN * SPARKS;
     this.flares.count = flareN;
     this.lamps.count = n;
-    for (const mesh of [this.beams, this.rings, this.sparks, this.flares, this.lamps]) mesh.instanceMatrix.needsUpdate = true;
+    this.halos.count = n;
+    for (const mesh of [this.beams, this.cores, this.rings, this.sparks, this.flares, this.lamps, this.halos]) mesh.instanceMatrix.needsUpdate = true;
     this.paths.geometry.setDrawRange(0, 0);
     // weldAt holds the tool tip then the arc's end, for each welding drone
     this.weldCount = this.weldAt.length / 2;
@@ -366,7 +392,6 @@ export class SwarmRig {
     this.tips.instanceMatrix.needsUpdate = true;
     const marked = this.weldCount > 0;
     this.spray.count = marked ? this.weldCount * SPRAY : 0;
-    if (marked) this.placeSpray(0);
     this.lasers.geometry.setDrawRange(0, marked ? this.weldCount * 2 : 0);
     this.seam.geometry.setDrawRange(0, marked ? this.weldCount * 2 : 0);
     if (marked) {
@@ -377,12 +402,30 @@ export class SwarmRig {
         const dx = b[0] - a[0];
         const dz = b[2] - a[2];
         const flat = Math.hypot(dx, dz) || 1;
-        const half = 0.6 * s;
+        const half = 1.6 * s;
         this.seamPositions.set([b[0] - (dz / flat) * half, b[1], b[2] + (dx / flat) * half, b[0] + (dz / flat) * half, b[1], b[2] - (dx / flat) * half], i * 6);
       }
+      let streakN = 0;
+      for (let i = 0; i < this.weldCount; i += 1) {
+        const at = this.weldAt[i * 2 + 1] ?? [0, 0, 0];
+        for (let ray = 0; ray < STREAKS; ray += 1) {
+          const dir = sparkAt(i * STREAKS + ray, 1);
+          const len = Math.hypot(dir[0], dir[1], dir[2]) || 1;
+          const ux = dir[0] / len;
+          const uy = dir[1] / len;
+          const uz = dir[2] / len;
+          const near = 0.25 * s;
+          const far = 1.6 * s;
+          this.streakPositions.set([at[0] + ux * near, at[1] + uy * near, at[2] + uz * near, at[0] + ux * far, at[1] + uy * far, at[2] + uz * far], streakN * 6);
+          streakN += 1;
+        }
+      }
+      this.streaks.geometry.setDrawRange(0, streakN * 2);
       this.lasers.geometry.getAttribute("position").needsUpdate = true;
       this.seam.geometry.getAttribute("position").needsUpdate = true;
-    }
+      this.streaks.geometry.getAttribute("position").needsUpdate = true;
+      this.placeSpray(reduced ? 0.7 : 0);
+    } else this.streaks.geometry.setDrawRange(0, 0);
     this.nearSig = "?";
     this.group.visible = true;
   }
@@ -498,8 +541,8 @@ export class SwarmRig {
       const at = this.weldAt[i * 2 + 1] ?? [0, 0, 0];
       for (let spark = 0; spark < SPRAY; spark += 1) {
         const off = sparkAt(i * SPRAY + spark, age);
-        this.scratch.makeScale(s, s, s);
-        this.scratch.setPosition(at[0] + off[0] * s * 0.5, at[1] + off[1] * s * 0.5, at[2] + off[2] * s * 0.5);
+        this.scratch.makeScale(1.8 * s, 1.8 * s, 1.8 * s);
+        this.scratch.setPosition(at[0] + off[0] * s, at[1] + off[1] * s, at[2] + off[2] * s);
         this.spray.setMatrixAt(i * SPRAY + spark, this.scratch);
       }
     }

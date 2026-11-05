@@ -127,26 +127,39 @@ test("a frame with 24 drones and one with 96", async ({ page }, info) => {
 
 test("builder pictures", async ({ page }, info) => {
   test.skip(!process.env.SHOTS || info.project.name !== "chromium-desk", "pictures only when SHOTS is set, on the desk");
-  test.setTimeout(180_000);
+  test.setTimeout(300_000);
   const dir = process.env.SHOTS ?? "";
-  const hero = page.getByTestId("hero");
-  for (const at of ["0.0684", "0.3", "0.6"]) {
+  const desk = { width: 1440, height: 900 };
+  const phone = { width: 390, height: 844 };
+  const shoot = async (at: string, name: string, size: { width: number; height: number }) => {
+    await page.setViewportSize(size);
     await page.goto(`${miyamoto}&at=${at}`);
-    const canvas = hero.locator("canvas");
+    await page.addStyleTag({
+      content: "main > :not(#main-view){display:none !important}.stage-row{margin:0 !important;display:block !important}.stage-box{padding:0 !important;border:0 !important}.stage-box uchusen-rocket,.stage-box uchusen-rocket[data-panel]{max-width:none !important;width:100vw !important}",
+    });
+    const canvas = page.getByTestId("hero").locator("canvas");
     await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 60_000 });
     await expect(canvas).toHaveAttribute("data-frame-ms", /\d/, { timeout: 45_000 });
-    await canvas.screenshot({ path: `${dir}/miyamoto-${at}.png` });
+    await canvas.screenshot({ path: `${dir}/${name}.png` });
+  };
+  for (const at of ["0.0684", "0.3", "0.6"]) {
+    await shoot(at, `miyamoto-${at}`, desk);
+    await shoot(at, `miyamoto-${at}-phone`, phone);
   }
+  await page.setViewportSize(desk);
   await page.goto(`${miyamoto}&at=0.6`);
-  const canvas = hero.locator("canvas");
+  await page.addStyleTag({
+    content: "main > :not(#main-view){display:none !important}.stage-row{margin:0 !important;display:block !important}.stage-box{padding:0 !important;border:0 !important}.stage-box uchusen-rocket,.stage-box uchusen-rocket[data-panel]{max-width:none !important;width:100vw !important}",
+  });
+  const canvas = page.getByTestId("hero").locator("canvas");
   await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 60_000 });
   const zoom = page.getByRole("region", { name: "The rocket" }).getByRole("button", { name: "Zoom in" }).first();
   let clicks = 0;
-  for (let i = 0; i < 8; i += 1) {
+  for (let i = 0; i < 4; i += 1) {
     if (await zoom.isDisabled()) break;
-    await zoom.click({ timeout: 3_000 });
+    await zoom.evaluate((node: HTMLButtonElement) => node.click());
     clicks += 1;
-    if (clicks === 3) {
+    if (clicks === 2) {
       await page.waitForTimeout(400);
       await canvas.screenshot({ path: `${dir}/miyamoto-mid.png` });
     }

@@ -1235,10 +1235,12 @@ export class RocketViewer {
         part.holder.visible = true;
       } else part.holder.visible = false;
     }
+    const open = frame.going.filter((slot) => grounded(slot, frame.done));
+    const workSteps = steps.filter((step) => !frame.going.includes(step.slot) || open.includes(step.slot));
     const count = swarmCount(built.report.variant?.id ?? "") ?? 0;
-    const jobs = swarmJobs(steps, count, at);
+    const jobs = open.length === 0 ? [] : swarmJobs(workSteps, count, at);
     const ys = shown.map((place) => place.at[1]);
-    const poses = carries(jobs, at, steps, (slot) => slotAt.get(slot), dock, [Math.min(...ys), Math.max(...ys)]);
+    const poses = carries(jobs, at, workSteps, (slot) => slotAt.get(slot), dock, [Math.min(...ys), Math.max(...ys)]);
     this.swarm ??= new SwarmRig(this.root, async (file) => (await new GLTFLoader().loadAsync(`${this.options.assets}models/${file}`)).scene, () => this.wake());
     this.swarm.setGlow(this.glowOn);
     // a drone is drawn larger than life on a big ship, about a fiftieth of its length across, so it reads at the distance the ship is seen from
