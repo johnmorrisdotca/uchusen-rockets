@@ -194,6 +194,7 @@ function renderStage() {
   hero.setAttribute("show", "together");
   hero.setAttribute("look", state.look);
   hero.setAttribute("beside", rest.length ? rest.map((craft) => `${craft.rocket}:${craft.variant}`).join(",") : "off");
+  hero.setAttribute("scale-note", say("cmpPlinth"));
   // the whole row is in the picture whenever it changes
   const now = list.map((craft) => `${craft.rocket}:${craft.variant}`).join(",");
   if (now !== framed) {

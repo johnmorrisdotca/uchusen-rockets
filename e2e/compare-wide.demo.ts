@@ -111,6 +111,87 @@ test("on a phone one craft is shown, with no way to add another, and the page do
   expect(param(page, "with")).toContain("iss:iss");
 });
 
+type Shot = {
+  frame: { left: number; top: number; right: number; bottom: number };
+  names: { text: string; left: number; top: number; right: number; bottom: number; cx: number }[];
+  notes: { text: string; left: number; top: number; right: number; bottom: number }[];
+  plinth: string;
+};
+const captions = (page: Page) =>
+  hero(page).evaluate((node) => {
+    const canvas = node.shadowRoot?.querySelector("canvas");
+    if (!canvas) return null;
+    const frame = canvas.getBoundingClientRect();
+    const read = (selector: string) =>
+      [...(node.shadowRoot?.querySelectorAll(selector) ?? [])].map((el) => {
+        const r = el.getBoundingClientRect();
+        return { text: el.textContent ?? "", left: r.left, top: r.top, right: r.right, bottom: r.bottom, cx: (r.left + r.right) / 2 };
+      });
+    return { frame: { left: frame.left, top: frame.top, right: frame.right, bottom: frame.bottom }, names: read("[data-beside-label]"), notes: read("[data-scale-note]"), plinth: (canvas as HTMLCanvasElement).dataset.plinth ?? "" };
+  });
+const inside = (box: { left: number; top: number; right: number; bottom: number }, frame: Shot["frame"]) =>
+  box.left >= frame.left - 1 && box.top >= frame.top - 1 && box.right <= frame.right + 1 && box.bottom <= frame.bottom + 1;
+const apart = (a: { left: number; top: number; right: number; bottom: number }, b: { left: number; top: number; right: number; bottom: number }) =>
+  a.right <= b.left + 1 || b.right <= a.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1;
+
+test("each craft is named at its own foot, inside the picture, and a craft in space stands on a marked plinth", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "WebGL is drawn in Chromium here, at a desk's width");
+  await page.goto(URL);
+  await page.locator('[data-testid="cw-add"]').click();
+  await expect(craftChips(page)).toHaveCount(3);
+  await reach3d(page);
+  await expect.poll(async () => (await captions(page))?.names.length ?? 0, { timeout: 30_000 }).toBe(3);
+  const shot = (await captions(page)) as Shot;
+  for (const box of shot.names) expect(inside(box, shot.frame)).toBe(true);
+  for (let i = 0; i < shot.names.length; i++) for (let j = i + 1; j < shot.names.length; j++) expect(apart(shot.names[i], shot.names[j])).toBe(true);
+  const centres = shot.names.map((name) => name.cx).sort((a, b) => a - b);
+  expect(centres[2] - centres[0]).toBeGreaterThan(80);
+  expect(shot.notes.map((note) => note.text)).toEqual(["shown on the ground for scale"]);
+  for (const note of shot.notes) expect(inside(note, shot.frame)).toBe(true);
+  expect(shot.plinth).toBe("on");
+  const built = build({ rocket: "starship", variant: "v3" }, { beside: [{ rocket: "saturn-v", variant: "saturn-v" }, { rocket: "fleet-ship-03", variant: "miyamoto" }], named: true });
+  const places = built.placesOf("together");
+  const parts = [...built.parts, ...built.beside];
+  const boxes = new Map<number, { minX: number; maxX: number; minY: number; minZ: number; maxZ: number }>();
+  for (const place of places) {
+    if (!place.shown) continue;
+    const part = parts.find((one) => one.slot === place.slot);
+    if (!part) continue;
+    const craft = part.craft ?? -1;
+    const have = boxes.get(craft);
+    boxes.set(craft, {
+      minX: Math.min(have?.minX ?? Infinity, place.at[0] + part.bounds.min[0]),
+      maxX: Math.max(have?.maxX ?? -Infinity, place.at[0] + part.bounds.max[0]),
+      minY: Math.min(have?.minY ?? Infinity, place.at[1] + part.bounds.min[1]),
+      minZ: Math.min(have?.minZ ?? Infinity, place.at[2] + part.bounds.min[2]),
+      maxZ: Math.max(have?.maxZ ?? -Infinity, place.at[2] + part.bounds.max[2]),
+    });
+  }
+  const feet = [-1, 0, 1].map((craft) => {
+    const box = boxes.get(craft);
+    if (!box) throw new Error(`no foot for ${craft}`);
+    return [(box.minX + box.maxX) / 2, box.minY, (box.minZ + box.maxZ) / 2];
+  });
+  const points = await hero(page).evaluate((node, pts) => pts.map((point) => (node as HTMLElement & { screenPoint(p: number[]): { x: number } | null }).screenPoint(point)), feet);
+  shot.names.forEach((name, index) => {
+    const own = Math.abs(name.cx - shot.frame.left - (points[index]?.x ?? 0));
+    points.forEach((point, other) => {
+      if (other === index || !point) return;
+      expect(own).toBeLessThanOrEqual(Math.abs(name.cx - shot.frame.left - point.x) + 2);
+    });
+  });
+});
+
+test("on a phone the one craft's name stays inside the picture", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-phone", "WebGL is drawn in Chromium here, at a phone's width");
+  await page.goto(URL);
+  await reach3d(page);
+  await expect.poll(async () => (await captions(page))?.names.length ?? 0, { timeout: 30_000 }).toBe(1);
+  const shot = (await captions(page)) as Shot;
+  expect(inside(shot.names[0], shot.frame)).toBe(true);
+  expect(shot.plinth).toBe("off");
+});
+
 test("any craft on the main page can be taken to the wide one", async ({ page }, info) => {
   test.skip(info.project.name === "chromium-phone", "A desk's layout");
   await page.goto("/uchusen-rockets/?rocket=saturn-v&variant=saturn-v");

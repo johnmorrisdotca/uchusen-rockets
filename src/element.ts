@@ -145,7 +145,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside", "captions", "scale-note"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -282,6 +282,7 @@ export class UchusenRocket extends HTMLBase {
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
     if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
+    else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
       // choosing what to show leaves the flight
@@ -476,7 +477,9 @@ export class UchusenRocket extends HTMLBase {
   /** The options of a build for what stands beside it. */
   private besideOptions(description: Description): { beside: readonly Description[]; named: boolean } {
     const beside = this.besideList(description);
-    return { beside, named: beside.length > 0 && this.getAttribute("beside") !== "on" };
+    // `captions` names the craft on screen even when it stands alone, so a phone's one craft still has its name
+    const named = this.hasAttribute("captions") || (beside.length > 0 && this.getAttribute("beside") !== "on");
+    return { beside, named };
   }
 
   /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
@@ -809,6 +812,7 @@ export class UchusenRocket extends HTMLBase {
       if (now.show !== show) made.setShow(now.show);
       this.lightViewer(made);
       made.setSpin(this.spin());
+      made.setScaleNote(this.getAttribute("scale-note"));
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
         if (generation === this.generation && this.viewer === made) {
