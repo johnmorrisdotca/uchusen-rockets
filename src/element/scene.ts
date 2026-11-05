@@ -1669,8 +1669,12 @@ export class RocketViewer {
   private tick = (now: number) => {
     this.frame = 0;
     if (!this.visible || document.hidden || this.disposed) return;
-    // shaders are being built: the next draw waits for them (prepare asks for a frame when they are in)
-    if (this.compiling > 0) return;
+    // shaders are being built: the picture waits, and a turning ring keeps its clock so the wait does not freeze it
+    if (this.compiling > 0) {
+      if (this.motionOn && !this.clockNow) this.stepMotion(now);
+      if (!this.frame) this.frame = requestAnimationFrame(this.tick);
+      return;
+    }
     this.inTick = true;
     this.clock.update(now);
     const dt = Math.min(this.clock.getDelta(), 0.1);
