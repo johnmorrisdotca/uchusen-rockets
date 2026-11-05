@@ -1493,7 +1493,7 @@ test("the comparison with the fleet in it: ships lie lengthwise on a scale that 
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once");
   await page.goto(URL);
   await press(page, "more-compare");
-  await press(page, "compare-fleet-02:fleet-02");
+  await press(page, "compare-fleet-kaminari:fleet-kaminari");
   const lineup = page.locator('[data-testid="lineup"]');
   const frame = page.locator('[data-testid="compare-view"]');
   const fits = async () => {

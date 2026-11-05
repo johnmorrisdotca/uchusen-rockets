@@ -14,7 +14,7 @@ const openCompare = async (page: Page) => {
 
 test("the Starship versions band: the numbers on the ruler are apart, each label has its own cell, and the unit is inside the picture", async ({ page }) => {
   await openCompare(page);
-  await page.locator('[data-testid="compare-fleet-02:fleet-02"]').click();
+  await page.locator('[data-testid="compare-fleet-ship-01:hanabusa"]').click();
   const boxes = await lineup(page).evaluate((node) => {
     const root = node.shadowRoot as ShadowRoot;
     const svg = root.querySelector("svg") as SVGSVGElement;
@@ -91,8 +91,13 @@ test("with a wide font the viewer's panel still keeps the stage inside 1010 px a
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
   const page = await context.newPage();
   await page.route(/\.(css|js)(\?.*)?$/, async (route) => {
-    const response = await route.fetch();
-    await route.fulfill({ response, body: (await response.text()).replaceAll("system-ui", "Verdana") });
+    try {
+      const response = await route.fetch();
+      await route.fulfill({ response, body: (await response.text()).replaceAll("system-ui", "Verdana") });
+    } catch {
+      // a goto starts the next rocket while the last one's files are still arriving
+      await route.abort();
+    }
   });
   let most = 0;
   let where = "";
