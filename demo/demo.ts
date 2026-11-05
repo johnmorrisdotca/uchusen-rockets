@@ -16,6 +16,7 @@ import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
+import { isPicker, paintThumbs, placeSky, skyCredit, type PickerId } from "./sky.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
 
@@ -56,12 +57,11 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
 const address = createAddressState({ defaults: { background: "none", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
-const BACKGROUND_NAMES = ["none", "earth"] as const;
-type BackgroundName = (typeof BACKGROUND_NAMES)[number];
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName, beside: address.get("beside") === "on", kscale: scalePercent(address.get("kscale")) };
+const askedBackground = address.get("background") ?? "none";
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: (isPicker(askedBackground) ? askedBackground : "none") as PickerId, beside: address.get("beside") === "on", kscale: scalePercent(address.get("kscale")) };
 
 /** A rocket is thin: the controls hold a pan so that a quarter of it stays in view. Its size on the screen: the picture is as wide as the box and a third taller, and the framing leaves 8% round the rocket. */
 function sizeObject() {
@@ -167,8 +167,28 @@ hero.addEventListener("uchusen-fallback", () => {
   realisticBarred = true;
   syncEarth();
 });
+let skyKey = "";
+/** The Moon, from wakusei-planets: small beside the Earth, or the picture itself. The same choice draws nothing again. */
+function syncSky() {
+  const lang = japanese() ? "ja" : "en";
+  const form = state.background === "moon" && state.look === "painted" && !realisticBarred ? "painted" : "line";
+  const key = `${state.background}|${form}|${lang}`;
+  const credit = byId("sky-credit");
+  const showCredit = state.background === "earth" || state.background === "moon";
+  if (key === skyKey) return;
+  skyKey = key;
+  placeSky(byId("sky-back"), byId("sky-moons"), state.background, form, lang);
+  credit.hidden = !showCredit;
+  credit.textContent = "";
+  if (!showCredit) return;
+  void skyCredit(form).then((text) => {
+    if (skyKey === key) credit.textContent = text;
+  });
+}
+
 function syncEarth() {
   byId("earth-credit").hidden = state.background !== "earth";
+  syncSky();
   const form: EarthForm | null = state.background !== "earth" ? null : state.look === "line" ? "line" : state.look === "thick" || realisticBarred ? "thick" : "realistic";
   if (form === earthForm) return;
   earthForm = form;
@@ -346,7 +366,17 @@ byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(WORDS.en[`look_${look}`], `look-${look}`, () => pick({ look }), `look_${look}`)));
 byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.replaceAll("-", "_")}`], `view-${view}`, () => pick({ view }), `view_${view.replaceAll("-", "_")}`)));
-byId("backgrounds").append(...BACKGROUND_NAMES.map((background) => chip(WORDS.en[`background_${background}`], `background-${background}`, () => pick({ background }), `background_${background}`)));
+const skyButton = (id: PickerId): HTMLButtonElement => {
+  const button = el("button", { type: "button", className: id === "none" ? "thumb thumb-none" : "thumb" });
+  button.dataset.testid = `background-${id}`;
+  button.dataset.sky = id;
+  button.setAttribute("aria-label", say(`background_${id}`));
+  button.append(el("span", { className: "thumb-dot" }));
+  button.addEventListener("click", () => pick({ background: id }));
+  return button;
+};
+byId("backgrounds").append(...(["none", "earth", "moon"] as const).map(skyButton));
+void paintThumbs(byId("backgrounds"), japanese() ? "ja" : "en");
 
 byId("beside").append(chip("Beside it", "beside-on", () => pick({ beside: !state.beside }), "beside"));
 // the size slider: the number follows the thumb at once, and the ship is rebuilt at the size when it is let go
@@ -725,6 +755,7 @@ function speak() {
   lightEngines(hero.getAttribute("engines") === "on");
   showMotion();
   drawTurn();
+  void paintThumbs(byId("backgrounds"), japanese() ? "ja" : "en");
   byId("gallery").replaceChildren(...gallery());
   byId("planned-list").replaceChildren(...planned());
   byId("source-list").replaceChildren(...sourceItems());

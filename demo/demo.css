@@ -36,8 +36,19 @@ section > p { color: var(--muted); margin: 0 0 1rem; max-width: 70ch; }
 .earth-back { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
 .earth-back[hidden] { display: none; }
 .earth-back svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.55; }
+#sky-back > svg { width: min(88%, 760px); height: auto; }
+#sky-back wakusei-body { position: absolute; left: 50%; top: 46%; width: min(88%, 720px); transform: translate(-50%, -50%); opacity: 0.9; }
 .earth-back chikyu-earth-realistic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; aspect-ratio: auto; opacity: 0.9; }
+.sky-moons { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.sky-moons[hidden] { display: none; }
+.sky-moons svg { position: absolute; opacity: 0.85; }
 .earth-credit { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.8rem; }
+.thumb { width: 44px; height: 44px; padding: 3px; border-radius: 50%; border: 1px solid var(--line); background: var(--raised); cursor: pointer; }
+.thumb-dot { display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: #101418; }
+.thumb-dot svg { display: block; width: 100%; height: 100%; }
+.thumb-none .thumb-dot { background: transparent; box-shadow: inset 0 0 0 2px var(--line); }
+.thumb[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.thumb:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .hint { margin: 0.3rem 0.5rem 0.2rem; color: var(--muted); font-size: 0.82rem; text-align: center; }
 .panel { display: flex; flex-direction: column; gap: 0.9rem; }
 .field h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 0.35rem; font-weight: 600; }
