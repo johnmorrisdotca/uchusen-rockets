@@ -68,7 +68,46 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   else earth?.dispatchEvent(new Event("orbit"));
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look" } });
+const PANELS = ["look", "background", "motion", "build", "lights"] as const;
+type PanelName = (typeof PANELS)[number];
+
+/** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. */
+function panelOffered(name: PanelName): boolean {
+  if (name === "motion") return !byId("motion-field").hidden;
+  if (name === "build") return !byId("build-field").hidden;
+  if (name === "lights") {
+    const field = byId("lights-field");
+    return !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
+  }
+  return true;
+}
+
+/** One group at a time. The choice is `panel` in the address, and Look is left off it. */
+function showPanels(): void {
+  const asked = address.get("panel") ?? "look";
+  const current: PanelName = (PANELS as readonly string[]).includes(asked) && panelOffered(asked as PanelName) ? (asked as PanelName) : "look";
+  for (const name of PANELS) {
+    const tab = document.querySelector(`[data-testid="panel-${name}"]`);
+    const group = document.querySelector(`[data-panel="${name}"]`);
+    const offered = panelOffered(name);
+    if (tab instanceof HTMLButtonElement) {
+      tab.hidden = !offered;
+      tab.setAttribute("aria-selected", String(name === current));
+    }
+    if (group instanceof HTMLElement) group.hidden = name !== current;
+  }
+  if (asked !== current) address.set("panel", current === "look" ? null : current);
+}
+
+for (const name of PANELS) {
+  document.querySelector(`[data-testid="panel-${name}"]`)?.addEventListener("click", () => {
+    if (!panelOffered(name)) return;
+    address.set("panel", name === "look" ? null : name);
+    showPanels();
+  });
+}
+new MutationObserver(() => showPanels()).observe(byId("lights-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
@@ -396,6 +435,7 @@ function renderMain() {
   drawEmbed();
   syncEarth();
   sizeObject();
+  showPanels();
 }
 
 /** The maker's row, and in the rocket's row only that maker's rockets. */
@@ -572,6 +612,7 @@ function showMotion() {
   press(motionBox, motionChoice === "off" ? "motion-off" : "motion-on");
   press(speedBox, motionChoice === "fast" ? "motion-fast" : "motion-real");
   address.set("motion", motionChoice === "on" ? null : motionChoice);
+  showPanels();
 }
 function chooseMotion(choice: string) {
   motionChoice = choice;

@@ -21,6 +21,7 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   const note = page.locator('[data-testid="orbit-altitude"]');
   const moons = page.locator('[data-testid="sky-moons"]');
   await page.goto(`${URL}?background=earth`);
+  await page.locator('[data-testid="panel-background"]').click();
   await expect(note).toHaveAttribute("data-km", "400");
   await expect(page.locator('[data-testid="orbit-400"]')).toHaveAttribute("aria-pressed", "true");
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBeNull();
@@ -64,6 +65,7 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   await expect(note).toHaveAttribute("data-km", "36000");
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBe("36000km");
 
+  await page.locator('[data-testid="panel-background"]').click();
   await page.locator('[data-testid="background-jupiter"]').click();
   const first = page.locator('[data-testid="orbits"] button').first();
   await expect(first).toBeVisible();

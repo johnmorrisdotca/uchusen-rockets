@@ -11,6 +11,7 @@ test("the build row is on a ship with an order, and a still keeps the place", as
   await expect(page.locator("#build-field")).toBeHidden();
 
   await page.goto("/uchusen-rockets/?rocket=fleet-ship-03&variant=miyamoto&build=on&at=0.25");
+  await page.locator('[data-testid="panel-build"]').click();
   await expect(page.locator("#build-field")).toBeVisible();
   const bar = page.locator("uchusen-build");
   await expect(bar.getByTestId("build-play")).toBeDisabled();
@@ -32,6 +33,7 @@ test("the row is on for each ship with an order, and off for a ship without one"
   ];
   for (const url of shown) {
     await page.goto(url);
+    await page.locator('[data-testid="panel-build"]').click();
     await expect(page.locator("#build-field")).toBeVisible();
     await expect(page.locator("uchusen-build").getByTestId("build-play")).toBeDisabled();
   }
