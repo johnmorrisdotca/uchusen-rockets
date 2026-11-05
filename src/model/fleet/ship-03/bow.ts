@@ -59,7 +59,8 @@ export function bow(cut: boolean, detail = 1, seed = "bow", marks = "452"): Piec
   const yF = layerY(2)[1] + 0.35;
   const lay = BOW_LAYERS[2];
   for (const [x, z] of [[-5, 4], [5, 4], [-5, -4], [5, -4]] as const) {
-    out.push(ringAt("hull-grey", x, z, 1.6, yF, 0.3), ringAt("hull-orange", x, z, 2.2, yF - 0.1, 0.18), tubeAt("glass", x, z, 1.1, yF - 0.2, yF + 0.4, { segs: 14 }), tubeAt("bell-inside", x + 0.2, z, 0.5, yF + 0.4, yF + 0.7, { segs: 10 }));
+    // the outer tube is the tip of the bow, so the coarse level keeps it and the hull stays the same length
+    out.push(ringAt("hull-grey", x, z, 1.6, yF, 0.3), ringAt("hull-orange", x, z, 2.2, yF - 0.1, 0.18), tubeAt("glass", x, z, 1.1, yF - 0.2, yF + 0.4, { segs: 14 }), tubeAt("bell-inside", x + 0.2, z, 0.5, yF + 0.4, yF + 0.7, { segs: 10, outline: true }));
     out.push(cub("hull-grey-dark", [x - 0.2, x + 0.2], [yF - 0.4, yF + 0.2], [z + 1.7, z + 2.4]), cub("lamp-amber", [x - 0.15, x + 0.15], [yF, yF + 0.2], [z - 2.4, z - 2]));
   }
   for (let k = 0; k < 6; k++) {
