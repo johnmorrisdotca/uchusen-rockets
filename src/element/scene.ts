@@ -828,9 +828,13 @@ export class RocketViewer {
     let burning = 0;
     let lowest: { view: PartView; y: number } | null = null;
     for (const view of this.parts) {
-      const count = counts.get(view.slot) ?? 0;
+      // a craft standing beside the one on screen lights with it: the bells of the part that stands on the ground, as at lift-off. A part's own bounds start at its foot, so the placed height is what says which one is down.
+      const besidePart = view.beside ? this.built.beside.find((part) => part.slot === view.slot) : undefined;
+      const foot = (slot: string) => this.built?.placesOf(this.show).find((place) => place.slot === slot)?.at[1] ?? 0;
+      const lowestBeside = besidePart !== undefined && this.built.beside.filter((part) => part.craft === besidePart.craft).every((part) => foot(part.slot) >= foot(besidePart.slot) - 0.5);
+      const count = besidePart ? (this.lit === "full" && lowestBeside ? bellsOf(besidePart.pieces).length : 0) : (counts.get(view.slot) ?? 0);
       if (count > 0 && !view.plumes) {
-        const built = this.built.parts.find((part) => part.slot === view.slot);
+        const built = besidePart ?? this.built.parts.find((part) => part.slot === view.slot);
         const bells = bellsOf(built?.pieces ?? []);
         if (bells.length === 0) continue;
         view.plumes = new PartPlumes(this.plumes, bells, built?.flame ?? "neutral");
