@@ -68,7 +68,7 @@ const stepsOf = (variant: string): readonly PlayStep[] | undefined => {
  * The build order of a ship, or nothing when that ship has no build to play. A cutaway and a deployed sail play the same build as the flown ship.
  *
  * @param variant The variant id.
- * @returns The steps, or nothing.
+ * @returns The steps, or undefined when that ship has no build to play.
  * @example
  * ```ts
  * import { buildOf } from "@johnmorrisdotca/uchusen-rockets";
@@ -119,4 +119,23 @@ export function playFrame(steps: readonly PlayStep[], at: number): PlayFrame {
 export function playFrom(params: URLSearchParams): { on: boolean; at: number } {
   const at = Number(params.get("at"));
   return { on: params.get("build") === "on", at: Number.isFinite(at) ? Math.min(1, Math.max(0, at)) : 0 };
+}
+
+/**
+ * The numbered stills for reduced motion: the keel just laid, evenly spaced moments, and the finished ship.
+ *
+ * @param steps The ship's build order.
+ * @param count How many stills. Fewer than 2 becomes the start and the end.
+ * @returns One frame per still, from the start to the end.
+ * @example
+ * ```ts
+ * import { stills } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const frames = stills([{ slot: "drive", start: 0, days: 10 }], 3);
+ * console.log(frames.length, frames[0].day, frames[2].day);
+ * ```
+ */
+export function stills(steps: readonly PlayStep[], count = 6): PlayFrame[] {
+  const n = Math.max(2, Math.floor(count));
+  return Array.from({ length: n }, (_, i) => playFrame(steps, i / (n - 1)));
 }

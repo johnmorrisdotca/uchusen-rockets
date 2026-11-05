@@ -1,7 +1,7 @@
 // The player reads the build order: the keel is underway at the start, everything is finished at the end, and a ship with no order is not offered.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PLAY_RATES, buildOf, playFrame, playFrom } from "../src/buildPlay.ts";
+import { PLAY_RATES, buildOf, playFrame, playFrom, stills } from "../src/buildPlay.ts";
 import { BUILD_DAYS } from "../src/model/fleet/ship-03/buildOrder.ts";
 
 test("Miyamoto starts on the drive, finishes every slot, and a rocket has no build", () => {
@@ -25,4 +25,8 @@ test("the long ships are offered, and the address keeps the place", () => {
   assert.ok(BUILD_DAYS / PLAY_RATES[0] < 30);
   assert.deepEqual(playFrom(new URLSearchParams("build=on&at=0.25")), { on: true, at: 0.25 });
   assert.deepEqual(playFrom(new URLSearchParams("at=no")), { on: false, at: 0 });
+  const frames = stills(buildOf("miyamoto") ?? [], 4);
+  assert.equal(frames.length, 4);
+  assert.equal(frames[0].day, 0);
+  assert.equal(frames[3].done.length, buildOf("miyamoto")?.length);
 });
