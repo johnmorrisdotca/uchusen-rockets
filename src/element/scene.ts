@@ -44,7 +44,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
 import { angleAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
-import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
+import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
@@ -527,6 +527,7 @@ export class RocketViewer {
       this.holder.append(bar);
       this.scaleBar = bar;
     }
+    this.updateScaleBar();
     this.wake();
   }
 
@@ -563,8 +564,7 @@ export class RocketViewer {
   private updateScaleBar(): void {
     if (!this.scaleBar) return;
     const metresPerPixel = 2 * this.camera.position.distanceTo(this.controls.target) * Math.tan(MathUtils.degToRad(FOV_DEG / 2)) / (Math.max(1, this.holder.clientHeight) * this.camera.zoom);
-    const candidates = [0.1, 1, 10, 100, 1000];
-    const metres = candidates.find((value) => value / metresPerPixel >= 50 && value / metresPerPixel <= this.holder.clientWidth * 0.7) ?? candidates.find((value) => value / metresPerPixel <= this.holder.clientWidth * 0.7) ?? 0.1;
+    const metres = scaleBarMetres(metresPerPixel, this.holder.clientWidth);
     this.scaleBar.style.width = `${metres / metresPerPixel}px`;
     this.scaleBar.textContent = metres === 1000 ? "1 km" : `${metres} m`;
   }

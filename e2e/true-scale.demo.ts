@@ -24,7 +24,8 @@ test("true scale shows the previous craft, then fits and returns to Fit", async 
     observer.observe(canvas, { attributes: true, attributeFilter: ["data-ghost"] });
   });
   await page.getByTestId("maker-fleet").click();
-  await page.getByTestId("rocket-fleet-02").click();
+  // The first hull (fleet-02, 1820 m) is opened by address and is not in the list. The listed Kaminari is fleet-kaminari, 1818 m.
+  await page.getByTestId("rocket-fleet-kaminari").click();
   await expect.poll(async () => Number(await data(page, "scaleRatio")), { timeout: 30000 }).toBeGreaterThan(0);
   const ratio = Number(await data(page, "scaleRatio"));
   expect(Math.abs(ratio / (1820 / 110.64) - 1)).toBeLessThan(0.05);
@@ -33,7 +34,7 @@ test("true scale shows the previous craft, then fits and returns to Fit", async 
   await page.getByTestId("view-bar").locator('[data-b="fit"]').click();
   await expect(page.getByTestId("true-scale")).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByTestId("scale-bar")).toHaveCount(0);
-  await expect.poll(() => new URL(page.url()).searchParams.has("scale")).toBe(false);
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.has("scale")).toBe(false);
 });
 
 test("ghost buffers are released after repeated craft changes", async ({ page }) => {

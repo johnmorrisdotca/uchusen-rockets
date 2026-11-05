@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PerspectiveCamera, Vector3 } from "three";
-import { FOV_DEG, transitionReferenceDistance } from "../src/framing.ts";
+import { FOV_DEG, scaleBarMetres, transitionReferenceDistance } from "../src/framing.ts";
 
 test("objects in the same camera plane project at their real length ratio", () => {
   const camera = new PerspectiveCamera(FOV_DEG, 4 / 3, 0.1, 20000);
@@ -18,4 +18,10 @@ test("objects in the same camera plane project at their real length ratio", () =
     return end.y - start.y;
   };
   assert.ok(Math.abs(pixels(1820) / pixels(110.6) - 1820 / 110.6) < 0.01);
+});
+
+test("a narrow picture still gets a scale bar long enough to read", () => {
+  assert.equal(scaleBarMetres(0.229, 500), 10);
+  assert.equal(scaleBarMetres(0.1, 800), 10);
+  assert.equal(scaleBarMetres(4.5, 600), 1000);
 });

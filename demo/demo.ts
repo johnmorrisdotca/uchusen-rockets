@@ -354,10 +354,11 @@ function renderMain() {
   byId("beside-note").hidden = !(besideHere && state.beside);
   press(byId("beside"), state.beside ? "beside-on" : "");
   showMotion();
-  // the Kaminari concepts take a size, 60 to 100 per cent
+  // the Kaminari concepts take a size, 60 to 100 per cent. scale="true" is the true-scale view, kept in the address apart from that size; a redraw must not clear it.
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
-  if (sizeHere) hero.setAttribute("scale", String(state.kscale));
+  if (address.get("scale") === "true") hero.setAttribute("scale", "true");
+  else if (sizeHere) hero.setAttribute("scale", String(state.kscale));
   else hero.removeAttribute("scale");
   byId<HTMLInputElement>("kscale").value = String(state.kscale);
   byId("kscale-out").textContent = `${state.kscale}%`;
