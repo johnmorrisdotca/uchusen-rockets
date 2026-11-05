@@ -776,7 +776,7 @@ function dockingNode(id: string, name: string, count: number, cls: CollarClass, 
         // the arm: two beams from the hub out to a cradle, a cradle ring, the port's collar facing up, lamps
         for (const d of [-0.9, 0.9]) out.push(beam("hull-grey-dark", [6 * Math.sin(a) + d * Math.cos(a), L - 1.5, 6 * Math.cos(a) - d * Math.sin(a)], [rr * Math.sin(a) + d * Math.cos(a), L - 1.5, rr * Math.cos(a) - d * Math.sin(a)], 0.5, 0.6), rod("hull-grey", [6 * Math.sin(a) + d * Math.cos(a), L - 0.3, 6 * Math.cos(a) - d * Math.sin(a)], [rr * Math.sin(a) + d * Math.cos(a), L - 1.5, rr * Math.cos(a) - d * Math.sin(a)], 0.14, 6));
         out.push(...place([{ kind: "lathe", material: "hull-grey-dark", segs: 28, outline: true, profile: [[COLLARS[cls].outer / 2, -0.8], [COLLARS[cls].outer / 2, 0]] } as Lathe, ...collar(cls, 0, 1)], { at: [p.at[0], L, p.at[2]] }));
-        out.push(...lamps([{ at: [p.at[0] + Math.sin(a) * COLLARS[cls].outer * 0.5, L - 0.5, p.at[2] + Math.cos(a) * COLLARS[cls].outer * 0.5], colour: "blue", size: 0.14 }, { at: [p.at[0], L + 0.15, p.at[2]], colour: "flood", size: 0.16 }]));
+        out.push(...lamps([{ at: [p.at[0] + Math.sin(a) * COLLARS[cls].outer * 0.5, L - 0.5, p.at[2] + Math.cos(a) * COLLARS[cls].outer * 0.5], colour: "blue", size: 0.14 }, { at: [p.at[0], L - 0.45, p.at[2]], colour: "flood", size: 0.16 }]));
         out.push(lightPool({ o: [p.at[0], L - 0.12, p.at[2]], u: [Math.cos(a), 0, -Math.sin(a)], v: [-Math.sin(a), 0, -Math.cos(a)], w: [0, 1, 0] }, COLLARS[cls].outer * 0.35));
       }
       return out;
