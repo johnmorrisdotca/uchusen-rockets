@@ -14,10 +14,10 @@ export const truss = (y0: number, length: number): Piece[] => stackOf(Array.from
 export const mod = (id: string | KitModule, y: number, detail = 0.4): Piece[] => place((typeof id === "string" ? KIT[id] : id).pieces({ detail }), { at: [0, y, 0] });
 
 /** The in-line drive, 60 m: a reactor chamber, a throat and twelve coil rings flaring out to the tail, each ring a field coil, on six long struts and a thrust ring. No bell: the field is the nozzle. */
-export function inlineDrive(y0 = 0): Piece[] {
+export function inlineDrive(y0 = 0, flare = 15): Piece[] {
   const out: Piece[] = [];
   out.push({ kind: "lathe", material: "hull-white", segs: 36, body: true, outline: true, profile: [[7, y0 + 38], [7, y0 + 60]] } as Lathe, { kind: "lathe", material: "hull-grey-dark", segs: 36, only: "mesh", profile: [[3.2, y0 + 20], [5.2, y0 + 30], [7, y0 + 38]] } as Lathe);
-  const ringAt = (i: number): [number, number] => [y0 + 3 + i * 3.1, 15 - (i * 9) / 11];
+  const ringAt = (i: number): [number, number] => [y0 + 3 + i * 3.1, flare - (i * (flare - 6)) / 11];
   for (let i = 0; i < 12; i++) {
     const [y, r] = ringAt(i);
     out.push(hoop(i < 3 ? "coil-lit" : "coil", r, y, 0.75, 56, 10), hoop("hull-grey-dark", r + 0.9, y, 0.18, 56, 6));
