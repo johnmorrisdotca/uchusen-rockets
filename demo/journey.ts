@@ -547,6 +547,7 @@ function buildPanel(): void {
     ["dvin", say("jDvIn"), speedWords(trip.dv.arrival)],
     ...(trip.ballistic ? ([["burnout", say("jBurnOut"), duration(trip.ballistic.burnS), trip.estimated.includes("departure burn length")], ["burnin", say("jBurnIn2"), trip.ballistic.brakeS > 0 ? duration(trip.ballistic.brakeS) : "–", trip.estimated.includes("braking acceleration")]] as [string, string, string, boolean][]) : []),
     ["peakg", say("jPeakG"), gWords(trip.peakG), trip.estimated.includes("departure burn length") || trip.estimated.includes("braking acceleration")],
+    ...(trip.escape ? ([[ "escsurf", say("jEscapeSurface"), speedWords(trip.escape.surfaceKmS * 1000) ], [ "escpark", say("jEscapePark"), speedWords(trip.escape.parkingKmS * 1000) ]] as [string, string, string][]) : []),
     ["peak", say("jPeakSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     ["fuel", say("jFuel"), fuelWords()],
     ["ratio", say("jMassRatio"), ratioWords()],
