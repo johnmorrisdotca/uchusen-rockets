@@ -80,9 +80,10 @@ const draw = (): void => {
     address.set("cut", "");
     draw();
   })));
-  sectionsRow.replaceChildren(...slots.map((slot) => chip(slotLabel(slot), `db-show-${slot}`, slot === show, () => {
+  sectionsRow.replaceChildren(...slots.map((slot) => chip(slotLabel(slot), `db-show-${slot}`, !cut && slot === show, () => {
     address.set("ship", ship);
     address.set("show", slot);
+    address.set("cut", "");
     address.set("module", "");
     draw();
   })), ...(cutId ? [chip(say("dbCutaway"), "db-cutaway", cut, () => {
