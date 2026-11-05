@@ -39,13 +39,22 @@ export interface BuildWords {
   rate: string;
 }
 
+const DAY_S = 86_400;
+
+function clockOf(day: number): { day: number; clock: string } {
+  const whole = Math.floor(Math.max(0, day));
+  const seconds = Math.min(DAY_S - 1, Math.floor((day - whole) * DAY_S));
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return { day: whole, clock: `${pad(Math.floor(seconds / 3600))}:${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}` };
+}
+
 const WORDS: BuildWords = {
   play: "Play",
   pause: "Pause",
   start: "Start",
   repeat: "Repeat",
   range: "Where in the build",
-  day: "Day {day}",
+  day: "Day {day}, {clock}",
   done: "{done} of {total} built",
   rate: "x{rate}",
 };
@@ -69,11 +78,11 @@ export class UchusenBuild extends HTMLBase {
   onRepeat: ((on: boolean) => void) | null = null;
   private order: readonly PlayStep[] | null = null;
   private place = 0;
-  /** Story days in one real second. 1 is real time. The family's speed buttons set it. */
+  /** Story seconds in one real second. 1 is real time. 86400 is one story day a real second. */
   private rate = 1;
   private repeatOn = false;
   private timer: ReturnType<typeof setInterval> | null = null;
-  /** The last tick, so a slowed timer still moves one story day a second at 1×. */
+  /** The last tick. A late tick counts at most two real seconds, so a stall does not skip the build. */
   private mark = 0;
   private said: Partial<BuildWords> = {};
   private parts: { play: HTMLButtonElement; start: HTMLButtonElement; repeat: HTMLButtonElement; range: HTMLInputElement; now: HTMLElement; stills: HTMLElement } | null = null;
@@ -165,7 +174,7 @@ export class UchusenBuild extends HTMLBase {
       const elapsed = Math.min(2, Math.max(0, (now - this.mark) / 1000));
       this.mark = now;
       const total = Math.max(1, playFrame(this.order ?? [], 1).total);
-      this.place = Math.min(1, this.place + (this.rate * elapsed) / total);
+      this.place = Math.min(1, this.place + (this.rate * elapsed) / DAY_S / total);
       if (this.place >= 1 && this.repeatOn) this.place = 0;
       this.draw();
       this.onMove?.(this.place);
@@ -245,7 +254,8 @@ export class UchusenBuild extends HTMLBase {
     parts.repeat.setAttribute("aria-pressed", String(this.repeatOn));
     parts.range.value = String(this.place);
     parts.range.setAttribute("aria-label", this.word("range"));
-    parts.range.setAttribute("aria-valuetext", this.fill("day", { day: Math.round(frame.day) }));
+    const dayText = this.dayText(frame.day);
+    parts.range.setAttribute("aria-valuetext", dayText);
     parts.stills.replaceChildren();
     if (reduced) {
       const frames = stills(order);
@@ -259,7 +269,14 @@ export class UchusenBuild extends HTMLBase {
         parts.stills.append(button);
       }
     }
-    parts.now.textContent = `${this.fill("day", { day: Math.round(frame.day) })}, ${this.fill("done", { done: frame.done.length, total: order.length })}`;
+    parts.now.textContent = `${dayText}, ${this.fill("done", { done: frame.done.length, total: order.length })}`;
+  }
+
+  /** Whole days at a day a second or faster. Slower rates show the time within the day, so 1× is seen to move. */
+  private dayText(day: number): string {
+    if (this.rate >= DAY_S) return this.fill("day", { day: Math.round(day), clock: "" }).replace(/[,、]\s*$/u, "").trim();
+    const clock = clockOf(day);
+    return this.fill("day", { day: clock.day, clock: clock.clock });
   }
 }
 
