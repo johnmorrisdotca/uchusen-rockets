@@ -106,12 +106,31 @@ export function playFrame(steps: readonly PlayStep[], at: number): PlayFrame {
 
 /** The work inside one step, in order. Bring is the only transport, and it is under 15% of the step. */
 export const PHASES = ["bring", "join", "outfit", "inspect"] as const;
+
+/**
+ * Bring, join, outfit, then inspect. Bring is the only time a part is carried.
+ * @example
+ * ```ts
+ * import type { BuildPhase } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const phase: BuildPhase = "join";
+ * console.log(phase);
+ * ```
+ */
 export type BuildPhase = (typeof PHASES)[number];
 
 /** How the step's days are shared. They add up to 1, and bring stays under 15%. */
 export const PHASE_SHARE: Record<BuildPhase, number> = { bring: 0.08, join: 0.27, outfit: 0.33, inspect: 0.32 };
 
-/** The widest part the shop will hand to a drone, in metres. Anything larger is built where it will stand. */
+/**
+ * The widest part the shop will hand to a drone, in metres. Anything larger is built where it will stand.
+ * @example
+ * ```ts
+ * import { SHOP_LIMIT_M } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(SHOP_LIMIT_M);
+ * ```
+ */
 export const SHOP_LIMIT_M = 30;
 
 /**
@@ -139,7 +158,16 @@ export function stepPhase(step: PlayStep, day: number): { phase: BuildPhase; alo
   return { phase: "inspect", along: 1 };
 }
 
-/** How a part stands at `day`. A shop-sized part rides in a beam while it is brought in. A larger one grows where it belongs, and a ring's `grown` is the fraction of the circle that is closed. */
+/**
+ * How a part stands at `day`. A shop-sized part rides in a beam while it is brought in. A larger one grows where it belongs, and a ring's `grown` is the fraction of the circle that is closed.
+ * @example
+ * ```ts
+ * import type { PartBuild } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const part: PartBuild = { slot: "drive", grown: 0.4, carried: false, phase: "join" };
+ * console.log(part.grown);
+ * ```
+ */
 export interface PartBuild {
   slot: string;
   /** 0 while it has not started, then up to 1. Below 1 the part is still being built, so it is not a finished piece appearing at once. */

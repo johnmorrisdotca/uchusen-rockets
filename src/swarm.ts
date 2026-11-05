@@ -117,8 +117,31 @@ export function approachPath(drone: number, count: number, slot: readonly [numbe
 }
 
 /**
- * One drone, where it is, and the point its beam aims at.
+ * A rank reads at a glance: one boss, one manager for every six to eight drones, and the rest builders and grunts about equally.
+ * @example
+ * ```ts
+ * import type { Rank } from "@johnmorrisdotca/uchusen-rockets";
  *
+ * const rank: Rank = "boss";
+ * console.log(rank);
+ * ```
+ */
+export type Rank = "boss" | "manager" | "builder" | "grunt";
+
+/**
+ * What the drone is doing. A boss or a manager is busy only while directing.
+ * @example
+ * ```ts
+ * import type { CrewTask } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const task: CrewTask = "weld";
+ * console.log(task);
+ * ```
+ */
+export type CrewTask = "direct" | "weld" | "inspect" | "spray" | "fasten" | "survey" | "carry" | "charge";
+
+/**
+ * One drone, where it is, and the point its beam aims at.
  * @example
  * ```ts
  * import type { Carry } from "@johnmorrisdotca/uchusen-rockets";
@@ -127,12 +150,6 @@ export function approachPath(drone: number, count: number, slot: readonly [numbe
  * console.log(carry.slot);
  * ```
  */
-/** A rank reads at a glance: one boss, one manager for every six to eight drones, and the rest builders and grunts about equally. */
-export type Rank = "boss" | "manager" | "builder" | "grunt";
-
-/** What the drone is doing. A boss or a manager is busy only while directing. */
-export type CrewTask = "direct" | "weld" | "inspect" | "spray" | "fasten" | "survey" | "carry" | "charge";
-
 export interface Carry {
   drone: number;
   slot: string;
@@ -146,7 +163,18 @@ export interface Carry {
   task: CrewTask;
 }
 
-/** The rank of drone `drone` in a crew of `count`. Drone 0 is the boss. */
+/**
+ * The rank of drone `drone` in a crew of `count`. Drone 0 is the boss.
+ * @param drone The drone's number, from 0.
+ * @param count How many drones are in the crew.
+ * @returns Boss, manager, builder or grunt.
+ * @example
+ * ```ts
+ * import { rankOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(rankOf(0, 24));
+ * ```
+ */
 export function rankOf(drone: number, count: number): Rank {
   if (drone <= 0 || count <= 1) return "boss";
   const managers = Math.max(1, Math.floor(count / 7));
@@ -155,25 +183,6 @@ export function rankOf(drone: number, count: number): Rank {
   return drone <= managers + builders ? "builder" : "grunt";
 }
 
-/**
- * Where each drone is at `at`. Most of the crew is at the part, spread all the way round it. A few fly out for a shop-sized piece, and a few charge at a berth. The part itself stays where it is built.
- *
- * @param jobs Which slot each drone is on.
- * @param at How far through the build, from 0 to 1.
- * @param steps The ship's build order.
- * @param slotAt Where a finished slot stands.
- * @param dock The parts stack, beside the ship.
- * @param length The ship's length, stern then bow, so drones in transit spread along it. Omitted, they spread from the stack to the slot.
- * @returns One carry per job.
- * @example
- * ```ts
- * import { buildOf, carries, swarmJobs } from "@johnmorrisdotca/uchusen-rockets";
- *
- * const steps = buildOf("miyamoto") ?? [];
- * const jobs = swarmJobs(steps, 4, 0);
- * console.log(carries(jobs, 0, steps, () => [0, 0, 0], [40, 0, 0]).length);
- * ```
- */
 const BUILDER_TASKS = ["weld", "fasten", "inspect"] as const;
 const GRUNT_TASKS = ["spray", "survey", "carry", "charge"] as const;
 
@@ -197,6 +206,24 @@ function placeCrew(job: SwarmJob, count: number, slot: readonly [number, number,
   return { drone: job.drone, slot: job.slot, part: [aim[0], aim[1], aim[2]], where, duty, rank, task };
 }
 
+/**
+ * Where each drone is at `at`. Most of the crew is at the part, spread all the way round it. A few fly out for a shop-sized piece, and a few charge at a berth. The part itself stays where it is built.
+ * @param jobs Which slot each drone is on.
+ * @param at How far through the build, from 0 to 1.
+ * @param steps The ship's build order.
+ * @param slotAt Where a finished slot stands.
+ * @param dock The parts stack, beside the ship.
+ * @param length The ship's length, stern then bow, so drones in transit spread along it. Omitted, they spread from the stack to the slot.
+ * @returns One carry per job.
+ * @example
+ * ```ts
+ * import { buildOf, carries, swarmJobs } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const steps = buildOf("miyamoto") ?? [];
+ * const jobs = swarmJobs(steps, 4, 0);
+ * console.log(carries(jobs, 0, steps, () => [0, 0, 0], [40, 0, 0]).length);
+ * ```
+ */
 export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly PlayStep[], slotAt: (slot: string) => readonly [number, number, number] | undefined, dock: readonly [number, number, number], length?: readonly [number, number]): Carry[] {
   const going = playFrame(steps, at).going;
   if (going.length === 0 || jobs.length === 0) return [];
