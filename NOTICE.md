@@ -53,6 +53,16 @@ The dataset addresses named below are the record of what each model is. Their do
 | `hubble-telescope.glb` | Hubble Space Telescope | https://data.nasa.gov/dataset/nasa-3d-models-hubble-space-telescope | A lettered plate painted out of its picture; its 7,672 triangles kept; rescaled to the sourced length; its materials made into one picture. |
 <!-- more NASA models -->
 
+## Lettering faces (SIL Open Font License 1.1)
+
+The fleet's hull markings are lettering made from the outlines of open-licence fonts. The package ships no font file: the outlines are plain numbers in `src/model/fleet/typeface.ts`, made by `scripts/make-glyphs.ts` and flattened to straight runs. The concepts use each face as it was drawn. Each font's licence ships with the package, as the licence requires (see [LICENSES/OFL-Michroma.txt](LICENSES/OFL-Michroma.txt) and [LICENSES/OFL-MPLUS1p.txt](LICENSES/OFL-MPLUS1p.txt)); the licence of the font Michroma and its file are also in `fonts/` in the repository. The outlines are shipped as geometry, with no font file, and are not sold as a font.
+
+- **Michroma**, Copyright 2011 The Michroma Project Authors (https://github.com/googlefonts/Michroma-font), SIL Open Font License 1.1, https://openfontlicense.org. Used for Latin letters, figures and signs.
+- **Orbitron Bold**, Copyright (c) 2009, Matt McInerney, with Reserved Font Name "Orbitron" (https://github.com/theleagueof/orbitron), SIL Open Font License 1.1 ([LICENSES/OFL-Orbitron.txt](LICENSES/OFL-Orbitron.txt)). Offered as a lettering concept. Its outlines are used as geometry and no font called Orbitron, or anything made from it under that name, is shipped.
+- **Oxanium ExtraBold**, Copyright 2019 The Oxanium Project Authors (https://github.com/sevmeyer/oxanium), SIL Open Font License 1.1 ([LICENSES/OFL-Oxanium.txt](LICENSES/OFL-Oxanium.txt)). Its outlines are kept with the other faces.
+- **Goldman Bold**, Copyright 2018 The Goldman Project Authors (https://github.com/magictype/goldman), SIL Open Font License 1.1 ([LICENSES/OFL-Goldman.txt](LICENSES/OFL-Goldman.txt)). Offered as a lettering concept, used as drawn.
+- **M PLUS 1p Bold**, Copyright 2016 The M+ Project Authors (https://github.com/google/fonts/tree/main/ofl/mplus1p), SIL Open Font License 1.1, https://openfontlicense.org. Used for the fourteen kanji and katakana of the ships' names and the class.
+
 ## Facts
 
 Sizes are plain facts, each with its source in `src/data/sources.ts` and on the demo page. A figure is blank where no source gives one. Where sources disagree, the data keeps the one chosen and names the others.

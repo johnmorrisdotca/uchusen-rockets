@@ -155,3 +155,7 @@ Parts are `fleet-ship-01-<slot>`: thirty-six rows in `src/model/ship-01.ts` and 
 ## Influences and originality check
 
 The pictures and films of spin-gravity ships, rings and wheels are mood only; no silhouette, name or marking of any of them is used. The nearest franchise ships are the rotating wheel of a famous film's space station and a certain series' tower with ringed gardens; Hanabusa differs in being a keel with three stepped glazed rings and a closed industrial wheel, a hull of real large tanks and drums, and a drive of nineteen coil-ring thrusters. Every shape is this package's own, from the real hardware above.
+
+## Motion
+
+With the Motion choice on, the three rings turn together at 3.43 rpm (one turn every 17.5 s, the real rate for 1.00 g in the living ring) and the industrial wheel at 2.83 rpm, while the keel stays still; see [motion.md](motion.md).

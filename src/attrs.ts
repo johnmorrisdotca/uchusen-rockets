@@ -10,7 +10,7 @@
  * console.log(OPTION_ATTRIBUTES.join(", "));
  * ```
  */
-export const OPTION_ATTRIBUTES = ["rocket", "variant", "show", "look", "view", "build", "mode", "spin", "way", "label", "assets", "engines", "phase"] as const;
+export const OPTION_ATTRIBUTES = ["rocket", "variant", "show", "look", "view", "build", "mode", "spin", "way", "label", "assets", "engines", "phase", "motion"] as const;
 
 /**
  * Every choice that draws a rocket, as plain text: the same names and values as the element's attributes. Nothing here is trusted. A value outside its list falls back to a default when it is drawn.
@@ -40,6 +40,8 @@ export interface RocketOptions {
   engines?: string;
   /** A phase of the rocket's flight, by its id: the engines that burn there. */
   phase?: string;
+  /** `on` moves the moving parts of a fleet ship (rings, doors, arrays, dishes) at their real speed, `fast` at ten times. `off` or left out keeps them still; a reader who asked for reduced motion always gets them still. */
+  motion?: string;
 }
 
 const text = (value: unknown): string | undefined => (typeof value === "string" && value !== "" ? value : undefined);

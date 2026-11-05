@@ -24,6 +24,7 @@ import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import { FLEET_KIT_ROCKETS, FLEET_SLOT_NAMES } from "./data/fleet.ts";
 import { CONCEPT_SLOT_NAMES, KAMINARI_VARIANTS } from "./data/kaminari-concepts.ts";
 import { SHIP_01_INSET_ROCKET, SHIP_01_SLOT_NAMES, SHIP_01_VARIANTS } from "./data/ship-01.ts";
+import { KYOTORI_SLOT_NAMES, KYOTORI_VARIANTS } from "./data/ship-kyotori.ts";
 import { ARIAKE_VARIANTS, SHIP_03_INSET_ROCKET, SHIP_03_SLOT_NAMES, SHIP_03_VARIANTS } from "./data/ship-03.ts";
 import { MADE_BY, type MakerId } from "./data/makers.ts";
 import type { Figure, Variant } from "./data/types.ts";
@@ -144,6 +145,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", ...MADE_BY["launch-tower"], variants: TOWER_VARIANTS, defaultVariant: "stack" },
   ...Object.fromEntries(Object.entries(FLEET_KIT_ROCKETS).map(([id, rocket]) => [id, { id, name: rocket.name, status: "built" as const, ...MADE_BY["fleet-kit"], variants: rocket.variants, defaultVariant: rocket.variants[0].id }])),
   "fleet-ship-01": { id: "fleet-ship-01", name: "ISV 花房 Hanabusa, SPX-013", status: "built", ...MADE_BY["fleet-ship-01"], variants: SHIP_01_VARIANTS, defaultVariant: "hanabusa" },
+  "fleet-kyotori": { id: "fleet-kyotori", name: "ISV 鏡鳥 Kyotori, SPX-045", status: "built", ...MADE_BY["fleet-kyotori"], variants: KYOTORI_VARIANTS, defaultVariant: "kyotori" },
   "fleet-insets-ship-01": { id: "fleet-insets-ship-01", name: SHIP_01_INSET_ROCKET.name, status: "built", ...MADE_BY["fleet-ship-01"], variants: SHIP_01_INSET_ROCKET.variants, defaultVariant: SHIP_01_INSET_ROCKET.variants[0].id },
   "fleet-ship-03": { id: "fleet-ship-03", name: "ISV 宮本 Miyamoto, SPX-452", status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_VARIANTS, defaultVariant: "miyamoto" },
   "fleet-ship-ariake": { id: "fleet-ship-ariake", name: "ISV 有明 Ariake, SPX-186", status: "built", ...MADE_BY["fleet-ship-ariake"], variants: ARIAKE_VARIANTS, defaultVariant: "ariake" },
@@ -223,6 +225,7 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   ...CONCEPT_SLOT_NAMES,
   ...FLEET_SLOT_NAMES,
   ...SHIP_01_SLOT_NAMES,
+  ...KYOTORI_SLOT_NAMES,
   ...SHIP_03_SLOT_NAMES,
   booster: "Super Heavy",
   ship: "Ship",

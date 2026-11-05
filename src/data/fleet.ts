@@ -1,6 +1,7 @@
 // The fleet kit as rockets and variants: each module on its own (and opened, where it has an inside), grouped by what it is, and the kit's sample ships. All fictional: this package's own design, so every
 // figure is blank and says so.
 import { designation, INSETS, KIT, SAMPLE_SHIPS, shipParts } from "../model/fleet/kit.ts";
+import { FLEET_MARKING_ROCKETS } from "./fleetMarkings.ts";
 import type { KitModule, ModuleKind } from "../model/fleet/types.ts";
 import { blank, type Variant } from "./types.ts";
 
@@ -43,7 +44,7 @@ const CODES: Readonly<Record<string, string>> = { hauler: "KIT-H", scout: "KIT-S
 
 /** What to call each slot of the fleet's variants: a module by its name, a ship's place with its number, an inset's part with its number. */
 export const FLEET_SLOT_NAMES: Readonly<Record<string, string>> = (() => {
-  const names: Record<string, string> = { module: "Module" };
+  const names: Record<string, string> = { module: "Module", hull: "Hull", markings: "Markings" };
   for (const inset of Object.values(INSETS)) for (const one of inset.parts) names[`part-${one.n}`] = `${one.n}. ${one.name}`;
   for (const [i, place] of SAMPLE_SHIPS.hauler.entries()) names[`${place.module}-${i + 1}`] = `${i + 1}. ${KIT[place.module].name}`;
   return names;
@@ -91,6 +92,7 @@ const insetVariant = (inset: (typeof INSETS)[string]): Variant => ({
 export const FLEET_KIT_ROCKETS: Readonly<Record<string, { name: string; variants: readonly Variant[] }>> = {
   "fleet-insets": { name: "Fleet system insets", variants: Object.values(INSETS).map(insetVariant) },
   "fleet-samples": { name: "Fleet kit sample ship", variants: [sample("fleet-samples", "hauler", "Kit hauler")] },
+  ...FLEET_MARKING_ROCKETS,
   ...Object.fromEntries(
     FLEET_GROUPS.map((group) => [
       group.id,
