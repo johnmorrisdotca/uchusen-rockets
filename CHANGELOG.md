@@ -2,7 +2,13 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-05
+
+Tilt up to 90 degrees for craft in space, and journey mode fixes.
+
 - **Tilt up to 90 degrees for craft in space** (MODULES-430): each variant has `view.tiltMax`, 90 for the SPX fleet, the ISS, Hubble, Dragon, Gemini, Mercury, the lunar module and Apollo-Soyuz, and 45 for rockets and sites on the ground (it stopped at about 20 before). The demo gives it to the view controls' `tilt-max`, so the slider, the drag and `?tilt=` follow the craft chosen, and a tip beyond the new limit is brought back to it when a rocket is chosen. The camera stays held at 87 degrees, so there is no flip, and Fit still frames the whole craft. Tests: `test/tilt-max.test.ts`, `e2e/tilt-max.demo.ts`.
+- **Journey mode fixes**: after separation the side view shows the payload itself (Orion for SLS, Cargo Dragon for Falcon Heavy) instead of the fairing dropped in ascent; a payload with no braking engine of its own flies past its target (verdict "Flyby only", no braking burn, fuel n/a with the reason) instead of braking at an assumed 0.2 g; Japanese lists in the numbers panel use 「、」.
+- Test only: the fleet walk and the GPU counts in the freeze tests wait for each ship to draw before they read, so a slow runner no longer reads a count from before the new ship is in.
 
 ## [0.11.0] - 2026-11-04
 
