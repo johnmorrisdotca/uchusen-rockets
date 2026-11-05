@@ -1,7 +1,9 @@
 // The three SPX ships side by side, upright, at one scale taken from their own models. The view stays in the address. Nothing new is drawn.
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import { ROCKETS, variantOf } from "../src/index.ts";
-import "../src/element.ts";
+import { defineUchusenRocket } from "../src/element.ts";
+
+defineUchusenRocket();
 import { fleetSize } from "./sizes.ts";
 import { WORDS } from "./words.js";
 
