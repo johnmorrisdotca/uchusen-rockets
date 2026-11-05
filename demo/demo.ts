@@ -2,6 +2,7 @@
 import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId, buildOf, playFrom } from "../src/index.ts";
 import { besideBounds, besideLayout, craftName } from "../src/beside.ts";
 import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
+import { dockMenu, dockPlan } from "../src/model/fleet/docked.ts";
 import { motionNote, motionsOf } from "../src/model/fleet/motion.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
@@ -98,7 +99,7 @@ const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
 const askedBeside = address.get("beside") ?? "off";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0 };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0, docked: address.get("docked") ?? dockPlan(firstRocket) };
 
 /** The craft standing beside the one on screen, or nothing when the choice is off or is the craft itself. */
 function besideNow(): { id: string; rocket: string; variant: string } | null {
@@ -382,6 +383,7 @@ function renderMain() {
   }
   press(byId("beside"), chosen ? (BESIDE_CHOICES.find((choice) => choice.id === chosen.id)?.testid ?? "") : "");
   showMotion();
+  showDocked();
   // the Kaminari concepts take a size, 60 to 100 per cent. scale="true" is the true-scale view, kept in the address apart from that size; a redraw must not clear it.
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
@@ -471,6 +473,7 @@ function pick(change: Partial<typeof state>) {
   const orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
+  if (change.rocket !== undefined && change.docked === undefined) state.docked = dockPlan(state.rocket);
   if (change.background !== undefined && change.moon === undefined) state.moon = "";
   if (change.background !== undefined) address.set("background", state.background);
   if (change.background !== undefined || change.moon !== undefined) address.set("moon", state.moon ? state.moon : null);
@@ -615,6 +618,41 @@ const motionBox = byId("motion");
 const speedBox = byId("motion-speed");
 /** `on` (real speed), `fast` (ten times) or `off`: the same words as the element's `motion` attribute and the address. */
 let motionChoice = ["on", "fast", "off"].includes(address.get("motion") ?? "") ? (address.get("motion") as string) : "on";
+/** One row of buttons for each port that can take a craft. The choice is `docked` on the ship and in the address. */
+function showDocked() {
+  const menu = dockMenu(state.rocket);
+  const field = byId("docked-field");
+  field.hidden = menu.length === 0;
+  const box = byId("docked");
+  if (menu.length === 0) {
+    hero.removeAttribute("docked");
+    address.set("docked", null);
+    box.replaceChildren();
+    return;
+  }
+  const chosen = new Map(state.docked.split(",").filter(Boolean).map((pair) => {
+    const [craft, port] = pair.split("@");
+    return [port, craft] as const;
+  }));
+  box.replaceChildren(...menu.map((port) => {
+    const row = el("div", { className: "chips" });
+    row.dataset.testid = `docked-${port.id}`;
+    const current = chosen.get(port.id) ?? "";
+    const set = (craft: string) => {
+      const next = new Map(chosen);
+      if (craft) next.set(port.id, craft);
+      else next.delete(port.id);
+      const spec = menu.flatMap((one) => (next.get(one.id) ? [`${next.get(one.id)}@${one.id}`] : [])).join(",");
+      pick({ docked: spec });
+    };
+    row.append(el("span", { className: "docked-port", textContent: port.name }), chip(say("dockedNone"), `docked-${port.id}-none`, () => set(""), "dockedNone"), ...port.craft.map((craft) => chip(craft.label, `docked-${port.id}-${craft.id}`, () => set(craft.id))));
+    press(row, `docked-${port.id}-${current || "none"}`);
+    return row;
+  }));
+  hero.setAttribute("docked", state.docked);
+  address.set("docked", state.docked ? state.docked : null);
+}
+
 function showMotion() {
   const moves = motionsOf(state.rocket).length > 0;
   byId("motion-field").hidden = !moves;
