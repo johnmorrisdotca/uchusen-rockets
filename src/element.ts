@@ -3,7 +3,9 @@
 // loaded only when a 3D view is wanted, and a licensed model only when the painted look asks for one.
 import { build, buildPart, type Built, FitError } from "./build/index.ts";
 import type { DetailLevel } from "./model/detail.ts";
+import { buildOf } from "./buildPlay.ts";
 import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
+import { motionsOf, motionSpeed, motionWanted } from "./model/fleet/motion.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
 import { defineUchusenFlight, UchusenFlight } from "./flightbar.ts";
@@ -12,6 +14,7 @@ import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
 import { besideCraft } from "./beside.ts";
+import { canScale, scalePercent } from "./concepts.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
@@ -145,7 +148,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside", "captions", "scale-note", "scale"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -281,9 +284,19 @@ export class UchusenRocket extends HTMLBase {
 
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
-    if (name === "scale") this.viewer?.setScaleMode(after === "true");
+    if (name === "scale") {
+      this.viewer?.setScaleMode(after === "true");
+      // `scale="true"` is the true-scale view. A number is a Kaminari size, which rebuilds the craft.
+      if (after !== "true" && after !== "false") this.queue();
+    }
     else if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
-    else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "motion") {
+      if (this.viewer) this.lightViewer(this.viewer);
+      this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
+    } else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "float") this.viewer?.setFloating(after !== null);
+    else if (name === "names") this.viewer?.setNameLabels(after !== "off");
+    else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
       // choosing what to show leaves the flight
@@ -293,6 +306,13 @@ export class UchusenRocket extends HTMLBase {
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------
+
+  private progress(): number | null {
+    const raw = this.getAttribute("progress");
+    if (raw === null || raw === "") return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : null;
+  }
 
   private spin(): Spin {
     return spinOf(this.getAttribute("spin"), this.getAttribute("way"));
@@ -483,6 +503,12 @@ export class UchusenRocket extends HTMLBase {
     return { beside, named };
   }
 
+  /** The size of a Kaminari concept hull in per cent, `scale="80"`: 60 to 100 in steps of 5. Any other craft stays at 100. */
+  private sizeNow(description: Description): number {
+    const variant = description.variant ?? ROCKETS[description.rocket]?.defaultVariant ?? "";
+    return canScale(description.rocket, variant) ? scalePercent(this.getAttribute("scale")) : 100;
+  }
+
   /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
   private engineLights(): boolean {
     return enginesWanted(this.getAttribute("engines"), media("(prefers-reduced-motion: reduce)"));
@@ -493,15 +519,17 @@ export class UchusenRocket extends HTMLBase {
     viewer.setReduced(media("(prefers-reduced-motion: reduce)"));
     viewer.setScaleMode(this.getAttribute("scale") === "true");
     viewer.setEngines(this.engineLights() ? "full" : null);
+    viewer.setMotion(motionsOf(this.descriptionNow().rocket), motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")), motionSpeed(this.getAttribute("motion")));
   }
 
   private update(): void {
     const description = this.descriptionNow();
-    const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}`;
+    const size = this.sizeNow(description);
+    const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}|${size}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description), ...this.besideOptions(description) });
+        this.builtNow = build(description, { detail: this.detailFor(description), ...this.besideOptions(description), scale: size });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -597,7 +625,9 @@ export class UchusenRocket extends HTMLBase {
     const { look, show, viewName } = this.settings(this.builtNow);
     this.dataset.look = look;
     this.dataset.engines = this.engineLights() ? "on" : "off";
+    this.dataset.motion = motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(this.getAttribute("motion")) === 10 ? "fast" : "on") : "off";
     this.dataset.beside = this.builtNow.beside.length ? "on" : "off";
+    this.dataset.size = String(this.sizeNow(this.descriptionNow()));
     this.dataset.flight = this.flight?.id ?? "";
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
@@ -622,6 +652,7 @@ export class UchusenRocket extends HTMLBase {
         const now = this.settings(this.builtNow);
         if (now.look !== look) viewer.setLook(now.look);
         if (now.show !== show) viewer.setShow(now.show);
+        viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
         this.lightViewer(viewer);
       }
       this.emit("uchusen-change", { report: this.builtNow.report });
@@ -643,7 +674,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.detailFor(description) === "full") return;
     this.fine = true;
     try {
-      this.builtNow = build(description, { detail: "full", ...this.besideOptions(description) });
+      this.builtNow = build(description, { detail: "full", ...this.besideOptions(description), scale: this.sizeNow(description) });
     } catch {
       return;
     }
@@ -804,6 +835,8 @@ export class UchusenRocket extends HTMLBase {
       this.flightFrame = 0;
       if (this.clock) made.setFlight(this.clock);
       if (this.driven) made.drive(this.driven);
+      made.setFloating(this.hasAttribute("float"));
+      made.setNameLabels(this.getAttribute("names") !== "off");
       made.setVisible(true);
       const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
       this.lastView = viewName;
@@ -812,9 +845,12 @@ export class UchusenRocket extends HTMLBase {
       const now = this.settings(this.builtNow ?? built);
       if (now.look !== look) made.setLook(now.look);
       if (now.show !== show) made.setShow(now.show);
+      made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
       this.lightViewer(made);
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));
+      made.setFloating(this.hasAttribute("float"));
+      made.setNameLabels(this.getAttribute("names") !== "off");
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
         if (generation === this.generation && this.viewer === made) {

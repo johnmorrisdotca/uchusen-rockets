@@ -1,0 +1,27 @@
+{
+  "near": {
+    "triangles": 119733,
+    "bytes": 4575100,
+    "box": [
+      1.048,
+      1.337,
+      1.131
+    ]
+  },
+  "far": {
+    "triangles": 2224,
+    "bytes": 126932,
+    "box": [
+      1.029,
+      1.319,
+      1.126
+    ]
+  },
+  "credits": {
+    "nasa-cluster-ii": 7860,
+    "nasa-hete": 4452,
+    "nasa-insight": 24564,
+    "nasa-curiosity": 19862,
+    "nasa-grease-gun": 9808
+  }
+}

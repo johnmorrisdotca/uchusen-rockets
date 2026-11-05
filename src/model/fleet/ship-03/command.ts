@@ -2,6 +2,7 @@
 // stand on the armour instead. The hull is a chamfered block of thick laminate, plated in grey with white blocks; aerial booms with beacons reach out to port and starboard, and thruster blocks sit at the corners. A cutaway
 // opens the starboard side. Pure: no three.js and no DOM.
 import { antenna, box, chamfered, collar, cub, discX, discZ, HULL_STACKS, ibeam, type Piece, pipeRun, prism, quad, rng, ringOf, rod, roundStrut, stamp, type Vec3 } from "./adapter.ts";
+import { moving } from "../motion.ts";
 import { CITADEL, STATION } from "./dims.ts";
 import { dressedFace, facesOf, wallShells } from "./hulls.ts";
 import { along, ARMOUR, lamp, rail } from "./faces.ts";
@@ -88,7 +89,7 @@ export function command(cut: boolean, detail = 1, seed = "command", refit = fals
     out.push(rod("hull-grey-dark", [x, y, z], [x, y, z + s * 1.1], 0.7, 8), rod("hull-grey", [x, y, z + s * 1.1], [x, y, z + s * 1.7], 0.5, 8), rod("glass", [x, y, z + s * 1.7], [x, y, z + s * 2.1], 0.34, 8), rod("lamp-amber", [x + 0.55, y, z + s * 1.2], [x + 0.55, y, z + s * 1.5], 0.08, 5));
   }
   // dishes and phased arrays dorsal, and a whip each side
-  for (const [x, y] of [[-8, Y0 + 14], [8, Y0 + 14], [-8, Y0 + 34], [8, Y0 + 34]] as const) out.push(...antenna("dish", [x, y, HZ], [0, 0, 1], 5.2, `${seed}${x}${y}`));
+  for (const [x, y] of [[-8, Y0 + 14], [8, Y0 + 14], [-8, Y0 + 34], [8, Y0 + 34]] as const) out.push(...moving(antenna("dish", [x, y, HZ], [0, 0, 1], 5.2, `${seed}${x}${y}`), { name: "dish-track", pivot: [x, y, HZ], axis: [1, 0, 0] }));
   out.push(...antenna("phased", [0, Y0 + 38, HZ], [0, 0, 1], 6, `${seed}ph`), ...antenna("whip", [0, Y1 - 6, HZ], [0, 0, 1], 9, `${seed}w`), ...antenna("omni", [-HX - 0.2, Y0 + 4, 0], [-1, 0, 0], 4, `${seed}o`));
   // aerial booms with beacons (Ariake's stand forward of the hangar boxes beside them): a truss out to each side, ending in a ring beacon
   const bo = Y0 + (refit ? 19 : 8);

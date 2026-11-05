@@ -39,6 +39,8 @@ import { ISS_VARIANTS } from "../data/iss.ts";
 import { ISS_BUILDS } from "./iss.ts";
 import { HUBBLE_VARIANTS } from "../data/hubble.ts";
 import { HUBBLE_BUILDS } from "./hubble.ts";
+import { DRONE_VARIANTS } from "../data/drone.ts";
+import { DRONE_BUILDS } from "./drone.ts";
 import { DRAGON_INSIDE_BUILDS } from "./dragoninside.ts";
 import { STARBASE_VARIANTS } from "../data/starbase.ts";
 import { STARBASE_BUILDS } from "./starbase.ts";
@@ -47,8 +49,12 @@ import { SHIP_02_BUILDS } from "./ship02.ts";
 import { SHIP_02_ALTERNATES, SHIP_02_CARDS, SHIP_02_VARIANT_PARTS } from "./fleet/ship-02/index.ts";
 import type { StackBuild } from "./stacks.ts";
 import { groupOf } from "../data/fleet.ts";
+import { SHIP_01_ENTRIES, SHIP_01_INSET_ENTRIES } from "./ship-01.ts";
+import { KYOTORI_ENTRIES } from "./ship-kyotori.ts";
 import { SHIP_03_ENTRIES, SHIP_03_INSET_ENTRIES } from "./ship-03.ts";
+import { CONCEPT_ENTRIES } from "./kaminari-concepts.ts";
 import { insetEntries, kitEntries, SAMPLE_SHIPS, shipParts } from "./fleet/kit.ts";
+import { CONCEPT_FACES, conceptHull, miyamotoHull } from "./fleet/markingSets.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
 export interface PartEntry {
@@ -175,8 +181,8 @@ entries.push(
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS];
-const stacks: readonly StackBuild[] = [...HUBBLE_BUILDS, ...ISS_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS];
+const stackFacts = [...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS];
+const stacks: readonly StackBuild[] = [...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);
@@ -224,8 +230,9 @@ entries.push(
 );
 
 // The fleet kit: each module alone, with its cutaway, and the sample ships
-entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_03_ENTRIES, ...SHIP_03_INSET_ENTRIES);
+entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_01_ENTRIES, ...KYOTORI_ENTRIES, ...SHIP_01_INSET_ENTRIES, ...SHIP_03_ENTRIES, ...SHIP_03_INSET_ENTRIES, ...CONCEPT_ENTRIES);
 for (const id of ["hauler"]) entries.push(...shipParts(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 }, "fleet-samples", id).entries);
+entries.push(...Object.keys(CONCEPT_FACES).flatMap((id) => [...conceptHull(id), ...miyamotoHull(id)]));
 
 /**
  * Every part of every rocket, each with its record: its real size in metres, the joints it mates at, and where its shape came from.

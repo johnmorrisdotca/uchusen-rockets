@@ -1136,7 +1136,7 @@ export function observationDome(base: Vec3, radius: number, shutters: "open" | "
  * console.log(ROOMS[kind].name);
  * ```
  */
-export type RoomKind = "cabin" | "mess" | "gym" | "garden" | "lounge" | "medical" | "shelter" | "recreation" | "school" | "plaza";
+export type RoomKind = "cabin" | "mess" | "gym" | "garden" | "lounge" | "medical" | "shelter" | "recreation" | "school" | "plaza" | "bridge" | "quarantine" | "engineering" | "lifesupport" | "stores" | "airlock";
 
 /**
  * One room: its id, the name a cutaway labels it with, its job, and its size in metres.
@@ -1160,7 +1160,7 @@ export interface RoomSpec {
 }
 
 /**
- * The rooms people need, named, each with a job and a size in metres: a cabin, a mess, a gym, a garden, an observation lounge, medical, a storm shelter, a recreation room, a school and a plaza. A ship places them in a cutaway
+ * The rooms people need, named, each with a job and a size in metres: a cabin, a mess, a gym, a garden, an observation lounge, medical, a storm shelter, a recreation room, a school, a plaza, a bridge, a quarantine room, engineering, life support, stores and an airlock. A ship places them in a cutaway
  * with `room`.
  *
  * @example
@@ -1181,6 +1181,12 @@ export const ROOMS: Readonly<Record<RoomKind, RoomSpec>> = {
   recreation: { id: "recreation", name: "Recreation room", job: "A library, a games table and soft chairs.", size: [6, 5, 2.8] },
   school: { id: "school", name: "School room", job: "Rows of desks and a board for the ship's children.", size: [7, 6, 2.8] },
   plaza: { id: "plaza", name: "Plaza", job: "An open paved square with trees, benches and a fountain: the middle of a ship's town.", size: [14, 14, 6] },
+  bridge: { id: "bridge", name: "Bridge", job: "The consoles a crew commands the ship from.", size: [8, 8, 3] },
+  quarantine: { id: "quarantine", name: "Quarantine", job: "A sealed room off the medical bay, for a long voyage.", size: [4, 4, 2.6] },
+  engineering: { id: "engineering", name: "Engineering", job: "Reactor and drive controls, and a workshop bench.", size: [8, 6, 3] },
+  lifesupport: { id: "lifesupport", name: "Life support", job: "Air, water and the recycling plant.", size: [6, 5, 2.8] },
+  stores: { id: "stores", name: "Stores", job: "Racks of spares and food.", size: [6, 5, 3] },
+  airlock: { id: "airlock", name: "Airlock", job: "Suits and the lock beside a port.", size: [3, 4, 2.6] },
 };
 
 /**

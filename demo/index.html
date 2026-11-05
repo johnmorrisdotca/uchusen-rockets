@@ -12,9 +12,11 @@
         <div class="stage-box">
           <div class="view-space">
             <div class="earth-back" id="earth-back" data-testid="earth" aria-hidden="true" hidden></div>
+            <div class="earth-back" id="sky-back" data-testid="sky" aria-hidden="true" hidden></div>
+            <div class="sky-moons" id="sky-moons" data-testid="sky-moons" aria-hidden="true" hidden></div>
             <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter"></uchusen-rocket>
           </div>
-          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark" controls="advanced"></kazoku-view-controls>
+          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark" controls="advanced" zoom-min="0.25"></kazoku-view-controls>
           <div class="chips turn-row" id="turn" role="group" aria-label="Which way it turns" data-say-label="turnLabel" data-testid="turn"></div>
           <p class="hint" data-say="hint">Drag to turn it. The controls tip, zoom and move it; the wheel zooms.</p>
         </div>
@@ -49,6 +51,11 @@
             <div class="field">
               <h2 id="background-title" data-say="background">Background</h2>
               <div class="chips" id="backgrounds" role="group" aria-labelledby="background-title"></div>
+              <p class="moon-heading" id="moon-heading" data-testid="moon-heading" hidden></p>
+              <div class="chips moon-row" id="moons" data-testid="moons" role="group" hidden></div>
+              <p class="moon-heading" id="orbit-heading" data-say="orbitTitle" data-testid="orbit-heading" hidden>Distance</p>
+              <div class="chips moon-row" id="orbits" data-testid="orbits" role="group" aria-labelledby="orbit-heading" hidden></div>
+              <p class="note" id="orbit-altitude" data-testid="orbit-altitude" hidden></p>
             </div>
             <div class="field">
               <h2 id="engines-title" data-say="engines">Engines</h2>
@@ -59,12 +66,36 @@
               <div class="chips" id="beside" role="group" aria-labelledby="beside-title"></div>
             </div>
             <p class="note" id="beside-note" data-testid="beside-note" data-say="besideNote" hidden>Starship with Super Heavy, at true size.</p>
+            <div class="field" id="kscale-field" hidden>
+              <h2 id="kscale-title" data-say="kscaleTitle">Ship size</h2>
+              <div class="slider">
+                <input type="range" id="kscale" data-testid="kscale" min="60" max="100" step="5" value="100" aria-labelledby="kscale-title">
+                <output id="kscale-out" data-testid="kscale-out" for="kscale">100%</output>
+              </div>
+            </div>
+            <p class="note" id="kscale-note" data-testid="kscale-note" hidden></p>
             <p class="note" id="engines-note" data-testid="engines-note" hidden></p>
+            <div class="field" id="motion-field" hidden>
+              <h2 id="motion-title" data-say="motionTitle">Motion</h2>
+              <div class="chips" id="motion" role="group" aria-labelledby="motion-title"></div>
+            </div>
+            <div class="field" id="motion-speed-field" hidden>
+              <h2 id="motion-speed-title" data-say="motionSpeedTitle">Speed</h2>
+              <div class="chips" id="motion-speed" role="group" aria-labelledby="motion-speed-title"></div>
+            </div>
+            <p class="note" id="motion-note" data-testid="motion-note" hidden></p>
             <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
+            <p class="earth-credit" id="sky-credit" data-testid="sky-credit" hidden></p>
           </div>
           <div class="field flight-field" id="flight-field">
             <h2 id="flight-title" data-say="flight">Flight</h2>
             <uchusen-flight id="flight" data-testid="flight" for="hero" aria-labelledby="flight-title"></uchusen-flight>
+          </div>
+          <div class="field" id="build-field" hidden>
+            <h2 id="build-title" data-say="buildTitle">The build</h2>
+            <uchusen-build id="build-bar" data-testid="build-bar" aria-labelledby="build-title">
+              <kazoku-speed-buttons slot="speed" steps="1 60 600 3600 10000 100000" value="1" address address-key="build-speed" no-label></kazoku-speed-buttons>
+            </uchusen-build>
           </div>
           <div class="field" id="facts" data-testid="facts" aria-live="polite"></div>
           <p class="note" id="data-note" data-say="dataNote" hidden></p>
@@ -72,6 +103,7 @@
         </div>
       </section>
 
+      <p class="note"><a href="poster.html" data-say="posterTitle">Rockets of the World</a></p>
       <div class="chips more-tabs" id="more-tabs" role="tablist" aria-label="More about this rocket" data-say-label="moreLabel" data-testid="more-tabs"></div>
 
       <section id="embed" aria-labelledby="embed-title">

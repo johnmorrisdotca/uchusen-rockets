@@ -15,6 +15,7 @@ import { BAY_OF, hangar } from "./hangar.ts";
 import { habitat } from "./habitat.ts";
 import { pod, type PodKind } from "./pod.ts";
 import { radiators } from "./radiators.ts";
+import { exteriorLoad, keelBerth, portBerth } from "./service.ts";
 import { fuelSection } from "./tanks.ts";
 
 /** How much small detail to build, 0.25 to 1: coarse first, fine as the viewer comes near. */
@@ -168,6 +169,17 @@ export function parts(): MiyamotoPart[] {
   for (const cut of [false, true]) out.push(shoulder("starboard-aft", cut), shoulder("port-fore", cut));
   out.push(...sister(), collarPart("plain"), collarPart("none"), collarPart("ariake"), missionPod("relay"), missionPod("relief"), missionPod("survey"), solarPart("stowed"), solarPart("deployed"));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
+  const moved = (bay: BayId, dy: number, dz: number): MiyamotoPart => {
+    const base = shoulder(bay, false, true);
+    return { ...base, id: `${base.id}-moved`, name: `${base.name}, moved`, y0: base.y0 + dy, place: { x: base.place?.x ?? 0, z: dz }, note: `${base.note} Moved to leave a clear berth of 146 m.` };
+  };
+  out.push(moved("port-fore", 28, 30), moved("port-aft", 146, 0));
+  out.push(stack("fuel-aft-inboard", "Aft fuel section, barrels inboard", "tank", STATION.fuelAft, 62, 44, "The aft barrels moved 4 m inboard, as far as their radius clears the spine. Descends from the Space Shuttle's external tank.", (c, d) => fuelSection("aft", c, d, 20), false));
+  out.push(stack("fuel-fore-inboard", "Fore fuel section, barrels inboard", "tank", STATION.fuelFore, 62, 66, "The fore barrels moved 4 m inboard, as far as their radius clears the spine. Descends from the Space Shuttle's external tank.", (c, d) => fuelSection("fore", c, d, 20), false));
+  const service = (id: string, name: string, y0: number, height: number, diameter: number, note: string, build: () => Piece[]): MiyamotoPart => ({ id, name, kind: "module", y0, place: { x: 0, z: 0 }, height, diameter, note, pieces: (o) => local(build(), 0, y0, 0, o?.level) });
+  out.push(service("exterior-load", "Loaded saddles", 110, 76, 40, "A Super Heavy and a Starship ship on the starboard aft box's exterior saddles, the package's own models. Descends from the Shuttle on its carrier aircraft.", exteriorLoad));
+  out.push(service("stack-berth-keel", "Ventral stack berth", 214, 140, 50, "A full Starship stack under the spine on a 140 m run, with the methane and oxygen depot beside it. Descends from the ISS visiting vehicles.", keelBerth));
+  out.push(service("stack-berth-port", "Port stack berth", 108, 146, 50, "A full Starship stack to port on the 146 m run the moved boxes leave, with the methane and oxygen depot beside it. Descends from the ISS visiting vehicles.", portBerth));
   return out;
 }
 

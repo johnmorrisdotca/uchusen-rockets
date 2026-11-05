@@ -148,7 +148,7 @@ export function specification(ship: keyof typeof SHIPS = "miyamoto"): Line[] {
     { name: "Designation", value: named, note: ship === "ariake" ? `${IDENTITY.class} class (${IDENTITY.classKanji}, "${IDENTITY.classMeaning}"), ${IDENTITY.type} type (${IDENTITY.typeMeans}); sister of ISV Miyamoto, SPX-452, with four hangar boxes` : `${IDENTITY.class} class (${IDENTITY.classKanji}, "${IDENTITY.classMeaning}"), ${IDENTITY.type} type (${IDENTITY.typeMeans}); flagship and command; sister of ISV Ariake, SPX-186` },
     { name: "Name", value: ship === "ariake" ? `${SHIPS.ariake.kanji} ${SHIPS.ariake.romaji}` : `${IDENTITY.japanese} ${IDENTITY.romaji}`, note: ship === "ariake" ? SHIPS.ariake.meaning : IDENTITY.meaning },
     { name: "Length", value: `${ENVELOPE.length} m` },
-    { name: "Beam", value: `${built.beam} m`, note: ship === "ariake" ? "across the hangar boxes: the same 118 m, because the staggered pair already stands at the full beam; the added boxes fill the empty corners" : "across both hangar shoulders" },
+    { name: "Beam", value: `${built.beam} m`, note: ship === "ariake" ? `across the hangar boxes: ${built.beam} m after each box grew 10 m outward so two Super Heavy bodies sit side by side` : "across both hangar shoulders, widened 10 m outward on each side" },
     { name: "Height", value: `${ENVELOPE.height} m`, note: "keel to the dorsal pod" },
     { name: "Hangar boxes", value: `${built.hangars}`, note: ship === "ariake" ? "all four positions filled: rescue bays aft, survey bays fore, one of each on each side; double Miyamoto's capacity" : "the staggered pair: a rescue bay starboard aft and a survey bay port fore" },
     { name: "Dry mass", value: `${n(built.mass.inert)} t`, note: ship === "ariake" ? `${n(built.mass.cargo)} t of cargo inside it, and ${n(2 * HANGAR_BOX.structure)} t of added framework for the two extra boxes (${n(HANGAR_BOX.structure)} t each)` : `${n(built.mass.cargo)} t of cargo inside it` },
@@ -232,7 +232,7 @@ export const SECTIONS: readonly MiyamotoSection[] = [
   s("fuel-aft", "spine-aft", "Spine, aft section", "structure", 90, 170, 0, 10, "The load-bearing box with conduit bundles and ring frames."),
   s("fuel-aft", "cassettes-aft", "Vented fuel cassettes", "hatch", 100, 156, 35, -12, "Removable orange cassettes that vent boil-off."),
   s("hangar-starboard", "rescue-bay", "Rescue bay and gantry", "cargo", 116, 192, 41, 12, "The aft shoulder's bay: gantry crane, racks, and the cradle with clamp arms for an ATC rescue cutter.", true),
-  s("hangar-starboard", "rescue-door", "Rescue bay door and shutters", "hatch", 116, 192, 59, 12, "Three of five orange shutter leaves open."),
+  s("hangar-starboard", "rescue-door", "Rescue bay door and shutters", "hatch", 116, 192, 69, 12, "Three of five orange shutter leaves open."),
   s("hangar-starboard", "vestibule", "Pressure vestibule", "hatch", 105, 111, 41, 5, "Where crews pass from the bay to the spine.", true),
   s("hangar-starboard", "racks-s", "Maintenance racks", "cargo", 108, 200, 24, 12, "Shelving with spares along the inner wall.", true),
   s("fuel-fore", "barrel-fore-s", "Fore starboard barrel", "tank", 174, 246, 24, -12, "Fore twin of the aft pair.", true),
@@ -244,7 +244,7 @@ export const SECTIONS: readonly MiyamotoSection[] = [
   s("pod", "payload", "Mission pod payload", "cargo", 178, 230, 0, 26, "The relay pod's bay and dishes, the relief pod's six containers, or the survey pod's telescope and probes.", true),
   s("pod", "dishes", "Dishes and arrays", "comms", 180, 228, 6, 32, "Four dishes and three phased arrays on the relay pod."),
   s("hangar-port", "survey-bay", "Survey bay", "lab", 234, 306, -41, 12, "Drones on racks and an access bridge, opening to port.", true),
-  s("hangar-port", "survey-door", "Survey bay shutters", "hatch", 234, 306, -59, 12, "Five orange emergency shutter leaves."),
+  s("hangar-port", "survey-door", "Survey bay shutters", "hatch", 234, 306, -69, 12, "Five orange emergency shutter leaves."),
   s("hangar-port", "drone-racks", "Survey cradles", "cargo", 230, 310, -41, 4, "Three cradles with clamp arms and guide rails to the door.", true),
   s("habitat", "recycling", "Water and air recycling", "farm", 285, 300, 0, 0, "Water and air tanks, scrubbers and a heat exchanger.", true),
   s("habitat", "mess-farm", "Mess and hydroponics", "farm", 272, 285, 6, -4, "Four tables and a rack of green trays under strip lights.", true),
@@ -351,6 +351,8 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   collar: "the shadow shields of NASA's nuclear thermal rocket and Mars transfer vehicle studies, a round cone between the reactor and the crew",
   array: "the ISS's solar array wings and iROSA's roll-out blankets: cells on a flexible blanket, a lattice mast, a beta gimbal at each bay and a rotary joint at each end of the beam that turns the wing to face the star",
   radiators: "the ISS's radiator panels on booms, large thin plates set away from the hull, and the folding radiators of the Mars transfer vehicle studies",
+  "exterior-load": "the Shuttle on its carrier aircraft: a Super Heavy and a Starship ship clamped side by side on the outside of a hangar box",
+  "stack-berth": "the ISS visiting vehicles: a full Starship stack lying alongside, with a methane and oxygen depot and umbilicals",
 };
 
 /** Miyamoto's solar array in watts: gold cells of 30% efficiency, 89% of the blanket covered, in the 1,361 W per square metre of sunlight at one astronomical unit from a Sun-like star. It is for time near a star; far out it falls with the square of the distance, and the fusion plants are the ship's power. */
@@ -373,6 +375,8 @@ export const CLASS_TABLE: readonly { row: string; miyamoto: string; ariake: stri
   { row: "Refits", miyamoto: "none extra", ariake: "an extra sensor mast, a second solarium" },
   { row: "Interior theme", miyamoto: "its own: blue and white", ariake: "warm wood and dawn-gold" },
   { row: "Shared", miyamoto: `hull, drive with shadow-shield collar, decks, length ${ENVELOPE.length} m`, ariake: "same" },
+  { row: "Hangar bodies", miyamoto: "two Starship bodies side by side in each box, on cradles", ariake: "the same, in all four boxes" },
+  { row: "Service", miyamoto: "a collar L for a Starship and a collar M for a Dragon, on the ventral side", ariake: "the service ship: an open berth for a full stack, drawn in two placements, and a methane and oxygen depot" },
 ];
 
 /** The table as Markdown, for the bible and the README. */

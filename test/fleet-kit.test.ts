@@ -397,7 +397,7 @@ test("the Lit look: coils, windows, navigation lights, strobes and floodlights a
   for (const role of ["coilGlow", "windowLit", "navRed", "navGreen", "strobe", "flood"]) assert.match((FLEET_PALETTE as Record<string, string>)[role], /^#[0-9a-f]{6}$/i, role);
 });
 
-test("life aboard: a porthole with a burn shutter open and closed, an observation dome with its petals open and closed, ten furnished rooms, and a dome lounge and a solarium in the kit", async () => {
+test("life aboard: a porthole with a burn shutter open and closed, an observation dome with its petals open and closed, sixteen furnished rooms, and a dome lounge and a solarium in the kit", async () => {
   const { observationDome, porthole, room } = await import("../src/model/fleet/detail.ts");
   const open = porthole(5, 0.3, 4, 0.5, "open");
   const shut = porthole(5, 0.3, 4, 0.5, "closed");
@@ -418,7 +418,7 @@ test("life aboard: a porthole with a burn shutter open and closed, an observatio
   assert.ok(dome.filter((piece) => piece.kind === "lathe" && piece.arc).length >= 6, "six meridian ribs");
   assert.ok(closed.some((piece) => piece.kind === "lathe" && piece.material === "hull-grey" && piece.arc), "six armoured petals over the glass");
   const { ROOMS } = await import("../src/index.ts");
-  assert.equal(Object.keys(ROOMS).length, 10);
+  assert.equal(Object.keys(ROOMS).length, 16);
   for (const spec of Object.values(ROOMS)) {
     assert.ok(spec.name.length > 4 && spec.job.length > 20, spec.id);
     const pieces = room(spec.id, "t");

@@ -142,6 +142,22 @@ Starship; Falcon 9 in v1.0 (with a fairing, or with Dragon 1 as it flew), v1.1, 
 
 The SPX fleet ships are original designs.
 
+ISV Hanabusa, SPX-013, is the fleet's wheel ship: a 589 m keel and a 22 m bow shield, 611 m overall, two rotating propellant booms and three glazed rings of 48, 62 and 76 m radius that step up from the bow (garden, research and living, at 3.43 rpm: 0.63, 0.82 and 1.00 g), with a closed industrial wheel of 112 m radius set apart. Its drive is nineteen magnetic-nozzle thrusters and no bell. It is three variants (the rings stepping up from the bow, the other order, and a flat section view of the living ring) and joins the picker under SPX. The bible is `docs/fleet/ship-01.md`.
+
+<!-- kyotori-class -->
+One of them is a class of four, the Kyotori class: ISV 鏡鳥 Kyotori, SPX-045, with ships A, B, C and D (names to be chosen). They share one design and differ like this:
+
+| | Ship A | Ship B | Ship C | Ship D |
+|---|---|---|---|---|
+| Role | survey and mapping | laboratory | astronomy | crew and medical |
+| Hull | the long hull with the payload bay and the glass lift | the short hull with the crew space | the long hull with the payload bay and the glass lift | the short hull with the crew space |
+| Its own compartments | two sensor booms with radar, lidar and camera heads | sample labs, a clean room and a cold store | a second telescope on its own mast | extra quarters and a sick bay |
+| Instruments | radar, lidar, cameras and star trackers on 34 m booms | two laboratory modules and a refrigerated sample store | a seven-segment mirror with a sun shield | a medical pod with a treatment bay and isolation room |
+| Crew | the standard crew | the standard crew and a laboratory staff | the standard crew and an observing staff | the standard crew and about a hundred more |
+| Shared | drive of twelve coil rings, tank bouquet, latch frames, bows and docking arms | same | same | same |
+| Name | to be chosen (A) | to be chosen (B) | to be chosen (C) | to be chosen (D) |
+<!-- kyotori-class -->
+
 One of them is a class of two, the Romurusu class: ISV Miyamoto, SPX-452, and its sister ISV Ariake, SPX-186. They share one hull and differ like this:
 
 | | ISV Miyamoto, SPX-452 | ISV Ariake, SPX-186 |
@@ -155,6 +171,8 @@ One of them is a class of two, the Romurusu class: ISV Miyamoto, SPX-452, and it
 | Refits | none extra | an extra sensor mast, a second solarium |
 | Interior theme | its own: blue and white | warm wood and dawn-gold |
 | Shared | hull, drive with shadow-shield collar, decks, length 380 m | same |
+| Hangar bodies | two Starship bodies side by side in each box, on cradles | the same, in all four boxes |
+| Service | a collar L for a Starship and a collar M for a Dragon, on the ventral side | the service ship: an open berth for a full stack, drawn in two placements, and a methane and oxygen depot |
 
 ## Variants, with their sources
 

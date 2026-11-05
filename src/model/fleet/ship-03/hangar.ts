@@ -1,10 +1,11 @@
-// The two hangar shoulders: starboard aft (104 to 204 m, the rescue bay with its gantry, maintenance racks, a pressure vestibule and an empty cradle with clamp arms, guide rails to the door and an umbilical boom) and port forward (222 to 318 m, the survey bay with three cradles
-// and guide rails, an access bridge and emergency shutters). Each is a rectangular shoulder braced to the spine, its outer wall open to a bay door with orange shutter leaves. A cutaway opens the face towards the spine and, on the
+// The two hangar shoulders: starboard aft (104 to 204 m) and port forward (222 to 318 m). Each box holds two Starship bodies side by side, a Super Heavy and a ship, on cradles, with a matching pair of empty clamp saddles on the outside. A cutaway opens the face towards the spine and, on the
 // starboard shoulder, the outer wall. Pure: no three.js and no DOM.
+import { moving } from "../motion.ts";
 import { cub, HULL_STACKS, ibeam, type Piece, pipeRun, rng, rod, roundStrut } from "./adapter.ts";
 import { type BayId, BAYS, bayBox } from "./dims.ts";
 import { dressedFace, pipe, wallShells } from "./hulls.ts";
 import { along, bolts, conduit, type Face, faceOf, frame, hazard, ladder, lamp, on, pt, rail, stencil, WHITE } from "./faces.ts";
+import { exteriorSaddles, starshipBay } from "./service.ts";
 
 type Side = "starboard" | "port";
 
@@ -126,6 +127,7 @@ export function hangar(which: Side | BayId, cut: boolean, detail = 1, seed?: str
     for (let k = 0; k < leaves; k++) {
       const a0 = openY[0] + k * lw;
       if (k >= leaves - drawn) {
+        const from = out.length;
         const mid = (openLow + openHigh) / 2;
         const high = openHigh - openLow;
         const lift = 0.7 + (k % 2) * 0.3;
@@ -150,6 +152,8 @@ export function hangar(which: Side | BayId, cut: boolean, detail = 1, seed?: str
           out.push(rod("hull-grey-dark", base, mid3, 0.34, 12), rod("engine-pale", mid3, tip, 0.17, 12), rod("hull-grey", base, [base[0], base[1] + 0.05, base[2]], 0.5, 12), rod("hull-yellow", tip, [tip[0], tip[1], tip[2] + 0.01], 0.3, 12));
         }
         out.push(...hazard(along(door), a0 + lw - 0.4, openLow + 0.3, openHigh - 0.3, 0.5, 0.9), ...lamp(door, a0 + lw / 2, openHigh - 0.9, "amber", 0.2), ...stencil(door, `${51 + k}`, a0 + lw / 2, mid, 1.6));
+        // the leaf swings up about the lintel when the door moves
+        out.splice(from, out.length - from, ...moving(out.slice(from), { name: `door-leaf-${k}`, pivot: pt(door, a0 + lw / 2, openHigh, 0.5), axis: [0, -(door.sign as number), 0] }));
       }
     }
     // the opening seam: where the drawn leaves stop there is a dark gap, a tall hazard-striped leading edge on the first leaf, a column of lamps at each end of it and a limit switch on the track
@@ -172,7 +176,7 @@ export function hangar(which: Side | BayId, cut: boolean, detail = 1, seed?: str
   if (!(cut && side === "port")) out.push(...dressedFace(innerFace, { ...o, density: 0.25 }));
   for (let y = y0 + 10; y < y1 - 6; y += 22) for (const z of [z0 + 4, z1 - 4]) out.push(...roundStrut("hull-grey-dark", [side === "starboard" ? x0 : x1, y, z], [sgn * 8.6, y + (side === "starboard" ? -8 : 8), z * 0.3], 0.55), cub("hull-yellow", sgn === 1 ? [x0 - 0.5, x0 + 0.3] : [x1 - 0.3, x1 + 0.5], [y - 0.7, y + 0.7], [z - 0.7, z + 0.7]));
   // the inside, always: it is what shows through the bay door
-  out.push(...inside(bay, seed));
+  out.push(...inside(bay, seed), ...exteriorSaddles(bay));
   return out;
 }
 
@@ -199,37 +203,16 @@ export function cradle(cx: number, cy: number, len: number, wide: number, floor:
 /** The hardware of an empty bay: cradles with clamp arms and chocks, guide rails from each cradle out through the door, deck markings, a fuel and service umbilical boom with its hoses, and floodlights. Round tubes and I-beams. */
 function bayHardware(bay: BayId, seed: string): Piece[] {
   const side = BAYS[bay].side;
-  const rescue = BAYS[bay].kind === "rescue";
   const h = bayBox(bay);
   const [y0, y1] = h.y;
-  const [x0, x1] = h.x;
   const [z0, z1] = h.z;
   const cx = h.centre;
   const floor = z0 + 1.7;
   const toDoor = side === "starboard" ? 1 : -1;
-  const doorX = side === "starboard" ? x1 - 1.4 : x0 + 1.4;
-  const wallX = side === "starboard" ? x0 + 1.4 : x1 - 1.4;
-  const out: Piece[] = [];
-  const cradles = rescue ? [{ y: (y0 + y1) / 2 - 10, len: 34, wide: 14 }] : [20, 48, 76].map((d) => ({ y: y0 + d, len: 20, wide: 10 }));
-  for (const [n, c] of cradles.entries()) {
-    const half = c.wide / 2;
-    out.push(...cradle(cx, c.y, c.len, c.wide, floor));
-    // guide rails: two round rails on I-beam sleepers from the cradle to the door, with stanchions, a lamp at each end and a stop
-    const rail0 = cx + toDoor * (half + 1.5);
-    for (const dy of [-c.wide / 4, c.wide / 4]) {
-      const y = c.y + dy;
-      out.push(...ibeam("hull-grey-dark", [rail0, y, floor + 0.15], [doorX, y, floor + 0.15], 0.3, 0.9, [0, 0, 1]), rod("hull-yellow", [rail0, y, floor + 0.6], [doorX, y, floor + 0.6], 0.14, 12), rod("hull-yellow", [rail0, y, floor + 0.6], [rail0, y, floor + 0.9], 0.22, 12));
-      for (let x = rail0; (x - doorX) * toDoor < -1; x += toDoor * 3) out.push(rod("hull-grey-dark", [x, y, floor + 0.15], [x, y, floor + 0.6], 0.08, 8));
-    }
-    out.push(cub("lamp-blue", [Math.min(rail0, doorX), Math.max(rail0, doorX)], [c.y - 0.1, c.y + 0.1], [floor + 0.02, floor + 0.08]));
-    // the deck marking: a yellow frame round the cradle, a bay number in our own figures
-    for (const [a, b, wide, deep] of [[cx, c.y - c.len / 2 - 1.6, c.wide + 6, 0.3], [cx, c.y + c.len / 2 + 1.6, c.wide + 6, 0.3]] as const) out.push(cub("hull-yellow", [a - wide / 2, a + wide / 2], [b - deep / 2, b + deep / 2], [floor, floor + 0.07]));
-    for (const x of [cx - half - 3.2, cx + half + 3.2]) out.push(cub("hull-yellow", [x - 0.15, x + 0.15], [c.y - c.len / 2 - 1.6, c.y + c.len / 2 + 1.6], [floor, floor + 0.07]));
-    out.push(...stencil({ n: "z", sign: 1, at: floor + 0.07, a: [cx - half, cx + half], b: [c.y - 3, c.y + 3] }, `${(rescue ? 1 : 2) * 10 + n + 1}`, cx, c.y, 2.2, "hull-yellow"));
-  }
-  // the umbilical boom: a pylon on the wall that faces the spine, a boom swinging out over the cradle, and the hoses for fuel, coolant and power hanging from it in loops to a connector head
+  const wallX = side === "starboard" ? h.x[0] + 1.4 : h.x[1] - 1.4;
+  const out: Piece[] = [...starshipBay(bay)];
+  const by0 = (y0 + y1) / 2;
   const bz = floor + 7.2;
-  const by0 = cradles[0].y;
   out.push(cub("hull-grey-dark", [wallX - 0.4, wallX + 0.4 * toDoor + toDoor * 2.4].sort((p, q) => p - q) as [number, number], [by0 - 1.4, by0 + 1.4], [floor, bz + 1]), rod("hull-grey", [wallX + toDoor * 1.4, by0, bz], [wallX + toDoor * 1.4, by0, bz + 0.6], 1.1, 14));
   const tip = wallX + toDoor * 14;
   out.push(...ibeam("hull-yellow", [wallX + toDoor * 1.4, by0, bz + 0.2], [tip, by0, bz + 0.2], 1.0, 0.7, [0, 0, 1]), ...roundStrut("hull-grey-dark", [wallX + toDoor * 1.4, by0, bz - 1.6], [wallX + toDoor * 9, by0, bz + 0.1], 0.3));

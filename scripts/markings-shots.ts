@@ -1,0 +1,85 @@
+// Writes the glbs and the camera jobs for the three lettering concepts. node scripts/markings-shots.ts <folder>
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { toGlb } from "../src/build/glb.ts";
+import { hullMarkings } from "../src/model/fleet/hullMarks.ts";
+import { CONCEPT_FACES, conceptHull, miyamotoHull } from "../src/model/fleet/markingSets.ts";
+import { SHIP_02_SLOTS } from "../src/model/fleet/ship-02/index.ts";
+import { meshOf } from "../src/model/pieces.ts";
+
+const folder = process.argv[2];
+if (!folder) throw new Error("usage: node scripts/markings-shots.ts <folder>");
+mkdirSync(folder, { recursive: true });
+
+const face = (az: number, y: number, radius: number, back: number, fov: number) => {
+  const nx = Math.sin(az);
+  const nz = Math.cos(az);
+  return {
+    eye: [nx * (radius + back), y, nz * (radius + back)] as [number, number, number],
+    target: [nx * radius, y, nz * radius] as [number, number, number],
+    up: [-Math.cos(az), 0, Math.sin(az)] as [number, number, number],
+    fov,
+  };
+};
+
+const tankAz = Math.atan2(-1, -1) + Math.PI;
+
+/** One lamp in front of the line, throwing a pool across the whole field. */
+const pools = (az: number, y: number, radius: number) => {
+  const nx = Math.sin(az);
+  const nz = Math.cos(az);
+  return [{
+    at: [nx * (radius + 26), y, nz * (radius + 26)] as [number, number, number],
+    target: [nx * radius, y, nz * radius] as [number, number, number],
+    color: "#fff2d8",
+    angle: 0.9,
+    intensity: 480,
+  }];
+};
+
+const jobs = [];
+for (const id of Object.keys(CONCEPT_FACES)) {
+  const write = (name: string, parts: { record: { id: string }; pieces: () => Parameters<typeof meshOf>[0] }[]): string => {
+    const glb = toGlb(parts.map((part) => ({ name: part.record.id, mesh: meshOf(part.pieces()), at: [0, 0, 0] as [number, number, number] })));
+    const path = join(folder, `${name}.glb`);
+    writeFileSync(path, glb.bytes);
+    return path;
+  };
+  const kaminari = write(`kaminari-${id}`, conceptHull(id));
+  const miyamoto = write(`miyamoto-${id}`, miyamotoHull(id));
+  const tank = face(tankAz, 230, 42, 105, 40);
+  const drum = face(1.71, 276, 15, 55, 40);
+  jobs.push({
+    glb: kaminari,
+    shots: [
+      { name: `kaminari-${id}-close`, ...tank, size: [1400, 900], look: "painted", shadow: 120 },
+      { name: `kaminari-${id}-lit`, ...tank, size: [1400, 900], look: "lit", shadow: 120, sun: 0.08, spots: pools(tankAz, 230, 42) },
+      { name: `kaminari-${id}-hull`, ...face(tankAz, 230, 42, 260, 36), size: [1600, 900], look: "painted", shadow: 250 },
+    ],
+  });
+  jobs.push({
+    glb: miyamoto,
+    shots: [
+      { name: `miyamoto-${id}-close`, ...drum, size: [1400, 900], look: "painted", shadow: 50 },
+      { name: `miyamoto-${id}-lit`, ...drum, size: [1400, 900], look: "lit", shadow: 50, sun: 0.08, spots: pools(1.71, 276, 15) },
+    ],
+  });
+}
+const keep = new Set(["spine", "tank-1", "tank-2", "tank-3", "tank-4", "dock", "command", "shield", "habitat-a"]);
+const ship = toGlb([
+  ...SHIP_02_SLOTS.filter((slot) => keep.has(slot.slot)).map((slot) => ({ name: slot.slot, mesh: meshOf(slot.pieces()), at: [slot.at[0], slot.at[1], slot.at[2]] as [number, number, number] })),
+  { name: "markings", mesh: meshOf(hullMarkings("kaminari")), at: [0, 0, 0] as [number, number, number] },
+]);
+const shipGlb = join(folder, "kaminari-ship.glb");
+writeFileSync(shipGlb, ship.bytes);
+const side = (x: number) => ({ eye: [x, 910, 280] as [number, number, number], target: [0, 910, 40] as [number, number, number], up: [0, 0, 1] as [number, number, number], fov: 42 });
+jobs.push({
+  glb: shipGlb,
+  shots: [
+    { name: "kaminari-starboard", ...side(1500), size: [1600, 700], look: "painted", shadow: 500 },
+    { name: "kaminari-port", ...side(-1500), size: [1600, 700], look: "painted", shadow: 500 },
+    { name: "kaminari-above", eye: [80, 700, 1400], target: [40, 570, 80], up: [0, 1, 0], fov: 42, size: [1600, 700], look: "painted", shadow: 500 },
+  ],
+});
+writeFileSync(join(folder, "jobs.json"), JSON.stringify(jobs, null, 2));
+console.log(`wrote ${jobs.length} jobs`);
