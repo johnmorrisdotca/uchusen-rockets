@@ -107,9 +107,9 @@ function flashOf(at: Vec3, backToward: Vec3): Plate {
  * @returns The pieces. Empty once the part is in its slot.
  * @example
  * ```ts
- * import { tractorBeam } from "@johnmorrisdotca/uchusen-rockets";
+ * import { tractorBeam, type BeamEnds } from "@johnmorrisdotca/uchusen-rockets";
  *
- * const ends = { from: [0, 0, 0], part: [0, 8, 0], slot: [0, 10, 0] };
+ * const ends: BeamEnds = { from: [0, 0, 0], part: [0, 8, 0], slot: [0, 10, 0] };
  * console.log(tractorBeam(ends, "settle", false, 1).length);
  * ```
  */
