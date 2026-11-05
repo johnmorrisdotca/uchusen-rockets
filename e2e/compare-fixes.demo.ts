@@ -14,7 +14,7 @@ const openCompare = async (page: Page) => {
 
 test("the Starship versions band: the numbers on the ruler are apart, each label has its own cell, and the unit is inside the picture", async ({ page }) => {
   await openCompare(page);
-  await page.locator('[data-testid="compare-fleet-02:fleet-02"]').click();
+  await page.locator('[data-testid="compare-fleet-ship-03:miyamoto"]').click();
   const boxes = await lineup(page).evaluate((node) => {
     const root = node.shadowRoot as ShadowRoot;
     const svg = root.querySelector("svg") as SVGSVGElement;

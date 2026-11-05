@@ -9,9 +9,13 @@ const gl = { launchOptions: { args: ["--use-gl=angle", "--use-angle=swiftshader"
 // WebKit has no software switch, and every page here can draw WebGL, so off CI it runs nothing; CI (a hosted runner, no graphics card) plays them.
 const webkitPages = process.env.CI ? undefined : /.*/;
 
+// CI splits the suite so no one job runs past about half an hour: DEMO_SET=freeze is the graphics-memory file alone (it takes half the time of everything else together), DEMO_SET=rest is every other file. Left out, every file runs.
+const set = process.env.DEMO_SET;
+const testMatch = set === "freeze" ? /[\\/]freeze\.demo\.ts$/ : set === "rest" ? /^(?!.*[\\/]freeze\.demo\.ts$).*\.demo\.(ts|mjs)$/ : "*.demo.{ts,mjs}";
+
 export default defineConfig({
   testDir: "e2e",
-  testMatch: "*.demo.{ts,mjs}",
+  testMatch,
   fullyParallel: true,
   forbidOnly: true,
   // A hosted runner has two cores and draws 3D in software: one test at a time, with room for it.

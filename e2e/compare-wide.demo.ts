@@ -18,7 +18,7 @@ const watch = (page: Page) => {
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 
 test("the page opens with two craft on one ground, its stage is wide, and the table names both", async ({ page, browserName }, info) => {
-  test.skip(info.project.name === "chromium-phone", "A desk's layout");
+  test.skip(info.project.name.endsWith("phone"), "A desk's layout: a phone's width shows one craft");
   const problems = watch(page);
   await page.goto(URL);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
@@ -40,7 +40,7 @@ test("the page opens with two craft on one ground, its stage is wide, and the ta
 });
 
 test("a third craft is added, the choices are kept in the address, and a reload brings them back", async ({ page }, info) => {
-  test.skip(info.project.name === "chromium-phone", "A desk's layout");
+  test.skip(info.project.name.endsWith("phone"), "A desk's layout: a phone's width shows one craft");
   await page.goto(URL);
   await page.locator('[data-testid="cw-add"]').click();
   await expect(craftChips(page)).toHaveCount(3);
@@ -99,7 +99,7 @@ test("the view controls tip as far as the first craft allows, and Fit holds all 
 });
 
 test("on a phone one craft is shown, with no way to add another, and the page does not scroll sideways", async ({ page }, info) => {
-  test.skip(info.project.name !== "chromium-phone", "A phone's width");
+  test.skip(!info.project.name.endsWith("phone"), "A phone's width");
   await page.goto(`${URL}?with=saturn-v:saturn-v,iss:iss`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(craftChips(page)).toHaveCount(1);
@@ -173,13 +173,20 @@ test("each craft is named at its own foot, inside the picture, and a craft in sp
     return [(box.minX + box.maxX) / 2, box.minY, (box.minZ + box.maxZ) / 2];
   });
   const points = await hero(page).evaluate((node, pts) => pts.map((point) => (node as HTMLElement & { screenPoint(p: number[]): { x: number } | null }).screenPoint(point)), feet);
+  // Names that would cover each other step apart sideways (src/element/namePlace.ts), so a name may stand nearer a neighbour's foot only when the two feet are closer than the two names are wide, and the names then keep the order of their feet.
+  // A serviced Miyamoto (MODULES-435) stands about 100 px from Saturn V in this view and its name is wider than that, so Saturn V's name steps toward it.
+  const feetAt = points.map((point) => point?.x ?? 0);
   shot.names.forEach((name, index) => {
-    const own = Math.abs(name.cx - shot.frame.left - (points[index]?.x ?? 0));
+    const own = Math.abs(name.cx - shot.frame.left - feetAt[index]);
     points.forEach((point, other) => {
       if (other === index || !point) return;
-      expect(own).toBeLessThanOrEqual(Math.abs(name.cx - shot.frame.left - point.x) + 2);
+      const crowded = Math.abs(feetAt[index] - point.x) < (name.right - name.left + (shot.names[other].right - shot.names[other].left)) / 2 + 4;
+      if (!crowded) expect(own).toBeLessThanOrEqual(Math.abs(name.cx - shot.frame.left - point.x) + 2);
     });
   });
+  const byFoot = [0, 1, 2].sort((a, b) => feetAt[a] - feetAt[b]);
+  const byName = [0, 1, 2].sort((a, b) => shot.names[a].cx - shot.names[b].cx);
+  expect(byName).toEqual(byFoot);
 });
 
 test("on a phone the one craft's name stays inside the picture", async ({ page, browserName }, info) => {
