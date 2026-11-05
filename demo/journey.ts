@@ -549,6 +549,7 @@ function buildPanel(): void {
     ["peakg", say("jPeakG"), gWords(trip.peakG), trip.estimated.includes("departure burn length") || trip.estimated.includes("braking acceleration")],
     ["peak", say("jPeakSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     ["fuel", say("jFuel"), fuelWords()],
+    ["ratio", say("jMassRatio"), ratioWords()],
     ["payload", say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],
   ];
   const list = byId("trip");
@@ -570,6 +571,12 @@ function buildPanel(): void {
       return wrap;
     }),
   );
+}
+
+function ratioWords(): string {
+  if (trip.massRatio === null) return `${say("jNA")}: ${trip.fuel.note}`;
+  const text = trip.massRatio >= 100 ? trip.massRatio.toFixed(0) : trip.massRatio.toFixed(3);
+  return trip.drive === "ballistic" ? `${text}${japanese() ? "、" : ", "}${say("jBrakeOnly")}` : text;
 }
 
 function fuelWords(): string {

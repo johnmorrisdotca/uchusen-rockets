@@ -100,6 +100,8 @@ export interface Trip {
   propellantCarriedT?: number;
   /** The propellant of the trip: tonnes used (and carried, where it is known), or null with the reason no figure can be given. */
   fuel: { usedT: number | null; carriedT: number | null; note: string };
+  /** Initial mass over mass after the burns the rocket equation was applied to. Null when no exhaust speed is known, so no propellant figure is invented. */
+  massRatio: number | null;
   /** What the craft carries to the end of this trip: kilograms (at least, where only a harder trip is rated), or null with the reason. */
   payload: { kg: number | null; atLeast: boolean; note: string };
   ballistic?: {
@@ -325,6 +327,7 @@ const unavailable = (craft: Craft, from: string, to: string, departMs: number, l
   verdict: { level: "cannot", line, because, playable: false },
   estimated: [],
   fuel: { usedT: null, carriedT: null, note: "No trip." },
+  massRatio: null,
   payload: { kg: null, atLeast: false, note: "No trip." },
   straightKm: 0,
   pathKm: 0,
@@ -526,6 +529,7 @@ function planMoon(source: BodySource, craft: BallisticCraft, to: string, departM
     straightKm,
     pathKm: arc[arcSteps]!,
     fuel,
+    massRatio: null,
     payload: carries,
     dv: { departure: depMs, arrival: flyby || home ? 0 : arrMs, total: depMs + (flyby || home ? 0 : arrMs) },
     peakG: Math.max(depMs / burnS / G0, flyby || home || brakeG === null ? 0 : brakeG),
@@ -663,6 +667,7 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     isp !== null && mass !== null && !flyby
       ? { usedT: (mass * (1 - Math.exp(-braking / (isp * G0)))) / 1000, carriedT: null, note: "the braking burn only, from the engine's specific impulse and the payload's mass" }
       : { usedT: null, carriedT: null, note: flyby ? "it does not brake, so it burns no propellant at the far end" : "no source gives the specific impulse of this payload's engine" };
+  const massRatio = isp !== null && !flyby && braking > 0 ? Math.exp(braking / (isp * G0)) : null;
   const toName = stopName(source, to);
   const carries =
     verdictCap.kg !== undefined
@@ -683,6 +688,7 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     straightKm,
     pathKm,
     fuel,
+    massRatio,
     payload: carries,
     dv: { departure: dv1 * 1000, arrival: flyby ? 0 : dv2 * 1000, total: (dv1 + (flyby ? 0 : dv2)) * 1000 },
     peakG,
@@ -774,6 +780,7 @@ function planContinuous(source: BodySource, craft: ContinuousCraft, from: string
     propellantUsedT: usedT,
     propellantCarriedT: carried,
     fuel: { usedT, carriedT: carried, note: "the whole trip, from the exhaust speed" },
+    massRatio: ratio,
     payload: { kg: craft.payloadT.value * 1000, atLeast: false, note: `Payload to ${stopName(source, to)}` },
     continuous: { from: from3, to: to3, a, burnS: tb, flipS, peakRapidity: plan.rapidity, blockedBySun },
   };
