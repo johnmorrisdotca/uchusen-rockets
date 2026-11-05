@@ -1,7 +1,7 @@
 // The four pods and the four-arm cross of ISV Kyotori, round 2. The cross is a hub on a bearing round the stem, four thick habitable arm tubes (three floors, rows of windows) running out to four end pods that each have their own shape (a control
 // centre with a glazed dome, a research lab of three drums and a dish, an observatory with a telescope barrel on a fork, and engineering with a reactor sphere and radiator fins), joined by a slender rim. Not a torus. It can turn or fold
 // forward along the stem. Every repeated part is one template stamped at many poses. Concepts only. Pure: no three.js and no DOM.
-import { antenna, box, collar, cub, hoop, ibeam, place, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
+import { antenna, box, collar, cub, hoop, ibeam, place, quad, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
 import { sphere } from "../ship-01/wheelparts.ts";
 
 const TAU = 2 * Math.PI;
@@ -11,10 +11,24 @@ const lathe = (material: MaterialName, profile: [number, number][], at: [number,
 /** The control centre, 18 m: a drum with a lit window band, a glazed dome of eight ribs above it, a mast with two whips and a ring of floodlights. Local origin: the middle of its base. */
 export function controlPod(): Piece[] {
   const out: Piece[] = [lathe("hull-white", [[5.2, 0], [5.2, 9]], [0, 0], { body: true, outline: true, only: undefined }), lathe("window", [[5.25, 5.4], [5.25, 7.2]]), hoop("hull-grey-dark", 5.2, 0, 0.35, 32, 8), hoop("hull-grey-dark", 5.2, 9, 0.35, 32, 8)];
-  const dome: [number, number][] = Array.from({ length: 9 }, (_, i) => [5 * Math.cos((Math.PI / 2) * (i / 8)) || 0.01, 9 + 4.4 * Math.sin((Math.PI / 2) * (i / 8))]);
-  out.push(lathe("glass-clear", dome, [0, 0], { segs: 32, only: "mesh" }));
-  for (let k = 0; k < 8; k++) out.push(rod("hull-grey", [5 * Math.sin(deg(45 * k)), 9, 5 * Math.cos(deg(45 * k))], [0, 13.4, 0], 0.12, 6, { only: "mesh" }));
-  out.push(rod("hull-grey", [0, 13.4, 0], [0, 18, 0], 0.18, 6, { only: "mesh" }), ...antenna("whip", [2, 9.3, 2], [0, 1, 0], 4, "ctl"), ...Array.from({ length: 6 }, (_, k): Piece => box("flood", [5.5 * Math.sin(deg(60 * k)), 8.7, 5.5 * Math.cos(deg(60 * k))], 0.5, 0.5, 0.4, 0, { only: "mesh", plain: true })));
+  out.push(lathe("hull-white", [[0.01, 9], [5.2, 9]], [0, 0], { segs: 32 }));
+  // a Cupola on the drum: six trapezoid windows on a low faceted frustum, a round window on top, and six shutters folded out
+  const R0 = 4.4;
+  const R1 = 2.1;
+  const top = 12.3;
+  const b = (k: number): Vec3 => [R0 * Math.sin(deg(60 * k)), 9, R0 * Math.cos(deg(60 * k))];
+  const t = (k: number): Vec3 => [R1 * Math.sin(deg(60 * k)), top, R1 * Math.cos(deg(60 * k))];
+  for (let k = 0; k < 6; k++) {
+    out.push(quad("glass-clear", b(k), b(k + 1), t(k + 1), t(k), 0.1, { only: "mesh" }), rod("hull-grey-dark", b(k), t(k), 0.2, 6, { only: "mesh" }), rod("hull-grey-dark", b(k), b(k + 1), 0.24, 6, { only: "mesh" }), rod("hull-grey-dark", t(k), t(k + 1), 0.18, 6, { only: "mesh" }));
+    const m: Vec3 = [(b(k)[0] + b(k + 1)[0]) / 2, 9.05, (b(k)[2] + b(k + 1)[2]) / 2];
+    const u: Vec3 = [m[0] / R0, 0, m[2] / R0];
+    const tan: Vec3 = [u[2], 0, -u[0]];
+    const d: Vec3 = [u[0] * 0.9, 0.45, u[2] * 0.9];
+    const P = (a: number, l: number): Vec3 => [m[0] + tan[0] * a + d[0] * l, m[1] + d[1] * l, m[2] + tan[2] * a + d[2] * l];
+    out.push(quad("hull-white", P(-1.9, 0), P(1.9, 0), P(1.4, 3.6), P(-1.4, 3.6), 0.22, { only: "mesh" }), rod("hull-grey-dark", P(-1.9, 0), P(1.9, 0), 0.12, 6, { only: "mesh" }), rod("hull-grey", P(0, 0.1), P(0, 3.4), 0.1, 6, { only: "mesh" }));
+  }
+  out.push(lathe("glass-clear", [[1.8, top], [1.8, top + 0.12]], [0, 0], { segs: 24 }), hoop("hull-grey-dark", 1.9, top + 0.1, 0.22, 24, 6));
+  out.push(rod("hull-grey", [0, top + 0.2, 0], [0, 17, 0], 0.18, 6, { only: "mesh" }), ...antenna("whip", [3.2, 9.3, 2], [0, 1, 0], 4, "ctl"), ...Array.from({ length: 6 }, (_, k): Piece => box("flood", [5.5 * Math.sin(deg(60 * k)), 8.7, 5.5 * Math.cos(deg(60 * k))], 0.5, 0.5, 0.4, 0, { only: "mesh", plain: true })));
   return out;
 }
 

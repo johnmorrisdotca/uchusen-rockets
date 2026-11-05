@@ -124,8 +124,8 @@ export function segment(rho: number): Piece[] {
 };
 const SEG = 3.6;
 /** The centres of the hexagonal segments: a hex grid of pitch `rho * sqrt(3)`, the ones inside an ellipse of half widths `ax` and `az`, the middle one left out as the telescope's own. */
-export function hexCentres(ax: number, az: number, hole = true): [number, number][] {
-  const s = SEG * Math.sqrt(3);
+export function hexCentres(ax: number, az: number, hole = true, seg = SEG): [number, number][] {
+  const s = seg * Math.sqrt(3);
   const out: [number, number][] = [];
   for (let r = -8; r <= 8; r++) for (let q = -10; q <= 10; q++) {
     const x = s * (q + r / 2);
@@ -136,16 +136,17 @@ export function hexCentres(ax: number, az: number, hole = true): [number, number
 }
 
 /** The telescope: a mast of open truss from `y0`, then the mirror (a hex grid inside an ellipse; round for a disc, wide for wings), a secondary on a three-legged tripod, a dark backplane and a five-layer diamond sunshield behind it. */
-export function telescope(y0: number, mastLen: number, ax: number, az: number): { pieces: Piece[]; top: number } {
+export function telescope(y0: number, mastLen: number, ax: number, az: number, seg = SEG): { pieces: Piece[]; top: number } {
   const out: Piece[] = [];
   const stack = stackOf(Array.from({ length: Math.ceil(mastLen / 12) }, () => "truss-m-12"), y0, 0.3);
   out.push(...stack.pieces);
   const y = stack.end + 4;
   // the sunshield, five layers a metre apart, a diamond wider than the mirror
-  for (let i = 0; i < 5; i++) out.push(prism("foil", [[-ax * 1.25, 0], [0, -az * 1.9], [ax * 1.25, 0], [0, az * 1.9]], y - 4 - i * 0.9, y - 3.88 - i * 0.9), prism("kapton", [[-ax * 1.25 + 1, 0], [0, -az * 1.9 + 1], [ax * 1.25 - 1, 0], [0, az * 1.9 - 1]], y - 3.88 - i * 0.9, y - 3.86 - i * 0.9));
-  const cs = hexCentres(ax, az);
-  const seg = segment(SEG * 0.98);
-  out.push(...stamp(seg, cs.map(([x, z]): Pose => ({ at: [x, y + 0.5 * Math.hypot(x, z) * 0.02, z], yaw: 0 }))));
+  for (let i = 0; i < 5; i++) out.push(prism(seg === SEG ? "foil" : "steel", [[-ax * 1.25, 0], [0, -az * 1.9], [ax * 1.25, 0], [0, az * 1.9]], y - 4 - i * 0.9, y - 3.88 - i * 0.9), ...(seg === SEG ? [prism("kapton", [[-ax * 1.25 + 1, 0], [0, -az * 1.9 + 1], [ax * 1.25 - 1, 0], [0, az * 1.9 - 1]], y - 3.88 - i * 0.9, y - 3.86 - i * 0.9)] : []));
+  const cs = hexCentres(ax, az, true, seg);
+  const sg = segment(seg * 0.98);
+  if (seg !== SEG) out.push(prism("hull-grey-dark", HEX.map(([x, z]) => [x * ax * 1.12, z * az * 1.12] as [number, number]), y - 1.3, y - 0.95));
+  out.push(...stamp(sg, cs.map(([x, z]): Pose => ({ at: [x, y + 0.5 * Math.hypot(x, z) * 0.02, z], yaw: 0 }))));
   out.push(prism("hull-grey-dark", [[-ax - 3, -2], [ax + 3, -2], [ax + 3, 2], [-ax - 3, 2]], y - 1.4, y - 1.0), prism("hull-grey-dark", [[-2, -az - 3], [2, -az - 3], [2, az + 3], [-2, az + 3]], y - 1.4, y - 1.0));
   const top = y + Math.max(ax, az) * 1.1;
   for (let k = 0; k < 3; k++) {

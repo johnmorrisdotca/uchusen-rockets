@@ -30,6 +30,6 @@ export function k2(): Piece[] {
     out.push(...mod(id, y));
     y += KIT[id].length;
   }
-  out.push(...telescope(y, 24, 22, 22).pieces);
+  out.push(...telescope(y, 24, 19, 19, 5.4).pieces);
   return out;
 }

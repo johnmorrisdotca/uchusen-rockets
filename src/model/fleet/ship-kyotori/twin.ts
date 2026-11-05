@@ -104,7 +104,7 @@ export function twinParts(v: TwinId): TwinPart[] {
   if (v === "v1") {
     add("cross", "A", cross({ y: K2.ringY, R: K2.R }));
     const bow = modules(["adapter-l-m", "deck-nav-m"], 382);
-    add("bow", "A", [...bow.pieces, ...telescope(bow.end, 24, 22, 22).pieces]);
+    add("bow", "A", [...bow.pieces, ...telescope(bow.end, 24, 19, 19, 5.4).pieces]);
   } else {
     // the two shafts end level at 339 m, B with a spacer; the station's yoke takes both on separation collars
     add("spacer", "B", [{ kind: "lathe", material: "hull-grey", segs: 32, body: true, outline: true, profile: [[6.5, crew.end - 3], [6.5, 339.3]] }]);
@@ -118,7 +118,7 @@ export function twinParts(v: TwinId): TwinPart[] {
     add("yoke", "C", yoke);
     add("cross", "C", cross({ y: K2.ringY, R: K2.R }));
     const bow = modules(["adapter-l-m", "deck-nav-m"], 382);
-    add("bow", "C", [...bow.pieces, ...telescope(bow.end, 24, 22, 22).pieces]);
+    add("bow", "C", [...bow.pieces, ...telescope(bow.end, 24, 19, 19, 5.4).pieces]);
   }
   return parts;
 }
