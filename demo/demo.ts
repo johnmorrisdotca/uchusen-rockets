@@ -55,6 +55,8 @@ const knownWord = (prefix: string, text: string) => (`${prefix}_${wordsKey(text)
 
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
+// A plain drag turns the craft at every zoom. The package pans a zoomed view unless Turn is chosen, and Move is its start; Turn is this page's start. Move, a second finger, Shift and the other mouse buttons still pan.
+bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => {
   const detail = (event as CustomEvent).detail as { zoom?: number };
