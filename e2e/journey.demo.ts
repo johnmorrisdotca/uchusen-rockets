@@ -112,6 +112,11 @@ test("seeking to a moment draws that moment on its own, and the end shows the su
   await page.goto(`${URL}&craft=kaminari&to=mars&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
+  await expect(page.getByTestId("summary")).toContainText("runs slower than the clocks at the two ends");
+  await expect(page.getByTestId("summary")).toContainText("smaller than the times above");
+  await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
+  await expect(page.getByTestId("summary")).toBeVisible();
+  await expect(page.getByTestId("summary")).not.toContainText("runs slower");
 });
 
 test("no control is left in the browser's own style, and nothing scrolls sideways", async ({ page }) => {

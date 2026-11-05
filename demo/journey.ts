@@ -670,6 +670,7 @@ function showSummary(): void {
     [say("jPath"), kilometres(trip.pathKm)],
     [say("jShip"), duration(trip.shipS)],
     [say("jEarthT"), duration(trip.frameS)],
+    ...(trip.drive === "continuous" ? [[say("jClocks"), duration(trip.shipS) === duration(trip.frameS) ? `${say("jTwin")} ${say("jTwinSmall")}` : say("jTwin")] as [string, string]] : []),
     [say("jTopSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     [say("jPeakG"), gWords(trip.peakG)],
     [say("jDvAll"), speedWords(trip.dv.total)],
