@@ -20,6 +20,20 @@ const scale = (a: Vec3, n: number): Vec3 => [a[0] * n, a[1] * n, a[2] * n];
 /** A plate lying flat, outline in [forward, side]. */
 export const deck = (material: MaterialName, centre: Vec3, outline: readonly (readonly [number, number])[], thick = 0.04): Piece => polygon(material, centre, [0, 0, 1], [0, 1, 0], outline, thick);
 
+/** A rectangular link from a to b, so an arm is a bar rather than a rod. */
+export function bar(material: MaterialName, a: Vec3, b: Vec3, width: number, depth: number): Piece {
+  const dir: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const len = Math.hypot(dir[0], dir[1], dir[2]) || 1;
+  const u: Vec3 = [dir[0] / len, dir[1] / len, dir[2] / len];
+  const hint: Vec3 = Math.abs(u[2]) > 0.85 ? [0, 1, 0] : [0, 0, 1];
+  const raw: Vec3 = [u[1] * hint[2] - u[2] * hint[1], u[2] * hint[0] - u[0] * hint[2], u[0] * hint[1] - u[1] * hint[0]];
+  const nl = Math.hypot(raw[0], raw[1], raw[2]) || 1;
+  const n: Vec3 = [raw[0] / nl, raw[1] / nl, raw[2] / nl];
+  const mid: Vec3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+  const half = len / 2;
+  return polygon(material, mid, n, u, chamfer(half * 0.92, width, Math.min(half, width) * 0.3), depth);
+}
+
 export const tube = (material: MaterialName, a: Vec3, b: Vec3, radius: number, segs = 8): Piece => {
   const dy = b[1] - a[1] || 0.001;
   const lean: [number, number] = [(b[0] - a[0]) / dy, (b[2] - a[2]) / dy];
@@ -62,15 +76,16 @@ function jaw(sign: number, wrist: Vec3, grasp: Vec3): Piece[] {
   return out;
 }
 
-/** A jointed arm ending in a gripper. Each joint has a housing and a motor cap. */
-export function limb(root: Vec3, joints: readonly Vec3[], grasp: Vec3): Piece[] {
+/** A jointed arm ending in a gripper. Each joint has a housing and a motor cap. A larger radius is a heavier arm. */
+export function limb(root: Vec3, joints: readonly Vec3[], grasp: Vec3, radius = 0.02): Piece[] {
   const out: Piece[] = [];
   let prev = root;
   for (const joint of joints) {
     const dir: Vec3 = [joint[0] - prev[0], joint[1] - prev[1], joint[2] - prev[2]];
     const len = Math.hypot(dir[0], dir[1], dir[2]) || 1;
     const u: Vec3 = [dir[0] / len, dir[1] / len, dir[2] / len];
-    out.push(tube(WHITE, prev, joint, 0.02, 8), tube(METAL, add(joint, scale(u, -0.025)), add(joint, scale(u, 0.025)), 0.034, 8), discZ(ORANGE, joint[0], joint[1], joint[2] + 0.025, joint[2] + 0.045, 0.014, 5));
+    const housing = radius * 1.7;
+    out.push(tube(WHITE, prev, joint, radius, 8), tube(METAL, add(joint, scale(u, -radius)), add(joint, scale(u, radius)), housing, 8), discZ(ORANGE, joint[0], joint[1], joint[2] + housing, joint[2] + housing + radius, radius * 0.7, 6));
     prev = joint;
   }
   out.push(...jaw(root[0] < 0 ? -1 : 1, prev, grasp));

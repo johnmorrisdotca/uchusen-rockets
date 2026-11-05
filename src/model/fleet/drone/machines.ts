@@ -1,6 +1,7 @@
 // The five construction machines. Shapes come from the reference notes; no mark or text is copied.
-import { discZ, hoop, post, rod } from "../detail.ts";
-import { BLUE, bolts, DARK, emitter, GLASS, GLOW, limb, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
+import type { MaterialName } from "../../materials.ts";
+import { disc, discZ, hoop, post, rod } from "../detail.ts";
+import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, limb, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
 import type { Piece, Vec3 } from "../../pieces.ts";
 
 /**
@@ -48,28 +49,68 @@ function weldDrone(): Machine {
   return { id: "drone-weld", role: "weld", pieces, mouth: [0, 0.28, 0.02], tool: nozzle, toolKind: "weld" };
 }
 
-function repairDrone(): Machine {
-  const grip: Vec3 = [-0.18, 0.48, -0.02];
-  const pieces: Piece[] = [
-    discZ(ORANGE, 0, 0, -0.01, 0.012, 0.32, 16),
-    discZ(WHITE, 0, 0.02, 0.012, 0.046, 0.26, 16),
-    ...panel(WHITE, 0, -0.02, 0.06, 0.12, 0.08),
-    ...panel(DARK, 0.02, -0.08, 0.09, 0.05, 0.04),
-    ...bolts(0, -0.02, 0.08, 0.1, 0.06),
-    ...vents(0.14, 0.02, 0.05),
-    discZ(BLUE, 0, 0, -0.04, -0.02, 0.1, 10),
-    rod(METAL, [-0.18, 0.06, 0.02], [-0.3, 0.08, 0.02], 0.028, 6),
-    rod(ORANGE, [-0.3, 0.08, 0.02], [-0.38, 0.09, 0.02], 0.022, 5),
-    rod(METAL, [0.18, 0.06, 0.02], [0.3, 0.08, 0.02], 0.028, 6),
-    rod(ORANGE, [0.3, 0.08, 0.02], [0.38, 0.09, 0.02], 0.022, 5),
-    ...whip([-0.05, -0.05, 0.1], [-0.08, -0.08, 0.36]),
-    ...whip([0.08, -0.01, 0.1], [0.12, 0.02, 0.34]),
-    ...limb([-0.06, 0.04, -0.02], [[-0.16, 0.18, -0.1], [-0.2, 0.34, -0.04]], grip),
-    ...limb([0.06, 0.04, -0.02], [[0.16, 0.16, -0.1], [0.18, 0.32, -0.04]], [0.14, 0.46, 0]),
-    post(METAL, [0, 0.02], 0.045, 0.18, 0.035, 0.28, 8),
-    ...emitter([0, 0.02], 0.3, 0.09),
+/** A disc lying on the deck, outline in [forward, side]. */
+function saucer(material: MaterialName, radius: number, z: number, thick: number): Piece {
+  const n = 24;
+  const outline: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (Math.PI * 2 * i) / n;
+    outline.push([radius * Math.sin(a), -radius * Math.cos(a)]);
+  }
+  return deck(material, [0, 0, z], outline, thick);
+}
+
+function knuckle(at: Vec3): Piece[] {
+  return [bar(METAL, [at[0] - 0.028, at[1], at[2]], [at[0] + 0.028, at[1], at[2]], 0.018, 0.02), discZ(ORANGE, at[0], at[1], at[2], at[2] + 0.028, 0.014, 6)];
+}
+
+/** Three rectangular links and a gripper, hung under the saucer and reaching forward. */
+function repairArm(root: Vec3, elbow: Vec3, wrist: Vec3, grasp: Vec3): Piece[] {
+  const finger = (tip: Vec3): Piece => bar(METAL, wrist, tip, 0.008, 0.008);
+  return [
+    bar(WHITE, root, elbow, 0.026, 0.02),
+    bar(DARK, root, elbow, 0.012, 0.024),
+    ...knuckle(elbow),
+    bar(WHITE, elbow, wrist, 0.022, 0.016),
+    ...knuckle(wrist),
+    finger(grasp),
+    finger([grasp[0], grasp[1] - 0.02, grasp[2] + 0.03]),
+    finger([grasp[0], grasp[1] - 0.02, grasp[2] - 0.03]),
+    discZ(BLUE, grasp[0], grasp[1], grasp[2], grasp[2] + 0.012, 0.008, 5),
   ];
-  return { id: "drone-repair", role: "repair", pieces, mouth: [0, 0.3, 0.02], tool: grip, toolKind: "laser" };
+}
+
+function repairDrone(): Machine {
+  const grip: Vec3 = [-0.2, 0.48, -0.18];
+  const pieces: Piece[] = [
+    saucer(DARK, 0.34, -0.05, 0.045),
+    saucer(ORANGE, 0.325, -0.018, 0.012),
+    saucer(WHITE, 0.3, 0.018, 0.05),
+    saucer(WHITE, 0.16, 0.062, 0.024),
+    saucer(METAL, 0.09, 0.086, 0.016),
+    ...panel(WHITE, 0, 0.02, 0.078, 0.09, 0.06),
+    ...panel(DARK, 0, -0.12, 0.09, 0.07, 0.045),
+    ...panel(METAL, 0.1, -0.02, 0.075, 0.035, 0.04),
+    ...panel(METAL, -0.1, -0.02, 0.075, 0.035, 0.04),
+    ...bolts(0, 0, 0.07, 0.16, 0.12),
+    ...vents(0.18, 0.04, 0.05),
+    ...vents(-0.18, 0.04, 0.05),
+    discZ(BLUE, 0, 0.02, -0.16, -0.13, 0.12, 16),
+    discZ(BLUE, 0.1, 0.04, -0.14, -0.125, 0.03, 8),
+    discZ(BLUE, -0.1, 0.04, -0.14, -0.125, 0.03, 8),
+    disc(DARK, [0, 0.015], 0.07, 0.18, 0.1, 16),
+    disc(ORANGE, [0, 0.015], 0.074, 0.26, 0.02, 16),
+    disc(ORANGE, [0.13, 0.02], 0.04, 0.16, 0.07, 10),
+    disc(DARK, [0.13, 0.02], 0.028, 0.22, 0.02, 8),
+    disc(ORANGE, [-0.13, 0.02], 0.04, 0.16, 0.07, 10),
+    disc(DARK, [-0.13, 0.02], 0.028, 0.22, 0.02, 8),
+    ...emitter([0, 0.015], 0.29, 0.072),
+    ...whip([-0.03, -0.04, 0.11], [-0.05, -0.08, 0.48]),
+    ...whip([0.05, 0, 0.11], [0.08, 0.04, 0.46]),
+    ...repairArm([-0.08, 0, -0.08], [-0.16, 0.12, -0.28], [-0.18, 0.32, -0.22], grip),
+    ...repairArm([0.08, 0, -0.08], [0.14, 0.1, -0.28], [0.12, 0.3, -0.2], [0.1, 0.46, -0.18]),
+  ];
+  return { id: "drone-repair", role: "repair", pieces, mouth: [0, 0.29, 0.015], tool: grip, toolKind: "laser" };
 }
 
 function carrierDrone(): Machine {
