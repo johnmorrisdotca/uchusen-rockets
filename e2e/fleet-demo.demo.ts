@@ -3,7 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { ROCKETS } from "../src/rockets.ts";
 
 const URL = "/uchusen-rockets/";
-const SHIPS = ["fleet-ship-03", "fleet-ship-ariake", "fleet-02"] as const;
+const SHIPS = ["fleet-ship-03", "fleet-ship-ariake", "fleet-02", "fleet-02-concepts"] as const;
 const names = SHIPS.map((id) => ROCKETS[id].name);
 
 const pressed = (page: Page, group: string) => page.locator(`#${group} button[aria-pressed="true"]`).allTextContents();
