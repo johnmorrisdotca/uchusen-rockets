@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!--family:head-->
+    <link rel="stylesheet" href="family.css" />
+    <link rel="stylesheet" href="demo.css" />
+    <link rel="stylesheet" href="fleet-db.css" />
+  </head>
+  <body class="demo fleet-db">
+    <main>
+      <!--family:header-->
+      <section class="db" aria-labelledby="db-title">
+        <h2 id="db-title" data-say="dbTitle">Fleet record</h2>
+        <p data-say="dbIntro">The SPX ships, then one ship's sections. The choice stays in the address.</p>
+        <div class="field">
+          <h3 id="db-ships-title" data-say="dbShips">Ships</h3>
+          <div class="chips" id="db-ships" data-testid="db-ships" role="group" aria-labelledby="db-ships-title"></div>
+        </div>
+        <div class="field">
+          <h3 id="db-sections-title" data-say="dbSections">Sections</h3>
+          <div class="chips" id="db-sections" data-testid="db-sections" role="group" aria-labelledby="db-sections-title"></div>
+        </div>
+        <div class="field">
+          <h3 id="db-modules-title" data-say="dbModules">Modules</h3>
+          <div class="chips" id="db-modules" data-testid="db-modules" role="group" aria-labelledby="db-modules-title"></div>
+          <p id="db-module-job" data-testid="db-module-job"></p>
+        </div>
+        <div class="stage-box">
+          <uchusen-rocket id="hero" data-testid="db-hero" rocket="fleet-ship-01" variant="hanabusa" look="painted" show="together" inspector="off"></uchusen-rocket>
+          <kazoku-view-controls for="hero" theme="dark"></kazoku-view-controls>
+        </div>
+        <table class="db-facts" data-testid="db-facts">
+          <tbody>
+            <tr><th data-say="length">Length</th><td id="db-length"></td></tr>
+            <tr><th data-say="beam">Beam</th><td id="db-beam"></td></tr>
+            <tr><th data-say="heightStowed">Height (stowed)</th><td id="db-height"></td></tr>
+          </tbody>
+        </table>
+        <h3 id="db-profile-title" data-say="dbProfile">Profile</h3>
+        <table class="db-facts" data-testid="db-profile">
+          <tbody id="db-profile-rows"></tbody>
+        </table>
+      </section>
+      <!--family:footer-->
+    </main>
+    <!--family:scripts js/fleet-db.js-->
+  </body>
+</html>
