@@ -11,16 +11,19 @@ const fiction = (brief: string) => blank<number>(FICTION, brief);
 const metres = (value: number) => `${Number(value.toFixed(1))} m, as designed`;
 
 const NOTES: Readonly<Record<string, string>> = {
-  miyamoto: "ISV 宮本 Miyamoto, SPX-452, Romurusu class (ロムルス級, ICV type), the flagship and command vessel, stowed, with the relay pod on its keyed collar. A narrow spine, two staggered hangar shoulders, a layered bow and two recessed drives, 380 m by 118 m by 74 m, 105,000 t at departure. Status: planned, first flight 2456. All numbers are design targets; the drive and its limits are described in the ship's bible.",
+  miyamoto: "ISV 宮本 Miyamoto, SPX-452, Romurusu class (ロムルス級, ICV type), the flagship and command vessel, stowed, with the relay pod on its keyed collar. A narrow spine, two staggered hangar shoulders, a layered bow and two recessed drives, 380 m by 138 m by 74 m, 105,000 t at departure. Status: planned, first flight 2456. All numbers are design targets; the drive and its limits are described in the ship's bible.",
   "miyamoto-deployed": "Miyamoto with both radiator banks out: four leaves of 25 by 60 m on each, clear of the hangar corridors. Sustained main burn needs every leaf out.",
   "miyamoto-relief": "Miyamoto with the relief pod on its collar: six relief and equipment containers under a gantry, in place of the relay pod.",
   "miyamoto-no-collar": "ISV Miyamoto with the drive's neck bare: the shadow-shield collar swapped for none, to compare the two ways the engines meet the hull.",
-  ariake: "ISV 有明 Ariake, SPX-186, \"daybreak\": the sister of ISV Miyamoto in the Romurusu class (ロムルス級), the same model with its own registry and hull marks, a dawn-gold livery with pinstripes, a survey pod on its collar, a sensor mast and a solarium each side of the dome, and warm rooms. Status: planned, first flight 2456.",
+  ariake: "ISV 有明 Ariake, SPX-186, \"daybreak\": the sister of ISV Miyamoto in the Romurusu class (ロムルス級), the service ship, with a Super Heavy and a Starship ship on one box's exterior saddles. Status: planned, first flight 2456.",
+  "ariake-empty": "Ariake with the exterior saddles empty. The clamps stay; the two components are off.",
+  "ariake-berth-keel": "Ariake with a full Starship stack berthed under the spine, the barrels moved 4 m inboard, and a methane and oxygen depot beside the stack.",
+  "ariake-berth-port": "Ariake with a full Starship stack berthed to port, the two port boxes moved forward to leave a 146 m run, and a methane and oxygen depot beside the stack.",
   "ariake-cutaway": "Ariake opened to starboard at the habitation drum: the four decks in warm wood and dawn-gold.",
   "miyamoto-cutaway": "Miyamoto opened to starboard: the layers of its armour at the cut edge, the reactor and power rooms, the barrels, both bays, the decks of the habitat and the operations ring of the citadel.",
 };
 
-const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", ariake: "ISV 有明 Ariake, SPX-186", "ariake-cutaway": "ISV 有明 Ariake, SPX-186, cutaway" };
+const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", ariake: "ISV 有明 Ariake, SPX-186", "ariake-empty": "ISV 有明 Ariake, SPX-186, empty mounts", "ariake-berth-keel": "ISV 有明 Ariake, SPX-186, ventral berth", "ariake-berth-port": "ISV 有明 Ariake, SPX-186, port berth", "ariake-cutaway": "ISV 有明 Ariake, SPX-186, cutaway" };
 
 /** What the viewer's panel shows for a variant: the labels of every named section, the specification (with the sister ship's row as a link), and the notes. The other ship is one click away. */
 const inspectorOf = (id: string, slots: Readonly<Record<string, string>>): Inspector => {
@@ -63,7 +66,7 @@ const variantOf = ([id, slots]: [string, Readonly<Record<string, string>>]): Var
     inspector: inspectorOf(id, slots),
     facts: {
       height: fiction(metres(380)),
-      diameter: fiction(metres(118)),
+      diameter: fiction(metres(138)),
       parts: Object.fromEntries(Object.entries(slots).map(([slot, part]) => [slot, fiction(metres(MIYAMOTO_PARTS.find((one) => one.id === part)?.height ?? 0))])),
       engines: { drive: blank<string>(FICTION, "2 DCD (Directed Conversion Drives), 4 plasma verniers") },
       more: {},
@@ -114,4 +117,7 @@ export const SHIP_03_SLOT_NAMES: Readonly<Record<string, string>> = {
   "drive-collar": "Shadow-shield collar",
   "hangar-starboard-fore": "Starboard fore hangar",
   "hangar-port-aft": "Port aft hangar",
+  "stack-berth": "Stack berth",
+  "exterior-load": "Loaded saddles",
+  "starship-port": "Visiting port",
 };
