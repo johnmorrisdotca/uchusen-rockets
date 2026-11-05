@@ -91,8 +91,13 @@ test("with a wide font the viewer's panel still keeps the stage inside 1010 px a
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
   const page = await context.newPage();
   await page.route(/\.(css|js)(\?.*)?$/, async (route) => {
-    const response = await route.fetch();
-    await route.fulfill({ response, body: (await response.text()).replaceAll("system-ui", "Verdana") });
+    // The next address can be opened while a file of the last is still being read, and Playwright then disposes of that response: nothing is waiting on it, and a page that really lacks its font fails the Verdana reading below.
+    try {
+      const response = await route.fetch();
+      await route.fulfill({ response, body: (await response.text()).replaceAll("system-ui", "Verdana") });
+    } catch {
+      await route.abort().catch(() => undefined);
+    }
   });
   let most = 0;
   let where = "";
