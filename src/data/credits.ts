@@ -146,6 +146,15 @@ export const MODEL_CREDITS = {
     licenceUrl: "https://www.nasa.gov/nasa-brand-center/images-and-media/",
     changes: "The drum with its foil and its own panels; the long booms left out; scaled to the sourced 2.9 m across and 1.3 m tall; stood with its base at y = 0. No mark was on the panels that were kept.",
   },
+  "nasa-cluster-ii-coarse": {
+    title: "Cluster II, distant",
+    creator: "NASA 3D Resources",
+    creatorUrl: "https://science.nasa.gov/3d-resources/",
+    sourceUrl: "https://science.nasa.gov/3d-resources/cluster-ii/",
+    licence: "Public domain (NASA)",
+    licenceUrl: "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    changes: "The same drum as the near model, foil and panels kept, long booms left out, reduced for a distant view; scaled to the sourced 2.9 m across and 1.3 m tall; stood with its base at y = 0. No mark was on the panels that were kept.",
+  },
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

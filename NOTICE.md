@@ -52,6 +52,7 @@ The dataset addresses named below are the record of what each model is. Their do
 | `iss-station.glb` | ISS | https://data.nasa.gov/dataset/nasa-3d-models-iss | Reduced from 174,440 triangles to 60,701; a ball of stray pieces far above it left out; rescaled to the sourced length; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove. |
 | `hubble-telescope.glb` | Hubble Space Telescope | https://data.nasa.gov/dataset/nasa-3d-models-hubble-space-telescope | A lettered plate painted out of its picture; its 7,672 triangles kept; rescaled to the sourced length; its materials made into one picture. |
 | `cluster-ii-body.glb` | Cluster II | https://science.nasa.gov/3d-resources/cluster-ii/ | The drum with its foil and its own panels, from NASA 3D Resources. The long booms left out. Scaled to the sourced 2.9 m across and 1.3 m tall, and stood with its base at y = 0. No mark was on the panels that were kept. The repository states these assets are free and without copyright. |
+| `cluster-ii-coarse-far.glb` | Cluster II, distant | https://science.nasa.gov/3d-resources/cluster-ii/ | The same drum, foil and panels kept, reduced for a distant view. NASA 3D Resources. No mark was on the panels that were kept. |
 <!-- more NASA models -->
 
 The five yard machines also follow design references that are not distributed with this package:
