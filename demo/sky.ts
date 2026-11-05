@@ -1,6 +1,7 @@
 // Backgrounds other than the Earth, drawn by wakusei-planets and only after one is chosen. Nothing here copies a picture or a size.
 // The framing is the Earth's orbit view (demo/earth-model.ts): the same placement, through this element's own camera.
 import { placementIn } from "./earth-model.ts";
+import { orbitStepsFor, roundKm, type OrbitStep } from "./orbit.ts";
 
 type Lang = "en" | "ja";
 type SkyForm = "line" | "painted";
@@ -61,7 +62,49 @@ type Framed = HTMLElement & {
   setView(view: { yaw?: number; tilt?: number; zoom?: number; panX?: number; panY?: number }): void;
 };
 
-/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened a little and tipped so its rings cross the sky as a band; the horizon stays on the middle. `viewZoom` below 1 opens the same picture further. */
+/** How long a change of altitude takes. The camera eases. It never jumps. */
+const MOVE_MS = 800;
+let shown = 0;
+let frame = 0;
+
+/** The altitude opening now, 0 at low orbit and 1 at the farthest step. */
+export const orbitShown = (): number => shown;
+
+/**
+ * Ease the camera to `open`. `animate` false sets it at once, which a page load uses. The holder hears an `orbit` event on each step, so the Earth's own picture can follow.
+ */
+export const aimOrbit = (open: number, holder: HTMLElement, animate: boolean): void => {
+  const goal = Math.min(1, Math.max(0, open));
+  holder.dataset.orbitTarget = goal.toFixed(4);
+  if (frame) cancelAnimationFrame(frame);
+  frame = 0;
+  const paint = (moving: boolean) => {
+    holder.dataset.orbitOpen = shown.toFixed(4);
+    holder.dataset.orbitMoving = moving ? "1" : "0";
+    const body = holder.querySelector("wakusei-body:not([data-moon])");
+    if (goal > 0.02 && body instanceof HTMLElement) body.dataset.pull = "1";
+    if (body instanceof HTMLElement) frameSky(body, holder, Number(holder.dataset.viewZoom) || Number(body.dataset.viewZoom) || 1);
+    holder.dispatchEvent(new Event("orbit"));
+  };
+  if (!animate || Math.abs(shown - goal) < 0.0005) {
+    shown = goal;
+    paint(false);
+    return;
+  }
+  const from = shown;
+  const start = performance.now();
+  holder.dataset.orbitMoving = "1";
+  const step = (now: number) => {
+    const t = Math.min(1, (now - start) / MOVE_MS);
+    const eased = 1 - (1 - t) ** 3;
+    shown = from + (goal - from) * eased;
+    paint(t < 1);
+    frame = t < 1 ? requestAnimationFrame(step) : 0;
+  };
+  frame = requestAnimationFrame(step);
+};
+
+/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened a little and tipped so its rings cross the sky as a band; the horizon stays on the middle. A higher orbit eases that picture out until the whole disc is in frame. `viewZoom` below 1 opens the same picture further. */
 const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: number) => {
   const width = holder.clientWidth;
   const height = holder.clientHeight;
@@ -73,13 +116,15 @@ const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: 
   const place = placementIn(width, height);
   const saturn = node.getAttribute("body") === "saturn";
   const moons = node.hasAttribute("moons");
-  const widen = saturn ? 0.48 : 1;
-  const camera = (moons ? ORBIT_ZOOM : ORBIT_ZOOM * viewZoom) * widen;
-  const shrink = (moons ? ROOM / Math.max(ROOM, range) : viewZoom) * widen;
+  const open = Math.min(1, Math.max(0, Number(node.dataset.open) || 0));
+  const widen = saturn ? 0.48 + 0.52 * open : 1;
+  const fullZoom = (0.84 * Math.min(width, height) * ROOM) / side / (saturn ? 2.4 : 1);
+  const camera = moons ? ORBIT_ZOOM : (ORBIT_ZOOM * widen * (1 - open) + fullZoom * open) * viewZoom;
+  const shrink = moons ? ROOM / Math.max(ROOM, range) : viewZoom * widen * (1 - open);
   const face = node.dataset.face;
   node.setView({
     yaw: 0,
-    tilt: saturn ? -36 : face ? -Number(face) : 0,
+    tilt: saturn ? -36 * (1 - open) : face ? -Number(face) : 0,
     zoom: camera,
     panX: (-2 * place.panX * shrink) / side,
     panY: (2 * place.panY * shrink) / side,
@@ -88,6 +133,7 @@ const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: 
 
 /** The reader's zoom. Below 1 opens the picture further. A moon picture opens its range; a body alone opens the camera, and neither one adds moons. */
 export const frameSky = (node: HTMLElement, holder: HTMLElement, viewZoom = 1) => {
+  node.dataset.open = shown.toFixed(4);
   const pull = Number(node.dataset.pull) || 1;
   const zoom = Math.max(0.25, viewZoom);
   node.dataset.viewZoom = String(zoom);
@@ -222,6 +268,11 @@ const placeMoons = (mine: number, planetNode: HTMLElement, holder: HTMLElement, 
     const start = performance.now();
     const step = (now: number) => {
       if (mine !== ticket || !planetNode.isConnected) return;
+      if (Number(planetNode.dataset.open) > 0.02) {
+        planetNode.dataset.pull = "1";
+        frameSky(planetNode, holder, Number(planetNode.dataset.viewZoom) || 1);
+        return;
+      }
       const t = Math.min(1, (now - start) / RANGE_MS);
       const eased = 1 - (1 - t) ** 3;
       planetNode.dataset.pull = (1 - 0.12 * eased).toFixed(3);
@@ -344,6 +395,19 @@ export const skyCredit = async (body: string, moon: string, look: SkyForm): Prom
   if (planetLine) lines.push(planetLine);
   if (moonLine && moonLine !== planetLine) lines.push(moonLine);
   return lines.join(" ");
+};
+
+/** The distances a body offers, and how far each moon sits, in kilometres from the body's centre. */
+export const orbitCatalogue = async (body: string): Promise<{ steps: OrbitStep[]; moons: { id: string; km: number }[] }> => {
+  if (body === "none") return { steps: [], moons: [] };
+  if (body === "earth") return { steps: orbitStepsFor(6371, 384400, true), moons: [{ id: "moon", km: 384400 }] };
+  const { BODIES, MOONS_OF, system } = await import("@johnmorrisdotca/wakusei-planets");
+  const facts = BODIES[body as keyof typeof BODIES];
+  if (!facts) return { steps: [], moons: [] };
+  const listed = (MOONS_OF as Record<string, readonly string[]>)[body] ?? [];
+  const moons = listed.length === 0 ? [] : system(body as "mars", Date.now()).moons.map((moon) => ({ id: moon.id, km: roundKm(moon.distance * facts.radiusKm) }));
+  const far = moons.reduce((max, moon) => Math.max(max, moon.km), 0);
+  return { steps: orbitStepsFor(facts.radiusKm, far > 0 ? far : null), moons };
 };
 
 /** Round thumbnails from the package's line drawings. */
