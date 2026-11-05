@@ -1,7 +1,9 @@
 // The swarm count follows the ship, and a drone stays outside the hull until the last move into its slot.
 import assert from "node:assert/strict";
 import test from "node:test";
+import { Vector3 } from "three";
 import { assemblyOf, buildOf, PHASE_SHARE, playFrame, SHOP_LIMIT_M, stepPhase } from "../src/buildPlay.ts";
+import { sectorNormals } from "../src/element/buildArc.ts";
 import { sparkAt } from "../src/element/swarm.ts";
 import { approachPath, berthRing, carries, grounded, pathClears, rankOf, SWARM_CAP, swarmCount, swarmJobs, type HullBox } from "../src/swarm.ts";
 
@@ -113,6 +115,14 @@ test("the ranks are one boss, a manager for a handful, and builders and grunts a
   const builders = ranks.filter((rank) => rank === "builder").length;
   const grunts = ranks.filter((rank) => rank === "grunt").length;
   assert.ok(Math.abs(builders - grunts) <= 1);
+});
+
+test("a half-built ring is the front half of the circle", () => {
+  const [left, right] = sectorNormals(Math.PI / 2);
+  const ahead = new Vector3(0, 0, 1);
+  const behind = new Vector3(0, 0, -1);
+  assert.ok(left.dot(ahead) > 0 && right.dot(ahead) > 0);
+  assert.ok(left.dot(behind) < 0 && right.dot(behind) < 0);
 });
 
 test("a weld spark flies straight out and is not pulled down", () => {

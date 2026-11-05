@@ -69,7 +69,17 @@ export interface SwarmPose {
   duty?: "work" | "transit" | "berth";
   /** The part's box in the scene. The weld ends on this skin; the part point itself is the middle. */
   skin?: { min: Vec; max: Vec };
+  /** Boss, manager, builder or grunt. The drawn size and the lamp follow it. */
+  rank?: "boss" | "manager" | "builder" | "grunt";
 }
+
+const RANK_SCALE = { boss: 2.2, manager: 1.55, builder: 1, grunt: 0.75 } as const;
+const RANK_LAMP: Record<keyof typeof RANK_SCALE, [number, number, number]> = {
+  boss: [1, 0.72, 0.2],
+  manager: [0.45, 0.75, 1],
+  builder: [1, 0.96, 0.85],
+  grunt: [0.55, 0.62, 0.55],
+};
 
 /** Where a weld from the tool toward the part's middle meets the part's box. Inside the box, the nearest face. */
 function onHull(tip: Vec, toward: Vec, box: { min: Vec; max: Vec }): Vec {
@@ -215,6 +225,8 @@ export class SwarmRig {
   /** Each drone's matrix, 16 floats apiece, and where its middle is. */
   private bodies = new Float32Array(CAP * 16);
   private centres = new Float32Array(CAP * 3);
+  private rankScale = new Float32Array(CAP).fill(1);
+  private lampColours = new Float32Array(CAP * 3);
   private count = 0;
   private nearSig = "";
 
@@ -234,7 +246,8 @@ export class SwarmRig {
     this.flares = new InstancedMesh(new SphereGeometry(1, 12, 12), flare, CAP * 2);
     const lampGeo = new BufferGeometry();
     lampGeo.setAttribute("position", new BufferAttribute(this.lampPositions, 3));
-    this.lamps = new Points(lampGeo, new PointsMaterial({ color: new Color("#fff6d8"), size: 14, sizeAttenuation: false, map: lampDisc(), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false }));
+    lampGeo.setAttribute("color", new BufferAttribute(this.lampColours, 3));
+    this.lamps = new Points(lampGeo, new PointsMaterial({ vertexColors: true, size: 14, sizeAttenuation: false, map: lampDisc(), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false }));
     this.lamps.frustumCulled = false;
     this.lamps.renderOrder = 6;
     // a cone: the narrow end (+y) is the lens, the wide end is the part
@@ -300,6 +313,9 @@ export class SwarmRig {
       const pose = list[i];
       if (!pose) continue;
       const duty = pose.duty ?? "work";
+      const rankScale = RANK_SCALE[pose.rank ?? "builder"];
+      this.rankScale[i] = rankScale;
+      this.lampColours.set(RANK_LAMP[pose.rank ?? "builder"], i * 3);
       const p = this.from.set(pose.where[0], pose.where[1], pose.where[2]);
       const target = this.to.set(pose.part[0], pose.part[1], pose.part[2]);
       const beaming = duty !== "berth";
@@ -324,7 +340,7 @@ export class SwarmRig {
           this.turnTo(target.x - this.mid.x, target.y - this.mid.y, target.z - this.mid.z);
         }
       }
-      this.scratch.compose(this.one.set(p.x, p.y, p.z), this.turn, this.side.set(s, s, s));
+      this.scratch.compose(this.one.set(p.x, p.y, p.z), this.turn, this.side.set(s * rankScale, s * rankScale, s * rankScale));
       // the drone's own frame is about the middle of its box
       this.scratch.multiply(this.shift);
       this.scratch.toArray(this.bodies, i * 16);
@@ -350,9 +366,7 @@ export class SwarmRig {
       const uy = (eY - endY) / span;
       const uz = (eZ - endZ) / span;
       this.spin.setFromUnitVectors(UP, this.side.set(ux, uy, uz));
-      const skin = pose.skin;
-      const sides = skin ? [Math.abs(skin.max[0] - skin.min[0]), Math.abs(skin.max[1] - skin.min[1]), Math.abs(skin.max[2] - skin.min[2])].sort((a, b) => a - b) : [1.2 * s, 1.2 * s, 1.2 * s];
-      const wide = Math.max(1.2, (sides[1] ?? 1.2) * 0.42);
+      const wide = Math.min(1.4, Math.max(0.25, s * 0.35));
       const placeBeam = (mesh: InstancedMesh) => {
         this.scratch.compose(this.one.set((eX + endX) / 2, (eY + endY) / 2, (eZ + endZ) / 2), this.spin, this.mid.set(wide, span, wide));
         mesh.setMatrixAt(beamN, this.scratch);
@@ -420,6 +434,8 @@ export class SwarmRig {
     this.lamps.geometry.setDrawRange(0, n);
     const lampAttr = this.lamps.geometry.getAttribute("position");
     lampAttr.needsUpdate = true;
+    const lampColour = this.lamps.geometry.getAttribute("color");
+    lampColour.needsUpdate = true;
     for (const mesh of [this.beams, this.cores, this.rings, this.sparks, this.flares]) mesh.instanceMatrix.needsUpdate = true;
     this.paths.geometry.setDrawRange(0, 0);
     // weldAt holds the tool tip then the arc's end, for each welding drone
@@ -498,7 +514,7 @@ export class SwarmRig {
     for (let i = 0; i < this.count; i += 1) {
       if (isFine.has(i)) continue;
       this.turn.fromArray(this.turns, i * 4);
-      const drawn = this.scale * 0.22;
+      const drawn = this.scale * 0.22 * (this.rankScale[i] ?? 1);
       this.scratch.compose(this.one.set(this.centres[i * 3] ?? 0, this.centres[i * 3 + 1] ?? 0, this.centres[i * 3 + 2] ?? 0), this.turn, this.side.set(drawn, drawn, drawn));
       this.scratch.multiply(this.shift);
       this.far.mesh.setMatrixAt(coarse, this.scratch);

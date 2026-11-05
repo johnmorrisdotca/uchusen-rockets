@@ -50,6 +50,7 @@ import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { assemblyOf, playFrame } from "../buildPlay.ts";
+import { clearArc, growPart } from "./buildArc.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
 import { SwarmRig } from "./swarm.ts";
@@ -297,6 +298,7 @@ export class RocketViewer {
     this.holder = holder;
     this.options = options;
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
+    this.renderer.localClippingEnabled = true;
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
@@ -1329,6 +1331,7 @@ export class RocketViewer {
         if (!place) continue;
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.scale.setScalar(1);
+        clearArc(part.holder);
         part.holder.visible = place.shown;
       }
       this.swarm?.hide();
@@ -1354,18 +1357,23 @@ export class RocketViewer {
       const step = steps.find((one) => one.slot === part.slot);
       if (!place || !step) continue;
       const seated = grounded(step.slot, frame.done);
-      const fit = assemblyOf(step, frame.day, 80);
+      const box = built.parts.find((one) => one.slot === step.slot)?.bounds;
+      const span = box ? Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]) : 80;
+      const fit = assemblyOf(step, frame.day, span);
+      const ring = step.slot.includes("ring") || step.slot.includes("wheel");
       if (frame.done.includes(step.slot) && seated) {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.scale.setScalar(1);
+        clearArc(part.holder);
         part.holder.visible = place.shown;
       } else if (frame.going.includes(step.slot) && seated && fit.grown > 0.02) {
-        // a section grows where it belongs; the shop never flies a whole tank or ring in
+        // a section grows where it belongs; a ring opens as an arc
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
-        part.holder.scale.setScalar(Math.max(0.05, fit.grown));
+        growPart(part.holder, fit.grown, ring);
         part.holder.visible = place.shown;
       } else {
         part.holder.scale.setScalar(1);
+        clearArc(part.holder);
         part.holder.visible = false;
       }
     }
@@ -1390,6 +1398,7 @@ export class RocketViewer {
           part: pose.part,
           weld: pose.duty === "work",
           duty: pose.duty,
+          rank: pose.rank,
           skin: box
             ? {
                 min: [pose.part[0] + box.min[0], pose.part[1] + box.min[1], pose.part[2] + box.min[2]] as [number, number, number],
