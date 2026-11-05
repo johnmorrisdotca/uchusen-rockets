@@ -1,12 +1,49 @@
-// The Moon in the demo's background, drawn by wakusei-planets and only after it is chosen. Nothing here copies a picture or a size: `lineSvg` and `embedCredit` are the package's. The Earth itself stays the one chikyu-earth draws.
-
-export const PICKER = ["none", "earth", "moon"] as const;
-export type PickerId = (typeof PICKER)[number];
-
-export const isPicker = (id: string): id is PickerId => (PICKER as readonly string[]).includes(id);
+// Backgrounds other than the Earth, drawn by wakusei-planets and only after one is chosen. Nothing here copies a picture or a size.
 
 type Lang = "en" | "ja";
 type SkyForm = "line" | "painted";
+
+export type SkyList = {
+  order: readonly string[];
+  moonsOf: (id: string) => readonly string[];
+  name: (id: string, lang: Lang) => string;
+  known: (id: string) => boolean;
+};
+
+let listPromise: Promise<SkyList> | null = null;
+
+/** The Sun, the planets out to Pluto, and the moons of those, as the package lists them. */
+export const skyList = (): Promise<SkyList> => {
+  listPromise ??= import("@johnmorrisdotca/wakusei-planets").then(({ PLANET_IDS, MOONS_OF, BODIES }) => {
+    const moons = MOONS_OF as Record<string, readonly string[]>;
+    const offered = new Set<string>(["none", "sun", ...PLANET_IDS]);
+    for (const id of PLANET_IDS) for (const moon of moons[id] ?? []) offered.add(moon);
+    return {
+      order: ["none", "sun", ...PLANET_IDS],
+      moonsOf: (id: string) => moons[id] ?? [],
+      name: (id: string, lang: Lang) => BODIES[id as keyof typeof BODIES]?.name[lang] ?? id,
+      known: (id: string) => offered.has(id),
+    };
+  });
+  return listPromise;
+};
+
+/** Moons that read well behind a planet when no single moon is chosen. Any other moon waits until it is picked. */
+export const companionsFor = (body: string, moon: string, moonsOf: (id: string) => readonly string[]): string[] => {
+  const list = moonsOf(body);
+  if (moon && list.includes(moon)) return [moon];
+  if (body === "earth" && list.includes("moon")) return ["moon"];
+  if (body === "jupiter") return ["io", "europa", "ganymede", "callisto"].filter((id) => list.includes(id));
+  if (body === "saturn" && list.includes("titan")) return ["titan"];
+  return [];
+};
+
+const SPOTS = [
+  { left: "68%", top: "16%", width: "20%" },
+  { left: "8%", top: "28%", width: "15%" },
+  { left: "72%", top: "54%", width: "17%" },
+  { left: "10%", top: "62%", width: "13%" },
+];
 
 let ticket = 0;
 
@@ -15,13 +52,6 @@ const clear = (holder: HTMLElement) => {
   holder.hidden = true;
   delete holder.dataset.draws;
   delete holder.dataset.form;
-};
-
-/** Drop whatever picture is up, so the next choice never keeps the last one's canvas. */
-export const stopSky = (planet: HTMLElement, moons: HTMLElement) => {
-  ticket += 1;
-  clear(planet);
-  clear(moons);
 };
 
 const putSvg = (holder: HTMLElement, markup: string, spot?: { left: string; top: string; width: string }) => {
@@ -37,40 +67,42 @@ const putSvg = (holder: HTMLElement, markup: string, spot?: { left: string; top:
   holder.append(svg);
 };
 
-/**
- * `earth` leaves the Earth's own picture alone and draws the Moon small beside it.
- * `moon` draws the Moon as the picture. `none` clears both.
- */
-export const placeSky = (planet: HTMLElement, moons: HTMLElement, choice: PickerId, form: SkyForm, lang: Lang) => {
+/** Draw `body` large, and `companions` small beside it. `earth` leaves the Earth's own picture alone. `none` clears both. */
+export const placeSky = (planet: HTMLElement, moons: HTMLElement, body: string, companions: readonly string[], form: SkyForm, lang: Lang) => {
   const mine = ++ticket;
   clear(planet);
   clear(moons);
-  if (choice === "none") return;
-  void draw(mine, planet, moons, choice, form, lang);
+  if (body === "none") return;
+  void draw(mine, planet, moons, body, companions, form, lang);
 };
 
-const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, choice: PickerId, form: SkyForm, lang: Lang) => {
-  const { lineSvg } = await import("@johnmorrisdotca/wakusei-planets");
+const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, body: string, companions: readonly string[], form: SkyForm, lang: Lang) => {
+  const { lineSvg, BODIES } = await import("@johnmorrisdotca/wakusei-planets");
   if (mine !== ticket) return;
-  if (choice === "earth") {
-    putSvg(moons, lineSvg("moon", { size: 320, labels: false, lang }), { left: "68%", top: "20%", width: "26%" });
-    if (mine !== ticket) return clear(moons);
-    moons.dataset.draws = "moon";
-    moons.dataset.form = "line";
-    moons.hidden = false;
-    return;
+  const known = (id: string) => id in BODIES;
+  if (body !== "earth" && known(body)) {
+    if (form === "painted") await paint(planet, body, lang);
+    else putSvg(planet, lineSvg(body as keyof typeof BODIES, { size: 640, labels: false, lang }));
+    if (mine !== ticket) return clear(planet);
+    planet.dataset.draws = body;
+    planet.dataset.form = form === "painted" ? "painted" : "line";
+    planet.hidden = false;
   }
-  if (form === "painted") await paint(planet, "moon", lang);
-  else putSvg(planet, lineSvg("moon", { size: 640, labels: false, lang }));
-  if (mine !== ticket) return clear(planet);
-  planet.dataset.draws = "moon";
-  planet.dataset.form = form === "painted" ? "painted" : "line";
-  planet.hidden = false;
+  const shown = companions.filter(known);
+  shown.forEach((id, index) => {
+    const spot = shown.length === 1 ? { left: "68%", top: "20%", width: "26%" } : (SPOTS[index] ?? SPOTS[0]);
+    putSvg(moons, lineSvg(id as keyof typeof BODIES, { size: 280, labels: false, lang }), spot);
+  });
+  if (mine !== ticket) return clear(moons);
+  if (shown.length === 0) return;
+  moons.dataset.draws = shown.join(",");
+  moons.dataset.form = "line";
+  moons.hidden = false;
 };
 
-/** The painted look is the package's own element, which fetches its picture itself. No texture is copied into this site. */
+/** The painted look is the package's own element. It fetches its picture itself. */
 const paint = async (holder: HTMLElement, body: string, lang: Lang) => {
-  await import("@johnmorrisdotca/wakusei-planets/moons-earth");
+  await loadBody(body);
   await import("@johnmorrisdotca/wakusei-planets/element");
   const node = document.createElement("wakusei-body");
   node.setAttribute("body", body);
@@ -81,24 +113,68 @@ const paint = async (holder: HTMLElement, body: string, lang: Lang) => {
   holder.append(node);
 };
 
-/** The credit line the package gives for a body, in the look on screen. */
-export const skyCredit = async (look: SkyForm): Promise<string> => {
-  const { embedCredit } = await import("@johnmorrisdotca/wakusei-planets");
-  return embedCredit({ body: "moon", look });
+const loadBody = (id: string) => {
+  switch (id) {
+    case "sun": return import("@johnmorrisdotca/wakusei-planets/sun");
+    case "mercury": return import("@johnmorrisdotca/wakusei-planets/mercury");
+    case "venus": return import("@johnmorrisdotca/wakusei-planets/venus");
+    case "mars": return import("@johnmorrisdotca/wakusei-planets/mars");
+    case "jupiter": return import("@johnmorrisdotca/wakusei-planets/jupiter");
+    case "saturn": return import("@johnmorrisdotca/wakusei-planets/saturn");
+    case "uranus": return import("@johnmorrisdotca/wakusei-planets/uranus");
+    case "neptune": return import("@johnmorrisdotca/wakusei-planets/neptune");
+    case "pluto": return import("@johnmorrisdotca/wakusei-planets/pluto");
+    case "moon": return import("@johnmorrisdotca/wakusei-planets/moons-earth");
+    case "phobos":
+    case "deimos": return import("@johnmorrisdotca/wakusei-planets/moons-mars");
+    case "io":
+    case "europa":
+    case "ganymede":
+    case "callisto": return import("@johnmorrisdotca/wakusei-planets/moons-jupiter");
+    case "mimas":
+    case "enceladus":
+    case "tethys":
+    case "dione":
+    case "rhea":
+    case "titan":
+    case "iapetus": return import("@johnmorrisdotca/wakusei-planets/moons-saturn");
+    case "miranda":
+    case "ariel":
+    case "umbriel":
+    case "titania":
+    case "oberon": return import("@johnmorrisdotca/wakusei-planets/moons-uranus");
+    case "proteus":
+    case "triton":
+    case "nereid": return import("@johnmorrisdotca/wakusei-planets/moons-neptune");
+    case "charon":
+    case "nix":
+    case "hydra": return import("@johnmorrisdotca/wakusei-planets/moons-pluto");
+    default: return Promise.resolve();
+  }
 };
 
-/** Small round thumbnails of the Earth and the Moon, from the package's line drawings. */
+/** Credits for the body on screen, in the package's own words. */
+export const skyCredit = async (body: string, moon: string, look: SkyForm): Promise<string> => {
+  const { embedCredit } = await import("@johnmorrisdotca/wakusei-planets");
+  const lines: string[] = [];
+  if (body !== "none" && body !== "earth") lines.push(embedCredit({ body: body as "mars", look }));
+  const extra = moon || (body === "earth" ? "moon" : "");
+  if (extra) lines.push(embedCredit({ body: extra as "moon", look: "line" }));
+  return lines.join(" ");
+};
+
+/** Round thumbnails from the package's line drawings. */
 export const paintThumbs = async (root: ParentNode, lang: Lang) => {
   const { lineSvg, BODIES } = await import("@johnmorrisdotca/wakusei-planets");
-  for (const id of ["earth", "moon"] as const) {
-    const button = root.querySelector<HTMLButtonElement>(`[data-sky="${id}"]`);
-    const dot = button?.querySelector(".thumb-dot");
-    if (!button || !dot) continue;
-    button.setAttribute("aria-label", BODIES[id].name[lang]);
+  for (const button of root.querySelectorAll<HTMLButtonElement>("[data-sky]")) {
+    const id = button.dataset.sky ?? "";
+    const facts = BODIES[id as keyof typeof BODIES];
+    const dot = button.querySelector(".thumb-dot");
+    if (!facts || !dot) continue;
+    button.setAttribute("aria-label", facts.name[lang]);
     const host = document.createElement("div");
-    host.innerHTML = lineSvg(id, { size: 48, labels: false, lang });
+    host.innerHTML = lineSvg(id as keyof typeof BODIES, { size: 48, labels: false, lang });
     const svg = host.querySelector("svg");
-    if (!svg) continue;
-    dot.replaceChildren(svg);
+    if (svg) dot.replaceChildren(svg);
   }
 };

@@ -16,7 +16,7 @@ import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
-import { isPicker, paintThumbs, placeSky, skyCredit, type PickerId } from "./sky.ts";
+import { companionsFor, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
 
@@ -56,12 +56,11 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
-const askedBackground = address.get("background") ?? "none";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: (isPicker(askedBackground) ? askedBackground : "none") as PickerId, beside: address.get("beside") === "on", kscale: scalePercent(address.get("kscale")) };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: address.get("beside") === "on", kscale: scalePercent(address.get("kscale")) };
 
 /** A rocket is thin: the controls hold a pan so that a quarter of it stays in view. Its size on the screen: the picture is as wide as the box and a third taller, and the framing leaves 8% round the rocket. */
 function sizeObject() {
@@ -168,21 +167,27 @@ hero.addEventListener("uchusen-fallback", () => {
   syncEarth();
 });
 let skyKey = "";
-/** The Moon, from wakusei-planets: small beside the Earth, or the picture itself. The same choice draws nothing again. */
+let skyBodies: SkyList | null = null;
+/** One body at a time, from wakusei-planets. The Earth keeps the picture it already had. */
 function syncSky() {
   const lang = japanese() ? "ja" : "en";
-  const form = state.background === "moon" && state.look === "painted" && !realisticBarred ? "painted" : "line";
-  const key = `${state.background}|${form}|${lang}`;
+  const painted = state.background !== "none" && state.background !== "earth" && state.look === "painted" && !realisticBarred;
+  const form = painted ? "painted" : "line";
+  const companions = skyBodies ? companionsFor(state.background, state.moon, (id) => skyBodies?.moonsOf(id) ?? []) : state.background === "earth" ? ["moon"] : state.moon ? [state.moon] : [];
+  const key = `${state.background}|${companions.join(",")}|${form}|${lang}`;
   const credit = byId("sky-credit");
-  const showCredit = state.background === "earth" || state.background === "moon";
+  const showCredit = state.background !== "none";
   if (key === skyKey) return;
   skyKey = key;
-  placeSky(byId("sky-back"), byId("sky-moons"), state.background, form, lang);
+  placeSky(byId("sky-back"), byId("sky-moons"), state.background, companions, form, lang);
   credit.hidden = !showCredit;
   credit.textContent = "";
   if (!showCredit) return;
-  void skyCredit(form).then((text) => {
-    if (skyKey === key) credit.textContent = text;
+  void skyCredit(state.background, state.moon, form).then((text) => {
+    if (skyKey === key) {
+      credit.textContent = text;
+      credit.hidden = text === "";
+    }
   });
 }
 
@@ -241,7 +246,7 @@ function renderMain() {
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
   press(byId("views"), `view-${state.view}`);
-  press(byId("backgrounds"), `background-${state.background}`);
+  drawSkyButtons();
   limitTilt(variant.view?.tiltMax ?? 45);
   (byId("turn").querySelector('[data-testid="compare-open"]') as HTMLAnchorElement).href = `compare.html?${new URLSearchParams({ rocket: state.rocket, variant: state.variant })}`;
   hero.setAttribute("rocket", state.rocket);
@@ -327,7 +332,9 @@ function pick(change: Partial<typeof state>) {
   if (change.view !== undefined && change.view !== state.view) bar.set({ yaw: 0, tilt: 0 });
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
-  if (change.background) address.set("background", change.background);
+  if (change.background !== undefined && change.moon === undefined) state.moon = "";
+  if (change.background !== undefined) address.set("background", state.background);
+  if (change.background !== undefined || change.moon !== undefined) address.set("moon", state.moon ? state.moon : null);
   if (change.beside !== undefined) {
     address.set("beside", change.beside ? "on" : "off");
     // both craft are to be in the picture
@@ -359,17 +366,41 @@ byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(WORDS.en[`look_${look}`], `look-${look}`, () => pick({ look }), `look_${look}`)));
 byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.replaceAll("-", "_")}`], `view-${view}`, () => pick({ view }), `view_${view.replaceAll("-", "_")}`)));
-const skyButton = (id: PickerId): HTMLButtonElement => {
+const skyButton = (id: string, testid: string, on: () => void): HTMLButtonElement => {
   const button = el("button", { type: "button", className: id === "none" ? "thumb thumb-none" : "thumb" });
-  button.dataset.testid = `background-${id}`;
+  button.dataset.testid = testid;
   button.dataset.sky = id;
-  button.setAttribute("aria-label", say(`background_${id}`));
+  const named = id === "none" || id === "earth" || id === "moon" ? say(`background_${id}`) : (skyBodies?.name(id, japanese() ? "ja" : "en") ?? id);
+  button.setAttribute("aria-label", named);
   button.append(el("span", { className: "thumb-dot" }));
-  button.addEventListener("click", () => pick({ background: id }));
+  button.addEventListener("click", on);
   return button;
 };
-byId("backgrounds").append(...(["none", "earth", "moon"] as const).map(skyButton));
-void paintThumbs(byId("backgrounds"), japanese() ? "ja" : "en");
+const drawSkyButtons = () => {
+  const order = skyBodies?.order ?? ["none", "earth"];
+  const lang = japanese() ? "ja" : "en";
+  byId("backgrounds").replaceChildren(...order.map((id) => skyButton(id, `background-${id}`, () => pick({ background: id }))));
+  const moons = skyBodies && state.background !== "none" && state.background !== "sun" ? skyBodies.moonsOf(state.background) : [];
+  const row = byId("moons");
+  row.hidden = moons.length === 0;
+  row.setAttribute("aria-label", say("moonsLabel"));
+  row.replaceChildren(...moons.map((id) => skyButton(id, `moon-${id}`, () => pick({ moon: state.moon === id ? "" : id }))));
+  press(byId("backgrounds"), `background-${state.background}`);
+  press(row, state.moon ? `moon-${state.moon}` : "");
+  void paintThumbs(byId("backgrounds"), lang);
+  void paintThumbs(row, lang);
+};
+drawSkyButtons();
+void skyList().then((got) => {
+  skyBodies = got;
+  if (!got.known(state.background)) {
+    state.background = "none";
+    state.moon = "";
+  } else if (state.moon && !got.moonsOf(state.background).includes(state.moon)) state.moon = "";
+  skyKey = "";
+  drawSkyButtons();
+  syncEarth();
+});
 
 byId("beside").append(chip("Beside it", "beside-on", () => pick({ beside: !state.beside }), "beside"));
 // the size slider: the number follows the thumb at once, and the ship is rebuilt at the size when it is let go
@@ -748,7 +779,6 @@ function speak() {
   lightEngines(hero.getAttribute("engines") === "on");
   showMotion();
   drawTurn();
-  void paintThumbs(byId("backgrounds"), japanese() ? "ja" : "en");
   byId("gallery").replaceChildren(...gallery());
   byId("planned-list").replaceChildren(...planned());
   byId("source-list").replaceChildren(...sourceItems());
