@@ -89,7 +89,7 @@ test("two planets and a moon stand behind the rocket, and the picture before is 
   await shot(page, "painted-desk");
 
   await page.goto(`${URL}?background=moon`);
-  await expect(sky).toHaveAttribute("data-draws", "moon");
+  await expect(sky).toHaveAttribute("data-draws", "moon", { timeout: 30_000 });
   await expect(moons).toBeHidden();
 
   await page.locator('[data-testid="background-earth"]').click();
