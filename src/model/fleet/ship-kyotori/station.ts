@@ -161,12 +161,20 @@ export function housing(yAft: number, shaftX: number): Piece[] {
   return out;
 }
 
-/** The whole station: hub, arms, rim, the four quarters (the one at `cutQuarter`, if any, cut open and furnished), their docking stubs, the wings in a state, and the stern housing. */
+/** The station's core: hub, arms, rim, the stem ahead (adapter, navigation deck, mast) and the figured mirror. */
+export function stationCore(): Piece[] {
+  return [...hub(), ...arms(), ...rim(), ...mod("adapter-l-m", 386), ...mod("deck-nav-m", 389.3), ...truss(399.3, 24), ...figuredMirror(427)];
+}
+/** One quarter of the station on its arm with its docking stub: `index` 0 to 3, the kind from `STATION.kinds`. */
+export function quarterPart(index: number, o: { cut?: boolean; furnish?: boolean } = {}): Piece[] {
+  const angle = 90 * index;
+  const kind = STATION.kinds[index];
+  return [...quarter(kind, STATION.y, STATION.base, angle, { cut: o.cut ?? false, cutAt: 270, seed: kind, furnish: o.furnish !== false }), ...stub(angle)];
+}
+
+/** The whole station: core, the four quarters (the one at `cutQuarter`, if any, cut open and furnished), the wings in a state, and the stern housing. */
 export function station(o: { wings?: "stowed" | "deployed"; cutQuarter?: number; shaftX?: number; furnish?: boolean } = {}): Piece[] {
-  const out: Piece[] = [...hub(), ...arms(), ...rim(), ...wings(o.wings ?? "deployed"), ...housing(335, o.shaftX ?? 13.5), ...mod("adapter-l-m", 386), ...mod("deck-nav-m", 389.3), ...truss(399.3, 24), ...figuredMirror(427)];
-  STATION.kinds.forEach((kind, k) => {
-    const angle = 90 * k;
-    out.push(...quarter(kind, STATION.y, STATION.base, angle, { cut: o.cutQuarter === k, cutAt: 270, seed: kind, furnish: o.furnish !== false }), ...stub(angle));
-  });
+  const out: Piece[] = [...stationCore(), ...wings(o.wings ?? "deployed"), ...housing(335, o.shaftX ?? 13.5)];
+  STATION.kinds.forEach((_, k) => out.push(...quarterPart(k, { cut: o.cutQuarter === k, furnish: o.furnish !== false })));
   return out;
 }

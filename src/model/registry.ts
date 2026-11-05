@@ -48,6 +48,7 @@ import { SHIP_02_ALTERNATES, SHIP_02_CARDS, SHIP_02_VARIANT_PARTS } from "./flee
 import type { StackBuild } from "./stacks.ts";
 import { groupOf } from "../data/fleet.ts";
 import { SHIP_01_ENTRIES, SHIP_01_INSET_ENTRIES } from "./ship-01.ts";
+import { KYOTORI_ENTRIES } from "./ship-kyotori.ts";
 import { SHIP_03_ENTRIES, SHIP_03_INSET_ENTRIES } from "./ship-03.ts";
 import { CONCEPT_ENTRIES } from "./kaminari-concepts.ts";
 import { insetEntries, kitEntries, SAMPLE_SHIPS, shipParts } from "./fleet/kit.ts";
@@ -226,7 +227,7 @@ entries.push(
 );
 
 // The fleet kit: each module alone, with its cutaway, and the sample ships
-entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_01_ENTRIES, ...SHIP_01_INSET_ENTRIES, ...SHIP_03_ENTRIES, ...SHIP_03_INSET_ENTRIES, ...CONCEPT_ENTRIES);
+entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_01_ENTRIES, ...KYOTORI_ENTRIES, ...SHIP_01_INSET_ENTRIES, ...SHIP_03_ENTRIES, ...SHIP_03_INSET_ENTRIES, ...CONCEPT_ENTRIES);
 for (const id of ["hauler"]) entries.push(...shipParts(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 }, "fleet-samples", id).entries);
 
 /**
