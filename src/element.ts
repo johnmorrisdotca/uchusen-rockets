@@ -155,8 +155,9 @@ export class UchusenRocket extends HTMLBase {
   private holder: HTMLElement | null = null;
   private drawing: HTMLElement | null = null;
   private viewer: RocketViewer | null = null;
-  /** The inset the page asked for, put back after a rocket loads. */
+  /** The inset the page asked for, put back after a rocket loads, and the words that mark its point. */
   private framed: ViewerFocus | null = null;
+  private frameLabel = "";
   private watch: IntersectionObserver | null = null;
   private releaseTimer = 0;
   private revealTimer = 0;
@@ -217,12 +218,21 @@ export class UchusenRocket extends HTMLBase {
     return this.viewer?.screenPoint([point[0], point[1], point[2]]) ?? null;
   }
 
-  /** Isolate the named slots and look at a point, as an inset does. `null` shows the whole ship again. */
-  focusAt(focus: ViewerFocus | null): void {
+  /** Isolate the named slots, look at a point and, when `label` is given, mark that point. `null` shows the whole ship again. */
+  focusAt(focus: ViewerFocus | null, label = ""): void {
     this.framed = focus;
+    this.frameLabel = label;
+    if (focus) this.endFlight();
+    this.applyFrame();
+  }
+
+  private applyFrame(): void {
+    const focus = this.framed;
     if (focus) this.dataset.focus = focus.slots.join(" ");
     else delete this.dataset.focus;
     this.viewer?.focusOn(focus);
+    const slot = focus?.slots[0];
+    this.viewer?.setMarks(focus && slot && this.frameLabel ? [{ id: "module", text: this.frameLabel, at: focus.target, slot }] : null);
   }
 
   /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
@@ -664,7 +674,7 @@ export class UchusenRocket extends HTMLBase {
         if (now.show !== show) viewer.setShow(now.show);
         viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
         this.lightViewer(viewer);
-        if (this.framed) viewer.focusOn(this.framed);
+        this.applyFrame();
       }
       this.emit("uchusen-change", { report: this.builtNow.report });
     }
@@ -705,7 +715,7 @@ export class UchusenRocket extends HTMLBase {
       this.panel = null;
       this.panelFor = null;
       delete this.dataset.panel;
-      this.viewer?.setMarks(null);
+      if (!this.framed) this.viewer?.setMarks(null);
       return;
     }
     if (this.panelFor !== inspector || !this.panel || !this.panel.el.isConnected) {
@@ -858,6 +868,7 @@ export class UchusenRocket extends HTMLBase {
       if (now.show !== show) made.setShow(now.show);
       made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
       this.lightViewer(made);
+      this.applyFrame();
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));
       made.setFloating(this.hasAttribute("float"));

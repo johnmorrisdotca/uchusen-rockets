@@ -290,6 +290,7 @@ export class RocketViewer {
   private progressFramed = false;
   private progressSteps: readonly { slot: string; start: number; days: number }[] | null = null;
   private focusing = false;
+  private focusNow: ViewerFocus | null = null;
   private nearSaid = false;
   private nearAt = 0;
 
@@ -1277,12 +1278,24 @@ export class RocketViewer {
     return { az: turned.az + MathUtils.radToDeg(lean.azimuth), el: MathUtils.clamp(turned.el - MathUtils.radToDeg(lean.polar), -87, 87) };
   }
 
-  /** The camera stands where the view's angle, turned and tipped, puts it, as far off as the whole rocket needs from the view's own angle, so turning never makes it breathe. */
+  /** A framed module is seen from its own side. The angle control turns around that, and does not swing the camera back through the ship. */
+  private drivenDirection(angle: Angle): Vec3 {
+    const focus = this.focusing ? this.focusNow : null;
+    if (!focus) return directionOf(angle);
+    const base = new Spherical().setFromVector3(new Vector3(...focus.direction).normalize());
+    base.theta += MathUtils.degToRad(angle.az - this.homeAngle.az);
+    base.phi = MathUtils.clamp(base.phi - MathUtils.degToRad(angle.el - this.homeAngle.el), 0.08, Math.PI - 0.08);
+    const out = new Vector3().setFromSpherical(base);
+    return [out.x, out.y, out.z];
+  }
+
+  /** The camera stands where the view's angle, turned and tipped, puts it, as far off as the whole rocket needs from the view's own angle, so turning never makes it breathe. A framed module keeps that point and its own distance, so the controls turn around the module instead of jumping back to the whole section. */
   private applyDriven(): void {
     const angle = this.drivenAngle();
     if (!angle || !this.built) return;
-    const framing = this.framingFor(this.homeAngle);
-    const direction = directionOf(angle);
+    const focus = this.focusing ? this.focusNow : null;
+    const framing = focus ? { target: focus.target, distance: focus.distance } : this.framingFor(this.homeAngle);
+    const direction = this.drivenDirection(angle);
     this.camera.position.set(framing.target[0] + direction[0] * framing.distance, framing.target[1] + direction[1] * framing.distance, framing.target[2] + direction[2] * framing.distance);
     this.controls.target.set(...framing.target);
     if (Math.abs(framing.distance - this.lastDistance) > 1e-6) {
@@ -1699,6 +1712,7 @@ export class RocketViewer {
   focusOn(focus: ViewerFocus | null): void {
     if (!this.built || this.clockNow) return;
     if (!focus) {
+      this.focusNow = null;
       if (!this.focusing) return;
       this.focusing = false;
       const places = this.built.placesOf(this.show);
@@ -1714,6 +1728,7 @@ export class RocketViewer {
       return;
     }
     this.focusing = true;
+    this.focusNow = focus;
     const places = this.built.placesOf("together");
     for (const part of this.parts) {
       const place = places.find((p) => p.slot === part.slot);
@@ -1773,7 +1788,7 @@ export class RocketViewer {
       while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
       const s = new Spherical(MathUtils.lerp(a.radius, b.radius, e), MathUtils.lerp(a.phi, b.phi, e), a.theta + dTheta * e);
       const aim = this.drivenAngle();
-      if (aim) s.setFromVector3(new Vector3(...directionOf(aim)).setLength(s.radius));
+      if (aim) s.setFromVector3(new Vector3(...this.drivenDirection(aim)).setLength(s.radius));
       this.camera.position.copy(this.controls.target).add(new Vector3().setFromSpherical(s));
       if (this.scaleZoom) {
         this.camera.zoom = MathUtils.lerp(this.scaleZoom.from, this.scaleZoom.to, e);
