@@ -56,6 +56,8 @@ export { OPTION_ATTRIBUTES, attributesFromOptions, optionsFromAttributes, rocket
 export type { RocketOptions } from "./attrs.ts";
 export { assetPathOf, CDN, EMBED_KINDS, SITE, THREE_VERSION, embedCode, embedNote, paintedCredit } from "./embed.ts";
 export type { EmbedKind, EmbedSettings } from "./embed.ts";
+export { COMPANIES, COMPANY_KINDS, companyOf } from "./model/fleet/company.ts";
+export type { Company, CompanyShip, CrewSpace } from "./model/fleet/company.ts";
 export { assemble, BUILDERS, BUILD_BUDGET_MS, COLLAR_CLASSES, COLLARS, designation, FLEET_MAKER, INSETS, isCoarse, KIT, LIVERY, mates, ROOMS, SAMPLE_SHIPS, shipLevels, shipParts, shipPieces, swapsFor, timeBuild } from "./model/fleet/kit.ts";
 export type { Assembly, BuildTime, CollarClass, CollarSpec, Inset, InsetPart, KitModule, Livery, LiveryName, ModuleKind, ModuleOptions, Placed, Port, RoomKind, RoomSpec, SeparationOptions, ShipIssue, ShipList, ShipParts, ShipPlace } from "./model/fleet/kit.ts";
 export { ENGINE_CARDS, engineTable, G0, performanceOf, PROXIMA_LY, rocketSpeed, trip } from "./model/fleet/engines.ts";
