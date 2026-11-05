@@ -939,7 +939,7 @@ svg { display: block; }
 `;
 
 /**
- * Rockets side by side on one baseline at one scale: `<uchusen-lineup items="starship:v1,starship:v3,person,building" unit="4" ruler labels>`.
+ * Rockets side by side on one baseline at one scale: `<uchusen-lineup items="starship:v1,starship:v3,person,building" unit="4" ruler labels>`. `pose="stand"` draws a fleet ship upright in that row, and `view` turns it; without it a fleet ship still lies in its own band.
  *
  * @example
  * ```ts no-run
@@ -953,7 +953,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -980,6 +980,7 @@ export class UchusenLineup extends HTMLBase {
       ruler: this.hasAttribute("ruler"),
       labels: this.hasAttribute("labels"),
       filter: ((value) => (value === "rockets" || value === "fleet" ? value : "all"))(this.getAttribute("filter")),
+      ...(this.getAttribute("pose") === "stand" ? { pose: "stand" as const } : {}),
       ...((room) => (room.length === 2 && room.every((v) => Number.isFinite(v) && v > 0) ? { fit: { width: room[0], height: room[1] } } : {}))((this.getAttribute("fit") ?? "").split(",").map(Number)),
     });
     this.dataset.unit = String(Math.round(drawnUnit * 100) / 100);

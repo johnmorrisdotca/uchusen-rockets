@@ -105,10 +105,12 @@ export interface LineupOptions {
   labels?: boolean;
   /** Real craft for scale: Starship with Super Heavy, Saturn V, SLS and the ISS lie sideways in the fleet band, at the same scale as the fleet ships, nose right, each labelled with its name and length. Left out: not drawn. Only where the fleet band is. */
   real?: boolean;
-  /** `rockets` or `fleet` leaves out the other kind; `all` (the default) draws both. A fleet ship (a rocket whose id starts with `fleet-`) lies lengthwise in its own band below the rockets. */
+  /** `rockets` or `fleet` leaves out the other kind; `all` (the default) draws both. A fleet ship (a rocket whose id starts with `fleet-`) lies lengthwise in its own band below the rockets, unless `pose` is `stand`. */
   filter?: "all" | "rockets" | "fleet";
   /** Shrinks the scale, never grows it, until the whole drawing fits this many pixels across and down (either may be left out). Without it the scale is `unit`, as it always was. */
   fit?: { width?: number; height?: number };
+  /** `stand` draws each fleet ship upright in the row, beside the others, at the same scale, and `view` turns it. Left out, a fleet ship lies in its own band, as it always has. */
+  pose?: "stand";
 }
 
 const isFleet = (key: string): boolean => key.startsWith("fleet-");
@@ -153,11 +155,12 @@ function comparison(id: CompareId, x: number, base: number, unit: number, line: 
  */
 export function lineupSvg(options: LineupOptions): { svg: string; items: LineupItem[]; real: LineupItem[]; width: number; height: number; unit: number } {
   const filter = options.filter ?? "all";
+  const stand = options.pose === "stand";
   const keys = options.items.map((raw) => raw.trim()).filter((key) => (isFleet(key) ? filter !== "rockets" : filter !== "fleet" || false));
-  const fleetKeys = keys.filter(isFleet);
-  const rocketKeys = keys.filter((key) => !isFleet(key));
-  // the fleet filter shows ships only: no person, no building
-  const standing = filter === "fleet" ? [] : rocketKeys;
+  const fleetKeys = stand ? [] : keys.filter(isFleet);
+  const rocketKeys = stand ? keys : keys.filter((key) => !isFleet(key));
+  // the fleet filter shows ships only: no person, no building. Standing puts those ships upright in the row.
+  const standing = filter === "fleet" && !stand ? [] : rocketKeys;
   let unit = options.unit;
   let drawn = draw({ ...options, items: standing }, fleetKeys, unit);
   const room = options.fit;
