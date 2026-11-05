@@ -2,13 +2,14 @@
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import { defineUchusenRocket } from "../src/element.ts";
 import { ROCKETS, variantOf } from "../src/index.ts";
+import { isListed } from "./listed.ts";
 import { fleetSize } from "./sizes.ts";
 import { WORDS } from "./words.js";
 
 defineUchusenRocket();
 
-const SHIPS = ["fleet-ship-01", "fleet-ship-03", "fleet-kaminari"] as const;
-type ShipId = (typeof SHIPS)[number];
+const FIRST = ["fleet-ship-01", "fleet-ship-03", "fleet-kaminari", "fleet-emiake", "fleet-romaryu", "fleet-ship-ariake", "fleet-kyotori", "fleet-drone"];
+const DEFAULT_SHIPS = "fleet-ship-01,fleet-ship-03,fleet-kaminari";
 const VIEWS = ["front", "side", "three-quarter", "below"] as const;
 type View = (typeof VIEWS)[number];
 
@@ -34,7 +35,23 @@ const byId = (id: string): HTMLElement => {
 };
 const metres = (n: number) => `${n >= 100 ? Math.round(n) : Number(n.toFixed(1))} m`;
 
-const address = createAddressState({ defaults: { view: "three-quarter" } });
+const address = createAddressState({ defaults: { view: "three-quarter", ships: DEFAULT_SHIPS } });
+
+const listed = (): string[] => {
+  const fleet = (id: string) => id in ROCKETS && isListed(id) && ROCKETS[id].maker === "fleet";
+  const rest = Object.keys(ROCKETS).filter((id) => fleet(id) && !FIRST.includes(id));
+  return [...FIRST.filter(fleet), ...rest];
+};
+
+/** Three listed ships. A short or unknown address is filled from the default three. */
+const picked = (): string[] => {
+  const known = listed();
+  const asked = (address.get("ships") ?? DEFAULT_SHIPS).split(",").map((id) => id.trim()).filter((id) => known.includes(id));
+  const unique = [...new Set(asked)];
+  for (const id of DEFAULT_SHIPS.split(",")) if (unique.length < 3 && !unique.includes(id)) unique.push(id);
+  for (const id of known) if (unique.length < 3 && !unique.includes(id)) unique.push(id);
+  return unique.slice(0, 3);
+};
 
 const chosen = (): View => {
   const asked = address.get("view") ?? "";
@@ -57,9 +74,9 @@ const fitOf = (): string => {
   return `${Math.max(200, Math.floor(frame.clientWidth) - 16)},${Math.max(200, Math.floor(frame.clientHeight) - 12)}`;
 };
 
-const specOf = (id: ShipId): readonly (readonly [string, string])[] => variantOf(id, ROCKETS[id].defaultVariant)?.inspector?.spec ?? [];
+const specOf = (id: string): readonly (readonly [string, string])[] => variantOf(id, ROCKETS[id].defaultVariant)?.inspector?.spec ?? [];
 
-const recorded = (id: ShipId, names: readonly string[]): string => {
+const recorded = (id: string, names: readonly string[]): string => {
   const spec = specOf(id);
   for (const name of names) {
     const found = spec.find((row) => row[0] === name);
@@ -77,12 +94,18 @@ const cell = (text: string, testid: string): HTMLTableCellElement => {
 
 const draw = (): void => {
   const view = chosen();
+  const ships = picked();
+  byId("cmp-picks").replaceChildren(...listed().map((id) => chip(ROCKETS[id].name, `cmp-ship-${id}`, ships.includes(id), () => {
+    if (ships.includes(id)) return;
+    address.set("ships", [...ships.slice(1), id].join(","));
+    draw();
+  })));
   byId("cmp-views").replaceChildren(...VIEWS.map((one) => chip(say(`view_${one.replaceAll("-", "_")}`), `cmp-view-${one}`, one === view, () => {
     address.set("view", one);
     draw();
   })));
   const lineup = byId("lineup");
-  const items = SHIPS.flatMap((id) => {
+  const items = ships.flatMap((id) => {
     const variant = variantOf(id, ROCKETS[id].defaultVariant);
     return variant ? [`${id}:${variant.id}`] : [];
   });
@@ -91,28 +114,28 @@ const draw = (): void => {
   lineup.setAttribute("fit", fitOf());
   const head = document.createElement("tr");
   head.append(document.createElement("th"));
-  for (const id of SHIPS) {
+  for (const id of ships) {
     const th = document.createElement("th");
     th.scope = "col";
     th.textContent = ROCKETS[id].name;
     head.append(th);
   }
   byId("cmp-head").replaceChildren(head);
-  const sizeRow = (label: string, key: string, value: (id: ShipId) => string): HTMLTableRowElement => {
+  const sizeRow = (label: string, key: string, value: (id: string) => string): HTMLTableRowElement => {
     const row = document.createElement("tr");
     const th = document.createElement("th");
     th.scope = "row";
     th.textContent = label;
-    row.append(th, ...SHIPS.map((id) => cell(value(id), `cmp-${key}-${id}`)));
+    row.append(th, ...ships.map((id) => cell(value(id), `cmp-${key}-${id}`)));
     return row;
   };
-  const variant = (id: ShipId) => variantOf(id, ROCKETS[id].defaultVariant);
+  const variant = (id: string) => variantOf(id, ROCKETS[id].defaultVariant);
   byId("cmp-rows").replaceChildren(
     sizeRow(say("length"), "length", (id) => { const one = variant(id); return one ? metres(fleetSize(one).length) : ""; }),
     sizeRow(say("beam"), "beam", (id) => { const one = variant(id); return one ? metres(fleetSize(one).beam) : ""; }),
     sizeRow(say("heightStowed"), "height", (id) => { const one = variant(id); return one ? metres(fleetSize(one).height) : ""; }),
     ...RECORD.map((names) => {
-      const label = names.find((name) => SHIPS.some((id) => specOf(id).some((row) => row[0] === name))) ?? names[0];
+      const label = names.find((name) => ships.some((id) => specOf(id).some((row) => row[0] === name))) ?? names[0];
       const key = names[0].toLowerCase().replaceAll(" ", "-");
       return sizeRow(label, key, (id) => recorded(id, names));
     }),

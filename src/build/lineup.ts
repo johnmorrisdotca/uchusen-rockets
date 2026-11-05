@@ -222,10 +222,11 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
   // a narrow frame shrinks the room between the craft along with the craft
   const gap = 28 * squeeze;
   const top = 26;
-  const minCell = 96 * squeeze;
-  // a label is wrapped to its own cell, so neighbours never run into each other
+  const minCell = (options.pose === "stand" ? 220 : 96) * squeeze;
+  // a label is wrapped to its own cell, so neighbours never run into each other. A standing ship's name is long, and 11px type is wider than the 5.5 estimate.
+  const per = options.pose === "stand" ? 8 : 5.5;
   const cells = known.map((item) => Math.max(minCell, item.width * unit + gap));
-  const lines = known.map((item, i) => wrapWords(item.label, Math.floor((cells[i] - 12) / 5.5)));
+  const lines = known.map((item, i) => wrapWords(item.label, Math.floor((cells[i] - 12) / per)));
   const labelRoom = labels ? Math.max(44, 18 + 13 * Math.max(...lines.map((one) => one.length))) : 0;
   const rulerRoom = ruler ? 46 : 8;
   const tallest = known.length ? Math.max(10, ...known.map((item) => item.height)) : 0;
