@@ -5,10 +5,10 @@ import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
 import { BUILD_BUDGET_MS, FLEET_MARKS, KIT, MATERIALS, PART_ENTRIES, ROCKETS } from "../src/index.ts";
 import { clearGlyphCache, glyphCacheSize, hazardMarking, dockingMarking, layoutOf, marking, markingWidth } from "../src/model/fleet/marking.ts";
-import { CONCEPT_FACES, conceptHull, conceptStyle, demoHull, lockup, markedHauler, miyamotoHull, nameplate } from "../src/model/fleet/markingSets.ts";
+import { CONCEPT_FACES, conceptHull, conceptStyle, demoHull, heightFor, lockup, markedHauler, miyamotoHull, nameplate } from "../src/model/fleet/markingSets.ts";
 import { areaOf, contains, coverage, simplified, triangulate } from "../src/model/fleet/triangulate.ts";
 import { GOLDMAN, KANJI, LATIN, ORBITRON, TYPEFACE_CREDITS } from "../src/model/fleet/typeface.ts";
-import { boundsOf, meshOf, type Piece, type Vec3 } from "../src/model/pieces.ts";
+import { boundsOf, meshOf, pointOf, type Piece, type Plate, type Vec3 } from "../src/model/pieces.ts";
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const flat = (height: number, extra: object = {}) => ({ at: [0, 0, 0] as Vec3, right: [1, 0, 0] as Vec3, up: [0, 1, 0] as Vec3, height, ...extra });
@@ -270,6 +270,49 @@ test("each concept face keeps the S open and the 8 as two counters, and the conc
   // the registry runs along the real tank, and the whole of it stays on the near face
   const along = vertices(conceptHull("goldman")[1].pieces()).map(([, y]) => y);
   assert.ok(Math.max(...along) - Math.min(...along) > 40);
+});
+
+test("the lamps stay a letter clear of the letters, and the letters face out off the field", () => {
+  const boxOf = (piece: Plate) => {
+    const min: Vec3 = [Infinity, Infinity, Infinity];
+    const max: Vec3 = [-Infinity, -Infinity, -Infinity];
+    const half = piece.thickness / 2;
+    for (const [a, b] of piece.outline) for (const c of [-half, half]) {
+      const p = pointOf(piece.frame, a, b, c);
+      for (let k = 0; k < 3; k++) {
+        if (p[k] < min[k]) min[k] = p[k];
+        if (p[k] > max[k]) max[k] = p[k];
+      }
+    }
+    return { min, max };
+  };
+  const gapBetween = (a: { min: Vec3; max: Vec3 }, b: { min: Vec3; max: Vec3 }) => Math.hypot(...([0, 1, 2] as const).map((k) => Math.max(0, a.min[k] - b.max[k], b.min[k] - a.max[k])));
+  const style = conceptStyle("goldman");
+  const hulls = [
+    ["kaminari", conceptHull("goldman")[1].pieces(), heightFor("SPX-207", 70, 10, style)],
+    ["miyamoto", miyamotoHull("goldman")[1].pieces(), heightFor("SPX-452", 36, 6, style)],
+  ] as const;
+  for (const [name, pieces, height] of hulls) {
+    const plates = pieces.filter((piece): piece is Plate => piece.kind === "plate");
+    const letters = plates.filter((piece) => piece.material === "black");
+    const lamps = plates.filter((piece) => piece.material === "hull-grey-dark" || piece.material === "flood");
+    const fieldR = Math.max(...pieces.filter((piece) => piece.kind === "lathe" && piece.material === "hull-white").flatMap((piece) => (piece.kind === "lathe" ? piece.profile.map(([r]) => r) : [])));
+    const need = markingWidth("M", height * 0.36, style);
+    const letterBoxes = letters.map(boxOf);
+    assert.ok(lamps.length >= 2 && letters.length > 20, name);
+    for (const lamp of lamps) {
+      const box = boxOf(lamp);
+      const nearest = letterBoxes.reduce((best, letter) => Math.min(best, gapBetween(box, letter)), Infinity);
+      assert.ok(nearest >= need, `${name} lamp is ${nearest.toFixed(2)} m from a letter, and a letter is ${need.toFixed(2)} m wide`);
+    }
+    for (const letter of letters) {
+      const [x, , z] = letter.frame.o;
+      const radial = Math.hypot(x, z);
+      const dot = (letter.frame.w[0] * x + letter.frame.w[2] * z) / radial;
+      assert.ok(dot > 0.5, `${name} letter faces out`);
+      assert.ok(radial > fieldR + 0.03, `${name} letter is ${(radial - fieldR).toFixed(3)} m off the field`);
+    }
+  }
 });
 
 test("a part with markings stays a mesh a phone can load, and the build stays inside the budget", () => {

@@ -350,7 +350,7 @@ export const CONCEPT_TEXT = "SPX-207 KAMINARI";
 export function conceptStyle(id: string): MarkingStyle {
   const concept = CONCEPT_FACES[id];
   if (!concept) throw new Error(`"${id}" is not a concept face.`);
-  return { face: concept.face, ink: concept.ink, weight: 0, lift: 0.04, flood: true, lines: false };
+  return { face: concept.face, ink: concept.ink, weight: 0, lift: 0.12, flood: "beside", lines: false };
 }
 
 /** The lock-up on one plain field of hull colour, so the plating under the letters is painted out, with the pinstripe on top of that field. */
@@ -458,7 +458,8 @@ export function lockup(registry: string, name: string, place: MarkingPlace, styl
   const gap = H * 0.32;
   const up = (by: number): MarkingPlace => lower(place, -by);
   const namePlace = { ...up(H / 2 + gap + small / 2), height: small };
-  const out = [...marking(registry, place, style), ...marking(name, namePlace, { ...style, tracking: trackingFor(name, small, width, face) })];
+  // the lamps belong to the registry line; the name sits above it and carries none of its own
+  const out = [...marking(registry, place, style), ...marking(name, namePlace, { ...style, tracking: trackingFor(name, small, width, face), flood: false })];
   // the pinstripe runs in the gap between the two lines, the width of the registry
   if (pinstripe) out.push(...stripeMarking({ ...up(H / 2 + gap / 2), height: H * 0.05 }, width, pinstripe, style));
   return out;

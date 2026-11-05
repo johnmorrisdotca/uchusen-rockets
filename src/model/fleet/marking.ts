@@ -118,8 +118,8 @@ export interface MarkingStyle {
   outline?: { material: MaterialName; width?: number };
   /** The paint stands on a plate this many metres proud that another marking laid (a second line on the same field). */
   onField?: number;
-  /** Floodlights standing over the text, which glow in the Lit look. */
-  flood?: boolean;
+  /** Floodlights, which glow in the Lit look. `true` stands them above the line; `"beside"` stands one at each end, a capital clear of the letters. */
+  flood?: boolean | "beside";
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -335,13 +335,19 @@ function plateOf(tri: readonly number[], map: Mapper, material: MaterialName, li
     corners.push([p[0] + n[0] * (lift + thickness / 2), p[1] + n[1] * (lift + thickness / 2), p[2] + n[2] * (lift + thickness / 2)]);
     facing = [facing[0] + n[0], facing[1] + n[1], facing[2] + n[2]];
   }
-  let w = norm(crossOf(sub(corners[1], corners[0]), sub(corners[2], corners[0])));
-  if (dotOf(w, facing) < 0) w = [-w[0], -w[1], -w[2]];
-  const u = norm(sub(corners[1], corners[0]));
-  const v = crossOf(w, u);
+  const w = norm(facing);
   const o: Vec3 = [(corners[0][0] + corners[1][0] + corners[2][0]) / 3, (corners[0][1] + corners[1][1] + corners[2][1]) / 3, (corners[0][2] + corners[1][2] + corners[2][2]) / 3];
+  // the face is flat and looks straight out of the hull, so a sliver of a stroke does not turn edge-on to the light
+  const flat = corners.map((p) => {
+    const d = dotOf(sub(p, o), w);
+    return [p[0] - w[0] * d, p[1] - w[1] * d, p[2] - w[2] * d] as Vec3;
+  });
+  const edge = sub(flat[1], flat[0]);
+  if (edge[0] * edge[0] + edge[1] * edge[1] + edge[2] * edge[2] < 1e-12) return null;
+  const u = norm(edge);
+  const v = crossOf(w, u);
   const local = (p: Vec3): [number, number] => [dotOf(sub(p, o), u), dotOf(sub(p, o), v)];
-  return { kind: "plate", material, frame: { o, u, v, w }, outline: [local(corners[0]), local(corners[1]), local(corners[2])], thickness, plain: true, sheet: true, only: "mesh" };
+  return { kind: "plate", material, frame: { o, u, v, w }, outline: [local(flat[0]), local(flat[1]), local(flat[2])], thickness, plain: true, sheet: true, only: "mesh" };
 }
 
 /** Lays shapes on the surface as plates (and their outlines as lines, when `outline` asks). */
@@ -441,14 +447,15 @@ function glyphArt(text: string, height: number, s0: number, style: MarkingStyle)
 
 const alignShift = (place: PlaceBase, width: number): number => (place.align === "middle" ? -width / 2 : place.align === "end" ? -width : 0);
 
-/** Floodlights over a text: two housings standing on the surface above the letters, each with a lens that glows in the Lit look and looks down at the paint. */
-function floods(map: Mapper, s0: number, width: number, height: number, standoff: number): Piece[] {
+/** Floodlights over a text: two housings, each with a lens that glows in the Lit look. `beside` puts one at each end, a capital clear of the letters; otherwise they stand above the line. */
+function floods(map: Mapper, s0: number, width: number, height: number, standoff: number, beside: boolean): Piece[] {
   const lens: MaterialName = "flood" in MATERIALS ? ("flood" as MaterialName) : "lamp-blue";
   const out: Piece[] = [];
   const size = height * 0.14;
-  for (const s of [s0 + width * 0.1, s0 + width * 0.9]) {
-    const here = map.at(s, height * 0.5 + height * 0.5);
-    const below = map.at(s, height * 0.5 + height * 0.5 - 0.1);
+  const spots: [number, number][] = beside ? [[s0 - height - size, 0], [s0 + width + height + size, 0]] : [[s0 + width * 0.1, height], [s0 + width * 0.9, height]];
+  for (const [s, t] of spots) {
+    const here = map.at(s, t);
+    const below = map.at(s, t - 0.1);
     const toText = norm(sub(below.p, here.p));
     const across = norm(crossOf(toText, here.n));
     const part = (material: MaterialName, grow: number, forward: number): Plate => {
@@ -568,7 +575,7 @@ export function marking(text: string, place: MarkingPlace, style: MarkingStyle =
   }
   const out = paint.pieces;
   if (paint.paths.length) out.push({ kind: "lines", weight: "feature", paths: paint.paths, only: "mesh" });
-  if (style.flood) out.push(...floods(map, s0, width, place.height, base));
+  if (style.flood) out.push(...floods(map, s0, width, place.height, base, style.flood === "beside"));
   return out;
 }
 
