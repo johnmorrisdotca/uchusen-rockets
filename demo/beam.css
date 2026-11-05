@@ -1,0 +1,5 @@
+.beam-page { background: #e7eef5; color: #172033; padding: 16px; }
+.beam-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.beam-row figure { margin: 0; flex: 1 1 220px; }
+.beam-row svg { width: 100%; height: auto; background: #fff; }
+.beam-row figcaption { font: 14px sans-serif; margin-top: 6px; }
