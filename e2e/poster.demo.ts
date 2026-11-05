@@ -16,9 +16,12 @@ test("the poster shows the rockets, the fleet and what is still to add, and the 
   expect(after).toBeLessThan(before);
 });
 
-test("the drawing downloads as an SVG", async ({ page }) => {
+test("the drawing downloads as an SVG and as a PNG", async ({ page }) => {
   await page.goto(URL);
-  const download = page.waitForEvent("download");
+  const svg = page.waitForEvent("download");
   await page.getByTestId("poster-svg").click();
-  expect((await download).suggestedFilename()).toBe("rockets-of-the-world.svg");
+  expect((await svg).suggestedFilename()).toBe("rockets-of-the-world.svg");
+  const png = page.waitForEvent("download");
+  await page.getByTestId("poster-a2").click();
+  expect((await png).suggestedFilename()).toBe("rockets-of-the-world-a2.png");
 });
