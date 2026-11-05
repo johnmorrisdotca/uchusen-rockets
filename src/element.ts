@@ -12,6 +12,7 @@ import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
 import { canBeside } from "./beside.ts";
+import { canScale, scalePercent } from "./concepts.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
@@ -145,7 +146,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside", "scale"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -473,6 +474,12 @@ export class UchusenRocket extends HTMLBase {
     return this.getAttribute("beside") === "on" && canBeside(description.rocket);
   }
 
+  /** The size of a Kaminari concept hull in per cent, `scale="80"`: 60 to 100 in steps of 5. Any other craft stays at 100. */
+  private sizeNow(description: Description): number {
+    const variant = description.variant ?? ROCKETS[description.rocket]?.defaultVariant ?? "";
+    return canScale(description.rocket, variant) ? scalePercent(this.getAttribute("scale")) : 100;
+  }
+
   /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
   private engineLights(): boolean {
     return enginesWanted(this.getAttribute("engines"), media("(prefers-reduced-motion: reduce)"));
@@ -486,11 +493,11 @@ export class UchusenRocket extends HTMLBase {
 
   private update(): void {
     const description = this.descriptionNow();
-    const key = `${JSON.stringify(description)}|${this.besideOn(description)}`;
+    const key = `${JSON.stringify(description)}|${this.besideOn(description)}|${this.sizeNow(description)}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description), beside: this.besideOn(description) });
+        this.builtNow = build(description, { detail: this.detailFor(description), beside: this.besideOn(description), scale: this.sizeNow(description) });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -587,6 +594,7 @@ export class UchusenRocket extends HTMLBase {
     this.dataset.look = look;
     this.dataset.engines = this.engineLights() ? "on" : "off";
     this.dataset.beside = this.builtNow.beside.length ? "on" : "off";
+    this.dataset.size = String(this.sizeNow(this.descriptionNow()));
     this.dataset.flight = this.flight?.id ?? "";
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
@@ -632,7 +640,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.detailFor(description) === "full") return;
     this.fine = true;
     try {
-      this.builtNow = build(description, { detail: "full", beside: this.besideOn(description) });
+      this.builtNow = build(description, { detail: "full", beside: this.besideOn(description), scale: this.sizeNow(description) });
     } catch {
       return;
     }

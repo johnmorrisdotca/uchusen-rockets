@@ -25,6 +25,8 @@ export type { Look, LookName } from "./looks.ts";
 export { cleanShow, placesFor, showsOf } from "./layout.ts";
 export { BESIDE_ROCKET, besideBounds, besideLabel, besideLayout, canBeside } from "./beside.ts";
 export type { Place, ShowName } from "./layout.ts";
+export { canScale, CONCEPT_IDS, CONCEPT_ROCKET, SCALE_PERCENT, scaleFactor, scalePercent, scalePieces, scaleReport } from "./concepts.ts";
+export { KAMINARI_CONCEPT_VARIANTS } from "./data/kaminari-concepts.ts";
 export { CROSSFADE_MS, DRAWING_HOLD_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 export { MAX_PIXELS, MAX_RATIO, MAX_SIDE, pixelRatioFor } from "./pixels.ts";
 export { tiltMode, tiltTurn } from "./tilt.ts";

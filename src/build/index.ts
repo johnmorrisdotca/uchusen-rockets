@@ -2,6 +2,7 @@
 import { propellantOf, type FlameKind } from "../data/propellants.ts";
 import { check, type Description, type FitReport } from "../fit.ts";
 import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../beside.ts";
+import { scaleFactor, scalePieces, scaleReport } from "../concepts.ts";
 import { type Angle, cleanView, DEFAULT_VIEW, PICTURE_H, PICTURE_W, VIEWS, type Vec3, type ViewName } from "../framing.ts";
 import { cleanShow, placesFor, showsOf } from "../layout.ts";
 import { DEFAULT_LOOK, type LookName } from "../looks.ts";
@@ -130,21 +131,21 @@ export interface Built {
 export const HEAVY_PIECES = 2000;
 
 const memo = new Map<string, { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }>();
-const memoKey = (id: string) => `${detail.level}/${id}`;
-function made(id: string) {
-  const known = memo.get(memoKey(id));
+const memoKey = (id: string, k: number) => `${detail.level}/${id}${k === 1 ? "" : `@${k}`}`;
+function made(id: string, k = 1) {
+  const known = memo.get(memoKey(id, k));
   if (known) return known;
   const entry = partEntry(id);
   if (!entry) throw new Error(`There is no part "${id}".`);
-  const pieces = entry.pieces();
+  const pieces = k === 1 ? entry.pieces() : scalePieces(entry.pieces(), k);
   if (pieces.length > HEAVY_PIECES) {
     const heavy = { pieces, bounds: boundsOfPieces(pieces), get mesh() { return meshOf(pieces); } };
-    memo.set(memoKey(id), heavy);
+    memo.set(memoKey(id, k), heavy);
     return heavy;
   }
   const mesh = meshOf(pieces);
   const result = { pieces, mesh, bounds: boundsOf(mesh) };
-  memo.set(memoKey(id), result);
+  memo.set(memoKey(id, k), result);
   return result;
 }
 
@@ -156,8 +157,8 @@ function wrap(inner: string, look: LookName, width = PICTURE_W, height = PICTURE
 }
 
 /** The widest a part reaches from its own axis. */
-const widthOf = (id: string): number => {
-  const { min, max } = made(id).bounds;
+const widthOf = (id: string, k = 1): number => {
+  const { min, max } = made(id, k).bounds;
   return Math.max(Math.abs(min[0]), Math.abs(max[0]), Math.abs(min[2]), Math.abs(max[2]));
 };
 
@@ -170,16 +171,16 @@ function flameKindOf(part: PartRecord): FlameKind {
   return "neutral";
 }
 
-function assembled(report: FitReport, other?: Built): Built {
+function assembled(report: FitReport, other?: Built, k = 1): Built {
   const own: BuiltPart[] = report.parts.map(({ slot, part }) => {
-    const one = made(part.id);
+    const one = made(part.id, k);
     return { slot, record: part, pieces: one.pieces, get mesh() { return one.mesh; }, bounds: one.bounds, flame: flameKindOf(part) };
   });
   const slots = own.map((part) => part.slot);
   const beside: BuiltPart[] = (other?.parts ?? []).map((part) => ({ slot: `beside-${part.slot}`, record: part.record, pieces: part.pieces, get mesh() { return part.mesh; }, bounds: part.bounds, flame: part.flame }));
   // what is drawn: the rocket's parts, then the ones beside it
   const parts: BuiltPart[] = [...own, ...beside];
-  const ownPlaces = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id));
+  const ownPlaces = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id, k));
   const boundsOfPlaces = (places: { slot: string; at: Vec3; shown: boolean }[]): Bounds => {
     const min: Vec3 = [Infinity, Infinity, Infinity];
     const max: Vec3 = [-Infinity, -Infinity, -Infinity];
@@ -212,7 +213,7 @@ function assembled(report: FitReport, other?: Built): Built {
   const flamesOf = (show: string | undefined): LitBell[] => flamesAt(placesOf(show), !show || show === "together");
   // the parts that are left, closed up joint to joint, and centred in a frame when there is one
   const stackOf = (only: readonly string[], frame?: Bounds) => {
-    const stacked = placesFor(report.parts.filter(({ slot }) => only.includes(slot)), "together", (part) => widthOf(part.id));
+    const stacked = placesFor(report.parts.filter(({ slot }) => only.includes(slot)), "together", (part) => widthOf(part.id, k));
     if (!frame || stacked.length === 0) return stacked;
     const mine = boundsOfPlaces(stacked);
     const dy = (frame.min[1] + frame.max[1]) / 2 - (mine.min[1] + mine.max[1]) / 2;
@@ -293,7 +294,7 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * A rocket from a description. Throws FitError when it does not go together.
  *
  * @param description The rocket, its variant and any other part in a slot.
- * @param options `detail`: `"coarse"` leaves out the small 3D-only detail of a very detailed part, for a fast first view; left out, every piece is made. `beside`: the real Starship stack (Block 3) stands beside it at true scale, on the same ground, and `boundsOf`, `placesOf`, `glb` and `svg` take it in; Starship itself has nothing beside it.
+ * @param options `detail`: `"coarse"` leaves out the small 3D-only detail of a very detailed part, for a fast first view; left out, every piece is made. `beside`: the real Starship stack (Block 3) stands beside it at true scale, on the same ground, and `boundsOf`, `placesOf`, `glb` and `svg` take it in; Starship itself has nothing beside it. `scale`: the size, in per cent from 60 to 100, of a Kaminari concept hull (any other craft ignores it); every part, place and length is that share of the full size.
  * @returns The built rocket. It throws a `FitError` when the description does not go together.
  * @example
  * ```ts
@@ -303,13 +304,14 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * console.log(rocket.report.label, rocket.glb().bytes.length > 1000);
  * ```
  */
-export function build(description: Description, options: { detail?: DetailLevel; beside?: boolean } = {}): Built {
+export function build(description: Description, options: { detail?: DetailLevel; beside?: boolean; scale?: number } = {}): Built {
   const report = check(description);
   if (!report.ok) throw new FitError(report);
   const before = detail.level;
   detail.level = options.detail ?? "full";
   try {
-    const built = assembled(report, options.beside && canBeside(description.rocket) ? build(BESIDE_ROCKET, { detail: "full" }) : undefined);
+    const k = scaleFactor(description.rocket, description.variant ?? report.variant?.id ?? "", options.scale ?? 100);
+    const built = assembled(scaleReport(report, k), options.beside && canBeside(description.rocket) ? build(BESIDE_ROCKET, { detail: "full" }) : undefined, k);
     // a part's pieces are made when it is assembled, at this level: the lazy parts of a heavy part keep the level they were made at
     return built;
   } finally {
