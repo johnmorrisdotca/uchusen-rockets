@@ -18,7 +18,7 @@ async function drag(page: Page): Promise<void> {
 }
 
 test("zoomed in, a drag turns the craft and does not move it", async ({ page, browserName }) => {
-  test.skip(browserName !== "chromium" || test.info().project.name !== "chromium-desk", "Once, in Chromium");
+  test.skip(browserName !== "chromium", "WebGL is drawn in Chromium here");
   const problems: string[] = [];
   page.on("pageerror", (error) => problems.push(error.message));
   await page.goto(URL);
