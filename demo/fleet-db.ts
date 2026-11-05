@@ -81,6 +81,15 @@ const draw = (): void => {
   })));
   const picked = modules.find((section) => section.id === moduleId);
   byId("db-module-job").textContent = picked?.job ?? "";
+  byId("db-profile-rows").replaceChildren(...(variant?.inspector?.spec ?? []).map(([name, value]) => {
+    const row = document.createElement("tr");
+    const head = document.createElement("th");
+    head.textContent = name;
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.append(head, cell);
+    return row;
+  }));
   const hero = byId("hero");
   hero.setAttribute("rocket", ship);
   hero.setAttribute("variant", rocket.defaultVariant);

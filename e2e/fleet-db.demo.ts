@@ -23,6 +23,7 @@ test("the fleet record opens on a ship, then a section, and keeps both in the ad
   await expect(page).toHaveURL(/module=/);
   await expect(page.getByTestId("db-module-job")).not.toHaveText("");
   await expect(page.getByTestId("db-facts")).toContainText("m");
+  await expect(page.getByTestId("db-profile").locator("tr").nth(2)).toBeVisible();
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(wide).toBe(false);
 });
