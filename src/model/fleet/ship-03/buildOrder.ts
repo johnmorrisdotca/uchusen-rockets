@@ -34,6 +34,8 @@ const WHEN: Readonly<Record<string, { start: number; days: number; group: BuildS
   array: { start: 700, days: 761, group: "fit-out" },
   "radiators-dorsal": { start: 380, days: 300, group: "fit-out" },
   "radiators-ventral": { start: 380, days: 300, group: "fit-out" },
+  // the craft the starboard hangar services, so it waits until that hangar is finished
+  "exterior-load": { start: 1320, days: 141, group: "fit-out" },
 };
 
 /** The build of one flown ship. A cutaway, a deployed array and a swapped pod are states of a slot, not further steps. */
