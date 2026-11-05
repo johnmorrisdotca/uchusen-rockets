@@ -102,6 +102,8 @@ export interface Trip {
   fuel: { usedT: number | null; carriedT: number | null; note: string };
   /** Initial mass over mass after the burns the rocket equation was applied to. Null when no exhaust speed is known, so no propellant figure is invented. */
   massRatio: number | null;
+  /** Escape speed from the surface and from the parking orbit of the body the rocket leaves, kilometres a second. Absent for a ship that burns all the way. */
+  escape?: { surfaceKmS: number; parkingKmS: number };
   /** What the craft carries to the end of this trip: kilograms (at least, where only a harder trip is rated), or null with the reason. */
   payload: { kg: number | null; atLeast: boolean; note: string };
   ballistic?: {
@@ -185,6 +187,7 @@ const quantity = (q: Quantity | undefined, name: string, estimated: string[]): n
 
 /** Parking orbit radius round a body, km. */
 const parkRadius = (source: BodySource, id: string): number => stopOf(source, id).radiusKm + (id === "earth" ? PARKING_ALTITUDE_KM.earth : id === "moon" ? PARKING_ALTITUDE_KM.moon : PARKING_ALTITUDE_KM.other);
+const escapeSpeed = (mu: number, rKm: number): number => circularSpeed(mu, rKm) * Math.SQRT2;
 
 interface Transfer {
   r1: number;
@@ -530,6 +533,7 @@ function planMoon(source: BodySource, craft: BallisticCraft, to: string, departM
     pathKm: arc[arcSteps]!,
     fuel,
     massRatio: null,
+    escape: { surfaceKmS: escapeSpeed(muMoon, stopOf(source, "moon").radiusKm), parkingKmS: escapeSpeed(muMoon, rLlo) },
     payload: carries,
     dv: { departure: depMs, arrival: flyby || home ? 0 : arrMs, total: depMs + (flyby || home ? 0 : arrMs) },
     peakG: Math.max(depMs / burnS / G0, flyby || home || brakeG === null ? 0 : brakeG),
@@ -689,6 +693,7 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     pathKm,
     fuel,
     massRatio,
+    escape: { surfaceKmS: escapeSpeed(muEarth, stopOf(source, "earth").radiusKm), parkingKmS: escapeSpeed(muEarth, rPark) },
     payload: carries,
     dv: { departure: dv1 * 1000, arrival: flyby ? 0 : dv2 * 1000, total: (dv1 + (flyby ? 0 : dv2)) * 1000 },
     peakG,
