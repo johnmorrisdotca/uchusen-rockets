@@ -2,6 +2,7 @@
 // placed. Every builder works in ship metres (X across, Y from the tail, Z dorsal); `local` moves a part's pieces so its origin is the middle of its base on the spine, or its own place, as every part of the package has it. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
 import { COLLARS, isCoarse, place, type Piece } from "./adapter.ts";
+import { moving } from "../motion.ts";
 import { DOCK, dockingPieces } from "./docking.ts";
 import { boomPieces, hubPieces, SPINE, SPINE_Y } from "./hull.ts";
 import { industrialWheel } from "./wheelparts.ts";
@@ -113,7 +114,7 @@ const ring = (order: Order, use: "garden" | "research" | "living"): HanabusaPart
     height: r.depth,
     diameter: r.rOut * 2 + 3,
     note: `A glazed ring ${r.rOut} m in radius and ${r.depth} m deep: ${use === "garden" ? "hydroponic terraces under LED grow-lamps" : use === "living" ? "a street with a canal, tree rows and three steps of homes up each side wall" : "terraces of laboratories under a glass roof"}, a solar skirt round the outer edge and six glazed spoke lifts to the hub. Descends from ${ANCESTORS.rings}; the hall from ${ANCESTORS.halls}.`,
-    pieces: (o) => local(ringPieces(r), 0, r.y - r.depth / 2, 0, o?.level),
+    pieces: (o) => local(moving(ringPieces(r), { name: "spin", pivot: [0, r.y, 0], axis: [0, 1, 0] }), 0, r.y - r.depth / 2, 0, o?.level),
   };
 };
 
@@ -126,7 +127,7 @@ const wheel = (): HanabusaPart => ({
   height: SPIN.industrial.wide,
   diameter: SPIN.industrial.rOut * 2 + 3,
   note: `A closed wheel ${SPIN.industrial.rOut} m in radius set apart: yard, workshops, quarantine and stores, on six round spokes with lit lifts. Descends from ${ANCESTORS.rings}.`,
-  pieces: (o) => local(industrialWheel("ring"), 0, SPIN.industrial.y - 11, 0, o?.level),
+  pieces: (o) => local(moving(industrialWheel("ring"), { name: "spin-wheel", pivot: [0, SPIN.industrial.y, 0], axis: [0, 1, 0] }), 0, SPIN.industrial.y - 11, 0, o?.level),
 });
 
 const section = (): HanabusaPart => {

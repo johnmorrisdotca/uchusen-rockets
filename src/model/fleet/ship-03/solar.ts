@@ -2,6 +2,7 @@
 // distance). It is built like the ISS's and iROSA's: a root beam on stand-offs to the spine; a rotary joint at each end of it (a ring gear and a motor) that turns the wing to face the star; in each bay a beta gimbal and a
 // hinge; and, deployed, a lattice mast 56 m long with a blanket each side of it, the cells in rows on a gold kapton backing, a tension bar at the end, edge wires and a take-up box at the root. Stowed, each bay folds into a
 // gold-foil canister on the root beam. The cells are plates from one template of size and thickness. Pure: no three.js and no DOM.
+import { moving } from "../motion.ts";
 import { cub, ibeam, type Piece, place, rod, roundStrut } from "./adapter.ts";
 import { ARRAY } from "./dims.ts";
 import { ringAt, tubeAt } from "./shapes.ts";
@@ -85,5 +86,5 @@ export function solarArray(state: ArrayState, detail = 1): Piece[] {
     const yb = Y0 + k * pitch;
     wing.push(...(state === "stowed" ? stowedBay(yb) : deployedBay(yb + pitch / 2, detail)));
   }
-  return [...fixedStructure(), ...place(wing, { at: [root.x, 0, root.z], yaw: state === "deployed" ? ARRAY.tilt : 0 })];
+  return [...fixedStructure(), ...place(state === "deployed" ? moving(wing, { name: "array-turn", pivot: [0, 0, 0], axis: [0, 1, 0] }) : wing, { at: [root.x, 0, root.z], yaw: state === "deployed" ? ARRAY.tilt : 0 })];
 }

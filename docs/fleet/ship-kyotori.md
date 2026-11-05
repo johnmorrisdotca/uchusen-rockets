@@ -50,3 +50,7 @@ Each ship has its own drive of twelve field coils flaring out of a reactor chamb
 ## Honest weak spots
 
 The rooms are the kit's furniture sets in plain decks; the quarters' outsides are patterned shells. The wing mast's extension is a different part per state, not a motion, until the motion work gets a translation. The mirror segments are shallow facets. Latch frame loads are not computed. See the concept boards in the pictures folder for the references and the look.
+
+## Motion
+
+With the Motion choice on, the four solar wings turn on their masts; see [motion.md](motion.md).

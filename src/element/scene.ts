@@ -41,6 +41,7 @@ import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
+import { angleAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
 import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
@@ -92,6 +93,8 @@ export interface ViewerOptions {
 }
 
 const IDLE_STOP_MS = 90_000;
+/** The moving parts of a fleet ship are drawn at most thirty times a second. */
+const MOTION_GAP_MS = 1000 / 30;
 const MOVE_MS = 1400;
 /** Wheel steps closer together than this belong to one turn of the wheel, so a zoom that reaches its end part-way through does not hand the rest to the page. */
 const WHEEL_GESTURE_MS = 300;
@@ -249,6 +252,12 @@ export class RocketViewer {
   private compiling = 0;
   private compiled = new Set<string>();
   private settled: Promise<void> = Promise.resolve();
+  /** The moving parts of the ship on show, whether they move, how fast, when the show began and when a frame of it was last drawn. */
+  private motions: readonly Motion[] = [];
+  private motionOn = false;
+  private motionSpeed: MotionSpeed = 1;
+  private motionT0 = 0;
+  private motionDrawn = 0;
   private marks: { mark: ViewerMark; el: HTMLElement }[] = [];
   private markHost: HTMLElement | null = null;
   /** The words that say what stands beside the craft: its name and length, under its foot. One for each craft named, by craft (-1 is the rocket itself). */
@@ -415,6 +424,7 @@ export class RocketViewer {
       this.parts.push(view);
     }
     this.addGlow();
+    this.stepMotion(performance.now(), true);
     this.fitShadow();
     this.setLook(look);
     this.frameTo(angle ?? this.currentAngle(), false);
@@ -622,6 +632,43 @@ export class RocketViewer {
       });
     this.settled = Promise.all([this.settled, wait]).then(() => undefined);
     return wait;
+  }
+
+  /** The moving parts of the ship: what each named group does and whether it does it now. Off, or under reduced motion, every part stands at rest and the view draws nothing for them. */
+  setMotion(motions: readonly Motion[], on: boolean, speed: MotionSpeed): void {
+    const was = this.motionOn;
+    this.motions = motions;
+    this.motionOn = on && motions.length > 0 && !this.options.reducedMotion;
+    this.motionSpeed = speed;
+    if (this.motionOn && !was) this.motionT0 = performance.now();
+    this.stepMotion(performance.now(), true);
+    this.wake();
+  }
+
+  /** Puts every tagged group at its angle for `now`, or at rest when motion is off. Only a group whose angle changed is touched. */
+  private stepMotion(now: number, force = false): void {
+    if (!this.built) return;
+    if (!force && now - this.motionDrawn < MOTION_GAP_MS) return;
+    this.motionDrawn = now;
+    const seconds = (now - this.motionT0) / 1000;
+    let changed = false;
+    let shown: number | undefined;
+    for (const part of this.parts) {
+      for (const move of part.moves) {
+        const motion = this.motionOn ? this.motions.find((one) => one.group === move.name) : undefined;
+        const angle = motion ? angleAt(motion, seconds, this.motionSpeed) : 0;
+        if (motion && shown === undefined) shown = angle;
+        if (Math.abs(angle - move.angle) < 0.005) continue;
+        move.angle = angle;
+        move.group.quaternion.setFromAxisAngle(move.axis, MathUtils.degToRad(angle));
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.needsDraw = true;
+      this.canvas.dataset.motion = this.motionOn ? `${this.motionSpeed}x` : "off";
+      this.canvas.dataset.motionAngle = shown === undefined ? "" : shown.toFixed(1);
+    } else if (!this.motionOn && this.canvas.dataset.motion !== "off") this.canvas.dataset.motion = "off";
   }
 
   /** Which engines burn: at full thrust every one that shows, a count for each part, or none. Nothing is made or freed by this after a part's first flame: only which of its flames are drawn changes. */
@@ -1553,6 +1600,8 @@ export class RocketViewer {
       this.applyFlight();
       this.options.onFlight?.();
     }
+    const motioning = this.motionOn && !this.clockNow;
+    if (motioning) this.stepMotion(now);
     const flaming = this.burningNow > 0 && !this.options.reducedMotion && (flying || performance.now() < this.flameUntil);
     if (flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
       this.flameDrawn = now;
@@ -1585,7 +1634,7 @@ export class RocketViewer {
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 

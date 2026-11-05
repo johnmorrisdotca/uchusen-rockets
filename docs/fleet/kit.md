@@ -208,6 +208,10 @@ Ships are built in the visitor's browser, so every module has two levels (`piece
 - 3D budget as for every view here: render on demand, 30 fps, one WebGL context, canvas within 4096 px and 6 MP, everything disposed, nothing drawn out of sight. The kit adds geometry only; `e2e/freeze.demo.ts` walks the fleet and holds graphics memory flat.
 - The kit adds about 62 KB (minified) to the package's root entry.
 
+## Motion
+
+A ship's moving parts are tagged with a `Move` where it builds them (`moving()` in `motion.ts`), and one table says what each name does: [motion.md](motion.md).
+
 ## Adding a module
 
 1. Write a `define({...})` in `modules.ts`: a `drum(ctx, {...})` for a hull with its collars and detail, then what makes it its own.
