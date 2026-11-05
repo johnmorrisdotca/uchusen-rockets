@@ -1,5 +1,6 @@
 // The Rockets of the World poster: one portrait sheet. Every built craft is the package's own drawing, at one scale, standing on shared baselines in rows from the shortest to the tallest. The SPX ships are a band at the foot, at a smaller scale that the band states.
 import { build, drawnPieces, type Built } from "../src/build/index.ts";
+import type { Piece } from "../src/model/pieces.ts";
 import { defsOf, drawPart, orthographic } from "../src/draw/svg.ts";
 import { check } from "../src/fit.ts";
 import { axesOf, directionOf, VIEWS, type Angle } from "../src/framing.ts";
@@ -166,6 +167,19 @@ const span = (built: Built, axis: readonly [number, number, number]): { lo: numb
 
 const shipFill = (material: keyof typeof MATERIALS) => MATERIALS[material].color;
 
+/** A poster shows the shapes a person can name, not every hatch. */
+const shipShape = (piece: Piece): boolean => {
+  if (piece.kind === "lathe") {
+    const radius = Math.max(...piece.profile.map(([r]) => r));
+    const ys = piece.profile.map(([, y]) => y);
+    return radius >= 6 || Math.max(...ys) - Math.min(...ys) >= 30;
+  }
+  if (piece.kind !== "plate") return false;
+  const across = piece.outline.map(([a]) => a);
+  const along = piece.outline.map(([, b]) => b);
+  return Math.max(...across) - Math.min(...across) >= 8 && Math.max(...along) - Math.min(...along) >= 4;
+};
+
 /** One ship, side-on: the windward face, laid flat, in the mesh's own colours. */
 const drawShip = (built: Built, unit: number, look: LookName, x0: number, yTop: number): { svg: string; tall: number; length: number } => {
   const direction = directionOf(VIEWS.front);
@@ -185,7 +199,8 @@ const drawShip = (built: Built, unit: number, look: LookName, x0: number, yTop: 
     .sort((a, b) => dot3(a.at, forward) - dot3(b.at, forward))
     .map((place) => {
       const part = built.parts.find((one) => one.slot === place.slot);
-      return part ? drawPart(drawnPieces(part, show === "together"), place.at, cam, look, 0.45, undefined, shipFill) : "";
+      const pieces = part ? drawnPieces(part, show === "together").filter(shipShape).map((piece) => (piece.kind === "lathe" ? { ...piece, segs: Math.min(piece.segs, 16) } : piece)) : [];
+      return pieces.length ? drawPart(pieces, place.at, cam, look, 0.45, undefined, shipFill) : "";
     })
     .join("");
   return { svg, tall: Math.max(1, across.hi - across.lo), length: Math.max(1, along.hi - along.lo) };
