@@ -161,10 +161,17 @@ export function lineupSvg(options: LineupOptions): { svg: string; items: LineupI
   let unit = options.unit;
   let drawn = draw({ ...options, items: standing }, fleetKeys, unit);
   const room = options.fit;
-  if (room) for (let i = 0; i < 40 && ((room.width !== undefined && drawn.width > room.width) || (room.height !== undefined && drawn.height > room.height)); i++) {
-    unit *= 0.88;
-    drawn = draw({ ...options, items: standing }, fleetKeys, unit, Math.max(0.75, unit / options.unit));
-  }
+  if (room)
+    for (let i = 0; i < 40; i++) {
+      const tooWide = room.width !== undefined && drawn.width > room.width;
+      const tooTall = room.height !== undefined && drawn.height > room.height;
+      if (!tooWide && !tooTall) break;
+      const next = draw({ ...options, items: standing }, fleetKeys, unit * 0.88, Math.max(0.75, (unit * 0.88) / options.unit));
+      // a frame narrower than the cells themselves: shrinking the craft further would only make them unreadable, and the page's frame scrolls
+      if (!tooTall && next.width >= drawn.width - 0.5) break;
+      unit *= 0.88;
+      drawn = next;
+    }
   return { ...drawn, unit };
 }
 
@@ -311,7 +318,7 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
     }
   if (ships.length) {
     // the ruler's last number and its unit sit past the end of the longest ship
-    width = Math.max(width, rulerRoom + longest * unit + (ruler ? 30 : 8), realEnd + 8);
+    width = Math.max(width, rulerRoom + longest * unit + (ruler ? 34 : 8), realEnd + 8);
     if (ruler) {
       // the metres, along the ground of the fleet band, the same scale as the rockets' ruler
       const steps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000];
@@ -319,7 +326,7 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
       const yy = fleetY + 4;
       fleetBody.push(`<path d="M${n(rulerRoom)} ${n(yy)}H${n(rulerRoom + longest * unit)}" stroke="currentColor" stroke-width="1" opacity=".7"/>`);
       for (let m = 0; m <= longest + 0.001; m += step) fleetBody.push(`<path d="M${n(rulerRoom + m * unit)} ${n(yy)}v5" stroke="currentColor" stroke-width="1" opacity=".7"/><text x="${n(rulerRoom + m * unit)}" y="${n(yy + 16)}" text-anchor="middle" font-size="10" fill="currentColor" opacity=".85">${m.toLocaleString("en-US")}</text>`);
-      fleetBody.push(`<text x="${n(rulerRoom + longest * unit + 4)}" y="${n(yy + 16)}" font-size="10" fill="currentColor" opacity=".85">m</text>`);
+      fleetBody.push(`<text x="${n(rulerRoom + longest * unit + 22)}" y="${n(yy + 16)}" font-size="10" fill="currentColor" opacity=".85">m</text>`);
       fleetY = yy + 24;
     }
   }

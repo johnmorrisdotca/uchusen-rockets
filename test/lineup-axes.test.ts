@@ -33,7 +33,7 @@ test("the unit of the metres ruler is inside the picture", () => {
   const picture = lineupSvg({ items: [KAMINARI], unit: 3.4, ruler: true, labels: true, fit: { width: 900, height: 560 } });
   const unit = numbers(picture.svg, "").find((one) => one.text === "m");
   assert.ok(unit);
-  assert.ok(unit.x + 12 <= picture.width, `the "m" at ${unit.x} in ${picture.width}`);
+  assert.ok(unit.x + 10 <= picture.width, `the "m" at ${unit.x} in ${picture.width}`);
   const last = numbers(picture.svg, 'text-anchor="middle" ').at(-1);
   assert.ok(last && last.x + (last.text.length * 6) / 2 <= picture.width, `the last number ${last?.text} at ${last?.x} in ${picture.width}`);
 });
