@@ -131,15 +131,15 @@ test("builder pictures", async ({ page }, info) => {
   const dir = process.env.SHOTS ?? "";
   const desk = { width: 1440, height: 900 };
   const phone = { width: 390, height: 844 };
+  const FRAME = "html,body,main,#main-view{background:#070c17 !important;margin:0 !important}main > :not(#main-view){display:none !important}#view-bar{position:fixed !important;left:-4000px !important;top:0 !important}.stage-row{margin:0 !important;display:block !important;width:100vw !important}.stage-box{padding:0 !important;border:0 !important;background:#070c17 !important;width:100vw !important}uchusen-rocket,.stage-box uchusen-rocket,.stage-box uchusen-rocket[data-panel]{max-width:none !important;width:100vw !important;height:100vh !important;margin:0 !important}uchusen-rocket::part(figure){aspect-ratio:auto !important;width:100% !important;height:100vh !important}";
   const shoot = async (at: string, name: string, size: { width: number; height: number }) => {
     await page.setViewportSize(size);
     await page.goto(`${miyamoto}&at=${at}`);
-    await page.addStyleTag({
-      content: "main > :not(#main-view){display:none !important}.stage-row{margin:0 !important;display:block !important}.stage-box{padding:0 !important;border:0 !important}.stage-box uchusen-rocket,.stage-box uchusen-rocket[data-panel]{max-width:none !important;width:100vw !important}",
-    });
+    await page.addStyleTag({ content: FRAME });
     const canvas = page.getByTestId("hero").locator("canvas");
     await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 60_000 });
     await expect(canvas).toHaveAttribute("data-frame-ms", /\d/, { timeout: 45_000 });
+    await expect.poll(async () => canvas.evaluate((node) => node.clientHeight)).toBeGreaterThan(size.height * 0.75);
     await canvas.screenshot({ path: `${dir}/${name}.png` });
   };
   for (const at of ["0.0684", "0.3", "0.6"]) {
@@ -148,9 +148,7 @@ test("builder pictures", async ({ page }, info) => {
   }
   await page.setViewportSize(desk);
   await page.goto(`${miyamoto}&at=0.6`);
-  await page.addStyleTag({
-    content: "main > :not(#main-view){display:none !important}.stage-row{margin:0 !important;display:block !important}.stage-box{padding:0 !important;border:0 !important}.stage-box uchusen-rocket,.stage-box uchusen-rocket[data-panel]{max-width:none !important;width:100vw !important}",
-  });
+  await page.addStyleTag({ content: FRAME });
   const canvas = page.getByTestId("hero").locator("canvas");
   await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 60_000 });
   const zoom = page.getByRole("region", { name: "The rocket" }).getByRole("button", { name: "Zoom in" }).first();
@@ -159,7 +157,7 @@ test("builder pictures", async ({ page }, info) => {
     if (await zoom.isDisabled()) break;
     await zoom.evaluate((node: HTMLButtonElement) => node.click());
     clicks += 1;
-    if (clicks === 2) {
+    if (clicks === 3) {
       await page.waitForTimeout(400);
       await canvas.screenshot({ path: `${dir}/miyamoto-mid.png` });
     }

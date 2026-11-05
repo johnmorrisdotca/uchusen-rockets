@@ -812,7 +812,9 @@ export class RocketViewer {
     }
     const box = this.litBounds();
     if (this.progressAt === null) return box;
-    return { min: [box.min[0] - 70, box.min[1] - 90, box.min[2] - 80] as Vec3, max: [box.max[0] + 160, box.max[1] + 90, box.max[2] + 80] as Vec3 };
+    const longest = Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]);
+    const pad = Math.max(6, longest * 0.06);
+    return { min: [box.min[0] - pad, box.min[1] - pad * 0.25, box.min[2] - pad] as Vec3, max: [box.max[0] + pad, box.max[1] + pad * 0.2, box.max[2] + pad] as Vec3 };
   }
 
   private flightParts() {
