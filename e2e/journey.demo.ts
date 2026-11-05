@@ -76,9 +76,13 @@ test("leaving the Moon for the Earth is rated for Saturn V and can be played; Fa
   await expect(page.getByTestId("route")).toContainText("ATMOSPHERE");
   await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Apollo command and service module");
   await expect(page.getByTestId("play")).toBeEnabled();
+  await expect(page.getByText("Since departure")).toBeVisible();
   await page.getByTestId("view-map").click();
   const path = await page.getByTestId("map").locator(".path-ahead").boundingBox();
-  expect(path && path.width > 40 && path.height > 40).toBe(true);
+  // A phone's map is shorter than a desk's, so the bar is "not a dot", not a desk size.
+  expect(path).not.toBeNull();
+  expect(path!.width).toBeGreaterThan(20);
+  expect(path!.height).toBeGreaterThan(10);
   await page.goto(`${URL}&from=moon&to=earth&craft=falcon-heavy`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
   await expect(page.getByTestId("play")).toBeDisabled();

@@ -456,7 +456,7 @@ function rows(listId: string, spec: [string, string][]): Map<string, Row> {
 function buildPanel(): void {
   const keys: [string, string][] = [
     ["date", "jDate"],
-    ["since", "jSince"],
+    ["since", trip.from === "moon" ? "jSinceDepart" : "jSince"],
     ["speed", "jSpeed"],
     ["light", "jLight"],
     ["gamma", "jGamma"],
