@@ -451,7 +451,7 @@ export const WORDS = {
     jDvAll: "速度変化の合計",
     jPeakG: "最大加速度",
     jEscapeSurface: "地表からの脱出速度",
-    jEscapePark: "待機軌道の脱出速度",
+    jEscapePark: "待機軌道からの脱出速度",
     jBurnOut: "出発時の噴射時間",
     jBurnIn2: "減速噴射の時間",
     jPeakSpeed: "最高速度",
