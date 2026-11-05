@@ -262,3 +262,18 @@ export function frameFor(min: Vec3, max: Vec3, angle: Angle, aspect: number, mar
       }
   return { target, distance, position: [target[0] + direction[0] * distance, target[1] + direction[1] * distance, target[2] + direction[2] * distance] };
 }
+
+/** A distant transition camera keeps very large craft in front of its near plane. */
+export function transitionReferenceDistance(oldDistance: number, newDistance: number): number {
+  return Math.max(oldDistance, newDistance) * 20;
+}
+
+/** The scale bar's length in metres: the shortest mark that is at least 50 pixels, or the longest that fits when the picture is too narrow for that. */
+export function scaleBarMetres(metresPerPixel: number, width: number): number {
+  const candidates = [0.1, 1, 10, 100, 1000];
+  if (!(metresPerPixel > 0) || !(width > 0)) return 0.1;
+  const room = width * 0.7;
+  const fit = candidates.filter((value) => value / metresPerPixel <= room);
+  const readable = fit.filter((value) => value / metresPerPixel >= 50);
+  return readable[0] ?? fit[fit.length - 1] ?? 0.1;
+}

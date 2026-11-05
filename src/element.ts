@@ -298,7 +298,12 @@ export class UchusenRocket extends HTMLBase {
 
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
-    if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
+    if (name === "scale") {
+      this.viewer?.setScaleMode(after === "true");
+      // `scale="true"` is the true-scale view. A number is a Kaminari size, which rebuilds the craft.
+      if (after !== "true" && after !== "false") this.queue();
+    }
+    else if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
     else if (name === "motion") {
       if (this.viewer) this.lightViewer(this.viewer);
       this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
@@ -528,6 +533,7 @@ export class UchusenRocket extends HTMLBase {
   /** Hands the 3D view what the attributes say about the engines, and its reader's motion setting. */
   private lightViewer(viewer: RocketViewer): void {
     viewer.setReduced(media("(prefers-reduced-motion: reduce)"));
+    viewer.setScaleMode(this.getAttribute("scale") === "true");
     viewer.setEngines(this.engineLights() ? "full" : null);
     viewer.setLights(lightMode(this.getAttribute("lights")));
     viewer.setMotion(motionsOf(this.descriptionNow().rocket), motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")), motionSpeed(this.getAttribute("motion")));
