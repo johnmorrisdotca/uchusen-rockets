@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **ISV Kaminari, three concept hulls** (MODULES-428): A "Quiver" (thinner cylinders: rings of slim tanks, containers and habitat drums round one long truss), B "Keel and frame" (a flattened wedge built like a ship's hull, open aft and plated forward) and C "Carrier" (a spine with four Miyamoto-size craft docked round it, ISV Miyamoto's own model at true size). All three have a drive of many magnetic-nozzle thrusters and no scaled-up bell. Concept variants of the rocket `fleet-02-concepts`: the shipped Kaminari is not changed. `docs/fleet/kaminari-concepts.md`.
+- **A size for the concepts**: `scale="60"` to `"100"` on `<uchusen-rocket>`, `build(description, { scale })` and the demo's "Ship size" slider (`?kscale=`); every length, part and label is that share of the full size, and Fit follows it, with Starship beside it when asked.
+
 ## [0.11.0] - 2026-11-04
 
 Journey mode (Earth to the Moon and the planets) and real craft for scale beside the SPX fleet.
