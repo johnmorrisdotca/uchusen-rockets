@@ -12,6 +12,8 @@
         <div class="stage-box">
           <div class="view-space">
             <div class="earth-back" id="earth-back" data-testid="earth" aria-hidden="true" hidden></div>
+            <div class="earth-back" id="sky-back" data-testid="sky" aria-hidden="true" hidden></div>
+            <div class="sky-moons" id="sky-moons" data-testid="sky-moons" aria-hidden="true" hidden></div>
             <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter"></uchusen-rocket>
           </div>
           <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark" controls="advanced"></kazoku-view-controls>
@@ -78,6 +80,7 @@
             </div>
             <p class="note" id="motion-note" data-testid="motion-note" hidden></p>
             <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
+            <p class="earth-credit" id="sky-credit" data-testid="sky-credit" hidden></p>
           </div>
           <div class="field flight-field" id="flight-field">
             <h2 id="flight-title" data-say="flight">Flight</h2>
