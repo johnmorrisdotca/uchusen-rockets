@@ -28,27 +28,27 @@ test("changing craft at zoom 5 returns to Fit, a shared zoom stays, and the fitt
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${URL}?zoom=5`);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
-  await expect.poll(() => zoomOf(page), { timeout: 30_000 }).toBe("5.00");
-  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("zoom"), { timeout: 30_000 }).toBe("5");
+  await expect.poll(() => zoomOf(page)).toBe("5.00");
+  expect(new globalThis.URL(page.url()).searchParams.get("zoom")).toBe("5");
 
   await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ yaw: 30 }));
   await press(page, "variant-v2");
-  await expect.poll(() => zoomOf(page), { timeout: 30_000 }).toBe("1.00");
+  await expect.poll(() => zoomOf(page)).toBe("1.00");
   const yaw = await bar(page).evaluate((node) => (node as HTMLElement & { state: { yaw: number } }).state.yaw);
   expect(Math.abs(yaw - 30)).toBeLessThan(0.5);
 
   await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ zoom: 5 }));
-  await expect.poll(() => zoomOf(page), { timeout: 30_000 }).toBe("5.00");
+  await expect.poll(() => zoomOf(page)).toBe("5.00");
   await press(page, "rocket-saturn-v");
   await expect(hero(page)).toHaveAttribute("rocket", "saturn-v");
-  await expect.poll(() => zoomOf(page), { timeout: 30_000 }).toBe("1.00");
-  // the address is written a moment after the view, on a slow runner a long one
-  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("zoom"), { timeout: 30_000 }).toBeNull();
+  await expect.poll(() => zoomOf(page)).toBe("1.00");
+  // the view controls write the address after a short delay, so the zoom is gone once that write lands
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("zoom")).toBeNull();
 
   await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ zoom: 5 }));
-  await expect.poll(() => zoomOf(page), { timeout: 30_000 }).toBe("5.00");
+  await expect.poll(() => zoomOf(page)).toBe("5.00");
   await press(page, "view-side");
-  await expect.poll(() => zoomOf(page), { timeout: 30_000 }).toBe("1.00");
+  await expect.poll(() => zoomOf(page)).toBe("1.00");
 
   await page.goto(`${URL}?rocket=fleet-ship-01&variant=hanabusa`);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());

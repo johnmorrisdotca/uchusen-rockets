@@ -19,7 +19,7 @@ import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
 import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
-import type { RocketViewer } from "./element/scene.ts";
+import type { RocketViewer, ViewerFocus } from "./element/scene.ts";
 import { Panel } from "./element/panel.ts";
 import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
@@ -155,6 +155,8 @@ export class UchusenRocket extends HTMLBase {
   private holder: HTMLElement | null = null;
   private drawing: HTMLElement | null = null;
   private viewer: RocketViewer | null = null;
+  /** The inset the page asked for, put back after a rocket loads. */
+  private framed: ViewerFocus | null = null;
   private watch: IntersectionObserver | null = null;
   private releaseTimer = 0;
   private revealTimer = 0;
@@ -213,6 +215,14 @@ export class UchusenRocket extends HTMLBase {
    */
   screenPoint(point: readonly [number, number, number]): { x: number; y: number; visible: boolean } | null {
     return this.viewer?.screenPoint([point[0], point[1], point[2]]) ?? null;
+  }
+
+  /** Isolate the named slots and look at a point, as an inset does. `null` shows the whole ship again. */
+  focusAt(focus: ViewerFocus | null): void {
+    this.framed = focus;
+    if (focus) this.dataset.focus = focus.slots.join(" ");
+    else delete this.dataset.focus;
+    this.viewer?.focusOn(focus);
   }
 
   /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
@@ -654,6 +664,7 @@ export class UchusenRocket extends HTMLBase {
         if (now.show !== show) viewer.setShow(now.show);
         viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
         this.lightViewer(viewer);
+        if (this.framed) viewer.focusOn(this.framed);
       }
       this.emit("uchusen-change", { report: this.builtNow.report });
     }
