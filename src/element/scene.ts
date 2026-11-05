@@ -1244,13 +1244,30 @@ export class RocketViewer {
     // a drone is drawn larger than life on a big ship, about a fiftieth of its length across, so it reads at the distance the ship is seen from
     const bounds = built.boundsOf(this.show);
     const longest = Math.max(bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]);
+    const boxOf = new Map(built.parts.map((part) => [part.slot, part.bounds]));
+    const shownAt = performance.now();
     this.swarm.show(
-      poses.map((pose) => ({ where: pose.where, part: pose.part, weld: pose.duty === "work", duty: pose.duty })),
+      poses.map((pose) => {
+        const box = pose.duty === "work" ? boxOf.get(pose.slot) : undefined;
+        return {
+          where: pose.where,
+          part: pose.part,
+          weld: pose.duty === "work",
+          duty: pose.duty,
+          skin: box
+            ? {
+                min: [pose.part[0] + box.min[0], pose.part[1] + box.min[1], pose.part[2] + box.min[2]] as [number, number, number],
+                max: [pose.part[0] + box.max[0], pose.part[1] + box.max[1], pose.part[2] + box.max[2]] as [number, number, number],
+              }
+            : undefined,
+        };
+      }),
       jobs.length ? [] : berthRing(count, dock),
       dock,
       this.options.reducedMotion,
       Math.min(DRONE_SCALE_MAX, Math.max(1, longest / DRONE_SHIP_RATIO)),
     );
+    this.canvas.dataset.swarmShow = (performance.now() - shownAt).toFixed(2);
     if (poses.some((pose) => pose.duty === "work")) this.canvas.dataset.weld = this.options.reducedMotion ? "dot" : "live";
     else delete this.canvas.dataset.weld;
     this.canvas.dataset.swarm = String(count);
@@ -1646,8 +1663,17 @@ export class RocketViewer {
     const changed = this.controls.update(dt);
     if (this.needsDraw || changed || this.pose) {
       this.syncSizes();
-      if (this.swarm) this.canvas.dataset.swarmNear = String(this.swarm.lod([this.camera.position.x, this.camera.position.y, this.camera.position.z]));
+      if (this.swarm) {
+        const began = performance.now();
+        this.canvas.dataset.swarmNear = String(this.swarm.lod([this.camera.position.x, this.camera.position.y, this.camera.position.z]));
+        this.canvas.dataset.swarmLod = (performance.now() - began).toFixed(3);
+      }
+      const drawn = performance.now();
       this.renderer.render(this.scene, this.camera);
+      const info = this.renderer.info.render;
+      this.canvas.dataset.frameMs = (performance.now() - drawn).toFixed(2);
+      this.canvas.dataset.drawCalls = String(info.calls);
+      this.canvas.dataset.triangles = String(info.triangles);
       this.placeMarks();
       this.placeBeside();
       if (this.options.onNear && !this.nearSaid && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {

@@ -24,7 +24,7 @@ In the drone's own frame: metres, the lowest point at y = 0, the front towards +
 | `DRONE.weldTip` | -0.25, 0.11, 0.85 | The end of the welding tool on the left arm. |
 | `DRONE.gripper` | 0.26, 0.05, 0.72 | The centre between the gripper's claws, right arm. |
 
-The construction swarm (`src/element/swarm.ts`) still draws its drones as boxes with a ringed emitter; swapping them for this model is a separate change, ticketed.
+The construction swarm (`src/element/swarm.ts`) draws this model, instanced: the coarse file for every drone and the fine file for the few nearest the camera. The beam leaves the lens and the weld leaves the tool and ends on the part's skin. On a long ship a drone is drawn larger than life, about a fiftieth of the ship's length (at most eight times life size), so a metre-wide craft still reads beside a ship of several hundred metres. The model's own frame matches the code: the lowest point is at y = 0 and the front, the lens, is toward +Z.
 
 ## Performance
 

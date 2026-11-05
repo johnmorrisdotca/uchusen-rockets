@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Builder mode draws the repair drone** (`src/element/swarm.ts`): the construction swarm uses the SPX repair drone instead of boxes. The coarse model stands in for every drone and the fine model for the few nearest the camera; the beam leaves the lens and the weld ends on the part. A drone is drawn larger than life on a long ship, about a fiftieth of the ship's length, so it reads at the distance the ship is seen from.
 - **The SPX repair drone** (`fleet-drone`, `docs/fleet/drones.md`): a small work drone, about a metre across, a layered white saucer with a red rim stripe, a big round camera lens that is the tractor-beam emitter (`DRONE.emitter`), two thruster pods, two antennas, a cyan ring light and two jointed arms of four segments, a five-claw gripper on one and a welding tool on the other (`DRONE.weldTip`). Its painted look is built from NASA's Cluster II, High Energy Transient Explorer, Curiosity, InSight and Grease Gun models with this package's own detail: one draw, 119,733 triangles near and 2,224 far, with a glow picture that lights in the Lit look. `scripts/make-drone.ts` makes the models.
 
 ## [0.13.0] - 2026-11-05

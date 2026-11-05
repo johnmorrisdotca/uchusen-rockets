@@ -39,12 +39,59 @@ export function sparkAt(index: number, age: number): readonly [number, number, n
 }
 
 export interface SwarmPose {
-  where: [number, number, number];
-  part: [number, number, number];
+  where: Vec;
+  part: Vec;
   /** This drone is fitting a part, so the join shows a weld. */
   weld?: boolean;
   /** Working a part (faces it, beam on it), flying the path (faces where it is going), or parked (faces away from the stack, no beam). Omitted, it is working. */
   duty?: "work" | "transit" | "berth";
+  /** The part's box in the scene. The weld ends on this skin; the part point itself is the middle. */
+  skin?: { min: Vec; max: Vec };
+}
+
+/** Where a weld from the tool toward the part's middle meets the part's box. Inside the box, the nearest face. */
+function onHull(tip: Vec, toward: Vec, box: { min: Vec; max: Vec }): Vec {
+  let enter = 0;
+  let exit = 1;
+  let missed = false;
+  for (let axis = 0; axis < 3; axis += 1) {
+    const delta = toward[axis] - tip[axis];
+    const low = box.min[axis];
+    const high = box.max[axis];
+    if (Math.abs(delta) < 1e-8) {
+      if (tip[axis] < low || tip[axis] > high) missed = true;
+      continue;
+    }
+    let near = (low - tip[axis]) / delta;
+    let far = (high - tip[axis]) / delta;
+    if (near > far) {
+      const swap = near;
+      near = far;
+      far = swap;
+    }
+    enter = Math.max(enter, near);
+    exit = Math.min(exit, far);
+    if (enter > exit) missed = true;
+  }
+  if (!missed && enter > 1e-3 && enter <= 1) return [tip[0] + (toward[0] - tip[0]) * enter, tip[1] + (toward[1] - tip[1]) * enter, tip[2] + (toward[2] - tip[2]) * enter];
+  const clamped: Vec = [Math.min(box.max[0], Math.max(box.min[0], tip[0])), Math.min(box.max[1], Math.max(box.min[1], tip[1])), Math.min(box.max[2], Math.max(box.min[2], tip[2]))];
+  const inside = clamped[0] === tip[0] && clamped[1] === tip[1] && clamped[2] === tip[2];
+  if (!inside) return clamped;
+  let best = Number.POSITIVE_INFINITY;
+  const face: [number, number, number] = [tip[0], tip[1], tip[2]];
+  for (let axis = 0; axis < 3; axis += 1) {
+    for (const plane of [box.min[axis], box.max[axis]]) {
+      const gap = Math.abs(tip[axis] - plane);
+      if (gap < best) {
+        best = gap;
+        face[0] = tip[0];
+        face[1] = tip[1];
+        face[2] = tip[2];
+        face[axis] = plane;
+      }
+    }
+  }
+  return face;
 }
 
 /** Fetches one of the drone's model files and gives its scene. */
@@ -293,15 +340,18 @@ export class SwarmRig {
       this.flares.setMatrixAt(flareN, this.scratch);
       flareN += 1;
       if (pose.weld) {
-        // the weld arc leaves the tool and runs toward the part
+        // the arc leaves the tool and ends on the part's skin; with no box it stops short of the middle
         this.point(DRONE.weldTip, p, s, this.mid);
         const wx = this.mid.x;
         const wy = this.mid.y;
         const wz = this.mid.z;
         const reach = Math.hypot(target.x - wx, target.y - wy, target.z - wz) || 1;
         const arc = Math.min(reach, ARC_WIDTHS * s * DRONE.diameter);
+        const end = pose.skin
+          ? onHull([wx, wy, wz], [target.x, target.y, target.z], pose.skin)
+          : ([wx + ((target.x - wx) / reach) * arc, wy + ((target.y - wy) / reach) * arc, wz + ((target.z - wz) / reach) * arc] as [number, number, number]);
         this.weldAt.push([wx, wy, wz]);
-        this.weldAt.push([wx + ((target.x - wx) / reach) * arc, wy + ((target.y - wy) / reach) * arc, wz + ((target.z - wz) / reach) * arc]);
+        this.weldAt.push([end[0], end[1], end[2]]);
       }
     }
     this.beams.count = beamN;
