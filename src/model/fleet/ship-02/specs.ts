@@ -1,4 +1,4 @@
-// ISV 加美鳴 (かみなり) Kaminari, SPX-207's numbers as one table, worked from the masses and the voyage arithmetic so that nothing is typed in twice: the spec block, the propulsion cards, the hull-layer stacks, the deck summary and the system
+// ISV 加美鳴 Kaminari, SPX-207's numbers as one table, worked from the masses and the voyage arithmetic so that nothing is typed in twice: the spec block, the propulsion cards, the hull-layer stacks, the deck summary and the system
 // insets. All fictional. The tests check every figure here against the physics.
 import { DRIVE, DRY_T, LENGTH, MASS_T, STATION } from "./dims.ts";
 import { C, G0, jetPowerW, ship02Budget, thrustN } from "./journey.ts";

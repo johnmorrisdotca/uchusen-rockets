@@ -142,6 +142,8 @@ Starship; Falcon 9 in v1.0 (with a fairing, or with Dragon 1 as it flew), v1.1, 
 
 The SPX fleet ships are original designs.
 
+ISV Hanabusa, SPX-013, is the fleet's wheel ship: a 589 m keel and a 22 m bow shield, 611 m overall, two rotating propellant booms and three glazed rings of 48, 62 and 76 m radius that step up from the bow (garden, research and living, at 3.43 rpm: 0.63, 0.82 and 1.00 g), with a closed industrial wheel of 112 m radius set apart. Its drive is nineteen magnetic-nozzle thrusters and no bell. It is three variants (the rings stepping up from the bow, the other order, and a flat section view of the living ring) and joins the picker under SPX. The bible is `docs/fleet/ship-01.md`.
+
 One of them is a class of two, the Romurusu class: ISV Miyamoto, SPX-452, and its sister ISV Ariake, SPX-186. They share one hull and differ like this:
 
 | | ISV Miyamoto, SPX-452 | ISV Ariake, SPX-186 |

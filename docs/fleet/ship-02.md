@@ -1,8 +1,8 @@
-# ISV 加美鳴 (かみなり) Kaminari, SPX-207
+# ISV 加美鳴 Kaminari, SPX-207
 
 **加美鳴（かみなり） · Kaminari · "thunder"**. Role: 大型輸送船 (large transport ship). In the programme's words: "Large transport ship. It carries heavy cargo in a giant hull, and its engines' low growl echoes like distant thunder."
 
-ISV 加美鳴 (かみなり) Kaminari, SPX-207 is a planned ship of the SPX fleet: the dates, figures and technologies here are the programme's planned figures. It is an original design, built in code from tables of metres (`src/model/fleet/ship-02/`).
+ISV 加美鳴 Kaminari, SPX-207 is a planned ship of the SPX fleet: the dates, figures and technologies here are the programme's planned figures. It is an original design, built in code from tables of metres (`src/model/fleet/ship-02/`).
 
 | | |
 |---|---|
@@ -33,7 +33,7 @@ ISV 加美鳴 (かみなり) Kaminari, SPX-207 is a planned ship of the SPX flee
 | Propellant | 6.35 million t loaded, of 7.29 million t tank capacity (four tanks, 80 m by 440 m) |
 | Endurance | 80 years sealed (closed water and air loops, farms, 60 years of stores) |
 
-Fleet scale: Waymark (SPX-03) is 380 m by 118 m by 74 m and 105,000 t, so ISV 加美鳴 (かみなり) Kaminari, SPX-207 is about 4.8 times as long and 80 times as heavy. It is about six times the length of a 300 m cruiser of any franchise.
+Fleet scale: Waymark (SPX-03) is 380 m by 118 m by 74 m and 105,000 t, so ISV 加美鳴 Kaminari, SPX-207 is about 4.8 times as long and 80 times as heavy. It is about six times the length of a 300 m cruiser of any franchise.
 
 ## The programme
 
