@@ -51,3 +51,25 @@ test("the switch: rockets alone, the fleet alone, or all, and rockets alone keep
   assert.ok(all.unit < 3.4 && all.unit <= fleet.unit + 1e-9, "everything on one scale, shrunk to fit the biggest");
   assert.ok(all.height > fleet.height, "the rockets band is above the fleet band");
 });
+
+const STOOD = ["fleet-ship-01:hanabusa", "fleet-ship-03:miyamoto", "fleet-kaminari:fleet-kaminari"];
+
+test("pose stand puts the fleet upright in one row, at one scale, and the view turns them", () => {
+  const lying = lineupSvg({ items: ["fleet-kaminari:fleet-kaminari"], unit: 3.4, ruler: false, labels: false, fit: FRAME });
+  const stood = lineupSvg({ items: STOOD, unit: 3.4, pose: "stand", filter: "fleet", ruler: false, labels: false, fit: FRAME, view: "side" });
+  assert.deepEqual(stood.items.map((item) => item.key), STOOD);
+  assert.ok(stood.height > stood.width, `${stood.width} by ${stood.height}: the length goes up`);
+  assert.ok(lying.width > lying.height, "without pose the same ship still lies down");
+  const length = (key: string) => {
+    const [rocket, variant] = key.split(":");
+    const box = build({ rocket, variant }).boundsOf("together");
+    return box.max[1] - box.min[1];
+  };
+  assert.ok(length(STOOD[2]) > length(STOOD[1]) * 2, "the transport is enormous beside the command ship");
+  const front = lineupSvg({ items: STOOD, unit: 3.4, pose: "stand", filter: "fleet", ruler: false, labels: false, fit: FRAME, view: "front" });
+  const quarter = lineupSvg({ items: STOOD, unit: 3.4, pose: "stand", filter: "fleet", ruler: false, labels: false, fit: FRAME, view: "three-quarter" });
+  assert.notEqual(stood.svg, front.svg);
+  assert.notEqual(stood.svg, quarter.svg);
+  const mixed = lineupSvg({ items: [STARSHIP, ...STOOD, "person"], unit: 3.4, pose: "stand", filter: "fleet", fit: FRAME });
+  assert.deepEqual(mixed.items.map((item) => item.key), STOOD, "the fleet filter still leaves out rockets and the person");
+});

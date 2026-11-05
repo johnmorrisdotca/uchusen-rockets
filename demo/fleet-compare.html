@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!--family:head-->
+    <link rel="stylesheet" href="family.css" />
+    <link rel="stylesheet" href="demo.css" />
+    <link rel="stylesheet" href="fleet-compare.css" />
+  </head>
+  <body class="demo fleet-cmp">
+    <main>
+      <!--family:header-->
+      <section class="cmp" aria-labelledby="cmp-title">
+        <h2 id="cmp-title" data-say="more_compare">Compare to scale</h2>
+        <div class="chips" id="cmp-picks" data-testid="cmp-picks" role="group" aria-labelledby="cmp-title"></div>
+        <div class="chips" id="cmp-views" data-testid="cmp-views" role="group" aria-labelledby="cmp-title"></div>
+        <div class="cmp-view" id="cmp-view" data-testid="cmp-view">
+          <uchusen-lineup id="lineup" data-testid="cmp-lineup" pose="stand" filter="fleet" ruler labels look="line"></uchusen-lineup>
+        </div>
+        <table class="cmp-facts" data-testid="cmp-facts">
+          <thead id="cmp-head"></thead>
+          <tbody id="cmp-rows"></tbody>
+        </table>
+      </section>
+      <!--family:footer-->
+    </main>
+    <!--family:scripts js/fleet-compare.js-->
+  </body>
+</html>
