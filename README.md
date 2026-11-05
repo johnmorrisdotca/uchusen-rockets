@@ -12,7 +12,7 @@ Uchūsen means "spaceship". Each rocket comes in every variant a source document
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
 </p>
 
-<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/flight.md">Lit engines and flights</a> · <a href="./docs/embed.md">Use one on your site</a> · <a href="./docs/assets.md">Assets</a> · <a href="./docs/guides/getting-started.md">Guides</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/builder.html">Code builder</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/docs/">Docs site</a></p>
+<p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/flight.md">Lit engines and flights</a> · <a href="./docs/embed.md">Use one on your site</a> · <a href="./docs/assets.md">Assets</a> · <a href="./docs/guides/getting-started.md">Guides</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/builder.html">Code builder</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/journey.html">Journey mode</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/docs/">Docs site</a></p>
 
 <p align="center"><img alt="Block 3 of the rocket as a painted 3D view, stainless steel with black tiles, beside its controls and its sizes, each with a source." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg" width="820"></p>
 
@@ -363,6 +363,7 @@ Each guide has a Japanese twin in [docs/guides/ja](docs/guides/ja).
 | [Build a rocket from parts](docs/guides/build-from-parts.md) | Part records, the fit check, `build`, the builder |
 | [Lit engines and flights](docs/guides/engines-and-flights.md) | Engines at full thrust, flights, what is sourced |
 | [Rockets to scale](docs/guides/scale-lineups.md) | `<uchusen-lineup>` and `lineupSvg` |
+| [Journey mode](docs/guides/journey.md) | Fly a rocket or a fleet ship to the Moon or a planet: windows, burns, the flip |
 | [Put a rocket on your own site](docs/guides/embed-on-your-site.md) | Six ways, and the credit |
 | [React and other frameworks](docs/guides/react-and-frameworks.md) | React, Vue, Svelte, Angular |
 | [Bundlers and CDNs](docs/guides/bundlers-and-cdn.md) | unpkg, Vite, webpack |

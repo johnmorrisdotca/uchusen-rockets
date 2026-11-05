@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/uchusen-rockets",
-  "version": "0.10.0",
+  "version": "0.12.0",
   "description": "Uchusen Rockets 宇宙船: line drawings and 3D views of rockets, as a web component. Every variant with its own sourced sizes, a typed way to assemble a rocket from parts, stack and separate. No logos. three.js is a peer dependency.",
   "keywords": [
     "rocket",
@@ -53,6 +53,11 @@
       "types": "./dist/build/index.d.ts",
       "import": "./dist/build/index.js",
       "default": "./dist/build/index.js"
+    },
+    "./journey": {
+      "types": "./dist/journey/index.d.ts",
+      "import": "./dist/journey/index.js",
+      "default": "./dist/journey/index.js"
     },
     "./element": {
       "types": "./dist/element.d.ts",
@@ -126,6 +131,7 @@
     "@gltf-transform/functions": "4.5.1",
     "@johnmorrisdotca/chikyu-earth": "0.10.0",
     "@johnmorrisdotca/kazoku-ui": "^0.15.1",
+    "@johnmorrisdotca/wakusei-planets": "0.15.0",
     "@playwright/test": "1.64.0",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@types/node": "24.10.1",

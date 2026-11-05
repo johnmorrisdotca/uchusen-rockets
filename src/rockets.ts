@@ -84,6 +84,19 @@ export interface PlannedRocket {
   source: SourceId;
 }
 
+/** Craft that fly in space: seen from any side, from straight above or below. Everything else stands on the ground or the sea, and keeps the ground in view. */
+const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble"]);
+
+/** Gives each variant its `view.tiltMax`: 90 degrees for a craft in space and the fleet, 45 for the rest. */
+function withTilt(rockets: Record<string, RocketEntry>): Record<string, RocketEntry> {
+  return Object.fromEntries(
+    Object.entries(rockets).map(([id, rocket]) => {
+      const tiltMax = IN_SPACE.has(id) || id in FLEET_KIT_ROCKETS || id.startsWith("fleet-") ? 90 : 45;
+      return [id, { ...rocket, variants: rocket.variants.map((variant) => ({ ...variant, view: { tiltMax } })) }];
+    }),
+  );
+}
+
 /**
  * Every rocket that has a shape, by id, each with its variants. Add a rocket here and the element, the drawing, the fit check and the demo all read it.
  *
@@ -94,7 +107,7 @@ export interface PlannedRocket {
  * console.log(Object.keys(ROCKETS).slice(0, 6));
  * ```
  */
-export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
+export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   starship: { id: "starship", name: "Starship", status: "built", ...MADE_BY["starship"], variants: STARSHIP_VARIANTS, defaultVariant: "v3" },
   "falcon-9": { id: "falcon-9", name: "Falcon 9", status: "built", ...MADE_BY["falcon-9"], variants: FALCON_9_VARIANTS, defaultVariant: "block-5" },
   "falcon-heavy": { id: "falcon-heavy", name: "Falcon Heavy", status: "built", ...MADE_BY["falcon-heavy"], variants: FALCON_HEAVY_VARIANTS, defaultVariant: "falcon-heavy" },
@@ -123,7 +136,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = {
   "fleet-insets-ship-03": { id: "fleet-insets-ship-03", name: SHIP_03_INSET_ROCKET.name, status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_INSET_ROCKET.variants, defaultVariant: SHIP_03_INSET_ROCKET.variants[0].id },
   "fleet-02": { id: "fleet-02", name: "ISV 加美鳴 (かみなり) Kaminari, SPX-207", status: "built", ...MADE_BY["fleet-02"], variants: SHIP_02_VARIANTS, defaultVariant: "fleet-02" },
   starbase: { id: "starbase", name: "Starbase", status: "built", ...MADE_BY["starbase"], variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
-};
+});
 
 const fig = (value: number, source: SourceId): Figure => ({ value, source });
 

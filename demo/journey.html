@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!--family:head-->
+    <link rel="stylesheet" href="family.css" />
+    <link rel="stylesheet" href="demo.css" />
+    <link rel="stylesheet" href="journey.css" />
+  </head>
+  <body class="demo journey">
+    <main>
+      <!--family:header-->
+      <section class="jr" id="journey" aria-label="Journey" data-say-label="jLabel">
+        <div class="jr-main">
+          <div class="jr-stage" id="stage" data-testid="stage" data-view="side" data-phase="ready">
+            <canvas class="jr-sky" id="sky" data-testid="sky" aria-hidden="true"></canvas>
+            <svg class="jr-map" id="map" data-testid="map" role="img" aria-label="The route" data-say-label="jMapLabel" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="jr-craft" id="craft" data-testid="craft" role="img" aria-label="The craft" data-say-label="jCraftLabel"></div>
+            <div class="jr-hud" aria-hidden="false">
+              <div class="jr-readout jr-accel" id="accel" data-testid="accel" hidden>
+                <span class="jr-kicker" id="accel-label"></span>
+                <span class="jr-big" id="accel-value"></span>
+                <svg class="jr-arrow" id="accel-arrow" viewBox="0 0 120 24" aria-hidden="true"><path d="M2 12H106M106 12L90 3M106 12L90 21" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </div>
+              <div class="jr-timer" id="timer" data-testid="timer" hidden>
+                <span class="jr-kicker" id="timer-label"></span>
+                <span class="jr-mid" id="timer-value"></span>
+              </div>
+              <div class="jr-phase" id="phase" data-testid="phase" role="status" aria-live="polite"></div>
+              <div class="jr-preheat" id="preheat" data-testid="preheat" hidden>
+                <span class="jr-kicker" data-say="jPhase_preheat">MAIN ENGINE PREHEATING</span>
+                <div class="jr-segments" id="segments"></div>
+                <span class="jr-mid" id="preheat-percent"></span>
+              </div>
+              <div class="jr-ignition" id="ignition" data-testid="ignition" hidden>
+                <span class="jr-kicker" data-say="jIgnition">IGNITION IN</span>
+                <svg class="jr-ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="jr-ring-track" cx="60" cy="60" r="52" /><circle class="jr-ring-fill" id="ring" cx="60" cy="60" r="52" pathLength="100" /></svg>
+                <span class="jr-count" id="count"></span>
+              </div>
+              <div class="jr-speed" id="speed" data-testid="speed">
+                <span class="jr-kicker" id="speed-label"></span>
+                <span class="jr-big" id="speed-value"></span>
+                <span class="jr-sub" id="speed-sub"></span>
+              </div>
+            </div>
+            <div class="chips jr-views" id="views" role="group" aria-label="View" data-say-label="jViewLabel"></div>
+            <div class="jr-summary" id="summary" data-testid="summary" role="dialog" aria-labelledby="summary-title" hidden>
+              <h2 id="summary-title" data-say="jArrived">Arrived</h2>
+              <p class="jr-route-line" id="summary-route"></p>
+              <dl class="jr-facts" id="summary-facts"></dl>
+              <div class="jr-actions">
+                <button type="button" class="chip" id="again" data-testid="again" data-say="jAgain">Fly it again</button>
+                <button type="button" class="chip" id="copy" data-testid="copy" data-say="jCopy">Copy link</button>
+                <span id="copied" role="status" aria-live="polite"></span>
+              </div>
+            </div>
+          </div>
+          <svg class="jr-route" id="route" data-testid="route" viewBox="0 0 1000 138" role="img" aria-label="The route from start to end" data-say-label="jRouteLabel" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="jr-controls" id="controls">
+            <button type="button" class="chip jr-play" id="play" data-testid="play" aria-pressed="false" data-say="jPlay">Play</button>
+            <button type="button" class="chip" id="restart" data-testid="restart" data-say="jRestart">Start again</button>
+            <label class="jr-scrub" for="scrub"><span class="jr-visually" data-say="jScrub">Where in the trip</span><input type="range" id="scrub" data-testid="scrub" min="0" max="1000" step="1" value="0" /></label>
+            <div class="chips" id="speeds" role="group" aria-label="Playback speed" data-say-label="jSpeedLabel"></div>
+          </div>
+        </div>
+        <div class="jr-side">
+          <div class="field">
+            <h2 id="from-title" data-say="jFrom">From</h2>
+            <div class="chips" id="from" role="group" aria-labelledby="from-title"></div>
+          </div>
+          <div class="field">
+            <h2 id="to-title" data-say="jTo">To</h2>
+            <div class="chips" id="to" role="group" aria-labelledby="to-title"></div>
+          </div>
+          <div class="field">
+            <h2 id="craft-title" data-say="jCraft">Craft</h2>
+            <div class="chips" id="crafts" role="group" aria-labelledby="craft-title"></div>
+          </div>
+          <div class="field">
+            <h2 id="when-title" data-say="jWhen">Leave on</h2>
+            <div class="chips" id="when" role="group" aria-labelledby="when-title"></div>
+          </div>
+          <div class="jr-verdict" id="verdict" data-testid="verdict" data-level="rated">
+            <span class="jr-level" id="verdict-level"></span>
+            <p id="verdict-line"></p>
+            <ul id="verdict-because"></ul>
+          </div>
+        </div>
+        <div class="jr-panel" id="panel" data-testid="panel" aria-label="Distances and numbers" data-say-label="jPanelLabel">
+          <div class="jr-cols">
+            <div><h3 id="now-title" data-say="jNow">Now</h3><dl class="jr-list" id="now" aria-labelledby="now-title"></dl></div>
+            <div><h3 id="trip-title" data-say="jTrip">The whole trip</h3><dl class="jr-list" id="trip" aria-labelledby="trip-title"></dl></div>
+          </div>
+        </div>
+      </section>
+      <p class="note jr-note" data-say="jNote">Positions of the planets are real, from NASA's approximate orbit elements (good to about an arc minute). Figures for each craft are from the source named under it, or marked "est.". Trips are in the flat plane of the planets' orbits.</p>
+      <p class="credit" id="jr-credit" data-testid="credit"></p>
+      <!--family:unreviewed-->
+      <!--family:footer-->
+    </main>
+    <!--family:scripts js/journey.js-->
+  </body>
+</html>

@@ -80,6 +80,10 @@ export interface SvgOptions {
   engines?: boolean | Readonly<Record<string, number>>;
   /** Degrees each moving group of each part is turned from where it is drawn at rest, by slot and then by name: `{ booster: { "grid-fins": 12 } }`. A flight asks for them. */
   moves?: Readonly<Record<string, Readonly<Record<string, number>>>>;
+  /** Only these slots, closed up into one stack, centred in `frame` when it is given: a rocket after its first stages have gone. Left out, `show` decides. */
+  only?: readonly string[];
+  /** The bounds the picture is fitted to, from another build's `boundsOf`: parts drawn with it keep the scale of the whole rocket they came from. */
+  frame?: Bounds;
 }
 
 /**
@@ -196,16 +200,23 @@ function assembled(report: FitReport, other?: Built): Built {
     const { at } = besideLayout(boundsOfPlaces(mine), other.boundsOf("together"));
     return [...mine, ...other.placesOf("together").map((place) => ({ slot: `beside-${place.slot}`, at: [place.at[0] + at[0], place.at[1] + at[1], place.at[2] + at[2]] as Vec3, shown: true }))];
   };
-  const flamesOf = (show: string | undefined): LitBell[] => {
-    const places = placesOf(show);
-    return litBells(
+  const flamesAt = (places: { slot: string; at: Vec3; shown: boolean }[], together: boolean): LitBell[] =>
+    litBells(
       places.map((place) => {
         const part = parts.find((p) => p.slot === place.slot) as BuiltPart;
         const told = report.variant?.facts.engines[part.slot]?.value;
         return { slot: part.slot, atY: place.at[1], shown: place.shown, pieces: part.pieces, beside: place.at[0] !== 0 || place.at[2] !== 0, dark: told === null || told === undefined };
       }),
-      !show || show === "together",
+      together,
     );
+  const flamesOf = (show: string | undefined): LitBell[] => flamesAt(placesOf(show), !show || show === "together");
+  // the parts that are left, closed up joint to joint, and centred in a frame when there is one
+  const stackOf = (only: readonly string[], frame?: Bounds) => {
+    const stacked = placesFor(report.parts.filter(({ slot }) => only.includes(slot)), "together", (part) => widthOf(part.id));
+    if (!frame || stacked.length === 0) return stacked;
+    const mine = boundsOfPlaces(stacked);
+    const dy = (frame.min[1] + frame.max[1]) / 2 - (mine.min[1] + mine.max[1]) / 2;
+    return stacked.map((place) => ({ ...place, at: [place.at[0], place.at[1] + dy, place.at[2]] as Vec3 }));
   };
   const boundsOfShow = (show?: string, lit = false): Bounds => {
     const mine = boundsOfPlaces(ownPlaces(show));
@@ -226,11 +237,12 @@ function assembled(report: FitReport, other?: Built): Built {
     placesOf,
     flamesOf,
     glb: () => toGlb(parts.map((part) => ({ name: part.slot, mesh: part.mesh, at: placesOf("together").find((place) => place.slot === part.slot)?.at ?? [0, 0, 0] }))),
-    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false, moves } = {}) => {
+    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false, moves, only, frame } = {}) => {
       const angle = typeof view === "string" ? VIEWS[cleanView(view)] : view;
-      const places = placesOf(show).filter((place) => place.shown);
+      const placed = only ? stackOf(only, frame) : placesOf(show);
+      const places = placed.filter((place) => place.shown);
       // a flame drawn at full thrust is held in the picture; a count of engines is the timeline's, which has its own room
-      const cam = perspective(boundsOfShow(show, engines === true), angle);
+      const cam = perspective(frame ?? boundsOfShow(show, engines === true), angle);
       const ordered = places
         .map((place) => {
           const part = parts.find((p) => p.slot === place.slot) as BuiltPart;
@@ -238,11 +250,11 @@ function assembled(report: FitReport, other?: Built): Built {
           return { place, part, depth: cam.depth(middle) };
         })
         .sort((a, b) => b.depth - a.depth);
-      const together = !show || show === "together";
+      const together = only !== undefined || !show || show === "together";
       const flames = typeof engines === "object"
         ? parts.flatMap((part) => pickBells(bellsOf(part.pieces), engines[part.slot] ?? 0).map((bell) => ({ ...bell, slot: part.slot })))
         : engines
-        ? flamesOf(show).filter((bell) => places.some((place) => place.slot === bell.slot))
+        ? (only ? flamesAt(placed, true) : flamesOf(show)).filter((bell) => places.some((place) => place.slot === bell.slot))
         : [];
       return wrap(
         ordered

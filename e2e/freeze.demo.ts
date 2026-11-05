@@ -341,6 +341,14 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   await press(page, "look-painted");
   const fleet = Object.values(ROCKETS).filter((rocket) => !real(rocket));
   expect(fleet.length).toBeGreaterThan(5);
+  // The element says `uchusen-change` when the rocket and variant on screen are in. `data-variant` and `data-state` are set before that and `data-state` stays "3d" through a change, so they do not tell a reading that the
+  // choice is drawn: a slow runner read 4 buffers where 1395 are made once the last variant's first frame is in.
+  await hero(page).evaluate((node) =>
+    node.addEventListener("uchusen-change", (event) => {
+      const variant = (event as CustomEvent<{ report: { variant?: { rocket: string; id: string } } }>).detail.report.variant;
+      (window as unknown as { __in: string }).__in = `${variant?.rocket}/${variant?.id}`;
+    }),
+  );
   const walk = async (stride: number) => {
     for (const rocket of fleet)
       for (const variant of rocket.variants.filter((_, i) => i % stride === 0)) {
@@ -348,6 +356,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
         await press(page, `variant-${variant.id}`);
         await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
         await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+        await expect.poll(() => page.evaluate(() => (window as unknown as { __in?: string }).__in), { timeout: 90_000 }).toBe(`${rocket.id}/${variant.id}`);
         await settle(page, 80);
       }
   };
