@@ -88,7 +88,9 @@ scaleButton.dataset.say = "trueScale";
 scaleButton.textContent = say("trueScale");
 byId("turn").append(scaleButton);
 function setScale(on: boolean): void {
-  hero.setAttribute("scale", String(on));
+  // A Kaminari concept's size is `scale` too, so turning the true-scale view off (every Fit does) gives the size back and does not write "false" over it.
+  const size = canScale(address.get("rocket") ?? "starship", address.get("variant") ?? "v3") ? String(scalePercent(address.get("kscale"))) : "false";
+  hero.setAttribute("scale", on ? "true" : size);
   scaleButton.setAttribute("aria-pressed", String(on));
   address.set("scale", on ? "true" : null);
 }
