@@ -27,6 +27,7 @@ import {
   type State,
   type Trip,
 } from "../src/journey/index.ts";
+import { assistApplies, assistWindows, swingPoint } from "../src/journey/assist.ts";
 import { conicPoint } from "../src/journey/lunar.ts";
 import { transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
@@ -81,6 +82,7 @@ const choice = {
   to: pickOf("to", stopIds, "mars"),
   craft: pickOf("craft", CRAFTS.map((craft) => craft.id), "falcon-heavy"),
   pull: query.get("pull") === "1" ? "1" : "ship",
+  via: query.get("via") === "jupiter" ? "jupiter" : "direct",
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
   view: isView(askedView) ? askedView : "side",
   look: query.get("look") === "painted" ? "painted" : "line",
@@ -95,6 +97,7 @@ function writeAddress(): void {
   next.set("to", choice.to);
   next.set("craft", choice.craft);
   if (choice.pull === "1" && craftNow().drive === "continuous") next.set("pull", "1");
+  if (choice.via === "jupiter" && assistApplies(choice.from, choice.to, craftNow().drive)) next.set("via", "jupiter");
   if (choice.when > 0) next.set("w", String(choice.when));
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
@@ -125,6 +128,11 @@ const dateWords = (ms: number, time = false): string =>
 function whenOptions(): Option[] {
   const craft = craftNow();
   const base = choice.base;
+  if (choice.via === "jupiter" && assistApplies(choice.from, choice.to, craft.drive)) {
+    const swings = assistWindows(SOURCE, choice.to, base, 3);
+    if (swings.length === 0) return [{ id: "w0", label: say("jNoSwing"), ms: base }];
+    return swings.map((one, index) => ({ id: `w${index}`, label: dateWords(one.dateMs), ms: one.dateMs }));
+  }
   // The Moon travels with the Earth, and the window search uses a heliocentric period. A lunar period would put the windows a month apart, so a departure from the Moon uses the Earth's windows.
   if ((choice.from === "earth" || choice.from === "moon") && craft.drive === "ballistic" && choice.to !== "moon" && choice.to !== "earth") {
     return windows(SOURCE, "earth", choice.to, base, 3).map((one, index) => ({ id: `w${index}`, label: dateWords(one.dateMs), ms: one.dateMs }));
@@ -139,11 +147,12 @@ function whenOptions(): Option[] {
 }
 
 function plan(): void {
+  const flown = craftNow();
+  if (!assistApplies(choice.from, choice.to, flown.drive)) choice.via = "direct";
   options = whenOptions();
   if (choice.when >= options.length) choice.when = 0;
   const date = options[choice.when]?.ms ?? choice.base;
-  const flown = craftNow();
-  trip = planTrip(SOURCE, flown, choice.from, choice.to, date, flown.drive === "continuous" && choice.pull === "1" ? 1 : undefined);
+  trip = planTrip(SOURCE, flown, choice.from, choice.to, date, flown.drive === "continuous" && choice.pull === "1" ? 1 : undefined, choice.via === "jupiter" ? "jupiter" : undefined);
   total = Math.max(1, playSeconds(trip));
 }
 
@@ -166,6 +175,16 @@ function drawPickers(): void {
   byId("crafts").replaceChildren(...CRAFTS.map((craft) => chip(craftName(craft), `craft-${craft.id}`, craft.id === choice.craft, () => change({ craft: craft.id }))));
   const continuous = craftNow().drive === "continuous";
   byId("pull-field").hidden = !continuous;
+  const swingChoice = assistApplies(choice.from, choice.to, craftNow().drive);
+  byId("via-field").hidden = !swingChoice;
+  byId("vias").replaceChildren(
+    ...(swingChoice
+      ? [
+          chip(say("jViaDirect"), "via-direct", choice.via !== "jupiter", () => change({ via: "direct" })),
+          chip(say("jViaJupiter"), "via-jupiter", choice.via === "jupiter", () => change({ via: "jupiter" })),
+        ]
+      : []),
+  );
   byId("pulls").replaceChildren(
     ...(continuous
       ? [
@@ -181,7 +200,7 @@ function drawPickers(): void {
   byId("speeds").replaceChildren(...([0.5, 1, 2, 4] as const).map((value) => chip(`×${value}`, `speed-${value}`, speed === value, () => setSpeed(value))));
 }
 
-function change(next: Partial<{ from: string; to: string; craft: string; when: number; pull: "ship" | "1" }>): void {
+function change(next: Partial<{ from: string; to: string; craft: string; when: number; pull: "ship" | "1"; via: "direct" | "jupiter" }>): void {
   if (next.from !== undefined) {
     choice.from = next.from;
     choice.when = 0;
@@ -196,6 +215,10 @@ function change(next: Partial<{ from: string; to: string; craft: string; when: n
   }
   if (next.when !== undefined) choice.when = next.when;
   if (next.pull !== undefined) choice.pull = next.pull;
+  if (next.via !== undefined) {
+    choice.via = next.via;
+    choice.when = 0;
+  }
   stop();
   playhead = 0;
   hideSummary();
@@ -379,7 +402,8 @@ function buildMap(): void {
   // the orbits
   for (const id of shown) {
     const pts = orbit(id).map(([x, y]) => point(x, y));
-    mapSvg.append(svgEl("path", { class: id === trip.from || id === trip.to ? "orbit orbit-lit" : "orbit", d: `M${pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}Z` }));
+    const lit = id === trip.from || id === trip.to || (trip.ballistic?.swing && id === "jupiter");
+    mapSvg.append(svgEl("path", { class: lit ? "orbit orbit-lit" : "orbit", d: `M${pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}Z` }));
   }
   const centre = point(0, 0);
   if (sunFrame) {
@@ -394,7 +418,7 @@ function buildMap(): void {
     const b = trip.ballistic;
     for (let i = 0; i <= 360; i += 1) {
       const t = (b.transitS * i) / 360;
-      const p = b.conic ? conicPoint(b.mu, b.conic, t) : transferPoint(b.mu, b.r1, b.r2, b.theta0, t);
+      const p = b.swing ? swingPoint(b.mu, b.swing, t) : b.conic ? conicPoint(b.mu, b.conic, t) : transferPoint(b.mu, b.r1, b.r2, b.theta0, t);
       const [x, y] = point(p.r * Math.cos(p.theta), p.r * Math.sin(p.theta));
       pathPoints.push([x, y]);
     }
@@ -408,6 +432,12 @@ function buildMap(): void {
   const ahead = svgEl("path", { class: "path-ahead", d: `M${pathPoints.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}` });
   const doneLine = svgEl("path", { class: "path-done", d: "" });
   mapSvg.append(ahead, doneLine);
+  const swing = trip.ballistic?.swing;
+  if (swing && trip.ballistic && pathPoints.length > 1) {
+    const at = Math.round((pathPoints.length - 1) * (swing.leg1S / trip.ballistic.transitS));
+    const [x, y] = pathPoints[Math.min(pathPoints.length - 1, Math.max(0, at))]!;
+    mapSvg.append(svgEl("text", { x, y: y - 16, "text-anchor": "middle", class: "warm", "data-assist": "jupiter" }, say("jAssist").toUpperCase()));
+  }
   // a ruler: one astronomical unit from the Sun, or the Moon's distance from the Earth
   const ruleLen = sunFrame ? AU_KM : 384_400;
   const x0 = 40;
@@ -416,7 +446,7 @@ function buildMap(): void {
   const ruleText = svgEl("text", { x: x0, y: H - 52, "text-anchor": "start" }, sunFrame ? `1 AU · ${kilometres(AU_KM)}` : kilometres(384_400));
   mapSvg.append(ruleText);
   // the places
-  const labelled = new Set([trip.from, trip.to]);
+  const labelled = new Set([trip.from, trip.to, ...(trip.ballistic?.swing ? ["jupiter"] : [])]);
   for (const id of earthFrame ? ["moon"] : shown) {
     const stop = SOURCE.stops.find((one) => one.id === id);
     const group = svgEl("g", { class: "body" });
@@ -545,6 +575,14 @@ function buildPanel(): void {
     ["time", say("jDuration"), trip.drive === "continuous" ? `${duration(trip.shipS)} / ${duration(trip.frameS)}` : duration(trip.frameS)],
     ["dvout", say("jDvOut"), speedWords(trip.dv.departure)],
     ["dvin", say("jDvIn"), speedWords(trip.dv.arrival)],
+    ...(trip.assist
+      ? ([[
+          "swing",
+          say("jSwing"),
+          trip.assist.savedMs >= 0 ? say("jSwingSaves", { speed: speedWords(trip.assist.savedMs) }) : say("jSwingCosts", { speed: speedWords(Math.abs(trip.assist.savedMs)) }),
+          true,
+        ]] as [string, string, string, boolean][])
+      : []),
     ...(trip.ballistic ? ([["burnout", say("jBurnOut"), duration(trip.ballistic.burnS), trip.estimated.includes("departure burn length")], ["burnin", say("jBurnIn2"), trip.ballistic.brakeS > 0 ? duration(trip.ballistic.brakeS) : "–", trip.estimated.includes("braking acceleration")]] as [string, string, string, boolean][]) : []),
     ["peakg", say("jPeakG"), gWords(trip.peakG), trip.estimated.includes("departure burn length") || trip.estimated.includes("braking acceleration")],
     ...(trip.escape ? ([[ "escsurf", say("jEscapeSurface"), speedWords(trip.escape.surfaceKmS * 1000) ], [ "escpark", say("jEscapePark"), speedWords(trip.escape.parkingKmS * 1000) ]] as [string, string, string][]) : []),

@@ -312,3 +312,20 @@ test("a ship that burns all the way can be asked for 1 g, and a rocket is not of
   await expect(page.getByTestId("pull-field")).toBeHidden();
   expect(page.url()).not.toContain("pull=");
 });
+
+test("a rocket to Saturn can swing past Jupiter, and the path says it is an assist", async ({ page }) => {
+  await page.goto(`${URL}&from=earth&to=saturn&craft=falcon-heavy&view=map&via=jupiter`);
+  await expect(page.getByTestId("via-field")).toBeVisible();
+  await expect(page.getByTestId("via-jupiter")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("map").locator("[data-assist=jupiter]")).toHaveText("ASSIST");
+  await expect(page.getByTestId("trip-swing")).toContainText("km/s");
+  await expect(page.getByTestId("verdict")).toContainText("swings past Jupiter");
+  expect(page.url()).toContain("via=jupiter");
+  await page.getByTestId("via-direct").click();
+  await expect(page.getByTestId("trip-swing")).toHaveCount(0);
+  expect(page.url()).not.toContain("via=");
+  await page.getByTestId("to-mars").click();
+  await expect(page.getByTestId("via-field")).toBeHidden();
+  await page.goto(`${URL}&from=moon&to=saturn&craft=saturn-v`);
+  await expect(page.getByTestId("via-field")).toBeHidden();
+});

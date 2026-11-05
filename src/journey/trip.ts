@@ -3,6 +3,7 @@
 import type { BodySource, Stop } from "./bodies.ts";
 import { AU_KM, C, DAY_S, G0, GM_KM3_S2, PARKING_ALTITUDE_KM, PERIOD_DAYS } from "./constants.ts";
 import type { BallisticCraft, CapacityKind, ContinuousCraft, Craft, Quantity } from "./crafts.ts";
+import { swingAt, swingPoint, type Swing } from "./assist.ts";
 import { ENTRY_ALTITUDE_KM, atmosphereReturn, conicPoint, leaveForPlanet, type Conic } from "./lunar.ts";
 import { accelerating, circularSpeed, escapeBurn, flipAndBurn, hohmann, transferPoint, wrapPi } from "./physics.ts";
 
@@ -104,6 +105,8 @@ export interface Trip {
   massRatio: number | null;
   /** Escape speed from the surface and from the parking orbit of the body the rocket leaves, kilometres a second. Absent for a ship that burns all the way. */
   escape?: { surfaceKmS: number; parkingKmS: number };
+  /** A swing past Jupiter on the way out, and how much speed change it saves against the direct Hohmann between the same distances. */
+  assist?: { by: "jupiter"; savedMs: number; radii: number };
   /** What the craft carries to the end of this trip: kilograms (at least, where only a harder trip is rated), or null with the reason. */
   payload: { kg: number | null; atLeast: boolean; note: string };
   ballistic?: {
@@ -134,6 +137,8 @@ export interface Trip {
     fromOrbit?: boolean;
     /** The coast meets an atmosphere, so there is no braking burn. */
     entry?: boolean;
+    /** Set when the coast swings past Jupiter instead of flying one Hohmann ellipse. */
+    swing?: Swing;
   };
   continuous?: {
     from: Vec3;
@@ -350,6 +355,7 @@ const unavailable = (craft: Craft, from: string, to: string, departMs: number, l
  * @param to The destination's id.
  * @param departMs When the departure burn begins, milliseconds since 1970 (for a ballistic trip to a planet, one of `windows`).
  * @param g Proper acceleration in g for a ship that burns all the way. Omitted, the ship flies at its rated acceleration. A ballistic craft ignores it.
+ * @param via `"jupiter"` asks a rocket leaving the Earth for a swing past Jupiter on the way to a planet beyond it. Anything else, and any other craft, flies the direct trip.
  * @returns The planned trip.
  * @example
  * ```ts no-run
@@ -360,9 +366,9 @@ const unavailable = (craft: Craft, from: string, to: string, departMs: number, l
  * console.log(trip.verdict.line, Math.round(trip.dv.departure));
  * ```
  */
-export function planTrip(source: BodySource, craft: Craft, from: string, to: string, departMs: number, g?: number): Trip {
+export function planTrip(source: BodySource, craft: Craft, from: string, to: string, departMs: number, g?: number, via?: "jupiter"): Trip {
   if (from === to) return unavailable(craft, from, to, departMs, "Pick two different places.", []);
-  return craft.drive === "ballistic" ? planBallistic(source, craft, from, to, departMs) : planContinuous(source, craft, from, to, departMs, g);
+  return craft.drive === "ballistic" ? planBallistic(source, craft, from, to, departMs, via) : planContinuous(source, craft, from, to, departMs, g);
 }
 
 /** Apollo 11's trans-Earth injection, from the mission report's Table 7-II: 3,279 ft/s in 151.4 seconds. */
@@ -545,7 +551,7 @@ function planMoon(source: BodySource, craft: BallisticCraft, to: string, departM
   };
 }
 
-function planBallistic(source: BodySource, craft: BallisticCraft, from: string, to: string, departMs: number): Trip {
+function planBallistic(source: BodySource, craft: BallisticCraft, from: string, to: string, departMs: number, via?: "jupiter"): Trip {
   if (from === "moon") return planMoon(source, craft, to, departMs);
   if (from !== "earth") return unavailable(craft, from, to, departMs, "Rockets in this version leave from the Earth or the Moon.", ["A rocket's payload figures are for launches from the Earth."]);
   if (to === "sun") return unavailable(craft, from, to, departMs, "No transfer is planned to the Sun.", []);
@@ -565,6 +571,7 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
   let burnEndSpeed: number;
   let c3: number;
   let straightKm: number;
+  let swing: Swing | undefined;
   if (toMoon) {
     mu = muEarth;
     r1 = rPark;
@@ -584,6 +591,25 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     vInf1 = Math.sqrt(Math.max(0, c3));
     vInf2 = Math.abs(circularSpeed(mu, r2) - Math.sqrt(mu * (2 / r2 - 2 / (r1 + r2))));
     straightKm = len(positionKm(source, "moon", departMs, "earth"));
+  } else if (via === "jupiter" && from === "earth" && (to === "saturn" || to === "uranus" || to === "neptune")) {
+    const swung = swingAt(source, to, departMs);
+    if (!swung) {
+      return unavailable(craft, from, to, departMs, `No swing past Jupiter lines up on the way to ${stopName(source, to)}.`, [
+        "The search looks at Earth-Jupiter windows over the next twenty years. None of them can be turned, at five Jupiter radii, onto the destination.",
+      ]);
+    }
+    mu = GM_KM3_S2.sun!;
+    swing = swung.swing;
+    r1 = swung.r1;
+    r2 = swung.r2;
+    transitS = swing.leg1S + swing.leg2S;
+    theta0 = swung.theta0;
+    vInf1 = swing.vInfDepart;
+    vInf2 = swing.vInfArrive;
+    burnEndSpeed = Math.sqrt(vInf1 ** 2 + (2 * muEarth) / rPark);
+    c3 = vInf1 ** 2;
+    straightKm = len(sub(positionKm(source, to, departMs, "sun"), positionKm(source, "earth", departMs, "sun")));
+    estimated.push("a flyby five Jupiter radii out");
   } else {
     mu = GM_KM3_S2.sun!;
     const t = transferAt(source, from, to, departMs);
@@ -623,9 +649,10 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
 
   const arcSteps = 360;
   const arc = [0];
-  let last = transferPoint(mu, r1, r2, theta0, 0);
+  const along = (tau: number): { r: number; theta: number } => (swing ? swingPoint(mu, swing, tau) : transferPoint(mu, r1, r2, theta0, tau));
+  let last = along(0);
   for (let i = 1; i <= arcSteps; i += 1) {
-    const p = transferPoint(mu, r1, r2, theta0, (transitS * i) / arcSteps);
+    const p = along((transitS * i) / arcSteps);
     arc.push(arc[i - 1]! + Math.hypot(p.r * Math.cos(p.theta) - last.r * Math.cos(last.theta), p.r * Math.sin(p.theta) - last.r * Math.sin(last.theta)));
     last = p;
   }
@@ -663,6 +690,22 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     verdict = { level: verdictCap.level, line: verdictCap.line, because, playable: true };
     if (verdictCap.level === "not-rated") because.push("The burns below are worked from the physics; nothing says this craft can lift them.");
   }
+  let assist: Trip["assist"] = undefined;
+  if (swing) {
+    const direct = hohmann(mu, r1, r2);
+    const directOut = Math.sqrt(direct.dv1 ** 2 + (2 * muEarth) / rPark) - parkSpeed;
+    const directIn = flyby ? 0 : escapeBurn(muTo, captureKm, direct.dv2);
+    const savedMs = (directOut + directIn - dv1 - (flyby ? 0 : dv2)) * 1000;
+    assist = { by: "jupiter", savedMs, radii: swing.radii };
+    const amount = Math.abs(Math.round(savedMs)).toLocaleString("en-US");
+    because.push(
+      savedMs >= 0
+        ? `The path swings past Jupiter and saves ${amount} m/s against the direct trip between the same distances.`
+        : `The path swings past Jupiter. Against the direct trip between the same distances it costs ${amount} m/s more, because the arrival is faster.`,
+    );
+    const degrees = Math.abs(swing.miss) * (180 / Math.PI);
+    if (degrees >= 1) because.push(`The destination is ${degrees.toFixed(1)} degrees from the end of that swing.`);
+  }
   if (estimated.length > 0) because.push(`Estimated, not from a source: ${[...new Set(estimated)].join(", ")}.`);
 
   const isp = payload.ispS?.value ?? null;
@@ -694,6 +737,7 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     fuel,
     massRatio,
     escape: { surfaceKmS: escapeSpeed(muEarth, stopOf(source, "earth").radiusKm), parkingKmS: escapeSpeed(muEarth, rPark) },
+    ...(assist ? { assist } : {}),
     payload: carries,
     dv: { departure: dv1 * 1000, arrival: flyby ? 0 : dv2 * 1000, total: (dv1 + (flyby ? 0 : dv2)) * 1000 },
     peakG,
@@ -701,7 +745,7 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     peakGamma: 1,
     shipS: end,
     frameS: end,
-    ballistic: { mu, r1, r2, theta0, transitS, parkKm: rPark, parkSpeed, burnEndSpeed, captureKm, captureSpeedIn, captureSpeedOut, burnS, brakeS, flipS, ascentS, vInfDeparture: vInf1, vInfArrival: vInf2, arc, c3 },
+    ballistic: { mu, r1, r2, theta0, transitS, parkKm: rPark, parkSpeed, burnEndSpeed, captureKm, captureSpeedIn, captureSpeedOut, burnS, brakeS, flipS, ascentS, vInfDeparture: vInf1, vInfArrival: vInf2, arc, c3, ...(swing ? { swing } : {}) },
   };
 }
 
