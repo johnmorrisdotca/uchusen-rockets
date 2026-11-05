@@ -218,7 +218,7 @@ export const CRAFTS: readonly Craft[] = [
     stages: {
       launch: { rocket: "falcon-heavy", variant: "falcon-heavy", slots: null, name: "Falcon Heavy" },
       upper: { rocket: "falcon-9", variant: "block-5", slots: ["second-stage", "fairing"], name: "Upper stage with its payload" },
-      payload: { rocket: "falcon-9", variant: "block-5", slots: ["fairing"], name: "The payload in its fairing" },
+      payload: { rocket: "dragon", variant: "cargo-dragon-2", slots: ["capsule", "trunk"], name: "Payload (illustrated by Cargo Dragon)" },
     },
   },
   {

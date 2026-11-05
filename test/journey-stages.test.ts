@@ -25,7 +25,8 @@ test("the stage at each phase: whole through the ascent, the upper stage with it
   assert.deepEqual(slotsOf("sls"), ["upper-stage", "service-module", "capsule"]);
   assert.deepEqual(stageOf(craftOf("sls")!, "brake").slots, ["service-module", "capsule"]);
   assert.deepEqual(slotsOf("falcon-heavy"), ["second-stage", "fairing"]);
-  assert.deepEqual(stageOf(craftOf("falcon-heavy")!, "arrival").slots, ["fairing"]);
+  assert.equal(stageOf(craftOf("falcon-heavy")!, "arrival").rocket, "dragon");
+  assert.deepEqual(stageOf(craftOf("falcon-heavy")!, "arrival").slots, ["capsule", "trunk"]);
   assert.equal(stageOf(craftOf("kaminari")!, "brake").slots, null, "a ship that burns all the way stays whole");
 });
 
