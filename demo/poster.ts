@@ -33,7 +33,7 @@ const MARK: Record<MakerId, string> = {
 const PAD = 28;
 const GAP = 4;
 const MIN_CELL = 36;
-const LABEL = 28;
+const LABEL = 88;
 
 export interface PosterCopy {
   title: string;
@@ -107,7 +107,24 @@ export function laterNames(): string[] {
   return names;
 }
 
-const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.min(72, craft.name.length * 3.2));
+/** A long name on two lines, split so the lines are as even as the words allow. */
+const wrapName = (name: string): string[] => {
+  if (name.length <= 14 || !name.includes(" ")) return [name];
+  const words = name.split(" ");
+  let cut = 1;
+  let best = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const score = Math.max(words.slice(0, i).join(" ").length, words.slice(i).join(" ").length);
+    if (score < best) {
+      best = score;
+      cut = i;
+    }
+  }
+  if (cut < words.length && (words[cut] === "and" || words[cut] === "or")) cut += 1;
+  return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
+};
+
+const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.max(...wrapName(craft.name).map((line) => line.length)) * 4.6);
 
 /**
  * Rows of craft, shortest first, each row staying within the sheet. A row takes the next craft until the next one would pass the width.
@@ -258,7 +275,11 @@ export function posterSvg(copy: PosterCopy = ENGLISH, look: LookName = "painted"
         parts.push(drawBuilt(built, facingOf(one.key), POSTER_UNIT, look, x + cell / 2, base));
       }
       parts.push(`<rect x="${x + cell / 2 - 4}" y="${base + 4}" width="8" height="8" rx="2" fill="${MARK[one.maker]}"/>`);
-      parts.push(`<text x="${x + cell / 2}" y="${base + 22}" text-anchor="middle" fill="#172033" font-size="8" font-family="sans-serif"><tspan x="${x + cell / 2}">${escape(one.name)}</tspan><tspan x="${x + cell / 2}" dy="10">${escape(one.height)}</tspan></text>`);
+      const lines = wrapName(one.name);
+      const stagger = index % 2 === 1 ? 40 : 0;
+      const nameTop = base + 16 + stagger;
+      const nameLines = lines.map((line, lineIndex) => `<tspan x="${x + cell / 2}" dy="${lineIndex === 0 ? 0 : 9}">${escape(line)}</tspan>`).join("");
+      parts.push(`<text data-poster-label="1" x="${x + cell / 2}" y="${nameTop}" text-anchor="middle" fill="#172033" font-size="8" font-family="sans-serif">${nameLines}<tspan x="${x + cell / 2}" dy="10">${escape(one.height)}</tspan></text>`);
       x += cell + gap;
     }
     y = base + LABEL + 4;

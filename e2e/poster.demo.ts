@@ -16,6 +16,23 @@ test("the poster shows the rockets, the fleet and what is still to add, and the 
   expect(after).toBeLessThan(before);
 });
 
+test("no two rocket labels touch", async ({ page }) => {
+  await page.goto(URL);
+  const boxes = await page.locator("[data-poster-label]").evaluateAll((nodes) => nodes.map((node) => {
+    const box = node.getBoundingClientRect();
+    return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, name: node.textContent ?? "" };
+  }));
+  expect(boxes.length).toBeGreaterThan(8);
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i];
+      const b = boxes[j];
+      const clear = a.right + 1 <= b.left || b.right + 1 <= a.left || a.bottom + 1 <= b.top || b.bottom + 1 <= a.top;
+      expect(clear, `${a.name} overlaps ${b.name}`).toBe(true);
+    }
+  }
+});
+
 test("the drawing downloads as an SVG and as a PNG", async ({ page }) => {
   await page.goto(URL);
   const svg = page.waitForEvent("download");
