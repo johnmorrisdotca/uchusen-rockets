@@ -1,5 +1,5 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
-import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
+import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId, buildOf, playFrom } from "../src/index.ts";
 import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../src/beside.ts";
 import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
 import { motionNote, motionsOf } from "../src/model/fleet/motion.ts";
@@ -16,7 +16,10 @@ import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
+import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
+
+defineUchusenBuild();
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -245,6 +248,25 @@ function renderMain() {
   if (sizeHere && typeof full === "number") byId("kscale-note").textContent = say("kscaleNote", { percent: state.kscale, length: Math.round((full * state.kscale) / 100).toLocaleString("en-US") });
   byId("facts").replaceChildren(...factsFor(variant));
   byId("flight-field").classList.toggle("has-flight", flightOf(state.rocket, state.variant) !== null);
+  const built = buildOf(state.variant) ?? null;
+  const buildBar = byId<UchusenBuild>("build-bar");
+  byId("build-field").hidden = built === null;
+  buildBar.onMove = (at) => {
+    address.set("build", at > 0 ? "on" : null);
+    address.set("at", at > 0 ? at.toFixed(4) : null);
+  };
+  if (buildBar.dataset.forVariant !== state.variant) {
+    const previous = buildBar.dataset.forVariant ?? "";
+    buildBar.dataset.forVariant = state.variant;
+    buildBar.steps = built;
+    if (built) {
+      const asked = playFrom(new URLSearchParams(location.search));
+      if (asked.on) buildBar.at = asked.at;
+    } else if (previous) {
+      address.set("build", null);
+      address.set("at", null);
+    }
+  }
   credit.hidden = state.look !== "painted";
   const credits = creditsFor(variant);
   if (credits.length) {
@@ -679,6 +701,14 @@ const flightBar = byId<HTMLElement & { words: Record<string, string> }>("flight"
 function setWords() {
   byId("data-note").hidden = !japanese();
   flightBar.words = Object.fromEntries(["play", "pause", "again", "back", "next", "leave", "range", "none", "sourced", "reduced", "from"].map((key) => [key, say(`flight${key[0].toUpperCase()}${key.slice(1)}`)]));
+  byId<UchusenBuild>("build-bar").words = {
+    play: say("buildPlay"),
+    pause: say("buildPause"),
+    range: say("buildRange"),
+    day: say("buildDay"),
+    done: say("buildDone"),
+    rate: say("buildRate"),
+  };
 }
 function speak() {
   setWords();
