@@ -157,6 +157,8 @@ One of them is a class of two, the Romurusu class: ISV Miyamoto, SPX-452, and it
 | Refits | none extra | an extra sensor mast, a second solarium |
 | Interior theme | its own: blue and white | warm wood and dawn-gold |
 | Shared | hull, drive with shadow-shield collar, decks, length 380 m | same |
+| Hangar bodies | two Starship bodies side by side in each box, on cradles | the same, in all four boxes |
+| Service | a collar L for a Starship and a collar M for a Dragon, on the ventral side | the service ship: an open berth for a full stack, drawn in two placements, and a methane and oxygen depot |
 
 ## Variants, with their sources
 

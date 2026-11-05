@@ -20,6 +20,8 @@ export const MESH_LIMIT = 600 * 1024;
 /** A fleet module on its own: the fleet ships are built in the browser and shipped as no prebuilt file, so a module may hold the detail of a full engineering model. */
 export const FLEET_PART_LIMIT = 1024 * 1024;
 export const DRAWING_LIMIT = 80 * 1024;
+/** A fleet ship that carries the real Starship meshes draws larger than a bare hull. The same number is in test/build.test.ts. */
+export const FLEET_DRAWING_LIMIT = 512 * 1024;
 export const MODEL_LIMIT = 8 * 1024 * 1024;
 mkdirSync(join(out, "parts"), { recursive: true });
 mkdirSync(join(out, "models"), { recursive: true });
@@ -31,8 +33,8 @@ function writeMesh(path: string, bytes: Uint8Array, limit = MESH_LIMIT): void {
   writeFileSync(path, bytes);
 }
 
-function writeDrawing(path: string, svg: string): void {
-  if (svg.length > DRAWING_LIMIT) throw new Error(`${path} is ${svg.length} bytes, over ${DRAWING_LIMIT}`);
+function writeDrawing(path: string, svg: string, limit = DRAWING_LIMIT): void {
+  if (svg.length > limit) throw new Error(`${path} is ${svg.length} bytes, over ${limit}`);
   writeFileSync(path, svg);
 }
 
@@ -51,7 +53,7 @@ for (const rocket of Object.values(ROCKETS)) {
     for (const show of built.shows) {
       const name = show === built.shows[0] ? stem : `${stem}-${show}`;
       for (const look of LOOK_NAMES) {
-        writeDrawing(join(out, `${name}${lookSuffix(look)}.svg`), built.svg({ look, show }));
+        writeDrawing(join(out, `${name}${lookSuffix(look)}.svg`), built.svg({ look, show }), rocket.id.startsWith("fleet-") ? FLEET_DRAWING_LIMIT : DRAWING_LIMIT);
         drawings++;
       }
     }

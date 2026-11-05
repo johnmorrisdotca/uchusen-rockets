@@ -1,6 +1,7 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
 import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../src/beside.ts";
+import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
@@ -50,24 +51,25 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", beside: "off", rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", beside: "off", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
 const BACKGROUND_NAMES = ["none", "earth"] as const;
 type BackgroundName = (typeof BACKGROUND_NAMES)[number];
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName, beside: address.get("beside") === "on" };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: (address.get("background") === "earth" ? "earth" : "none") as BackgroundName, beside: address.get("beside") === "on", kscale: scalePercent(address.get("kscale")) };
 
 /** A rocket is thin: the controls hold a pan so that a quarter of it stays in view. Its size on the screen: the picture is as wide as the box and a third taller, and the framing leaves 8% round the rocket. */
 function sizeObject() {
   const variant = variantOf(state.rocket, state.variant);
   const box = hero.getBoundingClientRect();
+  const size = canScale(state.rocket, state.variant) ? state.kscale / 100 : 1;
   const height = state.show === "together" ? variant?.facts.height.value : state.show === "apart" ? null : variant?.facts.parts[state.show]?.value;
   const diameter = variant?.facts.diameter.value;
   if (!box.width || typeof height !== "number" || typeof diameter !== "number") return bar.removeAttribute("object-size");
   // with Starship beside it the picture holds both
   const beside = state.beside && canBeside(state.rocket) ? variantOf(BESIDE_ROCKET.rocket, BESIDE_ROCKET.variant ?? "")?.facts : null;
-  const craft: Parameters<typeof besideBounds>[0] = { min: [-diameter / 2, 0, -diameter / 2], max: [diameter / 2, height, diameter / 2] };
+  const craft: Parameters<typeof besideBounds>[0] = { min: [(-diameter * size) / 2, 0, (-diameter * size) / 2], max: [(diameter * size) / 2, height * size, (diameter * size) / 2] };
   const both = beside && typeof beside.height.value === "number" && typeof beside.diameter.value === "number" ? besideBounds(craft, besideLayout(craft, { min: [-beside.diameter.value / 2, 0, 0], max: [beside.diameter.value / 2, beside.height.value, 0] }).bounds) : craft;
   const width = both.max[0] - both.min[0];
   const tall = both.max[1];
@@ -229,6 +231,16 @@ function renderMain() {
   hero.setAttribute("beside", besideHere && state.beside ? "on" : "off");
   byId("beside-note").hidden = !(besideHere && state.beside);
   press(byId("beside"), state.beside ? "beside-on" : "");
+  // the Kaminari concepts take a size, 60 to 100 per cent
+  const sizeHere = canScale(state.rocket, state.variant);
+  byId("kscale-field").hidden = !sizeHere;
+  if (sizeHere) hero.setAttribute("scale", String(state.kscale));
+  else hero.removeAttribute("scale");
+  byId<HTMLInputElement>("kscale").value = String(state.kscale);
+  byId("kscale-out").textContent = `${state.kscale}%`;
+  const full = variant.facts.height.value;
+  byId("kscale-note").hidden = !sizeHere;
+  if (sizeHere && typeof full === "number") byId("kscale-note").textContent = say("kscaleNote", { percent: state.kscale, length: Math.round((full * state.kscale) / 100).toLocaleString("en-US") });
   byId("facts").replaceChildren(...factsFor(variant));
   byId("flight-field").classList.toggle("has-flight", flightOf(state.rocket, state.variant) !== null);
   credit.hidden = state.look !== "painted";
@@ -277,7 +289,10 @@ function pick(change: Partial<typeof state>) {
     // both craft are to be in the picture
     bar.fit();
   }
+  if (change.kscale !== undefined) address.set("kscale", String(state.kscale));
   renderMain();
+  // the ship is a new size: Fit holds it, and Starship beside it, again
+  if (change.kscale !== undefined) bar.fit();
   address.set("rocket", state.rocket);
   address.set("variant", state.variant);
   address.set("show", state.show);
@@ -303,6 +318,9 @@ byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.repl
 byId("backgrounds").append(...BACKGROUND_NAMES.map((background) => chip(WORDS.en[`background_${background}`], `background-${background}`, () => pick({ background }), `background_${background}`)));
 
 byId("beside").append(chip("Beside it", "beside-on", () => pick({ beside: !state.beside }), "beside"));
+// the size slider: the number follows the thumb at once, and the ship is rebuilt at the size when it is let go
+byId<HTMLInputElement>("kscale").addEventListener("input", (event) => (byId("kscale-out").textContent = `${scalePercent((event.target as HTMLInputElement).value)}%`));
+byId<HTMLInputElement>("kscale").addEventListener("change", (event) => pick({ kscale: scalePercent((event.target as HTMLInputElement).value) }));
 
 // ------------------------------------------------------------- which way it turns
 // The family's controls turn it at their `speed` times the speed buttons' `pace` (0.5×, 1×, 2×): positive takes the near side to the right, negative to the left. A press changes the way at once, from where it is, and starts the turn if it had stopped.

@@ -269,6 +269,9 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   await page.getByTestId("look-painted").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
   await expect(page.getByTestId("painted-controls")).toBeVisible();
+  await expect(page.getByTestId("painted-note")).toBeHidden();
+  const bar = await page.getByTestId("painted-bar").evaluate((node) => getComputedStyle(node).backgroundColor);
+  expect(bar).toBe("rgb(28, 29, 34)");
   await expect.poll(() => page.getByTestId("painted-rocket").getAttribute("data-state")).toBe("3d");
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBeGreaterThan(0);
   await page.getByTestId("view-front").click();
