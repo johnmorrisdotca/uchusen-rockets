@@ -628,7 +628,7 @@ function chooseLights(choice: string) {
   showLights();
   drawEmbed();
 }
-lightsBox.append(chip("Off", "lights-off", () => chooseLights("off"), "lights_off"), chip("Running", "lights-running", () => chooseLights("running"), "lights_running"), chip("All", "lights-all", () => chooseLights("all"), "lights_all"));
+lightsBox.append(chip("Off", "lights-off", () => chooseLights("off"), "lights_off"), chip("Running only", "lights-running", () => chooseLights("running"), "lights_running"), chip("All", "lights-all", () => chooseLights("all"), "lights_all"));
 
 // ------------------------------------------------------------- the motion of a fleet ship's moving parts
 const motionBox = byId("motion");

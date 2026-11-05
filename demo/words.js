@@ -218,7 +218,7 @@ export const WORDS = {
     enginesNote: "This device asks for reduced motion, so the flames stay off. The engine chart still says which ones burn.",
     lights: "Lights",
     lights_off: "Off",
-    lights_running: "Running",
+    lights_running: "Running only",
     lights_all: "All",
     lightsNote: "When this device asks for reduced motion, the lights stay on and do not flash.",
     motionTitle: "Motion",
