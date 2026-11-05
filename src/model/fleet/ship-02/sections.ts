@@ -1,4 +1,4 @@
-// Every named section of SPX-207 加美鳴 (かみなり) Kaminari, from the nose to the tail: what it is called, what it does, which part holds it and where its label's leader ends (metres, ship space: x starboard, y from the tail, z up).
+// Every named section of SPX-207 加美鳴 Kaminari, from the nose to the tail: what it is called, what it does, which part holds it and where its label's leader ends (metres, ship space: x starboard, y from the tail, z up).
 // The renders label from this table, and the 3D view's labels follow the same anchors as the parts move. Sections for a 1,820 m ship: one for every 29 m on average.
 import { LENGTH } from "./dims.ts";
 

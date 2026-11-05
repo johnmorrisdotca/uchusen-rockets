@@ -1,4 +1,4 @@
-// SPX-02 加美鳴 (かみなり) Kaminari's slots: every module that stands on the ship, where it stands, what it is called and how to make it. The registry turns each row into a part; the renders read the same rows.
+// SPX-02 加美鳴 Kaminari's slots: every module that stands on the ship, where it stands, what it is called and how to make it. The registry turns each row into a part; the renders read the same rows.
 import type { PartKind } from "../../../parts.ts";
 import { type Piece, shifted, turned } from "./adapter.ts";
 import { cargoInside, cargoPieces } from "./cargo.ts";
