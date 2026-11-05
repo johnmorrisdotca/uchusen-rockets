@@ -1376,6 +1376,14 @@ test("every variant of every rocket lit, with the Earth behind: line and painted
   await pause(page);
   await reach3d(page);
   await press(page, "engines-on");
+  // `data-variant` and `data-state` are set before a variant is built and drawn, and `data-state` stays "3d" through a change: the element says `uchusen-change` once the rocket and variant on screen are in. A slow runner read 12 buffers where 111 are made once
+  // the last variant's first frame is in, so each step waits for it (as the fleet kit's walk above does).
+  await hero(page).evaluate((node) =>
+    node.addEventListener("uchusen-change", (event) => {
+      const variant = (event as CustomEvent<{ report: { variant?: { rocket: string; id: string } } }>).detail.report.variant;
+      (window as unknown as { __in: string }).__in = `${variant?.rocket}/${variant?.id}`;
+    }),
+  );
   const walk = async (look: "line" | "painted") => {
     await press(page, `look-${look}`);
     await expect(earth(page)).toHaveAttribute("data-form", look === "line" ? "line" : "realistic", { timeout: 60_000 });
@@ -1388,6 +1396,7 @@ test("every variant of every rocket lit, with the Earth behind: line and painted
         await expect(hero(page), named).toHaveAttribute("data-variant", variant.id);
         await expect(hero(page), named).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
         if (look === "painted") await expect(hero(page), named).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
+        await expect.poll(() => page.evaluate(() => (window as unknown as { __in?: string }).__in), { message: named, timeout: 90_000 }).toBe(`${rocket.id}/${variant.id}`);
         // the flames the package says it has, and none where no source tells of an engine
         const flames = String(build({ rocket: rocket.id, variant: variant.id }).flamesOf("together").length);
         await expect.poll(() => canvasData(page, "plumes"), { message: named, timeout: 30_000 }).toBe(flames);
