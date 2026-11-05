@@ -60,6 +60,9 @@ import { placeNameLabels } from "./namePlace.ts";
 import { plinthGroup, type Footprint } from "./plinth.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
 
+/** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
+const NIGHT_SHIPS = new Set(["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-02", "fleet-02-original", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"]);
+
 /** A label on a part: its text, where it points in the ship's own metres, the part it follows and where that part stands at rest (so the label moves with it). `number` draws a numbered disc. */
 export interface ViewerMark {
   id: string;
@@ -218,6 +221,8 @@ export class RocketViewer {
   private sun: DirectionalLight;
   /** The fleet is lit with a shadow: its ships are big enough for one part to fall on another. A rocket is not, so it keeps the one light it has. */
   private shadows = false;
+  /** Named SPX ships. The Lit look turns their sun down. A kit module stays in daylight. */
+  private shipNight = false;
   private rim!: DirectionalLight;
   private fill!: DirectionalLight;
   private sky!: HemisphereLight;
@@ -397,6 +402,7 @@ export class RocketViewer {
     this.built = built;
     this.show = show;
     this.shadows = built.parts.some((part) => part.record.rocket.startsWith("fleet-"));
+    this.shipNight = built.parts.some((part) => NIGHT_SHIPS.has(part.record.rocket));
     this.renderer.shadowMap.enabled = this.shadows;
     this.sun.castShadow = this.shadows;
     const places = built.placesOf(show);
@@ -738,9 +744,9 @@ export class RocketViewer {
     this.wake();
   }
 
-  /** A fleet ship with its lamps on is the night side: the sun drops and the lamps are what show. A rocket, and a ship with the lamps off, stays in daylight. */
+  /** The Lit look of a named SPX ship is the night side. Daylight stays the default, so lamps glow in the sun, and a kit module stays in daylight. */
   private nightSide(): void {
-    const night = this.shadows && this.lightsMode !== "off";
+    const night = this.shipNight && this.lightsMode !== "off" && this.glowOn;
     this.sun.intensity = night ? 0.16 : 1.6;
     this.rim.intensity = night ? 0.04 : 1.1;
     this.fill.intensity = night ? 0.03 : 0.35;
@@ -789,6 +795,7 @@ export class RocketViewer {
     }
     this.burningNow = burning;
     this.glowOn = this.lit === "full" || burning > 0;
+    this.nightSide();
     this.applyLamps(performance.now() / 1000);
     this.swarm?.setGlow(this.glowOn);
     this.burnSlots = lowest;
@@ -1726,10 +1733,11 @@ export class RocketViewer {
       this.needsDraw = true;
     }
     const pulsing = this.hasPulse && this.lightsMode !== "off" && !this.options.reducedMotion;
-    if (pulsing && now - this.lampDrawn >= 32) {
+    if (pulsing && now - this.lampDrawn >= MOTION_GAP_MS) {
       this.lampDrawn = now;
       this.applyLamps(now / 1000);
-      this.needsDraw = true;
+      // a ship that is already moving draws on its own clock: the flash rides that draw, so the two together stay at thirty a second
+      if (!motioning) this.needsDraw = true;
     }
     const flaming = this.burningNow > 0 && !this.options.reducedMotion && (flying || performance.now() < this.flameUntil);
     if (flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
