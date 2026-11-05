@@ -207,7 +207,8 @@ export class UchusenBuild extends HTMLBase {
     parts.range.setAttribute("aria-valuetext", this.fill("day", { day: Math.round(frame.day) }));
     for (const button of parts.rates.querySelectorAll("button")) {
       const rate = Number(button.dataset.testid?.replace("build-rate-", ""));
-      button.textContent = this.fill("rate", { rate });
+      const shown = Number.isInteger(rate) ? String(rate) : String(Math.round(rate * 1000) / 1000);
+      button.textContent = this.fill("rate", { rate: shown });
       button.setAttribute("aria-pressed", String(rate === this.rate));
     }
     parts.stills.replaceChildren();
