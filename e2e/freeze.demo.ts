@@ -1321,15 +1321,17 @@ test.describe("50 rounds", () => {
     await pressAndDraw(page, "variant-v2");
     await pressAndDraw(page, "variant-v3");
     await pressAndDraw(page, "look-line");
-    // the first round fills the rest; each round ends where it began
+    // the first round fills the rest; each round ends where it began. A second round is played before anything is read: on a slow runner the Earth's last pictures come in after the first round (20 textures read with the Earth on, where 24 are held
+    // from then on, and 24 again at round 50), so a first reading is a baseline only once they are in. A leak still shows, as growth from round 2 to the last.
+    await round();
     await round();
     await settle(page, 2500);
     const first = await usage(page);
     const firstOn = withEarth;
     const firstHeap = await heapMB();
     const firstMB = processMB();
-    log.push(`after round 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}, framebuffers ${first.framebuffers}, heap ${firstHeap} MB, process ${firstMB} MB`);
-    for (let index = 1; index < ROUNDS; index++) {
+    log.push(`after round 2: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}, framebuffers ${first.framebuffers}, heap ${firstHeap} MB, process ${firstMB} MB`);
+    for (let index = 2; index < ROUNDS; index++) {
       await round();
       if ((index + 1) % 10 === 0) log.push(`after round ${index + 1}: heap ${await heapMB()} MB, process ${processMB()} MB, contexts ${(await usage(page)).contexts}`);
     }
@@ -1337,7 +1339,7 @@ test.describe("50 rounds", () => {
     const last = await usage(page);
     const lastHeap = await heapMB();
     const lastMB = processMB();
-    log.push(`with the Earth on, round 1 then round ${ROUNDS}: buffers ${firstOn.buffers} ${withEarth.buffers}, textures ${firstOn.textures} ${withEarth.textures}, programs ${firstOn.programs} ${withEarth.programs}, contexts ${firstOn.contexts} ${withEarth.contexts}`);
+    log.push(`with the Earth on, round 2 then round ${ROUNDS}: buffers ${firstOn.buffers} ${withEarth.buffers}, textures ${firstOn.textures} ${withEarth.textures}, programs ${firstOn.programs} ${withEarth.programs}, contexts ${firstOn.contexts} ${withEarth.contexts}`);
     log.push(`at the start: heap ${startHeap} MB, process ${startMB} MB`);
     log.push(`after round ${ROUNDS}: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}, framebuffers ${last.framebuffers}, heap ${lastHeap} MB, process ${lastMB} MB`);
     console.log(log.join("\n"));
