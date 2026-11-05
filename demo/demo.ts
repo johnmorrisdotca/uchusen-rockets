@@ -59,7 +59,8 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => {
-  const detail = (event as CustomEvent).detail as { zoom?: number };
+  const detail = (event as CustomEvent).detail as { zoom?: number; reason?: string };
+  if (detail.reason === "fit") setScale(false);
   hero.drive(detail);
   const zoom = Math.max(0.25, detail.zoom ?? 1);
   const sky = byId("sky-back");
@@ -71,7 +72,21 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   else earth?.dispatchEvent(new Event("orbit"));
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const scaleButton = document.createElement("button");
+scaleButton.type = "button";
+scaleButton.className = "chip";
+scaleButton.dataset.testid = "true-scale";
+scaleButton.dataset.say = "trueScale";
+scaleButton.textContent = say("trueScale");
+byId("turn").append(scaleButton);
+function setScale(on: boolean): void {
+  hero.setAttribute("scale", String(on));
+  scaleButton.setAttribute("aria-pressed", String(on));
+  address.set("scale", on ? "true" : null);
+}
+scaleButton.addEventListener("click", () => setScale(hero.getAttribute("scale") !== "true"));
+setScale(address.get("scale") === "true");
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
@@ -339,10 +354,11 @@ function renderMain() {
   byId("beside-note").hidden = !(besideHere && state.beside);
   press(byId("beside"), state.beside ? "beside-on" : "");
   showMotion();
-  // the Kaminari concepts take a size, 60 to 100 per cent
+  // the Kaminari concepts take a size, 60 to 100 per cent. scale="true" is the true-scale view, kept in the address apart from that size; a redraw must not clear it.
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
-  if (sizeHere) hero.setAttribute("scale", String(state.kscale));
+  if (address.get("scale") === "true") hero.setAttribute("scale", "true");
+  else if (sizeHere) hero.setAttribute("scale", String(state.kscale));
   else hero.removeAttribute("scale");
   byId<HTMLInputElement>("kscale").value = String(state.kscale);
   byId("kscale-out").textContent = `${state.kscale}%`;
@@ -433,7 +449,7 @@ function pick(change: Partial<typeof state>) {
   if (change.beside !== undefined) {
     address.set("beside", change.beside ? "on" : "off");
     // both craft are to be in the picture
-    bar.fit();
+    if (hero.getAttribute("scale") !== "true") bar.fit();
   }
   if (change.kscale !== undefined) address.set("kscale", String(state.kscale));
   if (orbitChanged) orbitAnimate = true;
