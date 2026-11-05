@@ -543,7 +543,7 @@ export const WORDS = {
     background: "背景",
     trueScale: "実寸",
     besideTitle: "大きさ",
-    dockedTitle: "接舷する宇宙船",
+    dockedTitle: "ドッキング中の宇宙船",
     dockedNone: "なし",
     beside: "横に並べる",
     besideNote: "Starship と Super Heavy を、本当の大きさで横に並べています。",
