@@ -47,6 +47,7 @@ import { SHIP_02_BUILDS } from "./ship02.ts";
 import { SHIP_02_ALTERNATES, SHIP_02_CARDS, SHIP_02_VARIANT_PARTS } from "./fleet/ship-02/index.ts";
 import type { StackBuild } from "./stacks.ts";
 import { groupOf } from "../data/fleet.ts";
+import { SHIP_01_ENTRIES, SHIP_01_INSET_ENTRIES } from "./ship-01.ts";
 import { SHIP_03_ENTRIES, SHIP_03_INSET_ENTRIES } from "./ship-03.ts";
 import { insetEntries, kitEntries, SAMPLE_SHIPS, shipParts } from "./fleet/kit.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
@@ -224,7 +225,7 @@ entries.push(
 );
 
 // The fleet kit: each module alone, with its cutaway, and the sample ships
-entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_03_ENTRIES, ...SHIP_03_INSET_ENTRIES);
+entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_01_ENTRIES, ...SHIP_01_INSET_ENTRIES, ...SHIP_03_ENTRIES, ...SHIP_03_INSET_ENTRIES);
 for (const id of ["hauler"]) entries.push(...shipParts(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 }, "fleet-samples", id).entries);
 
 /**

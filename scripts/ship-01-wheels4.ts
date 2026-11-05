@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import process from "node:process";
 import { toGlb } from "../src/build/glb.ts";
-import { cutaway4, rings, ship4, TOWN4, type Order } from "../src/model/fleet/ship-01/wheels4.ts";
+import { cutaway4, rings, ship4, TOWN4, type Order } from "../src/model/fleet/ship-01/rings.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
 const out = resolve(process.argv[2] ?? "wheels4");
@@ -33,7 +33,6 @@ const only = process.argv[4] === "cutaways";
 const m = write(`w4-${order}`, only ? [] : ship4(order));
 const ys = rings(order).map((r) => r.y);
 const ringsMid: V3 = [0, ys.reduce((a, b) => a + b, 0) / ys.length, 0];
-const fromAhead: V3 = [0.3, 1, 0.45];
 const frame = (name: string, dir: V3, up: V3, extra: Record<string, unknown> = {}) => ({ name, eye: [m.centre[0] + dir[0] * m.size, m.centre[1] + dir[1] * m.size, m.centre[2] + dir[2] * m.size], target: m.centre, up, size: [1800, 900], fill: 0.85, shadow: m.size * 0.6, shadowBias: 0.004, look: "painted", ...extra });
 if (!only) jobs.push({ glb: m.file, shots: [
   // the hero: from the bow side, the three glazed rings leading and the industrial wheel behind, the sun ahead

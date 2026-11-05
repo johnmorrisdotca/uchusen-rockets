@@ -1,8 +1,10 @@
 // Hanabusa's W4 stepped rings, reworked: each glazed ring is one grand hall under a glass roof, as in NASA Ames' 1970s paintings of the Stanford torus: a street with a canal and rows of trees on the curving floor, terraced
 // buildings stepping up both side walls, a roof of thin mullions overhead. The garden ring is its own thing: hydroponic terraces under LED grow-lamps. The ring order is one parameter: the default has the smallest ring at the bow
 // so that, seen from ahead, every ring has open sky above it. Repeated parts are stamped templates. Concepts only. Pure: no three.js and no DOM.
-import { box, hoop, horn, place, rod, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
-import { bandAt, booms, hull, industrialWheel, liftTube, reach, rIn, roundSection, SPIN, SPIN4, solar, type Geo, type Use } from "./wheels3.ts";
+import { box, hoop, horn, place, rod, seams, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
+import { booms, hull } from "./hull.ts";
+import { SPIN, SPIN4 } from "./spin.ts";
+import { industrialWheel, liftTube, reach, rIn, roundSection, solar, type Geo, type Use } from "./wheelparts.ts";
 
 const TAU = 2 * Math.PI;
 const deg = (a: number): number => (a * Math.PI) / 180;
@@ -42,7 +44,7 @@ const blk = (material: MaterialName, x: number, wide: number, y0: number, y1: nu
 function glass(g: Geo, y: number, gap?: number): Piece[] {
   const out: Piece[] = [];
   const arc = gap ? (): readonly [number, number] => [deg(gap), TAU - deg(gap)] : undefined;
-  out.push({ kind: "lathe", material: "glass-clear", segs: 192, body: true, outline: true, profile: roundSection(g, y), ...(arc ? { arc } : {}) } as Lathe);
+  out.push({ kind: "lathe", material: "glass-clear", segs: 192, only: "mesh", body: true, outline: true, profile: roundSection(g, y), ...(arc ? { arc } : {}) } as Lathe, { kind: "lathe", material: "glass-clear", segs: 48, only: "drawing", body: true, outline: true, profile: roundSection(g, y).filter((_, i, a) => i % 6 === 0 || i === a.length - 1), ...(arc ? { arc } : {}) } as Lathe);
   // thin mullions across the section, every 3.75 degrees, and a lattice of fine rings round the section
   const mull: Lathe = { kind: "lathe", material: "hull-grey", segs: 800, only: "mesh", arc: () => [-0.0016, 0.0016], profile: roundSection(g, 0, 0.1) };
   for (let i = 0; i < 96; i++) {
@@ -128,7 +130,7 @@ function nave(g: Geo, i: number): Piece[] {
 }
 
 /** The whole living or research hall of a ring: bands for the ground, the canal and the terrace treads and risers, then terrace blocks and the nave stamped round the ring. */
-function townHall(g: Geo, y: number, use: Use, gap?: number): Piece[] {
+function townHall(g: Geo, y: number, use: Use, gap?: number, bare = false): Piece[] {
   const { nave: NAVE, tread: TREAD } = dims(g);
   const out: Piece[] = [];
   const arc = gap ? (): readonly [number, number] => [deg(gap), TAU - deg(gap)] : undefined;
@@ -149,7 +151,7 @@ function townHall(g: Geo, y: number, use: Use, gap?: number): Piece[] {
   const accent: MaterialName[] = ["hull-orange", "hull-yellow", "hull-blue"];
   const specials = new Map<string, string>();
   if (use === "living") for (const t of TOWN4) if (t.side !== 0) specials.set(`${Math.round((t.az / 360) * n)}/${t.side}/${t.step}`, t.id);
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < n && !bare; i++) {
     const az = (360 * i) / n;
     if (!shut(az)) continue;
     const pose: Pose = { at: [0, y, 0], yaw: az };
@@ -167,7 +169,7 @@ function townHall(g: Geo, y: number, use: Use, gap?: number): Piece[] {
 // ----------------------------------------------------------------------------------------------------------------------------------
 // the hydroponic hall of the garden ring
 
-function hydroHall(g: Geo, y: number, gap?: number): Piece[] {
+function hydroHall(g: Geo, y: number, gap?: number, bare = false): Piece[] {
   const { nave: NAVE, tread: TREAD } = dims(g);
   const out: Piece[] = [];
   const arc = gap ? (): readonly [number, number] => [deg(gap), TAU - deg(gap)] : undefined;
@@ -182,7 +184,7 @@ function hydroHall(g: Geo, y: number, gap?: number): Piece[] {
   }
   for (const dy of [-6.5, 0, 6.5]) out.push(lathe("flood", [[rIn(g) + 1.2, y + dy - 0.25], [rIn(g) + 1.2, y + dy + 0.25]]));
   const n = Math.round((TAU * rg) / 5.2);
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < n && !bare; i++) {
     const az = (360 * i) / n;
     if (!shut(az)) continue;
     const st: Piece[] = [];
@@ -242,5 +244,28 @@ export function cutaway4(use: "living" | "hydro"): Piece[] {
   return out;
 }
 
-void bandAt;
 void reach;
+
+/** The section lines of a ring cut open at `az` degrees: the outline of its section, and the steps of the terraces and the canal, drawn flat in the plane of the cut. */
+function sectionLines(g: Geo, y: number, az: number): Piece[] {
+  const { nave, tread } = dims(g);
+  const rg = ground(g);
+  const at = (r: number, yy: number): Vec3 => [r * Math.sin(deg(az)), y + yy, r * Math.cos(deg(az))];
+  const paths: Vec3[][] = [roundSection(g, 0).map(([r, yy]) => at(r, yy))];
+  for (const s of [-1, 1]) {
+    const steps: Vec3[] = [at(rg, 0), at(rg, s * nave)];
+    for (let k = 1; k <= 3; k++) steps.push(at(rg - STEP * k, s * (nave + tread * (k - 1))), at(rg - STEP * k, s * (nave + tread * k)));
+    paths.push(steps);
+  }
+  paths.push([at(rg, -1), at(rg - 0.4, -1), at(rg - 0.4, 1), at(rg, 1)]);
+  return [seams("feature", paths)];
+}
+
+/** The ring opened for a section view, flat: the glass cut away over `gap` degrees each side of +Z, its orange frames and section lines at the cut, the floors, terrace treads and risers and the canal as bands, and no furnishing. This is the view drawn in the line look. */
+export function sectionPieces(r: Ring, gap = 58): Piece[] {
+  const g = geoOf(r);
+  const out: Piece[] = [...glass(g, r.y, gap), ...(r.use === "hydro" ? hydroHall(g, r.y, gap, true) : townHall(g, r.y, r.use, gap, true))];
+  const frame: Lathe = { kind: "lathe", material: "hull-orange", segs: 400, only: "mesh", arc: () => [-0.02, 0.02], profile: roundSection(g, 0, 0.35) };
+  for (const a of [gap, 360 - gap]) out.push(...place([frame], { at: [0, r.y, 0], yaw: a }), ...sectionLines(g, r.y, a));
+  return out;
+}

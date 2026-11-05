@@ -59,8 +59,8 @@ mkdirSync(outDir, { recursive: true });
 const MAX_SIDE = 4096;
 const MAX_PIXELS = 6_000_000;
 
-const GLOW = JSON.stringify(Object.fromEntries(Object.entries(MATERIALS).filter(([, m]) => m.glow).map(([name, m]) => [name, { color: m.glowColor ?? m.color, strength: m.glow }])));
-const OPACITY = JSON.stringify(Object.fromEntries(Object.entries(MATERIALS).filter(([, m]) => m.opacity).map(([name, m]) => [name, m.opacity])));
+const GLOW = JSON.stringify(Object.fromEntries(Object.entries(MATERIALS as Record<string, { color: string; glow?: number; glowColor?: string; opacity?: number }>).filter(([, m]) => m.glow).map(([name, m]) => [name, { color: m.glowColor ?? m.color, strength: m.glow }])));
+const OPACITY = JSON.stringify(Object.fromEntries(Object.entries(MATERIALS as Record<string, { color: string; glow?: number; glowColor?: string; opacity?: number }>).filter(([, m]) => m.opacity).map(([name, m]) => [name, m.opacity])));
 const PAGE = `<!doctype html><meta charset="utf-8"><body style="margin:0;background:#070c17">
 <script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
 <script type="module">
