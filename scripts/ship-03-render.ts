@@ -88,7 +88,7 @@ window.draw = async (job, shot) => {
     if (o.isMesh) {
       o.castShadow = shot.look !== "line"; o.receiveShadow = shot.look !== "line";
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (shot.look === 'lit') { const n = m.name || ''; const glow = /^(lamp-(amber|blue|red)|core)$/.test(n) ? [m.color.clone(), 3.2] : /^(glass)$/.test(n) ? [new THREE.Color('#ffe0a0'), 2.4] : /^(coil|copper)$/.test(n) ? [new THREE.Color('#ff9a30'), 1.1] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
+      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (m.emissiveMap) m.emissiveIntensity = shot.look === 'lit' ? 1.5 : 0; if (shot.look === 'lit') { const n = m.name || ''; const glow = /^(lamp-(amber|blue|red)|core)$/.test(n) ? [m.color.clone(), 3.2] : /^(glass)$/.test(n) ? [new THREE.Color('#ffe0a0'), 2.4] : /^(coil|copper)$/.test(n) ? [new THREE.Color('#ff9a30'), 1.1] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
       if (shot.look === "line") { const e = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), new THREE.LineBasicMaterial({ color: "#8fd3ff", clippingPlanes: planes })); o.add(e); }
     } else if (o.material) { o.material.clippingPlanes = planes; }
   });
