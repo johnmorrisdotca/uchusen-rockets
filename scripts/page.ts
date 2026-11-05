@@ -14,7 +14,7 @@ const TITLES = {
   "compare.html": ["Uchusen Rockets 宇宙船: compare craft", "Up to three rockets, spacecraft or ships of the SPX fleet in one 3D view, each at its true size on one ground, with the Earth behind them."],
   "journey.html": ["Uchusen Rockets 宇宙船: journey mode", "Fly a real rocket or a ship of the SPX fleet from the Earth to the Moon or a planet: launch windows from real positions, the burns, the flip, and the numbers as it goes."],
 } as const;
-const LINKS = [{ href: "docs/index.html", say: "pageDocs" }, { href: "embed.html", say: "pageEmbed" }, { href: "journey.html", say: "pageJourney" }, { href: "compare.html", say: "pageCompare" }];
+const LINKS = [{ href: "docs/index.html", say: "pageDocs" }, { href: "embed.html", say: "pageEmbed" }, { href: "journey.html", say: "pageJourney" }];
 
 /** The page's text with the family's blocks put in where its comments say. */
 export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
