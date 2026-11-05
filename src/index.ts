@@ -62,6 +62,8 @@ export { SECTIONS } from "./model/fleet/sections.ts";
 export type { Section, SectionRole } from "./model/fleet/sections.ts";
 export { arrangement, deckSummary, exploded, labelDensity, labelsOf, LEGEND, scaleBar, specBlock, titleBlock } from "./model/fleet/sheet.ts";
 export type { Arrangement, Deck, ExplodedModule, Label, LegendSymbol, ScaleBar, SpecLine, TitleBlock } from "./model/fleet/sheet.ts";
+export { DRONE_CONCEPTS, droneConcept } from "./model/fleet/drone/concepts.ts";
+export type { DroneConcept } from "./model/fleet/drone/concepts.ts";
 export { FLEET_PALETTE } from "./model/fleet/palette.ts";
 export type { FleetColour } from "./model/fleet/palette.ts";
 export { FLEET_OPERATOR, GLOSSARY } from "./model/fleet/glossary.ts";
