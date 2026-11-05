@@ -1,7 +1,7 @@
 // Three ways to stand a yard around a 1.8 km ship. A spine, a hall and a dock, each from the kit's truss and a rack of its modules. The ship itself is placed in the slot by the picture script, so these pieces are only the yard. Arrival is along the long axis and the berths sit off that line.
 import type { Piece } from "../../pieces.ts";
-import { cub, place, rod } from "../kaminari-concepts/adapter.ts";
-import { stackOf, truss } from "../kaminari-concepts/common.ts";
+import { cub, hoop, place, rod } from "../kaminari-concepts/adapter.ts";
+import { radiatorFin, stackOf, truss } from "../kaminari-concepts/common.ts";
 
 /** How long the slot is, metres: room for a 1.8 km ship and the approach. */
 export const YARD_LENGTH = 2000;
@@ -53,11 +53,42 @@ const ties = (corners: readonly (readonly [number, number])[]): Piece[] => {
   return out;
 };
 
-const spine = (): Piece[] => [...beam(0, 0), ...racks(-80, 24), ...berths(-150, 50), ...approach(0)];
+const STORE = ["habitat-drum-large", "farm-drum", "lab-m", "common-area-m", "node-four", "solarium-m", "habitat-drum-crew", "deck-nav-m"] as const;
+
+/** Racks of real modules, a rail of arms, a crewed module, wings, berths, a supply ship and floods. One side of a yard. */
+function furnish(x: number, z: number): Piece[] {
+  const out: Piece[] = [];
+  STORE.forEach((id, i) => {
+    const along = 220 + Math.floor(i / 2) * 150;
+    const rank = (i % 2) * 26;
+    out.push(...place(stackOf([id], 0, 0.25, id).pieces, { at: [x, along, z + rank] }));
+  });
+  out.push(rod("hull-grey", [x, 100, z + 60], [x, YARD_LENGTH - 60, z + 60], 1.6, 8));
+  for (let y = 180; y < YARD_LENGTH - 100; y += 220) {
+    out.push(rod("hull-white", [x, y, z + 60], [x + 70, y + 24, z + 40], 1.8, 8));
+    out.push(rod("hull-white", [x + 70, y + 24, z + 40], [x + 120, y + 6, z + 20], 1.3, 8));
+  }
+  out.push(...place(stackOf(["habitat-drum-crew", "deck-nav-m", "dome-observation-m"], 0, 0.35, "crew").pieces, { at: [x, 60, z] }));
+  out.push(...radiatorFin(0, 16, 90, 500, 1100, 5, 2));
+  for (let y = 480; y < 900; y += 50) out.push(cub("kapton", [x - 2, x + 3], [y, y + 42], [z + 70, z + 140]));
+  for (let i = 0; i < 8; i++) {
+    const bx = x - 20 + (i % 4) * 16;
+    const by = 40 + Math.floor(i / 4) * 22;
+    out.push(rod("hull-grey-dark", [bx - 6, by, z], [bx + 6, by, z], 0.8, 6));
+    out.push(cub("lamp-amber", [bx - 1.4, bx + 1.4], [by - 1.4, by + 1.4], [z + 4, z + 7]));
+    if (i % 2 === 0) out.push(cub("hull-white", [bx - 2, bx + 2], [by - 0.6, by + 0.6], [z + 1, z + 3]));
+  }
+  out.push(hoop("hull-grey", 14, YARD_LENGTH - 80, 1.2, 28, 8));
+  out.push(rod("hull-white", [x + 30, YARD_LENGTH - 140, z], [x + 30, YARD_LENGTH - 40, z], 7, 16));
+  for (let y = 200; y < YARD_LENGTH; y += 180) out.push(cub("flood", [x - 1, x + 1], [y, y + 3], [z + 8, z + 12]));
+  return out;
+}
+
+const spine = (): Piece[] => [...beam(0, 0), ...racks(-80, 24), ...berths(-150, 50), ...approach(0), ...furnish(-100, 40)];
 
 const hall = (): Piece[] => {
   const corners: (readonly [number, number])[] = [[-SPAN, -SPAN], [SPAN, -SPAN], [SPAN, SPAN], [-SPAN, SPAN]];
-  return [...corners.flatMap(([x, z]) => beam(x, z)), ...ties(corners), ...racks(-SPAN + 40, SPAN - 30), ...berths(-80, -SPAN + 36), ...approach(0)];
+  return [...corners.flatMap(([x, z]) => beam(x, z)), ...ties(corners), ...racks(-SPAN + 40, SPAN - 30), ...berths(-80, -SPAN + 36), ...approach(0), ...furnish(-SPAN + 55, 0)];
 };
 
 const dock = (): Piece[] => {
@@ -67,7 +98,7 @@ const dock = (): Piece[] => {
     out.push(rod("hull-grey", [SPAN, y, -SPAN], [SPAN, y, 48], 2.2, 8));
     out.push(rod("hull-grey-dark", [-SPAN, y, 48], [SPAN, y, 48], 1.4, 8));
   }
-  return [...out, ...racks(-SPAN + 36, 20), ...berths(-80, -SPAN + 30), ...approach(-SPAN + 20)];
+  return [...out, ...racks(-SPAN + 36, 20), ...berths(-80, -SPAN + 30), ...approach(-SPAN + 20), ...furnish(-SPAN + 48, 10)];
 };
 
 /** The three yards, in the order they are shown. */
