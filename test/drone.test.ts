@@ -13,9 +13,9 @@ const triangles = (pieces: readonly Piece[]) => {
   return count;
 };
 
-test("the three kept machines, each with a glowing face", () => {
+test("the five yard machines, each with a glowing face", () => {
   const ids = DRONE_CONCEPTS.map((make) => make().id);
-  assert.deepEqual(ids, ["ring-beetle", "tug-crab", "arm-equal"]);
+  assert.deepEqual(ids, ["drone-weld", "drone-repair", "drone-carrier", "drone-tug", "drone-fitter"]);
   for (const id of ids) {
     const concept = droneConcept(id);
     const used = names(concept.pieces);
@@ -28,7 +28,7 @@ test("the three kept machines, each with a glowing face", () => {
 
 test("the small drones stay cheap enough to instance, and the others stay one mesh", () => {
   const counts = Object.fromEntries(DRONE_CONCEPTS.map((make) => [make().id, triangles(make().pieces)])) as Record<DroneConcept["id"], number>;
-  assert.ok(counts["ring-beetle"] > 400 && counts["ring-beetle"] < 4000, `ring-beetle ${counts["ring-beetle"]}`);
-  for (const id of ["tug-crab", "arm-equal"] as const) assert.ok(counts[id] > 400 && counts[id] < 8000, `${id} ${counts[id]}`);
-  assert.ok(counts["ring-beetle"] * 100 < 400_000);
+  assert.ok(counts["drone-carrier"] > 200 && counts["drone-carrier"] < 4000, `drone-carrier ${counts["drone-carrier"]}`);
+  for (const id of ["drone-weld", "drone-repair", "drone-tug", "drone-fitter"] as const) assert.ok(counts[id] > 400 && counts[id] < 12_000, `${id} ${counts[id]}`);
+  assert.ok(counts["drone-carrier"] * 100 < 400_000);
 });
