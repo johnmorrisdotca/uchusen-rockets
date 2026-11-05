@@ -1,5 +1,5 @@
 // The construction swarm in the 3D view. Each drone is the SPX repair drone: the coarse model for every drone, the fine one for the few nearest the camera, both instanced. The tractor beam leaves the lens (DRONE.emitter) and runs to the part, the weld arc leaves the tool (DRONE.weldTip), a working drone faces its part, and a parked one faces away from the stack. One set of instanced meshes, disposed with the view.
-import { AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, DoubleSide, DynamicDrawUsage, Group, InstancedMesh, LineBasicMaterial, LineSegments, type Material, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D, type Texture } from "three";
+import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, ConeGeometry, DoubleSide, DynamicDrawUsage, Group, InstancedMesh, LineBasicMaterial, LineSegments, type Material, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D, type Texture } from "three";
 import { DRONE_FILES } from "../model/drone.ts";
 import { DRONE } from "../model/fleet/drone/index.ts";
 import { DRONE_SIZE } from "../model/fleet/drone/size.ts";
@@ -159,6 +159,7 @@ export class SwarmRig {
   private glowOn = false;
   private readonly flares: InstancedMesh;
   private readonly beams: InstancedMesh;
+  private readonly lamps: InstancedMesh;
   private readonly rings: InstancedMesh;
   private readonly sparks: InstancedMesh;
   private readonly tips: InstancedMesh;
@@ -198,11 +199,13 @@ export class SwarmRig {
     this.wake = wake;
     this.group.name = "swarm";
     this.shift.makeTranslation(-centre.x, -centre.y, -centre.z);
-    const glow = new MeshBasicMaterial({ color: new Color("#d9e6ff"), transparent: true, opacity: 0.7, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
+    const glow = new MeshBasicMaterial({ color: new Color("#8a78ff"), transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
+    const lamp = new MeshBasicMaterial({ color: new Color("#c9d8ff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     const ring = new MeshBasicMaterial({ color: new Color("#efeaff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     const spark = new MeshBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false });
     const flare = new MeshBasicMaterial({ color: new Color("#bcd8ff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     this.flares = new InstancedMesh(new SphereGeometry(1, 10, 10), flare, CAP);
+    this.lamps = new InstancedMesh(new SphereGeometry(0.55, 12, 12), lamp, CAP);
     // the cone's point is at +y, at the drone; its base is at the part
     this.beams = new InstancedMesh(new ConeGeometry(1, 1, 16, 1, true), glow, CAP);
     // rings stand across the beam: their axis is y, the cone's
@@ -212,7 +215,7 @@ export class SwarmRig {
     this.tips = new InstancedMesh(new SphereGeometry(1, 10, 10), tip, CAP);
     const fleck = new MeshBasicMaterial({ color: new Color("#fff4d2"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     this.spray = new InstancedMesh(new SphereGeometry(0.05, 6, 6), fleck, CAP * SPRAY);
-    for (const mesh of [this.flares, this.beams, this.rings, this.sparks, this.tips, this.spray]) {
+    for (const mesh of [this.flares, this.lamps, this.beams, this.rings, this.sparks, this.tips, this.spray]) {
       mesh.count = 0;
       mesh.frustumCulled = false;
       this.group.add(mesh);
@@ -221,7 +224,7 @@ export class SwarmRig {
     pathGeo.setAttribute("position", new BufferAttribute(this.pathPositions, 3));
     this.paths = new LineSegments(pathGeo, new LineBasicMaterial({ color: new Color("#b7c6ff"), transparent: true, opacity: 0.45, blending: AdditiveBlending, depthWrite: false }));
     this.paths.frustumCulled = false;
-    this.group.add(this.paths);
+    this.paths.visible = false;
     const laserGeo = new BufferGeometry();
     laserGeo.setAttribute("position", new BufferAttribute(this.laserPositions, 3));
     this.lasers = new LineSegments(laserGeo, new LineBasicMaterial({ color: new Color("#d7ecff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false }));
@@ -233,21 +236,6 @@ export class SwarmRig {
     this.seam = new LineSegments(seamGeo, this.seamMaterial);
     this.seam.frustumCulled = false;
     this.group.add(this.seam);
-    const steel = new MeshStandardMaterial({ color: new Color("#8b93a1"), roughness: 0.6, metalness: 0.2 });
-    const post = new BoxGeometry(2, 36, 2);
-    const bar = new BoxGeometry(28, 2, 2);
-    const left = new Mesh(post, steel);
-    left.position.set(-12, 0, 0);
-    const right = new Mesh(post, steel);
-    right.position.set(12, 0, 0);
-    const top = new Mesh(bar, steel);
-    top.position.set(0, 16, 0);
-    const rail = new Mesh(new BoxGeometry(1.2, 70, 1.2), steel);
-    rail.position.set(8, 0, -6);
-    const frame = new Group();
-    frame.name = "dock";
-    frame.add(left, right, top, rail);
-    this.group.add(frame);
     parent.add(this.group);
     void this.loadLevel("far");
   }
@@ -267,7 +255,6 @@ export class SwarmRig {
     this.beams.count = 0;
     let beamN = 0;
     let flareN = 0;
-    const places: Vec[] = [];
     for (let i = 0; i < n; i += 1) {
       const pose = list[i];
       if (!pose) continue;
@@ -303,23 +290,29 @@ export class SwarmRig {
       this.centres[i * 3] = p.x;
       this.centres[i * 3 + 1] = p.y;
       this.centres[i * 3 + 2] = p.z;
-      places.push(pose.where);
-      if (!beaming) continue;
-      // the tractor beam: from the lens to the part
+      this.scratch.makeScale(0.28 * s, 0.28 * s, 0.28 * s);
+      this.scratch.setPosition(p.x, p.y, p.z);
+      this.lamps.setMatrixAt(i, this.scratch);
+      if (duty !== "work") continue;
+      // the tractor beam: from the lens to the part's skin, only while this drone is fitting that part
       this.point(DRONE.emitter, p, s, this.mid);
       const eX = this.mid.x;
       const eY = this.mid.y;
       const eZ = this.mid.z;
-      const span = Math.max(0.01, Math.hypot(target.x - eX, target.y - eY, target.z - eZ));
-      const along = this.side.set(eX - target.x, eY - target.y, eZ - target.z).divideScalar(span);
+      const landed = pose.skin ? onHull([eX, eY, eZ], [target.x, target.y, target.z], pose.skin) : ([target.x, target.y, target.z] as Vec);
+      const endX = landed[0];
+      const endY = landed[1];
+      const endZ = landed[2];
+      const span = Math.max(0.01, Math.hypot(endX - eX, endY - eY, endZ - eZ));
+      const along = this.side.set(eX - endX, eY - endY, eZ - endZ).divideScalar(span);
       this.spin.setFromUnitVectors(UP, along);
-      const base = 0.5 * s * DRONE.diameter;
-      this.scratch.compose(this.one.set((eX + target.x) / 2, (eY + target.y) / 2, (eZ + target.z) / 2), this.spin, this.mid.set(base, span, base));
+      const base = 0.7 * s * DRONE.diameter;
+      this.scratch.compose(this.one.set((eX + endX) / 2, (eY + endY) / 2, (eZ + endZ) / 2), this.spin, this.mid.set(base, span, base));
       this.beams.setMatrixAt(beamN, this.scratch);
       for (let ring = 0; ring < RINGS; ring += 1) {
         const t = (ring + 1) / (RINGS + 1);
         const r = Math.max(0.05 * s, base * t);
-        this.scratch.compose(this.one.set(eX + (target.x - eX) * t, eY + (target.y - eY) * t, eZ + (target.z - eZ) * t), this.spin, this.mid.set(r, r, r));
+        this.scratch.compose(this.one.set(eX + (endX - eX) * t, eY + (endY - eY) * t, eZ + (endZ - eZ) * t), this.spin, this.mid.set(r, r, r));
         this.rings.setMatrixAt(beamN * RINGS + ring, this.scratch);
       }
       // sparks of light drifting beside the beam, on either side
@@ -330,7 +323,7 @@ export class SwarmRig {
         const t = (spark + 0.5) / SPARKS;
         const off = (spark % 2 === 0 ? 0.7 : -0.7) * base * t;
         this.scratch.makeScale(s, s, s);
-        this.scratch.setPosition(eX + (target.x - eX) * t + this.side.x * off, eY + (target.y - eY) * t + this.side.y * off, eZ + (target.z - eZ) * t + this.side.z * off);
+        this.scratch.setPosition(eX + (endX - eX) * t + this.side.x * off, eY + (endY - eY) * t + this.side.y * off, eZ + (endZ - eZ) * t + this.side.z * off);
         this.sparks.setMatrixAt(beamN * SPARKS + spark, this.scratch);
       }
       beamN += 1;
@@ -358,18 +351,9 @@ export class SwarmRig {
     this.rings.count = beamN * RINGS;
     this.sparks.count = beamN * SPARKS;
     this.flares.count = flareN;
-    for (const mesh of [this.beams, this.rings, this.sparks, this.flares]) mesh.instanceMatrix.needsUpdate = true;
-    for (let i = 0; i < n; i += 1) {
-      const at = places[i] ?? [0, 0, 0];
-      this.pathPositions[i * 6] = dock[0];
-      this.pathPositions[i * 6 + 1] = dock[1];
-      this.pathPositions[i * 6 + 2] = dock[2];
-      this.pathPositions[i * 6 + 3] = at[0];
-      this.pathPositions[i * 6 + 4] = at[1];
-      this.pathPositions[i * 6 + 5] = at[2];
-    }
-    this.paths.geometry.setDrawRange(0, n * 2);
-    this.paths.geometry.getAttribute("position").needsUpdate = true;
+    this.lamps.count = n;
+    for (const mesh of [this.beams, this.rings, this.sparks, this.flares, this.lamps]) mesh.instanceMatrix.needsUpdate = true;
+    this.paths.geometry.setDrawRange(0, 0);
     // weldAt holds the tool tip then the arc's end, for each welding drone
     this.weldCount = this.weldAt.length / 2;
     this.tips.count = this.weldCount;
@@ -380,12 +364,12 @@ export class SwarmRig {
       this.tips.setMatrixAt(i, this.scratch);
     }
     this.tips.instanceMatrix.needsUpdate = true;
-    const live = !reduced && this.weldCount > 0;
-    this.spray.count = live ? this.weldCount * SPRAY : 0;
-    if (live) this.placeSpray(0);
-    this.lasers.geometry.setDrawRange(0, live ? this.weldCount * 2 : 0);
-    this.seam.geometry.setDrawRange(0, live ? this.weldCount * 2 : 0);
-    if (live) {
+    const marked = this.weldCount > 0;
+    this.spray.count = marked ? this.weldCount * SPRAY : 0;
+    if (marked) this.placeSpray(0);
+    this.lasers.geometry.setDrawRange(0, marked ? this.weldCount * 2 : 0);
+    this.seam.geometry.setDrawRange(0, marked ? this.weldCount * 2 : 0);
+    if (marked) {
       for (let i = 0; i < this.weldCount; i += 1) {
         const a = this.weldAt[i * 2] ?? [0, 0, 0];
         const b = this.weldAt[i * 2 + 1] ?? a;
@@ -393,14 +377,12 @@ export class SwarmRig {
         const dx = b[0] - a[0];
         const dz = b[2] - a[2];
         const flat = Math.hypot(dx, dz) || 1;
-        const half = 0.12 * s;
+        const half = 0.6 * s;
         this.seamPositions.set([b[0] - (dz / flat) * half, b[1], b[2] + (dx / flat) * half, b[0] + (dz / flat) * half, b[1], b[2] - (dx / flat) * half], i * 6);
       }
       this.lasers.geometry.getAttribute("position").needsUpdate = true;
       this.seam.geometry.getAttribute("position").needsUpdate = true;
     }
-    const frame = this.group.getObjectByName("dock");
-    if (frame) frame.position.set(dock[0], dock[1], dock[2]);
     this.nearSig = "?";
     this.group.visible = true;
   }

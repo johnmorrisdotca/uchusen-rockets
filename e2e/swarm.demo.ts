@@ -137,13 +137,19 @@ test("builder pictures", async ({ page }, info) => {
     await expect(canvas).toHaveAttribute("data-frame-ms", /\d/, { timeout: 45_000 });
     await canvas.screenshot({ path: `${dir}/miyamoto-${at}.png` });
   }
-  await page.goto(`${miyamoto}&at=0.0684`);
+  await page.goto(`${miyamoto}&at=0.6`);
   const canvas = hero.locator("canvas");
   await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 60_000 });
   const zoom = page.getByRole("region", { name: "The rocket" }).getByRole("button", { name: "Zoom in" }).first();
+  let clicks = 0;
   for (let i = 0; i < 8; i += 1) {
     if (await zoom.isDisabled()) break;
     await zoom.click({ timeout: 3_000 });
+    clicks += 1;
+    if (clicks === 3) {
+      await page.waitForTimeout(400);
+      await canvas.screenshot({ path: `${dir}/miyamoto-mid.png` });
+    }
   }
   await page.waitForTimeout(600);
   await canvas.screenshot({ path: `${dir}/miyamoto-close.png` });

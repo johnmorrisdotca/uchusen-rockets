@@ -164,12 +164,8 @@ export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly P
   const parkN = n >= 4 && going.length > 0 ? Math.max(1, Math.floor(n / 4)) : 0;
   const workN = going.length === 0 ? 0 : Math.min(n - parkN, Math.max(1, Math.min(n - parkN, going.length * 3)));
   const cargoOf = (slot: string): [number, number, number] => {
-    const step = steps.find((one) => one.slot === slot);
     const place = slotAt(slot) ?? dock;
-    const t = step && step.days > 0 ? Math.min(1, Math.max(0, (frame.day - step.start) / step.days)) : 0;
-    const index = Math.max(0, going.indexOf(slot));
-    const originY = dock[1] + (index - (going.length - 1) / 2) * 22;
-    return [dock[0] + (place[0] - dock[0]) * t, originY + (place[1] - originY) * t, dock[2] + (place[2] - dock[2]) * t];
+    return [place[0], place[1], place[2]];
   };
   return jobs.map((job, i) => {
     const slot = slotAt(job.slot) ?? dock;

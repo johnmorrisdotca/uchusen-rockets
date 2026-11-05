@@ -59,7 +59,7 @@ test("drones split between the work, the path and the berth, and a part waits fo
     const distance = Math.hypot(dx, dy, dz);
     return distance > 8 && distance < 28;
   }));
-  assert.ok(work.every((one) => one.part[0] > 40 && one.part[0] < 100));
+  assert.ok(work.every((one) => one.part[0] === 0 && one.part[1] === 0 && one.part[2] === 0));
   const along = carries(jobs, at, steps, () => [0, 170, 0], dock, [0, 380]).filter((one) => one.duty === "transit");
   const alongY = along.map((one) => one.where[1]);
   assert.ok(Math.max(...alongY) - Math.min(...alongY) > 300);
