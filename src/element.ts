@@ -3,6 +3,7 @@
 // loaded only when a 3D view is wanted, and a licensed model only when the painted look asks for one.
 import { build, buildPart, type Built, FitError } from "./build/index.ts";
 import type { DetailLevel } from "./model/detail.ts";
+import { buildOf } from "./buildPlay.ts";
 import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
@@ -146,7 +147,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside", "captions", "scale-note", "scale"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -284,6 +285,7 @@ export class UchusenRocket extends HTMLBase {
     if (before === after) return;
     if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
     else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
       // choosing what to show leaves the flight
@@ -293,6 +295,13 @@ export class UchusenRocket extends HTMLBase {
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------
+
+  private progress(): number | null {
+    const raw = this.getAttribute("progress");
+    if (raw === null || raw === "") return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : null;
+  }
 
   private spin(): Spin {
     return spinOf(this.getAttribute("spin"), this.getAttribute("way"));
@@ -629,6 +638,7 @@ export class UchusenRocket extends HTMLBase {
         const now = this.settings(this.builtNow);
         if (now.look !== look) viewer.setLook(now.look);
         if (now.show !== show) viewer.setShow(now.show);
+        viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
         this.lightViewer(viewer);
       }
       this.emit("uchusen-change", { report: this.builtNow.report });
@@ -819,6 +829,7 @@ export class UchusenRocket extends HTMLBase {
       const now = this.settings(this.builtNow ?? built);
       if (now.look !== look) made.setLook(now.look);
       if (now.show !== show) made.setShow(now.show);
+      made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
       this.lightViewer(made);
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));

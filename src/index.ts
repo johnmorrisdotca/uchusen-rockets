@@ -40,6 +40,8 @@ export type { Spin, Way } from "./spin.ts";
 export { FLIGHTS } from "./data/flights.ts";
 export { burnsOf, clockWords, FlightClock, flightOf, frameAt, lastPosition, phaseAt, phasePosition, SECONDS_PER_PHASE } from "./flight.ts";
 export { PLAY_RATES, buildOf, playFrame, playFrom, stills } from "./buildPlay.ts";
+export { SWARM_CAP, approachPath, berthRing, carries, pathClears, swarmCount, swarmJobs } from "./swarm.ts";
+export type { Carry, HullBox, SwarmJob } from "./swarm.ts";
 export type { PlayFrame, PlayStep } from "./buildPlay.ts";
 export type { BuildWords } from "./buildbar.ts";
 export { tractorBeam } from "./beam.ts";

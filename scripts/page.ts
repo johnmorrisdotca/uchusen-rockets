@@ -15,6 +15,7 @@ const TITLES = {
   "journey.html": ["Uchusen Rockets 宇宙船: journey mode", "Fly a real rocket or a ship of the SPX fleet from the Earth to the Moon or a planet: launch windows from real positions, the burns, the flip, and the numbers as it goes."],
   "poster.html": ["Uchusen Rockets 宇宙船: Rockets of the World", "Every built craft at one true scale, with the SPX ships in their own row, to print or to zoom."],
   "beam.html": ["Uchusen Rockets 宇宙船: tractor beam", "A soft cone from a drone to the part it carries, in the painted look, the line look, and as a dotted line when motion is reduced."],
+  "swarm.html": ["Uchusen Rockets 宇宙船: drone swarm", "Boxes stand in for the drones. They fly outside the hull and move in on the last leg, at the busiest moment of the build."],
 } as const;
 const LINKS = [{ href: "docs/index.html", say: "pageDocs" }, { href: "embed.html", say: "pageEmbed" }, { href: "journey.html", say: "pageJourney" }];
 
