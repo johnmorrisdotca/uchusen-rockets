@@ -334,7 +334,7 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
 });
 
 test("the fleet kit: every module and the sample ship drawn painted, then contexts and graphics memory stay flat as they are walked again, and it still draws once a frame", async ({ page }) => {
-  test.setTimeout(30 * 60_000);
+  test.setTimeout(45 * 60_000);
   await page.goto(URL);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);

@@ -19,7 +19,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-  # The demo's browser suite, split so every job ends in about half an hour (one job took 1.3 to 2.4 hours): the graphics-memory file in two shards, every other file at a desk's width, then a phone's width in Chromium, then in WebKit. Every test still runs once.
+  # The demo's browser suite, split so every job ends in under an hour (one job took 1.3 to 2.4 hours): the graphics-memory file in two jobs (the fleet walk, which is 17 minutes on a quick runner and 30 on a slow one, and the rest of the file), every other file at a desk's width, then a phone's width in Chromium, then in WebKit. Every test still runs once.
   demo:
     name: demo (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -28,8 +28,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: "graphics memory 1/2", set: freeze, project: chromium-desk, shard: "1/2", browser: chromium }
-          - { name: "graphics memory 2/2", set: freeze, project: chromium-desk, shard: "2/2", browser: chromium }
+          - { name: "graphics memory, fleet walk", set: freeze, project: chromium-desk, shard: "1/1", browser: chromium, only: "--grep \"the fleet kit\"" }
+          - { name: "graphics memory, the rest", set: freeze, project: chromium-desk, shard: "1/1", browser: chromium, only: "--grep-invert \"the fleet kit\"" }
           - { name: "desk, Chromium", set: rest, project: chromium-desk, shard: "1/1", browser: chromium }
           - { name: "phone, Chromium", set: all, project: chromium-phone, shard: "1/1", browser: chromium }
           - { name: "phone, WebKit", set: all, project: webkit-phone, shard: "1/1", browser: webkit }
@@ -48,7 +48,7 @@ jobs:
       - name: The site and the documentation site, as the demo's tests read them
         run: pnpm site && node scripts/docs-site.mjs build
       - name: The demo, played in ${{ matrix.name }}
-        run: pnpm exec playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}
+        run: pnpm exec playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }} ${{ matrix.only }}
         env:
           DEMO_SET: ${{ matrix.set }}
   usage:
