@@ -1,7 +1,7 @@
 // The five construction machines. Shapes come from the reference notes; no mark or text is copied.
 import type { MaterialName } from "../../materials.ts";
 import { disc, discZ, hoop, post, rod } from "../detail.ts";
-import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, GOLD, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
+import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, GOLD, limb, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
 import type { Piece, Vec3 } from "../../pieces.ts";
 
 /**
@@ -86,38 +86,18 @@ function repairArm(root: Vec3, elbow: Vec3, wrist: Vec3, grasp: Vec3): Piece[] {
   ];
 }
 
-/** A boxed link with a cable along it, thick enough to read as a housing. */
-function housing(a: Vec3, b: Vec3, width: number): Piece[] {
-  return [bar(WHITE, a, b, width, width * 0.72), bar(DARK, a, b, width * 0.4, width * 0.95), bar(METAL, a, b, width * 0.14, width * 0.14)];
-}
-
-/** A motor cap where two housings meet. */
-function joint(at: Vec3, radius: number): Piece[] {
-  return [discZ(ORANGE, at[0], at[1], at[2] - radius, at[2] + radius, radius, 8), disc(METAL, [at[0], at[2]], radius * 0.75, at[1] - radius, radius * 2, 8)];
-}
-
-/** Four housings, a motor at each joint, and a two-finger gripper. Sized for the 2.9 m drum. */
+/** Four round housings, a motor cap at each joint, a cable, and a gripper. Sized for the 2.9 m drum. */
 function fittedArm(sign: number): Piece[] {
   const root: Vec3 = [sign * 0.55, 1.2, 0.15];
-  const shoulder: Vec3 = [sign * 0.9, 1.65, -0.2];
-  const elbow: Vec3 = [sign * 0.6, 2.05, -0.6];
-  const wrist: Vec3 = [sign * 0.3, 2.35, -0.85];
-  const grasp: Vec3 = [sign * 0.12, 2.55, -0.95];
-  return [
-    ...housing(root, shoulder, 0.12),
-    ...joint(shoulder, 0.08),
-    ...housing(shoulder, elbow, 0.1),
-    ...joint(elbow, 0.07),
-    ...housing(elbow, wrist, 0.08),
-    ...joint(wrist, 0.06),
-    ...housing(wrist, grasp, 0.06),
-    bar(METAL, wrist, [grasp[0] + sign * 0.07, grasp[1] + 0.1, grasp[2] + 0.02], 0.016, 0.014),
-    bar(METAL, wrist, [grasp[0] - sign * 0.05, grasp[1] + 0.08, grasp[2] - 0.05], 0.016, 0.014),
-  ];
+  const shoulder: Vec3 = [sign * 0.95, 1.7, -0.15];
+  const elbow: Vec3 = [sign * 0.7, 2.15, -0.55];
+  const wrist: Vec3 = [sign * 0.35, 2.45, -0.85];
+  const grasp: Vec3 = [sign * 0.15, 2.7, -1.05];
+  return [...limb(root, [shoulder, elbow, wrist], grasp, 0.07), rod(DARK, root, wrist, 0.012, 5)];
 }
 
 function repairDrone(): Machine {
-  const grip: Vec3 = [-0.12, 2.55, -0.95];
+  const grip: Vec3 = [-0.15, 2.7, -1.05];
   const pieces: Piece[] = [
     disc(DARK, [0, 0.55], 0.38, 1.4, 0.22, 18),
     disc(METAL, [0, 0.55], 0.28, 1.58, 0.08, 14),
