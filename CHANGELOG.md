@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Tilt up to 90 degrees for craft in space** (MODULES-430): each variant has `view.tiltMax`, 90 for the SPX fleet, the ISS, Hubble, Dragon, Gemini, Mercury, the lunar module and Apollo-Soyuz, and 45 for rockets and sites on the ground (it stopped at about 20 before). The demo gives it to the view controls' `tilt-max`, so the slider, the drag and `?tilt=` follow the craft chosen, and a tip beyond the new limit is brought back to it when a rocket is chosen. The camera stays held at 87 degrees, so there is no flip, and Fit still frames the whole craft. Tests: `test/tilt-max.test.ts`, `e2e/tilt-max.demo.ts`.
+
 ## [0.11.0] - 2026-11-04
 
 Journey mode (Earth to the Moon and the planets) and real craft for scale beside the SPX fleet.

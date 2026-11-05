@@ -188,4 +188,6 @@ export interface Variant {
   lineupView?: "back" | "side";
   /** The panel that goes with the viewer: sections, specification, notes and insets. */
   inspector?: Inspector;
+  /** How the viewer's controls may move it. `tiltMax` is the most the view may be tipped up or down, in degrees: 90 for a craft in space, 45 for a rocket on the ground. */
+  view?: { tiltMax: number };
 }

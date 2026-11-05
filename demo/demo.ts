@@ -173,6 +173,15 @@ function syncEarth() {
     });
 }
 
+/** How far the view may be tipped follows the craft: the controls' slider and drag take the limit, and a tip beyond it, or one the address asked for before the craft was known, is brought to it. */
+let askedTilt = Number(new URLSearchParams(location.search).get("tilt")) || 0;
+function limitTilt(max: number) {
+  if (bar.getAttribute("tilt-max") !== String(max)) bar.setAttribute("tilt-max", String(max));
+  const tilt = askedTilt || bar.state.tilt;
+  askedTilt = 0;
+  if (Math.abs(tilt) > max || tilt !== bar.state.tilt) bar.set({ tilt: Math.max(-max, Math.min(max, tilt)) });
+}
+
 function renderMain() {
   const rocket = ROCKETS[state.rocket];
   if (!rocket.variants.some((one) => one.id === state.variant)) state.variant = rocket.defaultVariant;
@@ -200,6 +209,7 @@ function renderMain() {
   press(byId("looks"), `look-${state.look}`);
   press(byId("views"), `view-${state.view}`);
   press(byId("backgrounds"), `background-${state.background}`);
+  limitTilt(variant.view?.tiltMax ?? 45);
   hero.setAttribute("rocket", state.rocket);
   hero.setAttribute("variant", state.variant);
   hero.setAttribute("show", state.show);
