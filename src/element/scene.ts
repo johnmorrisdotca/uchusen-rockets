@@ -195,6 +195,9 @@ const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
 /** The pictures a licensed model's material may hold (the shared sky it reflects is not one of them). */
 /** How brightly a painted model's glow picture shines when the lights are on. */
 const MODEL_GLOW = 1.5;
+/** A drone is drawn this many times life size at most, and a ship's longest side over this many metres: a saucer about a fiftieth of the ship across (Miyamoto, 380 m, gets 7.6). */
+const DRONE_SCALE_MAX = 8;
+const DRONE_SHIP_RATIO = 50;
 const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
 export class RocketViewer {
@@ -721,6 +724,7 @@ export class RocketViewer {
     this.burningNow = burning;
     this.glowOn = this.lit === "full" || burning > 0;
     for (const [material, strength] of this.glowing) material.emissiveIntensity = this.glowOn ? strength : 0;
+    this.swarm?.setGlow(this.glowOn);
     this.burnSlots = lowest;
     this.plumes.setBurning(burning);
     this.plumes.light.intensity = burning === 0 || this.look !== "painted" ? 0 : Math.min(900, 120 + burning * 40);
@@ -1205,6 +1209,7 @@ export class RocketViewer {
       delete this.canvas.dataset.built;
       delete this.canvas.dataset.showing;
       delete this.canvas.dataset.weld;
+      delete this.canvas.dataset.swarmNear;
       if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
       this.wake();
@@ -1234,12 +1239,17 @@ export class RocketViewer {
     const jobs = swarmJobs(steps, count, at);
     const ys = shown.map((place) => place.at[1]);
     const poses = carries(jobs, at, steps, (slot) => slotAt.get(slot), dock, [Math.min(...ys), Math.max(...ys)]);
-    this.swarm ??= new SwarmRig(this.root);
+    this.swarm ??= new SwarmRig(this.root, async (file) => (await new GLTFLoader().loadAsync(`${this.options.assets}models/${file}`)).scene, () => this.wake());
+    this.swarm.setGlow(this.glowOn);
+    // a drone is drawn larger than life on a big ship, about a fiftieth of its length across, so it reads at the distance the ship is seen from
+    const bounds = built.boundsOf(this.show);
+    const longest = Math.max(bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]);
     this.swarm.show(
-      poses.map((pose) => ({ where: pose.where, part: pose.part, weld: pose.duty === "work" })),
+      poses.map((pose) => ({ where: pose.where, part: pose.part, weld: pose.duty === "work", duty: pose.duty })),
       jobs.length ? [] : berthRing(count, dock),
       dock,
       this.options.reducedMotion,
+      Math.min(DRONE_SCALE_MAX, Math.max(1, longest / DRONE_SHIP_RATIO)),
     );
     if (poses.some((pose) => pose.duty === "work")) this.canvas.dataset.weld = this.options.reducedMotion ? "dot" : "live";
     else delete this.canvas.dataset.weld;
@@ -1636,6 +1646,7 @@ export class RocketViewer {
     const changed = this.controls.update(dt);
     if (this.needsDraw || changed || this.pose) {
       this.syncSizes();
+      if (this.swarm) this.canvas.dataset.swarmNear = String(this.swarm.lod([this.camera.position.x, this.camera.position.y, this.camera.position.z]));
       this.renderer.render(this.scene, this.camera);
       this.placeMarks();
       this.placeBeside();

@@ -1,10 +1,23 @@
-// The construction swarm in the 3D view. Each drone is a box about a metre across, with a ringed emitter, two lamps and a small glow, a stand-in until the drone exists. The beam is a short translucent cone. One set of instanced meshes, disposed with the view.
-import { AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, DoubleSide, Group, InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D } from "three";
+// The construction swarm in the 3D view. Each drone is the SPX repair drone: the coarse model for every drone, the fine one for the few nearest the camera, both instanced. The tractor beam leaves the lens (DRONE.emitter) and runs to the part, the weld arc leaves the tool (DRONE.weldTip), a working drone faces its part, and a parked one faces away from the stack. One set of instanced meshes, disposed with the view.
+import { AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, DoubleSide, DynamicDrawUsage, Group, InstancedMesh, LineBasicMaterial, LineSegments, type Material, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D, type Texture } from "three";
+import { DRONE_FILES } from "../model/drone.ts";
+import { DRONE } from "../model/fleet/drone/index.ts";
+import { DRONE_SIZE } from "../model/fleet/drone/size.ts";
 
 const CAP = 100;
 const RINGS = 3;
 const SPARKS = 4;
 const SPRAY = 6;
+/** How many of the nearest drones are drawn with the fine model. Each is about 120,000 triangles. */
+const NEAR_MAX = 6;
+/** A drone is drawn fine when the camera is within this many saucer widths of it. */
+const NEAR_WIDTHS = 14;
+/** How brightly the drone's glow picture shines when the lights are on (the same as a painted ship's). */
+const DRONE_GLOW = 1.5;
+/** How far the weld arc reaches from the tool, in saucer widths. */
+const ARC_WIDTHS = 3;
+const PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
+const UP = new Vector3(0, 1, 0);
 
 /**
  * Where one spark sits relative to a weld, in metres. It flies straight out and starts again. Nothing pulls it downward.
@@ -30,15 +43,74 @@ export interface SwarmPose {
   part: [number, number, number];
   /** This drone is fitting a part, so the join shows a weld. */
   weld?: boolean;
+  /** Working a part (faces it, beam on it), flying the path (faces where it is going), or parked (faces away from the stack, no beam). Omitted, it is working. */
+  duty?: "work" | "transit" | "berth";
+}
+
+/** Fetches one of the drone's model files and gives its scene. */
+export type DroneLoader = (file: string) => Promise<Object3D>;
+
+type Vec = readonly [number, number, number];
+
+/** Where a point of the drone's own frame (metres, lowest point at 0, front +Z) lands on a drone at `at`, turned by `turn` and drawn `scale` times life size. The drone turns about the middle of its box. */
+const centre = new Vector3(0, (DRONE_SIZE.min[1] + DRONE_SIZE.max[1]) / 2, (DRONE_SIZE.min[2] + DRONE_SIZE.max[2]) / 2);
+
+/** The first mesh under `root`, with its position picture turned into plain floats and its own placement baked in, so one geometry serves every instance. */
+function bake(root: Object3D): { geometry: BufferGeometry; material: MeshStandardMaterial } | null {
+  let found: Mesh | null = null;
+  root.updateMatrixWorld(true);
+  root.traverse((node) => {
+    if (!found && node instanceof Mesh) found = node;
+  });
+  const mesh = found as Mesh | null;
+  if (!mesh) return null;
+  const source = mesh.geometry;
+  const position = source.getAttribute("position");
+  const floats = new Float32Array(position.count * 3);
+  const point = new Vector3();
+  for (let i = 0; i < position.count; i += 1) {
+    point.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld);
+    floats[i * 3] = point.x;
+    floats[i * 3 + 1] = point.y;
+    floats[i * 3 + 2] = point.z;
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(floats, 3));
+  const normal = source.getAttribute("normal");
+  if (normal) {
+    const nf = new Float32Array(normal.count * 3);
+    for (let i = 0; i < normal.count; i += 1) {
+      nf[i * 3] = normal.getX(i);
+      nf[i * 3 + 1] = normal.getY(i);
+      nf[i * 3 + 2] = normal.getZ(i);
+    }
+    geometry.setAttribute("normal", new BufferAttribute(nf, 3));
+  }
+  const uv = source.getAttribute("uv");
+  if (uv) geometry.setAttribute("uv", uv);
+  if (source.index) geometry.setIndex(source.index);
+  const material = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as MeshStandardMaterial;
+  // the pictures stay on the material; the geometry's own quantised buffers are let go by the caller through `source`
+  source.dispose();
+  return { geometry, material };
+}
+
+/** One level of the drone: an instanced mesh over one geometry and one material. */
+interface Level {
+  mesh: InstancedMesh;
+  material: MeshStandardMaterial;
 }
 
 /** The drones, their beams and the placeholder parts stack. */
 export class SwarmRig {
   private readonly group = new Group();
-  private readonly drones: InstancedMesh;
-  private readonly emitters: InstancedMesh;
-  private readonly lamps: InstancedMesh;
-  private readonly glows: InstancedMesh;
+  private far: Level | null = null;
+  private near: Level | null = null;
+  private nearState: "none" | "loading" | "ready" = "none";
+  private generation = 0;
+  private disposed = false;
+  private glowOn = false;
+  private readonly flares: InstancedMesh;
   private readonly beams: InstancedMesh;
   private readonly rings: InstancedMesh;
   private readonly sparks: InstancedMesh;
@@ -53,33 +125,47 @@ export class SwarmRig {
   private readonly weldAt: [number, number, number][] = [];
   private weldCount = 0;
   private reduced = true;
+  private scale = 1;
   private readonly pathPositions = new Float32Array(CAP * 6);
   private readonly scratch = new Matrix4();
-  private readonly aim = new Quaternion();
+  /** The turn of the drone being placed, and the aim of its beam. */
+  private readonly turn = new Quaternion();
+  private readonly spin = new Quaternion();
+  private readonly shift = new Matrix4();
+  private readonly one = new Vector3();
   private readonly from = new Vector3();
   private readonly to = new Vector3();
   private readonly mid = new Vector3();
+  private readonly side = new Vector3();
+  /** Each drone's matrix, 16 floats apiece, and where its middle is. */
+  private bodies = new Float32Array(CAP * 16);
+  private centres = new Float32Array(CAP * 3);
+  private count = 0;
+  private nearSig = "";
 
-  constructor(parent: Object3D) {
+  private readonly load: DroneLoader | undefined;
+  private readonly wake: () => void;
+
+  constructor(parent: Object3D, load?: DroneLoader, wake: () => void = () => {}) {
+    this.load = load;
+    this.wake = wake;
     this.group.name = "swarm";
-    const white = new MeshStandardMaterial({ color: new Color("#f4f7fb"), roughness: 0.45, metalness: 0.05 });
-    const lamp = new MeshBasicMaterial({ color: new Color("#ffe7a3") });
-    const halo = new MeshBasicMaterial({ color: new Color("#ffe1a0"), transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false });
+    this.shift.makeTranslation(-centre.x, -centre.y, -centre.z);
     const glow = new MeshBasicMaterial({ color: new Color("#d9e6ff"), transparent: true, opacity: 0.7, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
     const ring = new MeshBasicMaterial({ color: new Color("#efeaff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     const spark = new MeshBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false });
-    this.drones = new InstancedMesh(new BoxGeometry(1.4, 0.55, 1.1), white, CAP);
-    this.emitters = new InstancedMesh(new TorusGeometry(0.7, 0.08, 6, 12), ring, CAP);
-    this.lamps = new InstancedMesh(new SphereGeometry(0.16, 8, 8), lamp, CAP * 2);
-    this.glows = new InstancedMesh(new SphereGeometry(3.2, 10, 10), halo, CAP);
-    this.beams = new InstancedMesh(new ConeGeometry(1, 1, 12), glow, CAP);
-    this.rings = new InstancedMesh(new TorusGeometry(0.8, 0.06, 6, 12), ring.clone(), CAP * RINGS);
-    this.sparks = new InstancedMesh(new SphereGeometry(0.28, 6, 6), spark, CAP * SPARKS);
+    const flare = new MeshBasicMaterial({ color: new Color("#bcd8ff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
+    this.flares = new InstancedMesh(new SphereGeometry(1, 10, 10), flare, CAP);
+    // the cone's point is at +y, at the drone; its base is at the part
+    this.beams = new InstancedMesh(new ConeGeometry(1, 1, 16, 1, true), glow, CAP);
+    // rings stand across the beam: their axis is y, the cone's
+    this.rings = new InstancedMesh(new TorusGeometry(1, 0.05, 6, 20).rotateX(Math.PI / 2), ring.clone(), CAP * RINGS);
+    this.sparks = new InstancedMesh(new SphereGeometry(0.1, 6, 6), spark, CAP * SPARKS);
     const tip = new MeshBasicMaterial({ color: new Color("#e7f6ff"), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false });
-    this.tips = new InstancedMesh(new SphereGeometry(1.1, 10, 10), tip, CAP);
+    this.tips = new InstancedMesh(new SphereGeometry(1, 10, 10), tip, CAP);
     const fleck = new MeshBasicMaterial({ color: new Color("#fff4d2"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
-    this.spray = new InstancedMesh(new SphereGeometry(0.22, 6, 6), fleck, CAP * SPRAY);
-    for (const mesh of [this.drones, this.emitters, this.lamps, this.glows, this.beams, this.rings, this.sparks, this.tips, this.spray]) {
+    this.spray = new InstancedMesh(new SphereGeometry(0.05, 6, 6), fleck, CAP * SPRAY);
+    for (const mesh of [this.flares, this.beams, this.rings, this.sparks, this.tips, this.spray]) {
       mesh.count = 0;
       mesh.frustumCulled = false;
       this.group.add(mesh);
@@ -116,66 +202,115 @@ export class SwarmRig {
     frame.add(left, right, top, rail);
     this.group.add(frame);
     parent.add(this.group);
+    void this.loadLevel("far");
   }
 
-  /** Puts the drones on `poses` with a beam to each part, or on `parked` with no beam, and the stack at `dock`. A weld is a steady dot, and, unless `reduced` is set, a laser, a seam and a spray. */
-  show(poses: readonly SwarmPose[], parked: readonly [number, number, number][], dock: readonly [number, number, number], reduced = false): void {
+  /**
+   * Puts the drones on `poses` with a beam to each part, or on `parked` with no beam, and the stack at `dock`. A weld is a steady dot, and, unless `reduced` is set, a laser, a seam and a spray.
+   * `scale` is how many times life size a drone is drawn: at 1 it is the metre-wide drone itself, and a long ship draws it larger so it reads.
+   */
+  show(poses: readonly SwarmPose[], parked: readonly [number, number, number][], dock: readonly [number, number, number], reduced = false, scale = 1): void {
     this.reduced = reduced;
-    const points = poses.length ? poses.map((pose) => pose.where) : parked;
-    this.place(this.drones, points, (at, i) => {
-      this.scratch.makeTranslation(at[0], at[1], at[2]);
-      this.drones.setMatrixAt(i, this.scratch);
-    });
-    this.place(this.emitters, points, (at, i) => {
-      this.scratch.makeTranslation(at[0], at[1], at[2] + 0.4);
-      this.emitters.setMatrixAt(i, this.scratch);
-    });
-    this.place(this.glows, points, (at, i) => {
-      this.scratch.makeTranslation(at[0], at[1], at[2]);
-      this.glows.setMatrixAt(i, this.scratch);
-    });
-    this.lamps.count = points.length * 2;
-    for (let i = 0; i < points.length; i += 1) {
-      const at = points[i] ?? [0, 0, 0];
-      this.scratch.makeTranslation(at[0] - 0.4, at[1], at[2] + 0.25);
-      this.lamps.setMatrixAt(i * 2, this.scratch);
-      this.scratch.makeTranslation(at[0] + 0.4, at[1], at[2] + 0.25);
-      this.lamps.setMatrixAt(i * 2 + 1, this.scratch);
-    }
-    this.lamps.instanceMatrix.needsUpdate = true;
-    this.beams.count = poses.length;
-    this.rings.count = poses.length * RINGS;
-    this.sparks.count = poses.length * SPARKS;
-    for (let i = 0; i < poses.length; i += 1) {
-      const pose = poses[i];
+    this.scale = Math.max(0.5, scale);
+    const s = this.scale;
+    const list: SwarmPose[] = poses.length ? [...poses] : parked.map((where) => ({ where, part: where, duty: "berth" as const }));
+    const n = Math.min(CAP, list.length);
+    this.count = n;
+    this.weldAt.length = 0;
+    this.beams.count = 0;
+    let beamN = 0;
+    let flareN = 0;
+    const places: Vec[] = [];
+    for (let i = 0; i < n; i += 1) {
+      const pose = list[i];
       if (!pose) continue;
-      this.from.set(pose.where[0], pose.where[1], pose.where[2]);
-      this.to.set(pose.part[0], pose.part[1], pose.part[2]);
-      this.mid.addVectors(this.from, this.to).multiplyScalar(0.5);
-      const span = Math.max(0.01, this.to.distanceTo(this.from));
-      this.aim.setFromUnitVectors(new Vector3(0, 1, 0), this.from.clone().sub(this.to).normalize());
-      this.scratch.compose(this.mid, this.aim, new Vector3(1.1, span, 1.1));
-      this.beams.setMatrixAt(i, this.scratch);
+      const duty = pose.duty ?? "work";
+      const p = this.from.set(pose.where[0], pose.where[1], pose.where[2]);
+      const target = this.to.set(pose.part[0], pose.part[1], pose.part[2]);
+      const beaming = duty !== "berth";
+      // the drone turns until the lens points at the part (working or flying), or away from the stack (parked)
+      let aimX: number;
+      let aimY: number;
+      let aimZ: number;
+      if (!beaming) {
+        aimX = pose.where[0] - dock[0];
+        aimY = 0;
+        aimZ = pose.where[2] - dock[2];
+        if (Math.hypot(aimX, aimZ) < 1e-6) aimX = 1;
+      } else {
+        aimX = target.x - p.x;
+        aimY = target.y - p.y;
+        aimZ = target.z - p.z;
+      }
+      this.turnTo(aimX, aimY, aimZ);
+      if (beaming) {
+        for (let pass = 0; pass < 3; pass += 1) {
+          this.point(DRONE.emitter, p, s, this.mid);
+          this.turnTo(target.x - this.mid.x, target.y - this.mid.y, target.z - this.mid.z);
+        }
+      }
+      this.scratch.compose(this.one.set(p.x, p.y, p.z), this.turn, this.side.set(s, s, s));
+      // the drone's own frame is about the middle of its box
+      this.scratch.multiply(this.shift);
+      this.scratch.toArray(this.bodies, i * 16);
+      this.centres[i * 3] = p.x;
+      this.centres[i * 3 + 1] = p.y;
+      this.centres[i * 3 + 2] = p.z;
+      places.push(pose.where);
+      if (!beaming) continue;
+      // the tractor beam: from the lens to the part
+      this.point(DRONE.emitter, p, s, this.mid);
+      const eX = this.mid.x;
+      const eY = this.mid.y;
+      const eZ = this.mid.z;
+      const span = Math.max(0.01, Math.hypot(target.x - eX, target.y - eY, target.z - eZ));
+      const along = this.side.set(eX - target.x, eY - target.y, eZ - target.z).divideScalar(span);
+      this.spin.setFromUnitVectors(UP, along);
+      const base = 0.5 * s * DRONE.diameter;
+      this.scratch.compose(this.one.set((eX + target.x) / 2, (eY + target.y) / 2, (eZ + target.z) / 2), this.spin, this.mid.set(base, span, base));
+      this.beams.setMatrixAt(beamN, this.scratch);
       for (let ring = 0; ring < RINGS; ring += 1) {
         const t = (ring + 1) / (RINGS + 1);
-        this.mid.copy(this.from).lerp(this.to, t);
-        this.scratch.compose(this.mid, this.aim, new Vector3(1, 1, 1));
-        this.rings.setMatrixAt(i * RINGS + ring, this.scratch);
+        const r = Math.max(0.05 * s, base * t);
+        this.scratch.compose(this.one.set(eX + (target.x - eX) * t, eY + (target.y - eY) * t, eZ + (target.z - eZ) * t), this.spin, this.mid.set(r, r, r));
+        this.rings.setMatrixAt(beamN * RINGS + ring, this.scratch);
       }
+      // sparks of light drifting beside the beam, on either side
+      this.side.crossVectors(along, UP);
+      if (this.side.lengthSq() < 1e-6) this.side.set(1, 0, 0);
+      this.side.normalize();
       for (let spark = 0; spark < SPARKS; spark += 1) {
         const t = (spark + 0.5) / SPARKS;
-        const side = spark % 2 === 0 ? 0.7 : -0.7;
-        this.mid.copy(this.from).lerp(this.to, t);
-        this.mid.z += side;
-        this.scratch.makeTranslation(this.mid.x, this.mid.y, this.mid.z);
-        this.sparks.setMatrixAt(i * SPARKS + spark, this.scratch);
+        const off = (spark % 2 === 0 ? 0.7 : -0.7) * base * t;
+        this.scratch.makeScale(s, s, s);
+        this.scratch.setPosition(eX + (target.x - eX) * t + this.side.x * off, eY + (target.y - eY) * t + this.side.y * off, eZ + (target.z - eZ) * t + this.side.z * off);
+        this.sparks.setMatrixAt(beamN * SPARKS + spark, this.scratch);
+      }
+      beamN += 1;
+      // a flare at the lens
+      this.scratch.makeScale(0.14 * s, 0.14 * s, 0.14 * s);
+      this.scratch.setPosition(eX, eY, eZ);
+      this.flares.setMatrixAt(flareN, this.scratch);
+      flareN += 1;
+      if (pose.weld) {
+        // the weld arc leaves the tool and runs toward the part
+        this.point(DRONE.weldTip, p, s, this.mid);
+        const wx = this.mid.x;
+        const wy = this.mid.y;
+        const wz = this.mid.z;
+        const reach = Math.hypot(target.x - wx, target.y - wy, target.z - wz) || 1;
+        const arc = Math.min(reach, ARC_WIDTHS * s * DRONE.diameter);
+        this.weldAt.push([wx, wy, wz]);
+        this.weldAt.push([wx + ((target.x - wx) / reach) * arc, wy + ((target.y - wy) / reach) * arc, wz + ((target.z - wz) / reach) * arc]);
       }
     }
-    this.beams.instanceMatrix.needsUpdate = true;
-    this.rings.instanceMatrix.needsUpdate = true;
-    this.sparks.instanceMatrix.needsUpdate = true;
-    for (let i = 0; i < points.length; i += 1) {
-      const at = points[i] ?? [0, 0, 0];
+    this.beams.count = beamN;
+    this.rings.count = beamN * RINGS;
+    this.sparks.count = beamN * SPARKS;
+    this.flares.count = flareN;
+    for (const mesh of [this.beams, this.rings, this.sparks, this.flares]) mesh.instanceMatrix.needsUpdate = true;
+    for (let i = 0; i < n; i += 1) {
+      const at = places[i] ?? [0, 0, 0];
       this.pathPositions[i * 6] = dock[0];
       this.pathPositions[i * 6 + 1] = dock[1];
       this.pathPositions[i * 6 + 2] = dock[2];
@@ -183,16 +318,18 @@ export class SwarmRig {
       this.pathPositions[i * 6 + 4] = at[1];
       this.pathPositions[i * 6 + 5] = at[2];
     }
-    this.paths.geometry.setDrawRange(0, points.length * 2);
-    const position = this.paths.geometry.getAttribute("position");
-    position.needsUpdate = true;
-    this.weldAt.length = 0;
-    for (const pose of poses) if (pose.weld) this.weldAt.push(pose.part);
-    this.weldCount = this.weldAt.length;
-    this.place(this.tips, this.weldAt, (at, i) => {
-      this.scratch.makeTranslation(at[0], at[1], at[2]);
+    this.paths.geometry.setDrawRange(0, n * 2);
+    this.paths.geometry.getAttribute("position").needsUpdate = true;
+    // weldAt holds the tool tip then the arc's end, for each welding drone
+    this.weldCount = this.weldAt.length / 2;
+    this.tips.count = this.weldCount;
+    for (let i = 0; i < this.weldCount; i += 1) {
+      const tipAt = this.weldAt[i * 2] ?? [0, 0, 0];
+      this.scratch.makeScale(0.07 * s, 0.07 * s, 0.07 * s);
+      this.scratch.setPosition(tipAt[0], tipAt[1], tipAt[2]);
       this.tips.setMatrixAt(i, this.scratch);
-    });
+    }
+    this.tips.instanceMatrix.needsUpdate = true;
     const live = !reduced && this.weldCount > 0;
     this.spray.count = live ? this.weldCount * SPRAY : 0;
     if (live) this.placeSpray(0);
@@ -200,40 +337,76 @@ export class SwarmRig {
     this.seam.geometry.setDrawRange(0, live ? this.weldCount * 2 : 0);
     if (live) {
       for (let i = 0; i < this.weldCount; i += 1) {
-        const pose = poses.filter((one) => one.weld)[i];
-        const at = this.weldAt[i] ?? [0, 0, 0];
-        const from = pose?.where ?? at;
-        const dx = at[0] - from[0];
-        const dy = at[1] - from[1];
-        const dz = at[2] - from[2];
-        const span = Math.hypot(dx, dy, dz) || 1;
-        const ux = dx / span;
-        const uy = dy / span;
-        const uz = dz / span;
-        this.laserPositions[i * 6] = at[0] - ux * Math.min(1.2, span);
-        this.laserPositions[i * 6 + 1] = at[1] - uy * Math.min(1.2, span);
-        this.laserPositions[i * 6 + 2] = at[2] - uz * Math.min(1.2, span);
-        this.laserPositions[i * 6 + 3] = at[0];
-        this.laserPositions[i * 6 + 4] = at[1];
-        this.laserPositions[i * 6 + 5] = at[2];
-        this.seamPositions[i * 6] = at[0] - uz * 0.8;
-        this.seamPositions[i * 6 + 1] = at[1];
-        this.seamPositions[i * 6 + 2] = at[2] + ux * 0.8;
-        this.seamPositions[i * 6 + 3] = at[0] + uz * 0.8;
-        this.seamPositions[i * 6 + 4] = at[1];
-        this.seamPositions[i * 6 + 5] = at[2] - ux * 0.8;
+        const a = this.weldAt[i * 2] ?? [0, 0, 0];
+        const b = this.weldAt[i * 2 + 1] ?? a;
+        this.laserPositions.set([a[0], a[1], a[2], b[0], b[1], b[2]], i * 6);
+        const dx = b[0] - a[0];
+        const dz = b[2] - a[2];
+        const flat = Math.hypot(dx, dz) || 1;
+        const half = 0.12 * s;
+        this.seamPositions.set([b[0] - (dz / flat) * half, b[1], b[2] + (dx / flat) * half, b[0] + (dz / flat) * half, b[1], b[2] - (dx / flat) * half], i * 6);
       }
       this.lasers.geometry.getAttribute("position").needsUpdate = true;
       this.seam.geometry.getAttribute("position").needsUpdate = true;
     }
     const frame = this.group.getObjectByName("dock");
     if (frame) frame.position.set(dock[0], dock[1], dock[2]);
+    this.nearSig = "?";
     this.group.visible = true;
+  }
+
+  /**
+   * Chooses which drones are drawn fine and which coarse, for a camera at `eye`: the nearest few within a short reach get the fine model, every other one the coarse model. Does nothing when no drone has moved into or out of the near set.
+   * @returns How many are drawn fine.
+   */
+  lod(eye: Vec): number {
+    if (!this.group.visible || !this.far) return 0;
+    const reach = NEAR_WIDTHS * DRONE.diameter * this.scale;
+    const near: number[] = [];
+    const ranked: { i: number; d: number }[] = [];
+    for (let i = 0; i < this.count; i += 1) {
+      const d = Math.hypot((this.centres[i * 3] ?? 0) - eye[0], (this.centres[i * 3 + 1] ?? 0) - eye[1], (this.centres[i * 3 + 2] ?? 0) - eye[2]);
+      if (d < reach) ranked.push({ i, d });
+    }
+    ranked.sort((a, b) => a.d - b.d);
+    for (const { i } of ranked.slice(0, NEAR_MAX)) near.push(i);
+    if (near.length > 0 && this.nearState === "none") void this.loadLevel("near");
+    // until the fine model is in, the coarse one stands for it
+    const fine = this.near && this.nearState === "ready" ? near : [];
+    const sig = fine.join(",");
+    if (sig === this.nearSig) return fine.length;
+    this.nearSig = sig;
+    const isFine = new Set(fine);
+    let coarse = 0;
+    for (let i = 0; i < this.count; i += 1) {
+      if (isFine.has(i)) continue;
+      this.far.mesh.setMatrixAt(coarse, this.scratch.fromArray(this.bodies, i * 16));
+      coarse += 1;
+    }
+    this.far.mesh.count = coarse;
+    this.far.mesh.instanceMatrix.needsUpdate = true;
+    if (this.near) {
+      fine.forEach((i, slot) => this.near?.mesh.setMatrixAt(slot, this.scratch.fromArray(this.bodies, i * 16)));
+      this.near.mesh.count = fine.length;
+      this.near.mesh.instanceMatrix.needsUpdate = true;
+    }
+    return fine.length;
+  }
+
+  /** The lights of the drones glow when the ship's lights are on, as a painted ship's do. */
+  setGlow(on: boolean): void {
+    this.glowOn = on;
+    for (const level of [this.far, this.near]) if (level) level.material.emissiveIntensity = on ? DRONE_GLOW : 0;
   }
 
   /** Whether the spray and the laser are moving. A reduced-motion view keeps only the dot, so this is false. */
   live(): boolean {
     return this.weldCount > 0 && !this.reduced;
+  }
+
+  /** Whether the view needs another draw soon: the fine model is on its way. */
+  loading(): boolean {
+    return this.nearState === "loading";
   }
 
   /** Moves the spray out along its rays and lets the seam fade and return. */
@@ -243,37 +416,112 @@ export class SwarmRig {
     this.seamMaterial.opacity = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(age * 3));
   }
 
+  /** Hides the swarm and gives back the fine model, the heavy one; the coarse one stays for the next time. */
   hide(): void {
     this.group.visible = false;
     this.weldCount = 0;
+    this.count = 0;
+    this.nearSig = "?";
+    this.generation += 1;
+    if (this.near) this.freeLevel(this.near);
+    this.near = null;
+    this.nearState = "none";
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.generation += 1;
     this.group.removeFromParent();
+    if (this.far) this.freeLevel(this.far);
+    if (this.near) this.freeLevel(this.near);
+    this.far = null;
+    this.near = null;
     this.group.traverse((node) => {
       const mesh = node as Mesh;
       mesh.geometry?.dispose();
       const material = mesh.material;
       if (Array.isArray(material)) for (const one of material) one.dispose();
       else material?.dispose();
+      if (node instanceof InstancedMesh) node.dispose();
     });
   }
 
+  /** Where a point of the drone's own frame lands for the drone at `at`, in the turn last set, drawn `scale` times life size. */
+  private point(local: Vec, at: Vector3, scale: number, out: Vector3): Vector3 {
+    out.set(local[0] - centre.x, local[1] - centre.y, local[2] - centre.z).multiplyScalar(scale).applyQuaternion(this.turn).add(at);
+    return out;
+  }
+
+  /** Sets the turn so the drone's front (+Z) points along (x, y, z), upright. */
+  private turnTo(x: number, y: number, z: number): void {
+    const m = this.scratch;
+    // an object's +Z toward the target: the look-at is taken from the target back to the drone
+    m.lookAt(this.side.set(x, y, z), this.one.set(0, 0, 0), UP);
+    this.turn.setFromRotationMatrix(m);
+  }
+
   private placeSpray(age: number): void {
+    const s = this.scale;
     for (let i = 0; i < this.weldCount; i += 1) {
-      const at = this.weldAt[i] ?? [0, 0, 0];
+      const at = this.weldAt[i * 2 + 1] ?? [0, 0, 0];
       for (let spark = 0; spark < SPRAY; spark += 1) {
         const off = sparkAt(i * SPRAY + spark, age);
-        this.scratch.makeTranslation(at[0] + off[0], at[1] + off[1], at[2] + off[2]);
+        this.scratch.makeScale(s, s, s);
+        this.scratch.setPosition(at[0] + off[0] * s * 0.5, at[1] + off[1] * s * 0.5, at[2] + off[2] * s * 0.5);
         this.spray.setMatrixAt(i * SPRAY + spark, this.scratch);
       }
     }
     this.spray.instanceMatrix.needsUpdate = true;
   }
 
-  private place(mesh: InstancedMesh, points: readonly (readonly [number, number, number])[], put: (at: readonly [number, number, number], index: number) => void): void {
-    mesh.count = points.length;
-    for (let i = 0; i < points.length; i += 1) put(points[i] ?? [0, 0, 0], i);
-    mesh.instanceMatrix.needsUpdate = true;
+  /** Brings in one level of the drone. Until it is in, nothing of that level draws. */
+  private async loadLevel(which: "far" | "near"): Promise<void> {
+    if (!this.load) return;
+    if (which === "near") this.nearState = "loading";
+    const generation = this.generation;
+    try {
+      const scene = await this.load(DRONE_FILES[which]);
+      const baked = bake(scene);
+      if (!baked || this.disposed || (which === "near" && generation !== this.generation)) {
+        this.discard(baked, scene);
+        if (which === "near") this.nearState = "none";
+        return;
+      }
+      const mesh = new InstancedMesh(baked.geometry, baked.material, CAP);
+      mesh.instanceMatrix.setUsage(DynamicDrawUsage);
+      mesh.count = 0;
+      mesh.frustumCulled = false;
+      mesh.name = `drone-${which}`;
+      baked.material.emissiveIntensity = this.glowOn ? DRONE_GLOW : 0;
+      this.group.add(mesh);
+      const level = { mesh, material: baked.material };
+      if (which === "far") this.far = level;
+      else {
+        this.near = level;
+        this.nearState = "ready";
+      }
+      this.nearSig = "?";
+      this.wake();
+    } catch {
+      if (which === "near") this.nearState = "none";
+    }
+  }
+
+  private discard(baked: { geometry: BufferGeometry; material: MeshStandardMaterial } | null, scene: Object3D): void {
+    baked?.geometry.dispose();
+    const material = baked?.material;
+    if (material) {
+      for (const slot of PICTURES) (material[slot] as Texture | null | undefined)?.dispose();
+      material.dispose();
+    }
+    scene.clear();
+  }
+
+  private freeLevel(level: Level): void {
+    level.mesh.removeFromParent();
+    level.mesh.geometry.dispose();
+    for (const slot of PICTURES) (level.material[slot] as Texture | null | undefined)?.dispose();
+    (level.material as Material).dispose();
+    level.mesh.dispose();
   }
 }
