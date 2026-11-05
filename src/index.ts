@@ -42,6 +42,9 @@ export { burnsOf, clockWords, FlightClock, flightOf, frameAt, lastPosition, phas
 export { PLAY_RATES, buildOf, playFrame, playFrom, stills } from "./buildPlay.ts";
 export type { PlayFrame, PlayStep } from "./buildPlay.ts";
 export type { BuildWords } from "./buildbar.ts";
+export { tractorBeam } from "./beam.ts";
+export { beamLight } from "./draw/beamLight.ts";
+export type { BeamEnds, BeamPhase } from "./beam.ts";
 export type { Flight, FlightBurn, FlightFrame, FlightPhase, PartPose } from "./flight.ts";
 export { bellsOf, enginesWanted, FLAME_SETTLE_MS, pickBells, plumeLength, ringsOf } from "./engines.ts";
 export type { Bell } from "./engines.ts";
