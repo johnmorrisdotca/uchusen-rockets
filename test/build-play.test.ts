@@ -3,6 +3,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { PLAY_RATES, buildOf, playFrame, playFrom, stills } from "../src/buildPlay.ts";
 import { BUILD_DAYS } from "../src/model/fleet/ship-03/buildOrder.ts";
+import { ROCKETS } from "../src/rockets.ts";
+
+/** The ships whose build order is in, so the build row is on. Everyone else keeps it hidden. */
+const builderOn = (id: string): boolean => id.startsWith("miyamoto") || id.startsWith("ariake") || id === "hanabusa" || id.startsWith("hanabusa-") || id === "fleet-kaminari" || id.startsWith("fleet-emiake") || id === "fleet-romaryu";
 
 test("Miyamoto starts on the drive, finishes every slot, and a rocket has no build", () => {
   const steps = buildOf("miyamoto");
@@ -29,4 +33,18 @@ test("the long ships are offered, and the address keeps the place", () => {
   assert.equal(frames.length, 4);
   assert.equal(frames[0].day, 0);
   assert.equal(frames[3].done.length, buildOf("miyamoto")?.length);
+});
+
+test("the build row is offered for every variant of those ships, and for no other variant in the catalogue", () => {
+  const on: string[] = [];
+  const off: string[] = [];
+  for (const rocket of Object.values(ROCKETS)) {
+    for (const variant of rocket.variants) {
+      (builderOn(variant.id) ? on : off).push(variant.id);
+      if (builderOn(variant.id)) assert.ok(buildOf(variant.id), variant.id);
+      else assert.equal(buildOf(variant.id), undefined, variant.id);
+    }
+  }
+  for (const id of ["miyamoto", "ariake", "hanabusa", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"]) assert.ok(on.includes(id), id);
+  for (const id of ["kyotori", "v3"]) assert.ok(off.includes(id), id);
 });
