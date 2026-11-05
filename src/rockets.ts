@@ -144,7 +144,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "fleet-ship-03": { id: "fleet-ship-03", name: "ISV 宮本 Miyamoto, SPX-452", status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_VARIANTS, defaultVariant: "miyamoto" },
   "fleet-ship-ariake": { id: "fleet-ship-ariake", name: "ISV 有明 Ariake, SPX-186", status: "built", ...MADE_BY["fleet-ship-ariake"], variants: ARIAKE_VARIANTS, defaultVariant: "ariake" },
   "fleet-insets-ship-03": { id: "fleet-insets-ship-03", name: SHIP_03_INSET_ROCKET.name, status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_INSET_ROCKET.variants, defaultVariant: SHIP_03_INSET_ROCKET.variants[0].id },
-  "fleet-02": { id: "fleet-02", name: "ISV 加美鳴 (かみなり) Kaminari, SPX-207", status: "built", ...MADE_BY["fleet-02"], variants: SHIP_02_VARIANTS, defaultVariant: "fleet-02" },
+  "fleet-02": { id: "fleet-02", name: "ISV 加美鳴 Kaminari, SPX-207", status: "built", ...MADE_BY["fleet-02"], variants: SHIP_02_VARIANTS, defaultVariant: "fleet-02" },
   starbase: { id: "starbase", name: "Starbase", status: "built", ...MADE_BY["starbase"], variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
 });
 
