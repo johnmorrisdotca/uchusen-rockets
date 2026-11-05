@@ -263,10 +263,12 @@ test("each concept face keeps the S open and the 8 as two counters, and the conc
   for (const [name, face] of [["michroma", LATIN], ["orbitron", ORBITRON], ["goldman", GOLDMAN]] as const) {
     assert.equal(holes(face.S), 0, `${name} S`);
     assert.equal(holes(face["8"]), 2, `${name} 8`);
-    assert.equal(conceptStyle(name).weight, 0, name);
   }
-  // the registry runs along the real tank, far past one 12.2 m panel
-  const along = vertices(conceptHull("michroma")[1].pieces()).map(([, y]) => y);
+  assert.deepEqual(Object.keys(CONCEPT_FACES), ["goldman"]);
+  assert.equal(conceptStyle("goldman").weight, 0);
+  assert.equal(conceptStyle("goldman").lines, false);
+  // the registry runs along the real tank, and the whole of it stays on the near face
+  const along = vertices(conceptHull("goldman")[1].pieces()).map(([, y]) => y);
   assert.ok(Math.max(...along) - Math.min(...along) > 40);
 });
 

@@ -327,32 +327,40 @@ export function demoHull(id: string): KitEntry[] {
 // ---------------------------------------------------------------------------------------------------------------------------------
 // concepts: the registry large and the name smaller, on the real hulls, in each candidate face
 
-/** The faces a concept shows. Each is a real weight of an open-licence face, used as drawn. */
-export const CONCEPT_FACES: Readonly<Record<string, { face: FaceName; ink: "hull-grey-dark" | "black" }>> = {
-  michroma: { face: "michroma", ink: "hull-grey-dark" },
-  orbitron: { face: "orbitron", ink: "hull-grey-dark" },
-  goldman: { face: "goldman", ink: "hull-grey-dark" },
+/** The face the hulls are lettered in. Goldman Bold, used as drawn. */
+export const CONCEPT_FACES: Readonly<Record<string, { face: FaceName; ink: "black" }>> = {
+  goldman: { face: "goldman", ink: "black" },
 };
 
 /** The line of lettering the Kaminari concepts set. */
 export const CONCEPT_TEXT = "SPX-207 KAMINARI";
 
 /**
- * How a concept is painted: the face as drawn, with no added stroke, a light inline, and lamps for the night view.
+ * How a concept is painted: the face as drawn, a solid fill on a plain field, and lamps for the night view.
  *
  * @param id A face in `CONCEPT_FACES`.
- * @returns The paint, the face and the weight, which is none.
+ * @returns The paint, the face and the weight, which is none. The letters are a solid fill.
  * @example
  * ```ts
  * import { conceptStyle } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(conceptStyle("michroma").weight === 0);
+ * console.log(conceptStyle("goldman").weight === 0);
  * ```
  */
 export function conceptStyle(id: string): MarkingStyle {
   const concept = CONCEPT_FACES[id];
   if (!concept) throw new Error(`"${id}" is not a concept face.`);
-  return { face: concept.face, ink: concept.ink, inline: "hull-white", weight: 0, lift: 0.08, flood: true };
+  return { face: concept.face, ink: concept.ink, weight: 0, lift: 0.04, flood: true, lines: false };
+}
+
+/** The lock-up on one plain field of hull colour, so the plating under the letters is painted out, with the pinstripe on top of that field. */
+function paintedLockup(registry: string, name: string, place: RoundPlace, style: MarkingStyle, raise: number): Piece[] {
+  const painted: MarkingStyle = { ...style, field: { material: "hull-white", pad: 1.1, raise } };
+  const out = lockup(registry, name, place, painted, undefined, 0.36);
+  const width = markingWidth(registry, place.height, painted);
+  const stripe = { ...lower(place, -(place.height / 2 + place.height * 0.16)), height: Math.max(0.3, place.height * 0.05) };
+  out.push(...stripeMarking(stripe, width, "red", { onField: raise, lines: false }));
+  return out;
 }
 
 /**
@@ -364,7 +372,7 @@ export function conceptStyle(id: string): MarkingStyle {
  * ```ts
  * import { conceptHull } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(conceptHull("michroma").length === 2);
+ * console.log(conceptHull("goldman").length === 2);
  * ```
  */
 export function conceptHull(id: string): KitEntry[] {
@@ -373,7 +381,13 @@ export function conceptHull(id: string): KitEntry[] {
   const base: PartRecord = { ...recordOf(KIT["tank-cryo-24"], partId, "fleet-markings"), trueTo: [`concept-${id}`], height: 440, diameter: TANK.radius * 2, joints: {} };
   // tank 1 stands outboard of the spine; its outer face is the opposite heading, where the blankets are and the feed manifold is not
   const toward = Math.atan2(-1, -1);
-  const marks = (): Piece[] => lockup("SPX-207", "ISV KAMINARI", { radius: TANK.radius + 0.8, y: 215, az: toward + Math.PI, height: 16, run: "up", align: "middle", sides: 40 }, conceptStyle(id), "red", 0.36);
+  const marks = (): Piece[] => {
+    const style = conceptStyle(id);
+    // 70 m keeps the registry and the whole name on the near face, inside the white band between the orange blankets
+    const height = heightFor("SPX-207", 70, 10, style);
+    const place: RoundPlace = { radius: TANK.radius + 1.2, y: 230, az: toward + Math.PI, height, run: "up", align: "middle", sides: 40 };
+    return paintedLockup("SPX-207", "ISV KAMINARI", place, style, 1.1);
+  };
   return [
     { record: { ...base, name: `Kaminari tank, ${id}` }, pieces: () => tank(toward, 2101, "T1", 1) },
     { record: { ...base, id: `${partId}-markings`, name: `Kaminari lettering, ${id}`, strapOn: { x: 0, z: 0, y: 0 } }, pieces: marks },
@@ -389,15 +403,20 @@ export function conceptHull(id: string): KitEntry[] {
  * ```ts
  * import { miyamotoHull } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(miyamotoHull("orbitron").length === 2);
+ * console.log(miyamotoHull("goldman").length === 2);
  * ```
  */
 export function miyamotoHull(id: string): KitEntry[] {
   if (!CONCEPT_FACES[id]) throw new Error(`"${id}" is not a concept face.`);
   const partId = `fleet-markings-miyamoto-${id}`;
   const base: PartRecord = { ...recordOf(KIT["habitat-drum-large"], partId, "fleet-markings"), trueTo: [`miyamoto-${id}`], height: 302, diameter: 26, joints: {} };
-  // 4.4 m keeps the longest face (Michroma, about 41 m) on the 52 m drum, and it is still the largest mark on it
-  const marks = (): Piece[] => lockup("SPX-452", "MIYAMOTO", { radius: 13.6, y: 276, az: 1.71, height: 4.4, run: "up", align: "middle", sides: 56 }, conceptStyle(id), "red", 0.36);
+  const marks = (): Piece[] => {
+    const style = conceptStyle(id);
+    // 36 m keeps the registry and the name on the 52 m drum
+    const height = heightFor("SPX-452", 36, 6, style);
+    const place: RoundPlace = { radius: 14.2, y: 276, az: 1.71, height, run: "up", align: "middle", sides: 56 };
+    return paintedLockup("SPX-452", "MIYAMOTO", place, style, 0.7);
+  };
   return [
     { record: { ...base, name: `Miyamoto habitat, ${id}` }, pieces: () => habitat(false) },
     { record: { ...base, id: `${partId}-markings`, name: `Miyamoto lettering, ${id}`, strapOn: { x: 0, z: 0, y: 0 } }, pieces: marks },
