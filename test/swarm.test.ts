@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildOf, playFrame } from "../src/buildPlay.ts";
-import { approachPath, berthRing, carries, pathClears, SWARM_CAP, swarmCount, swarmJobs, type HullBox } from "../src/swarm.ts";
+import { approachPath, berthRing, carries, grounded, pathClears, SWARM_CAP, swarmCount, swarmJobs, type HullBox } from "../src/swarm.ts";
 
 const hull: HullBox = { min: [-69, 0, -40], max: [69, 380, 34] };
 const slot: [number, number, number] = [0, 29, 0];
@@ -32,7 +32,7 @@ test("drones work only the steps that are underway, and they split across those 
   assert.ok(new Set(jobs.map((job) => job.slot)).size === mid.going.length);
 });
 
-test("drones ring the part they carry, and the part is on its way from the stack", () => {
+test("drones split between the work, the path and the berth, and a part waits for its mount", () => {
   const steps = buildOf("miyamoto");
   assert.ok(steps);
   const at = 100 / 1461;
@@ -41,15 +41,34 @@ test("drones ring the part they carry, and the part is on its way from the stack
   const dock: [number, number, number] = [140, 190, 0];
   const flown = carries(jobs, at, steps, () => [0, 0, 0], dock);
   assert.equal(flown.length, 24);
-  const xs = flown.map((one) => one.where[0]);
-  const zs = flown.map((one) => one.where[2]);
-  assert.ok(Math.max(...xs) - Math.min(...xs) > 20);
-  assert.ok(Math.max(...zs) - Math.min(...zs) > 20);
-  assert.ok(flown.every((one) => one.part[0] > 40 && one.part[0] < 100));
+  const work = flown.filter((one) => one.duty === "work");
+  const transit = flown.filter((one) => one.duty === "transit");
+  const berth = flown.filter((one) => one.duty === "berth");
+  assert.equal(work.length, 3);
+  assert.ok(transit.length >= 10);
+  assert.ok(berth.length >= 4);
+  const span = (axis: 0 | 1 | 2) => Math.max(...flown.map((one) => one.where[axis])) - Math.min(...flown.map((one) => one.where[axis]));
+  assert.ok(span(0) > 30);
+  assert.ok(span(1) > 80);
+  assert.ok(span(2) > 20);
+  assert.ok(work.every((one) => {
+    const dx = one.where[0] - one.part[0];
+    const dy = one.where[1] - one.part[1];
+    const dz = one.where[2] - one.part[2];
+    const distance = Math.hypot(dx, dy, dz);
+    return distance > 8 && distance < 28;
+  }));
+  assert.ok(work.every((one) => one.part[0] > 40 && one.part[0] < 100));
   assert.equal(carries(swarmJobs(steps, 24, 1), 1, steps, () => [0, 0, 0], dock).length, 0);
   const parked = berthRing(24, dock);
   assert.equal(parked.length, 24);
   assert.ok(Math.max(...parked.map((p) => p[0])) - Math.min(...parked.map((p) => p[0])) > 20);
+  const day = 0.4791;
+  const frame = playFrame(steps, day);
+  assert.equal(grounded("radiators-dorsal", frame.done), false);
+  assert.equal(grounded("radiators-ventral", frame.done), false);
+  assert.equal(grounded("fuel-fore", frame.done), true);
+  assert.equal(grounded("habitat", ["drive", "engineering", "fuel-aft", "fuel-fore"]), true);
 });
 
 test("the path stays outside the hull until the last leg, and each drone has its own berth", () => {

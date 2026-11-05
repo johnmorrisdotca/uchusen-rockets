@@ -117,27 +117,29 @@ export function approachPath(drone: number, count: number, slot: readonly [numbe
 }
 
 /**
- * One drone, the part it is carrying, and where the drone is.
+ * One drone, where it is, and the point its beam aims at.
  *
  * @example
  * ```ts
  * import type { Carry } from "@johnmorrisdotca/uchusen-rockets";
  *
- * const carry: Carry = { drone: 0, slot: "drive", part: [10, 0, 0], where: [10, 0, 16] };
+ * const carry: Carry = { drone: 0, slot: "drive", part: [10, 0, 0], where: [14, 0, 6], duty: "work" };
  * console.log(carry.slot);
  * ```
  */
 export interface Carry {
   drone: number;
   slot: string;
-  /** Where the part is, between the stack and its slot. */
+  /** Where the beam aims: the part, for a drone at the work, or a short point ahead. */
   part: [number, number, number];
-  /** Where the drone is, on a ring around that part. */
+  /** Where the drone is. */
   where: [number, number, number];
+  /** Working a part, flying the path, or waiting at the berth. */
+  duty: "work" | "transit" | "berth";
 }
 
 /**
- * Where each drone and the part it carries are at `at`. Parts leave a stack beside the ship and the drones ring the part, so they are spread around the work rather than stood in a line.
+ * Where each drone is at `at`. A few work each part that is being built, some fly the path from the stack, and some wait at the berth. Distances differ, so they do not sit in one ring.
  *
  * @param jobs Which slot each drone is on.
  * @param at How far through the build, from 0 to 1.
@@ -156,18 +158,101 @@ export interface Carry {
  */
 export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly PlayStep[], slotAt: (slot: string) => readonly [number, number, number] | undefined, dock: readonly [number, number, number]): Carry[] {
   const frame = playFrame(steps, at);
-  return jobs.map((job) => {
-    const step = steps.find((one) => one.slot === job.slot);
-    const slot = slotAt(job.slot) ?? dock;
+  const going = frame.going;
+  const n = jobs.length;
+  const parkN = n >= 4 && going.length > 0 ? Math.max(1, Math.floor(n / 4)) : 0;
+  const workN = going.length === 0 ? 0 : Math.min(n - parkN, Math.max(1, Math.min(n - parkN, going.length * 3)));
+  const cargoOf = (slot: string): [number, number, number] => {
+    const step = steps.find((one) => one.slot === slot);
+    const place = slotAt(slot) ?? dock;
     const t = step && step.days > 0 ? Math.min(1, Math.max(0, (frame.day - step.start) / step.days)) : 0;
-    const index = Math.max(0, frame.going.indexOf(job.slot));
-    const origin: [number, number, number] = [dock[0], dock[1] + (index - (frame.going.length - 1) / 2) * 22, dock[2]];
-    const part: [number, number, number] = [origin[0] + (slot[0] - origin[0]) * t, origin[1] + (slot[1] - origin[1]) * t, origin[2] + (slot[2] - origin[2]) * t];
-    const mates = jobs.filter((one) => one.slot === job.slot);
-    const place = Math.max(0, mates.findIndex((one) => one.drone === job.drone));
-    const turn = (place / Math.max(1, mates.length)) * Math.PI * 2;
-    return { drone: job.drone, slot: job.slot, part, where: [part[0] + Math.cos(turn) * 36, part[1], part[2] + Math.sin(turn) * 36] };
+    const index = Math.max(0, going.indexOf(slot));
+    const originY = dock[1] + (index - (going.length - 1) / 2) * 22;
+    return [dock[0] + (place[0] - dock[0]) * t, originY + (place[1] - originY) * t, dock[2] + (place[2] - dock[2]) * t];
+  };
+  return jobs.map((job, i) => {
+    const slot = slotAt(job.slot) ?? dock;
+    if (i < workN) {
+      const mates = jobs.slice(0, workN).filter((one) => one.slot === job.slot);
+      const place = Math.max(0, mates.findIndex((one) => one.drone === job.drone));
+      const turn = (place / Math.max(1, mates.length)) * Math.PI * 2 + 0.6;
+      const radius = 12 + (place % 3) * 5;
+      const cargo = cargoOf(job.slot);
+      const where: [number, number, number] = [cargo[0] + Math.cos(turn) * radius, cargo[1] + ((place % 5) - 2) * 3, cargo[2] + Math.sin(turn) * radius];
+      return { drone: job.drone, slot: job.slot, part: cargo, where, duty: "work" };
+    }
+    if (i < n - parkN) {
+      const along = 0.08 + ((job.drone * 3) % 10) / 10 * 0.84;
+      const lane = dock[0] - 6 - (job.drone % 4) * 8;
+      const lift = ((job.drone % 5) - 2) * 12;
+      const where: [number, number, number] = [
+        lane,
+        dock[1] + (slot[1] - dock[1]) * along + ((job.drone % 3) - 1) * 10,
+        dock[2] + (slot[2] - dock[2]) * along + lift,
+      ];
+      return { drone: job.drone, slot: job.slot, part: aimOf(where, slot, 5), where, duty: "transit" };
+    }
+    const turn = job.drone * 2.399;
+    const reach = 16 + (job.drone % 6) * 8;
+    const where: [number, number, number] = [dock[0] + 10 + Math.cos(turn) * 14, dock[1] + Math.sin(turn) * reach, dock[2] + Math.cos(turn * 1.7) * 12];
+    return { drone: job.drone, slot: job.slot, part: [where[0] - 3, where[1], where[2]], where, duty: "berth" };
   });
+}
+
+/** A point `metres` from `from` toward `toward`. */
+function aimOf(from: readonly [number, number, number], toward: readonly [number, number, number], metres: number): [number, number, number] {
+  const dx = toward[0] - from[0];
+  const dy = toward[1] - from[1];
+  const dz = toward[2] - from[2];
+  const span = Math.hypot(dx, dy, dz) || 1;
+  const scale = metres / span;
+  return [from[0] + dx * scale, from[1] + dy * scale, from[2] + dz * scale];
+}
+
+/** What a part stands on, for the ships whose build is a spine with parts hung on it. */
+const STANDS_ON: Readonly<Record<string, string>> = {
+  engineering: "drive",
+  "fuel-aft": "engineering",
+  "fuel-fore": "fuel-aft",
+  habitat: "fuel-fore",
+  command: "habitat",
+  bow: "command",
+  "drive-collar": "drive",
+  "hangar-starboard": "fuel-aft",
+  "hangar-port": "habitat",
+  "hangar-starboard-fore": "habitat",
+  "hangar-port-aft": "fuel-aft",
+  pod: "fuel-fore",
+  array: "fuel-fore",
+  "radiators-dorsal": "habitat",
+  "radiators-ventral": "habitat",
+  "exterior-load": "hangar-starboard",
+};
+
+/**
+ * Whether `slot` may stand in the picture. A part waits until the part it stands on has finished, and that one waits the same way. A slot with no mount may stand.
+ *
+ * @param slot The slot.
+ * @param done Slots whose step has finished.
+ * @returns True when every part it stands on is finished.
+ * @example
+ * ```ts
+ * import { grounded } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(grounded("habitat", ["drive", "engineering", "fuel-aft", "fuel-fore"]));
+ * console.log(grounded("radiators-dorsal", ["drive"]));
+ * ```
+ */
+export function grounded(slot: string, done: readonly string[]): boolean {
+  const seen = new Set<string>();
+  let mount: string | undefined = STANDS_ON[slot];
+  while (mount) {
+    if (seen.has(mount)) return false;
+    seen.add(mount);
+    if (!done.includes(mount)) return false;
+    mount = STANDS_ON[mount];
+  }
+  return true;
 }
 
 /**

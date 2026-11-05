@@ -49,7 +49,7 @@ import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materi
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { playFrame } from "../buildPlay.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
-import { berthRing, carries, swarmCount, swarmJobs } from "../swarm.ts";
+import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
 import { SwarmRig } from "./swarm.ts";
 import type { Spin } from "../spin.ts";
 import { besideLabel } from "../beside.ts";
@@ -806,7 +806,7 @@ export class RocketViewer {
     }
     const box = this.litBounds();
     if (this.progressAt === null) return box;
-    return { min: [box.min[0] - 20, box.min[1], box.min[2] - 50] as Vec3, max: [box.max[0] + 110, box.max[1], box.max[2] + 50] as Vec3 };
+    return { min: [box.min[0] - 70, box.min[1] - 90, box.min[2] - 80] as Vec3, max: [box.max[0] + 160, box.max[1] + 90, box.max[2] + 80] as Vec3 };
   }
 
   private flightParts() {
@@ -1196,6 +1196,8 @@ export class RocketViewer {
       delete this.canvas.dataset.swarm;
       delete this.canvas.dataset.going;
       delete this.canvas.dataset.built;
+      delete this.canvas.dataset.showing;
+      if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
       this.wake();
       return;
@@ -1210,10 +1212,11 @@ export class RocketViewer {
       const place = places.find((one) => one.slot === part.slot);
       const step = steps.find((one) => one.slot === part.slot);
       if (!place || !step) continue;
-      if (frame.done.includes(step.slot)) {
+      const seated = grounded(step.slot, frame.done);
+      if (frame.done.includes(step.slot) && seated) {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.visible = place.shown;
-      } else if (frame.going.includes(step.slot)) {
+      } else if (frame.going.includes(step.slot) && seated) {
         const flown = carries([{ drone: 0, slot: step.slot }], at, steps, (slot) => slotAt.get(slot), dock)[0];
         if (flown) part.holder.position.set(flown.part[0], flown.part[1], flown.part[2]);
         part.holder.visible = true;
@@ -1226,10 +1229,11 @@ export class RocketViewer {
     this.swarm.show(poses, jobs.length ? [] : berthRing(count, dock), dock);
     this.canvas.dataset.swarm = String(count);
     this.canvas.dataset.going = frame.going.join(" ");
-    this.canvas.dataset.built = frame.done.join(" ");
+    this.canvas.dataset.built = frame.done.filter((slot) => grounded(slot, frame.done)).join(" ");
+    this.canvas.dataset.showing = this.parts.filter((part) => !part.beside && part.holder.visible).map((part) => part.slot).join(" ");
     if (!this.progressFramed) {
       this.progressFramed = true;
-      this.setAngle(this.homeAngle, false);
+      this.setAngle({ az: this.homeAngle.az, el: -4 }, false);
     }
     this.wake();
   }
