@@ -51,6 +51,7 @@ const usage = (page: Page) =>
   });
 
 const miyamoto = "/uchusen-rockets/?rocket=fleet-ship-03&variant=miyamoto&look=painted&view=three-quarter&build=on";
+const ariake = "/uchusen-rockets/?rocket=fleet-ship-ariake&variant=ariake&look=painted&view=three-quarter&build=on";
 
 test("twenty-four drone boxes stay outside the hull", async ({ page }) => {
   await page.goto("/uchusen-rockets/swarm.html");
@@ -72,6 +73,14 @@ test("day 100 of Miyamoto shows the drive underway and 24 drones", async ({ page
   await expect(canvas).toHaveAttribute("data-built", "");
   await expect(canvas).toHaveAttribute("data-weld", "dot");
   await expect(canvas).toHaveAttribute("data-swarm-near", /\d+/);
+});
+
+test("Ariake builds with the same swarm", async ({ page }) => {
+  await page.goto(`${ariake}&at=0.3`);
+  const canvas = page.getByTestId("hero").locator("canvas");
+  await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 60_000 });
+  await expect(canvas).toHaveAttribute("data-going", /.+/);
+  await expect(canvas).toHaveAttribute("data-frame-ms", /\d/, { timeout: 45_000 });
 });
 
 test("leaving builder mode and coming back keeps the drone buffers", async ({ page }) => {
@@ -132,19 +141,19 @@ test("builder pictures", async ({ page }, info) => {
   const desk = { width: 1440, height: 900 };
   const phone = { width: 390, height: 844 };
   const FRAME = "html,body,main,#main-view{background:#070c17 !important;margin:0 !important}main > :not(#main-view){display:none !important}#view-bar{position:fixed !important;left:-4000px !important;top:0 !important}.stage-row{margin:0 !important;display:block !important;width:100vw !important}.stage-box{padding:0 !important;border:0 !important;background:#070c17 !important;width:100vw !important}uchusen-rocket,.stage-box uchusen-rocket,.stage-box uchusen-rocket[data-panel]{max-width:none !important;width:100vw !important;height:100vh !important;margin:0 !important}uchusen-rocket::part(figure){aspect-ratio:auto !important;width:100% !important;height:100vh !important}";
-  const shoot = async (at: string, name: string, size: { width: number; height: number }) => {
+  const shoot = async (base: string, at: string, name: string, size: { width: number; height: number }, swarm = "24") => {
     await page.setViewportSize(size);
-    await page.goto(`${miyamoto}&at=${at}`);
+    await page.goto(`${base}&at=${at}`);
     await page.addStyleTag({ content: FRAME });
     const canvas = page.getByTestId("hero").locator("canvas");
-    await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 60_000 });
+    await expect(canvas).toHaveAttribute("data-swarm", swarm, { timeout: 60_000 });
     await expect(canvas).toHaveAttribute("data-frame-ms", /\d/, { timeout: 45_000 });
     await expect.poll(async () => canvas.evaluate((node) => node.clientHeight)).toBeGreaterThan(size.height * 0.75);
     await canvas.screenshot({ path: `${dir}/${name}.png` });
   };
   for (const at of ["0.0684", "0.3", "0.6"]) {
-    await shoot(at, `miyamoto-${at}`, desk);
-    await shoot(at, `miyamoto-${at}-phone`, phone);
+    await shoot(miyamoto, at, `miyamoto-${at}`, desk);
+    await shoot(miyamoto, at, `miyamoto-${at}-phone`, phone);
   }
   await page.setViewportSize(desk);
   await page.goto(`${miyamoto}&at=0.6`);
@@ -164,4 +173,30 @@ test("builder pictures", async ({ page }, info) => {
   }
   await page.waitForTimeout(600);
   await canvas.screenshot({ path: `${dir}/miyamoto-close.png` });
+});
+
+test("fleet builder pictures", async ({ page }, info) => {
+  test.skip(!process.env.SHOTS || info.project.name !== "chromium-desk", "pictures only when SHOTS is set, on the desk");
+  test.setTimeout(600_000);
+  const dir = process.env.SHOTS ?? "";
+  const frame = "html,body,main,#main-view{background:#070c17 !important;margin:0 !important}main > :not(#main-view){display:none !important}#view-bar{position:fixed !important;left:-4000px !important;top:0 !important}.stage-row{margin:0 !important;display:block !important;width:100vw !important}.stage-box{padding:0 !important;border:0 !important;background:#070c17 !important;width:100vw !important}uchusen-rocket,.stage-box uchusen-rocket,.stage-box uchusen-rocket[data-panel]{max-width:none !important;width:100vw !important;height:100vh !important;margin:0 !important}uchusen-rocket::part(figure){aspect-ratio:auto !important;width:100% !important;height:100vh !important}";
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const ships = [
+    { base: ariake, name: "ariake", swarm: "24" },
+    { base: "/uchusen-rockets/?rocket=fleet-kaminari&variant=fleet-kaminari&look=painted&view=three-quarter&build=on", name: "kaminari", swarm: "96" },
+    { base: "/uchusen-rockets/?rocket=fleet-emiake&variant=fleet-emiake&look=painted&view=three-quarter&build=on", name: "emiake", swarm: "96" },
+    { base: "/uchusen-rockets/?rocket=fleet-romaryu&variant=fleet-romaryu&look=painted&view=three-quarter&build=on", name: "romaryu", swarm: "96" },
+    { base: "/uchusen-rockets/?rocket=fleet-ship-01&variant=hanabusa&look=painted&view=three-quarter&build=on", name: "hanabusa", swarm: "48" },
+  ];
+  for (const ship of ships) {
+    for (const at of ["0.0684", "0.3", "0.6"]) {
+      await page.goto(`${ship.base}&at=${at}`);
+      await page.addStyleTag({ content: frame });
+      const canvas = page.getByTestId("hero").locator("canvas");
+      await expect(canvas).toHaveAttribute("data-swarm", ship.swarm, { timeout: 60_000 });
+      await expect(canvas).toHaveAttribute("data-frame-ms", /\d/, { timeout: 45_000 });
+      await expect.poll(async () => canvas.evaluate((node) => node.clientHeight)).toBeGreaterThan(600);
+      await canvas.screenshot({ path: `${dir}/${ship.name}-${at}.png` });
+    }
+  }
 });
