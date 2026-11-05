@@ -21,3 +21,22 @@ test("the build row is on a ship with an order, and a still keeps the place", as
   await expect.poll(() => new URL(page.url()).searchParams.get("at")).toBe("0.6000");
   await expect(bar.getByTestId("build-now")).toContainText(day(0.6));
 });
+
+test("the row is on for each ship with an order, and off for a ship without one", async ({ page }) => {
+  const shown = [
+    "/uchusen-rockets/?rocket=fleet-ship-ariake&variant=ariake",
+    "/uchusen-rockets/?rocket=fleet-ship-01&variant=hanabusa",
+    "/uchusen-rockets/?rocket=fleet-kaminari&variant=fleet-kaminari",
+    "/uchusen-rockets/?rocket=fleet-emiake&variant=fleet-emiake",
+    "/uchusen-rockets/?rocket=fleet-romaryu&variant=fleet-romaryu",
+  ];
+  for (const url of shown) {
+    await page.goto(url);
+    await expect(page.locator("#build-field")).toBeVisible();
+    await expect(page.locator("uchusen-build").getByTestId("build-play")).toBeDisabled();
+  }
+  for (const url of ["/uchusen-rockets/?rocket=fleet-kyotori&variant=kyotori", "/uchusen-rockets/?rocket=fleet-02&variant=fleet-02"]) {
+    await page.goto(url);
+    await expect(page.locator("#build-field")).toBeHidden();
+  }
+});
