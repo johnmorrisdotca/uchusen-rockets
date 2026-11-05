@@ -56,10 +56,10 @@ test("a rated trip names its figure; a higher-energy figure is 'at least'; no fi
   assert.equal(moonSaturn.verdict.level, "rated");
   assert.match(moonSaturn.verdict.line, /43\.5 t to the Moon/);
   const moonHeavy = planTrip(S, craftOf("falcon-heavy")!, "earth", "moon", NOW);
-  assert.equal(moonHeavy.verdict.level, "at-least");
-  assert.match(moonHeavy.verdict.line, /at least 16\.8 t/);
+  assert.equal(moonHeavy.verdict.level, "flyby");
+  assert.ok(moonHeavy.verdict.because.some((line) => /at least 16\.8 t/.test(line)));
   const marsHeavy = planTrip(S, craftOf("falcon-heavy")!, "earth", "mars", mars);
-  assert.equal(marsHeavy.verdict.level, "rated");
+  assert.equal(marsHeavy.verdict.level, "flyby");
   const marsSaturn = planTrip(S, craftOf("saturn-v")!, "earth", "mars", mars);
   assert.equal(marsSaturn.verdict.level, "not-rated");
   assert.ok(marsSaturn.verdict.playable);
@@ -204,4 +204,15 @@ test("the words: digits near c are never rounded up to 100 per cent, and speeds 
   assert.equal(speedWords(340), "340 m/s");
   assert.equal(duration(700), "11 min 40 s");
   assert.equal(duration(258.8 * 86400), "258 d 19 h");
+});
+
+test("a payload without an engine flies past and never brakes", () => {
+  const trip = planTrip(S, craftOf("falcon-heavy")!, "earth", "mars", mars);
+  assert.equal(trip.verdict.level, "flyby");
+  assert.match(trip.verdict.line, /no braking engine/);
+  assert.ok(trip.phases.some((phase) => phase.id === "flyby"));
+  assert.ok(!trip.phases.some((phase) => phase.id === "brake"));
+  assert.equal(trip.dv.arrival, 0);
+  assert.equal(trip.ballistic!.brakeS, 0);
+  assert.equal(trip.fuel.usedT, null);
 });

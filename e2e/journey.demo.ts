@@ -16,7 +16,7 @@ const problems = (page: Page): string[] => {
 test("the page opens with Earth to Mars chosen, a verdict, a route, a map and the numbers, and the choices are rows of buttons", async ({ page }) => {
   const found = problems(page);
   await page.goto(URL);
-  await expect(page.getByTestId("verdict")).toContainText("Rated: 16.8 t to Mars");
+  await expect(page.getByTestId("verdict")).toContainText("no braking engine");
   await expect(page.getByTestId("from-earth")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("to-mars")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("craft-falcon-heavy")).toHaveAttribute("aria-pressed", "true");
@@ -37,7 +37,7 @@ test("choosing a place, a craft, a date and a view changes the trip and the addr
   const found = problems(page);
   await page.goto(URL);
   await page.getByTestId("to-moon").click();
-  await expect(page.getByTestId("verdict")).toContainText("at least 16.8 t");
+  await expect(page.getByTestId("verdict")).toContainText("no braking engine");
   await page.getByTestId("craft-saturn-v").click();
   await expect(page.getByTestId("verdict")).toContainText("Rated: 43.5 t to the Moon");
   await page.getByTestId("view-map").click();
@@ -194,7 +194,7 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
   await page.goto(`${URL}&craft=falcon-heavy&to=mars`);
   await expect(page.getByTestId("trip-payload")).toHaveText("16.8 t");
   await expect(page.locator("#trip").getByText("Payload to Mars")).toBeVisible();
-  await expect(page.getByTestId("trip-fuel")).toContainText("n/a: no source gives the specific impulse");
+  await expect(page.getByTestId("trip-fuel")).toContainText("n/a: it does not brake");
   await page.goto(`${URL}&craft=saturn-v&to=moon`);
   await expect(page.getByTestId("trip-payload")).toHaveText("43.5 t");
   await expect(page.getByTestId("trip-fuel")).toContainText("10.2 t");

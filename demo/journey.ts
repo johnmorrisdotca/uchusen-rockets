@@ -580,6 +580,7 @@ function showSummary(): void {
   const end = stateAt(trip, SOURCE, total);
   setText(byId("summary-route"), `${stopName(trip.from)} → ${stopName(trip.to)} · ${craftName(craftNow())}`);
   const facts: [string, string][] = [
+    [say(`jLevel_${trip.verdict.level}`), trip.verdict.line],
     [say("jStraight"), `${kilometres(trip.straightKm)} (${astronomicalUnits(trip.straightKm)})`],
     [say("jPath"), kilometres(trip.pathKm)],
     [say("jShip"), duration(trip.shipS)],

@@ -210,7 +210,6 @@ export const CRAFTS: readonly Craft[] = [
     payload: {
       name: "A spacecraft of the Mars-transfer payload mass",
       massKg: { value: 16_800, source: "wikipedia-falcon-heavy", note: "The Mars figure." },
-      brakeG: { value: 0.2, source: null, estimate: "The article names no spacecraft, so no engine: 0.2 g is a typical figure for a storable-propellant main engine on a craft of this mass." },
     },
     ascentS: ascentEstimate(540),
     flipS: { value: 120, source: null, estimate: "The turn before a braking burn is taken as two minutes." },

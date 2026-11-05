@@ -406,9 +406,10 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
   const payload = craft.payload;
   const thrust = quantity(payload.thrustN, "braking engine thrust", estimated);
   const mass = quantity(payload.massKg, "payload mass", estimated);
-  const brakeG = thrust !== null && mass !== null ? thrust / mass / G0 : quantity(payload.brakeG, "braking acceleration", estimated) ?? 0.2;
+  const brakeG = thrust !== null && mass !== null ? thrust / mass / G0 : quantity(payload.brakeG, "braking acceleration", estimated);
+  const noEngine = brakeG === null || brakeG <= 0;
   const dvAvailable = payload.dvMs?.value ?? null;
-  const flyby = dvAvailable !== null && dvAvailable < dv2 * 1000;
+  const flyby = noEngine || (dvAvailable !== null && dvAvailable < dv2 * 1000);
   const ascentS = quantity(craft.ascentS, "time to orbit", estimated) ?? 540;
   let burnS = quantity(craft.departureBurnS, "departure burn length", estimated);
   if (burnS === null) {
@@ -416,7 +417,7 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
     estimated.push("departure burn length");
   }
   const flipS = quantity(craft.flipS, "turn-round time", estimated) ?? 120;
-  const brakeS = flyby ? 0 : (dv2 * 1000) / (brakeG * G0);
+  const brakeS = flyby ? 0 : (dv2 * 1000) / (brakeG! * G0);
 
   const arcSteps = 360;
   const arc = [0];
@@ -447,10 +448,13 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
   end += ARRIVAL_S;
 
   const peakSpeed = Math.max(burnEndSpeed, captureSpeedIn) * 1000;
-  const peakG = Math.max((dv1 * 1000) / burnS / G0, flyby ? 0 : brakeG);
+  const peakG = Math.max((dv1 * 1000) / burnS / G0, flyby ? 0 : brakeG!);
   let verdict: Verdict;
   const because: string[] = [verdictCap.line];
-  if (flyby) {
+  if (noEngine) {
+    const line = "Flyby only: no braking engine is specified for the payload.";
+    verdict = { level: "flyby", line, because, playable: true };
+  } else if (flyby) {
     because.push(`${payload.name} can change its speed by ${Math.round(dvAvailable!).toLocaleString("en-US")} m/s; stopping at ${stopName(source, to)} needs ${Math.round(dv2 * 1000).toLocaleString("en-US")} m/s.`);
     verdict = { level: "flyby", line: `Flyby only: not enough fuel on board to stop at ${stopName(source, to)} (${Math.round(dv2 * 1000).toLocaleString("en-US")} m/s needed, ${Math.round(dvAvailable!).toLocaleString("en-US")} m/s on board).`, because, playable: true };
   } else {
