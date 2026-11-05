@@ -64,7 +64,12 @@ test("the size slider: offered to the concepts only, 60 to 100 in steps of 5, in
     await page.locator('[data-testid="beside-on"]').click();
     await expect(hero(page)).toHaveAttribute("data-beside", "on");
     await inView(page, "fleet-kaminari", 60, true);
-    await slider(page).fill("85");
+    // the thumb is let go: `change` is what rebuilds the ship, and a range filled while the view is settling does not always fire it
+    await slider(page).evaluate((node) => {
+      const input = node as HTMLInputElement;
+      input.value = "85";
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
     await expect.poll(() => param(page, "kscale")).toBe("85");
     await expect(hero(page)).toHaveAttribute("data-size", "85");
     await inView(page, "fleet-kaminari", 85, true);
