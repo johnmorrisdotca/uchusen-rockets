@@ -47,7 +47,10 @@ import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
+import { playFrame } from "../buildPlay.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
+import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
+import { SwarmRig } from "./swarm.ts";
 import type { Spin } from "../spin.ts";
 import { besideLabel } from "../beside.ts";
 import { fliesInSpace } from "../rockets.ts";
@@ -263,6 +266,10 @@ export class RocketViewer {
   private plinths: Group | null = null;
   /** The words on a plinth. The compare page sets them in the reader's language. */
   private scaleNote = "shown on the ground for scale";
+  private swarm: SwarmRig | null = null;
+  private progressAt: number | null = null;
+  private progressFramed = false;
+  private progressSteps: readonly { slot: string; start: number; days: number }[] | null = null;
   private focusing = false;
   private nearSaid = false;
   private nearAt = 0;
@@ -429,6 +436,7 @@ export class RocketViewer {
     this.canvas.dataset.ready = "true";
     this.canvas.dataset.parts = this.parts.filter((part) => !part.beside).map((part) => part.slot).join(" ");
     this.canvas.dataset.beside = built.beside.length ? "on" : "off";
+    this.applyProgress();
     this.fitPlinths();
     this.drivenDirty = this.driven !== null;
     this.wake();
@@ -791,10 +799,14 @@ export class RocketViewer {
   /** What the picture must hold: all of a flight while one is on. */
   private boundsNow() {
     if (!this.built) throw new Error("nothing is loaded");
-    if (!this.clockNow) return this.litBounds();
-    const { height, parts } = this.flightParts();
-    const { min, max } = flightBounds(this.clockNow.flight, parts, height);
-    return { min, max };
+    if (this.clockNow) {
+      const { height, parts } = this.flightParts();
+      const { min, max } = flightBounds(this.clockNow.flight, parts, height);
+      return { min, max };
+    }
+    const box = this.litBounds();
+    if (this.progressAt === null) return box;
+    return { min: [box.min[0] - 70, box.min[1] - 90, box.min[2] - 80] as Vec3, max: [box.max[0] + 160, box.max[1] + 90, box.max[2] + 80] as Vec3 };
   }
 
   private flightParts() {
@@ -1159,6 +1171,74 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Shows the build at `at`, or the finished ship when `at` is null. Slots not yet begun are hidden. A slot being built is on its way from the stack, with the drones around it. */
+  setProgress(at: number | null, steps: readonly { slot: string; start: number; days: number }[] | null): void {
+    this.progressAt = at;
+    this.progressSteps = steps;
+    if (this.built && this.parts.length) this.applyProgress();
+  }
+
+  private applyProgress(): void {
+    const built = this.built;
+    if (!built) return;
+    const places = built.placesOf(this.show);
+    const at = this.progressAt;
+    const steps = this.progressSteps;
+    const restore = at === null || !steps || steps.length === 0;
+    if (restore) {
+      for (const part of this.parts) {
+        const place = places.find((one) => one.slot === part.slot);
+        if (!place) continue;
+        part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.visible = place.shown;
+      }
+      this.swarm?.hide();
+      delete this.canvas.dataset.swarm;
+      delete this.canvas.dataset.going;
+      delete this.canvas.dataset.built;
+      delete this.canvas.dataset.showing;
+      if (this.progressFramed) this.setAngle(this.homeAngle, false);
+      this.progressFramed = false;
+      this.wake();
+      return;
+    }
+    const frame = playFrame(steps, at);
+    const shown = places.filter((place) => place.shown && !place.slot.startsWith("beside-"));
+    if (shown.length === 0) return;
+    const dock: [number, number, number] = [Math.max(...shown.map((place) => place.at[0])) + 40, shown.reduce((sum, place) => sum + place.at[1], 0) / shown.length, 0];
+    const slotAt = new Map(shown.map((place) => [place.slot, place.at] as const));
+    for (const part of this.parts) {
+      if (part.beside) continue;
+      const place = places.find((one) => one.slot === part.slot);
+      const step = steps.find((one) => one.slot === part.slot);
+      if (!place || !step) continue;
+      const seated = grounded(step.slot, frame.done);
+      if (frame.done.includes(step.slot) && seated) {
+        part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.visible = place.shown;
+      } else if (frame.going.includes(step.slot) && seated) {
+        const flown = carries([{ drone: 0, slot: step.slot }], at, steps, (slot) => slotAt.get(slot), dock)[0];
+        if (flown) part.holder.position.set(flown.part[0], flown.part[1], flown.part[2]);
+        part.holder.visible = true;
+      } else part.holder.visible = false;
+    }
+    const count = swarmCount(built.report.variant?.id ?? "") ?? 0;
+    const jobs = swarmJobs(steps, count, at);
+    const ys = shown.map((place) => place.at[1]);
+    const poses = carries(jobs, at, steps, (slot) => slotAt.get(slot), dock, [Math.min(...ys), Math.max(...ys)]);
+    this.swarm ??= new SwarmRig(this.root);
+    this.swarm.show(poses, jobs.length ? [] : berthRing(count, dock), dock);
+    this.canvas.dataset.swarm = String(count);
+    this.canvas.dataset.going = frame.going.join(" ");
+    this.canvas.dataset.built = frame.done.filter((slot) => grounded(slot, frame.done)).join(" ");
+    this.canvas.dataset.showing = this.parts.filter((part) => !part.beside && part.holder.visible).map((part) => part.slot).join(" ");
+    if (!this.progressFramed) {
+      this.progressFramed = true;
+      this.setAngle({ az: this.homeAngle.az, el: -4 }, false);
+    }
+    this.wake();
+  }
+
   dispose(): void {
     this.disposed = true;
     cancelAnimationFrame(this.frame);
@@ -1182,6 +1262,8 @@ export class RocketViewer {
 
   /** Lets the graphics card have back what the parts took: geometries, the thick lines' materials and a licensed model's own materials and pictures. */
   private disposeParts(): void {
+    this.swarm?.dispose();
+    this.swarm = null;
     this.clearPlinths();
     this.freePlumes();
     for (const part of this.parts) {

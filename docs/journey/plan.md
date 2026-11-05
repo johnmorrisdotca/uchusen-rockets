@@ -120,6 +120,8 @@ When 397 adds the cockpit and the painted 3D side view:
 - **Words:** the panel's text for known frames (units, digits near c, "est." marks); a hostile craft or body name is escaped.
 - **Browser:** the page opens with a trip shown; the picker rows exist and set the address; Play reaches the summary; no visible control is in the browser's default style (kyogijo's `controls.demo.mjs` pattern); at desk and phone width nothing overflows sideways; no WebGL context is made; the frame loop is idle at rest.
 
+What a trip still needs after this plan, and the order it will be built, is `docs/journey/rest.md` (MODULES-400).
+
 ## 7. How 395 to 401 split, and what the first slice holds
 
 | Ticket | What it is | In the first slice | Still to do |

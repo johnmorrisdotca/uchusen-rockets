@@ -80,6 +80,7 @@ const choice = {
   from: pickOf("from", stopIds, "earth"),
   to: pickOf("to", stopIds, "mars"),
   craft: pickOf("craft", CRAFTS.map((craft) => craft.id), "falcon-heavy"),
+  pull: query.get("pull") === "1" ? "1" : "ship",
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
   view: isView(askedView) ? askedView : "side",
   look: query.get("look") === "painted" ? "painted" : "line",
@@ -93,6 +94,7 @@ function writeAddress(): void {
   next.set("from", choice.from);
   next.set("to", choice.to);
   next.set("craft", choice.craft);
+  if (choice.pull === "1" && craftNow().drive === "continuous") next.set("pull", "1");
   if (choice.when > 0) next.set("w", String(choice.when));
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
@@ -128,7 +130,7 @@ function whenOptions(): Option[] {
     return windows(SOURCE, "earth", choice.to, base, 3).map((one, index) => ({ id: `w${index}`, label: dateWords(one.dateMs), ms: one.dateMs }));
   }
   if (craft.drive === "continuous" && choice.to !== "moon") {
-    const best = bestDate(SOURCE, craft, choice.from, choice.to, base);
+    const best = bestDate(SOURCE, craft, choice.from, choice.to, base, choice.pull === "1" ? 1 : undefined);
     const list = [{ id: "w0", label: say("jSoonest"), ms: base }];
     if (best > base) list.push({ id: "w1", label: say("jShortest"), ms: best });
     return list;
@@ -140,7 +142,8 @@ function plan(): void {
   options = whenOptions();
   if (choice.when >= options.length) choice.when = 0;
   const date = options[choice.when]?.ms ?? choice.base;
-  trip = planTrip(SOURCE, craftNow(), choice.from, choice.to, date);
+  const flown = craftNow();
+  trip = planTrip(SOURCE, flown, choice.from, choice.to, date, flown.drive === "continuous" && choice.pull === "1" ? 1 : undefined);
   total = Math.max(1, playSeconds(trip));
 }
 
@@ -161,6 +164,16 @@ function drawPickers(): void {
   byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
   byId("to").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.from).map((stop) => chip(stopName(stop.id), `to-${stop.id}`, stop.id === choice.to, () => change({ to: stop.id }))));
   byId("crafts").replaceChildren(...CRAFTS.map((craft) => chip(craftName(craft), `craft-${craft.id}`, craft.id === choice.craft, () => change({ craft: craft.id }))));
+  const continuous = craftNow().drive === "continuous";
+  byId("pull-field").hidden = !continuous;
+  byId("pulls").replaceChildren(
+    ...(continuous
+      ? [
+          chip(say("jPullShip"), "pull-ship", choice.pull !== "1", () => change({ pull: "ship" })),
+          chip(say("jPullOne"), "pull-1", choice.pull === "1", () => change({ pull: "1" })),
+        ]
+      : []),
+  );
   byId("when").replaceChildren(...options.map((option, index) => chip(option.label, `when-${index}`, index === choice.when, () => change({ when: index }))));
   byId("views").replaceChildren(...VIEWS.map((view) => chip(say(VIEW_WORD[view]), `view-${view}`, choice.view === view, () => setView(view))));
   const painted = choice.look === "painted";
@@ -168,7 +181,7 @@ function drawPickers(): void {
   byId("speeds").replaceChildren(...([0.5, 1, 2, 4] as const).map((value) => chip(`×${value}`, `speed-${value}`, speed === value, () => setSpeed(value))));
 }
 
-function change(next: Partial<{ from: string; to: string; craft: string; when: number }>): void {
+function change(next: Partial<{ from: string; to: string; craft: string; when: number; pull: "ship" | "1" }>): void {
   if (next.from !== undefined) {
     choice.from = next.from;
     choice.when = 0;
@@ -182,6 +195,7 @@ function change(next: Partial<{ from: string; to: string; craft: string; when: n
     choice.when = 0;
   }
   if (next.when !== undefined) choice.when = next.when;
+  if (next.pull !== undefined) choice.pull = next.pull;
   stop();
   playhead = 0;
   hideSummary();
@@ -533,8 +547,10 @@ function buildPanel(): void {
     ["dvin", say("jDvIn"), speedWords(trip.dv.arrival)],
     ...(trip.ballistic ? ([["burnout", say("jBurnOut"), duration(trip.ballistic.burnS), trip.estimated.includes("departure burn length")], ["burnin", say("jBurnIn2"), trip.ballistic.brakeS > 0 ? duration(trip.ballistic.brakeS) : "–", trip.estimated.includes("braking acceleration")]] as [string, string, string, boolean][]) : []),
     ["peakg", say("jPeakG"), gWords(trip.peakG), trip.estimated.includes("departure burn length") || trip.estimated.includes("braking acceleration")],
+    ...(trip.escape ? ([[ "escsurf", say("jEscapeSurface"), speedWords(trip.escape.surfaceKmS * 1000) ], [ "escpark", say("jEscapePark"), speedWords(trip.escape.parkingKmS * 1000) ]] as [string, string, string][]) : []),
     ["peak", say("jPeakSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     ["fuel", say("jFuel"), fuelWords()],
+    ["ratio", say("jMassRatio"), ratioWords()],
     ["payload", say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],
   ];
   const list = byId("trip");
@@ -556,6 +572,12 @@ function buildPanel(): void {
       return wrap;
     }),
   );
+}
+
+function ratioWords(): string {
+  if (trip.massRatio === null) return `${say("jNA")}: ${trip.fuel.note}`;
+  const text = trip.massRatio >= 100 ? trip.massRatio.toFixed(0) : trip.massRatio.toFixed(3);
+  return trip.drive === "ballistic" ? `${text}${japanese() ? "、" : ", "}${say("jBrakeOnly")}` : text;
 }
 
 function fuelWords(): string {
@@ -648,6 +670,7 @@ function showSummary(): void {
     [say("jPath"), kilometres(trip.pathKm)],
     [say("jShip"), duration(trip.shipS)],
     [say("jEarthT"), duration(trip.frameS)],
+    ...(trip.drive === "continuous" ? [[say("jClocks"), duration(trip.shipS) === duration(trip.frameS) ? `${say("jTwin")} ${say("jTwinSmall")}` : say("jTwin")] as [string, string]] : []),
     [say("jTopSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     [say("jPeakG"), gWords(trip.peakG)],
     [say("jDvAll"), speedWords(trip.dv.total)],

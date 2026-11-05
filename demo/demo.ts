@@ -276,20 +276,27 @@ function renderMain() {
   const built = buildOf(state.variant) ?? null;
   const buildBar = byId<UchusenBuild>("build-bar");
   byId("build-field").hidden = built === null;
-  buildBar.onMove = (at) => {
+  const showProgress = (at: number) => {
     address.set("build", at > 0 ? "on" : null);
     address.set("at", at > 0 ? at.toFixed(4) : null);
+    if (built) hero.setAttribute("progress", at.toFixed(4));
+    else hero.removeAttribute("progress");
   };
+  buildBar.onMove = showProgress;
   if (buildBar.dataset.forVariant !== state.variant) {
     const previous = buildBar.dataset.forVariant ?? "";
     buildBar.dataset.forVariant = state.variant;
     buildBar.steps = built;
     if (built) {
       const asked = playFrom(new URLSearchParams(location.search));
-      if (asked.on) buildBar.at = asked.at;
+      if (asked.on) {
+        buildBar.at = asked.at;
+        hero.setAttribute("progress", asked.at.toFixed(4));
+      } else hero.removeAttribute("progress");
     } else if (previous) {
       address.set("build", null);
       address.set("at", null);
+      hero.removeAttribute("progress");
     }
   }
   credit.hidden = state.look !== "painted";

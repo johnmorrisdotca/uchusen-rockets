@@ -112,6 +112,11 @@ test("seeking to a moment draws that moment on its own, and the end shows the su
   await page.goto(`${URL}&craft=kaminari&to=mars&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
+  await expect(page.getByTestId("summary")).toContainText("runs slower than the clocks at the two ends");
+  await expect(page.getByTestId("summary")).toContainText("smaller than the times above");
+  await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
+  await expect(page.getByTestId("summary")).toBeVisible();
+  await expect(page.getByTestId("summary")).not.toContainText("runs slower");
 });
 
 test("no control is left in the browser's own style, and nothing scrolls sideways", async ({ page }) => {
@@ -218,13 +223,19 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
   await expect(page.getByTestId("trip-payload")).toHaveText("16.8 t");
   await expect(page.locator("#trip").getByText("Payload to Mars")).toBeVisible();
   await expect(page.getByTestId("trip-fuel")).toContainText("n/a: it does not brake");
+  await expect(page.getByTestId("trip-ratio")).toContainText("n/a: it does not brake");
   await page.goto(`${URL}&craft=saturn-v&to=moon`);
   await expect(page.getByTestId("trip-payload")).toHaveText("43.5 t");
   await expect(page.getByTestId("trip-fuel")).toContainText("10.2 t");
+  await expect(page.getByTestId("trip-escsurf")).toContainText("km/s");
+  await expect(page.getByTestId("trip-escpark")).toContainText("km/s");
+  await expect(page.getByTestId("trip-ratio")).toContainText("the braking burn only");
   await page.goto(`${URL}&craft=saturn-v&to=mars`);
   await expect(page.getByTestId("trip-payload")).toContainText("n/a: no published payload figure covers a trip to Mars");
   await page.goto(`${URL}&craft=kaminari&to=mars`);
   await expect(page.getByTestId("trip-fuel")).toContainText("/");
+  await expect(page.getByTestId("trip-ratio")).toHaveText(/^[0-9]+\.[0-9]+$/);
+  await expect(page.getByTestId("trip-escsurf")).toHaveCount(0);
   await expect(page.getByTestId("trip-payload")).toContainText("million t");
 });
 
@@ -282,4 +293,22 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   await page.getByTestId("view-side").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
   expect(page.url()).toContain("look=painted");
+});
+
+test("a ship that burns all the way can be asked for 1 g, and a rocket is not offered the choice", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari`);
+  await expect(page.getByTestId("pull-field")).toBeVisible();
+  await expect(page.getByTestId("pull-ship")).toHaveAttribute("aria-pressed", "true");
+  const rated = await page.getByTestId("trip-time").innerText();
+  await page.getByTestId("pull-1").click();
+  await expect(page.getByTestId("pull-1")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("verdict")).toContainText("at 1 g");
+  await expect(page.getByTestId("verdict")).toContainText("rated at 0.015 g");
+  expect(page.url()).toContain("pull=1");
+  expect(await page.getByTestId("trip-time").innerText()).not.toBe(rated);
+  await page.goto(page.url());
+  await expect(page.getByTestId("pull-1")).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("craft-falcon-heavy").click();
+  await expect(page.getByTestId("pull-field")).toBeHidden();
+  expect(page.url()).not.toContain("pull=");
 });
