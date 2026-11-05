@@ -343,6 +343,7 @@ const unavailable = (craft: Craft, from: string, to: string, departMs: number, l
  * @param from The starting place's id.
  * @param to The destination's id.
  * @param departMs When the departure burn begins, milliseconds since 1970 (for a ballistic trip to a planet, one of `windows`).
+ * @param g Proper acceleration in g for a ship that burns all the way. Omitted, the ship flies at its rated acceleration. A ballistic craft ignores it.
  * @returns The planned trip.
  * @example
  * ```ts no-run
@@ -353,9 +354,9 @@ const unavailable = (craft: Craft, from: string, to: string, departMs: number, l
  * console.log(trip.verdict.line, Math.round(trip.dv.departure));
  * ```
  */
-export function planTrip(source: BodySource, craft: Craft, from: string, to: string, departMs: number): Trip {
+export function planTrip(source: BodySource, craft: Craft, from: string, to: string, departMs: number, g?: number): Trip {
   if (from === to) return unavailable(craft, from, to, departMs, "Pick two different places.", []);
-  return craft.drive === "ballistic" ? planBallistic(source, craft, from, to, departMs) : planContinuous(source, craft, from, to, departMs);
+  return craft.drive === "ballistic" ? planBallistic(source, craft, from, to, departMs) : planContinuous(source, craft, from, to, departMs, g);
 }
 
 /** Apollo 11's trans-Earth injection, from the mission report's Table 7-II: 3,279 ft/s in 151.4 seconds. */
@@ -693,11 +694,13 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
   };
 }
 
-function planContinuous(source: BodySource, craft: ContinuousCraft, from: string, to: string, departMs: number): Trip {
+function planContinuous(source: BodySource, craft: ContinuousCraft, from: string, to: string, departMs: number, asked?: number): Trip {
   const estimated: string[] = [];
   const nearEarth = (id: string): boolean => id === "earth" || id === "moon";
   const frame = nearEarth(from) && nearEarth(to) ? "earth" : "sun";
-  const a = craft.g.value * G0;
+  const rated = craft.g.value;
+  const g = asked !== undefined && Number.isFinite(asked) && asked > 0 ? asked : rated;
+  const a = g * G0;
   const flipS = quantity(craft.flipS, "turn-round time", estimated) ?? 600;
   const startAt = positionKm(source, from, departMs, frame);
   let seconds = 2 * Math.sqrt((len(sub(positionKm(source, to, departMs, frame), startAt)) * 1000) / a);
@@ -744,7 +747,8 @@ function planContinuous(source: BodySource, craft: ContinuousCraft, from: string
   let verdict: Verdict;
   if (blockedBySun) verdict = { level: "cannot", line: `The straight path passes too close to the Sun: pick another date.`, because, playable: false };
   else if (usedT > carried) verdict = { level: "cannot", line: `Not enough fuel: this trip needs ${Math.round(usedT).toLocaleString("en-US")} t of propellant and the ship carries ${Math.round(carried).toLocaleString("en-US")} t.`, because, playable: false };
-  else verdict = { level: "ok", line: `Can do it: ${(usedT / carried * 100) >= 1 ? (usedT / carried * 100).toFixed(0) : (usedT / carried * 100).toPrecision(2)} per cent of the propellant, at ${craft.g.value} g.`, because, playable: true };
+  else verdict = { level: "ok", line: `Can do it: ${(usedT / carried * 100) >= 1 ? (usedT / carried * 100).toFixed(0) : (usedT / carried * 100).toPrecision(2)} per cent of the propellant, at ${g} g.`, because, playable: true };
+  if (g > rated) because.push(`The ship is rated at ${rated} g. ${g} g is more than it is built to pull.`);
   if (estimated.length > 0) because.push(`Estimated, not from a source: ${[...new Set(estimated)].join(", ")}.`);
   const peak = accelerating(a, tb);
   return {
@@ -762,7 +766,7 @@ function planContinuous(source: BodySource, craft: ContinuousCraft, from: string
     straightKm: len(sub(positionKm(source, to, departMs, frame), startAt)),
     pathKm: distanceM / 1000,
     dv: { departure: C * plan.rapidity, arrival: C * plan.rapidity, total: 2 * C * plan.rapidity },
-    peakG: craft.g.value,
+    peakG: g,
     peakSpeed: peak.v,
     peakGamma: peak.gamma,
     shipS: plan.properSeconds,
@@ -782,6 +786,7 @@ function planContinuous(source: BodySource, craft: ContinuousCraft, from: string
  * @param from The starting place's id.
  * @param to The destination's id.
  * @param afterMs The earliest date.
+ * @param g Proper acceleration in g. Omitted, the ship flies at its rated acceleration. Passed on to `planTrip`.
  * @returns The date, milliseconds since 1970.
  * @example
  * ```ts no-run
@@ -791,12 +796,12 @@ function planContinuous(source: BodySource, craft: ContinuousCraft, from: string
  * console.log(new Date(bestDate(source, craftOf("kaminari")!, "earth", "mars", Date.UTC(2026, 10, 4))).toISOString());
  * ```
  */
-export function bestDate(source: BodySource, craft: Craft, from: string, to: string, afterMs: number): number {
+export function bestDate(source: BodySource, craft: Craft, from: string, to: string, afterMs: number, g?: number): number {
   let best = afterMs;
   let bestS = Infinity;
   for (let day = 0; day <= 800; day += 4) {
     const at = afterMs + day * DAY_S * 1000;
-    const trip = planTrip(source, craft, from, to, at);
+    const trip = planTrip(source, craft, from, to, at, g);
     if (trip.verdict.playable && trip.frameS < bestS) {
       bestS = trip.frameS;
       best = at;

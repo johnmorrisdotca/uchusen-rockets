@@ -176,6 +176,18 @@ test("a ship that burns all the way: speed rises, is greatest at the turn, falls
   near(stateAt(trip, S, 1e6).shipS, trip.shipS, 1, "time on board at the end");
 });
 
+test("asking a ship for 1 g shortens the trip and says the ship is not built for it", () => {
+  const rated = planTrip(S, fleetShip, "earth", "mars", NOW);
+  const one = planTrip(S, fleetShip, "earth", "mars", NOW, 1);
+  assert.equal(one.peakG, 1);
+  assert.ok(one.frameS < rated.frameS / 2, `${one.frameS} against ${rated.frameS}`);
+  assert.match(one.verdict.line, /at 1 g/);
+  assert.ok(one.verdict.because.some((line) => line.includes("rated at 0.015 g")));
+  assert.equal(planTrip(S, fleetShip, "earth", "mars", NOW, 0.015).frameS, rated.frameS);
+  const rocket = planTrip(S, craftOf("saturn-v")!, "earth", "moon", NOW);
+  assert.equal(planTrip(S, craftOf("saturn-v")!, "earth", "moon", NOW, 1).peakG, rocket.peakG);
+});
+
 test("the countdown: the preheat bar fills in ten segments, the ignition counts 3, 2, 1, and the burn timer runs down", () => {
   assert.deepEqual(preheat(-13), { percent: 0, full: 0, partial: 0 });
   assert.equal(preheat(-8).percent, 50);

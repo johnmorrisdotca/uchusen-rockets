@@ -283,3 +283,21 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
   expect(page.url()).toContain("look=painted");
 });
+
+test("a ship that burns all the way can be asked for 1 g, and a rocket is not offered the choice", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari`);
+  await expect(page.getByTestId("pull-field")).toBeVisible();
+  await expect(page.getByTestId("pull-ship")).toHaveAttribute("aria-pressed", "true");
+  const rated = await page.getByTestId("trip-time").innerText();
+  await page.getByTestId("pull-1").click();
+  await expect(page.getByTestId("pull-1")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("verdict")).toContainText("at 1 g");
+  await expect(page.getByTestId("verdict")).toContainText("rated at 0.015 g");
+  expect(page.url()).toContain("pull=1");
+  expect(await page.getByTestId("trip-time").innerText()).not.toBe(rated);
+  await page.goto(page.url());
+  await expect(page.getByTestId("pull-1")).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("craft-falcon-heavy").click();
+  await expect(page.getByTestId("pull-field")).toBeHidden();
+  expect(page.url()).not.toContain("pull=");
+});
