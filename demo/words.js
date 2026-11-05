@@ -301,7 +301,7 @@ export const WORDS = {
     cmpAdd: "機体を追加",
     cmpRemove: "{name}を比較から外す",
     cmpOpen: "ほかの機体と比べる",
-    cmpPlinth: "縮尺のため地面に置いて表示",
+    cmpPlinth: "大きさ比較のため地上に表示",
     jLabel: "旅：出発地、目的地、機体を選んで飛ばします",
     jMapLabel: "航路の地図",
     jCraftLabel: "横から見た機体",
