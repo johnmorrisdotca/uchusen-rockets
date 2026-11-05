@@ -4,9 +4,9 @@
 // centrifuge, Daedalus' coil-held fusion chamber and the Saturn V's ring of engines on a thrust structure. Pure: no three.js and no DOM.
 import { rng as shipRng } from "../ship-02/adapter.ts";
 import { container } from "../ship-02/cargo.ts";
-import { annulus, BUILDERS, deg, hoop, type Piece, place, revolve, rod, stamp, type Vec3 } from "./adapter.ts";
+import { annulus, deg, hoop, type Piece, place, revolve, rod, stamp, type Vec3 } from "./adapter.ts";
 import { berthSlot } from "./berth.ts";
-import { bundle, type ConceptSlot, radiatorFin, reactorCells, ringFrame, shieldDisc, stackOf, truss } from "./common.ts";
+import { bundle, type ConceptSlot, radiatorFin, reactorCells, repeatedDrum, ringFrame, shieldDisc, stackOf, truss } from "./common.ts";
 import { coilStack, thrusterRings, type ThrusterRing } from "./drive.ts";
 
 /** Concept A's numbers, metres: where each station starts, tail to bow. */
@@ -122,7 +122,7 @@ function carousel(which: 0 | 1): Piece[] {
   const out: Piece[] = [];
   // the hub: a bearing drum round the truss that turns, with a stationary collar at each end
   out.push(revolve("hull-white", [[hub, mid], [hub, mid + hubL]], 40, [0, 0], { body: true, outline: true }), annulus("hull-grey-dark", hub - 1, hub + 2, mid - 1, mid + 2, 40, { outline: true }), annulus("hull-grey-dark", hub - 1, hub + 2, mid + hubL - 2, mid + hubL + 1, 40, { outline: true }));
-  const drum = BUILDERS.habitatDrum("c-drum", "Slim habitat drum", drumR, drumL, 900, false).pieces({ detail: 0.45, seed: `c${which}` });
+  const drum = repeatedDrum(drumR, drumL);
   const poses = Array.from({ length: count }, (_, i) => ({ at: [ringR * Math.sin(deg((360 * i) / count + 30 * which)), mid + (hubL - drumL) / 2, ringR * Math.cos(deg((360 * i) / count + 30 * which))] as Vec3, yaw: (360 * i) / count + 30 * which }));
   out.push(...stamp(drum, poses));
   // spokes: two for every drum, each a lattice of round tube from the hub to the rim cage, and a rim cage at each end of the drums: two hoops, inside and outside the drums, tied by a strut at each drum
