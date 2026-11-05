@@ -21,6 +21,8 @@ export default defineConfig({
   // A hosted runner has two cores and draws 3D in software: one test at a time, with room for it.
   workers: process.env.CI ? 1 : 2,
   timeout: process.env.CI ? 240_000 : 120_000,
+  // A hosted runner draws in software at about half a Mac's speed, and one that is slow is twice as slow again: a check that waits for the address, the 3D view or a rebuilt picture was cut off at the default 5 s there, and passed when run again.
+  expect: { timeout: process.env.CI ? 30_000 : 5_000 },
   reporter: "list",
   use: { baseURL: `http://127.0.0.1:${port}`, headless: true, reducedMotion: "reduce", locale: "en-US" },
   webServer: { command: "node scripts/dev.ts", env: { PORT: String(port) }, url: `http://127.0.0.1:${port}/uchusen-rockets/`, reuseExistingServer: false },
