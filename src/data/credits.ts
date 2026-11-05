@@ -30,7 +30,7 @@ const nasa = (title: string, slug: string, changes: string): ModelCredit => ({
   title,
   creator: "NASA",
   creatorUrl: "https://science.nasa.gov/3d-resources/",
-  sourceUrl: `https://data.nasa.gov/dataset/${slug}`,
+  sourceUrl: slug.startsWith("https://") ? slug : `https://data.nasa.gov/dataset/${slug}`,
   licence: "Public domain (NASA)",
   licenceUrl: "https://www.nasa.gov/nasa-brand-center/images-and-media/",
   changes,
@@ -137,6 +137,11 @@ export const MODEL_CREDITS = {
   "nasa-jupiter-c": nasa("Jupiter-C", "nasa-3d-models-jupiter-c", "The lettering removed with the two pictures that carried it, which are plain white here; rescaled to the sourced height; its materials made into one picture."),
   "nasa-iss": nasa("ISS", "nasa-3d-models-iss", "Reduced from 174,440 triangles; a ball of stray pieces far above it left out; rescaled to the sourced length; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove."),
   "nasa-hubble": nasa("Hubble Space Telescope", "nasa-3d-models-hubble-space-telescope", "A lettered plate painted out of its picture; rescaled to the sourced length; its materials made into one picture."),
+  "nasa-cluster-ii": nasa("Cluster II", "https://science.nasa.gov/3d-resources/cluster-ii/", "Only the drum, its lid and the instruments on it kept, the booms left out; turned over so its gold foil faces down; squeezed to a third of its height and a third of its size across; its materials made into one picture with this package's own. No mark was on it."),
+  "nasa-insight": nasa("InSight Cruise and Lander, arm deployed", "https://science.nasa.gov/3d-resources/insight-cruise-lander/", "Only the arm's links, its five-claw grapple and a leg kept; each moved and scaled to the drone's arms; its materials made into one picture with this package's own. The lettering and flag plates were left out."),
+  "nasa-curiosity": nasa("Curiosity Rover (Detailed)", "https://science.nasa.gov/3d-resources/curiosity-rover-detailed/", "Only the arm's two links, its tool turret and a swivel kept, from NASA's printable parts (STL, no textures); painted by this package; moved and scaled to the drone's arms. No mark was on it."),
+  "nasa-hete": nasa("High Energy Transient Explorer", "https://science.nasa.gov/3d-resources/high-energy-transient-explorer/", "Its body kept as the drone's equipment block, turned and scaled; its materials made into one picture with this package's own. No mark was on it."),
+  "nasa-grease-gun": nasa("Grease Gun", "https://science.nasa.gov/3d-resources/grease-gun/", "Scaled from millimetres to the drone's welding tool and given a welding nozzle of this package's own; its materials made into one picture. No mark was on it."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

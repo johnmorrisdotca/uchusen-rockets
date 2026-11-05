@@ -193,6 +193,8 @@ interface PartView {
 const NOZZLE_MATERIALS: ReadonlySet<string> = new Set(["bell", "bell-inside", "engine-metal"]);
 const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
 /** The pictures a licensed model's material may hold (the shared sky it reflects is not one of them). */
+/** How brightly a painted model's glow picture shines when the lights are on. */
+const MODEL_GLOW = 1.5;
 const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
 export class RocketViewer {
@@ -904,6 +906,11 @@ export class RocketViewer {
           if (material.name === "steel") material.roughness = 0.46;
           this.dullTile(material, material.name);
           if (material.name === "tile") material.color.setScalar(0.42);
+          // a model with a glow picture (the repair drone's lights) lights up with the engines, like this package's own lamps
+          if (material.emissiveMap) {
+            material.emissiveIntensity = this.glowOn ? MODEL_GLOW : 0;
+            this.glowing.set(material, MODEL_GLOW);
+          }
         });
         part.holder.add(gltf.scene);
         part.modelState = "ready";

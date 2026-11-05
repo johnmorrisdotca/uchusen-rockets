@@ -20,7 +20,7 @@ export interface StackPart {
   /** Its own diameter's source, when the variant's is not this part's. */
   sourcedDiameter?: Figure;
   /** The painted look's model, when a licensed one shows it. */
-  painted?: { file: string; credit: CreditId };
+  painted?: { file: string; credit: CreditId; also?: readonly CreditId[] };
   /** Other variants it is true for. */
   alsoTrueTo?: readonly string[];
   pieces: () => Piece[];
