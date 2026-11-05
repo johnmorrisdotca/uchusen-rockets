@@ -3,6 +3,7 @@
 import type { BodySource, Stop } from "./bodies.ts";
 import { AU_KM, C, DAY_S, G0, GM_KM3_S2, PARKING_ALTITUDE_KM, PERIOD_DAYS } from "./constants.ts";
 import type { BallisticCraft, CapacityKind, ContinuousCraft, Craft, Quantity } from "./crafts.ts";
+import { ENTRY_ALTITUDE_KM, atmosphereReturn, conicPoint, leaveForPlanet, type Conic } from "./lunar.ts";
 import { accelerating, circularSpeed, escapeBurn, flipAndBurn, hohmann, transferPoint, wrapPi } from "./physics.ts";
 
 /** The kinds of phase a trip is made of: the countdown, the climb, the burns, the coast, the turn round, the braking and the arrival. */
@@ -123,6 +124,12 @@ export interface Trip {
     arc: number[];
     /** Where the departure and the destination body are in the frame, km, and the destination at arrival. */
     c3: number;
+    /** Set when the coast is not a Hohmann half-ellipse: the three-day return from the Moon. */
+    conic?: Conic;
+    /** The craft was already in orbit. The burn's speeds are measured from the start, and there is no ascent. */
+    fromOrbit?: boolean;
+    /** The coast meets an atmosphere, so there is no braking burn. */
+    entry?: boolean;
   };
   continuous?: {
     from: Vec3;
@@ -146,8 +153,15 @@ const stopOf = (source: BodySource, id: string): Stop => {
 const muOf = (source: BodySource, id: string): number => stopOf(source, id).muKm3s2 ?? GM_KM3_S2[id] ?? NaN;
 const periodOf = (source: BodySource, id: string): number => stopOf(source, id).periodDays ?? PERIOD_DAYS[id] ?? NaN;
 
-/** A place's position in a frame, km: round the Sun for a planet, round the Earth for the Moon (and the Earth's own is the origin of the Earth's frame). */
+/** A place's position in a frame, km. A moon is its offset from its planet; in the Sun's frame that planet's place is added. The Earth's own place is the origin of the Earth's frame. */
 export function positionKm(source: BodySource, id: string, ms: number, frame: "sun" | "earth"): Vec3 {
+  const stop = source.stops.find((one) => one.id === id);
+  if (stop?.kind === "moon" && stop.parent) {
+    if (frame === "earth" && stop.parent === "earth") return source.offsetKm(id, ms);
+    const parent = source.positionAu(stop.parent, ms);
+    const off = source.offsetKm(id, ms);
+    return [parent[0] * AU_KM + off[0], parent[1] * AU_KM + off[1], parent[2] * AU_KM + off[2]];
+  }
   if (frame === "earth") {
     if (id === "earth") return [0, 0, 0];
     return source.offsetKm(id, ms);
@@ -344,8 +358,187 @@ export function planTrip(source: BodySource, craft: Craft, from: string, to: str
   return craft.drive === "ballistic" ? planBallistic(source, craft, from, to, departMs) : planContinuous(source, craft, from, to, departMs);
 }
 
+/** Apollo 11's trans-Earth injection, from the mission report's Table 7-II: 3,279 ft/s in 151.4 seconds. */
+const APOLLO_11_TEI = { feetPerSecond: 3279, burnS: 151.4 } as const;
+
+/**
+ * A ballistic trip that leaves the Moon: home to the Earth's atmosphere in three days, or on to another planet with the Moon's orbital speed taken as helping. The craft is already in low lunar orbit, so there is no ascent and the drawing is the payload.
+ */
+function planMoon(source: BodySource, craft: BallisticCraft, to: string, departMs: number): Trip {
+  if (to === "sun") return unavailable(craft, "moon", to, departMs, "No transfer is planned to the Sun.", []);
+  const estimated: string[] = [];
+  const home = to === "earth";
+  const muEarth = muOf(source, "earth");
+  const muMoon = muOf(source, "moon");
+  const rLlo = parkRadius(source, "moon");
+  const moonNow = positionKm(source, "moon", departMs, "earth");
+  const rMoon = flat(moonNow);
+  const payload = craft.payload;
+  const thrust = payload.thrustN?.value ?? null;
+  const mass = payload.massKg?.value ?? null;
+  const noEngine = thrust === null || thrust <= 0;
+  const dvAvailable = payload.dvMs?.value ?? null;
+  const toName = stopName(source, to);
+
+  let mu: number;
+  let r1: number;
+  let r2: number;
+  let transitS: number;
+  let theta0: number;
+  let parkSpeed: number;
+  let burnEndSpeed: number;
+  let dvDep: number;
+  let dvArr: number;
+  let captureKm: number;
+  let captureSpeedIn: number;
+  let captureSpeedOut: number;
+  let vInf1: number;
+  let vInf2: number;
+  let straightKm: number;
+  let conic: Conic | undefined;
+  let entry = false;
+  if (home) {
+    const back = atmosphereReturn(muEarth, muMoon, rMoon, rLlo, stopOf(source, "earth").radiusKm + ENTRY_ALTITUDE_KM, lon(moonNow));
+    mu = muEarth;
+    r1 = rMoon;
+    r2 = stopOf(source, "earth").radiusKm + ENTRY_ALTITUDE_KM;
+    transitS = back.transitS;
+    theta0 = lon(moonNow);
+    parkSpeed = back.parkSpeed;
+    burnEndSpeed = back.burnEndSpeed;
+    dvDep = back.dvKmS;
+    dvArr = 0;
+    captureKm = r2;
+    captureSpeedIn = back.entrySpeed;
+    captureSpeedOut = back.entrySpeed;
+    vInf1 = back.vInfKmS;
+    vInf2 = 0;
+    conic = back.conic;
+    entry = true;
+    const start = conicPoint(mu, conic, 0);
+    const end = conicPoint(mu, conic, transitS);
+    straightKm = Math.hypot(end.x - start.x, end.y - start.y);
+  } else {
+    estimated.push("the Moon's orbital speed helping the departure");
+    mu = GM_KM3_S2.sun!;
+    const t = transferAt(source, "moon", to, departMs);
+    const leave = leaveForPlanet(muEarth, muMoon, rMoon, rLlo, t.dv1);
+    r1 = t.r1;
+    r2 = t.r2;
+    transitS = t.seconds;
+    theta0 = t.theta0;
+    parkSpeed = leave.parkSpeed;
+    burnEndSpeed = leave.burnEndSpeed;
+    dvDep = leave.dvKmS;
+    captureKm = parkRadius(source, to);
+    const muTo = muOf(source, to);
+    vInf1 = leave.vInfMoon;
+    vInf2 = t.dv2;
+    dvArr = escapeBurn(muTo, captureKm, vInf2);
+    captureSpeedIn = Math.sqrt(vInf2 ** 2 + (2 * muTo) / captureKm);
+    captureSpeedOut = circularSpeed(muTo, captureKm);
+    straightKm = len(sub(positionKm(source, to, departMs, "sun"), positionKm(source, "moon", departMs, "sun")));
+  }
+  const depMs = dvDep * 1000;
+  const arrMs = dvArr * 1000;
+  if (noEngine) return unavailable(craft, "moon", to, departMs, "Cannot leave the Moon: no engine is specified for the payload.", ["The published payload figures are for a launch from the Earth."]);
+  if (dvAvailable !== null && dvAvailable < depMs) {
+    return unavailable(craft, "moon", to, departMs, `Cannot leave the Moon: the departure needs ${Math.round(depMs).toLocaleString("en-US")} m/s and ${payload.name} can change its speed by ${Math.round(dvAvailable).toLocaleString("en-US")} m/s.`, []);
+  }
+  const flyby = !home && dvAvailable !== null && dvAvailable < depMs + arrMs;
+  const apollo = home && craft.id === "saturn-v";
+  let burnS: number;
+  if (apollo) burnS = APOLLO_11_TEI.burnS;
+  else if (thrust !== null && mass !== null) {
+    burnS = depMs / (thrust / mass);
+    estimated.push("departure burn length");
+  } else {
+    burnS = depMs / (0.6 * G0);
+    estimated.push("departure burn length");
+  }
+  const brakeG = thrust !== null && mass !== null ? thrust / mass / G0 : null;
+  const brakeS = flyby || home || brakeG === null ? 0 : arrMs / (brakeG * G0);
+
+  const arcSteps = 360;
+  const pointAt = (t: number): { r: number; theta: number } => (conic ? conicPoint(mu, conic, t) : transferPoint(mu, r1, r2, theta0, t));
+  const arc = [0];
+  let last = pointAt(0);
+  for (let i = 1; i <= arcSteps; i += 1) {
+    const p = pointAt((transitS * i) / arcSteps);
+    arc.push(arc[i - 1]! + Math.hypot(p.r * Math.cos(p.theta) - last.r * Math.cos(last.theta), p.r * Math.sin(p.theta) - last.r * Math.sin(last.theta)));
+    last = p;
+  }
+
+  let end = burnS + transitS;
+  const phases: Phase[] = [
+    phase("preheat", -13, -3, SCREEN.preheat),
+    phase("ignition", -3, 0, SCREEN.ignition),
+    phase("burn", 0, burnS, SCREEN.burn),
+    phase("coast", burnS, end, SCREEN.coast),
+  ];
+  if (!home && !flyby && brakeS > 0) {
+    phases.push(phase("brake", end, end + brakeS, SCREEN.brake));
+    end += brakeS;
+  } else if (flyby) {
+    phases.push(phase("flyby", end, end + 60, SCREEN.brake));
+    end += 60;
+  }
+  phases.push(phase("arrival", end, end + ARRIVAL_S, SCREEN.arrival));
+  end += ARRIVAL_S;
+
+  const because: string[] = [];
+  let verdict: Verdict;
+  if (apollo) {
+    const line = "Rated: the Apollo command and service module flew home from lunar orbit. Apollo 11's trans-Earth injection was 3,279 ft/s (Apollo 11 Mission Report).";
+    because.push("The craft at the Moon is the command and service module, not the whole Saturn V.");
+    because.push(`This plan's burn is ${Math.round(depMs).toLocaleString("en-US")} m/s and meets the atmosphere about three days later. The mission report's Table 7-II gives Apollo 11's burn as 3,279 ft/s in 151.4 seconds.`);
+    verdict = { level: "rated", line, because, playable: true };
+  } else if (home && craft.id === "sls") {
+    const line = "Rated: Orion flew home on Artemis I, from a distant retrograde orbit, not this three-day return.";
+    because.push(`This plan is a three-day return from low lunar orbit, a ${Math.round(depMs).toLocaleString("en-US")} m/s burn. Artemis I came home from a distant retrograde orbit, which is a different path.`);
+    because.push(`Orion can change its speed by ${Math.round(dvAvailable ?? 0).toLocaleString("en-US")} m/s, which covers this burn.`);
+    verdict = { level: "rated", line, because, playable: true };
+  } else if (flyby) {
+    const line = `Flyby only: not enough fuel on board to stop at ${toName} after leaving the Moon.`;
+    because.push(`${payload.name} can change its speed by ${Math.round(dvAvailable!).toLocaleString("en-US")} m/s; leaving and then stopping needs ${Math.round(depMs + arrMs).toLocaleString("en-US")} m/s.`);
+    verdict = { level: "flyby", line, because, playable: true };
+  } else {
+    const line = `Not rated: no published figure covers leaving the Moon for ${toName}.`;
+    because.push("The burns below are worked from the physics; nothing says this craft can make them from the Moon.");
+    verdict = { level: "not-rated", line, because, playable: true };
+  }
+  if (estimated.length > 0) because.push(`Estimated, not from a source: ${[...new Set(estimated)].join(", ")}.`);
+  const carries = { kg: null, atLeast: false, note: home ? "The spacecraft is already in lunar orbit. The published tonnes are for a launch from the Earth." : `No published payload figure covers leaving the Moon for ${toName}.` };
+  const fuel = { usedT: null, carriedT: null, note: apollo ? "Apollo 11's mission report gives the speed change and the burn length, not the propellant." : "No published propellant figure covers leaving the Moon." };
+  return {
+    from: "moon",
+    to,
+    craftId: craft.id,
+    drive: "ballistic",
+    frame: home ? "earth" : "sun",
+    departMs,
+    liftoffBeforeS: 0,
+    phases,
+    totalS: end,
+    verdict,
+    estimated: [...new Set(estimated)],
+    straightKm,
+    pathKm: arc[arcSteps]!,
+    fuel,
+    payload: carries,
+    dv: { departure: depMs, arrival: flyby || home ? 0 : arrMs, total: depMs + (flyby || home ? 0 : arrMs) },
+    peakG: Math.max(depMs / burnS / G0, flyby || home || brakeG === null ? 0 : brakeG),
+    peakSpeed: Math.max(burnEndSpeed, captureSpeedIn) * 1000,
+    peakGamma: 1,
+    shipS: end,
+    frameS: end,
+    ballistic: { mu, r1, r2, theta0, transitS, parkKm: rLlo, parkSpeed, burnEndSpeed, captureKm, captureSpeedIn, captureSpeedOut, burnS, brakeS, flipS: 0, ascentS: 0, vInfDeparture: vInf1, vInfArrival: vInf2, arc, c3: vInf1 ** 2, ...(conic ? { conic } : {}), fromOrbit: true, entry },
+  };
+}
+
 function planBallistic(source: BodySource, craft: BallisticCraft, from: string, to: string, departMs: number): Trip {
-  if (from !== "earth") return unavailable(craft, from, to, departMs, "Rockets in this version lift off from the Earth only.", ["A rocket's payload figures are for launches from the Earth."]);
+  if (from === "moon") return planMoon(source, craft, to, departMs);
+  if (from !== "earth") return unavailable(craft, from, to, departMs, "Rockets in this version leave from the Earth or the Moon.", ["A rocket's payload figures are for launches from the Earth."]);
   if (to === "sun") return unavailable(craft, from, to, departMs, "No transfer is planned to the Sun.", []);
   const estimated: string[] = [];
   const toMoon = to === "moon";
@@ -502,8 +695,8 @@ function planBallistic(source: BodySource, craft: BallisticCraft, from: string, 
 
 function planContinuous(source: BodySource, craft: ContinuousCraft, from: string, to: string, departMs: number): Trip {
   const estimated: string[] = [];
-  const frame = from === "moon" || to === "moon" ? "earth" : "sun";
-  if ((from === "moon" || to === "moon") && from !== "earth" && to !== "earth") return unavailable(craft, from, to, departMs, "The Moon can be reached from the Earth only, for now.", []);
+  const nearEarth = (id: string): boolean => id === "earth" || id === "moon";
+  const frame = nearEarth(from) && nearEarth(to) ? "earth" : "sun";
   const a = craft.g.value * G0;
   const flipS = quantity(craft.flipS, "turn-round time", estimated) ?? 600;
   const startAt = positionKm(source, from, departMs, frame);

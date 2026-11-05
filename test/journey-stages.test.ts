@@ -28,6 +28,9 @@ test("the stage at each phase: whole through the ascent, the upper stage with it
   assert.equal(stageOf(craftOf("falcon-heavy")!, "arrival").rocket, "dragon");
   assert.deepEqual(stageOf(craftOf("falcon-heavy")!, "arrival").slots, ["capsule", "trunk"]);
   assert.equal(stageOf(craftOf("kaminari")!, "brake").slots, null, "a ship that burns all the way stays whole");
+  assert.equal(stageOf(craftOf("saturn-v")!, "ascent", false).name, "Apollo command and service module");
+  assert.equal(stageOf(craftOf("saturn-v")!, "coast", false).name, "Apollo command and service module");
+  assert.equal(stagedSvg(craftOf("saturn-v")!, "coast", false, false).stage.name, "Apollo command and service module");
 });
 
 test("every stage is the rockets' own parts: its rocket, variant and slots exist, and each stage is part of the one before", () => {
