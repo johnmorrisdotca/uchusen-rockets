@@ -22,6 +22,8 @@ interface Shot {
   shadowBias?: number;
   /** How strongly lit materials glow in the lit look (default 1.6). */
   glow?: number;
+  /** Where the key light comes from, as a direction towards the light (default 0.5, 0.7, 0.6): the hero frames light the ship from ahead, along +Y. */
+  sunDir?: [number, number, number];
   /** The key light in the lit look (default 0.3). */
   sun?: number;
   /** Radius round the target the key light's shadow covers, metres. */
@@ -99,7 +101,7 @@ window.draw = async (job, shot) => {
     if (o.isMesh) {
       o.castShadow = shot.look !== "line"; o.receiveShadow = shot.look !== "line";
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (OPACITY[m.name] && shot.look !== 'line') { m.transparent = true; m.opacity = OPACITY[m.name]; m.depthWrite = false; } if (shot.look === 'lit') { const n = m.name || ''; const g = GLOW[n]; const glow = g ? [new THREE.Color(g.color), g.strength * (shot.glow ?? 1.6)] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
+      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (OPACITY[m.name] && shot.look !== 'line') { m.transparent = true; m.opacity = shot.look === 'lit' ? OPACITY[m.name] : OPACITY[m.name] * 0.8; m.depthWrite = false; if (m.name === 'glass-clear') { m.color.set('#a9cdee'); m.metalness = 0.35; m.roughness = 0.05; m.envMapIntensity = 2.4; } } if (shot.look === 'lit') { const n = m.name || ''; const g = GLOW[n]; const glow = g ? [new THREE.Color(g.color), g.strength * (shot.glow ?? 1.6)] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
       if (shot.look === "line") { const e = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), new THREE.LineBasicMaterial({ color: "#8fd3ff", clippingPlanes: planes })); o.add(e); }
     } else if (o.material) { o.material.clippingPlanes = planes; }
   });
@@ -112,7 +114,7 @@ window.draw = async (job, shot) => {
   camera.position.set(...shot.eye);
   camera.lookAt(...shot.target);
   const target = new THREE.Vector3(...shot.target);
-  const dir = new THREE.Vector3(0.5, 0.7, 0.6).normalize();
+  const dir = new THREE.Vector3(...(shot.sunDir ?? [0.5, 0.7, 0.6])).normalize();
   const sun = new THREE.DirectionalLight("#fff3e0", shot.look === "line" ? 0 : shot.look === "lit" ? (shot.sun ?? 0.3) : 2.6);
   const r = shot.shadow ?? 200;
   sun.position.copy(target).addScaledVector(dir, r * 3);

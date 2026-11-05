@@ -43,8 +43,8 @@ export interface Layout3 {
   pieces: () => Piece[];
 }
 
-type Style = "ring" | "beads";
-interface Geo {
+export type Style = "ring" | "beads";
+export interface Geo {
   rOut: number;
   depth: number;
   wide: number;
@@ -52,10 +52,10 @@ interface Geo {
   /** Corner radius of the ring's section. */
   c: number;
 }
-const rIn = (g: Geo): number => g.rOut - g.depth;
+export const rIn = (g: Geo): number => g.rOut - g.depth;
 
 /** Half the width of the section at radius r, less a metre of wall: how far a floor reaches across. */
-function reach(g: Geo, r: number): number {
+export function reach(g: Geo, r: number): number {
   if (g.style === "beads") {
     const m = g.depth / 2;
     return Math.sqrt(Math.max(0, m * m - (r - (g.rOut - m)) ** 2)) - 0.8;
@@ -69,7 +69,7 @@ function reach(g: Geo, r: number): number {
 }
 
 /** The rounded section of a ring as a closed profile going up the outside. */
-function roundSection(g: Geo, y: number, grow = 0): [number, number][] {
+export function roundSection(g: Geo, y: number, grow = 0): [number, number][] {
   const out: [number, number][] = [];
   const ro = g.rOut + grow;
   const ri = rIn(g) - grow;
@@ -89,17 +89,17 @@ function roundSection(g: Geo, y: number, grow = 0): [number, number][] {
   return out;
 }
 
-const poses = (n: number, y: number, start = 0): Pose[] => Array.from({ length: n }, (_, i) => ({ at: [0, y, 0] as Vec3, yaw: start + (360 * i) / n }));
+export const poses = (n: number, y: number, start = 0): Pose[] => Array.from({ length: n }, (_, i) => ({ at: [0, y, 0] as Vec3, yaw: start + (360 * i) / n }));
 
-const sphere = (material: MaterialName, at: Vec3, r: number): Lathe => ({ kind: "lathe", material, at: [at[0], at[2]], segs: 24, only: "mesh", profile: Array.from({ length: 13 }, (_, i) => [Math.max(0.001, r * Math.sin((Math.PI * i) / 12)), at[1] - r * Math.cos((Math.PI * i) / 12)] as const) });
+export const sphere = (material: MaterialName, at: Vec3, r: number): Lathe => ({ kind: "lathe", material, at: [at[0], at[2]], segs: 24, only: "mesh", profile: Array.from({ length: 13 }, (_, i) => [Math.max(0.001, r * Math.sin((Math.PI * i) / 12)), at[1] - r * Math.cos((Math.PI * i) / 12)] as const) });
 
-type Use = "garden" | "living" | "research" | "hydro";
+export type Use = "garden" | "living" | "research" | "hydro";
 
 /** One cylindrical band at radius r from axial a to b. */
-const bandAt = (material: MaterialName, r: number, a: number, b: number, segs = 120, arc?: (y: number) => readonly [number, number]): Lathe => ({ kind: "lathe", material, segs, only: "mesh", profile: [[r, a], [r, b]], ...(arc ? { arc } : {}) });
+export const bandAt = (material: MaterialName, r: number, a: number, b: number, segs = 120, arc?: (y: number) => readonly [number, number]): Lathe => ({ kind: "lathe", material, segs, only: "mesh", profile: [[r, a], [r, b]], ...(arc ? { arc } : {}) });
 
 /** What is inside one wheel: six floors, each a street with parks either side, light strips under the floor above, and houses, labs or trees along it. Stamped round the ring, so it costs vertices and no draw calls. */
-function interior(g: Geo, y: number, use: Use, town?: Town, gap?: number): Piece[] {
+export function interior(g: Geo, y: number, use: Use, town?: Town, gap?: number): Piece[] {
   const out: Piece[] = [];
   const arc = gap ? (): readonly [number, number] => [deg(gap), TAU - deg(gap)] : undefined;
   const shut = (az: number): boolean => !gap || (az >= gap && az <= 360 - gap);
@@ -140,7 +140,7 @@ function interior(g: Geo, y: number, use: Use, town?: Town, gap?: number): Piece
 const angleDiff = (a: number, b: number): number => ((((a - b) % 360) + 540) % 360) - 180;
 
 /** The places of a town, set at an azimuth on a floor: each builds its pieces in the pose's frame (x along the street, y across, z outward). */
-interface Town {
+export interface Town {
   skips: { k: number; az: number; half: number }[];
   landmarks: { k: number; az: number; id: string; build: (rf: number, h: number) => Piece[] }[];
 }
@@ -218,7 +218,7 @@ function shell(g: Geo, y: number): Piece[] {
 }
 
 /** The solar skirt round the outer edge: a band of cells on a frame, with ribs, standing 1.4 m off the rim. */
-function solar(g: Geo, y: number): Piece[] {
+export function solar(g: Geo, y: number): Piece[] {
   const out: Piece[] = [];
   const r = g.rOut + 1.4;
   const half = g.wide / 2 - 4;
@@ -236,7 +236,7 @@ function solar(g: Geo, y: number): Piece[] {
 }
 
 /** A glazed lift tube with its lit cars, from a to b: the elevator the wheel's people ride. */
-function liftTube(a: Vec3, b: Vec3, glassMaterial: MaterialName, radius: number, cars: readonly number[], angle: number): Piece[] {
+export function liftTube(a: Vec3, b: Vec3, glassMaterial: MaterialName, radius: number, cars: readonly number[], angle: number): Piece[] {
   const out: Piece[] = [rod(glassMaterial, a, b, radius, 14, { only: "mesh" }), rod("hull-grey", [a[0], a[1] + radius * 0.2, a[2]], [b[0], b[1] + radius * 0.2, b[2]], radius * 0.12, 6, { only: "mesh" })];
   for (const f of cars) {
     const p: Vec3 = [a[0] + (b[0] - a[0]) * f, a[1], a[2] + (b[2] - a[2]) * f];
@@ -257,7 +257,7 @@ function closeWheel(style: Style, y: number, use: Use, geo?: Geo): Piece[] {
 }
 
 /** The industrial wheel: opaque, with a deep section, lit window rows, hazard bands and six round spokes. */
-function industrialWheel(style: Style): Piece[] {
+export function industrialWheel(style: Style): Piece[] {
   const g: Geo = { rOut: SPIN.industrial.rOut, depth: SPIN.industrial.depth, wide: SPIN.industrial.wide, style, c: 6 };
   const y = SPIN.industrial.y;
   const out: Piece[] = [];
@@ -286,7 +286,7 @@ function industrialWheel(style: Style): Piece[] {
   return out;
 }
 
-function stackOf(list: readonly (string | KitModule)[], y0: number, detail: number): { pieces: Piece[]; end: number; at: Map<string, number> } {
+export function stackOf(list: readonly (string | KitModule)[], y0: number, detail: number): { pieces: Piece[]; end: number; at: Map<string, number> } {
   let y = y0;
   const pieces: Piece[] = [];
   const at = new Map<string, number>();
@@ -340,13 +340,13 @@ function drivePieces(): Piece[] {
 const DRIVE = { id: "mn-drive", length: 11.6, pieces: () => drivePieces() } as unknown as KitModule;
 
 /** The still hull: engines, reactor, large propellant tanks, farm and habitat drums, the docking hub and the bow sections: about 600 m of real modules, the wheels' hubs turning round it. */
-function hull(): Piece[] {
+export function hull(): Piece[] {
   const list: (string | KitModule)[] = [DRIVE, "reactor-fusion", TANK, TANK, TANK, TANK, HAB, FARM, TANK, TANK, FARM, TANK, HAB, TANK, "node-four", "adapter-l-m", "habitat-drum-crew", "common-area-m", "lab-m", "pod-survey-m", "solarium-m", "deck-nav-m", "dome-observation-m"];
   return stackOf(list, 0, 0.45).pieces;
 }
 
 /** The two propellant booms, turning with the wheels, and the cross-frames to each hub; and the axial lift between the hubs and the docking node. */
-function booms(): Piece[] {
+export function booms(): Piece[] {
   const out: Piece[] = [];
   const tanks = Array.from({ length: 17 }, () => BOOM_TANK);
   for (const sx of [-1, 1]) {
