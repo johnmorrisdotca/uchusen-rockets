@@ -58,9 +58,11 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // A plain drag turns the craft at every zoom. The package pans a zoomed view unless Turn is chosen, and Move is its start; Turn is this page's start. Move, a second finger, Shift and the other mouse buttons still pan.
 bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
+/** A size change calls `fit()` to hold the new ship. That is not the Fit button, so it must not turn true scale off or replace a concept's percent. */
+let fittingForSize = false;
 bar.addEventListener("kazoku-viewchange", (event) => {
   const detail = (event as CustomEvent).detail as { zoom?: number; reason?: string };
-  if (detail.reason === "fit") setScale(false);
+  if (detail.reason === "fit" && !fittingForSize) setScale(false);
   hero.drive(detail);
   const zoom = Math.max(0.25, detail.zoom ?? 1);
   const sky = byId("sky-back");
@@ -72,7 +74,7 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   else earth?.dispatchEvent(new Event("orbit"));
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look" } });
 /** What can stand beside the craft on screen. `on` is Starship with Super Heavy, the one the address has always used. The others are the same real craft the fleet band lies down. */
 const BESIDE_CHOICES: readonly { id: string; rocket: string; variant: string; testid: string; key?: string }[] = [
   { id: "on", rocket: "starship", variant: "v3", testid: "beside-on", key: "beside" },
@@ -94,6 +96,45 @@ function setScale(on: boolean): void {
 }
 scaleButton.addEventListener("click", () => setScale(hero.getAttribute("scale") !== "true"));
 setScale(address.get("scale") === "true");
+const PANELS = ["look", "background", "motion", "build", "lights"] as const;
+type PanelName = (typeof PANELS)[number];
+
+/** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. */
+function panelOffered(name: PanelName): boolean {
+  if (name === "motion") return !byId("motion-field").hidden;
+  if (name === "build") return !byId("build-field").hidden;
+  if (name === "lights") {
+    const field = byId("lights-field");
+    return !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
+  }
+  return true;
+}
+
+/** One group at a time. The choice is `panel` in the address, and Look is left off it. */
+function showPanels(): void {
+  const asked = address.get("panel") ?? "look";
+  const current: PanelName = (PANELS as readonly string[]).includes(asked) && panelOffered(asked as PanelName) ? (asked as PanelName) : "look";
+  for (const name of PANELS) {
+    const tab = document.querySelector(`[data-testid="panel-${name}"]`);
+    const group = document.querySelector(`[data-panel="${name}"]`);
+    const offered = panelOffered(name);
+    if (tab instanceof HTMLButtonElement) {
+      tab.hidden = !offered;
+      tab.setAttribute("aria-selected", String(name === current));
+    }
+    if (group instanceof HTMLElement) group.hidden = name !== current;
+  }
+  if (asked !== current) address.set("panel", current === "look" ? null : current);
+}
+
+for (const name of PANELS) {
+  document.querySelector(`[data-testid="panel-${name}"]`)?.addEventListener("click", () => {
+    if (!panelOffered(name)) return;
+    address.set("panel", name === "look" ? null : name);
+    showPanels();
+  });
+}
+new MutationObserver(() => showPanels()).observe(byId("lights-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
@@ -448,6 +489,7 @@ function renderMain() {
   drawEmbed();
   syncEarth();
   sizeObject();
+  showPanels();
 }
 
 /** The maker's row, and in the rocket's row only that maker's rockets. */
@@ -489,8 +531,12 @@ function pick(change: Partial<typeof state>) {
     } else if (state.background === "earth" || orbitCache.has(state.background)) settleOrbit(true);
     orbitAnimate = false;
   }
-  // the ship is a new size: Fit holds it, and Starship beside it, again
-  if (change.kscale !== undefined) bar.fit();
+  // the ship is a new size: Fit holds it, and Starship beside it, again. This fit is the camera, not the Fit button.
+  if (change.kscale !== undefined) {
+    fittingForSize = true;
+    bar.fit();
+    fittingForSize = false;
+  }
   address.set("rocket", state.rocket);
   address.set("variant", state.variant);
   address.set("show", state.show);
@@ -626,6 +672,7 @@ function showMotion() {
   press(motionBox, motionChoice === "off" ? "motion-off" : "motion-on");
   press(speedBox, motionChoice === "fast" ? "motion-fast" : "motion-real");
   address.set("motion", motionChoice === "on" ? null : motionChoice);
+  showPanels();
 }
 function chooseMotion(choice: string) {
   motionChoice = choice;

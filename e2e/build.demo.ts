@@ -11,6 +11,7 @@ test("the build row is on a ship with an order, and a still keeps the place", as
   await expect(page.locator("#build-field")).toBeHidden();
 
   await page.goto("/uchusen-rockets/?rocket=fleet-ship-03&variant=miyamoto&build=on&at=0.25");
+  await page.locator('[data-testid="panel-build"]').click();
   await expect(page.locator("#build-field")).toBeVisible();
   const bar = page.locator("uchusen-build");
   await expect(bar.getByTestId("build-play")).toBeDisabled();
@@ -32,6 +33,7 @@ test("the row is on for each ship with an order, and off for a ship without one"
   ];
   for (const url of shown) {
     await page.goto(url);
+    await page.locator('[data-testid="panel-build"]').click();
     await expect(page.locator("#build-field")).toBeVisible();
     await expect(page.locator("uchusen-build").getByTestId("build-play")).toBeDisabled();
   }
@@ -47,6 +49,7 @@ test.describe("the build plays", () => {
 
   test("1x is real time: about one story day in one second, and Pause shows while it plays", async ({ page }) => {
     await page.goto(miyamoto);
+    await page.locator('[data-testid="panel-build"]').click();
     const bar = page.locator("uchusen-build");
     await expect(bar.getByTestId("build-now")).toContainText("Day 0");
     await expect(bar.locator("kazoku-speed-buttons").getByRole("button", { name: "1×" })).toHaveAttribute("aria-pressed", "true");
@@ -64,6 +67,7 @@ test.describe("the build plays", () => {
 
   test("repeat wraps from the end to the keel, and the address keeps the speed and the repeat", async ({ page }) => {
     await page.goto(miyamoto);
+    await page.locator('[data-testid="panel-build"]').click();
     const bar = page.locator("uchusen-build");
     const speeds = bar.locator("kazoku-speed-buttons");
     await speeds.getByRole("button", { name: "60×" }).click();
@@ -84,6 +88,7 @@ test.describe("the build plays", () => {
     expect(new URL(page.url()).searchParams.get("build-speed")).toBe("10000");
     expect(new URL(page.url()).searchParams.get("pace")).toBe(null);
     await page.goto(`${miyamoto}&build-speed=10000&repeat=on`);
+    await page.locator('[data-testid="panel-build"]').click();
     await expect(bar.getByTestId("build-repeat")).toHaveAttribute("aria-pressed", "true");
     await expect(speeds.getByRole("button", { name: "10000×" })).toHaveAttribute("aria-pressed", "true");
     await expect(new URL(page.url()).searchParams.get("build-speed")).toBe("10000");
@@ -91,6 +96,7 @@ test.describe("the build plays", () => {
 
   test("the build speed and the turn's pace keep their own address keys", async ({ page }) => {
     await page.goto(miyamoto);
+    await page.locator('[data-testid="panel-build"]').click();
     const buildSpeeds = page.locator("uchusen-build kazoku-speed-buttons");
     const turnSpeeds = page.locator("#view-bar kazoku-speed-buttons");
     await buildSpeeds.getByRole("button", { name: "60×" }).click();
@@ -106,6 +112,7 @@ test.describe("the build plays", () => {
 
   test("back to the start resets the build to day 0", async ({ page }) => {
     await page.goto(`${miyamoto}&build=on&at=0.25`);
+    await page.locator('[data-testid="panel-build"]').click();
     const bar = page.locator("uchusen-build");
     await expect(bar.getByTestId("build-now")).not.toContainText("Day 0,");
     await bar.getByTestId("build-start").click();
