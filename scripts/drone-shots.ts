@@ -1,27 +1,51 @@
-// Pictures of the six detailed machines, and of each one working: the beam on, holding a part. The arms are shown latched to a truss. `node scripts/drone-shots.ts <folder>`.
+// Pictures of the three kept machines, and of each one working. The beam in these pictures is narrowed to the machine. The arm is shown with its clamp closed on a truss fixture. `node scripts/drone-shots.ts <folder>`.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import process from "node:process";
-import { tractorBeam } from "../src/beam.ts";
 import { toGlb } from "../src/build/glb.ts";
 import { DRONE_CONCEPTS } from "../src/model/fleet/drone/concepts.ts";
 import { hoop, post, rod } from "../src/model/fleet/detail.ts";
-import { meshOf, type Piece, type Vec3 } from "../src/model/pieces.ts";
+import { meshOf, strut, type Piece, type Vec3 } from "../src/model/pieces.ts";
 import { chamfer, polygon } from "../src/model/fleet/drone/plates.ts";
 
 const out = resolve(process.argv[2] ?? "drone");
 mkdirSync(join(out, "glb"), { recursive: true });
 
-const part = (at: Vec3): Piece => polygon("hull-orange", at, [0, 1, 0], [1, 0, 0], chamfer(0.12, 0.08, 0.03), 0.06);
+const part = (at: Vec3): Piece => polygon("hull-orange", at, [0, 1, 0], [1, 0, 0], chamfer(0.05, 0.04, 0.015), 0.03);
 
-function truss(): Piece[] {
+/** The carry cone, drawn at a drone's size. The package beam is 1.2 m across, which hides a machine this small. */
+function pictureBeam(from: Vec3, to: Vec3): Piece[] {
+  const along: Vec3 = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
+  const length = Math.hypot(along[0], along[1], along[2]) || 1;
+  const u: Vec3 = [along[0] / length, along[1] / length, along[2] / length];
+  const seed: Vec3 = Math.abs(u[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+  const raw: Vec3 = [u[1] * seed[2] - u[2] * seed[1], u[2] * seed[0] - u[0] * seed[2], u[0] * seed[1] - u[1] * seed[0]];
+  const l = Math.hypot(raw[0], raw[1], raw[2]) || 1;
+  const v: Vec3 = [raw[0] / l, raw[1] / l, raw[2] / l];
+  const w: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const spot = (alongM: number, turn: number, radius: number): Vec3 => {
+    const c = Math.cos(turn);
+    const s = Math.sin(turn);
+    return [from[0] + u[0] * alongM + (v[0] * c + w[0] * s) * radius, from[1] + u[1] * alongM + (v[1] * c + w[1] * s) * radius, from[2] + u[2] * alongM + (v[2] * c + w[2] * s) * radius];
+  };
+  const narrow = 0.03;
+  const wide = 0.11;
+  const sides = 16;
+  const out: Piece[] = [];
+  for (let i = 0; i < sides; i++) {
+    const turn = (i / sides) * Math.PI * 2;
+    out.push(strut("lamp-blue", spot(0, turn, narrow), spot(length, turn, wide), wide * 0.35, 0.02));
+  }
+  return out;
+}
+
+/** A truss whose grapple fixture sits at `at`, so a clamp there reads as closed on it. */
+function trussAt(at: Vec3): Piece[] {
   return [
-    post("hull-grey", [0, 0], 0.04, -0.15, 0.04, 0.15, 10),
-    rod("hull-grey", [-0.7, -0.02, 0], [0.9, -0.02, 0], 0.035, 8),
-    hoop("hull-grey", 0.07, 0.02, 0.012, 14, 4),
-    hoop("lamp-blue", 0.025, 0.02, 0.006, 10, 4),
-    hoop("hull-grey", 0.07, -0.02, 0.012, 14, 4, { at: [0.75, 0] }),
-    hoop("lamp-blue", 0.025, -0.02, 0.006, 10, 4, { at: [0.75, 0] }),
+    rod("hull-grey", [at[0] - 0.6, at[1], at[2]], [at[0] + 0.55, at[1], at[2]], 0.032, 8),
+    post("hull-grey", [at[0], at[2]], 0.03, at[1] - 0.18, 0.03, at[1] + 0.18, 8),
+    hoop("hull-grey", 0.065, at[1], 0.012, 14, 4, { at: [at[0], at[2]] }),
+    hoop("lamp-blue", 0.02, at[1], 0.006, 10, 4, { at: [at[0], at[2]] }),
   ];
 }
 
@@ -30,9 +54,9 @@ for (const make of DRONE_CONCEPTS) {
   const concept = make();
   const file = join(out, "glb", `${concept.id}.glb`);
   writeFileSync(file, toGlb([{ name: concept.id, mesh: meshOf(concept.pieces), at: [0, 0, 0] }]).bytes);
-  const held: Vec3 = [concept.mouth[0], concept.mouth[1] + 0.45, concept.mouth[2]];
-  const working: Piece[] = [...concept.pieces, ...tractorBeam({ from: concept.mouth, part: held, slot: held }, "carry"), part(held)];
-  if (concept.id.startsWith("arm-")) working.push(...truss());
+  const held: Vec3 = [concept.mouth[0], concept.mouth[1] + 0.32, concept.mouth[2]];
+  const working: Piece[] = [...concept.pieces, ...pictureBeam(concept.mouth, held), part(held)];
+  if (concept.id.startsWith("arm-")) working.push(...trussAt(concept.mouth));
   const workFile = join(out, "glb", `${concept.id}-work.glb`);
   writeFileSync(workFile, toGlb([{ name: concept.id, mesh: meshOf(working), at: [0, 0, 0] }]).bytes);
   const eye = (name: string, at: [number, number, number], up: [number, number, number] = [0, 0, 1]) => ({
