@@ -111,7 +111,7 @@ window.draw = async (job, shot) => {
   const [w, h] = shot.size ?? [1600, 900];
   renderer.setPixelRatio(1);
   renderer.setSize(w, h);
-  const camera = shot.ortho ? new THREE.OrthographicCamera((-shot.ortho * w) / h / 2, (shot.ortho * w) / h / 2, shot.ortho / 2, -shot.ortho / 2, 0.1, 3000) : new THREE.PerspectiveCamera(shot.fov ?? 35, w / h, 0.05, 3000);
+  const camera = shot.ortho ? new THREE.OrthographicCamera((-shot.ortho * w) / h / 2, (shot.ortho * w) / h / 2, shot.ortho / 2, -shot.ortho / 2, 0.1, 30000) : new THREE.PerspectiveCamera(shot.fov ?? 35, w / h, 0.5, 30000);
   camera.up.set(...(shot.up ?? [0, 0, 1]));
   camera.position.set(...shot.eye);
   camera.lookAt(...shot.target);

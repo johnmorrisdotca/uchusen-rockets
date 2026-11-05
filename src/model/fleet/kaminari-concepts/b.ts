@@ -4,7 +4,7 @@
 // Real ancestors: a ship's keel and frames, the Space Shuttle's payload-bay longerons, the ISS pressurised modules' plating, Gateway's HALO and the Mars transfer vehicle studies' radiator fins. Pure: no three.js and no DOM.
 import { type Face, facesOf, hatch, PLATE, plating, rng as numRng, stencil as faceStencil, vent } from "../ship-02/adapter.ts";
 import { container } from "../ship-02/cargo.ts";
-import { BUILDERS, cub, type Piece, place, prism, rod, stamp, type Vec3 } from "./adapter.ts";
+import { BUILDERS, cub, iBeam, type Piece, place, prism, rod, stamp, type Vec3 } from "./adapter.ts";
 import { type ConceptSlot, radiatorFin, reactorRows, stackOf } from "./common.ts";
 import { thrusterRings } from "./drive.ts";
 
@@ -45,8 +45,8 @@ function rib(y: number, seed: number): Piece[] {
   for (let i = 0; i < 6; i++) {
     const [ax, az] = v[i];
     const [bx, bz] = v[(i + 1) % 6];
-    out.push(rod("hull-grey", [ax, y, az], [bx, y, bz], 1.0, 10));
-    out.push(cub("engine-metal", [ax - 1.9, ax + 1.9], [y - 1.5, y + 1.5], [az - 1.9, az + 1.9]));
+    out.push(...iBeam("hull-grey", [ax, y, az], [bx, y, bz], [0, 1, 0], 3.4, 1.7));
+    out.push(cub("engine-metal", [ax - 2.2, ax + 2.2], [y - 2.2, y + 2.2], [az - 2.2, az + 2.2]));
   }
   // the ties: across the middle, and two from the keel to the upper corners
   out.push(rod("hull-grey-dark", [v[0][0], y, 0], [v[3][0], y, 0], 0.7, 8));
@@ -84,6 +84,25 @@ function ridge(y0: number, y1: number): Piece[] {
   for (const sx of [-1, 1]) out.push(rod("hull-grey", [sx * 3, y0, z], [sx * 3, y1, z], 0.6, 8, { only: undefined }), rod("hull-grey", [sx * 3, y0, z - 2.6], [sx * 3, y1, z - 2.6], 0.4, 8));
   out.push(rod("hull-grey", [0, y0, z + 2.2], [0, y1, z + 2.2], 0.6, 8, { only: undefined }));
   for (let y = y0; y <= y1; y += 30) out.push(rod("hull-grey-dark", [-3, y, z], [3, y, z], 0.3, 6), rod("hull-grey-dark", [-3, y, z], [0, y, z + 2.2], 0.3, 6), rod("hull-grey-dark", [3, y, z], [0, y, z + 2.2], 0.3, 6));
+  return out;
+}
+
+/** The open section's decks: the dorsal and ventral faces are plated between the ribs, panel by panel, with hatches, vents and stencilled frame numbers; the flanks stay open so the tanks and containers show. */
+function decks(): Piece[] {
+  const r = numbers(5300);
+  const out: Piece[] = [];
+  for (let y = B.y0 + 60; y < B.plated[0]; y += B.rib) {
+    const ya = y + 1.8;
+    const yb = y + B.rib - 1.8;
+    const ym = (ya + yb) / 2;
+    const W = halfWidth(ym) * 0.62 * 0.97;
+    for (const s of [1, -1]) {
+      out.push(cub(s > 0 ? "hull-white" : "hull-grey-dark", [-W, W], [ya, yb], [s * (B.H / 2 - 0.4), s * (B.H / 2 + 0.2)]));
+      const f = facesOf([0, ym, s * (B.H / 2)], [2 * W, yb - ya, 0.2], [s > 0 ? "z+" : "z-"])[0];
+      out.push(...plating(f, r, s > 0 ? PLATE : ["hull-grey-dark", "hull-grey-dark", "hull-grey", "dark"], 7, 7, { thick: 0.3, skip: 0.04, fine: 0.2 }));
+      if (Math.round((y - B.y0) / B.rib) % 3 === 1) out.push(...hatch(f, 0, 0, 4, 6, "dark", s > 0 ? "hull-orange" : "hull-yellow", 0.4), ...vent(f, W * 0.5, 0, 6, 4, 4));
+    }
+  }
   return out;
 }
 
@@ -230,7 +249,7 @@ function bulkhead(): Piece[] {
   const outline = hex(B.y0).map(([x, z]) => [x * 0.97, z * 0.97] as [number, number]);
   out.push(prism("hull-grey-dark", outline, plane, plane + 2, { only: undefined }), prism("hull-grey-dark", outline, plane + 14, plane + 18, { only: undefined }));
   for (const z of rows) out.push(rod("pipe-steel", [-W + 6, plane + 11.5, z], [W - 6, plane + 11.5, z], 0.9, 12), rod("coolant", [-W + 6, plane + 13, z + 3], [W - 6, plane + 13, z + 3], 0.7, 12));
-  for (let i = 0; i <= cols; i++) for (const z of [-21, -7.5, 7.5, 21]) out.push(rod("hull-grey", [(i - cols / 2) * pitch, plane + 2, z], [(i - cols / 2) * pitch, plane + 14, z], 0.9, 8));
+  for (let i = 0; i <= cols; i++) for (const z of [-21, -7.5, 7.5, 21]) if (Math.abs((i - cols / 2) * pitch) <= W * (1 - 0.38 * (Math.abs(z) / (B.H / 2))) - 4) out.push(rod("hull-grey", [(i - cols / 2) * pitch, plane + 2, z], [(i - cols / 2) * pitch, plane + 14, z], 0.9, 8));
   // the engine bay's flank plates, and a row of strobes on the stern edge
   for (const s of [-1, 1]) out.push(prism("hull-white-worn", [[s * W, 0], [s * W * 0.64, B.H / 2 * 0.97], [s * W * 0.64 + s * 1, B.H / 2 * 0.97], [s * W + s * 1, 0]], plane + 2, plane + 14), prism("hull-white-worn", [[s * W, 0], [s * W * 0.64, -B.H / 2 * 0.97], [s * W * 0.64 + s * 1, -B.H / 2 * 0.97], [s * W + s * 1, 0]], plane + 2, plane + 14));
   for (let i = 0; i < 9; i++) out.push(rod(i % 2 ? "strobe" : "lamp-amber", [(i - 4) * 18, plane + 18, B.H / 2], [(i - 4) * 18, plane + 19.4, B.H / 2], 0.5, 8));
@@ -252,7 +271,7 @@ const bridgeSlot: ConceptSlot = { slot: "bridge", name: "Bridge tower: docking n
 
 /** The slots, tail to bow. */
 export const SLOTS_B: readonly ConceptSlot[] = [
-  { slot: "frame", name: "Ribs and longerons", kind: "spacecraft", at: [0, B.y0, 0], height: B.plated[1] + 70 - B.y0, diameter: 168, note: "Forty-seven transverse ribs every 30 m, hexagonal rings of round tube, and six longerons along the corners of the wedge. Descends from a ship's frames and the Space Shuttle's payload-bay longerons.", pieces: () => local([...frames(), ...longerons(B.y0, B.plated[1] + 70)], B.y0) },
+  { slot: "frame", name: "Ribs and longerons", kind: "spacecraft", at: [0, B.y0, 0], height: B.plated[1] + 70 - B.y0, diameter: 168, note: "Forty-seven transverse ribs every 30 m, hexagonal rings of round tube, and six longerons along the corners of the wedge. Descends from a ship's frames and the Space Shuttle's payload-bay longerons.", pieces: () => local([...frames(), ...decks(), ...longerons(B.y0, B.plated[1] + 70)], B.y0) },
   { slot: "keel", name: "Armoured keel girder", kind: "spacecraft", at: [0, B.y0, -B.H / 2 - 14], height: B.length - 20 - B.y0, diameter: 18, note: "A box girder under the centreline, 14 m wide and 14 m deep, plated, with a service rail each side. It carries the thrust of the drive the whole length of the ship. Descends from a ship's keel and the ISS truss's main beam.", pieces: () => local(keel(B.y0, B.length - 20), B.y0, 0, -B.H / 2 - 14) },
   { slot: "ridge", name: "Dorsal ridge truss", kind: "arms", at: [0, B.y0, B.H / 2 + 2.4], height: B.plated[1] - B.y0, diameter: 8, note: "A light truss along the top of the wedge that carries the antennas and the roots of the radiator fins. Descends from the ISS truss's upper rail.", pieces: () => local(ridge(B.y0, B.plated[1]), B.y0, 0, B.H / 2 + 2.4) },
   { slot: "thrusters", name: "Drive grid: 27 magnetic-nozzle thrusters", kind: "engine", at: [0, 0, 0], height: 62, diameter: 140, note: "Twenty-seven magnetic-nozzle thrusters in three rows of nine across the stern face. Descends from the VASIMR VX-200 and the X3 nested Hall thruster.", pieces: drive },

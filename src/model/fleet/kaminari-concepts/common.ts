@@ -134,7 +134,7 @@ export function radiatorFin(az: number, r0: number, reach: number, y0: number, y
   const frameOf = (r: number, y: number) => ({ o: at(r, y), u: n, v: [0, 1, 0] as Vec3, w: t });
   for (let i = 0; i < bays; i++) {
     const y = y0 + (i + 0.5) * bay;
-    out.push({ kind: "plate", material: (i + seed) % 5 === 4 ? "radiator-hot" : "radiator", frame: frameOf(r0 + reach / 2, y), outline: [[-reach / 2, -bay / 2 + 0.6], [reach / 2, -bay / 2 + 0.6], [reach / 2, bay / 2 - 0.6], [-reach / 2, bay / 2 - 0.6]], thickness: 0.25, ribs: Array.from({ length: 6 }, (_, k) => [[-reach / 2, -bay / 2 + 0.6 + ((k + 1) * (bay - 1.2)) / 7], [reach / 2, -bay / 2 + 0.6 + ((k + 1) * (bay - 1.2)) / 7]] as const), quilt: undefined });
+    out.push({ kind: "plate", material: i === 0 && seed % 2 === 0 ? "radiator-hot" : "radiator", frame: frameOf(r0 + reach / 2, y), outline: [[-reach / 2, -bay / 2 + 0.6], [reach / 2, -bay / 2 + 0.6], [reach / 2, bay / 2 - 0.6], [-reach / 2, bay / 2 - 0.6]], thickness: 0.25, ribs: Array.from({ length: 6 }, (_, k) => [[-reach / 2, -bay / 2 + 0.6 + ((k + 1) * (bay - 1.2)) / 7], [reach / 2, -bay / 2 + 0.6 + ((k + 1) * (bay - 1.2)) / 7]] as const), quilt: undefined });
     for (let k = 0; k < 4; k++) out.push(rod("copper", at(r0 + 2, y - bay / 2 + 1 + ((k + 0.5) * (bay - 2)) / 4, 0.2), at(r0 + reach - 2, y - bay / 2 + 1 + ((k + 0.5) * (bay - 2)) / 4, 0.2), 0.12, 6));
     out.push(rod("hull-grey", at(r0 + reach, y - bay / 2 + 0.6, 0), at(r0 + reach, y + bay / 2 - 0.6, 0), 0.3, 6));
   }

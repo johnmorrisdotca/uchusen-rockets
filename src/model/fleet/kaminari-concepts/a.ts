@@ -124,19 +124,29 @@ function carousel(which: 0 | 1): Piece[] {
   const drum = BUILDERS.habitatDrum("c-drum", "Slim habitat drum", drumR, drumL, 900, false).pieces({ detail: 0.45, seed: `c${which}` });
   const poses = Array.from({ length: count }, (_, i) => ({ at: [ringR * Math.sin(deg((360 * i) / count + 30 * which)), mid + (hubL - drumL) / 2, ringR * Math.cos(deg((360 * i) / count + 30 * which))] as Vec3, yaw: (360 * i) / count + 30 * which }));
   out.push(...stamp(drum, poses));
-  // spokes: two for every drum, trusses of round tube from the hub to the drum's ends, and a rim ring at each end joining the drums
+  // spokes: two for every drum, each a lattice of round tube from the hub to the rim cage, and a rim cage at each end of the drums: two hoops, inside and outside the drums, tied by a strut at each drum
   for (let i = 0; i < count; i++) {
     const a = deg((360 * i) / count + 30 * which);
+    const sn = Math.sin(a);
+    const cs = Math.cos(a);
     for (const dy of [0.15, 0.85]) {
       const y = mid + hubL * dy;
-      for (const s of [-1, 1]) out.push(rod("hull-grey", [hub * Math.sin(a) + s * 1.5 * Math.cos(a), y, hub * Math.cos(a) - s * 1.5 * Math.sin(a)], [(ringR - drumR - 0.5) * Math.sin(a) + s * 1.5 * Math.cos(a), y, (ringR - drumR - 0.5) * Math.cos(a) - s * 1.5 * Math.sin(a)], 0.8, 8, { only: undefined }));
-      for (let q = 1; q < 8; q++) {
-        const r0 = hub + ((ringR - drumR - hub) * q) / 8;
-        out.push(rod("hull-grey-dark", [r0 * Math.sin(a) + 1.5 * Math.cos(a), y, r0 * Math.cos(a) - 1.5 * Math.sin(a)], [r0 * Math.sin(a) - 1.5 * Math.cos(a), y, r0 * Math.cos(a) + 1.5 * Math.sin(a)], 0.35, 6));
+      for (const [s, t] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as const) out.push(rod("hull-grey", [hub * sn + (s * 2.2 * cs), y + t * 2.2, hub * cs - s * 2.2 * sn], [(ringR - drumR - 1.5) * sn + s * 2.2 * cs, y + t * 2.2, (ringR - drumR - 1.5) * cs - s * 2.2 * sn], 0.7, 8, { only: undefined }));
+      for (let q = 0; q < 14; q++) {
+        const r0 = hub + ((ringR - drumR - 1.5 - hub) * q) / 14;
+        const r1 = hub + ((ringR - drumR - 1.5 - hub) * (q + 1)) / 14;
+        const f = q % 2 ? 1 : -1;
+        out.push(rod("hull-grey-dark", [r0 * sn + f * 2.2 * cs, y, r0 * cs - f * 2.2 * sn], [r1 * sn - f * 2.2 * cs, y, r1 * cs + f * 2.2 * sn], 0.3, 6), rod("hull-grey-dark", [r0 * sn, y + f * 2.2, r0 * cs], [r1 * sn, y - f * 2.2, r1 * cs], 0.3, 6));
       }
     }
   }
-  for (const y of [mid + (hubL - drumL) / 2 + 2, mid + (hubL + drumL) / 2 - 2]) out.push(hoop("hull-grey", ringR, y, 0.9, 96, 8, { outline: true }));
+  for (const y of [mid + (hubL - drumL) / 2 - 3, mid + (hubL + drumL) / 2 + 3]) {
+    out.push(hoop("hull-grey", ringR - drumR - 1.5, y, 1.1, 96, 8, { outline: true }), hoop("hull-grey", ringR + drumR + 1.5, y, 1.1, 96, 8, { outline: true }));
+    for (let i = 0; i < count; i++) {
+      const a = deg((360 * i) / count + 30 * which);
+      out.push(rod("hull-grey", [(ringR - drumR - 1.5) * Math.sin(a), y, (ringR - drumR - 1.5) * Math.cos(a)], [(ringR + drumR + 1.5) * Math.sin(a), y, (ringR + drumR + 1.5) * Math.cos(a)], 0.9, 8));
+    }
+  }
   return out;
 }
 

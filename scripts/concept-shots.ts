@@ -76,25 +76,40 @@ const lit = (key: ConceptKey): { at: V3; dir: V3; r: number; len: number }[] => 
   return plumes;
 };
 
-const W = 1300;
 const H = 2000;
 const jobs: unknown[] = [];
+const wide = (lo: number, hi: number): number => Math.ceil((hi - lo + 140) / 20) * 20;
 for (const c of concepts) {
   const hx = Math.max(Math.abs(c.min[0]), c.max[0]);
   const hzRight = c.max[2];
   const mid = (c.min[1] + c.max[1]) / 2;
-  const more = (axis: 0 | 2, sign: 1 | -1, edge: number) => row(axis, sign, edge).map((r) => ({ glb: refs.find((x) => x.id === r.id)!.file, at: r.at }));
+  // each view puts the craft beside on the side it looks from, and the picture is as wide as the row and no wider
+  const extent = (placed: { id: string; at: V3 }[], axis: 0 | 2, own: readonly [number, number]): [number, number] => {
+    let lo = own[0];
+    let hi = own[1];
+    for (const r of placed) {
+      const ref = refs.find((x) => x.id === r.id)!;
+      lo = Math.min(lo, r.at[axis] + ref.min[axis]);
+      hi = Math.max(hi, r.at[axis] + ref.max[axis]);
+    }
+    return [lo, hi];
+  };
+  const files = (placed: { id: string; at: V3 }[]) => placed.map((r) => ({ glb: refs.find((x) => x.id === r.id)!.file, at: r.at }));
+  const topRow = row(0, -1, hx);
+  const sideRow = row(2, 1, hzRight);
+  const frontRow = row(0, 1, hx);
+  const [tx0, tx1] = extent(topRow, 0, [c.min[0], c.max[0]]);
+  const [sz0, sz1] = extent(sideRow, 2, [c.min[2], c.max[2]]);
+  const [fx0, fx1] = extent(frontRow, 0, [c.min[0], c.max[0]]);
   const base = { glb: c.file };
-  // the views: top (from the dorsal side), side (from starboard), front (from ahead), three-quarter and lit
-  const topMore = more(0, -1, hx);
-  const sideMore = more(2, 1, hzRight);
-  const frontMore = more(0, 1, hx);
-  const size: [number, number] = [W, H];
-  jobs.push({ ...base, more: topMore, shots: [{ name: `${c.key}-top`, eye: [0, mid, 3000], target: [0, mid, 0], up: [0, 1, 0], ortho: 2000, size, look: "painted", shadow: 1300, sunDir: [0.2, 0.3, 1] }] });
-  jobs.push({ ...base, more: sideMore, shots: [{ name: `${c.key}-side`, eye: [3000, mid, 0], target: [0, mid, 0], up: [0, 1, 0], ortho: 2000, size, look: "painted", shadow: 1300, sunDir: [1, 0.3, 0.5] }] });
-  jobs.push({ ...base, more: frontMore, shots: [{ name: `${c.key}-front`, eye: [0, 3000, 0], target: [0, 0, 0], up: [0, 0, 1], ortho: 700, size: [1300, 700], look: "painted", shadow: 700, sunDir: [0.3, 1, 0.6] }] });
-  jobs.push({ ...base, more: topMore, shots: [{ name: `${c.key}-3q`, eye: [900, -700, 1100], target: [-300, mid, 0], up: [0, 1, 0], fov: 28, size, look: "painted", shadow: 1300, fill: 0.92, sunDir: [0.5, 0.5, 0.8] }] });
-  jobs.push({ ...base, more: topMore, shots: [{ name: `${c.key}-lit`, eye: [900, -700, 1100], target: [-300, mid, 0], up: [0, 1, 0], fov: 28, size, look: "lit", shadow: 1300, fill: 0.92, plumes: lit(c.key), glow: 2.2 }] });
+  jobs.push({ ...base, more: files(topRow), shots: [{ name: `${c.key}-top`, eye: [(tx0 + tx1) / 2, mid, 3000], target: [(tx0 + tx1) / 2, mid, 0], up: [0, 1, 0], ortho: 2000, size: [wide(tx0, tx1), H], look: "painted", shadow: 1300, sunDir: [0.2, 0.3, 1] }] });
+  jobs.push({ ...base, more: files(sideRow), shots: [{ name: `${c.key}-side`, eye: [3000, mid, (sz0 + sz1) / 2], target: [0, mid, (sz0 + sz1) / 2], up: [0, 1, 0], ortho: 2000, size: [wide(sz0, sz1), H], look: "painted", shadow: 1300, sunDir: [1, 0.3, 0.5] }] });
+  jobs.push({ ...base, more: files(frontRow), shots: [{ name: `${c.key}-front`, eye: [(fx0 + fx1) / 2, 3000, 0], target: [(fx0 + fx1) / 2, 0, 0], up: [0, 0, 1], ortho: 700, size: [wide(fx0, fx1), 700], look: "painted", shadow: 700, sunDir: [0.3, 1, 0.6] }] });
+  // the three-quarter views look at the same row as the top
+  const cx = (tx0 + tx1) / 2;
+  const view = { eye: [cx + 900, -700, 1100] as V3, target: [cx, mid, 0] as V3, up: [0, 1, 0] as V3, fov: 28, size: [wide(tx0, tx1) + 300, H] as [number, number], shadow: 1300, fill: 0.92 };
+  jobs.push({ ...base, more: files(topRow), shots: [{ name: `${c.key}-3q`, ...view, look: "painted", sunDir: [0.5, 0.5, 0.8] }] });
+  jobs.push({ ...base, more: files(topRow), shots: [{ name: `${c.key}-lit`, ...view, look: "lit", plumes: lit(c.key), glow: 2.2 }] });
 }
 // all three side by side, with the craft beside once, from the dorsal side and from starboard
 {
