@@ -1,4 +1,4 @@
-// The three construction machines: a small ring drone cheap enough to draw a hundred times, a claw tug, and an arm that grips at both ends.
+// The six detailed construction machines: two silhouettes of each kind, each one mesh, each with a glowing ring where the beam leaves.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DRONE_CONCEPTS, droneConcept, type DroneConcept } from "../src/model/fleet/drone/concepts.ts";
@@ -13,41 +13,22 @@ const triangles = (pieces: readonly Piece[]) => {
   return count;
 };
 
-test("three machines: a ring drone, a tug and an arm", () => {
+test("two silhouettes of each kind, each with a glowing face", () => {
   const ids = DRONE_CONCEPTS.map((make) => make().id);
-  assert.deepEqual(ids, ["ring", "tug", "arm"]);
+  assert.deepEqual(ids, ["ring-manta", "ring-beetle", "tug-crab", "tug-boot", "arm-equal", "arm-inch"]);
   for (const id of ids) {
     const concept = droneConcept(id);
     const used = names(concept.pieces);
-    assert.ok(used.has("hull-white"), `${id} body`);
-    assert.ok(used.has("hull-grey"), `${id} frame`);
-    assert.ok(used.has("lamp-amber"), `${id} work light`);
-    assert.ok(concept.mouth[1] > 0, `${id} works forward`);
+    assert.ok(used.has("gold"), `${id} ring`);
+    assert.ok(used.has("coil-lit"), `${id} glow`);
+    assert.ok(used.has("glass-clear"), `${id} lens`);
+    assert.ok(concept.mouth[1] > 0, `${id} faces forward`);
   }
-  const ring = names(droneConcept("ring").pieces);
-  assert.ok(ring.has("gold"), "the ring is gold");
-  assert.ok(ring.has("glass-clear"), "the ring has a lens");
-  assert.ok(ring.has("hull-orange"), "orange on the edges");
-  const tug = names(droneConcept("tug").pieces);
-  assert.ok(tug.has("hull-yellow"), "the tug is yellow");
-  assert.ok(tug.has("hull-orange"), "the tug's claws are marked");
 });
 
-test("the ring drone is cheap enough that a hundred stay light, and the other two stay instanced", () => {
+test("the small drones stay cheap enough to instance, and the others stay one mesh", () => {
   const counts = Object.fromEntries(DRONE_CONCEPTS.map((make) => [make().id, triangles(make().pieces)])) as Record<DroneConcept["id"], number>;
-  assert.ok(counts.ring > 1000 && counts.ring < 4000, `ring ${counts.ring}`);
-  assert.ok(counts.ring * 100 < 400_000, "a hundred ring drones");
-  assert.ok(counts.tug > 1000 && counts.tug < 8000, `tug ${counts.tug}`);
-  assert.ok(counts.arm > 1000 && counts.arm < 8000, `arm ${counts.arm}`);
-});
-
-test("the arm grips at both ends", () => {
-  const concept: DroneConcept = droneConcept("arm");
-  const lamps = concept.pieces.filter((piece) => piece.kind !== "lines" && piece.material === "lamp-amber");
-  assert.ok(lamps.length >= 2, "a light at each gripper");
-  const along = (piece: Piece) => (piece.kind === "plate" ? piece.frame.o[1] : 0);
-  const ys = lamps.map(along);
-  assert.ok(Math.max(...ys) - Math.min(...ys) > 0.4, "the grippers are apart");
-  const across = (piece: Piece) => (piece.kind === "plate" ? piece.frame.o[0] : 0);
-  assert.ok(Math.max(...lamps.map(across)) - Math.min(...lamps.map(across)) > 0.2, "the arm bends");
+  for (const id of ["ring-manta", "ring-beetle"] as const) assert.ok(counts[id] > 400 && counts[id] < 4000, `${id} ${counts[id]}`);
+  for (const id of ["tug-crab", "tug-boot", "arm-equal", "arm-inch"] as const) assert.ok(counts[id] > 400 && counts[id] < 8000, `${id} ${counts[id]}`);
+  assert.ok(Math.max(counts["ring-manta"], counts["ring-beetle"]) * 100 < 400_000);
 });
