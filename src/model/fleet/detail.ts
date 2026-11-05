@@ -6,6 +6,7 @@
 import { deg } from "../../framing.ts";
 import type { MaterialName } from "../materials.ts";
 import { type Frame, type Lathe, type Lines, type Piece, type Plate, pointOf, type Vec3 } from "../pieces.ts";
+import { lightPool } from "./lights.ts";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // numbers
@@ -600,19 +601,19 @@ export function boltRing(r: number, y: number, count: number, size: number, down
 
 export interface Lamp {
   at: Vec3;
-  /** `amber` (work), `blue` (docking), `red` (warning), `port` (the red navigation light), `starboard` (the green one), `strobe` (a white flash) or `flood` (a floodlight's lens). All of them light up with the engines ("Engines: Lit"). */
+  /** `amber` (work), `blue` (docking), `red` (warning), `port` (the red navigation light), `starboard` (the green one), `strobe` (a white flash) or `flood` (a floodlight's lens). They glow with the Lights choice. */
   colour: "amber" | "blue" | "red" | "port" | "starboard" | "strobe" | "flood";
   size?: number;
 }
 
 const LAMP_MATERIAL: Readonly<Record<Lamp["colour"], MaterialName>> = { amber: "lamp-amber", blue: "lamp-blue", red: "lamp-red", port: "nav-red", starboard: "nav-green", strobe: "strobe", flood: "flood" };
 
-/** Lamps: small domes in a bright colour. They glow when the viewer's engines are lit. */
+/** Lamps: small domes in a bright colour. They glow with the Lights choice. */
 export function lamps(list: readonly Lamp[]): Piece[] {
   return list.map(({ at, colour, size = 0.1 }): Piece => ({ kind: "lathe", material: LAMP_MATERIAL[colour], at: [at[0], at[2]], segs: 8, only: "mesh", profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [size * 0.001, at[1] + size * 0.8]] }));
 }
 
-/** A navigation light on a hull of radius `r` at azimuth `az` (radians) and height `y`: a housing, a stalk and a lens, red (`port`) or green (`starboard`), or a white `strobe`. Lit with the engines. */
+/** A navigation light on a hull of radius `r` at azimuth `az` (radians) and height `y`: a housing, a stalk and a lens, red (`port`) or green (`starboard`), or a white `strobe`. The red and the green stay steady. The strobe flashes. */
 export function navLight(colour: "port" | "starboard" | "strobe", r: number, az: number, y: number, size = 0.16): Piece[] {
   const f = patch(r, az, y);
   const out: Piece[] = [box("hull-grey-dark", pointOf(f, 0, 0, 0.02), size * 2.6, size * 2.2, size * 0.8, (az * 180) / Math.PI)];
@@ -621,7 +622,7 @@ export function navLight(colour: "port" | "starboard" | "strobe", r: number, az:
   return out;
 }
 
-/** A floodlight on a hull of radius `r` at azimuth `az` and height `y`, aimed along the hull by `tilt` (radians, up positive): a bracket, a round housing with cooling fins and a bright lens. Lit with the engines. */
+/** A floodlight on a hull of radius `r` at azimuth `az` and height `y`, aimed along the hull by `tilt` (radians, up positive): a bracket, a round housing with cooling fins, a bright lens and a warm pool on the hull. */
 export function floodlight(r: number, az: number, y: number, tilt = 0): Piece[] {
   const f = patch(r, az, y);
   const out: Piece[] = [box("hull-grey-dark", pointOf(f, 0, -0.1, 0.02), 0.42, 0.3, 0.18, (az * 180) / Math.PI)];
@@ -629,6 +630,7 @@ export function floodlight(r: number, az: number, y: number, tilt = 0): Piece[] 
   const dir: Vec3 = unit(add(mul(f.w, Math.cos(tilt)), mul(f.v, Math.sin(tilt))));
   const mouth = add(base, mul(dir, 0.42));
   out.push(rod("hull-grey", pointOf(f, 0, -0.1, 0.1), base, 0.04, 6), rod("hull-grey", base, mouth, 0.2, 12), rod("hull-grey-dark", add(base, mul(dir, 0.04)), add(base, mul(dir, 0.1)), 0.23, 12), rod("hull-grey-dark", add(base, mul(dir, 0.16)), add(base, mul(dir, 0.22)), 0.23, 12), rod("flood", mouth, add(mouth, mul(dir, 0.03)), 0.17, 12));
+  out.push(lightPool({ o: pointOf(f, 0, -0.2, 0.06), u: f.u, v: f.v, w: f.w }, 0.9));
   return out;
 }
 

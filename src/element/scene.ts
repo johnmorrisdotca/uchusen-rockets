@@ -41,6 +41,7 @@ import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
+import { dutyOf, lampFactor } from "../model/fleet/lights.ts";
 import { angleAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
 import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
@@ -214,6 +215,9 @@ export class RocketViewer {
   private sun: DirectionalLight;
   /** The fleet is lit with a shadow: its ships are big enough for one part to fall on another. A rocket is not, so it keeps the one light it has. */
   private shadows = false;
+  private rim!: DirectionalLight;
+  private fill!: DirectionalLight;
+  private sky!: HemisphereLight;
   private plumes: PlumeKit;
   private lit: { readonly [slot: string]: number } | "full" | null = null;
   /** What was lit before a flight took over the engines. */
@@ -230,9 +234,18 @@ export class RocketViewer {
   private burnSlots: { view: PartView; y: number } | null = null;
   private generation = 0;
   private materialCache = new Map<string, Material>();
-  /** The materials that glow when the engines are lit, and whether they do now. */
+  /** The materials that glow, and the strength they take when fully on. */
   private glowing = new Map<MeshStandardMaterial, number>();
+  /** What each glowing material does: engine glow, or a lamp. */
+  private lampDuty = new Map<MeshStandardMaterial, ReturnType<typeof dutyOf>>();
+  /** Materials whose glow flashes, so a new rocket can keep the pulse after the material was cached. */
+  private pulseMaterials = new WeakSet<Material>();
   private glowOn = false;
+  /** The Lights choice. `all` until the page says otherwise. */
+  private lightsMode: "off" | "running" | "all" = "all";
+  /** This rocket has a strobe or a beacon, so the view keeps a frame going. */
+  private hasPulse = false;
+  private lampDrawn = 0;
   private outlineMaterial: ShaderMaterial;
   private textures: Texture[] = [];
   private steelMap: CanvasTexture | null = null;
@@ -315,10 +328,14 @@ export class RocketViewer {
     this.sun = key;
     const rim = new DirectionalLight("#cfe2ff", 1.1);
     rim.position.set(-4, 1, -5);
+    this.rim = rim;
     const low = new DirectionalLight("#ffffff", 0.35);
     low.position.set(1, -4, 2);
+    this.fill = low;
+    const hemi = new HemisphereLight("#d7e6ff", "#22252b", 0.35);
+    this.sky = hemi;
     this.plumes = new PlumeKit();
-    this.scene.add(key, key.target, rim, low, new HemisphereLight("#d7e6ff", "#22252b", 0.35), this.plumes.light, this.root);
+    this.scene.add(key, key.target, rim, low, hemi, this.plumes.light, this.root);
 
     this.outlineMaterial = new ShaderMaterial({
       vertexShader: OUTLINE_VERTEX,
@@ -366,6 +383,7 @@ export class RocketViewer {
 
   /** Loads a rocket and shows it. The camera's angle stays when a rocket is already showing. */
   async load(built: Built, show: string, look: LookName, angle: Angle | null): Promise<void> {
+    this.hasPulse = false;
     const generation = ++this.generation;
     const bytes = built.glb().bytes;
     const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, "");
@@ -527,7 +545,10 @@ export class RocketViewer {
   private paintedMaterial(name: string, hasUv: boolean): Material {
     const key = `painted/${name}/${hasUv}`;
     const known = this.materialCache.get(key);
-    if (known) return known;
+    if (known) {
+      if (this.pulseMaterials.has(known)) this.hasPulse = true;
+      return known;
+    }
     const spec: MaterialSpec = name in MATERIALS ? MATERIALS[name as MaterialName] : MATERIALS.steel;
     const made = new MeshStandardMaterial({ color: spec.color, metalness: spec.metal, roughness: spec.rough, side: DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
     if (name === "steel" && hasUv) {
@@ -549,9 +570,16 @@ export class RocketViewer {
       made.depthWrite = false;
     }
     if (spec.glow) {
+      const duty = dutyOf(name);
       made.emissive.set(spec.glowColor ?? spec.color);
-      made.emissiveIntensity = this.glowOn ? spec.glow : 0;
+      made.emissiveIntensity = this.lampStrength(duty, spec.glow, 0);
       this.glowing.set(made, spec.glow);
+      this.lampDuty.set(made, duty);
+      if (name === "light-pool") made.userData.pool = true;
+      if (duty === "flash" || duty === "beacon") {
+        this.hasPulse = true;
+        this.pulseMaterials.add(made);
+      }
     }
     this.materialCache.set(key, made);
     return made;
@@ -693,6 +721,44 @@ export class RocketViewer {
   /** The page reads reduced motion again at each change, so a view opened earlier follows the reader now. */
   setReduced(reduced: boolean): void {
     this.options.reducedMotion = reduced;
+    this.applyLamps(performance.now() / 1000);
+    this.wake();
+  }
+
+  /** The Lights choice: `off`, running lights only, or running lights plus floods and work lights. */
+  setLights(mode: "off" | "running" | "all"): void {
+    this.lightsMode = mode;
+    this.nightSide();
+    this.applyLamps(performance.now() / 1000);
+    this.canvas.dataset.lights = mode;
+    this.needsDraw = true;
+    this.wake();
+  }
+
+  /** A fleet ship with its lamps on is the night side: the sun drops and the lamps are what show. A rocket, and a ship with the lamps off, stays in daylight. */
+  private nightSide(): void {
+    const night = this.shadows && this.lightsMode !== "off";
+    this.sun.intensity = night ? 0.16 : 1.6;
+    this.rim.intensity = night ? 0.04 : 1.1;
+    this.fill.intensity = night ? 0.03 : 0.35;
+    this.sky.intensity = night ? 0.07 : 0.35;
+    this.scene.environmentIntensity = night ? 0.22 : 0.95;
+  }
+
+  /** How bright one glowing material is. Engine glow follows the engines. Lamps follow the Lights choice. */
+  private lampStrength(duty: ReturnType<typeof dutyOf>, strength: number, seconds: number): number {
+    if (duty === "engine") return this.glowOn ? strength : 0;
+    return strength * lampFactor(duty, this.lightsMode, Boolean(this.options.reducedMotion), seconds);
+  }
+
+  /** Writes every lamp's brightness for this moment. A pool disappears when its light is off. */
+  private applyLamps(seconds: number): void {
+    for (const [material, strength] of this.glowing) {
+      const duty = this.lampDuty.get(material) ?? "engine";
+      const level = this.lampStrength(duty, strength, seconds);
+      material.emissiveIntensity = level;
+      if (material.userData.pool) material.opacity = level > 0 ? 0.42 : 0;
+    }
   }
 
   private relight(): void {
@@ -720,7 +786,7 @@ export class RocketViewer {
     }
     this.burningNow = burning;
     this.glowOn = this.lit === "full" || burning > 0;
-    for (const [material, strength] of this.glowing) material.emissiveIntensity = this.glowOn ? strength : 0;
+    this.applyLamps(performance.now() / 1000);
     this.burnSlots = lowest;
     this.plumes.setBurning(burning);
     this.plumes.light.intensity = burning === 0 || this.look !== "painted" ? 0 : Math.min(900, 120 + burning * 40);
@@ -910,6 +976,7 @@ export class RocketViewer {
           if (material.emissiveMap) {
             material.emissiveIntensity = this.glowOn ? MODEL_GLOW : 0;
             this.glowing.set(material, MODEL_GLOW);
+            this.lampDuty.set(material, "engine");
           }
         });
         part.holder.add(gltf.scene);
@@ -1627,6 +1694,12 @@ export class RocketViewer {
       this.swarm?.step(now / 1000);
       this.needsDraw = true;
     }
+    const pulsing = this.hasPulse && this.lightsMode !== "off" && !this.options.reducedMotion;
+    if (pulsing && now - this.lampDrawn >= 32) {
+      this.lampDrawn = now;
+      this.applyLamps(now / 1000);
+      this.needsDraw = true;
+    }
     const flaming = this.burningNow > 0 && !this.options.reducedMotion && (flying || performance.now() < this.flameUntil);
     if (flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
       this.flameDrawn = now;
@@ -1659,7 +1732,7 @@ export class RocketViewer {
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || pulsing)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 

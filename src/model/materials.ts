@@ -20,7 +20,7 @@ export interface MaterialSpec {
   rough: number;
   /** The fill it takes in a drawing. */
   fill: FillName;
-  /** How brightly it glows when the engines are lit (the viewer's "Engines: Lit" switch): the emissive strength. Left out: it never glows. */
+  /** How brightly it glows. Engine materials (`coil-lit`, `window`, `grow-lamp`) glow with the Engines switch. Lamp materials glow with the Lights choice. Left out: it never glows. */
   glow?: number;
   /** The colour of that glow; left out: its own colour. */
   glowColor?: string;
@@ -98,8 +98,11 @@ export const MATERIALS = {
   "coil-lit": { color: P.coil, metal: 1, rough: 0.26, fill: "metal", glow: 2.4, glowColor: P.coilGlow },
   "nav-red": { color: "#9a1f1f", metal: 0, rough: 0.3, fill: "metal", glow: 3, glowColor: P.navRed },
   "nav-green": { color: "#1f8a46", metal: 0, rough: 0.3, fill: "metal", glow: 3, glowColor: P.navGreen },
+  "nav-white": { color: "#f4f4f4", metal: 0, rough: 0.25, fill: "white", glow: 3, glowColor: "#f7f7f7" },
   strobe: { color: "#e8e8e8", metal: 0, rough: 0.25, fill: "white", glow: 4, glowColor: P.strobe },
+  beacon: { color: "#b42323", metal: 0, rough: 0.3, fill: "metal", glow: 3, glowColor: P.navRed },
   flood: { color: "#e6dfc8", metal: 0, rough: 0.25, fill: "white", glow: 3, glowColor: P.flood },
+  "light-pool": { color: "#ffe2b0", metal: 0, rough: 1, fill: "white", glow: 1.4, glowColor: "#ffe2b0", opacity: 0.42 },
   "glass-clear": { color: "#c3dbe8", metal: 0.15, rough: 0.04, fill: "dark", opacity: 0.26 },
   "grow-lamp": { color: "#7a4a8a", metal: 0, rough: 0.3, fill: "metal", glow: 2.6, glowColor: P.growLamp },
   leaf: { color: "#3f8f45", metal: 0, rough: 0.7, fill: "dark" },

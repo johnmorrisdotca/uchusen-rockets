@@ -2,6 +2,7 @@
 // and the walkway), and the pieces are drawn from that data. The hub node keeps four L-class ports for short visits and the inflatable modules; the docking crown at the bow has three arms with long-stay ports of two collar classes (S and M); and
 // a berth along the keel takes the upper stage of a Starship. Every long-stay berth has a hard-dock collar or a clamp, service umbilicals (power, coolant, water, air, data) and a pressurised walkway to the keel's lift, so a parked ship can be
 // shut down and its crew can live aboard. The bow dust shield stands ahead of the crown, so what is parked sits in its shadow. The berths are shown empty: the visiting craft are drawn only in the sheets, from the package's own models. Pure: no three.js and no DOM.
+import { lightPool } from "../lights.ts";
 import { box, collar, cub, discZ, hoop, ibeam, KIT, pipeRun, place, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose } from "./adapter.ts";
 import { SPINE_Y } from "./hull.ts";
 import { SPIN } from "./spin.ts";
@@ -125,9 +126,11 @@ export function dockingHardware(s: number): Piece[] {
   const hook: Piece[] = [box("hull-grey-dark", [0, -0.12 * s, R * 0.8], 0.28 * s, 0.22 * s, 0.14 * s, 0, { only: "mesh", plain: true }), box("hazard", [0, -0.3 * s, R * 0.8], 0.12 * s, 0.1 * s, 0.18 * s, 0, { only: "mesh", plain: true })];
   const poses: Pose[] = Array.from({ length: 12 }, (_, i) => ({ at: [0, 0, 0] as [number, number, number], yaw: 30 * i }));
   out.push(...stamp(hook, poses));
-  // approach lights (a red, a green and two white) and a target cross on a short mast at the rim
-  const lights: [number, MaterialName][] = [[0, "nav-red"], [90, "nav-green"], [180, "flood"], [270, "flood"]];
-  for (const [deg, m] of lights) out.push(box(m, [R * 1.12 * Math.sin((deg * Math.PI) / 180), -0.25 * s, R * 1.12 * Math.cos((deg * Math.PI) / 180)], 0.2 * s, 0.2 * s, 0.14 * s, 0, { only: "mesh", plain: true }));
+  // approach lights (a red, a green and two floods), a white flash, a slow red beacon and a white stern light, and a target cross on a short mast at the rim
+  const lights: [number, MaterialName][] = [[0, "nav-red"], [90, "nav-green"], [180, "flood"], [270, "flood"], [45, "strobe"], [225, "nav-white"]];
+  for (const [deg, m] of lights) out.push(box(m, [R * 1.12 * Math.sin((deg * Math.PI) / 180), -0.25 * s, R * 1.12 * Math.cos((deg * Math.PI) / 180)], 0.45 * s, 0.45 * s, 0.22 * s, 0, { only: "mesh", plain: true }));
+  out.push(box("beacon", [0, 0.2 * s, 0], 0.28 * s, 0.28 * s, 0.28 * s, 0, { only: "mesh", plain: true }));
+  out.push(lightPool({ o: [0, -0.2 * s, 0], u: [1, 0, 0], v: [0, 0, 1], w: [0, -1, 0] }, R * 0.85));
   out.push(rod("hull-grey", [R * 0.4, -0.1 * s, R * 1.2], [R * 0.4, -1.4 * s, R * 1.2], 0.05 * s, 6, { only: "mesh" }), box("hull-white", [R * 0.4, -1.4 * s, R * 1.2], 0.5 * s, 0.5 * s, 0.05 * s, 0, { only: "mesh", plain: true }), box("black", [R * 0.4, -1.42 * s, R * 1.2], 0.36 * s, 0.05 * s, 0.07 * s, 0, { only: "mesh", plain: true }), box("black", [R * 0.4, -1.42 * s, R * 1.2], 0.07 * s, 0.05 * s, 0.36 * s, 0, { only: "mesh", plain: true }));
   // an umbilical panel on the housing's side: a plate, three connector sockets and a hose stub with a clamp
   out.push(box("hull-grey-dark", [-R * 1.25, 0.9 * s, 0], 0.1 * s, 0.9 * s, 1.1 * s, 0, { only: "mesh", plain: true }), ...[-0.3, 0, 0.3].map((z) => box("lamp-amber", [-R * 1.31, 0.9 * s, z * s], 0.05 * s, 0.2 * s, 0.1 * s, 0, { only: "mesh", plain: true })), rod("copper", [-R * 1.3, 0.55 * s, 0.45 * s], [-R * 1.7, 0.1 * s, 0.7 * s], 0.06 * s, 8, { only: "mesh" }));

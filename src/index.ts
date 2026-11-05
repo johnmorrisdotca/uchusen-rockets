@@ -51,6 +51,7 @@ export { beamLight } from "./draw/beamLight.ts";
 export type { BeamEnds, BeamPhase } from "./beam.ts";
 export type { Flight, FlightBurn, FlightFrame, FlightPhase, PartPose } from "./flight.ts";
 export { angleAt, MOTIONS, motionNote, motionSpeed, motionsOf, motionWanted } from "./model/fleet/motion.ts";
+export { beaconLamp, dutyOf, lampFactor, lightMode, lightPool, sternLamp, workLamp } from "./model/fleet/lights.ts";
 export type { Motion, MotionKind, MotionSpeed } from "./model/fleet/motion.ts";
 export { bellsOf, enginesWanted, FLAME_SETTLE_MS, pickBells, plumeLength, ringsOf } from "./engines.ts";
 export type { Bell } from "./engines.ts";

@@ -3,6 +3,7 @@
 // stand where they stood on the square bow. Ariake keeps the square bow (`bow.ts`). A cutaway opens the starboard side to the crush cells. Pure: no three.js and no DOM.
 import { collar, cub, type Lathe, type MaterialName, type Piece, rng, rod } from "./adapter.ts";
 import { STATION } from "./dims.ts";
+import { lightPool } from "../lights.ts";
 import { frame, lamp, on, stencil } from "./faces.ts";
 import { hexClad } from "./hex.ts";
 import { OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
@@ -123,6 +124,8 @@ export function noseRounded(cut: boolean, detail = 1, seed = "bow", marks = "452
     }
   }
   out.push(cub("hull-white-worn", [-r0 - 0.9, -r0 + 0.3], [Y0 + 3, Y0 + 9], [-7, 0]), ...stencil({ n: "x", sign: -1, at: -r0 - 0.9, a: [Y0, Y0 + 12], b: [-7, 0] }, marks, Y0 + 6, -3.5, 2.2));
+  out.push(cub("flood", [-r0 - 1.2, -r0 - 0.95], [Y0 + 9.4, Y0 + 10.1], [-4.4, -3.5]));
+  out.push(lightPool({ o: [-r0 - 0.82, Y0 + 6, -3.5], u: [0, 1, 0], v: [0, 0, 1], w: [-1, 0, 0] }, 2.6));
   out.push(...collar("L", Y0, -1));
   return out;
 }
