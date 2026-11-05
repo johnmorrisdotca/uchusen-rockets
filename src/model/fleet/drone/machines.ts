@@ -1,7 +1,7 @@
 // The five construction machines. Shapes come from the reference notes; no mark or text is copied.
 import type { MaterialName } from "../../materials.ts";
 import { disc, discZ, hoop, post, rod } from "../detail.ts";
-import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, GOLD, limb, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
+import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, GOLD, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
 import type { Piece, Vec3 } from "../../pieces.ts";
 
 /**
@@ -136,51 +136,51 @@ function carrierDrone(): Machine {
 }
 
 function tugDrone(): Machine {
-  const grasp: Vec3 = [0, 0.86, 0.04];
+  const grasp: Vec3 = [0, 0.7, 0.02];
   const pieces: Piece[] = [
-    ...panel(DARK, 0, 0, -0.02, 0.32, 0.24),
-    ...panel(YELLOW, 0, 0.02, 0.03, 0.24, 0.18),
-    ...panel(WHITE, 0, 0.06, 0.08, 0.1, 0.08),
-    ...bolts(0, 0.02, 0.06, 0.18, 0.12),
-    ...vents(0.16, -0.06, 0.05),
-    hoop(METAL, 0.07, -0.06, 0.016, 12, 4, { at: [-0.28, 0.02] }),
-    hoop(METAL, 0.07, -0.06, 0.016, 12, 4, { at: [0.28, 0.02] }),
-    rod(ORANGE, [-0.28, -0.06, 0.02], [-0.4, -0.06, 0.02], 0.03, 6),
-    rod(ORANGE, [0.28, -0.06, 0.02], [0.4, -0.06, 0.02], 0.03, 6),
-    rod(METAL, [-0.12, 0.16, 0.05], [-0.12, 0.5, 0.05], 0.03, 6),
-    rod(METAL, [0.12, 0.16, 0.05], [0.12, 0.5, 0.05], 0.03, 6),
-    ...limb([-0.18, 0.1, 0.02], [[-0.26, 0.32, 0.04], [-0.12, 0.55, 0.05]], grasp),
-    ...limb([0.18, 0.1, 0.02], [[0.26, 0.32, 0.04], [0.12, 0.55, 0.05]], grasp),
-    post(METAL, [0, 0.04], 0.03, 0.18, 0.022, 0.34, 8),
-    ...emitter([0, 0.04], 0.38, 0.06),
+    ...panel(DARK, 0, 0, -0.05, 0.26, 0.2),
+    ...panel(METAL, 0, 0.02, 0.01, 0.24, 0.18),
+    ...panel(WHITE, 0, 0.02, 0.055, 0.2, 0.14),
+    ...panel(DARK, 0, 0, 0.09, 0.14, 0.09),
+    ...bolts(0, 0, 0.07, 0.16, 0.1),
+    ...vents(0.14, -0.08, 0.06),
+    disc(ORANGE, [0.26, 0], 0.05, -0.02, 0.1, 8),
+    disc(DARK, [0.26, 0], 0.03, 0.06, 0.016, 6),
+    disc(ORANGE, [-0.26, 0], 0.05, -0.02, 0.1, 8),
+    disc(DARK, [-0.26, 0], 0.03, 0.06, 0.016, 6),
+    ...emitter([0, 0.05], 0.26, 0.05),
+    ...repairArm([-0.1, 0.06, -0.02], [-0.14, 0.28, -0.1], [-0.06, 0.48, -0.02], [-0.04, 0.64, 0.02]),
+    ...repairArm([0.1, 0.06, -0.02], [0.14, 0.28, -0.1], [0.06, 0.48, -0.02], grasp),
   ];
-  for (let i = 0; i < 7; i++) pieces.push(rod(METAL, [-0.12 + i * 0.04, 0.2, 0.02], [-0.12 + i * 0.04, 0.2, -0.1], 0.008, 3));
-  return { id: "drone-tug", role: "tug", pieces, mouth: [0, 0.38, 0.04], tool: grasp, toolKind: "weld" };
+  for (let i = 0; i < 8; i++) {
+    const x = -0.15 + i * 0.043;
+    pieces.push(bar(METAL, [x, 0.2, 0.03], [x, 0.52, 0], 0.007, 0.012), bar(WHITE, [x, 0.48, 0], [x, 0.6, 0.03], 0.009, 0.008));
+  }
+  return { id: "drone-tug", role: "tug", pieces, mouth: [0, 0.26, 0.05], tool: grasp, toolKind: "weld" };
 }
 
 function fitterDrone(): Machine {
-  const pieces: Piece[] = [
-    hoop(WHITE, 0.28, 0, 0.04, 16, 5),
-    hoop(ORANGE, 0.28, 0, 0.012, 16, 4),
-    discZ(DARK, 0, 0, -0.02, 0.02, 0.1, 10),
-    ...panel(WHITE, 0, 0, 0.06, 0.07, 0.05),
-    ...emitter([0, 0], 0.16, 0.05),
-  ];
+  const pieces: Piece[] = [saucer(DARK, 0.12, -0.02, 0.02), ...panel(WHITE, 0, 0, 0.04, 0.06, 0.04), ...emitter([0, 0], 0.14, 0.045)];
+  const n = 10;
+  for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * Math.PI * 2;
+    const a1 = ((i + 1) / n) * Math.PI * 2;
+    pieces.push(bar(WHITE, [0.26 * Math.cos(a0), 0.26 * Math.sin(a0), 0], [0.26 * Math.cos(a1), 0.26 * Math.sin(a1), 0], 0.014, 0.02));
+    pieces.push(bar(ORANGE, [0.3 * Math.cos(a0), 0.3 * Math.sin(a0), 0], [0.3 * Math.cos(a1), 0.3 * Math.sin(a1), 0], 0.006, 0.01));
+  }
   const tools: Vec3[] = [];
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2;
-    const x = Math.cos(a) * 0.28;
-    const z = Math.sin(a) * 0.08;
-    const y = Math.sin(a) * 0.1;
-    const elbow: Vec3 = [Math.cos(a) * 0.46, y + 0.16, z];
-    const tip: Vec3 = [Math.cos(a) * 0.58, y + 0.32, z];
-    pieces.push(...limb([x, 0.04, 0], [elbow], tip));
+    const root: Vec3 = [Math.cos(a) * 0.28, Math.sin(a) * 0.28, 0];
+    const elbow: Vec3 = [Math.cos(a) * 0.42, Math.sin(a) * 0.42, -0.08];
+    const tip: Vec3 = [Math.cos(a) * 0.52, Math.sin(a) * 0.52 + 0.08, -0.04];
+    pieces.push(...repairArm(root, elbow, [tip[0], tip[1] - 0.06, tip[2]], tip));
     tools.push(tip);
-    if (i === 2) pieces.push(discZ(BLUE, tip[0], tip[1], tip[2], tip[2] + 0.02, 0.02, 6));
-    if (i === 3) pieces.push(discZ(GLASS, tip[0], tip[1], tip[2], tip[2] + 0.015, 0.018, 6));
+    if (i === 2) pieces.push(discZ(BLUE, tip[0], tip[1], tip[2], tip[2] + 0.02, 0.016, 6));
+    if (i === 3) pieces.push(discZ(GLASS, tip[0], tip[1], tip[2], tip[2] + 0.015, 0.016, 6));
     if (i === 4) pieces.push(rod(GLOW, tip, [tip[0], tip[1] + 0.06, tip[2]], 0.008, 3));
   }
-  return { id: "drone-fitter", role: "fit", pieces, mouth: [0, 0.16, 0], tool: tools[0] ?? [0.5, 0.3, 0], toolKind: "laser" };
+  return { id: "drone-fitter", role: "fit", pieces, mouth: [0, 0.14, 0], tool: tools[0] ?? [0.52, 0.08, -0.04], toolKind: "laser" };
 }
 
 /**
