@@ -116,6 +116,8 @@ export const MOTIONS: readonly Motion[] = [
   { ship: "fleet-ship-01", group: "spin-wheel", kind: "spin", rate: WHEEL_RPM * DEG_PER_RPM, note: `The industrial wheel turns at ${rpmNote(WHEEL_RPM)} (1.00 g at its rim).` },
   ...doorLeaves("fleet-ship-03"),
   ...doorLeaves("fleet-ship-ariake"),
+  { ship: "fleet-emiake", group: "sail-swing-port", kind: "swing", from: 0, to: -115, period: 40, note: "The outer two radiator sails swing down and out on their hinge along the ship's axis and back, as the ISS radiator wings deploy (the middle sail stays up). Drawn faster than the real deployment." },
+  { ship: "fleet-emiake", group: "sail-swing-starboard", kind: "swing", from: 0, to: 115, period: 40, note: "The outer two radiator sails swing down and out on their hinge along the ship's axis and back, as the ISS radiator wings deploy (the middle sail stays up). Drawn faster than the real deployment." },
   { ship: "fleet-ship-03", group: "array-turn", kind: "sweep", from: -50, to: 50, period: 90, note: "The gold solar array turns on its root beam to face the star, as the ISS's solar array rotary joints do (the ISS turns once an orbit, about 92 minutes; the array here sweeps 100 degrees in 45 s)." },
   { ship: "fleet-ship-03", group: "dish-track", kind: "sweep", from: -35, to: 35, period: 60, note: "The command tower's dishes sweep slowly on their mounts, as a Deep Space Network dish tracks a spacecraft across the sky (a degree or so a minute); drawn faster so it can be seen." },
   { ship: "fleet-ship-ariake", group: "dish-track", kind: "sweep", from: -35, to: 35, period: 60, note: "The command tower's dishes sweep slowly on their mounts, as a Deep Space Network dish tracks a spacecraft across the sky." },

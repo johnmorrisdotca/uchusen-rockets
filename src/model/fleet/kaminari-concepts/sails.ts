@@ -1,5 +1,6 @@
 // Emiake's three dorsal radiator sails. The middle one stays up. The outer two swing down and out on a hinge along the ship's axis, and both states are drawn: the pin, the fold line and the actuators stay visible. Pure: no three.js and no DOM.
 import type { Piece, Vec3 } from "../../pieces.ts";
+import { moving } from "../motion.ts";
 import { cub, place, rod } from "./adapter.ts";
 import { type ConceptSlot, radiatorFin } from "./common.ts";
 
@@ -41,7 +42,8 @@ export function sailPieces(x: number, deployed: boolean): Piece[] {
   const { z, reach, y0, y1, bays, deploy } = SAIL;
   const fin = place(radiatorFin(0, z, reach, y0, y1, bays, x < 0 ? 1 : x > 0 ? 2 : 3), { at: [x, 0, 0] });
   const theta = deployed && x !== 0 ? (x < 0 ? -deploy : deploy) : 0;
-  const folded = foldAbout(fin, x, z, theta);
+  // a stowed outer sail is one group about its hinge, so the viewer can swing it down and out
+  const folded = x !== 0 && theta === 0 ? moving(fin, { name: x < 0 ? "sail-swing-port" : "sail-swing-starboard", pivot: [x, y0, z], axis: [0, 1, 0] }) : foldAbout(fin, x, z, theta);
   const pin = rod("engine-metal", [x, y0, z], [x, y1, z], 1.15, 12);
   const foldLine = rod("hull-yellow", [x + 0.85, y0, z], [x + 0.85, y1, z], 0.28, 8);
   const cheeks: Piece[] = [];

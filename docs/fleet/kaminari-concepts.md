@@ -47,3 +47,7 @@ A 36 m square truss round a pressurised transit tube, 1.3 km long. Two stations 
 ## The size slider
 
 `scale="60"` to `"100"` (steps of 5) on `<uchusen-rocket>`, `build(description, { scale })`, and the demo's "Ship size" slider with `?kscale=` in the address. It applies to the three concepts only; every piece of every part is made that share of the full size (`scalePieces`), the parts' places and the viewer's labels with it, and Fit follows. The whole ship is scaled, docked craft included: at 60 per cent concept C's craft are 228 m long, so use 100 per cent to see Miyamoto at her true size. A test holds every scaled length to the full length times the share.
+
+## Motion
+
+With the Motion choice on, Emiake's two outer radiator sails swing down and out and back on their hinge; see [motion.md](motion.md).
