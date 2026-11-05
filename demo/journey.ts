@@ -32,6 +32,7 @@ import { transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { stagedSvg } from "./journey-craft.ts";
 import { WORDS } from "./words.js";
+import { destinationGrow, forwardStar } from "../src/journey/forward.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
@@ -55,6 +56,11 @@ const setText = (node: Element, text: string): void => {
   if (node.textContent !== text) node.textContent = text;
 };
 const reduced = (): boolean => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const VIEWS = ["side", "front", "rear", "cockpit", "map"] as const;
+type JourneyView = (typeof VIEWS)[number];
+const VIEW_WORD: Record<JourneyView, string> = { side: "jSide", front: "jFront", rear: "jRear", cockpit: "jCockpit", map: "jMap" };
+const isView = (value: string | null): value is JourneyView => VIEWS.some((view) => view === value);
+const C_MS = 299_792_458;
 const DAY = 86_400_000;
 const AU_KM = 149_597_870.7;
 
@@ -68,12 +74,13 @@ const todayUtc = (): number => {
   const now = new Date();
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 };
+const askedView = query.get("view");
 const choice = {
   from: pickOf("from", stopIds, "earth"),
   to: pickOf("to", stopIds, "mars"),
   craft: pickOf("craft", CRAFTS.map((craft) => craft.id), "falcon-heavy"),
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
-  view: query.get("view") === "map" ? "map" : "side",
+  view: isView(askedView) ? askedView : "side",
   base: todayUtc(),
 };
 if (choice.to === choice.from) choice.to = choice.from === "earth" ? "mars" : "earth";
@@ -152,7 +159,7 @@ function drawPickers(): void {
   byId("to").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.from).map((stop) => chip(stopName(stop.id), `to-${stop.id}`, stop.id === choice.to, () => change({ to: stop.id }))));
   byId("crafts").replaceChildren(...CRAFTS.map((craft) => chip(craftName(craft), `craft-${craft.id}`, craft.id === choice.craft, () => change({ craft: craft.id }))));
   byId("when").replaceChildren(...options.map((option, index) => chip(option.label, `when-${index}`, index === choice.when, () => change({ when: index }))));
-  byId("views").replaceChildren(...(["side", "map"] as const).map((view) => chip(say(view === "side" ? "jSide" : "jMap"), `view-${view}`, choice.view === view, () => setView(view))));
+  byId("views").replaceChildren(...VIEWS.map((view) => chip(say(VIEW_WORD[view]), `view-${view}`, choice.view === view, () => setView(view))));
   byId("speeds").replaceChildren(...([0.5, 1, 2, 4] as const).map((value) => chip(`×${value}`, `speed-${value}`, speed === value, () => setSpeed(value))));
 }
 
@@ -176,7 +183,7 @@ function change(next: Partial<{ from: string; to: string; craft: string; when: n
   start();
 }
 
-function setView(view: "side" | "map"): void {
+function setView(view: JourneyView): void {
   choice.view = view;
   stage.dataset.view = view;
   for (const button of byId("views").querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === `view-${view}`));
@@ -205,9 +212,13 @@ function onPad(): boolean {
   return !(trip.from === "moon" && craftNow().drive === "ballistic");
 }
 
+let faceNow = "";
+
 function setCraft(lit: boolean, phase = "ascent"): void {
   litNow = lit;
-  const shown = stagedSvg(craftNow(), phase, lit, onPad());
+  const facing = choice.view === "front" ? "front" : choice.view === "rear" ? "back" : "side";
+  faceNow = facing;
+  const shown = stagedSvg(craftNow(), phase, lit, onPad(), facing);
   stageNow = shown.stage.name;
   const template = document.createElement("template");
   template.innerHTML = shown.svg;
@@ -243,7 +254,7 @@ const stars = (() => {
 })();
 let skyOffset = 0;
 
-function drawSky(streak: number): void {
+function drawSky(streak: number, forward: boolean, beta: number): void {
   const ctx = sky.getContext("2d");
   if (!ctx) return;
   const w = sky.width;
@@ -251,6 +262,16 @@ function drawSky(streak: number): void {
   const ratio = w / Math.max(1, stage.clientWidth);
   ctx.clearRect(0, 0, w, h);
   for (const star of stars) {
+    if (forward) {
+      const place = forwardStar(star.x, star.y, beta);
+      const red = Math.round(255 - place.blue * 90);
+      const green = Math.round(200 + place.blue * 30);
+      const blue = Math.round(170 + place.blue * 85);
+      ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${star.alpha})`;
+      const size = Math.max(1, star.size * ratio * (1 + place.blue * beta));
+      ctx.fillRect(place.x * w, place.y * h, size, size);
+      continue;
+    }
     const x = (((star.x * w - skyOffset * star.depth * ratio) % w) + w) % w;
     const y = star.y * h;
     ctx.fillStyle = star.warm ? `rgba(255, 214, 160, ${star.alpha})` : `rgba(206, 224, 255, ${star.alpha})`;
@@ -675,7 +696,8 @@ function draw(force = false): void {
   setText(byId("speed-sub"), say("jOfLight", { pct: percentOfLight(state.speedMs) }));
   // the craft: which way it faces, and whether its engines burn
   const lit = state.burn !== "off";
-  if (lit !== litNow || stageOf(craftNow(), id, onPad()).name !== stageNow) setCraft(lit, id);
+  const facing = choice.view === "front" ? "front" : choice.view === "rear" ? "back" : "side";
+  if (lit !== litNow || stageOf(craftNow(), id, onPad()).name !== stageNow || facing !== faceNow) setCraft(lit, id);
   craftBox.style.setProperty("--turn", `${(90 - 180 * state.turned).toFixed(1)}deg`);
   drawRoute(state);
   if (choice.view === "map") drawMap(state);
@@ -686,8 +708,13 @@ function draw(force = false): void {
   // the sky: still when nothing moves, and always still for a reader who asked for less motion
   const moving = playing && !reduced() && state.speedMs > 0;
   const streak = moving ? Math.min(70, Math.log10(1 + state.speedMs / 50) * 14) : 0;
-  if (choice.view === "side") drawSky(streak);
-  else if (force) drawSky(0);
+  const forward = choice.view === "cockpit";
+  const beta = Math.min(0.99, Math.max(0, state.speedMs / C_MS));
+  const dest = byId("dest");
+  dest.style.setProperty("--grow", destinationGrow(total > 0 ? playhead / total : 0).toFixed(4));
+  setText(byId("dest-name"), stopName(trip.to));
+  if (choice.view !== "map") drawSky(forward || reduced() ? 0 : streak, forward, beta);
+  else if (force) drawSky(0, false, 0);
 }
 
 function frame(ts: number): void {
@@ -782,7 +809,7 @@ function start(): void {
   lastPhase = "";
   layout();
   draw(true);
-  if (!ok) drawSky(0);
+  if (!ok) drawSky(0, false, 0);
 }
 
 byId("play").addEventListener("click", () => (playing ? pause() : play()));

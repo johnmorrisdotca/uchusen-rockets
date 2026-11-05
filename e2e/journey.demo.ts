@@ -227,3 +227,29 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
   await expect(page.getByTestId("trip-fuel")).toContainText("/");
   await expect(page.getByTestId("trip-payload")).toContainText("million t");
 });
+
+test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the picture", async ({ page }) => {
+  const found = problems(page);
+  await page.goto(URL);
+  const names = ["side", "front", "rear", "cockpit", "map"];
+  const tops = [];
+  for (const name of names) {
+    const box = await page.getByTestId(`view-${name}`).boundingBox();
+    expect(box).not.toBeNull();
+    tops.push(box!.y);
+  }
+  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(8);
+  await page.getByTestId("view-front").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "front");
+  await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
+  expect(page.url()).toContain("view=front");
+  await page.getByTestId("view-rear").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "rear");
+  await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
+  await page.getByTestId("view-cockpit").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "cockpit");
+  await expect(page.getByTestId("dest")).toBeVisible();
+  await expect(page.getByTestId("dest")).toContainText("Mars");
+  await expect(page.getByTestId("craft")).toBeHidden();
+  expect(found).toEqual([]);
+});

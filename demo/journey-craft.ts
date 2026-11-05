@@ -1,6 +1,10 @@
 // The craft as the stage draws it: the package's own line drawing of the rocket, and after each burn only the parts that are left, at the scale of the whole rocket. No new drawing: the stages are the rockets' own parts.
 import { build } from "../src/build/index.ts";
+import type { Angle } from "../src/framing.ts";
 import { stageOf, type Craft, type Stage } from "../src/journey/index.ts";
+
+/** Looking along the rocket, which stands nose-up in the drawing: the nose from above, the bells from below. */
+const AXIAL: Record<"front" | "back", Angle> = { front: { az: 0, el: 87 }, back: { az: 0, el: -87 } };
 
 const cache = new Map<string, string>();
 const frames = new Map<string, ReturnType<ReturnType<typeof build>["boundsOf"]>>();
@@ -13,12 +17,14 @@ export const viewOf = (craft: Craft): "side" | "front" => (craft.drive === "ball
  * @param craft The craft.
  * @param phase The phase, such as `coast`.
  * @param lit Whether its engines burn.
+ * @param onPad Whether the craft is still on the ground. Off the Moon, a ballistic craft is the payload.
+ * @param facing The side, the nose, or the engines. The side keeps the craft's own launch view. The nose and the engines look along the rocket.
  * @returns The drawing as SVG text, and the stage it shows.
  */
-export function stagedSvg(craft: Craft, phase: string, lit: boolean, onPad = true): { svg: string; stage: Stage } {
+export function stagedSvg(craft: Craft, phase: string, lit: boolean, onPad = true, facing: "side" | "front" | "back" = "side"): { svg: string; stage: Stage } {
   const stage = stageOf(craft, phase, onPad);
-  const view = onPad ? viewOf(craft) : "side";
-  const key = `${craft.id}:${stage.name}:${view}:${lit}`;
+  const view = facing === "side" ? (onPad ? viewOf(craft) : "side") : AXIAL[facing];
+  const key = `${craft.id}:${stage.name}:${facing}:${lit}`;
   let svg = cache.get(key);
   if (!svg) {
     let frame = frames.get(craft.id);

@@ -127,3 +127,13 @@ test("the Payload row is its own: the figure for the target, at least, or n/a wi
   const ship = planTrip(S, craftOf("kaminari")!, "earth", "mars", NOW);
   assert.equal(ship.payload.kg, 1_000_000 * 1000);
 });
+
+test("front looks along the nose and rear looks at the engines, and the two drawings stay apart", () => {
+  const craft = craftOf("falcon-heavy")!;
+  const side = stagedSvg(craft, "coast", false, true, "side").svg;
+  const front = stagedSvg(craft, "coast", false, true, "front").svg;
+  const rear = stagedSvg(craft, "coast", false, true, "back").svg;
+  assert.notEqual(front, side);
+  assert.notEqual(rear, front);
+  assert.notEqual(rear, side);
+});
