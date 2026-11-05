@@ -86,9 +86,16 @@ function furnish(x: number, z: number): Piece[] {
 
 const spine = (): Piece[] => [...beam(0, 0), ...racks(-80, 24), ...berths(-150, 50), ...approach(0), ...furnish(-100, 40)];
 
+/** Glazed bays along one face, with a gap between them so the slot stays open to see. */
+const bays = (x0: number, x1: number, z0: number, z1: number): Piece[] => {
+  const out: Piece[] = [];
+  for (let y = 60; y < YARD_LENGTH - 60; y += 90) out.push(cub("hull-white", [x0, x1], [y, y + 58], [z0, z1]));
+  return out;
+};
+
 const hall = (): Piece[] => {
   const corners: (readonly [number, number])[] = [[-SPAN, -SPAN], [SPAN, -SPAN], [SPAN, SPAN], [-SPAN, SPAN]];
-  return [...corners.flatMap(([x, z]) => beam(x, z)), ...ties(corners), ...racks(-SPAN + 40, SPAN - 30), ...berths(-80, -SPAN + 36), ...approach(0), ...furnish(-SPAN + 55, 0)];
+  return [...corners.flatMap(([x, z]) => beam(x, z)), ...ties(corners), ...bays(-SPAN + 16, SPAN - 16, SPAN - 2, SPAN + 2), ...bays(-SPAN - 2, -SPAN + 2, -SPAN + 16, SPAN - 16), ...racks(-SPAN + 40, SPAN - 30), ...berths(-80, -SPAN + 36), ...approach(0), ...furnish(-SPAN + 55, 0)];
 };
 
 const dock = (): Piece[] => {
@@ -98,7 +105,7 @@ const dock = (): Piece[] => {
     out.push(rod("hull-grey", [SPAN, y, -SPAN], [SPAN, y, 48], 2.2, 8));
     out.push(rod("hull-grey-dark", [-SPAN, y, 48], [SPAN, y, 48], 1.4, 8));
   }
-  return [...out, ...racks(-SPAN + 36, 20), ...berths(-80, -SPAN + 30), ...approach(-SPAN + 20), ...furnish(-SPAN + 48, 10)];
+  return [...out, ...bays(-SPAN - 2, -SPAN + 2, -SPAN + 24, 40), ...bays(SPAN - 2, SPAN + 2, -SPAN + 24, 40), ...racks(-SPAN + 36, 20), ...berths(-80, -SPAN + 30), ...approach(-SPAN + 20), ...furnish(-SPAN + 48, 10)];
 };
 
 /** The three yards, in the order they are shown. */
