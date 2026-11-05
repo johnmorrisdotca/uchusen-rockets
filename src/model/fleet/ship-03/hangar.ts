@@ -1,6 +1,7 @@
 // The two hangar shoulders: starboard aft (104 to 204 m, the rescue bay with its gantry, maintenance racks, a pressure vestibule and an empty cradle with clamp arms, guide rails to the door and an umbilical boom) and port forward (222 to 318 m, the survey bay with three cradles
 // and guide rails, an access bridge and emergency shutters). Each is a rectangular shoulder braced to the spine, its outer wall open to a bay door with orange shutter leaves. A cutaway opens the face towards the spine and, on the
 // starboard shoulder, the outer wall. Pure: no three.js and no DOM.
+import { moving } from "../motion.ts";
 import { cub, HULL_STACKS, ibeam, type Piece, pipeRun, rng, rod, roundStrut } from "./adapter.ts";
 import { type BayId, BAYS, bayBox } from "./dims.ts";
 import { dressedFace, pipe, wallShells } from "./hulls.ts";
@@ -126,6 +127,7 @@ export function hangar(which: Side | BayId, cut: boolean, detail = 1, seed?: str
     for (let k = 0; k < leaves; k++) {
       const a0 = openY[0] + k * lw;
       if (k >= leaves - drawn) {
+        const from = out.length;
         const mid = (openLow + openHigh) / 2;
         const high = openHigh - openLow;
         const lift = 0.7 + (k % 2) * 0.3;
@@ -150,6 +152,8 @@ export function hangar(which: Side | BayId, cut: boolean, detail = 1, seed?: str
           out.push(rod("hull-grey-dark", base, mid3, 0.34, 12), rod("engine-pale", mid3, tip, 0.17, 12), rod("hull-grey", base, [base[0], base[1] + 0.05, base[2]], 0.5, 12), rod("hull-yellow", tip, [tip[0], tip[1], tip[2] + 0.01], 0.3, 12));
         }
         out.push(...hazard(along(door), a0 + lw - 0.4, openLow + 0.3, openHigh - 0.3, 0.5, 0.9), ...lamp(door, a0 + lw / 2, openHigh - 0.9, "amber", 0.2), ...stencil(door, `${51 + k}`, a0 + lw / 2, mid, 1.6));
+        // the leaf swings up about the lintel when the door moves
+        out.splice(from, out.length - from, ...moving(out.slice(from), { name: `door-leaf-${k}`, pivot: pt(door, a0 + lw / 2, openHigh, 0.5), axis: [0, -(door.sign as number), 0] }));
       }
     }
     // the opening seam: where the drawn leaves stop there is a dark gap, a tall hazard-striped leading edge on the first leaf, a column of lamps at each end of it and a limit switch on the track

@@ -2,6 +2,7 @@
 import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
 import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../src/beside.ts";
 import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
+import { motionNote, motionsOf } from "../src/model/fleet/motion.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
@@ -51,7 +52,7 @@ const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", beside: "off", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
 const BACKGROUND_NAMES = ["none", "earth"] as const;
 type BackgroundName = (typeof BACKGROUND_NAMES)[number];
 const askedRocket = address.get("rocket") ?? "starship";
@@ -231,6 +232,7 @@ function renderMain() {
   hero.setAttribute("beside", besideHere && state.beside ? "on" : "off");
   byId("beside-note").hidden = !(besideHere && state.beside);
   press(byId("beside"), state.beside ? "beside-on" : "");
+  showMotion();
   // the Kaminari concepts take a size, 60 to 100 per cent
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
@@ -371,6 +373,31 @@ function lightEngines(on: boolean) {
 enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false), "engines_off"), chip("Lit", "engines-on", () => lightEngines(true), "engines_on"));
 press(enginesBox, "engines-off");
 
+// ------------------------------------------------------------- the motion of a fleet ship's moving parts
+const motionBox = byId("motion");
+const speedBox = byId("motion-speed");
+/** `on` (real speed), `fast` (ten times) or `off`: the same words as the element's `motion` attribute and the address. */
+let motionChoice = ["on", "fast", "off"].includes(address.get("motion") ?? "") ? (address.get("motion") as string) : "on";
+function showMotion() {
+  const moves = motionsOf(state.rocket).length > 0;
+  byId("motion-field").hidden = !moves;
+  byId("motion-speed-field").hidden = !moves || motionChoice === "off";
+  const note = byId("motion-note");
+  note.hidden = !moves;
+  note.textContent = moves ? `${reducedMotion ? `${say("motionReduced")} ` : ""}${motionNote(state.rocket)}` : "";
+  hero.setAttribute("motion", moves ? motionChoice : "off");
+  press(motionBox, motionChoice === "off" ? "motion-off" : "motion-on");
+  press(speedBox, motionChoice === "fast" ? "motion-fast" : "motion-real");
+  address.set("motion", motionChoice === "on" ? null : motionChoice);
+}
+function chooseMotion(choice: string) {
+  motionChoice = choice;
+  showMotion();
+  drawEmbed();
+}
+motionBox.append(chip("", "motion-off", () => chooseMotion("off"), "motion_off"), chip("", "motion-on", () => chooseMotion(motionChoice === "off" ? "on" : motionChoice), "motion_on"));
+speedBox.append(chip("", "motion-real", () => chooseMotion("on"), "motion_real"), chip("", "motion-fast", () => chooseMotion("fast"), "motion_fast"));
+
 // ------------------------------------------------------------- copy the rocket that is on screen
 const embedStatus = byId("embed-status");
 const panel = byId<EmbedPanelElement>("embed-panel");
@@ -378,9 +405,10 @@ const here = new URL(".", location.href).href;
 function embedOptions(): RocketOptions {
   const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
+  const motion = hero.getAttribute("motion");
   // what turns here by the controls turns there by itself, as fast: left is `cw`, the near side going left
   const turning = bar.state.turning ? { spin: String(Math.round(360 / (TURN_SPEED * (Number(bar.getAttribute("pace")) || 1)))), way: turnWay === "left" ? "cw" : "ccw" } : {};
-  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
 panel.kinds = KINDS;
 panel.labels = LABELS;
@@ -658,6 +686,7 @@ function speak() {
   renderCompare();
   renderBuilder();
   lightEngines(hero.getAttribute("engines") === "on");
+  showMotion();
   drawTurn();
   byId("gallery").replaceChildren(...gallery());
   byId("planned-list").replaceChildren(...planned());

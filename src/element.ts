@@ -4,6 +4,7 @@
 import { build, buildPart, type Built, FitError } from "./build/index.ts";
 import type { DetailLevel } from "./model/detail.ts";
 import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
+import { motionsOf, motionSpeed, motionWanted } from "./model/fleet/motion.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
 import { defineUchusenFlight, UchusenFlight } from "./flightbar.ts";
@@ -146,7 +147,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside", "captions", "scale-note", "scale"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -283,7 +284,10 @@ export class UchusenRocket extends HTMLBase {
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
     if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
-    else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "motion") {
+      if (this.viewer) this.lightViewer(this.viewer);
+      this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
+    } else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
       // choosing what to show leaves the flight
@@ -498,6 +502,7 @@ export class UchusenRocket extends HTMLBase {
   private lightViewer(viewer: RocketViewer): void {
     viewer.setReduced(media("(prefers-reduced-motion: reduce)"));
     viewer.setEngines(this.engineLights() ? "full" : null);
+    viewer.setMotion(motionsOf(this.descriptionNow().rocket), motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")), motionSpeed(this.getAttribute("motion")));
   }
 
   private update(): void {
@@ -603,6 +608,7 @@ export class UchusenRocket extends HTMLBase {
     const { look, show, viewName } = this.settings(this.builtNow);
     this.dataset.look = look;
     this.dataset.engines = this.engineLights() ? "on" : "off";
+    this.dataset.motion = motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(this.getAttribute("motion")) === 10 ? "fast" : "on") : "off";
     this.dataset.beside = this.builtNow.beside.length ? "on" : "off";
     this.dataset.size = String(this.sizeNow(this.descriptionNow()));
     this.dataset.flight = this.flight?.id ?? "";

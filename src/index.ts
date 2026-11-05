@@ -40,6 +40,8 @@ export type { Spin, Way } from "./spin.ts";
 export { FLIGHTS } from "./data/flights.ts";
 export { burnsOf, clockWords, FlightClock, flightOf, frameAt, lastPosition, phaseAt, phasePosition, SECONDS_PER_PHASE } from "./flight.ts";
 export type { Flight, FlightBurn, FlightFrame, FlightPhase, PartPose } from "./flight.ts";
+export { angleAt, MOTIONS, motionNote, motionSpeed, motionsOf, motionWanted } from "./model/fleet/motion.ts";
+export type { Motion, MotionKind, MotionSpeed } from "./model/fleet/motion.ts";
 export { bellsOf, enginesWanted, FLAME_SETTLE_MS, pickBells, plumeLength, ringsOf } from "./engines.ts";
 export type { Bell } from "./engines.ts";
 export { OPTION_ATTRIBUTES, attributesFromOptions, optionsFromAttributes, rocketFromParams, rocketToParams } from "./attrs.ts";

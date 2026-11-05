@@ -235,3 +235,7 @@ The ship builds on the visitor's computer, once a visit. No `.glb` is shipped; t
 | Star Wars tradition | Recessed hangars, layered plating, a visible thrust frame | No triangular plan, no split bridge towers, no dorsal runway, no copied bay arrangement |
 
 The reference pictures were mood only. Nothing is traced; every shape is built in code from numbers.
+
+## Motion
+
+With the Motion choice on, the hangar door leaves of Miyamoto and Ariake swing up and back, the deployed gold array turns on its root beam, and the command tower's dishes tilt; see [motion.md](motion.md) for the rates and what a rotation-only move cannot show.
