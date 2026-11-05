@@ -82,11 +82,11 @@ test.describe("motion on", () => {
     await page.goto(`${ROOT}?rocket=fleet-ship-01&variant=hanabusa`);
     await page.locator('[data-testid="motion-off"]').click();
     await expect(hero(page)).toHaveAttribute("motion", "off");
-    expect(new URL(page.url()).searchParams.get("motion")).toBe("off");
+    await expect.poll(() => new URL(page.url()).searchParams.get("motion")).toBe("off");
     await page.locator('[data-testid="motion-on"]').click();
     await page.locator('[data-testid="motion-fast"]').click();
     await expect(hero(page)).toHaveAttribute("motion", "fast");
-    expect(new URL(page.url()).searchParams.get("motion")).toBe("fast");
+    await expect.poll(() => new URL(page.url()).searchParams.get("motion")).toBe("fast");
     await expect(page.locator('[data-testid="motion-note"]')).toContainText("3.43 rpm");
     await page.goto(`${ROOT}?rocket=starship`);
     await expect(page.locator("#motion-field")).toBeHidden();
