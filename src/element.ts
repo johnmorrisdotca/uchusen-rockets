@@ -148,7 +148,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -289,6 +289,8 @@ export class UchusenRocket extends HTMLBase {
       if (this.viewer) this.lightViewer(this.viewer);
       this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "float") this.viewer?.setFloating(after !== null);
+    else if (name === "names") this.viewer?.setNameLabels(after !== "off");
     else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
@@ -827,6 +829,8 @@ export class UchusenRocket extends HTMLBase {
       this.flightFrame = 0;
       if (this.clock) made.setFlight(this.clock);
       if (this.driven) made.drive(this.driven);
+      made.setFloating(this.hasAttribute("float"));
+      made.setNameLabels(this.getAttribute("names") !== "off");
       made.setVisible(true);
       const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
       this.lastView = viewName;
@@ -839,6 +843,8 @@ export class UchusenRocket extends HTMLBase {
       this.lightViewer(made);
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));
+      made.setFloating(this.hasAttribute("float"));
+      made.setNameLabels(this.getAttribute("names") !== "off");
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
         if (generation === this.generation && this.viewer === made) {
