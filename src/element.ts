@@ -226,7 +226,8 @@ export class UchusenRocket extends HTMLBase {
   lookAt(target: readonly [number, number, number], direction: readonly [number, number, number], distance: number): void {
     const slots = this.builtNow?.parts.map((part) => part.slot) ?? [];
     if (slots.length === 0 || !this.viewer) return;
-    this.viewer.focusOn({ slots, target: [target[0], target[1], target[2]], direction: [direction[0], direction[1], direction[2]], distance });
+    const aim = { slots, target: [target[0], target[1], target[2]] as [number, number, number], direction: [direction[0], direction[1], direction[2]] as [number, number, number], distance };
+    void this.upgrade().then(() => this.viewer?.focusOn(aim));
   }
 
   /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */

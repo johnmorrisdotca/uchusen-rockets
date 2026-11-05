@@ -58,7 +58,7 @@ export const DRONE = {
  * model does not. `finest` keeps the fine detail (bolts, slots) too: the painted model has it; the line looks and the code-made mesh stay inside the mesh limit without it.
  */
 export function dronePieces(standIn = true, finest = false): Piece[] {
-  const natural: Piece[] = [...shellPieces(), ...lensPieces(), ...podPieces(), ...antennaPieces(), ...underglowPieces(), workLamp([0.42, 0.12, 0.5], 0.045)];
+  const natural: Piece[] = [...shellPieces(), ...lensPieces(), ...podPieces(), ...antennaPieces(), ...underglowPieces(), ...workLamp([0.42, 0.12, 0.5], 0.045)];
   for (const arm of ARMS) natural.push(...armPieces(arm));
   natural.push(...weldNozzle(ARMS[1]));
   if (standIn) {

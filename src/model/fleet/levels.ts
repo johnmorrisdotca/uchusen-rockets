@@ -18,6 +18,12 @@ import { type Piece } from "../pieces.ts";
  */
 export function isCoarse(piece: Piece): boolean {
   if (piece.kind === "lathe") return Boolean(piece.body || piece.outline);
+  if (piece.kind === "plate" && (piece.material.startsWith("light-pool") || piece.material.startsWith("halo-"))) return true;
+  if (piece.kind === "plate" && piece.material === "window") {
+    const us = piece.outline.map(([a]) => a);
+    const vs = piece.outline.map(([, b]) => b);
+    return Math.min(Math.max(...us) - Math.min(...us), Math.max(...vs) - Math.min(...vs)) >= 0.6;
+  }
   if (piece.kind === "plate") {
     // a solid, not a beam, a sheet or a panel of the plating: thick, wide and deep all at once
     if (!piece.plain) return false;

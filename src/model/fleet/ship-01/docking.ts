@@ -130,7 +130,7 @@ export function dockingHardware(s: number): Piece[] {
   const lights: [number, MaterialName][] = [[0, "nav-red"], [90, "nav-green"], [180, "flood"], [270, "flood"], [45, "strobe"], [225, "nav-white"]];
   for (const [deg, m] of lights) out.push(box(m, [R * 1.12 * Math.sin((deg * Math.PI) / 180), -0.25 * s, R * 1.12 * Math.cos((deg * Math.PI) / 180)], 0.45 * s, 0.45 * s, 0.22 * s, 0, { only: "mesh", plain: true }));
   out.push(box("beacon", [0, 0.2 * s, 0], 0.28 * s, 0.28 * s, 0.28 * s, 0, { only: "mesh", plain: true }));
-  out.push(lightPool({ o: [0, -0.2 * s, 0], u: [1, 0, 0], v: [0, 0, 1], w: [0, -1, 0] }, R * 0.85));
+  out.push(...lightPool({ o: [0, -0.2 * s, 0], u: [1, 0, 0], v: [0, 0, 1], w: [0, -1, 0] }, R * 1.6));
   out.push(rod("hull-grey", [R * 0.4, -0.1 * s, R * 1.2], [R * 0.4, -1.4 * s, R * 1.2], 0.05 * s, 6, { only: "mesh" }), box("hull-white", [R * 0.4, -1.4 * s, R * 1.2], 0.5 * s, 0.5 * s, 0.05 * s, 0, { only: "mesh", plain: true }), box("black", [R * 0.4, -1.42 * s, R * 1.2], 0.36 * s, 0.05 * s, 0.07 * s, 0, { only: "mesh", plain: true }), box("black", [R * 0.4, -1.42 * s, R * 1.2], 0.07 * s, 0.05 * s, 0.36 * s, 0, { only: "mesh", plain: true }));
   // an umbilical panel on the housing's side: a plate, three connector sockets and a hose stub with a clamp
   out.push(box("hull-grey-dark", [-R * 1.25, 0.9 * s, 0], 0.1 * s, 0.9 * s, 1.1 * s, 0, { only: "mesh", plain: true }), ...[-0.3, 0, 0.3].map((z) => box("lamp-amber", [-R * 1.31, 0.9 * s, z * s], 0.05 * s, 0.2 * s, 0.1 * s, 0, { only: "mesh", plain: true })), rod("copper", [-R * 1.3, 0.55 * s, 0.45 * s], [-R * 1.7, 0.1 * s, 0.7 * s], 0.06 * s, 8, { only: "mesh" }));

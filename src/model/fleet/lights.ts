@@ -1,5 +1,6 @@
 // The fleet's lights, in one place: running lights, a white anti-collision flash, a slow red beacon, floods and the pools they throw. Every ship asks here. The flash timings are the aircraft rule (40 to 100 a
 // minute): the white flash at 60, the red beacon at 40. Position lights stay steady. A reader who asked for reduced motion gets them steady, not off. Pure: no three.js and no DOM.
+import type { MaterialName } from "../materials.ts";
 import type { Frame, Piece, Vec3 } from "../pieces.ts";
 
 /** How many white anti-collision flashes a minute. Inside 40 to 100. */
@@ -22,6 +23,18 @@ const DUTY: Readonly<Record<string, LampDuty>> = {
   beacon: "beacon",
   flood: "work",
   "light-pool": "work",
+  "light-pool-mid": "work",
+  "light-pool-edge": "work",
+  "halo-port": "running",
+  "halo-port-soft": "running",
+  "halo-starboard": "running",
+  "halo-starboard-soft": "running",
+  "halo-stern": "running",
+  "halo-stern-soft": "running",
+  "halo-strobe": "flash",
+  "halo-strobe-soft": "flash",
+  "halo-beacon": "beacon",
+  "halo-beacon-soft": "beacon",
   "lamp-blue": "work",
   "lamp-amber": "work",
   "lamp-red": "work",
@@ -83,14 +96,40 @@ export function lampFactor(duty: LampDuty, mode: "off" | "running" | "all", redu
     if (reduced) return 0.45;
     const period = 60 / (duty === "flash" ? STROBE_PER_MIN : BEACON_PER_MIN);
     const on = duty === "flash" ? STROBE_ON_S : BEACON_ON_S;
-    return ((seconds % period) + period) % period < on ? 1 : 0;
+    return ((seconds % period) + period) % period < on ? 1 : 0.35;
   }
   return 1;
 }
 
+/** A soft coloured bead around a lamp, big enough to read when the whole ship is in frame, and faint so a close look still shows the lamp. Two of them, a bright core and a wider falloff. The wide view is the coarse model, so the bead is marked as a body. */
+const HALO: Readonly<Record<string, { core: MaterialName; soft: MaterialName; radius: number }>> = {
+  port: { core: "halo-port", soft: "halo-port-soft", radius: 12 },
+  starboard: { core: "halo-starboard", soft: "halo-starboard-soft", radius: 12 },
+  strobe: { core: "halo-strobe", soft: "halo-strobe-soft", radius: 12 },
+  beacon: { core: "halo-beacon", soft: "halo-beacon-soft", radius: 12 },
+  "nav-white": { core: "halo-stern", soft: "halo-stern-soft", radius: 12 },
+  work: { core: "halo-stern", soft: "halo-stern-soft", radius: 0.45 },
+};
+
+function bead(material: MaterialName, at: Vec3, radius: number): Piece {
+  const profile: [number, number][] = [];
+  for (let i = 0; i <= 10; i++) {
+    const t = (Math.PI * i) / 10;
+    profile.push([Math.max(0.001, Math.sin(t) * radius), at[1] - Math.cos(t) * radius]);
+  }
+  return { kind: "lathe", material, at: [at[0], at[2]], segs: 18, only: "mesh", body: true, profile };
+}
+
+/** The glow around a running light, a strobe or a beacon. Empty for a colour that has no halo. */
+export function lampHalo(colour: string, at: Vec3): Piece[] {
+  const halo = HALO[colour];
+  if (!halo) return [];
+  return [bead(halo.soft, at, halo.radius), bead(halo.core, at, halo.radius * 0.22)];
+}
+
 /** A small dome. `at` is metres; the dome stands up from that point. */
 function dome(material: "beacon" | "nav-white" | "lamp-amber", at: Vec3, size: number): Piece {
-  return { kind: "lathe", material, at: [at[0], at[2]], segs: 8, only: "mesh", profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [0.001, at[1] + size * 0.8]] };
+  return { kind: "lathe", material, at: [at[0], at[2]], segs: 8, only: "mesh", body: true, profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [0.001, at[1] + size * 0.8]] };
 }
 
 /**
@@ -103,11 +142,11 @@ function dome(material: "beacon" | "nav-white" | "lamp-amber", at: Vec3, size: n
  * ```ts
  * import { beaconLamp } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(beaconLamp([0, 2, 4]).kind);
+ * console.log(beaconLamp([0, 2, 4])[0].kind);
  * ```
  */
-export function beaconLamp(at: Vec3, size = 0.14): Piece {
-  return dome("beacon", at, size);
+export function beaconLamp(at: Vec3, size = 0.14): Piece[] {
+  return [dome("beacon", at, size), ...lampHalo("beacon", at)];
 }
 
 /**
@@ -120,11 +159,11 @@ export function beaconLamp(at: Vec3, size = 0.14): Piece {
  * ```ts
  * import { sternLamp } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(sternLamp([0, 1, -4]).kind);
+ * console.log(sternLamp([0, 1, -4])[0].kind);
  * ```
  */
-export function sternLamp(at: Vec3, size = 0.14): Piece {
-  return dome("nav-white", at, size);
+export function sternLamp(at: Vec3, size = 0.14): Piece[] {
+  return [dome("nav-white", at, size), ...lampHalo("nav-white", at)];
 }
 
 /**
@@ -137,11 +176,11 @@ export function sternLamp(at: Vec3, size = 0.14): Piece {
  * ```ts
  * import { workLamp } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(workLamp([0.4, 0.2, 0.5]).kind);
+ * console.log(workLamp([0.4, 0.2, 0.5])[0].kind);
  * ```
  */
-export function workLamp(at: Vec3, size = 0.08): Piece {
-  return dome("lamp-amber", at, size);
+export function workLamp(at: Vec3, size = 0.08): Piece[] {
+  return [dome("lamp-amber", at, size), ...lampHalo("work", at)];
 }
 
 /**
@@ -155,14 +194,18 @@ export function workLamp(at: Vec3, size = 0.08): Piece {
  * import { lightPool } from "@johnmorrisdotca/uchusen-rockets";
  *
  * const pool = lightPool({ o: [0, 0, 0], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, 1);
- * console.log(pool.kind);
+ * console.log(pool[0].kind);
  * ```
  */
-export function lightPool(frame: Frame, radius: number): Piece {
-  const outline: [number, number][] = [];
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
-    outline.push([Math.cos(a) * radius, Math.sin(a) * radius]);
-  }
-  return { kind: "plate", material: "light-pool", frame, outline, thickness: 0.02, plain: true, sheet: true, only: "mesh" };
+export function lightPool(frame: Frame, radius: number): Piece[] {
+  const ring = (material: MaterialName, scale: number, lift: number): Piece => {
+    const outline: [number, number][] = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      outline.push([Math.cos(a) * radius * scale, Math.sin(a) * radius * scale]);
+    }
+    const o: Vec3 = [frame.o[0] + frame.w[0] * lift, frame.o[1] + frame.w[1] * lift, frame.o[2] + frame.w[2] * lift];
+    return { kind: "plate", material, frame: { ...frame, o }, outline, thickness: 0.02, plain: true, sheet: true, only: "mesh" };
+  };
+  return [ring("light-pool-edge", 1, 0), ring("light-pool-mid", 0.62, 0.015), ring("light-pool", 0.32, 0.03)];
 }

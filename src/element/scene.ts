@@ -705,7 +705,10 @@ export class RocketViewer {
       made.emissiveIntensity = this.lampStrength(duty, spec.glow, 0);
       this.glowing.set(made, spec.glow);
       this.lampDuty.set(made, duty);
-      if (name === "light-pool") made.userData.pool = true;
+      if (name.startsWith("light-pool") || name.startsWith("halo-")) {
+        made.userData.pool = true;
+        made.userData.poolOpacity = spec.opacity ?? 0.42;
+      }
       if (duty === "flash" || duty === "beacon") {
         this.hasPulse = true;
         this.pulseMaterials.add(made);
@@ -887,7 +890,7 @@ export class RocketViewer {
       const duty = this.lampDuty.get(material) ?? "engine";
       const level = this.lampStrength(duty, strength, seconds);
       material.emissiveIntensity = level;
-      if (material.userData.pool) material.opacity = level > 0 ? 0.42 : 0;
+      if (material.userData.pool) material.opacity = (material.userData.poolOpacity ?? 0.42) * level;
     }
   }
 

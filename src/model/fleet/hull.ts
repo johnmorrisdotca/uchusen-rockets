@@ -145,7 +145,7 @@ export function drum(ctx: Ctx, spec: DrumSpec): Piece[] {
     out.push(...lamps([...lampRing(y1 - 0.5, "amber"), ...lampRing(y0 + 0.5, "red")]));
     // red to port, green to starboard, a white strobe and a slow red beacon on top, a white stern light, and floodlights over the joint
     out.push(...navLight("port", R + proud * 0.8, deg(270), y1 - 1.0), ...navLight("starboard", R + proud * 0.8, deg(90), y1 - 1.0), ...navLight("strobe", R + proud * 0.8, 0, y1 - 1.0));
-    out.push(beaconLamp([0, y1 - 0.35, R + proud * 0.8], 0.12), sternLamp([0, y0 + 0.35, -(R + proud * 0.8)], 0.12));
+    out.push(...beaconLamp([0, y1 - 0.35, R + proud * 0.8], 0.12), ...sternLamp([0, y0 + 0.35, -(R + proud * 0.8)], 0.12));
     for (const a of [deg(150), deg(210)]) out.push(...floodlight(R + proud * 0.8, a, y1 - 1.3, 0.3));
   }
   return out;

@@ -2,6 +2,7 @@
 // enclosed, with service windows in places that show the field coils, the throat rings and the feed lines; a neck carries the feed lines on to the hull, and four plasma verniers stand at the aft corners. The shadow-shield collar that
 // steps from the engines to the hull is its own part (`shadowCollar`), swappable with none. A cutaway leaves the starboard side open. Pure: no three.js and no DOM.
 import { collar, cub, pipeRun, type Lathe, type Piece, quad, rng, rod, roundStrut, tileShield, type Vec3 } from "./adapter.ts";
+import { lightPool, sternLamp } from "../lights.ts";
 import { DRIVE, SHADOW_COLLAR, SHROUD } from "./dims.ts";
 import { hexClad } from "./hex.ts";
 import { collarAt, nozzleProfile, nozzleRadiusAt, OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
@@ -175,6 +176,7 @@ export function driveFrame(cut: boolean, detail = 1, seed = "drive", hex = false
     for (const dy of [3, 7]) out.push(...roundStrut("hull-grey-dark", [x, dy + 4, z * 0.8], [sx * nx + sx * Math.hypot(shroudAt(11) - 2, 0) * 0.9, 11, z * 0.45], 0.4));
   }
   out.push(...collar("L", 58, 1));
+  out.push(...sternLamp([0, 3, -(SHROUD.rAft + 2)]), ...lightPool({ o: [0, 18, -(SHROUD.rAft + 0.4)], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, -1] }, 16));
   return out;
 }
 

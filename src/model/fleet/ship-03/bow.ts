@@ -1,9 +1,12 @@
 // Bow defence and navigation, station 350 to 380 m: a short blunt stack of three staggered, spaced shield layers in the orange of removable shields, each narrower than the one behind, with spacer struts between them; steerable
 // ranging apertures and retracted optical heads on the front; two debris-intercept mounts; side apertures that keep working if the front is damaged. A cutaway opens the starboard side to the crush cells. Pure: no three.js and no DOM.
-import { chamfered, collar, cub, type Piece, prism, rng, rod } from "./adapter.ts";
+import { chamfered, collar, cub, designation, type Piece, prism, rng, rod } from "./adapter.ts";
 import { BOW_LAYERS, STATION } from "./dims.ts";
 import { dressedFace } from "./hulls.ts";
-import { frame, lamp, on, SHUTTER, stencil } from "./faces.ts";
+import { beaconLamp, lampHalo, lightPool } from "../lights.ts";
+import { marking } from "../marking.ts";
+import { conceptStyle } from "../markingSets.ts";
+import { frame, lamp, on, SHUTTER } from "./faces.ts";
 import { ringAt, tubeAt } from "./shapes.ts";
 
 const [Y0] = STATION.bow;
@@ -85,7 +88,10 @@ export function bow(cut: boolean, detail = 1, seed = "bow", marks = "452"): Piec
     for (const x of [-1, 1]) out.push(rod("hull-grey", [x, y1[0] + 2, z + s * 2.6], [x, y1[1] + 3, z + s * 2.6], 0.34, 8), rod("bell-inside", [x, y1[1] + 3, z + s * 2.6], [x, y1[1] + 3.15, z + s * 2.6], 0.22, 8), ringAt("hull-grey-dark", x, z + s * 2.6, 0.45, y1[0] + 4, 0.1));
     out.push(cub("hull-grey-dark", [-1.8, 1.8], [y1[0] + 1.6, y1[0] + 3.4], [z + s * 1.8, z + s * 2.8]));
   }
-  out.push(...stencil({ n: "x", sign: -1, at: -l0.hx, a: [Y0, Y0 + 12], b: [-l0.hz, l0.hz] }, marks, Y0 + 6, -4, 2.2));
+  out.push(...marking(designation(marks), { at: [-l0.hx - 0.2, Y0 + 6, -4], right: [0, 0, 1], up: [0, 1, 0], height: 1.35, align: "middle" }, conceptStyle("goldman")));
+  out.push(...lightPool({ o: [-l0.hx - 0.12, Y0 + 6, -7], u: [0, 0, 1], v: [0, 1, 0], w: [-1, 0, 0] }, 5.5));
+  out.push(...lampHalo("port", [-72, 270, 22]), ...lampHalo("starboard", [72, 154, 22]), ...lampHalo("strobe", [0, 210, 36]), ...beaconLamp([0, 374, 6]));
+  out.push(...lightPool({ o: [0, 268, 30], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, 20));
   out.push(...collar("L", Y0, -1));
   return out;
 }
