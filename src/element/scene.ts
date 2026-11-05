@@ -49,7 +49,7 @@ import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
-import { playFrame } from "../buildPlay.ts";
+import { assemblyOf, playFrame } from "../buildPlay.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
 import { SwarmRig } from "./swarm.ts";
@@ -1328,6 +1328,7 @@ export class RocketViewer {
         const place = places.find((one) => one.slot === part.slot);
         if (!place) continue;
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.scale.setScalar(1);
         part.holder.visible = place.shown;
       }
       this.swarm?.hide();
@@ -1353,14 +1354,20 @@ export class RocketViewer {
       const step = steps.find((one) => one.slot === part.slot);
       if (!place || !step) continue;
       const seated = grounded(step.slot, frame.done);
+      const fit = assemblyOf(step, frame.day, 80);
       if (frame.done.includes(step.slot) && seated) {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.scale.setScalar(1);
         part.holder.visible = place.shown;
-      } else if (frame.going.includes(step.slot) && seated) {
-        const flown = carries([{ drone: 0, slot: step.slot }], at, steps, (slot) => slotAt.get(slot), dock)[0];
-        if (flown) part.holder.position.set(flown.part[0], flown.part[1], flown.part[2]);
-        part.holder.visible = true;
-      } else part.holder.visible = false;
+      } else if (frame.going.includes(step.slot) && seated && fit.grown > 0.02) {
+        // a section grows where it belongs; the shop never flies a whole tank or ring in
+        part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.scale.setScalar(Math.max(0.05, fit.grown));
+        part.holder.visible = place.shown;
+      } else {
+        part.holder.scale.setScalar(1);
+        part.holder.visible = false;
+      }
     }
     const open = frame.going.filter((slot) => grounded(slot, frame.done));
     const workSteps = steps.filter((step) => !frame.going.includes(step.slot) || open.includes(step.slot));

@@ -226,8 +226,8 @@ export class SwarmRig {
     this.wake = wake;
     this.group.name = "swarm";
     this.shift.makeTranslation(-centre.x, -centre.y, -centre.z);
-    const glow = new MeshBasicMaterial({ color: new Color("#6d8cff"), transparent: true, opacity: 0.22, blending: AdditiveBlending, depthWrite: false });
-    const core = new MeshBasicMaterial({ color: new Color("#c5d6ff"), transparent: true, opacity: 0.14, blending: AdditiveBlending, depthWrite: false });
+    const glow = new MeshBasicMaterial({ color: new Color("#6d8cff"), transparent: true, opacity: 0.07, blending: AdditiveBlending, depthWrite: false });
+    const core = new MeshBasicMaterial({ color: new Color("#c5d6ff"), transparent: true, opacity: 0.05, blending: AdditiveBlending, depthWrite: false });
     const ring = new MeshBasicMaterial({ color: new Color("#b9ceff"), transparent: true, opacity: 0.1, blending: AdditiveBlending, depthWrite: false });
     const spark = new MeshBasicMaterial({ color: new Color("#d7e6ff"), transparent: true, opacity: 0.8, blending: AdditiveBlending, depthWrite: false });
     const flare = new MeshBasicMaterial({ color: new Color("#9eb6ff"), transparent: true, opacity: 0.28, blending: AdditiveBlending, depthWrite: false });
@@ -262,7 +262,7 @@ export class SwarmRig {
     this.paths.visible = false;
     const laserGeo = new BufferGeometry();
     laserGeo.setAttribute("position", new BufferAttribute(this.laserPositions, 3));
-    this.lasers = new LineSegments(laserGeo, new LineBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 1, blending: AdditiveBlending, depthWrite: false }));
+    this.lasers = new LineSegments(laserGeo, new LineBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 0.35, blending: AdditiveBlending, depthWrite: false }));
     this.lasers.frustumCulled = false;
     this.group.add(this.lasers);
     const seamGeo = new BufferGeometry();
