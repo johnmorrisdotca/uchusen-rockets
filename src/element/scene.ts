@@ -1064,7 +1064,7 @@ export class RocketViewer {
     // in a flight a stage leaves the one below, so its nozzle shows then too
     const nozzle = nozzleOnly && (this.show !== "together" || this.flightOn);
     for (const { mesh, name } of part.faces) mesh.visible = !nozzleOnly || (nozzle && NOZZLE_MATERIALS.has(name));
-    for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
+    if (this.progressAt === null) for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
     part.nozzleShown = nozzle;
     this.canvas.dataset.nozzle = this.parts.some((one) => one.nozzleShown) ? "own" : "";
   }
@@ -1372,7 +1372,7 @@ export class RocketViewer {
         // a section grows where it belongs; a ring opens as an arc
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         growPart(part.holder, fit.grown, ring);
-        for (const lines of part.feature) lines.visible = !(ring && fit.grown < 0.995);
+        for (const lines of [...part.feature, ...part.weld]) lines.visible = !(ring && fit.grown < 0.995);
         part.holder.visible = place.shown;
       } else {
         part.holder.scale.setScalar(1);

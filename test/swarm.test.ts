@@ -1,9 +1,9 @@
 // The swarm count follows the ship, and a drone stays outside the hull until the last move into its slot.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Vector3 } from "three";
+import { BoxGeometry, Group, Mesh, Vector3 } from "three";
 import { assemblyOf, buildOf, PHASE_SHARE, playFrame, SHOP_LIMIT_M, stepPhase } from "../src/buildPlay.ts";
-import { sectorNormals } from "../src/element/buildArc.ts";
+import { growPart, ringPiece, sectorNormals } from "../src/element/buildArc.ts";
 import { sparkAt } from "../src/element/swarm.ts";
 import { approachPath, berthRing, carries, grounded, pathClears, rankOf, SWARM_CAP, swarmCount, swarmJobs, type HullBox } from "../src/swarm.ts";
 
@@ -123,6 +123,28 @@ test("a half-built ring is the front half of the circle", () => {
   const behind = new Vector3(0, 0, -1);
   assert.ok(left.dot(ahead) > 0 && right.dot(ahead) > 0);
   assert.ok(left.dot(behind) < 0 && right.dot(behind) < 0);
+  assert.equal(ringPiece(0, 16, 50, 0.1), true);
+  assert.equal(ringPiece(0, 45, 50, 0.1), false);
+  assert.equal(ringPiece(0, 45, 50, 0.5), true);
+  assert.equal(ringPiece(0, -45, 50, 0.5), false);
+  assert.equal(ringPiece(18, 0, 50, 0.1), true);
+});
+
+test("a ring piece is cut where it stands, so a moved mesh is not kept whole", () => {
+  const holder = new Group();
+  const ahead = new Mesh(new BoxGeometry(1, 1, 1));
+  ahead.position.set(0, 0, 40);
+  const behind = new Mesh(new BoxGeometry(1, 1, 1));
+  behind.position.set(0, 0, -40);
+  const collar = new Mesh(new BoxGeometry(1, 1, 1));
+  collar.position.set(16, 0, 0);
+  holder.add(ahead, behind, collar);
+  growPart(holder, 0.5, true);
+  assert.ok((ahead.geometry.getIndex()?.count ?? 0) > 0);
+  assert.equal(behind.geometry.getIndex()?.count ?? 0, 0);
+  assert.ok((collar.geometry.getIndex()?.count ?? 0) > 0);
+  growPart(holder, 1, true);
+  assert.ok((behind.geometry.getIndex()?.count ?? 0) > 0);
 });
 
 test("a weld spark flies straight out and is not pulled down", () => {
