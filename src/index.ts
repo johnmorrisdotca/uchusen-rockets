@@ -73,5 +73,7 @@ export type { FlatPlace, MarkingPlace, MarkingStyle, RoundPlace } from "./model/
 export { FLEET_MARKS, conceptHull, conceptStyle, deckNumber, demoHull, hangarNumber, kanjiPlate, lockup, markedHauler, miyamotoHull, nameplate, noStep, portMarker } from "./model/fleet/markingSets.ts";
 export { HULL_MARKS, hullMarkings } from "./model/fleet/hullMarks.ts";
 export type { HullMark } from "./model/fleet/hullMarks.ts";
+export { DRONE_CONCEPTS, droneConcept } from "./model/fleet/drone/concepts.ts";
+export type { DroneConcept } from "./model/fleet/drone/concepts.ts";
 export type { ShipMarks } from "./model/fleet/markingSets.ts";
 export { FLEET_MARKING_ROCKETS } from "./data/fleetMarkings.ts";
