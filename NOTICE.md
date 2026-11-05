@@ -54,6 +54,14 @@ The dataset addresses named below are the record of what each model is. Their do
 | `cluster-ii-body.glb` | Cluster II | https://science.nasa.gov/3d-resources/cluster-ii/ | The drum only, from NASA 3D Resources. The foil, the long booms and every picture left out, so no mark is shipped. Stood with its base at y = 0. It was already the sourced 2.9 m across and 1.3 m tall. The repository states these assets are free and without copyright. |
 <!-- more NASA models -->
 
+The five yard machines also follow design references that are not distributed with this package:
+
+- Repair saucer: design reference: images supplied by the project owner (kept privately, not distributed).
+- Welder: design reference: images supplied by the project owner (kept privately, not distributed).
+- Carrier: design reference: images supplied by the project owner (kept privately, not distributed).
+- Tug: design reference: images supplied by the project owner (kept privately, not distributed).
+- Fitter: design reference: images supplied by the project owner (kept privately, not distributed).
+
 ## Lettering faces (SIL Open Font License 1.1)
 
 The fleet's hull markings are lettering made from the outlines of open-licence fonts. The package ships no font file: the outlines are plain numbers in `src/model/fleet/typeface.ts`, made by `scripts/make-glyphs.ts` and flattened to straight runs. The concepts use each face as it was drawn. Each font's licence ships with the package, as the licence requires (see [LICENSES/OFL-Michroma.txt](LICENSES/OFL-Michroma.txt) and [LICENSES/OFL-MPLUS1p.txt](LICENSES/OFL-MPLUS1p.txt)); the licence of the font Michroma and its file are also in `fonts/` in the repository. The outlines are shipped as geometry, with no font file, and are not sold as a font.

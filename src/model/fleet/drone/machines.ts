@@ -1,7 +1,7 @@
 // The five construction machines. Shapes come from the reference notes; no mark or text is copied.
 import type { MaterialName } from "../../materials.ts";
 import { disc, discZ, hoop, post, rod } from "../detail.ts";
-import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, limb, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
+import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, GOLD, limb, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
 import type { Piece, Vec3 } from "../../pieces.ts";
 
 /**
@@ -28,25 +28,31 @@ export interface Machine {
 }
 
 function weldDrone(): Machine {
-  const grip: Vec3 = [-0.2, 0.5, -0.02];
-  const nozzle: Vec3 = [0.18, 0.52, 0];
+  const grip: Vec3 = [-0.16, 0.44, -0.16];
+  const nozzle: Vec3 = [0.16, 0.5, -0.14];
   const pieces: Piece[] = [
-    ...panel(YELLOW, 0, 0, 0, 0.28, 0.2),
-    ...panel(DARK, 0, -0.02, -0.03, 0.3, 0.22),
-    ...bolts(0, 0, 0.02, 0.22, 0.14),
-    ...panel(ORANGE, 0.22, 0, 0.02, 0.02, 0.12),
-    ...panel(DARK, 0.22, 0.08, 0.03, 0.016, 0.04),
-    ...vents(-0.16, -0.04, 0.03),
-    discZ(BLUE, 0, -0.04, -0.05, -0.03, 0.08, 8),
-    rod(METAL, [-0.14, 0.12, 0.02], [-0.14, 0.36, 0.04], 0.02, 6),
-    rod(ORANGE, [-0.14, 0.36, 0.04], [-0.14, 0.44, 0.04], 0.016, 5),
-    ...limb([-0.1, 0.08, -0.02], [[-0.2, 0.24, -0.08], [-0.22, 0.4, -0.04]], grip),
-    ...limb([0.08, 0.08, -0.02], [[0.16, 0.26, -0.06], [0.18, 0.42, -0.02]], nozzle),
-    post(ORANGE, [0.18, 0], 0.02, 0.42, 0.008, 0.52, 6),
-    post(METAL, [0, 0.02], 0.04, 0.16, 0.03, 0.26, 8),
-    ...emitter([0, 0.02], 0.28, 0.07),
+    saucer(DARK, 0.28, -0.04, 0.04),
+    saucer(ORANGE, 0.27, -0.012, 0.01),
+    saucer(YELLOW, 0.26, 0.012, 0.05),
+    saucer(YELLOW, 0.15, 0.052, 0.026),
+    ...panel(DARK, 0, 0.08, 0.07, 0.055, 0.04),
+    discZ(DARK, 0, 0.1, 0.062, 0.078, 0.032, 10),
+    ...panel(ORANGE, 0.16, 0, 0.04, 0.018, 0.09),
+    ...panel(DARK, 0.185, 0, 0.05, 0.01, 0.07),
+    ...panel(ORANGE, -0.16, 0, 0.04, 0.018, 0.09),
+    ...panel(DARK, -0.185, 0, 0.05, 0.01, 0.07),
+    ...bolts(0, -0.02, 0.06, 0.12, 0.08),
+    ...vents(0, -0.1, 0.05),
+    disc(ORANGE, [0.22, 0.02], 0.045, -0.02, 0.08, 10),
+    disc(DARK, [0.22, 0.02], 0.028, 0.05, 0.016, 8),
+    disc(ORANGE, [-0.22, 0.02], 0.045, -0.02, 0.08, 10),
+    disc(DARK, [-0.22, 0.02], 0.028, 0.05, 0.016, 8),
+    ...emitter([0, 0.02], 0.24, 0.055),
+    ...repairArm([-0.06, 0.02, -0.04], [-0.14, 0.16, -0.16], [-0.16, 0.32, -0.14], grip),
+    ...repairArm([0.06, 0.02, -0.04], [0.14, 0.18, -0.14], [0.16, 0.36, -0.12], nozzle),
+    post(GLOW, [0.16, -0.14], 0.01, 0.36, 0.004, 0.5, 6),
   ];
-  return { id: "drone-weld", role: "weld", pieces, mouth: [0, 0.28, 0.02], tool: nozzle, toolKind: "weld" };
+  return { id: "drone-weld", role: "weld", pieces, mouth: [0, 0.24, 0.02], tool: nozzle, toolKind: "weld" };
 }
 
 /** A disc lying on the deck, outline in [forward, side]. */
@@ -115,16 +121,18 @@ function repairDrone(): Machine {
 
 function carrierDrone(): Machine {
   const pieces: Piece[] = [
-    discZ(WHITE, 0, 0, 0, 0.03, 0.16, 12),
-    discZ(DARK, 0, 0, -0.012, 0, 0.18, 12),
-    ...bolts(0, 0, 0.03, 0.1, 0.08),
-    discZ(BLUE, 0, 0, -0.03, -0.014, 0.06, 8),
-    post(METAL, [0, 0], 0.03, 0.1, 0.02, 0.16, 8),
-    ...emitter([0, 0], 0.18, 0.06),
-    rod(METAL, [-0.08, -0.02, 0.03], [-0.1, -0.04, 0.16], 0.004, 3),
-    discZ(BLUE, -0.1, -0.04, 0.16, 0.175, 0.008, 5),
+    saucer(DARK, 0.18, -0.02, 0.02),
+    saucer(WHITE, 0.16, 0.004, 0.028),
+    saucer(METAL, 0.08, 0.03, 0.012),
+    ...bolts(0, 0, 0.028, 0.1, 0.07),
+    discZ(BLUE, 0, 0, -0.04, -0.026, 0.06, 8),
+    disc(DARK, [0, 0.02], 0.04, 0.1, 0.05, 10),
+    hoop(GOLD, 0.05, 0.16, 0.007, 16, 4, { at: [0, 0.02] }),
+    disc(GLASS, [0, 0.02], 0.032, 0.15, 0.008, 12),
+    disc(GLOW, [0, 0.02], 0.016, 0.145, 0.006, 8),
+    ...whip([-0.06, -0.02, 0.03], [-0.08, -0.04, 0.16]),
   ];
-  return { id: "drone-carrier", role: "carry", pieces, mouth: [0, 0.18, 0], tool: [0, 0.18, 0], toolKind: "laser" };
+  return { id: "drone-carrier", role: "carry", pieces, mouth: [0, 0.16, 0.02], tool: [0, 0.16, 0.02], toolKind: "laser" };
 }
 
 function tugDrone(): Machine {
