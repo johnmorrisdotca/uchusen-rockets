@@ -19,11 +19,12 @@ test("the craft run from short to tall, and a row stays within the sheet", () =>
   }
 });
 
-test("a rocket with no shape, and a ship the package does not have yet, are named to add later", () => {
+test("a rocket with no shape is named to add later, and Hanabusa is named only until the package has the ship", () => {
   const later = laterNames();
   assert.ok(later.includes("Vulcan Centaur"));
   assert.ok(later.includes("Ariane 6"));
-  assert.ok(later.includes("Hanabusa, SPX-013"));
+  const hasShip = fleetKeys().some((key) => key.startsWith("fleet-ship-01:"));
+  assert.equal(later.includes("Hanabusa, SPX-013"), !hasShip);
 });
 
 test("the poster is one coloured sheet, with one scale line and the fleet band", () => {
