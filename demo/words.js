@@ -126,6 +126,7 @@ export const WORDS = {
     look: "Look",
     from: "From",
     background: "Background",
+    trueScale: "True scale",
     besideTitle: "Scale",
     beside: "Beside it",
     besideNote: "Starship with Super Heavy, at true size.",

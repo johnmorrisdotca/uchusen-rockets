@@ -7,10 +7,12 @@ import {
   CanvasTexture,
   Color,
   DirectionalLight,
+  EdgesGeometry,
   DoubleSide,
   Group,
   HemisphereLight,
   LineSegments,
+  LineBasicMaterial,
   LinearMipmapLinearFilter,
   MathUtils,
   type Material,
@@ -41,7 +43,7 @@ import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
-import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
+import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
@@ -199,6 +201,10 @@ export class RocketViewer {
   private scene = new Scene();
   private camera = new PerspectiveCamera(FOV_DEG, 3 / 4, 1, 4000);
   private root = new Group();
+  private scaleMode = false;
+  private scaleZoom: { from: number; to: number } | null = null;
+  private ghost: { group: Group; material: LineBasicMaterial; start: number | null } | null = null;
+  private scaleBar: HTMLElement | null = null;
   private parts: PartView[] = [];
   private built: Built | null = null;
   private look: LookName = "line";
@@ -352,6 +358,9 @@ export class RocketViewer {
     const bytes = built.glb().bytes;
     const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, "");
     if (this.disposed || generation !== this.generation) return;
+    const old = this.built;
+    const changingCraft = Boolean(this.scaleMode && old && old.report.variant?.id !== built.report.variant?.id);
+    if (changingCraft) this.makeGhost();
     this.disposeParts();
     this.root.clear();
     this.parts = [];
@@ -410,7 +419,19 @@ export class RocketViewer {
     this.addGlow();
     this.fitShadow();
     this.setLook(look);
-    this.frameTo(angle ?? this.currentAngle(), false);
+    if (changingCraft && !this.options.reducedMotion) {
+      this.homeAngle = angle ?? this.currentAngle();
+      const framing = this.framingFor(this.homeAngle);
+      const offset = this.camera.position.clone().sub(this.controls.target);
+      const oldDistance = offset.length();
+      const reference = transitionReferenceDistance(oldDistance, framing.distance);
+      const zoom = this.camera.zoom;
+      this.camera.position.copy(this.controls.target).add(offset.setLength(reference));
+      this.scaleZoom = { from: zoom * reference / oldDistance, to: zoom };
+      this.camera.zoom = this.scaleZoom.from;
+      this.camera.updateProjectionMatrix();
+      this.startPose(framing, 1000, false);
+    } else this.frameTo(angle ?? this.currentAngle(), false);
     if (this.clockNow) {
       this.flightKey = "";
       this.flightOn = false;
@@ -423,6 +444,64 @@ export class RocketViewer {
     this.drivenDirty = this.driven !== null;
     this.wake();
     await this.settled;
+  }
+
+  setScaleMode(on: boolean): void {
+    this.scaleMode = on;
+    this.canvas.dataset.scale = on ? "true" : "false";
+    if (!on) {
+      this.scaleZoom = null;
+      this.lens();
+      this.clearGhost();
+      this.scaleBar?.remove();
+      this.scaleBar = null;
+    } else if (!this.scaleBar) {
+      const bar = document.createElement("div");
+      bar.dataset.testid = "scale-bar";
+      bar.style.cssText = "position:absolute;left:16px;bottom:16px;color:#fff;font:12px system-ui;text-shadow:0 1px 3px #000;pointer-events:none;border-bottom:2px solid currentColor;text-align:center";
+      this.holder.append(bar);
+      this.scaleBar = bar;
+    }
+    this.wake();
+  }
+
+  private clearGhost(): void {
+    if (!this.ghost) return;
+    this.ghost.group.traverse((node) => { if (node instanceof LineSegments) node.geometry.dispose(); });
+    this.ghost.material.dispose();
+    this.ghost.group.removeFromParent();
+    this.ghost = null;
+    this.canvas.dataset.ghost = "off";
+  }
+
+  private makeGhost(): void {
+    this.clearGhost();
+    if (!this.built) return;
+    const oldBounds = this.built.boundsOf("together");
+    const group = new Group();
+    const material = new LineBasicMaterial({ color: 0xaec8dc, transparent: true, opacity: 0.65, depthWrite: false, depthTest: false });
+    this.root.updateMatrixWorld(true);
+    for (const part of this.parts) {
+      if (part.beside || !part.holder.visible) continue;
+      for (const { mesh } of part.faces) {
+        const line = new LineSegments(new EdgesGeometry(mesh.geometry, 25), material);
+        line.applyMatrix4(mesh.matrixWorld);
+        group.add(line);
+      }
+    }
+    group.position.x = -(oldBounds.max[0] - oldBounds.min[0]) - 5;
+    this.scene.add(group);
+    this.ghost = { group, material, start: null };
+    this.canvas.dataset.ghost = "on";
+  }
+
+  private updateScaleBar(): void {
+    if (!this.scaleBar) return;
+    const metresPerPixel = 2 * this.camera.position.distanceTo(this.controls.target) * Math.tan(MathUtils.degToRad(FOV_DEG / 2)) / (Math.max(1, this.holder.clientHeight) * this.camera.zoom);
+    const candidates = [0.1, 1, 10, 100, 1000];
+    const metres = candidates.find((value) => value / metresPerPixel >= 50 && value / metresPerPixel <= this.holder.clientWidth * 0.7) ?? candidates.find((value) => value / metresPerPixel <= this.holder.clientWidth * 0.7) ?? 0.1;
+    this.scaleBar.style.width = `${metres / metresPerPixel}px`;
+    this.scaleBar.textContent = metres === 1000 ? "1 km" : `${metres} m`;
   }
 
   /** Moves the parts from the packed nodes into `into`, keeping each mesh's own placement. */
@@ -1120,6 +1199,8 @@ export class RocketViewer {
     this.resize.disconnect();
     this.controls.dispose();
     this.disposeParts();
+    this.clearGhost();
+    this.scaleBar?.remove();
     this.plumes.dispose();
     this.ground?.dispose();
     this.glow?.geometry.dispose();
@@ -1440,6 +1521,10 @@ export class RocketViewer {
       if (!this.pose) this.applyDriven();
       this.needsDraw = true;
     }
+    if (this.ghost && this.ghost.start === null) {
+      this.ghost.start = now;
+      if (this.pose) this.pose.start = performance.now();
+    }
     if (this.pose) {
       const { from, to, start, ms, moveParts } = this.pose;
       const k = Math.min(1, (performance.now() - start) / ms);
@@ -1455,6 +1540,10 @@ export class RocketViewer {
       const aim = this.drivenAngle();
       if (aim) s.setFromVector3(new Vector3(...directionOf(aim)).setLength(s.radius));
       this.camera.position.copy(this.controls.target).add(new Vector3().setFromSpherical(s));
+      if (this.scaleZoom) {
+        this.camera.zoom = MathUtils.lerp(this.scaleZoom.from, this.scaleZoom.to, e);
+        this.camera.updateProjectionMatrix();
+      }
       if (moveParts)
         for (const part of this.parts) {
           // lifts clear first, then across, then down: a stage does not slide through another
@@ -1465,6 +1554,8 @@ export class RocketViewer {
       if (k >= 1) {
         const done = this.pose.moveParts;
         this.pose = null;
+        if (this.scaleZoom && this.built) this.limits(this.framingFor(this.currentAngle()).distance);
+        this.scaleZoom = null;
         if (done) this.finishParts();
         this.drivenDirty = this.driven !== null;
       }
@@ -1482,12 +1573,21 @@ export class RocketViewer {
       this.plumes.setTime(now / 1000);
       this.needsDraw = true;
     }
+    if (this.ghost) {
+      const elapsed = now - (this.ghost.start ?? now);
+      if (elapsed >= 2000) this.clearGhost();
+      else {
+        this.ghost.material.opacity = 0.65 * Math.min(1, (2000 - elapsed) / 500);
+        this.needsDraw = true;
+      }
+    }
     const changed = this.controls.update(dt);
     if (this.needsDraw || changed || this.pose) {
       this.syncSizes();
       this.renderer.render(this.scene, this.camera);
       this.placeMarks();
       this.placeBeside();
+      this.updateScaleBar();
       if (this.options.onNear && !this.nearSaid && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {
         this.nearSaid = true;
         this.options.onNear();
@@ -1508,7 +1608,7 @@ export class RocketViewer {
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || this.ghost)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 
