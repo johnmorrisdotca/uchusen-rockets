@@ -145,7 +145,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside", "scale"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -281,7 +281,8 @@ export class UchusenRocket extends HTMLBase {
 
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
-    if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
+    if (name === "scale") this.viewer?.setScaleMode(after === "true");
+    else if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
       // choosing what to show leaves the flight
@@ -481,6 +482,7 @@ export class UchusenRocket extends HTMLBase {
   /** Hands the 3D view what the attributes say about the engines, and its reader's motion setting. */
   private lightViewer(viewer: RocketViewer): void {
     viewer.setReduced(media("(prefers-reduced-motion: reduce)"));
+    viewer.setScaleMode(this.getAttribute("scale") === "true");
     viewer.setEngines(this.engineLights() ? "full" : null);
   }
 

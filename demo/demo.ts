@@ -47,9 +47,28 @@ const knownWord = (prefix: string, text: string) => (`${prefix}_${wordsKey(text)
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
-bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
+bar.addEventListener("kazoku-viewchange", (event) => {
+  const detail = (event as CustomEvent).detail;
+  if (detail.reason === "fit") setScale(false);
+  hero.drive(detail);
+});
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", beside: "off", rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", beside: "off", scale: "false", rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const scaleButton = document.createElement("button");
+scaleButton.type = "button";
+scaleButton.className = "chip";
+scaleButton.dataset.testid = "true-scale";
+scaleButton.dataset.say = "trueScale";
+scaleButton.textContent = say("trueScale");
+bar.insertAdjacentElement("afterend", scaleButton);
+function setScale(on: boolean): void {
+  hero.setAttribute("scale", String(on));
+  scaleButton.setAttribute("aria-pressed", String(on));
+  address.set("scale", on ? "true" : null);
+}
+scaleButton.addEventListener("click", () => setScale(hero.getAttribute("scale") !== "true"));
+setScale(address.get("scale") === "true");
+
 const BACKGROUND_NAMES = ["none", "earth"] as const;
 type BackgroundName = (typeof BACKGROUND_NAMES)[number];
 const askedRocket = address.get("rocket") ?? "starship";
@@ -257,7 +276,7 @@ function pick(change: Partial<typeof state>) {
   if (change.beside !== undefined) {
     address.set("beside", change.beside ? "on" : "off");
     // both craft are to be in the picture
-    bar.fit();
+    if (hero.getAttribute("scale") !== "true") bar.fit();
   }
   renderMain();
   address.set("rocket", state.rocket);

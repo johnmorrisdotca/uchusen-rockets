@@ -262,3 +262,8 @@ export function frameFor(min: Vec3, max: Vec3, angle: Angle, aspect: number, mar
       }
   return { target, distance, position: [target[0] + direction[0] * distance, target[1] + direction[1] * distance, target[2] + direction[2] * distance] };
 }
+
+/** A distant transition camera keeps very large craft in front of its near plane. */
+export function transitionReferenceDistance(oldDistance: number, newDistance: number): number {
+  return Math.max(oldDistance, newDistance) * 20;
+}
