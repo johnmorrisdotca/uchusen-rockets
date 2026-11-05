@@ -218,13 +218,16 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
   await expect(page.getByTestId("trip-payload")).toHaveText("16.8 t");
   await expect(page.locator("#trip").getByText("Payload to Mars")).toBeVisible();
   await expect(page.getByTestId("trip-fuel")).toContainText("n/a: it does not brake");
+  await expect(page.getByTestId("trip-ratio")).toContainText("n/a: it does not brake");
   await page.goto(`${URL}&craft=saturn-v&to=moon`);
   await expect(page.getByTestId("trip-payload")).toHaveText("43.5 t");
   await expect(page.getByTestId("trip-fuel")).toContainText("10.2 t");
+  await expect(page.getByTestId("trip-ratio")).toContainText("the braking burn only");
   await page.goto(`${URL}&craft=saturn-v&to=mars`);
   await expect(page.getByTestId("trip-payload")).toContainText("n/a: no published payload figure covers a trip to Mars");
   await page.goto(`${URL}&craft=kaminari&to=mars`);
   await expect(page.getByTestId("trip-fuel")).toContainText("/");
+  await expect(page.getByTestId("trip-ratio")).toHaveText(/^[0-9]+\.[0-9]+$/);
   await expect(page.getByTestId("trip-payload")).toContainText("million t");
 });
 

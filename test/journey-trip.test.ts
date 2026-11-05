@@ -176,6 +176,17 @@ test("a ship that burns all the way: speed rises, is greatest at the turn, falls
   near(stateAt(trip, S, 1e6).shipS, trip.shipS, 1, "time on board at the end");
 });
 
+test("the mass ratio is the rocket equation, and a craft with no exhaust speed is not given one", () => {
+  const ship = planTrip(S, fleetShip, "earth", "mars", NOW);
+  const full = fleetShip.dryT.value + fleetShip.payloadT.value + fleetShip.propellantT.value;
+  near(ship.massRatio ?? 0, full / (full - ship.propellantUsedT!), 1e-6, "full mass over what is left");
+  assert.ok((ship.propellantUsedT ?? 0) <= (ship.propellantCarriedT ?? 0), "the tanks hold it");
+  const moon = planTrip(S, craftOf("saturn-v")!, "earth", "moon", NOW);
+  assert.ok((moon.massRatio ?? 0) > 1, "the braking burn has a ratio");
+  assert.equal(planTrip(S, craftOf("falcon-heavy")!, "earth", "mars", NOW).massRatio, null);
+  assert.equal(planTrip(S, craftOf("saturn-v")!, "moon", "earth", NOW).massRatio, null);
+});
+
 test("asking a ship for 1 g shortens the trip and says the ship is not built for it", () => {
   const rated = planTrip(S, fleetShip, "earth", "mars", NOW);
   const one = planTrip(S, fleetShip, "earth", "mars", NOW, 1);
