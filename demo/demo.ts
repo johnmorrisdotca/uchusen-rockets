@@ -16,7 +16,8 @@ import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
-import { companionsFor, frameSky, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { aimOrbit, companionsFor, frameSky, orbitCatalogue, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
 
@@ -58,17 +59,21 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   const detail = (event as CustomEvent).detail as { zoom?: number };
   hero.drive(detail);
   const zoom = Math.max(0.25, detail.zoom ?? 1);
-  const holder = byId("sky-back");
-  const node = holder.querySelector("wakusei-body:not([data-moon])");
-  if (!(node instanceof HTMLElement)) return;
-  frameSky(node, holder, zoom);
+  const sky = byId("sky-back");
+  sky.dataset.viewZoom = String(zoom);
+  const earth = document.getElementById("earth-back");
+  if (earth instanceof HTMLElement) earth.dataset.viewZoom = String(zoom);
+  const node = sky.querySelector("wakusei-body:not([data-moon])");
+  if (node instanceof HTMLElement) frameSky(node, sky, zoom);
+  else earth?.dispatchEvent(new Event("orbit"));
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
 const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: address.get("beside") === "on", kscale: scalePercent(address.get("kscale")) };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: address.get("beside") === "on", kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0 };
+if (state.background === "earth") state.orbitKm = nearestOrbit(state.orbitKm || EARTH_ORBIT[0].km, EARTH_ORBIT);
 
 /** A rocket is thin: the controls hold a pan so that a quarter of it stays in view. Its size on the screen: the picture is as wide as the box and a third taller, and the framing leaves 8% round the rocket. */
 function sizeObject() {
@@ -176,12 +181,75 @@ hero.addEventListener("uchusen-fallback", () => {
 });
 let skyKey = "";
 let skyBodies: SkyList | null = null;
+type OrbitFacts = { steps: OrbitStep[]; moons: { id: string; km: number }[] };
+const orbitCache = new Map<string, OrbitFacts>();
+const orbitPending = new Set<string>();
+let orbitAnimate = false;
+const factsNow = (): OrbitFacts => (state.background === "earth" ? { steps: EARTH_ORBIT.map((step) => ({ ...step })), moons: [{ id: "moon", km: 384400 }] } : (orbitCache.get(state.background) ?? { steps: [], moons: [] }));
+const visibleMoonIds = (): string[] => {
+  const facts = factsNow();
+  const km = state.orbitKm || facts.steps[0]?.km || 0;
+  return facts.moons.filter((moon) => moon.km <= km).map((moon) => moon.id);
+};
+const orbitLabel = (step: OrbitStep, earth: boolean) => (step.name === "low" ? say("orbitLow") : step.name === "moon" ? say("orbitMoon") : step.name === "geo" && earth ? say("orbitGeo") : say("orbitKm", { km: groupKm(step.km) }));
+function drawOrbitButtons() {
+  const facts = state.background === "none" ? { steps: [] as OrbitStep[], moons: [] } : factsNow();
+  const row = byId("orbits");
+  const heading = byId("orbit-heading");
+  const note = byId("orbit-altitude");
+  const show = facts.steps.length > 0;
+  row.hidden = !show;
+  heading.hidden = !show;
+  note.hidden = !show;
+  if (!show) {
+    row.replaceChildren();
+    return;
+  }
+  row.replaceChildren(
+    ...facts.steps.map((step) => {
+      const button = chip(orbitLabel(step, state.background === "earth"), `orbit-${step.km}`, () => pick({ orbitKm: step.km }));
+      button.dataset.km = String(step.km);
+      return button;
+    }),
+  );
+  press(row, `orbit-${state.orbitKm}`);
+  note.dataset.km = String(state.orbitKm);
+  note.textContent = say("orbitNow", { km: groupKm(state.orbitKm) });
+}
+function settleOrbit(animate: boolean) {
+  const facts = factsNow();
+  if (facts.steps.length === 0) return;
+  state.orbitKm = nearestOrbit(state.orbitKm || facts.steps[0].km, facts.steps);
+  address.set("orbit", orbitQuery(state.orbitKm, facts.steps));
+  drawOrbitButtons();
+  const holder = state.background === "earth" ? earthHolder : byId("sky-back");
+  holder.dataset.altitude = String(state.orbitKm);
+  aimOrbit(orbitOpen(state.orbitKm, facts.steps), holder, animate);
+}
+function ensureOrbit(body: string, animate: boolean) {
+  if (body === "none" || body === "earth" || orbitCache.has(body) || orbitPending.has(body)) return;
+  orbitPending.add(body);
+  void orbitCatalogue(body).then((facts) => {
+    orbitPending.delete(body);
+    orbitCache.set(body, facts);
+    if (state.background !== body) return;
+    settleOrbit(animate);
+    skyKey = "";
+    syncSky();
+  });
+}
 /** One body at a time, from wakusei-planets. The Earth keeps the picture it already had. */
 function syncSky() {
+  if (state.background !== "none" && state.background !== "earth" && !orbitCache.has(state.background)) {
+    ensureOrbit(state.background, orbitAnimate);
+    return;
+  }
   const lang = japanese() ? "ja" : "en";
   const painted = state.background !== "none" && state.look === "painted" && !realisticBarred;
   const form = painted ? "painted" : "line";
-  const companions = skyBodies ? companionsFor(state.background, state.moon, (id) => skyBodies?.moonsOf(id) ?? []) : state.moon && state.moon !== "all" ? [state.moon] : [];
+  const chosen = skyBodies ? companionsFor(state.background, state.moon, (id) => skyBodies?.moonsOf(id) ?? []) : state.moon && state.moon !== "all" ? [state.moon] : [];
+  const companions = [...chosen];
+  for (const id of visibleMoonIds()) if (!companions.includes(id)) companions.push(id);
   const key = `${state.background}|${companions.join(",")}|${form}|${lang}`;
   const credit = byId("sky-credit");
   const showCredit = state.background !== "none";
@@ -344,6 +412,7 @@ function drawMakers() {
 
 function pick(change: Partial<typeof state>) {
   if (change.view !== undefined && change.view !== state.view) bar.set({ yaw: 0, tilt: 0 });
+  const orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
   if (change.background !== undefined && change.moon === undefined) state.moon = "";
@@ -355,7 +424,15 @@ function pick(change: Partial<typeof state>) {
     bar.fit();
   }
   if (change.kscale !== undefined) address.set("kscale", String(state.kscale));
+  if (orbitChanged) orbitAnimate = true;
   renderMain();
+  if (orbitChanged) {
+    if (state.background === "none") {
+      address.set("orbit", null);
+      drawOrbitButtons();
+    } else if (state.background === "earth" || orbitCache.has(state.background)) settleOrbit(true);
+    orbitAnimate = false;
+  }
   // the ship is a new size: Fit holds it, and Starship beside it, again
   if (change.kscale !== undefined) bar.fit();
   address.set("rocket", state.rocket);
@@ -407,6 +484,7 @@ const drawSkyButtons = () => {
   press(row, state.moon ? `moon-${state.moon}` : "");
   void paintThumbs(byId("backgrounds"), lang);
   void paintThumbs(row, lang);
+  drawOrbitButtons();
 };
 drawSkyButtons();
 void skyList().then((got) => {
@@ -578,6 +656,11 @@ hero.addEventListener("uchusen-flight", () => {
   embedPhase = now;
   drawEmbed();
 });
+if (state.background === "earth") {
+  address.set("orbit", orbitQuery(state.orbitKm, EARTH_ORBIT));
+  earthHolder.dataset.altitude = String(state.orbitKm);
+  aimOrbit(orbitOpen(state.orbitKm, EARTH_ORBIT), earthHolder, false);
+}
 renderMain();
 
 // ------------------------------------------------------------- compare

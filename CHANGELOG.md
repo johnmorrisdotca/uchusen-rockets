@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - **A body behind the rocket is seen from low orbit** (MODULES-455): the horizon sits across the middle, as the Earth's picture does, and the body turns with the clock. A chosen moon is its own body in the sky, at least 16 pixels across, and the planet stays in that view. Saturn is tipped so its rings cross the sky. Venus's Painted choice uses the package's cloud surface, because the painted map is a radar picture.
+- **Orbit distance** (MODULES-457): a row of distances above the background body, from low orbit out to a moon's distance. The horizon opens into the whole disc as the camera climbs, the move is smooth, and the choice stays in the address (`orbit=10000km`). The craft stays the size it is. A moon comes into view when the distance reaches it.
 - **The SPX repair drone** (`fleet-drone`, `docs/fleet/drones.md`): a small work drone, about a metre across, a layered white saucer with a red rim stripe, a big round camera lens that is the tractor-beam emitter (`DRONE.emitter`), two thruster pods, two antennas, a cyan ring light and two jointed arms of four segments, a five-claw gripper on one and a welding tool on the other (`DRONE.weldTip`). Its painted look is built from NASA's Cluster II, High Energy Transient Explorer, Curiosity, InSight and Grease Gun models with this package's own detail: one draw, 119,733 triangles near and 2,224 far, with a glow picture that lights in the Lit look. `scripts/make-drone.ts` makes the models.
 
 ## [0.13.0] - 2026-11-05

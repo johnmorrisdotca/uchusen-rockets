@@ -3,6 +3,19 @@
 import type { ChikyuEarthRealistic } from "@johnmorrisdotca/chikyu-earth/realistic/element";
 import { CENTRE, placementIn, type Placement, START_TIME, stepSeconds, turnAt } from "./earth-model.ts";
 
+/** Low orbit uses the picture as it is. A higher orbit pulls the pan back to the middle and shrinks the disc until the whole Earth is in frame. The reader's zoom multiplies that. */
+const orbitBlend = (holder: HTMLElement, box: Placement & { width: number; height: number }) => {
+  const open = Math.min(1, Math.max(0, Number(holder.dataset.orbitOpen) || 0));
+  const asked = Number(holder.dataset.viewZoom);
+  const view = asked > 0 ? asked : 1;
+  const full = Math.min(box.width, box.height) * 0.42;
+  return {
+    radius: (box.radius * (1 - open) + full * open) * view,
+    panX: box.panX * (1 - open),
+    panY: box.panY * (1 - open),
+  };
+};
+
 export type EarthForm = "line" | "thick" | "realistic";
 
 export interface EarthShow {
@@ -58,6 +71,10 @@ function turn(holder: HTMLElement, tickMs: number, draw: (seconds: number, box: 
     active = performance.now();
     if (!timer) settle();
   };
+  const onOrbit = () => {
+    stale = true;
+    settle();
+  };
   const sight = new IntersectionObserver(([entry]) => {
     onScreen = entry.isIntersecting;
     settle();
@@ -72,6 +89,7 @@ function turn(holder: HTMLElement, tickMs: number, draw: (seconds: number, box: 
   });
   sight.observe(holder);
   size.observe(holder);
+  holder.addEventListener("orbit", onOrbit);
   document.addEventListener("visibilitychange", settle);
   motion.addEventListener("change", settle);
   for (const name of SIGNS_OF_LIFE) window.addEventListener(name, alive, { passive: true, capture: true });
@@ -80,6 +98,7 @@ function turn(holder: HTMLElement, tickMs: number, draw: (seconds: number, box: 
     timer = 0;
     sight.disconnect();
     size.disconnect();
+    holder.removeEventListener("orbit", onOrbit);
     document.removeEventListener("visibilitychange", settle);
     motion.removeEventListener("change", settle);
     for (const name of SIGNS_OF_LIFE) window.removeEventListener(name, alive, { capture: true });
@@ -101,10 +120,10 @@ function showLine(holder: HTMLElement, style: "line" | "thick"): EarthShow {
   root.replaceChildren(sheet, picture);
   void import("@johnmorrisdotca/chikyu-earth").then(({ globe }) => {
     if (stopped) return;
-    stopTurn = turn(holder, TICK_MS[style], (seconds, { width, height, radius, panX, panY }) => {
-      // the globe's SVG is square: as wide as the longer side of the box, centred on it and cut off by it
-      const size = Math.max(width, height);
-      picture.innerHTML = globe({ size, style, centre: CENTRE, graticule: true, view: { yaw: turnAt(seconds).yaw, tilt: 0, zoom: radius / (size / 2 - 1), panX, panY } });
+    stopTurn = turn(holder, TICK_MS[style], (seconds, box) => {
+      const size = Math.max(box.width, box.height);
+      const framed = orbitBlend(holder, box);
+      picture.innerHTML = globe({ size, style, centre: CENTRE, graticule: true, view: { yaw: turnAt(seconds).yaw, tilt: 0, zoom: framed.radius / (size / 2 - 1), panX: framed.panX, panY: framed.panY } });
       holder.dataset.draws = String(++draws);
     });
   });
@@ -137,9 +156,10 @@ function showRealistic(holder: HTMLElement, unavailable: () => void): EarthShow 
     holder.append(made);
     earth = made;
     stopTurn = turn(holder, TICK_MS.realistic, (seconds, box) => {
+      const framed = orbitBlend(holder, box);
       const { yaw, time } = turnAt(seconds);
       made.time = time;
-      made.setView({ yaw, tilt: 0, zoom: box.radius / discRadius(box.width, box.height, 1), panX: box.panX, panY: box.panY }, true);
+      made.setView({ yaw, tilt: 0, zoom: framed.radius / discRadius(box.width, box.height, 1), panX: framed.panX, panY: framed.panY }, true);
     });
   });
   return {
