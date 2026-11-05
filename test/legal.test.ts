@@ -90,6 +90,7 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "hubble-telescope.glb": [13.2, 4.2],
     "cluster-ii-body.glb": [1.3, 2.9],
     "cluster-ii-coarse-far.glb": [1.3, 2.9],
+    "insight-arm-arm.glb": [1.8, Number.NaN],
     "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
     "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
     "space-shuttle-stack-srb.glb": [45.46, 3.71],

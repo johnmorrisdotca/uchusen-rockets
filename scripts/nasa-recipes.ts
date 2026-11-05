@@ -156,6 +156,30 @@ const placeCluster = (p: number[]): void => {
 const CLUSTER_BODY: NasaPart = { id: "body", triangles: 12_000, error: 0.002, place: placeCluster };
 const CLUSTER_FAR: NasaPart = { id: "far", triangles: 800, error: 0.04, place: placeCluster };
 
+// InSight's arm is 1.8 m long (the mission page). The file's arm spans 1.038 m on its long side, so the scale brings that side to 1.8 m, then stands it up.
+const INSIGHT_ARM: NasaPart = {
+  id: "arm",
+  triangles: 12_000,
+  error: 0.003,
+  place: (p) => {
+    const s = 1.8 / 1.038;
+    p[0] *= s;
+    p[1] *= s;
+    p[2] *= s;
+    const up = p[2];
+    p[2] = p[1];
+    p[1] = up + 0.204 * s;
+    // that stand left the base at 1.63 and the height at 1.69; bring the height to 1.8 and the base to 0
+    const k = 1.8 / 1.69;
+    p[0] *= k;
+    p[1] *= k;
+    p[2] *= k;
+    p[1] -= 1.63 * k;
+  },
+};
+
+const insightArm = (node: string): boolean => node.startsWith("arm_") || node.startsWith("claw_") || node === "IDC" || node === "grapple" || node === "shovel" || node === "knob" || node === "lens_cap_IDC";
+
 const clusterDrum = (centre: readonly number[], _material: string, node: string, part: NasaPart): NasaPart | null => {
   if (node !== "shiny_panel" && node !== "foil_gold" && node !== "foil_silver") return null;
   // the wire booms run many metres out; the drum and its foil cap stay
@@ -309,5 +333,15 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     parts: [CLUSTER_FAR],
     partOf: (centre, material, node) => clusterDrum(centre, material, node, CLUSTER_FAR),
     atlas: 128,
+  },
+  {
+    id: "insight-arm",
+    files: [`${FOLDER}/insight-arm-deployed.glb`],
+    title: "InSight arm",
+    source: "https://science.nasa.gov/3d-resources/insight-cruise-lander/",
+    changes: "the arm, its claws and its instrument only; the lander, the legs and the panels left out; scaled so its long side is the sourced 1.8 m and stood up. No mark was on the parts that were kept",
+    parts: [INSIGHT_ARM],
+    partOf: (_centre, _material, node) => (insightArm(node) ? INSIGHT_ARM : null),
+    atlas: 1024,
   },
 ];

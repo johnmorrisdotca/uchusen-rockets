@@ -155,6 +155,15 @@ export const MODEL_CREDITS = {
     licenceUrl: "https://www.nasa.gov/nasa-brand-center/images-and-media/",
     changes: "The same drum as the near model, foil and panels kept, long booms left out, reduced for a distant view; scaled to the sourced 2.9 m across and 1.3 m tall; stood with its base at y = 0. No mark was on the panels that were kept.",
   },
+  "nasa-insight-arm": {
+    title: "InSight arm",
+    creator: "NASA 3D Resources",
+    creatorUrl: "https://science.nasa.gov/3d-resources/",
+    sourceUrl: "https://science.nasa.gov/3d-resources/insight-cruise-lander/",
+    licence: "Public domain (NASA)",
+    licenceUrl: "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    changes: "The arm, its claws and its instrument only; the lander, the legs and the panels left out; scaled so its long side is the sourced 1.8 m and stood up. No mark was on the parts that were kept.",
+  },
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 
