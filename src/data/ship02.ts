@@ -9,6 +9,9 @@ import { DECKS, ENGINE_CARDS, HULL_STACK_RING, INSETS, NOTES, SPEC } from "../mo
 const S = "uchusen-fleet-ship-02" as const;
 const fig = (value: number, note?: string): Figure => ({ value, source: S, ...(note ? { note } : {}) });
 
+/** What to call each slot of the ship in the picker, from the ship's own table. */
+export const SHIP_02_SLOT_NAMES: Readonly<Record<string, string>> = Object.fromEntries(SHIP_02_SLOTS.map((slot) => [slot.slot, slot.name]));
+
 export const SHIP_02_LENGTH: Figure = fig(LENGTH, "Tail to the tip of the bow mast.");
 
 const wording = (value: string, note?: string): Figure<string> => ({ value, source: S, ...(note ? { note } : {}) });

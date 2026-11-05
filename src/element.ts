@@ -72,11 +72,11 @@ const CSS = `
 .picture[data-state="3d"] .drawing { opacity: 0; filter: blur(2px); }
 .picture[data-state="3d"] .canvas { opacity: 1; filter: none; }
 .panel { font: 0.85rem/1.4 system-ui, sans-serif; margin-top: 0.5rem; }
-.panel .bar { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.panel button { min-height: 2rem; padding: 0.2rem 0.7rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.panel .bar { display: flex; flex-wrap: nowrap; gap: 0.3rem; overflow-x: auto; padding-bottom: 0.2rem; scrollbar-width: thin; }
+.panel button { flex: none; white-space: nowrap; min-height: 1.75rem; padding: 0.1rem 0.6rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; font-size: 0.8rem; cursor: pointer; }
 .panel button[aria-selected="true"], .panel button[aria-pressed="true"] { background: color-mix(in srgb, currentColor 22%, transparent); box-shadow: inset 0 0 0 1px currentColor; font-weight: 600; }
 .panel button:disabled { opacity: 0.5; cursor: default; }
-.panel .body { margin-top: 0.5rem; max-height: 14rem; overflow: auto; }
+.panel .body { margin-top: 0.4rem; max-height: 7rem; overflow: auto; }
 .panel .body button { margin: 0 0.35rem 0.35rem 0; }
 .panel td button.link { margin: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; text-decoration: underline; text-align: left; }
 .panel table { border-collapse: collapse; width: 100%; }
@@ -651,6 +651,7 @@ export class UchusenRocket extends HTMLBase {
       this.panel?.el.remove();
       this.panel = null;
       this.panelFor = null;
+      delete this.dataset.panel;
       this.viewer?.setMarks(null);
       return;
     }
@@ -672,6 +673,7 @@ export class UchusenRocket extends HTMLBase {
       root.appendChild(this.panel.el);
       this.panelFor = inspector;
     }
+    this.dataset.panel = "on";
     this.panel.labels(this.getAttribute("labels") === "on");
   }
 

@@ -143,3 +143,10 @@ uchusen-flight { --uchusen-accent: var(--accent); }
 .compare-frame { position: relative; overflow: hidden; height: min(60vh, 560px); display: flex; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 0.5rem; touch-action: none; }
 .compare-frame:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .compare-frame uchusen-lineup { overflow: visible; transform-origin: 50% 50%; flex: none; }
+/* on a phone the drawing of many craft may be wider than its frame: the frame scrolls it sideways, by itself, and the page never does */
+@media (max-width: 640px) {
+  .compare-frame { overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x pan-y; justify-content: flex-start; }
+  .compare-frame uchusen-lineup { margin: 0 auto; }
+}
+/* a ship with its panel under the picture gives the picture less of the window, so both fit */
+.stage-box uchusen-rocket[data-panel] { max-width: min(620px, calc((100vh - 26rem) * 0.75)); }

@@ -111,4 +111,7 @@ export const SHIP_03_SLOT_NAMES: Readonly<Record<string, string>> = {
   ...Object.fromEntries(MIYAMOTO_PARTS.filter((part) => !part.id.endsWith("-cutaway")).map((part) => [part.id.replace(/-(stowed|deployed)$/, "").replace(/^(pod|radiators-dorsal|radiators-ventral)-.*/, (m) => (m.startsWith("pod") ? "pod" : m.startsWith("radiators-dorsal") ? "radiators-dorsal" : "radiators-ventral")), part.name.replace(/, (stowed|deployed|relay|relief)$/, "").replace(/^Mission pod.*/, "Mission pod")])),
   ...Object.fromEntries(Object.values(SHIP_INSETS).flatMap((inset) => inset.parts.map((one) => [`${inset.id}-${one.n}`, `${one.n}. ${one.name}`]))),
   engine: "Engine",
+  "drive-collar": "Shadow-shield collar",
+  "hangar-starboard-fore": "Starboard fore hangar",
+  "hangar-port-aft": "Port aft hangar",
 };

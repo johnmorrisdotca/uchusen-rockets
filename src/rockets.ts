@@ -1,6 +1,6 @@
 // The catalogue: which rockets there are, their variants with sourced sizes, and which are still to be built. All data, all typed. Pure.
 import { DRAGON_VARIANTS } from "./data/dragon.ts";
-import { SHIP_02_VARIANTS } from "./data/ship02.ts";
+import { SHIP_02_SLOT_NAMES, SHIP_02_VARIANTS } from "./data/ship02.ts";
 import { FALCON_HEAVY_VARIANTS, FALCON_9_VARIANTS } from "./data/falcon.ts";
 import { FALCON_1_VARIANTS } from "./data/falcon1.ts";
 import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
@@ -201,6 +201,7 @@ export const partIdOf = (rocket: string, variant: string, slot: string): string 
  * ```
  */
 export const SLOT_NAMES: Readonly<Record<string, string>> = {
+  ...SHIP_02_SLOT_NAMES,
   ...FLEET_SLOT_NAMES,
   ...SHIP_03_SLOT_NAMES,
   booster: "Super Heavy",
@@ -279,4 +280,5 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "shadow-shield": "Shadow shield",
   "propellant-lines": "Propellant lines",
   pod: "Mission pod",
+  soyuz: "Soyuz spacecraft",
 };
