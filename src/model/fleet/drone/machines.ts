@@ -86,37 +86,57 @@ function repairArm(root: Vec3, elbow: Vec3, wrist: Vec3, grasp: Vec3): Piece[] {
   ];
 }
 
-function repairDrone(): Machine {
-  const grip: Vec3 = [-0.2, 0.48, -0.18];
-  const pieces: Piece[] = [
-    saucer(DARK, 0.34, -0.05, 0.045),
-    saucer(ORANGE, 0.325, -0.018, 0.012),
-    saucer(WHITE, 0.3, 0.018, 0.05),
-    saucer(WHITE, 0.16, 0.062, 0.024),
-    saucer(METAL, 0.09, 0.086, 0.016),
-    ...panel(WHITE, 0, 0.02, 0.078, 0.09, 0.06),
-    ...panel(DARK, 0, -0.12, 0.09, 0.07, 0.045),
-    ...panel(METAL, 0.1, -0.02, 0.075, 0.035, 0.04),
-    ...panel(METAL, -0.1, -0.02, 0.075, 0.035, 0.04),
-    ...bolts(0, 0, 0.07, 0.16, 0.12),
-    ...vents(0.18, 0.04, 0.05),
-    ...vents(-0.18, 0.04, 0.05),
-    discZ(BLUE, 0, 0.02, -0.16, -0.13, 0.12, 16),
-    discZ(BLUE, 0.1, 0.04, -0.14, -0.125, 0.03, 8),
-    discZ(BLUE, -0.1, 0.04, -0.14, -0.125, 0.03, 8),
-    disc(DARK, [0, 0.015], 0.07, 0.18, 0.1, 16),
-    disc(ORANGE, [0, 0.015], 0.074, 0.26, 0.02, 16),
-    disc(ORANGE, [0.13, 0.02], 0.04, 0.16, 0.07, 10),
-    disc(DARK, [0.13, 0.02], 0.028, 0.22, 0.02, 8),
-    disc(ORANGE, [-0.13, 0.02], 0.04, 0.16, 0.07, 10),
-    disc(DARK, [-0.13, 0.02], 0.028, 0.22, 0.02, 8),
-    ...emitter([0, 0.015], 0.29, 0.072),
-    ...whip([-0.03, -0.04, 0.11], [-0.05, -0.08, 0.48]),
-    ...whip([0.05, 0, 0.11], [0.08, 0.04, 0.46]),
-    ...repairArm([-0.08, 0, -0.08], [-0.16, 0.12, -0.28], [-0.18, 0.32, -0.22], grip),
-    ...repairArm([0.08, 0, -0.08], [0.14, 0.1, -0.28], [0.12, 0.3, -0.2], [0.1, 0.46, -0.18]),
+/** A boxed link with a cable along it, thick enough to read as a housing. */
+function housing(a: Vec3, b: Vec3, width: number): Piece[] {
+  return [bar(WHITE, a, b, width, width * 0.72), bar(DARK, a, b, width * 0.4, width * 0.95), bar(METAL, a, b, width * 0.14, width * 0.14)];
+}
+
+/** A motor cap where two housings meet. */
+function joint(at: Vec3, radius: number): Piece[] {
+  return [discZ(ORANGE, at[0], at[1], at[2] - radius, at[2] + radius, radius, 8), disc(METAL, [at[0], at[2]], radius * 0.75, at[1] - radius, radius * 2, 8)];
+}
+
+/** Four housings, a motor at each joint, and a two-finger gripper. Sized for the 2.9 m drum. */
+function fittedArm(sign: number): Piece[] {
+  const root: Vec3 = [sign * 0.55, 1.2, 0.15];
+  const shoulder: Vec3 = [sign * 0.9, 1.65, -0.2];
+  const elbow: Vec3 = [sign * 0.6, 2.05, -0.6];
+  const wrist: Vec3 = [sign * 0.3, 2.35, -0.85];
+  const grasp: Vec3 = [sign * 0.12, 2.55, -0.95];
+  return [
+    ...housing(root, shoulder, 0.12),
+    ...joint(shoulder, 0.08),
+    ...housing(shoulder, elbow, 0.1),
+    ...joint(elbow, 0.07),
+    ...housing(elbow, wrist, 0.08),
+    ...joint(wrist, 0.06),
+    ...housing(wrist, grasp, 0.06),
+    bar(METAL, wrist, [grasp[0] + sign * 0.07, grasp[1] + 0.1, grasp[2] + 0.02], 0.016, 0.014),
+    bar(METAL, wrist, [grasp[0] - sign * 0.05, grasp[1] + 0.08, grasp[2] - 0.05], 0.016, 0.014),
   ];
-  return { id: "drone-repair", role: "repair", pieces, mouth: [0, 0.29, 0.015], tool: grip, toolKind: "laser" };
+}
+
+function repairDrone(): Machine {
+  const grip: Vec3 = [-0.12, 2.55, -0.95];
+  const pieces: Piece[] = [
+    disc(DARK, [0, 0.55], 0.38, 1.4, 0.22, 18),
+    disc(METAL, [0, 0.55], 0.28, 1.58, 0.08, 14),
+    disc(GOLD, [0, 0.55], 0.44, 1.32, 0.04, 18),
+    disc(ORANGE, [0, 0.55], 0.42, 1.36, 0.05, 18),
+    disc(GLASS, [0, 0.55], 0.16, 1.64, 0.04, 12),
+    disc(ORANGE, [0.48, 0.55], 0.14, 1.32, 0.16, 12),
+    disc(DARK, [0.48, 0.55], 0.08, 1.44, 0.04, 8),
+    disc(ORANGE, [-0.48, 0.55], 0.14, 1.32, 0.16, 12),
+    disc(DARK, [-0.48, 0.55], 0.08, 1.44, 0.04, 8),
+    disc(BLUE, [0, 0.08], 0.42, -0.15, 0.04, 16),
+    rod(METAL, [-0.5, 0.25, 1.22], [-0.7, 0.55, 1.95], 0.014, 6),
+    rod(GLOW, [-0.7, 0.55, 1.95], [-0.74, 0.62, 2.08], 0.02, 6),
+    rod(METAL, [0.45, 0.3, 1.22], [0.62, 0.7, 1.9], 0.014, 6),
+    rod(GLOW, [0.62, 0.7, 1.9], [0.66, 0.78, 2.04], 0.02, 6),
+    ...fittedArm(-1),
+    ...fittedArm(1),
+  ];
+  return { id: "drone-repair", role: "repair", pieces, mouth: [0, 1.66, 0.55], tool: grip, toolKind: "laser" };
 }
 
 function carrierDrone(): Machine {

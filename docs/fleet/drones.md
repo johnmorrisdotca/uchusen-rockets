@@ -2,7 +2,7 @@
 
 The five machines are meshes built in this package, not imported models.
 
-The repair saucer's body is Cluster II's drum (`cluster-ii-body.glb`), credited as NASA 3D Resources, Cluster II, https://science.nasa.gov/3d-resources/cluster-ii/. The foil, the long booms and the pictures are left out. The lens, the arms and the livery are still the kit mesh beside it, not yet mounted on that drum. A concept image supplied for this work shows the finished shape: a white saucer, an orange rim, a lens, two antennae and two arms. The artist is not named, and no page address was given with that image. Logos, flags and lettering on it are left out.
+The repair saucer's body is Cluster II's drum (`cluster-ii-body.glb`), credited as NASA 3D Resources, Cluster II, https://science.nasa.gov/3d-resources/cluster-ii/. The foil and the panels are kept. The long booms are left out. The lens, the two arms, the antennae and the red pods are fittings in the machine, and the picture mounts them on that drum. A concept image supplied for this work shows the finished shape: a white saucer, an orange rim, a lens, two antennae and two arms. The artist is not named, and no page address was given with that image. Logos, flags and lettering on it are left out.
 
 The welder is a yellow saucer of the same kind as the repair, with two arms and a weld tip, and no mark from its design reference. The carrier is a smaller saucer with the lens at the rim. The tug is a box with a comb of grab fingers, two arms and side pods. The fitter is a ring with six arms. None of these four is mounted on a NASA body yet.
 

@@ -1,7 +1,10 @@
 // Pictures of the three kept machines, and of each one working. The beam in these pictures is narrowed to the machine. The arm is shown with its clamp closed on a truss fixture. `node scripts/drone-shots.ts <folder>`.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import process from "node:process";
+import { NodeIO } from "@gltf-transform/core";
+import { KHRONOS_EXTENSIONS } from "@gltf-transform/extensions";
+import { mergeDocuments } from "@gltf-transform/functions";
 import { toGlb } from "../src/build/glb.ts";
 import { DRONE_CONCEPTS } from "../src/model/fleet/drone/concepts.ts";
 import { discZ, hoop, post, rod } from "../src/model/fleet/detail.ts";
@@ -54,6 +57,7 @@ for (const make of DRONE_CONCEPTS) {
   const concept = make();
   const file = join(out, "glb", `${concept.id}.glb`);
   writeFileSync(file, toGlb([{ name: concept.id, mesh: meshOf(concept.pieces), at: [0, 0, 0] }]).bytes);
+  if (concept.id === "drone-repair") await mountDrum(file);
   const held: Vec3 = [concept.mouth[0], concept.mouth[1] + 0.32, concept.mouth[2]];
   const working: Piece[] = [...concept.pieces, ...pictureBeam(concept.mouth, held), part(held)];
   if (concept.id.startsWith("arm-")) working.push(...trussAt([0, -0.16, 0.05]));
@@ -68,10 +72,12 @@ for (const make of DRONE_CONCEPTS) {
   }
   const workFile = join(out, "glb", `${concept.id}-work.glb`);
   writeFileSync(workFile, toGlb([{ name: concept.id, mesh: meshOf(working), at: [0, 0, 0] }]).bytes);
+  if (concept.id === "drone-repair") await mountDrum(workFile);
+  const far = concept.id === "drone-repair";
   const eye = (name: string, at: [number, number, number], up: [number, number, number] = [0, 0, 1]) => ({
     name: `${concept.id}-${name}`,
     eye: at,
-    target: [0, 0.3, 0] as [number, number, number],
+    target: (far ? [0, 1.1, 0.2] : [0, 0.3, 0]) as [number, number, number],
     up,
     fov: 30,
     size: [900, 700] as [number, number],
@@ -81,7 +87,9 @@ for (const make of DRONE_CONCEPTS) {
   });
   jobs.push({
     glb: file,
-    shots: [eye("quarter", [1.8, 0.5, 1.3]), eye("side", [2.4, 0.2, 0.25]), eye("top", [0.1, 0.3, 2.4], [0, 1, 0])],
+    shots: far
+      ? [eye("quarter", [2.8, 5.4, 0.7]), eye("side", [5.2, 1.2, 0.5]), eye("top", [0.3, 0.8, 5], [0, 1, 0])]
+      : [eye("quarter", [1.8, 0.5, 1.3]), eye("side", [2.4, 0.2, 0.25]), eye("top", [0.1, 0.3, 2.4], [0, 1, 0])],
   });
   jobs.push({
     glb: workFile,
@@ -90,3 +98,30 @@ for (const make of DRONE_CONCEPTS) {
 }
 writeFileSync(join(out, "jobs.json"), JSON.stringify(jobs, null, 2));
 console.log(join(out, "jobs.json"));
+
+/** The repair's body is the Cluster II drum, Y up. Turn it so that axis is the drone's up, and keep its foil and panels. */
+async function mountDrum(file: string): Promise<void> {
+  const io = new NodeIO().registerExtensions(KHRONOS_EXTENSIONS);
+  const drum = await io.readBinary(new Uint8Array(readFileSync(join("models", "cluster-ii-body.glb"))));
+  const turn = Math.PI / 2;
+  const q = [Math.sin(turn / 2), 0, 0, Math.cos(turn / 2)];
+  for (const node of drum.getRoot().listNodes()) node.setRotation(q as [number, number, number, number]);
+  const fittings = await io.readBinary(new Uint8Array(readFileSync(file)));
+  mergeDocuments(fittings, drum);
+  const scene = fittings.getRoot().listScenes()[0];
+  for (const extra of fittings.getRoot().listScenes()) {
+    if (extra === scene) continue;
+    for (const child of extra.listChildren()) scene.addChild(child);
+    extra.dispose();
+  }
+  const keep = fittings.getRoot().listBuffers()[0];
+  for (const accessor of fittings.getRoot().listAccessors()) {
+    if (accessor.getBuffer() && accessor.getBuffer() !== keep) {
+      const array = accessor.getArray();
+      accessor.setBuffer(keep);
+      if (array) accessor.setArray(array);
+    }
+  }
+  for (const buffer of fittings.getRoot().listBuffers()) if (buffer !== keep) buffer.dispose();
+  writeFileSync(file, await io.writeBinary(fittings));
+}

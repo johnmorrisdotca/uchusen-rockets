@@ -147,10 +147,14 @@ const HUBBLE: NasaPart = { id: "telescope", triangles: 8_000, error: 0.002, plac
 // Cluster II's drum is already metres: 2.9 m across and 1.3 m tall (ESA). Stood with its base on y = 0. The foil and the 44 m booms are not this part.
 const CLUSTER_BODY: NasaPart = {
   id: "body",
-  triangles: 6_000,
-  error: 0.008,
+  triangles: 12_000,
+  error: 0.002,
   place: (p) => {
     p[1] += 0.65;
+    // the foil cap sits a little outside the published drum; bring it back to that size
+    p[0] *= 2.9 / 3.03;
+    p[2] *= 2.9 / 3.03;
+    p[1] *= 1.3 / 1.33;
   },
 };
 
@@ -286,10 +290,14 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     files: [`${FOLDER}/cluster-ii.glb`],
     title: "Cluster II",
     source: "https://science.nasa.gov/3d-resources/cluster-ii/",
-    changes: "the drum only; the foil, the long booms and every picture left out, so no mark is shipped; stood with its base at y = 0. It was already the sourced 2.9 m across and 1.3 m tall",
+    changes: "the drum with its foil and its own panels; the long booms left out; scaled to the sourced 2.9 m across and 1.3 m tall; stood with its base at y = 0. No mark was on the panels that were kept",
     parts: [CLUSTER_BODY],
-    partOf: (_centre, _material, node) => (node === "shiny_panel" ? CLUSTER_BODY : null),
-    colours: { shiny_panel: [0.75, 0.75, 0.72] },
-    atlas: 64,
+    partOf: (centre, _material, node) => {
+      if (node !== "shiny_panel" && node !== "foil_gold" && node !== "foil_silver") return null;
+      // the wire booms run many metres out; the drum and its foil cap stay
+      if (Math.hypot(centre[0], centre[2]) > 1.7 || Math.abs(centre[1]) > 0.8) return null;
+      return CLUSTER_BODY;
+    },
+    atlas: 1024,
   },
 ];

@@ -144,7 +144,7 @@ export const MODEL_CREDITS = {
     sourceUrl: "https://science.nasa.gov/3d-resources/cluster-ii/",
     licence: "Public domain (NASA)",
     licenceUrl: "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-    changes: "The drum only; the foil, the long booms and every picture left out, so no mark is shipped; stood with its base at y = 0. It was already the sourced 2.9 m across and 1.3 m tall.",
+    changes: "The drum with its foil and its own panels; the long booms left out; scaled to the sourced 2.9 m across and 1.3 m tall; stood with its base at y = 0. No mark was on the panels that were kept.",
   },
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
