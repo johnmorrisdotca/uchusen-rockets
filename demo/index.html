@@ -93,7 +93,9 @@
           </div>
           <div class="field" id="build-field" hidden>
             <h2 id="build-title" data-say="buildTitle">The build</h2>
-            <uchusen-build id="build-bar" data-testid="build-bar" aria-labelledby="build-title"></uchusen-build>
+            <uchusen-build id="build-bar" data-testid="build-bar" aria-labelledby="build-title">
+              <kazoku-speed-buttons slot="speed" steps="1 60 600 3600 10000 100000" value="1" address address-key="build-speed" no-label></kazoku-speed-buttons>
+            </uchusen-build>
           </div>
           <div class="field" id="facts" data-testid="facts" aria-live="polite"></div>
           <p class="note" id="data-note" data-say="dataNote" hidden></p>

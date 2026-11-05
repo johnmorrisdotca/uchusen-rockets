@@ -7,6 +7,7 @@ import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
+import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
@@ -360,6 +361,11 @@ function renderMain() {
     else hero.removeAttribute("progress");
   };
   buildBar.onMove = showProgress;
+  buildBar.onRepeat = (on) => address.set("repeat", on ? "on" : null);
+  if (buildBar.dataset.repeatReady !== "yes") {
+    buildBar.dataset.repeatReady = "yes";
+    buildBar.repeat = new URLSearchParams(location.search).get("repeat") === "on";
+  }
   if (buildBar.dataset.forVariant !== state.variant) {
     const previous = buildBar.dataset.forVariant ?? "";
     buildBar.dataset.forVariant = state.variant;
@@ -872,6 +878,8 @@ function setWords() {
   byId<UchusenBuild>("build-bar").words = {
     play: say("buildPlay"),
     pause: say("buildPause"),
+    start: say("buildStart"),
+    repeat: say("buildRepeat"),
     range: say("buildRange"),
     day: say("buildDay"),
     done: say("buildDone"),
