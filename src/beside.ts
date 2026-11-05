@@ -2,7 +2,7 @@
 import type { Description } from "./fit.ts";
 import type { Vec3 } from "./framing.ts";
 import type { Bounds } from "./model/pieces.ts";
-import { variantOf } from "./rockets.ts";
+import { ROCKETS, variantOf } from "./rockets.ts";
 
 /**
  * The rocket that can stand beside another for scale: the real Starship stack, Super Heavy and the ship, Block 3. Beside another craft it is drawn in this package's own paint, so no licensed model comes in unseen.
@@ -33,6 +33,67 @@ export const BESIDE_NAME = "Starship with Super Heavy";
 export function besideLabel(): string {
   const height = variantOf(BESIDE_ROCKET.rocket, BESIDE_ROCKET.variant)?.facts.height.value;
   return typeof height === "number" ? `${BESIDE_NAME}, ${height.toLocaleString("en-US")} m` : BESIDE_NAME;
+}
+
+/**
+ * The words that name one craft in a picture of several: its name, then its length in metres, such as "Saturn V (Apollo), 110.64 m". A real craft's length is its sourced height when a source gave one; otherwise the model's own height in the picture, `tall`.
+ *
+ * @param description The craft's rocket and variant.
+ * @param tall The height of its model, in metres, used when no source gave its length.
+ * @returns The label.
+ * @example
+ * ```ts
+ * import { craftName } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(craftName({ rocket: "saturn-v", variant: "saturn-v" }, 110.6));
+ * ```
+ */
+export function craftName(description: Readonly<Description>, tall: number): string {
+  const rocket = Object.hasOwn(ROCKETS, description.rocket) ? ROCKETS[description.rocket] : undefined;
+  const variant = variantOf(description.rocket, description.variant);
+  if (!rocket || !variant) return description.rocket;
+  const name = variant.name.includes(rocket.name) || rocket.name.includes(variant.name) ? variant.name : `${rocket.name}, ${variant.name}`;
+  const sourced = variant.facts.height.value;
+  const metres = typeof sourced === "number" && !description.rocket.startsWith("fleet-") ? sourced : Math.round(tall);
+  return `${name}, ${metres.toLocaleString("en-US")} m`;
+}
+
+/**
+ * The most craft that stand beside the one on screen: two, so three in all.
+ *
+ * @example
+ * ```ts
+ * import { BESIDE_MOST } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(BESIDE_MOST + 1);
+ * ```
+ */
+export const BESIDE_MOST = 2;
+
+/**
+ * The craft that stand beside a rocket, from the element's `beside` attribute: `on` is Starship with Super Heavy (never beside Starship itself), and a list such as `saturn-v:saturn-v,iss:iss` is those craft, at most two, each a rocket and a variant (the rocket's default variant when none is given). Anything that is not a craft is left out.
+ *
+ * @param value The attribute's value.
+ * @param rocket The rocket on screen.
+ * @returns The craft that stand beside it, in order from the left.
+ * @example
+ * ```ts
+ * import { besideCraft } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(besideCraft("saturn-v:saturn-v,iss:iss,hubble:hubble", "starship").map((craft) => craft.rocket), besideCraft("on", "starship"));
+ * ```
+ */
+export function besideCraft(value: string | null | undefined, rocket: string): Description[] {
+  if (value === "on") return canBeside(rocket) ? [{ ...BESIDE_ROCKET }] : [];
+  const out: Description[] = [];
+  for (const key of (value ?? "").split(",")) {
+    const [id, variantId] = key.trim().split(":");
+    if (!id || !Object.hasOwn(ROCKETS, id)) continue;
+    const variant = variantOf(id, variantId || undefined);
+    if (variant) out.push({ rocket: id, variant: variant.id });
+    if (out.length === BESIDE_MOST) break;
+  }
+  return out;
 }
 
 /** The least room between the two, in metres. */

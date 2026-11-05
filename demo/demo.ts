@@ -217,6 +217,7 @@ function renderMain() {
   press(byId("views"), `view-${state.view}`);
   press(byId("backgrounds"), `background-${state.background}`);
   limitTilt(variant.view?.tiltMax ?? 45);
+  (byId("turn").querySelector('[data-testid="compare-open"]') as HTMLAnchorElement).href = `compare.html?${new URLSearchParams({ rocket: state.rocket, variant: state.variant })}`;
   hero.setAttribute("rocket", state.rocket);
   hero.setAttribute("variant", state.variant);
   hero.setAttribute("show", state.show);
@@ -329,6 +330,11 @@ function turnTo(way: "left" | "right") {
   drawEmbed();
 }
 turnBox.append(chip("Turn left", "turn-left", () => turnTo("left"), "turnLeft"), chip("Turn right", "turn-right", () => turnTo("right"), "turnRight"));
+// any craft can be taken to the wide page to stand beside another
+const compareLink = el("a", { className: "chip compare-open", href: "compare.html", textContent: say("cmpOpen") });
+compareLink.dataset.testid = "compare-open";
+compareLink.dataset.say = "cmpOpen";
+turnBox.append(compareLink);
 bar.addEventListener("kazoku-viewchange", drawTurn);
 // the speed buttons write the speed to the bar's `pace`
 new MutationObserver(() => drawEmbed()).observe(bar, { attributes: true, attributeFilter: ["pace"] });

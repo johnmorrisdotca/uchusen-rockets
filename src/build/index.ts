@@ -1,7 +1,7 @@
 // The builder: one description into one mesh and one drawing. Works in Node and in a browser, with no dependency: the geometry here is this package's own.
 import { propellantOf, type FlameKind } from "../data/propellants.ts";
 import { check, type Description, type FitReport } from "../fit.ts";
-import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../beside.ts";
+import { BESIDE_ROCKET, besideBounds, besideLabel, besideLayout, canBeside, craftName } from "../beside.ts";
 import { type Angle, cleanView, DEFAULT_VIEW, PICTURE_H, PICTURE_W, VIEWS, type Vec3, type ViewName } from "../framing.ts";
 import { cleanShow, placesFor, showsOf } from "../layout.ts";
 import { DEFAULT_LOOK, type LookName } from "../looks.ts";
@@ -59,6 +59,8 @@ export interface BuiltPart {
   bounds: Bounds;
   /** The colour of this part's flame, from what a page says its engine burns; `neutral` when none read here says. */
   flame: FlameKind;
+  /** Which craft standing beside the rocket this part belongs to (0 is the first); left out for the rocket's own parts. */
+  craft?: number;
 }
 
 /**
@@ -103,6 +105,8 @@ export interface Built {
   parts: readonly BuiltPart[];
   /** The parts of the rocket standing beside it, when it was built `beside`; empty otherwise. They are not in `parts`; `placesOf`, `boundsOf`, `glb` and `svg` take them in. Their slots start `beside-`. */
   beside: readonly BuiltPart[];
+  /** The words that name each craft in a picture of several, in the order they stand from the left: the rocket first, then each beside it. Empty unless it was built to name them. */
+  names: readonly string[];
   /** What can be shown: together, apart and each part. */
   shows: readonly string[];
   /** The bounds of a choice of what to show, in metres, and with `lit` the flames of its engines at full thrust. */
@@ -170,13 +174,15 @@ function flameKindOf(part: PartRecord): FlameKind {
   return "neutral";
 }
 
-function assembled(report: FitReport, other?: Built): Built {
+function assembled(report: FitReport, others: readonly Built[] = [], naming?: { own: Description; others: readonly string[] }): Built {
   const own: BuiltPart[] = report.parts.map(({ slot, part }) => {
     const one = made(part.id);
     return { slot, record: part, pieces: one.pieces, get mesh() { return one.mesh; }, bounds: one.bounds, flame: flameKindOf(part) };
   });
   const slots = own.map((part) => part.slot);
-  const beside: BuiltPart[] = (other?.parts ?? []).map((part) => ({ slot: `beside-${part.slot}`, record: part.record, pieces: part.pieces, get mesh() { return part.mesh; }, bounds: part.bounds, flame: part.flame }));
+  // the first craft beside is "beside-", the next "beside-3-" and so on, so two of one rocket never share a slot
+  const prefixOf = (index: number) => (index === 0 ? "beside-" : `beside-${index + 1}-`);
+  const beside: BuiltPart[] = others.flatMap((other, index) => other.parts.map((part) => ({ slot: `${prefixOf(index)}${part.slot}`, record: part.record, pieces: part.pieces, get mesh() { return part.mesh; }, bounds: part.bounds, flame: part.flame, craft: index })));
   // what is drawn: the rocket's parts, then the ones beside it
   const parts: BuiltPart[] = [...own, ...beside];
   const ownPlaces = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id));
@@ -193,12 +199,21 @@ function assembled(report: FitReport, other?: Built): Built {
     }
     return { min, max };
   };
-  // the other rocket stands whole, on the ground, clear of whatever of this one shows
+  // each other craft stands whole, on the ground, clear of whatever of this one shows and of the ones before it, in a row to the right
+  const standing = (mine: Bounds): { at: Vec3[]; box: Bounds } => {
+    let box = mine;
+    const at = others.map((other) => {
+      const laid = besideLayout(box, other.boundsOf("together"));
+      box = besideBounds(box, laid.bounds);
+      return laid.at;
+    });
+    return { at, box };
+  };
   const placesOf = (show?: string) => {
     const mine = ownPlaces(show);
-    if (!other) return mine;
-    const { at } = besideLayout(boundsOfPlaces(mine), other.boundsOf("together"));
-    return [...mine, ...other.placesOf("together").map((place) => ({ slot: `beside-${place.slot}`, at: [place.at[0] + at[0], place.at[1] + at[1], place.at[2] + at[2]] as Vec3, shown: true }))];
+    if (others.length === 0) return mine;
+    const { at } = standing(boundsOfPlaces(mine));
+    return [...mine, ...others.flatMap((other, index) => other.placesOf("together").map((place) => ({ slot: `${prefixOf(index)}${place.slot}`, at: [place.at[0] + at[index][0], place.at[1] + at[index][1], place.at[2] + at[index][2]] as Vec3, shown: true })))];
   };
   const flamesAt = (places: { slot: string; at: Vec3; shown: boolean }[], together: boolean): LitBell[] =>
     litBells(
@@ -220,7 +235,7 @@ function assembled(report: FitReport, other?: Built): Built {
   };
   const boundsOfShow = (show?: string, lit = false): Bounds => {
     const mine = boundsOfPlaces(ownPlaces(show));
-    const { min, max } = other ? besideBounds(mine, besideLayout(mine, other.boundsOf("together")).bounds) : mine;
+    const { min, max } = standing(mine).box;
     if (lit)
       for (const bell of flamesOf(show)) {
         const place = placesOf(show).find((one) => one.slot === bell.slot);
@@ -232,6 +247,7 @@ function assembled(report: FitReport, other?: Built): Built {
     report,
     parts: own,
     beside,
+    names: naming ? [craftName(naming.own, boundsOfPlaces(ownPlaces("together")).max[1]), ...naming.others] : [],
     shows: showsOf(slots),
     boundsOf: boundsOfShow,
     placesOf,
@@ -303,13 +319,16 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * console.log(rocket.report.label, rocket.glb().bytes.length > 1000);
  * ```
  */
-export function build(description: Description, options: { detail?: DetailLevel; beside?: boolean } = {}): Built {
+export function build(description: Description, options: { detail?: DetailLevel; beside?: boolean | readonly Description[]; named?: boolean } = {}): Built {
   const report = check(description);
   if (!report.ok) throw new FitError(report);
   const before = detail.level;
   detail.level = options.detail ?? "full";
   try {
-    const built = assembled(report, options.beside && canBeside(description.rocket) ? build(BESIDE_ROCKET, { detail: "full" }) : undefined);
+    const asked = options.beside === true ? (canBeside(description.rocket) ? [BESIDE_ROCKET] : []) : (options.beside || []);
+    const others = asked.map((one) => build(one, { detail: "full" }));
+    const naming = options.named ? { own: description, others: asked.map((one, index) => (options.beside === true ? besideLabel() : craftName(one, others[index].boundsOf("together").max[1]))) } : undefined;
+    const built = assembled(report, others, naming);
     // a part's pieces are made when it is assembled, at this level: the lazy parts of a heavy part keep the level they were made at
     return built;
   } finally {

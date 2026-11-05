@@ -155,8 +155,10 @@ void main() {
 
 interface PartView {
   slot: string;
-  /** It belongs to the rocket standing beside the one on screen. */
+  /** It belongs to a craft standing beside the one on screen. */
   beside: boolean;
+  /** Which craft: -1 for the rocket itself, then 0, 1 for the ones beside it. */
+  craft: number;
   holder: Group;
   code: Group;
   model: Group | null;
@@ -243,8 +245,8 @@ export class RocketViewer {
   private settled: Promise<void> = Promise.resolve();
   private marks: { mark: ViewerMark; el: HTMLElement }[] = [];
   private markHost: HTMLElement | null = null;
-  /** The words that say what stands beside the craft: its name and length, under its foot. */
-  private besideEl: HTMLElement | null = null;
+  /** The words that say what stands beside the craft: its name and length, under its foot. One for each craft named, by craft (-1 is the rocket itself). */
+  private besideEls = new Map<number, HTMLElement>();
   private focusing = false;
   private nearSaid = false;
   private nearAt = 0;
@@ -354,6 +356,7 @@ export class RocketViewer {
       const view: PartView = {
         slot: part.slot,
         beside: built.beside.includes(part),
+        craft: part.craft ?? -1,
         holder,
         code,
         model: null,
@@ -1180,7 +1183,7 @@ export class RocketViewer {
     for (const { el } of this.marks) el.remove();
     this.marks = [];
     if (!marks || marks.length === 0) {
-      if (!this.besideEl) {
+      if (this.besideEls.size === 0) {
         this.markHost?.remove();
         this.markHost = null;
       }
@@ -1212,35 +1215,44 @@ export class RocketViewer {
     return this.markHost;
   }
 
-  /** What stands beside the craft is named: a caption under its foot, kept inside the picture. */
+  /** What stands beside the craft is named: a caption under its foot, kept inside the picture. A picture built with names names every craft, the rocket too; otherwise only the one beside it is. */
   private placeBeside(): void {
-    const view = this.parts.find((part) => part.beside);
-    if (!view) {
-      this.besideEl?.remove();
-      this.besideEl = null;
-      return;
+    const names = this.built?.names ?? [];
+    const labels = names.length ? names.map((text, index) => ({ craft: index - 1, text })) : this.parts.some((part) => part.beside) ? [{ craft: 0, text: besideLabel() }] : [];
+    for (const [craft, el] of this.besideEls) {
+      if (labels.some((label) => label.craft === craft)) continue;
+      el.remove();
+      this.besideEls.delete(craft);
     }
-    if (!this.besideEl) {
-      const el = document.createElement("span");
-      el.dataset.besideLabel = "";
-      el.textContent = besideLabel();
-      el.style.cssText = "position:absolute;left:0;top:0;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.72);white-space:nowrap;will-change:transform;display:none";
-      this.hostOfMarks().appendChild(el);
-      this.besideEl = el;
+    const taken: { x: number; w: number; y: number }[] = [];
+    for (const { craft, text } of labels) {
+      const view = this.parts.find((part) => part.craft === craft);
+      if (!view) continue;
+      let el = this.besideEls.get(craft);
+      if (!el) {
+        el = document.createElement("span");
+        el.dataset.besideLabel = "";
+        el.style.cssText = "position:absolute;left:0;top:0;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.72);white-space:nowrap;will-change:transform;display:none";
+        this.hostOfMarks().appendChild(el);
+        this.besideEls.set(craft, el);
+      }
+      if (el.textContent !== text) el.textContent = text;
+      if (!view.holder.visible || this.clockNow) {
+        el.style.display = "none";
+        continue;
+      }
+      const width = this.canvas.clientWidth;
+      const height = this.canvas.clientHeight;
+      const point = new Vector3(view.holder.position.x, view.holder.position.y, view.holder.position.z).project(this.camera);
+      const w = text.length * 6.2 + 12;
+      const x = Math.min(Math.max(((point.x + 1) / 2) * width - w / 2, 4), Math.max(4, width - w - 4));
+      let y = Math.min(((1 - point.y) / 2) * height + 6, height - 20);
+      // a name that would lie on another is put on the line below it
+      while (taken.some((one) => Math.abs(one.y - y) < 16 && Math.abs(one.x - (x + w / 2)) < (one.w + w) / 2) && y < height - 20) y += 17;
+      taken.push({ x: x + w / 2, w, y });
+      el.style.display = point.z < 1 ? "block" : "none";
+      el.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`;
     }
-    const el = this.besideEl;
-    if (!view.holder.visible || this.clockNow) {
-      el.style.display = "none";
-      return;
-    }
-    const width = this.canvas.clientWidth;
-    const height = this.canvas.clientHeight;
-    const point = new Vector3(view.holder.position.x, view.holder.position.y, view.holder.position.z).project(this.camera);
-    const w = besideLabel().length * 6.2 + 12;
-    const x = Math.min(Math.max(((point.x + 1) / 2) * width - w / 2, 4), Math.max(4, width - w - 4));
-    const y = Math.min(((1 - point.y) / 2) * height + 6, height - 20);
-    el.style.display = point.z < 1 ? "block" : "none";
-    el.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`;
   }
 
   /** Put the labels where their parts are now. */

@@ -1,0 +1,18 @@
+/* The wide comparison page: the stage takes the whole width of the page, two to two and a half times the main view, and the choices run in rows under it. */
+body.compare main { max-width: 1560px; }
+.cw .field h3 { margin: 0 0 0.35rem; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.cw > .field { margin-bottom: 0.8rem; }
+.cw-stage { position: static; margin-bottom: 1rem; }
+.cw-stage uchusen-rocket { --uchusen-aspect: 2.3 / 1; max-width: none; width: 100%; margin: 0; }
+.cw-pickers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem 1.6rem; margin-bottom: 1rem; }
+.cw-craft-chip { display: inline-flex; align-items: center; gap: 0.1rem; }
+.cw-craft-chip .chip { margin: 0; }
+.cw-craft-chip .cw-remove { min-width: 2rem; padding-inline: 0.5rem; }
+#cw-table { border-collapse: collapse; min-width: 30rem; font-size: 0.9rem; }
+#cw-table th, #cw-table td { border-bottom: 1px solid var(--line); padding: 0.4rem 0.8rem 0.4rem 0; text-align: left; font-variant-numeric: tabular-nums; vertical-align: top; }
+#cw-table thead th { color: var(--muted); font-weight: 500; }
+@media (max-width: 820px) {
+  .cw-pickers { grid-template-columns: minmax(0, 1fr); }
+  .cw-stage uchusen-rocket { --uchusen-aspect: 3 / 4; }
+  #cw-table { min-width: 0; width: 100%; }
+}

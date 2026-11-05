@@ -11,7 +11,7 @@ import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
-import { canBeside } from "./beside.ts";
+import { besideCraft } from "./beside.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
@@ -468,9 +468,15 @@ export class UchusenRocket extends HTMLBase {
     this.emit("uchusen-flight", this.flightState);
   }
 
-  /** Whether Starship stands beside it: `beside="on"`, and never beside Starship itself. */
-  private besideOn(description: Description): boolean {
-    return this.getAttribute("beside") === "on" && canBeside(description.rocket);
+  /** The craft that stand beside it: `beside="on"` is Starship (never beside Starship itself), and a list such as `beside="saturn-v:saturn-v,iss:iss"` is those craft, at most two, each named in the picture. */
+  private besideList(description: Description): Description[] {
+    return besideCraft(this.getAttribute("beside"), description.rocket);
+  }
+
+  /** The options of a build for what stands beside it. */
+  private besideOptions(description: Description): { beside: readonly Description[]; named: boolean } {
+    const beside = this.besideList(description);
+    return { beside, named: beside.length > 0 && this.getAttribute("beside") !== "on" };
   }
 
   /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
@@ -486,11 +492,11 @@ export class UchusenRocket extends HTMLBase {
 
   private update(): void {
     const description = this.descriptionNow();
-    const key = `${JSON.stringify(description)}|${this.besideOn(description)}`;
+    const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description), beside: this.besideOn(description) });
+        this.builtNow = build(description, { detail: this.detailFor(description), ...this.besideOptions(description) });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -632,7 +638,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.detailFor(description) === "full") return;
     this.fine = true;
     try {
-      this.builtNow = build(description, { detail: "full", beside: this.besideOn(description) });
+      this.builtNow = build(description, { detail: "full", ...this.besideOptions(description) });
     } catch {
       return;
     }
