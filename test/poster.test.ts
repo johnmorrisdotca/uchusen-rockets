@@ -9,7 +9,8 @@ test("the craft run from short to tall, and a row stays within the sheet", () =>
   assert.ok(craft[0].metres <= craft[craft.length - 1].metres);
   assert.ok(craft.some((one) => one.name === "Saturn V"));
   assert.equal(craft.some((one) => one.key.startsWith("fleet-")), false);
-  assert.ok(fleetKeys().some((key) => key.startsWith("fleet-02:")));
+  assert.ok(fleetKeys().some((key) => key.startsWith("fleet-kaminari:")));
+  assert.ok(fleetKeys().some((key) => key.startsWith("fleet-ship-01:")));
   const rows = packRows(craft, 3.2, 844);
   assert.ok(rows.length > 1);
   assert.ok(rows[0][0].metres <= rows[rows.length - 1][0].metres);
