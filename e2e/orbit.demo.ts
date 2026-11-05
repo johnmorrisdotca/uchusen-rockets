@@ -23,7 +23,7 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   await page.goto(`${URL}?background=earth`);
   await expect(note).toHaveAttribute("data-km", "400");
   await expect(page.locator('[data-testid="orbit-400"]')).toHaveAttribute("aria-pressed", "true");
-  await expect.poll(() => new URL(page.url()).searchParams.get("orbit")).toBeNull();
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBeNull();
   await expect(moons).toBeHidden();
 
   await page.evaluate(() => {
@@ -35,7 +35,8 @@ test("each orbit step sets the altitude, the camera eases, and the address round
     const start = performance.now();
     const tick = () => {
       seen.push(Number(holder.dataset.orbitOpen));
-      if (performance.now() - start < 640) requestAnimationFrame(tick);
+      const elapsed = performance.now() - start;
+      if (elapsed < 4000 && (holder.dataset.orbitMoving === "1" || elapsed < 900)) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
     button.click();
@@ -49,7 +50,7 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   expect(new Set(values.map((value) => value.toFixed(3))).size).toBeGreaterThan(2);
   expect(values[values.length - 1]).toBeGreaterThan(values[0]);
   await expect(note).toHaveAttribute("data-km", "10000");
-  await expect.poll(() => new URL(page.url()).searchParams.get("orbit")).toBe("10000km");
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBe("10000km");
   await expect(moons).toBeHidden();
 
   for (const km of [1000, 36000, 100000, 384400]) {
@@ -61,7 +62,7 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   await page.goto(`${URL}?background=earth&orbit=36000km`);
   await expect(page.locator('[data-testid="orbit-36000"]')).toHaveAttribute("aria-pressed", "true");
   await expect(note).toHaveAttribute("data-km", "36000");
-  await expect.poll(() => new URL(page.url()).searchParams.get("orbit")).toBe("36000km");
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBe("36000km");
 
   await page.locator('[data-testid="background-jupiter"]').click();
   const first = page.locator('[data-testid="orbits"] button').first();
@@ -70,6 +71,6 @@ test("each orbit step sets the altitude, the camera eases, and the address round
 
   await page.locator('[data-testid="background-none"]').click();
   await expect(page.locator('[data-testid="orbits"]')).toBeHidden();
-  await expect.poll(() => new URL(page.url()).searchParams.get("orbit")).toBeNull();
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBeNull();
   expect(problems, problems.join("\n")).toEqual([]);
 });
