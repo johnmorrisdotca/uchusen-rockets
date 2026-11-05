@@ -11,6 +11,8 @@ import { readMetrics } from "./metrics.ts";
 const MESH_LIMIT = 600 * 1024;
 // the fleet's ships are far bigger than any real rocket and are built in the browser, so they ship no prebuilt file; each of their modules is within 1.25 MB (test/fleet-kit.test.ts)
 const DRAWING_LIMIT = 80 * 1024;
+// a fleet ship that carries the real Starship meshes: the same number as FLEET_DRAWING_LIMIT in scripts/make-assets.ts
+const FLEET_DRAWING_LIMIT = 512 * 1024;
 
 const bellsOf = (pieces: readonly Piece[]) => pieces.filter((piece) => piece.kind === "lathe" && piece.material === "bell");
 
@@ -33,7 +35,7 @@ test("every variant, in every look, from every side, in every choice of parts: w
         for (const look of LOOK_NAMES)
           for (const view of VIEW_NAMES) {
             const svg = built.svg({ look, view, show });
-            assert.ok(svg.length < DRAWING_LIMIT, `${variant.id} ${show} ${look} ${view}: ${svg.length}`);
+            assert.ok(svg.length < (rocket.id.startsWith("fleet-") ? FLEET_DRAWING_LIMIT : DRAWING_LIMIT), `${variant.id} ${show} ${look} ${view}: ${svg.length}`);
             assert.ok(svg.startsWith("<svg "));
             assert.ok(!/NaN|Infinity/.test(svg), `${variant.id} ${show} ${look} ${view}`);
           }

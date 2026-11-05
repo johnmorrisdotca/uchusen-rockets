@@ -1,8 +1,8 @@
 // Miyamoto's numbers in metres: every station and every box of the hull, in one place, so the parts, the sheets and the tests read the same table. X is across the beam (starboard +), Y is up the spine from the
-// tail to the bow, Z is dorsal (up from the keel). The stowed envelope is 380 x 118 x 74 m. Pure: no three.js and no DOM.
+// tail to the bow, Z is dorsal (up from the keel). The stowed envelope is 380 x 138 x 74 m. Pure: no three.js and no DOM.
 
 /** The stowed envelope: length (Y), beam (X, both hangar shoulders) and height (Z, keel to the dorsal collar's payload). */
-export const ENVELOPE = { length: 380, beam: 118, height: 74, zLow: -40, zHigh: 34 } as const;
+export const ENVELOPE = { length: 380, beam: 138, height: 74, zLow: -40, zHigh: 34 } as const;
 
 /** The narrow load-bearing spine: half its width across X, half its height across Z. */
 export const SPINE = { hx: 8, hz: 10 } as const;
@@ -29,8 +29,8 @@ export type StackId = keyof typeof STATION;
 
 /** The two rescue and survey shoulders: starboard aft, port forward. */
 export const HANGAR = {
-  starboard: { y: [104, 204], x: [23, 59], z: [0, 28], centre: 41 },
-  port: { y: [222, 318], x: [-59, -23], z: [0, 28], centre: -41 },
+  starboard: { y: [104, 204], x: [23, 69], z: [0, 28], centre: 46 },
+  port: { y: [222, 318], x: [-69, -23], z: [0, 28], centre: -46 },
 } as const;
 
 /** The four places a hangar box can stand: Miyamoto has the staggered pair (starboard aft, port fore); Ariake fills all four. A rescue bay has one large cradle, a survey bay three small ones. */

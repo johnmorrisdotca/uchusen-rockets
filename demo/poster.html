@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!--family:head-->
+    <link rel="stylesheet" href="family.css" />
+    <link rel="stylesheet" href="demo.css" />
+    <link rel="stylesheet" href="poster.css" />
+  </head>
+  <body class="demo poster">
+    <main>
+      <!--family:header-->
+      <section class="poster-page" aria-label="Rockets of the World" data-say-label="posterTitle">
+        <h1 data-say="posterTitle">Rockets of the World</h1>
+        <p data-say="posterIntro">Every built craft at one true scale, and the SPX ships in their own row.</p>
+        <div class="poster-tools">
+          <button type="button" class="chip" id="look" data-testid="poster-look"></button>
+          <label class="poster-zoom"><span data-say="posterZoom">Zoom</span><input type="range" id="zoom" data-testid="poster-zoom" min="25" max="200" value="100" /></label>
+          <button type="button" class="chip" id="save-svg" data-testid="poster-svg" data-say="posterSvg">SVG</button>
+          <button type="button" class="chip" id="save-a2" data-testid="poster-a2" data-say="posterPngA2">PNG, A2</button>
+          <button type="button" class="chip" id="save-a1" data-testid="poster-a1" data-say="posterPngA1">PNG, A1</button>
+        </div>
+        <div class="poster-frame" id="poster" data-testid="poster"></div>
+      </section>
+      <!--family:footer-->
+    </main>
+    <!--family:scripts js/poster.js-->
+  </body>
+</html>

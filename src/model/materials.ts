@@ -105,6 +105,15 @@ export const MATERIALS = {
   soil: { color: "#4a3a2c", metal: 0, rough: 0.95, fill: "dark" },
   fabric: { color: "#6f7f93", metal: 0, rough: 0.85, fill: "metal" },
   wood: { color: "#a77b4e", metal: 0, rough: 0.7, fill: "metal" },
+  lawn: { color: "#5f9f3c", metal: 0, rough: 0.9, fill: "dark" },
+  "lawn-dark": { color: "#3f7a30", metal: 0, rough: 0.95, fill: "dark" },
+  meadow: { color: "#93b349", metal: 0, rough: 0.9, fill: "dark" },
+  shrub: { color: "#2c5f31", metal: 0, rough: 0.9, fill: "dark" },
+  bark: { color: "#5a4330", metal: 0, rough: 0.9, fill: "dark" },
+  flower: { color: "#e58aa8", metal: 0, rough: 0.7, fill: "dark" },
+  "crop-gold": { color: "#d6a93a", metal: 0, rough: 0.8, fill: "dark" },
+  "crop-green": { color: "#6fae3a", metal: 0, rough: 0.8, fill: "dark" },
+  "water-clear": { color: "#3d7ea3", metal: 0.55, rough: 0.06, fill: "dark" },
 } as const satisfies Record<string, MaterialSpec>;
 
 /**

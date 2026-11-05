@@ -31,9 +31,9 @@ export function rings(order: Order = RING_ORDER_DEFAULT): Ring[] {
   return SPIN4.rings.map((r, i) => ({ use: r.use, name: r.name, rOut: r.rOut, depth: r.depth, y: stations[i] }));
 }
 
-const geoOf = (r: Ring): Geo => ({ rOut: r.rOut, depth: r.depth, wide: r.depth, style: "ring", c: 8 });
+export const geoOf = (r: Ring): Geo => ({ rOut: r.rOut, depth: r.depth, wide: r.depth, style: "ring", c: 8 });
 /** The ground of the nave: 1.5 m inside the outer wall. */
-const ground = (g: Geo): number => g.rOut - 1.5;
+export const ground = (g: Geo): number => g.rOut - 1.5;
 
 /** A box by its ranges: x centre and width, axial from y0 to y1, radial from z0 to z1. */
 const blk = (material: MaterialName, x: number, wide: number, y0: number, y1: number, z0: number, z1: number): Piece => box(material, [x, y0, (z0 + z1) / 2], wide, Math.abs(z1 - z0), y1 - y0, 0, { only: "mesh", plain: true });
@@ -41,7 +41,7 @@ const blk = (material: MaterialName, x: number, wide: number, y0: number, y1: nu
 // ----------------------------------------------------------------------------------------------------------------------------------
 // the glass: thin mullions and a lattice of fine rings, a tint, no pipe segments
 
-function glass(g: Geo, y: number, gap?: number): Piece[] {
+export function glass(g: Geo, y: number, gap?: number): Piece[] {
   const out: Piece[] = [];
   const arc = gap ? (): readonly [number, number] => [deg(gap), TAU - deg(gap)] : undefined;
   out.push({ kind: "lathe", material: "glass-clear", segs: 192, only: "mesh", body: true, outline: true, profile: roundSection(g, y), ...(arc ? { arc } : {}) } as Lathe, { kind: "lathe", material: "glass-clear", segs: 48, only: "drawing", body: true, outline: true, profile: roundSection(g, y).filter((_, i, a) => i % 6 === 0 || i === a.length - 1), ...(arc ? { arc } : {}) } as Lathe);
@@ -70,9 +70,9 @@ export const TOWN4 = [
   { id: "canal", name: "Canal and tree rows", az: 72, side: 0, step: 0 },
 ] as const;
 
-const STEP = 3.2;
+export const STEP = 3.2;
 /** Half the width of the nave and the width of each terrace step, from the ring's own width: three steps fill the side walls. */
-const dims = (g: Geo): { nave: number; tread: number } => {
+export const dims = (g: Geo): { nave: number; tread: number } => {
   const hw = g.wide / 2 - 1.2;
   const nave = hw * 0.4;
   return { nave, tread: (hw - nave) / 3 };
@@ -130,7 +130,7 @@ function nave(g: Geo, i: number): Piece[] {
 }
 
 /** The whole living or research hall of a ring: bands for the ground, the canal and the terrace treads and risers, then terrace blocks and the nave stamped round the ring. */
-function townHall(g: Geo, y: number, use: Use, gap?: number, bare = false): Piece[] {
+export function townHall(g: Geo, y: number, use: Use, gap?: number, bare = false): Piece[] {
   const { nave: NAVE, tread: TREAD } = dims(g);
   const out: Piece[] = [];
   const arc = gap ? (): readonly [number, number] => [deg(gap), TAU - deg(gap)] : undefined;
@@ -169,7 +169,7 @@ function townHall(g: Geo, y: number, use: Use, gap?: number, bare = false): Piec
 // ----------------------------------------------------------------------------------------------------------------------------------
 // the hydroponic hall of the garden ring
 
-function hydroHall(g: Geo, y: number, gap?: number, bare = false): Piece[] {
+export function hydroHall(g: Geo, y: number, gap?: number, bare = false): Piece[] {
   const { nave: NAVE, tread: TREAD } = dims(g);
   const out: Piece[] = [];
   const arc = gap ? (): readonly [number, number] => [deg(gap), TAU - deg(gap)] : undefined;
