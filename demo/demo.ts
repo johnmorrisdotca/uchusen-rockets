@@ -171,7 +171,7 @@ let skyBodies: SkyList | null = null;
 /** One body at a time, from wakusei-planets. The Earth keeps the picture it already had. */
 function syncSky() {
   const lang = japanese() ? "ja" : "en";
-  const painted = state.background !== "none" && state.background !== "earth" && state.look === "painted" && !realisticBarred;
+  const painted = state.background !== "none" && state.look === "painted" && !realisticBarred;
   const form = painted ? "painted" : "line";
   const companions = skyBodies ? companionsFor(state.background, state.moon, (id) => skyBodies?.moonsOf(id) ?? []) : state.background === "earth" ? ["moon"] : state.moon ? [state.moon] : [];
   const key = `${state.background}|${companions.join(",")}|${form}|${lang}`;

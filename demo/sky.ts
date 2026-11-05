@@ -107,17 +107,16 @@ const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, body:
     const ratio = trueWidth(host, moon, ringReach(host));
     const enlarge = id === chosen && ratio < ENLARGE_UNDER;
     const width = enlarge ? ENLARGED_WIDTH : ratio;
-    const spot = enlarge ? { left: "68%", top: "18%", width: `${(width * 100).toFixed(2)}%` } : placeAt(index, shown.length, width, ringReach(host));
-    if (form === "painted" && shown.length === 1) {
-      await paint(moons, id, lang);
-      const node = moons.querySelector("wakusei-body");
-      if (node instanceof HTMLElement) Object.assign(node.style, { position: "absolute", left: spot.left, top: spot.top, width: spot.width });
+    const spot = enlarge || width > 0.12 ? { left: "64%", top: "6%", width: `${(width * 100).toFixed(2)}%` } : placeAt(index, shown.length, width, ringReach(host));
+    if (form === "painted") {
+      const node = await paint(moons, id, lang, body === "earth" ? undefined : "off");
+      Object.assign(node.style, { position: "absolute", left: spot.left, top: spot.top, width: spot.width });
     } else putSvg(moons, lineSvg(id as keyof typeof BODIES, { size: 280, labels: false, lang }), spot);
     if (mine !== ticket) return clear(moons);
   }
   if (shown.length === 0) return;
   moons.dataset.draws = shown.join(",");
-  moons.dataset.form = form === "painted" && shown.length === 1 ? "painted" : "line";
+  moons.dataset.form = form === "painted" ? "painted" : "line";
   moons.hidden = false;
 };
 
@@ -131,8 +130,8 @@ const placeAt = (index: number, count: number, width: number, rings: number) => 
   return { left: `${left.toFixed(2)}%`, top: `${top.toFixed(2)}%`, width: `${(width * 100).toFixed(2)}%` };
 };
 
-/** The painted look is the package's own element. It fetches its picture itself. */
-const paint = async (holder: HTMLElement, body: string, lang: Lang) => {
+/** The painted look is the package's own element. It fetches its picture itself. A moon beside another painted body does not take the one shared picture (`live` off), so the planet keeps it. */
+const paint = async (holder: HTMLElement, body: string, lang: Lang, live?: "off") => {
   await loadBody(body);
   await import("@johnmorrisdotca/wakusei-planets/element");
   const node = document.createElement("wakusei-body");
@@ -141,7 +140,9 @@ const paint = async (holder: HTMLElement, body: string, lang: Lang) => {
   node.setAttribute("fit", "tight");
   node.setAttribute("labels", "off");
   node.setAttribute("lang", lang);
+  if (live !== undefined) node.setAttribute("live", live);
   holder.append(node);
+  return node;
 };
 
 const loadBody = (id: string) => {
@@ -190,7 +191,7 @@ export const skyCredit = async (body: string, moon: string, look: SkyForm): Prom
   const lines: string[] = [];
   if (body !== "none" && body !== "earth") lines.push(embedCredit({ body: body as "mars", look }));
   const extra = moon || (body === "earth" ? "moon" : "");
-  if (extra) lines.push(embedCredit({ body: extra as "moon", look: "line" }));
+  if (extra) lines.push(embedCredit({ body: extra as "moon", look }));
   return lines.join(" ");
 };
 
