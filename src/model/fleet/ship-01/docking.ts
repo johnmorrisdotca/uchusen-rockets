@@ -2,7 +2,7 @@
 // and the walkway), and the pieces are drawn from that data. The hub node keeps four L-class ports for short visits and the inflatable modules; the docking crown at the bow has three arms with long-stay ports of two collar classes (S and M); and
 // a berth along the keel takes the upper stage of a Starship. Every long-stay berth has a hard-dock collar or a clamp, service umbilicals (power, coolant, water, air, data) and a pressurised walkway to the keel's lift, so a parked ship can be
 // shut down and its crew can live aboard. The bow dust shield stands ahead of the crown, so what is parked sits in its shadow. The berths are shown empty: the visiting craft are drawn only in the sheets, from the package's own models. Pure: no three.js and no DOM.
-import { box, collar, cub, discZ, hoop, ibeam, KIT, pipeRun, place, rod, roundStrut, tileShield, type Piece } from "./adapter.ts";
+import { box, collar, cub, discZ, hoop, ibeam, KIT, pipeRun, place, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose } from "./adapter.ts";
 import { SPINE_Y } from "./hull.ts";
 import { SPIN } from "./spin.ts";
 
@@ -78,6 +78,39 @@ export function craftBox(port: DockPort): { r0: number; r1: number; y0: number; 
   return { r0: Math.max(0, rp - port.craft.radius), r1: rp + port.craft.radius, y0: below[0], y1: below[1] };
 }
 
+/** A solid dished plate facing +Y, `r` in radius, the centre `sag` higher than the rim and `t` thick, its top at `y` at the rim: a closed shell, not a surface. */
+const dish = (material: MaterialName, r: number, sag: number, t: number, y: number, segs = 64): Lathe => {
+  const top = Array.from({ length: 13 }, (_, i) => [(r * i) / 12 || 0.001, y + sag * (1 - (i / 12) ** 2)] as [number, number]);
+  const bottom = [...top].reverse().map(([x, yy]) => [x, yy - t] as [number, number]);
+  return { kind: "lathe", material, segs, body: true, outline: true, profile: [...top, ...bottom] };
+};
+
+/** The docking mechanism of one port, facing down the keel (-Y) from the ring's face at the origin, as the IDSS and NDS rings look: a capture ring with its lead-in cone and three guide petals, a ring of latch hooks, approach lights and a target cross, and a panel of umbilical connectors. `s` is 1 for the S class and 2 for the M. */
+export function dockingHardware(s: number): Piece[] {
+  const R = 1.5 * s;
+  const out: Piece[] = [];
+  // the capture ring: a soft-capture ring on three arms, with a conical lead-in below it
+  out.push(hoop("hull-grey", R * 0.92, -0.45 * s, 0.14 * s, 48, 10), hoop("hull-grey-dark", R * 0.92, -0.78 * s, 0.1 * s, 48, 8));
+  out.push({ kind: "lathe", material: "hull-white", segs: 36, only: "mesh", profile: [[R * 0.6, -0.1 * s], [R * 0.95, -0.7 * s]] } as Lathe);
+  for (let k = 0; k < 3; k++) {
+    const a = (2 * Math.PI * k) / 3;
+    out.push(...roundStrut("hull-grey", [R * 0.92 * Math.sin(a), -0.45 * s, R * 0.92 * Math.cos(a)], [R * 0.5 * Math.sin(a), -0.05 * s, R * 0.5 * Math.cos(a)], 0.06 * s));
+    // a guide petal: a triangular plate standing below the ring
+    out.push(box("hull-white", [R * 1.0 * Math.sin(a + 0.52), -1.15 * s, R * 1.0 * Math.cos(a + 0.52)], 0.5 * s, 0.1 * s, 0.7 * s, (a + 0.52) * 180 / Math.PI, { only: "mesh", plain: true }));
+  }
+  // twelve latch hooks round the flange, each a pair of blocks and a hook
+  const hook: Piece[] = [box("hull-grey-dark", [0, -0.12 * s, R * 0.8], 0.28 * s, 0.22 * s, 0.14 * s, 0, { only: "mesh", plain: true }), box("hazard", [0, -0.3 * s, R * 0.8], 0.12 * s, 0.1 * s, 0.18 * s, 0, { only: "mesh", plain: true })];
+  const poses: Pose[] = Array.from({ length: 12 }, (_, i) => ({ at: [0, 0, 0] as [number, number, number], yaw: 30 * i }));
+  out.push(...stamp(hook, poses));
+  // approach lights (a red, a green and two white) and a target cross on a short mast at the rim
+  const lights: [number, MaterialName][] = [[0, "nav-red"], [90, "nav-green"], [180, "flood"], [270, "flood"]];
+  for (const [deg, m] of lights) out.push(box(m, [R * 1.12 * Math.sin((deg * Math.PI) / 180), -0.25 * s, R * 1.12 * Math.cos((deg * Math.PI) / 180)], 0.2 * s, 0.2 * s, 0.14 * s, 0, { only: "mesh", plain: true }));
+  out.push(rod("hull-grey", [R * 0.4, -0.1 * s, R * 1.2], [R * 0.4, -1.4 * s, R * 1.2], 0.05 * s, 6, { only: "mesh" }), box("hull-white", [R * 0.4, -1.4 * s, R * 1.2], 0.5 * s, 0.5 * s, 0.05 * s, 0, { only: "mesh", plain: true }), box("black", [R * 0.4, -1.42 * s, R * 1.2], 0.36 * s, 0.05 * s, 0.07 * s, 0, { only: "mesh", plain: true }), box("black", [R * 0.4, -1.42 * s, R * 1.2], 0.07 * s, 0.05 * s, 0.36 * s, 0, { only: "mesh", plain: true }));
+  // an umbilical panel on the housing's side: a plate, three connector sockets and a hose stub with a clamp
+  out.push(box("hull-grey-dark", [-R * 1.25, 0.9 * s, 0], 0.1 * s, 0.9 * s, 1.1 * s, 0, { only: "mesh", plain: true }), ...[-0.3, 0, 0.3].map((z) => box("lamp-amber", [-R * 1.31, 0.9 * s, z * s], 0.05 * s, 0.2 * s, 0.1 * s, 0, { only: "mesh", plain: true })), rod("copper", [-R * 1.3, 0.55 * s, 0.45 * s], [-R * 1.7, 0.1 * s, 0.7 * s], 0.06 * s, 8, { only: "mesh" }));
+  return out;
+}
+
 const tube = (a: [number, number, number], b: [number, number, number], r: number): Piece[] => [rod("hull-white", a, b, r, 14, { only: "mesh" }), rod("hull-grey-dark", a, b, r + 0.18, 6, { only: "mesh" }), ...[a, b].map((p) => rod("hull-grey", [p[0] - (b[0] - a[0]) * 0.001, p[1], p[2]], p, r + 0.35, 14, { only: "mesh" }))];
 
 /** The pieces of the crown, the berth and the shield, in ship metres. */
@@ -93,7 +126,8 @@ export function dockingPieces(): Piece[] {
     out.push(...roundStrut("hull-grey", at(7.8, y - 3.2), at(DOCK.reach - 1.2, y + 0.4), 0.22), ...roundStrut("hull-grey", at(7.8, y + 3.2), at(DOCK.reach - 1.2, y + 0.4), 0.22));
     out.push(...place(collar(port.collar as "S" | "M", 0, -1), { at: [x, y, z] }));
     const w = port.collar === "S" ? 4.2 : 7.4;
-    out.push(box("hull-white", [x, y, z], w, w, 2.2, 0, { only: "mesh", plain: true }));
+    out.push({ kind: "lathe", material: "hull-white", at: [x, z], segs: 32, only: "mesh", body: true, profile: [[w / 2, y], [w / 2, y + 2.2]] } as Lathe, { kind: "lathe", material: "hull-grey-dark", at: [x, z], segs: 32, only: "mesh", profile: [[w / 2 + 0.1, y + 2.2], [w / 2 + 0.1, y + 2.4]] } as Lathe);
+    out.push(...place(dockingHardware(port.collar === "S" ? 1 : 2), { at: [x, y, z], yaw: (Math.atan2(-d[1], d[0]) * 180) / Math.PI }));
     // the five services run down the arm in a bundle: power, coolant, water, air and data
     ["copper", "coolant", "hull-blue", "hull-white", "lamp-blue"].forEach((m, i) => out.push(rod(m as "copper", at(8.4, y + 1.0 + i * 0.28), at(DOCK.reach, y + 1.0 + i * 0.28), 0.1, 8, { only: "mesh" })));
     // the pressurised walkway: a tube from the port's housing along the arm to a lock ring on the solarium's hull, with a flange and a lit hatch at each end
@@ -118,12 +152,26 @@ export function dockingPieces(): Piece[] {
   [0, 1, 2, 3, 4].forEach((i) => out.push(...pipeRun("pipe-steel", [[1 + i * 0.5, b.y0 + 8 + i * 0.4, keelR(b.y0 + 8)], [1 + i * 0.5, b.y0 + 8 + i * 0.4, keelR(b.y0 + 8) + 2], [1.4 + i * 0.5, b.y0 + 2 + i * 0.4, b.z - b.radius - 0.2]], 0.1, { clampEvery: 3 })));
   out.push(...tube([0, mid, b.z - b.radius - 1.2], [0, mid, keelR(mid) + 0.2], 1.0), box("lamp-amber", [0, mid, keelR(mid) + 0.5], 0.5, 0.5, 0.4, 0, { only: "mesh", plain: true }));
   out.push(cub("hazard", [-3, 3], [b.y0 - 0.5, b.y0], [b.z - 0.5, b.z + 0.5]));
-  // the bow dust shield: a dished disc of tile on a ring of stays from the dome, so the whole crown and the berth sit in its shadow
-  const s = DOCK.shield;
-  out.push(...place(tileShield([[s.radius, 0], [s.radius * 0.8, 1.6], [s.radius * 0.5, 3.4], [s.radius * 0.2, 5], [0.5, s.depth]], "bow-shield", 64, 32), { at: [0, s.y0 + s.stay, 0] }), hoop("hull-grey-dark", s.radius, s.y0 + s.stay, 0.8, 64, 10));
+  // the bow dust shield, a whipple stack of three solid plates: a tile bumper, a gold blanket layer and an aluminium rear wall, spaced 1.6 m apart on posts and held by eight stays from the dome, with a rim bumper and tile seams, so the whole crown and the berth sit in its shadow
+  const sh = DOCK.shield;
+  const base = sh.y0 + sh.stay;
+  const sag = 4.8;
+  const layers: [MaterialName, number, number, number][] = [["tile", sh.radius, 0.7, base + 3.2], ["kapton", sh.radius - 0.6, 0.4, base + 1.6], ["hull-grey", sh.radius - 1.2, 0.5, base]];
+  for (const [m, r, t, yy] of layers) out.push(dish(m, r, sag, t, yy));
+  const at = (r: number, yy: number): number => yy + sag * (1 - (r / sh.radius) ** 2);
+  for (const r of [7, 14, 20]) for (let k = 0; k < 12; k++) {
+    const a = (Math.PI * 2 * k) / 12 + r * 0.01;
+    out.push(rod("hull-grey-dark", [r * Math.sin(a), at(r, base) - 0.3, r * Math.cos(a)], [r * Math.sin(a), at(r, base + 3.2) - 0.7, r * Math.cos(a)], 0.22, 8, { only: "mesh" }));
+  }
+  out.push(hoop("hull-white", sh.radius, at(sh.radius, base + 1.6) + 0.5, 0.9, 64, 10), hoop("hull-grey-dark", sh.radius - 0.2, at(sh.radius, base + 3.2) + 0.1, 0.35, 64, 8));
+  for (const r of [4, 8, 12, 16, 20]) out.push(hoop("hull-grey-dark", r, at(r, base + 3.2) + 0.02, 0.05, 64, 5));
+  for (let k = 0; k < 16; k++) {
+    const a = (Math.PI * 2 * k) / 16;
+    for (let j = 0; j < 5; j++) out.push(rod("hull-grey-dark", [(3 + j * 4.2) * Math.sin(a), at(3 + j * 4.2, base + 3.2) + 0.02, (3 + j * 4.2) * Math.cos(a)], [(3 + (j + 1) * 4.2) * Math.sin(a), at(3 + (j + 1) * 4.2, base + 3.2) + 0.02, (3 + (j + 1) * 4.2) * Math.cos(a)], 0.05, 5, { only: "mesh" }));
+  }
   for (let k = 0; k < 8; k++) {
     const a = (Math.PI / 4) * k;
-    out.push(...ibeam("hull-grey-dark", [4.2 * Math.sin(a), s.y0, 4.2 * Math.cos(a)], [s.radius * Math.sin(a), s.y0 + s.stay, s.radius * Math.cos(a)], 1.2, 0.7, [0, 1, 0]));
+    out.push(...ibeam("hull-grey-dark", [4.2 * Math.sin(a), sh.y0, 4.2 * Math.cos(a)], [12 * Math.sin(a), at(12, base) - 0.3, 12 * Math.cos(a)], 1.2, 0.7, [0, 1, 0]));
   }
   return out;
 }

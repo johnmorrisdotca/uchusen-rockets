@@ -84,10 +84,10 @@ const dragon = craft("dragon", [{ id: "dragon-dragon-2-trunk", at: [0, 0, 0] }, 
 const soyuz = craft("soyuz", [{ id: "apollo-soyuz-apollo-soyuz-soyuz", at: [0, 0, 0] }]);
 const stage = craft("starship", [{ id: "starship-v3-ship", at: [0, 0, 0] }]);
 const dockView = glb("dockview", ["common-area", "lab", "survey-pod", "solarium", "nav-deck", "dome", "docks"]);
-const dockMore: { glb: string; at: V3 }[] = [{ glb: dragon, at: [DOCK.reach, DOCK.face - 8.1, 0] }, { glb: soyuz, at: [0, DOCK.face - 7.5, -DOCK.reach] }, { glb: stage, at: [0, DOCK.berth.y0, DOCK.berth.z] }];
-const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: string; at: V3 }[] }[] = [
+const dockMore: { glb: string; at: V3; turn?: number }[] = [{ glb: dragon, at: [DOCK.reach, DOCK.face - 8.1, 0] }, { glb: soyuz, at: [0, DOCK.face - 7.5, -DOCK.reach] }, { glb: stage, at: [0, DOCK.berth.y0, DOCK.berth.z], turn: Math.PI }];
+const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: string; at: V3; turn?: number }[] }[] = [
   { glb: files.together, more: dockMore, shots: [shots("parked-whole", [2000, 800], { fill: 0.85, eye: [620, 740, 300], target: [0, 340, 0], fov: 36, shadow: 380, sunDir: [0.35, 1, 0.45] })] },
-  { glb: dockView, more: dockMore, shots: [shots("docked", [1800, 800], { fill: 0.85, eye: [100, 500, 90], target: [0, 548, 4], fov: 36, shadow: 120, sunDir: [0.4, 0.3, 0.8] }), shots("docked-top", [1200, 700], { fill: 0.85, eye: [0, 548, 160], target: [0, 548, 0], up: [-1, 0, 0], fov: 30, shadow: 120 })] },
+  { glb: dockView, more: dockMore, shots: [shots("docked", [1800, 800], { fill: 0.85, eye: [100, 500, 90], target: [0, 548, 4], fov: 36, shadow: 120, sunDir: [0.4, 0.3, 0.8] }), shots("docked-close", [1600, 900], { eye: [26, 538, 12], target: [16, 548.5, 0], fov: 34, shadow: 30, sunDir: [0.4, 0.3, 0.8] }), shots("shield-front", [1600, 800], { fill: 0.8, eye: [60, 700, 50], target: [0, 606, 0], fov: 32, shadow: 60, sunDir: [0.3, 1, 0.4] }), shots("docked-top", [1200, 700], { fill: 0.85, eye: [0, 548, 160], target: [0, 548, 0], up: [-1, 0, 0], fov: 30, shadow: 120 })] },
   { glb: files.together, shots: [
     shots("sheet1-tq", [2400, 1300], { fill: 0.8, eye: [620, 560, 360], target: [0, 300, 0], fov: 38, shadow: 360, sunDir: [0.35, 1, 0.45], points: labelPoints }),
     shots("ga-side", [ENVELOPE.length * PPM + 120, 240 * PPM], { eye: [900, 300, 0], target: [0, 300, 0], up: [0, 0, 1], ortho: 240, shadow: 340 }),
