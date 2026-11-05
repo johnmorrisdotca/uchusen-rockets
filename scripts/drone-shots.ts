@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import process from "node:process";
 import { toGlb } from "../src/build/glb.ts";
 import { DRONE_CONCEPTS } from "../src/model/fleet/drone/concepts.ts";
-import { hoop, post, rod } from "../src/model/fleet/detail.ts";
+import { discZ, hoop, post, rod } from "../src/model/fleet/detail.ts";
 import { meshOf, strut, type Piece, type Vec3 } from "../src/model/pieces.ts";
 import { chamfer, polygon } from "../src/model/fleet/drone/plates.ts";
 
@@ -56,7 +56,16 @@ for (const make of DRONE_CONCEPTS) {
   writeFileSync(file, toGlb([{ name: concept.id, mesh: meshOf(concept.pieces), at: [0, 0, 0] }]).bytes);
   const held: Vec3 = [concept.mouth[0], concept.mouth[1] + 0.32, concept.mouth[2]];
   const working: Piece[] = [...concept.pieces, ...pictureBeam(concept.mouth, held), part(held)];
-  if (concept.id.startsWith("arm-")) working.push(...trussAt(concept.mouth));
+  if (concept.id.startsWith("arm-")) working.push(...trussAt([0, -0.16, 0.05]));
+  if (concept.toolKind === "weld") {
+    working.push(discZ("coil-lit", concept.tool[0], concept.tool[1], concept.tool[2], concept.tool[2] + 0.02, 0.02, 8));
+    for (let i = 0; i < 6; i++) {
+      const t = (i / 6) * Math.PI * 2;
+      working.push(rod("lamp-blue", concept.tool, [concept.tool[0] + Math.cos(t) * 0.07, concept.tool[1] + 0.03, concept.tool[2] + Math.sin(t) * 0.05], 0.006, 3));
+    }
+  } else {
+    working.push(rod("coil-lit", concept.tool, [concept.tool[0], concept.tool[1] + 0.16, concept.tool[2]], 0.006, 4));
+  }
   const workFile = join(out, "glb", `${concept.id}-work.glb`);
   writeFileSync(workFile, toGlb([{ name: concept.id, mesh: meshOf(working), at: [0, 0, 0] }]).bytes);
   const eye = (name: string, at: [number, number, number], up: [number, number, number] = [0, 0, 1]) => ({
