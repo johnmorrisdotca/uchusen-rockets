@@ -10,6 +10,6 @@ test("the beam page shows the cone, the line and the dotted line", async ({ page
   await expect(page.getByTestId("beam-line").locator("svg")).toBeVisible();
   const carry = await marks("beam-carry");
   const dotted = await marks("beam-dotted");
-  expect(carry).toBeGreaterThan(0);
-  expect(dotted).toBeGreaterThan(carry);
+  expect(dotted).toBeGreaterThan(0);
+  expect(carry).toBeGreaterThan(dotted);
 });

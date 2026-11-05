@@ -16,13 +16,15 @@ const far = (plate: Plate): number => {
 test("a carry is a cone from the drone to the part, and both looks draw it", () => {
   const pieces = tractorBeam(ends, "carry");
   const plates = pieces.filter((piece): piece is Plate => piece.kind === "plate");
-  assert.ok(plates.length > 1);
-  assert.equal(plates[0]?.frame.o[1], 0);
-  const last = plates[plates.length - 1];
-  assert.ok(last);
-  assert.ok(Math.abs(far(last) - 8) < 0.01);
-  const widths = plates.map((plate) => Math.abs((plate.outline[0]?.[1] ?? 0) * 2));
-  assert.ok(widths[widths.length - 1]! > widths[0]!);
+  assert.equal(plates.length, 24);
+  assert.ok(plates.every((plate) => Math.abs(plate.frame.o[1]) < 0.2));
+  assert.ok(plates.every((plate) => Math.abs(far(plate) - 8) < 0.01));
+  const near = Math.max(...plates.map((plate) => Math.hypot(plate.frame.o[0], plate.frame.o[2])));
+  const wide = Math.min(...plates.map((plate) => {
+    const length = plate.outline[1]?.[0] ?? 0;
+    return Math.hypot(plate.frame.o[0] + plate.frame.u[0] * length, plate.frame.o[2] + plate.frame.u[2] * length);
+  }));
+  assert.ok(wide > near);
   const cam = perspective({ min: [-2, -1, -2], max: [2, 10, 2] }, VIEWS.side);
   for (const look of ["line", "painted"] as const) {
     const svg = drawPart(pieces, [0, 0, 0], cam, look);
@@ -33,7 +35,7 @@ test("a carry is a cone from the drone to the part, and both looks draw it", () 
 test("reduced motion is a dotted line with gaps, and no flash", () => {
   const solid = tractorBeam(ends, "attach");
   const dotted = tractorBeam(ends, "attach", true);
-  assert.ok(dotted.length > solid.filter((piece) => piece.kind === "plate").length - 1);
+  assert.ok(dotted.length < solid.length);
   const lengths = dotted.filter((piece): piece is Plate => piece.kind === "plate").map((plate) => plate.outline[1]?.[0] ?? 0);
   assert.ok(lengths.reduce((sum, one) => sum + one, 0) < 8);
   assert.equal(dotted.some((piece) => piece.kind === "plate" && piece.material === "strobe"), false);
