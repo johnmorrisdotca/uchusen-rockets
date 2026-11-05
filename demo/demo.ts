@@ -59,9 +59,8 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   hero.drive(detail);
   const zoom = Math.max(0.25, detail.zoom ?? 1);
   const holder = byId("sky-back");
-  const node = holder.querySelector("wakusei-body");
+  const node = holder.querySelector("wakusei-body:not([data-moon])");
   if (!(node instanceof HTMLElement)) return;
-  if (node.hasAttribute("moons") && !node.dataset.baseRange) return;
   frameSky(node, holder, zoom);
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
