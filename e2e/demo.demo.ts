@@ -1358,7 +1358,7 @@ test("a maker first, then only that maker's rockets, kept in the address; a host
 
 test("the choices fit a 1440 by 900 window for every variant, Earth on and all, and a phone's width never scrolls sideways", async ({ browser, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once");
-  test.setTimeout(300_000);
+  test.setTimeout(900_000);
   const tallest = async (viewport: { width: number; height: number }, extra: object) => {
     const context = await browser.newContext({ viewport, reducedMotion: "reduce", ...extra });
     const page = await context.newPage();

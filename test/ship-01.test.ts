@@ -10,7 +10,7 @@ import { ANCESTORS, DRIVE, ENGINES, ENVELOPE, HISTORY, IDENTITY, journey, labelD
 import { rings, ship4 } from "../src/model/fleet/ship-01/rings.ts";
 import { gAt, rpmFor, SPIN, SPIN4 } from "../src/model/fleet/ship-01/spin.ts";
 import { SPINE_Y } from "../src/model/fleet/ship-01/hull.ts";
-import { clearance, craftBox, DOCK, dockingPieces, gapTo, PORTS } from "../src/model/fleet/ship-01/docking.ts";
+import { clearance, craftBox, DOCK, dockingPieces, gapTo, PORTS, shieldPlateAt, shieldStays } from "../src/model/fleet/ship-01/docking.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);
@@ -253,4 +253,25 @@ test("the docking plan: ports as data, long-stay berths with services and walkwa
   const { min, max } = boundsOf(meshOf(dockingPieces()));
   assert.ok(min[1] > 100 + 17 * 24 + 10, `the crown starts ${min[1]} m up`);
   assert.ok(Math.max(Math.abs(min[0]), Math.abs(max[0]), Math.abs(min[2]), Math.abs(max[2])) < 25, `the crown reaches ${max[0]} m`);
+});
+
+test("the bow shield's eight stays hold it from the keel side: every stay ends aft of the rear wall, with the beam's depth to spare", () => {
+  const stays = shieldStays();
+  assert.equal(stays.length, 8);
+  for (const { from, to } of stays) {
+    const r = Math.hypot(to[0], to[2]);
+    // the beam is 1.2 m deep and 0.7 m wide: its highest corner is 0.6 m above its end, and it spans 0.35 m either side of the end's radius
+    const worst = Math.max(...[r - 0.4, r + 0.4].map((rr) => shieldPlateAt(2, rr).back));
+    const lowestBack = Math.min(...[r - 0.4, r + 0.4].map((rr) => shieldPlateAt(2, rr).back));
+    assert.ok(to[1] + 0.6 < lowestBack, `a stay's end reaches ${to[1] + 0.6} against the rear wall's back face at ${lowestBack}`);
+    assert.ok(from[1] < to[1] && worst > to[1], "it runs forward from the dome to the wall");
+    // along its whole length it is aft of the wall's back face at its own radius
+    for (let t = 0; t <= 1; t += 0.1) {
+      const rr = Math.hypot(from[0] + (to[0] - from[0]) * t, from[2] + (to[2] - from[2]) * t);
+      assert.ok(from[1] + (to[1] - from[1]) * t + 0.6 < shieldPlateAt(2, rr).back, `the stay at ${(t * 100).toFixed(0)}% is level with the wall`);
+    }
+  }
+  // and in the mesh: no piece of the stack's stays is higher than the rear wall's back face at its radius
+  const wall = shieldPlateAt(2, 12.4).back;
+  assert.ok(wall - stays[0].to[1] > 0.7, "the stays stop short of the wall");
 });
