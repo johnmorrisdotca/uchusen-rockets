@@ -350,7 +350,8 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
     }),
   );
   const walk = async (stride: number) => {
-    for (const rocket of fleet)
+    for (const rocket of fleet) {
+      const began = Date.now();
       for (const variant of rocket.variants.filter((_, i) => i % stride === 0)) {
         await press(page, `rocket-${rocket.id}`);
         await press(page, `variant-${variant.id}`);
@@ -359,6 +360,9 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
         await expect.poll(() => page.evaluate(() => (window as unknown as { __in?: string }).__in), { timeout: 90_000 }).toBe(`${rocket.id}/${variant.id}`);
         await settle(page, 80);
       }
+      // seconds a ship took, said as each ends, so a walk that slows down (or stops) says which ship did it
+      console.log(`fleet walk, ${rocket.id}: ${Math.round((Date.now() - began) / 1000)} s`);
+    }
   };
   await walk(1);
   const first = await usage(page);
