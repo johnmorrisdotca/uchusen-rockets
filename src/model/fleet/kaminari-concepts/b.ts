@@ -4,9 +4,9 @@
 // Real ancestors: a ship's keel and frames, the Space Shuttle's payload-bay longerons, the ISS pressurised modules' plating, Gateway's HALO and the Mars transfer vehicle studies' radiator fins. Pure: no three.js and no DOM.
 import { type Face, facesOf, hatch, PLATE, plating, rng as numRng, stencil as faceStencil, vent } from "../ship-02/adapter.ts";
 import { container } from "../ship-02/cargo.ts";
-import { BUILDERS, cub, iBeam, type Piece, place, prism, rod, stamp, type Vec3 } from "./adapter.ts";
+import { cub, iBeam, type Piece, place, prism, rod, stamp, type Vec3 } from "./adapter.ts";
 import { berthSlot } from "./berth.ts";
-import { type ConceptSlot, reactorRows, stackOf } from "./common.ts";
+import { type ConceptSlot, reactorRows, repeatedTank, stackOf } from "./common.ts";
 import { SAIL_SLOTS } from "./sails.ts";
 import { thrusterRings } from "./drive.ts";
 
@@ -116,8 +116,8 @@ function frames(): Piece[] {
   return out;
 }
 
-/** A slim tank lying along the ship, in the frame. */
-const tankTemplate = (seed: string): Piece[] => BUILDERS.tank("b-tank", "Slim propellant tank", B.tank.R, B.tank.L, "L", "L", 80, 1000, "").pieces({ detail: 0.4, seed });
+/** A slim tank lying along the ship, in the frame. One barrel, stamped down every row. */
+const tankTemplate = (): Piece[] => repeatedTank(B.tank.R, B.tank.L);
 
 /** How many tanks stand across the hull at y, and in how many layers. */
 export const tanksAcross = (y: number): number => Math.max(1, Math.floor((2 * halfWidth(y) * 0.78) / 21));
@@ -126,7 +126,7 @@ function tanks(group: number): Piece[] {
   const y = B.tank.y + group * B.tank.pitch;
   const n = tanksAcross(y + B.tank.L);
   const out: Piece[] = [];
-  const template = tankTemplate(`b${group % 2}`);
+  const template = tankTemplate();
   const poses: { at: Vec3; yaw?: number }[] = [];
   for (const z of [-11.5, 11.5]) for (let i = 0; i < n; i++) poses.push({ at: [(i - (n - 1) / 2) * 21, y, z] });
   out.push(...stamp(template, poses));

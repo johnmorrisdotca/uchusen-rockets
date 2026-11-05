@@ -3,7 +3,8 @@
 import type { MaterialName } from "../../materials.ts";
 import type { Lathe, Piece, Plate, Vec3 } from "../../pieces.ts";
 
-export { annulus, antenna, ball, beam, channel, disc, floodlight, hoop, iBeam, lamps, LIVERY, navLight, observationDome, pipeRun, place, porthole, post, radiator, ringOf, rng, rod, room, seams, separationJoint, stamp, strut, tileShield } from "../detail.ts";
+export { annulus, antenna, ball, beam, channel, disc, floodlight, foilBand, hoop, iBeam, lamps, LIVERY, navLight, observationDome, pipeRun, place, porthole, post, radiator, ringOf, rng, rod, room, seams, separationJoint, stamp, strut, tileShield } from "../detail.ts";
+export { collar } from "../collars.ts";
 export { BUILDERS, KIT } from "../kit.ts";
 export type { KitModule } from "../types.ts";
 export type { Lamp, Pose, Rng } from "../detail.ts";

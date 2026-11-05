@@ -1,7 +1,7 @@
 // What the three concepts share: the shape of a slot (a module of the ship, where it stands, how to build it), the long truss, the bundle of slim tanks, a stack of the kit's crew modules, a radiator fin
 // and a reactor cell. Every shape is built once and stamped at a pose, so a ship of a hundred thousand pieces builds in about a second. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
-import { annulus, BUILDERS, hoop, KIT, type KitModule, type Piece, place, revolve, rod, stamp, tileShield, type Vec3 } from "./adapter.ts";
+import { annulus, collar, foilBand, hoop, KIT, type Piece, place, porthole, revolve, rod, stamp, tileShield, type Vec3 } from "./adapter.ts";
 import { cub, deg } from "./adapter.ts";
 
 /** One module of a concept: its slot, where its base stands (metres: x across, y from the tail, z dorsal), its size and how to build its pieces in its own frame. */
@@ -77,22 +77,69 @@ export interface Bundle {
   length: number;
 }
 
-const tankKits = new Map<string, KitModule>();
-const slimTank = (r: number, length: number, detail: number): KitModule => {
-  const key = `${r}/${length}/${detail}`;
-  let tank = tankKits.get(key);
-  if (!tank) {
-    const propellant = Math.round(tankVolumeM3(r, length) * PROPELLANT_T_PER_M3);
-    tank = BUILDERS.tank(`slim-${key}`, "Slim propellant tank", r, length, "L", "L", Math.round(propellant * 0.012), propellant, "A slim cryogenic propellant tank.");
-    tankKits.set(key, tank);
-  }
-  return tank;
-};
+const tankCache = new Map<string, Piece[]>();
 
-/** A bundle of slim tanks round the truss: `count` of them on a ring, each the kit's plated tank drawn once and stamped, held at both ends by a ring frame and tied to the truss, with a feed ring of pipe round the heads. y is the foot of the tanks. */
+/**
+ * One cryogenic barrel, built once and stamped. A shell steps down to L collars, with girth rings, insulation cuffs at the shoulders and four hatches.
+ * The kit drum's quilt is not copied onto every tank: that quilt is most of the triangles, and a quiver carries forty-eight of them.
+ */
+export function repeatedTank(r: number, length: number, detail = 0.4): Piece[] {
+  const key = `${r}/${length}/${detail}`;
+  const hit = tankCache.get(key);
+  if (hit) return hit;
+  const neck = 6;
+  const shoulder = Math.min(2.4, length * 0.04);
+  const y0 = shoulder;
+  const y1 = length - shoulder;
+  const span = y1 - y0;
+  const cell = Math.max(0.9, (r * 0.1) / Math.max(detail, 0.25));
+  const cuff = Math.min(1.6, span * 0.03);
+  const out: Piece[] = [
+    revolve("hull-white", [[neck, 0], [r, y0], [r, y1], [neck, length]], 32, [0, 0], { body: true, outline: true, welds: [y0, y1] }),
+    ...collar("L", 0, -1),
+    ...collar("L", length, 1),
+  ];
+  for (const f of [0.25, 0.5, 0.75]) out.push(hoop("hull-grey-dark", r + 0.12, y0 + span * f, Math.max(0.1, r * 0.018), 32, 6));
+  out.push(...foilBand("blanket", r + 0.05, y0, y0 + cuff, 0, 2 * Math.PI, `${key}/a`, cell, 0.03));
+  out.push(...foilBand("blanket-worn", r + 0.05, y1 - cuff, y1, 0, 2 * Math.PI, `${key}/b`, cell, 0.03));
+  out.push(rod("pipe-steel", [r + 0.3, y0 + 1, 0], [r + 0.3, y1 - 1, 0], Math.max(0.12, r * 0.02), 8));
+  for (const a of [0, 90, 180, 270]) {
+    const rad = deg(a);
+    const x = (r + 0.2) * Math.sin(rad);
+    const z = (r + 0.2) * Math.cos(rad);
+    const y = y0 + span * (a % 180 === 0 ? 0.38 : 0.62);
+    const hatch = a === 90 ? "hull-orange" : "hull-grey";
+    if (a % 180 === 0) out.push(cub(hatch, [x - r * 0.08, x + r * 0.08], [y - r * 0.12, y + r * 0.12], [z - 0.16, z + 0.16]));
+    else out.push(cub(hatch, [x - 0.16, x + 0.16], [y - r * 0.12, y + r * 0.12], [z - r * 0.08, z + r * 0.08]));
+  }
+  tankCache.set(key, out);
+  return out;
+}
+
+const drumCache = new Map<string, Piece[]>();
+
+/** One habitat drum, built once and stamped: a shell, end rings and two rows of windows. The kit drum's plating is not copied onto every drum. */
+export function repeatedDrum(r: number, length: number): Piece[] {
+  const key = `${r}/${length}`;
+  const hit = drumCache.get(key);
+  if (hit) return hit;
+  const out: Piece[] = [
+    revolve("hull-white", [[r * 0.7, 0], [r, 1.8], [r, length - 1.8], [r * 0.7, length]], 28, [0, 0], { body: true, outline: true, welds: [1.8, length / 2, length - 1.8] }),
+    hoop("hull-grey-dark", r + 0.16, 1.8, 0.16, 28, 6),
+    hoop("hull-grey-dark", r + 0.16, length - 1.8, 0.16, 28, 6),
+  ];
+  for (let k = 0; k < 6; k++) {
+    out.push(...porthole(r, deg(60 * k), length * 0.34, 0.65, "open"));
+    out.push(...porthole(r, deg(60 * k + 30), length * 0.66, 0.65, k % 2 === 0 ? "open" : "closed"));
+  }
+  out.push(rod("hull-grey", [r + 0.4, 3, 0], [r + 0.4, length - 3, 0], 0.08, 6));
+  drumCache.set(key, out);
+  return out;
+}
+
+/** A bundle of slim tanks round the truss: `count` of them on a ring, one barrel drawn once and stamped, held at both ends by a ring frame and tied to the truss, with a feed ring of pipe round the heads. y is the foot of the tanks. */
 export function bundle(b: Bundle, half: number, y: number, seed: number, detail = 0.4): Piece[] {
-  const tank = slimTank(b.tankR, b.length, detail);
-  const template = tank.pieces({ detail, seed: `q${seed}` });
+  const template = repeatedTank(b.tankR, b.length, detail);
   const poses = Array.from({ length: b.count }, (_, i) => ({ at: [b.ringR * Math.sin(deg((360 * i) / b.count)), y, b.ringR * Math.cos(deg((360 * i) / b.count))] as Vec3, yaw: (360 * i) / b.count }));
   const out: Piece[] = stamp(template, poses);
   out.push(...ringFrame(b.ringR, b.tankR, half, y + 4, seed), ...ringFrame(b.ringR, b.tankR, half, y + b.length - 4, seed + 1));
