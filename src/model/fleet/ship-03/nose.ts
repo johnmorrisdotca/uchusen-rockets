@@ -127,7 +127,7 @@ export function noseRounded(cut: boolean, detail = 1, seed = "bow", marks = "452
   }
   out.push(cub("hull-white-worn", [-r0 - 0.9, -r0 + 0.3], [Y0 + 3, Y0 + 9], [-7, 0]));
   out.push(...marking(designation(marks), { at: [-r0 - 1.05, Y0 + 6, -3.5], right: [0, 0, 1], up: [0, 1, 0], height: 1.35, align: "middle" }, conceptStyle("goldman")));
-  out.push(...lightPool({ o: [-r0 - 0.98, Y0 + 6, -6.2], u: [0, 0, 1], v: [0, 1, 0], w: [-1, 0, 0] }, 5.5));
+  out.push(...lightPool({ o: [-r0 - 1.0, Y0 + 6, -3.5], u: [0, 0, 1], v: [0, 1, 0], w: [-1, 0, 0] }, 5.5));
   out.push(...beaconLamp([0, 366, 4]));
   out.push(...collar("L", Y0, -1));
   return out;

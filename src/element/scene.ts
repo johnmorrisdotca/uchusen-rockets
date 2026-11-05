@@ -633,6 +633,7 @@ export class RocketViewer {
         if (name === "light-pool") stampPoolUv(node.geometry);
         const mesh = new Mesh(node.geometry);
         mesh.name = name;
+        if (name === "light-pool") mesh.renderOrder = 3;
         mesh.castShadow = this.shadows && !(name in MATERIALS && "opacity" in MATERIALS[name as MaterialName]);
         mesh.receiveShadow = this.shadows;
         carrier.add(mesh);
