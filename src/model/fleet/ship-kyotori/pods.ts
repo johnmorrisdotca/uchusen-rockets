@@ -1,9 +1,10 @@
 // The four pods and the four-arm cross of ISV Kyotori, round 2. The cross is a hub on a bearing round the stem, four thick habitable arm tubes (three floors, rows of windows) running out to four end pods that each have their own shape (a control
 // centre with a glazed dome, a research lab of three drums and a dish, an observatory with a telescope barrel on a fork, and engineering with a reactor sphere and radiator fins), joined by a slender rim. Not a torus. It can turn or fold
 // forward along the stem. Every repeated part is one template stamped at many poses. Concepts only. Pure: no three.js and no DOM.
-import { antenna, box, cub, hoop, ibeam, place, rod, stamp, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
+import { antenna, box, collar, cub, hoop, ibeam, place, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
 import { sphere } from "../ship-01/wheelparts.ts";
 
+const TAU = 2 * Math.PI;
 const deg = (a: number): number => (a * Math.PI) / 180;
 const lathe = (material: MaterialName, profile: [number, number][], at: [number, number] = [0, 0], extra: Partial<Lathe> = {}): Lathe => ({ kind: "lathe", material, segs: 32, only: "mesh", at, profile, ...extra });
 
@@ -102,5 +103,69 @@ export function cross(o: CrossOptions): Piece[] {
   // the slender rim: a thin tube through the four pods when open, four reeled cables when folded
   if (fold < 0.05) out.push(hoop("hull-grey", R - 1, y, 0.7, 160, 10), ...stamp([hoop("hull-grey-dark", R - 1, 0, 1.0, 40, 8, { arc: () => [-0.03, 0.03] })], Array.from({ length: 24 }, (_, i): Pose => ({ at: [0, y, 0], yaw: 15 * i }))));
   else for (const c of centres) out.push(lathe("hull-grey-dark", [[1.2, c[1] + 11], [1.2, c[1] + 12.4]], [c[0], c[2]], { segs: 16 }), lathe("copper", [[0.8, c[1] + 11.4], [0.8, c[1] + 12]], [c[0], c[2]], { segs: 16 }));
+  return out;
+}
+
+/** A real propellant tank, `len` long and `r` in radius: a cylinder with domed ends in white insulation, eight longerons and a ring frame every 6 m standing proud of the skin, gold foil bands, a feed fitting on the top dome and a cradle of two saddles. Local origin: the middle of its base. */
+export function framedTank(r: number, len: number): Piece[] {
+  const dome = (sign: 1 | -1): [number, number][] => Array.from({ length: 7 }, (_, i) => [Math.max(0.01, r * Math.cos((Math.PI / 2) * (i / 6))), sign > 0 ? len - r * 0.55 + r * 0.55 * Math.sin((Math.PI / 2) * (i / 6)) : r * 0.55 - r * 0.55 * Math.sin((Math.PI / 2) * (i / 6))]);
+  const body: [number, number][] = [...dome(-1).reverse(), ...dome(1)];
+  const out: Piece[] = [{ kind: "lathe", material: "hull-white", segs: 32, body: true, outline: true, profile: body } as Lathe];
+  for (let k = 0; k < 8; k++) {
+    const a = deg(45 * k);
+    out.push(rod("hull-grey", [(r + 0.12) * Math.sin(a), r * 0.55, (r + 0.12) * Math.cos(a)], [(r + 0.12) * Math.sin(a), len - r * 0.55, (r + 0.12) * Math.cos(a)], 0.07, 6, { only: "mesh" }));
+  }
+  for (let y = 4; y < len - 3; y += 6) out.push(hoop("hull-grey-dark", r + 0.14, y, 0.14, 32, 6));
+  for (const f of [0.18, 0.5, 0.82]) out.push(lathe("kapton", [[r + 0.06, len * f - 0.8], [r + 0.06, len * f + 0.8]], [0, 0], { segs: 32 }));
+  out.push(lathe("hull-grey-dark", [[0.9, len], [0.9, len + 1.1]], [0, 0], { segs: 12 }), hoop("hull-grey", 0.9, len + 1.1, 0.15, 12, 6), rod("hull-grey", [0, len + 1.1, 0], [0, len + 2.4, 0], 0.12, 6, { only: "mesh" }));
+  for (const f of [0.12, 0.88]) for (const s of [-1, 1]) out.push(box("hull-grey-dark", [s * (r + 0.35), len * f - 0.4, 0], 0.5, 1.6, 0.8, 0, { only: "mesh", plain: true }));
+  return out;
+}
+
+/** The payload barrel with its two clamshell doors open on vertical hinges as on the Space Shuttle: each door a shell with six ribs, a seal along its free edge, latch hooks, a row of hinge knuckles on a pin, and two hydraulic actuators (a cylinder and a piston) from the barrel's frame to the door's inside; inside, a cradle ring on rails, a robot arm and an M-class dock at each end. */
+export function payloadBay2(y0: number, open = 100): Piece[] {
+  const R = 9;
+  const L = 40;
+  const gap = 1.05;
+  const out: Piece[] = [];
+  const shell = (a0: number, a1: number, material: MaterialName = "hull-white"): Lathe => ({ kind: "lathe", material, segs: 72, body: true, outline: true, arc: () => [a0, a1], profile: [[R, y0], [R, y0 + L]] });
+  out.push(shell(TAU / 4 + gap, (5 * TAU) / 4 - gap));
+  for (const y of [y0, y0 + L]) out.push(hoop("hull-grey-dark", R, y, 0.5, 72, 8));
+  for (let i = 1; i < 8; i++) out.push(hoop("hull-grey", R + 0.08, y0 + (L * i) / 8, 0.2, 72, 6, { arc: () => [TAU / 4 + gap, (5 * TAU) / 4 - gap] }));
+  const turn = (p: Vec3, t: number): Vec3 => [p[0] * Math.cos(t) + p[2] * Math.sin(t), p[1], -p[0] * Math.sin(t) + p[2] * Math.cos(t)];
+  for (const s of [-1, 1]) {
+    const hingeA = TAU / 4 + s * gap;
+    const free = s > 0 ? hingeA - 1.05 : hingeA + 1.05;
+    const span: [number, number] = s > 0 ? [hingeA - 1.05, hingeA] : [hingeA, hingeA + 1.05];
+    const H: Vec3 = [R * Math.sin(hingeA), 0, R * Math.cos(hingeA)];
+    const door: Piece[] = [shell(span[0], span[1], "hull-white-worn")];
+    for (let i = 0; i <= 6; i++) door.push(hoop("hull-grey", R + 0.12, y0 + (L * i) / 6, 0.2, 72, 6, { arc: () => span }));
+    const edge = (r: number, y: number): Vec3 => [r * Math.sin(free), y, r * Math.cos(free)];
+    door.push(rod("black", edge(R + 0.05, y0), edge(R + 0.05, y0 + L), 0.1, 6, { only: "mesh" }), rod("hull-grey-dark", edge(R + 0.25, y0), edge(R + 0.25, y0 + L), 0.14, 6, { only: "mesh" }));
+    for (let i = 0; i < 6; i++) door.push(box("hazard", edge(R + 0.2, y0 + 3 + i * 6.8), 0.5, 0.35, 0.9, 0, { only: "mesh", plain: true }));
+    out.push(...place(place(door, { at: [-H[0], 0, -H[2]] }), { at: H, yaw: s * open }));
+    // the hinge: a pin and knuckles on the barrel's frame
+    out.push(rod("hull-grey-dark", [H[0] * 1.02, y0 + 0.5, H[2] * 1.02], [H[0] * 1.02, y0 + L - 0.5, H[2] * 1.02], 0.12, 6, { only: "mesh" }));
+    for (let i = 0; i < 6; i++) out.push(rod("hull-grey", [H[0] * 1.03, y0 + 1 + i * 6.6, H[2] * 1.03], [H[0] * 1.03, y0 + 3.6 + i * 6.6, H[2] * 1.03], 0.3, 10, { only: "mesh" }));
+    // two actuators: a cylinder from the frame at the hinge side to a piston on the door's inside at its middle, where the door has swung to
+    const mid = (span[0] + span[1]) / 2;
+    for (const f of [0.28, 0.72]) {
+      const y = y0 + L * f;
+      const P0: Vec3 = [(R - 0.5) * Math.sin(hingeA - s * 0.3), y, (R - 0.5) * Math.cos(hingeA - s * 0.3)];
+      const closed: Vec3 = [(R - 0.3) * Math.sin(mid), y, (R - 0.3) * Math.cos(mid)];
+      const rel: Vec3 = [closed[0] - H[0], closed[1], closed[2] - H[2]];
+      const t = deg(s * open);
+      const P1: Vec3 = [H[0] + turn(rel, t)[0], y, H[2] + turn(rel, t)[2]];
+      const M: Vec3 = [(P0[0] * 0.55 + P1[0] * 0.45), y, (P0[2] * 0.55 + P1[2] * 0.45)];
+      out.push(rod("hull-grey", P0, M, 0.24, 10, { only: "mesh" }), rod("copper", M, P1, 0.12, 8, { only: "mesh" }), rod("hull-grey-dark", [P1[0] - 0.2, y - 0.4, P1[2]], [P1[0] + 0.2, y + 0.4, P1[2]], 0.2, 6, { only: "mesh" }));
+    }
+  }
+  out.push(hoop("hull-grey", R - 1.2, y0 + L * 0.45, 0.45, 56, 8, { arc: () => [-1.2, 1.2] }));
+  out.push(cub("hull-yellow", [-2.6, -2.4], [y0 + 2, y0 + L - 2], [-R + 1.3, -R + 1.6]), cub("hull-yellow", [2.4, 2.6], [y0 + 2, y0 + L - 2], [-R + 1.3, -R + 1.6]));
+  for (let i = 0; i < 9; i++) out.push(cub("hull-grey-dark", [-3.2, 3.2], [y0 + 3 + i * 4.2, y0 + 3.4 + i * 4.2], [-R + 1.1, -R + 1.5]));
+  out.push(...place(collar("M", 0, 1), { at: [0, y0 + 0.4, 0] }), ...place(collar("M", 0, -1), { at: [0, y0 + L - 0.4, 0] }));
+  const arm: Vec3[] = [[-6.2, y0 + 3, -R + 2.4], [-6.2, y0 + 14, -2.5], [-2, y0 + 22, 3], [3, y0 + 32, 3]];
+  for (let i = 0; i + 1 < arm.length; i++) out.push(...roundStrut("hull-white", arm[i], arm[i + 1], 0.55));
+  out.push(box("hull-grey-dark", [3, y0 + 32, 3], 1.2, 1.2, 0.6, 0, { only: "mesh", plain: true }));
   return out;
 }
