@@ -952,7 +952,9 @@ const earthDraws = (page: Page) =>
   });
 /** The Earth in a look, and the rocket's picture in: everything loaded and at least one draw of each. */
 const earthIn = async (page: Page, look: string, form: string) => {
+  await press(page, "panel-look");
   await press(page, `look-${look}`);
+  await press(page, "panel-background");
   await press(page, "background-earth");
   await expect(earth(page)).toHaveAttribute("data-form", form, { timeout: 60_000 });
   if (form === "realistic") {
@@ -1284,6 +1286,7 @@ test.describe("50 rounds", () => {
     const startMB = processMB();
     const startHeap = await heapMB();
     const offNow = async () => {
+      await press(page, "panel-background");
       await press(page, "background-none");
       await expect(earth(page)).toBeHidden();
       await expect(earth(page).locator("*")).toHaveCount(0);
@@ -1303,9 +1306,11 @@ test.describe("50 rounds", () => {
       expect((await usage(page)).contexts).toBe(2);
       // straight off from the realistic Earth, and on and off again as lines
       await offNow();
+      await press(page, "panel-look");
       await pressAndDraw(page, "look-thick");
       await earthIn(page, "thick", "thick");
       await offNow();
+      await press(page, "panel-look");
       await pressAndDraw(page, "look-line");
       await pressAndDraw(page, "rocket-starship");
       await settle(page, 300);
@@ -1427,6 +1432,7 @@ for (const { look, form, contexts } of LOOKS.filter((one) => one.look !== "thick
     await pause(page);
     await reach3d(page);
     await earthIn(page, look, form);
+    await press(page, "panel-look");
     await press(page, "engines-on");
     await expect.poll(() => canvasData(page, "plumes")).toBe("33");
     expect((await usage(page)).contexts).toBe(contexts);

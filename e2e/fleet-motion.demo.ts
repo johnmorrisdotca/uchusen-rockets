@@ -80,6 +80,7 @@ test.describe("motion on", () => {
 
   test("the Motion choice is kept in the address, and the Speed choice goes with it", async ({ page }) => {
     await page.goto(`${ROOT}?rocket=fleet-ship-01&variant=hanabusa`);
+    await page.locator('[data-testid="panel-motion"]').click();
     await page.locator('[data-testid="motion-off"]').click();
     await expect(hero(page)).toHaveAttribute("motion", "off");
     await expect.poll(() => new URL(page.url()).searchParams.get("motion")).toBe("off");

@@ -1233,6 +1233,7 @@ test("the Earth behind the rocket: off by default, kept in the address, behind t
   await stopTurn(page);
   if (is3d(browserName)) await reach3d(page);
 
+  await press(page, "panel-background");
   await press(page, "background-earth");
   await expect(page.locator('[data-testid="background-earth"]')).toHaveAttribute("aria-pressed", "true");
   // on a phone the row is below the view, and nothing is drawn out of sight: it is drawn when the view comes back
@@ -1264,6 +1265,7 @@ test("the Earth behind the rocket: off by default, kept in the address, behind t
   await expect(earth.locator("svg")).toBeVisible({ timeout: 30_000 });
 
   // each look has its own form, and the realistic one's pictures load under the strict policy
+  await press(page, "panel-look");
   await press(page, "look-thick");
   await expect(earth).toHaveAttribute("data-form", "thick");
   if (is3d(browserName)) {
@@ -1275,6 +1277,7 @@ test("the Earth behind the rocket: off by default, kept in the address, behind t
     await expect(earth.locator("chikyu-earth-realistic")).toHaveCount(0);
   }
 
+  await press(page, "panel-background");
   await press(page, "background-none");
   await expect(earth).toBeHidden();
   await expect(earth.locator("svg")).toHaveCount(0);
@@ -1490,7 +1493,7 @@ test("the comparison with the fleet in it: ships lie lengthwise on a scale that 
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once");
   await page.goto(URL);
   await press(page, "more-compare");
-  await press(page, "compare-fleet-02:fleet-02");
+  await press(page, "compare-fleet-kaminari:fleet-kaminari");
   const lineup = page.locator('[data-testid="lineup"]');
   const frame = page.locator('[data-testid="compare-view"]');
   const fits = async () => {
