@@ -1,6 +1,6 @@
 // The catalogue: which rockets there are, their variants with sourced sizes, and which are still to be built. All data, all typed. Pure.
 import { DRAGON_VARIANTS } from "./data/dragon.ts";
-import { SHIP_02_VARIANTS } from "./data/ship02.ts";
+import { SHIP_02_SLOT_NAMES, SHIP_02_VARIANTS } from "./data/ship02.ts";
 import { FALCON_HEAVY_VARIANTS, FALCON_9_VARIANTS } from "./data/falcon.ts";
 import { FALCON_1_VARIANTS } from "./data/falcon1.ts";
 import { GRASSHOPPER_VARIANTS } from "./data/grasshopper.ts";
@@ -88,11 +88,21 @@ export interface PlannedRocket {
 /** Craft that fly in space: seen from any side, from straight above or below. Everything else stands on the ground or the sea, and keeps the ground in view. */
 const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble"]);
 
+/**
+ * Whether a craft flies in space: the same ones that may be seen from straight above or below, including the fleet. A rocket or a place on the ground does not. On the compare page one of these stands on a marked plinth, so it is not read as a rocket on a pad.
+ *
+ * @param id A rocket's id.
+ * @returns True for a craft in space.
+ */
+export function fliesInSpace(id: string): boolean {
+  return IN_SPACE.has(id) || id in FLEET_KIT_ROCKETS || id.startsWith("fleet-");
+}
+
 /** Gives each variant its `view.tiltMax`: 90 degrees for a craft in space and the fleet, 45 for the rest. */
 function withTilt(rockets: Record<string, RocketEntry>): Record<string, RocketEntry> {
   return Object.fromEntries(
     Object.entries(rockets).map(([id, rocket]) => {
-      const tiltMax = IN_SPACE.has(id) || id in FLEET_KIT_ROCKETS || id.startsWith("fleet-") ? 90 : 45;
+      const tiltMax = fliesInSpace(id) ? 90 : 45;
       return [id, { ...rocket, variants: rocket.variants.map((variant) => ({ ...variant, view: { tiltMax } })) }];
     }),
   );
@@ -204,6 +214,7 @@ export const partIdOf = (rocket: string, variant: string, slot: string): string 
  * ```
  */
 export const SLOT_NAMES: Readonly<Record<string, string>> = {
+  ...SHIP_02_SLOT_NAMES,
   ...FLEET_SLOT_NAMES,
   ...SHIP_01_SLOT_NAMES,
   ...SHIP_03_SLOT_NAMES,
@@ -283,4 +294,5 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "shadow-shield": "Shadow shield",
   "propellant-lines": "Propellant lines",
   pod: "Mission pod",
+  soyuz: "Soyuz spacecraft",
 };

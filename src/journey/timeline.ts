@@ -2,6 +2,7 @@
 // without the ones before it and a test needs no clock.
 import type { BodySource } from "./bodies.ts";
 import { C, G0 } from "./constants.ts";
+import { conicPoint } from "./lunar.ts";
 import { accelerating, transferPoint } from "./physics.ts";
 import { positionKm, type Phase, type Trip, type Vec3 } from "./trip.ts";
 
@@ -158,8 +159,12 @@ export function stateAt(trip: Trip, source: BodySource, playbackS: number): Stat
     let burn: State["burn"] = "off";
     let done = 0;
     let pos: Vec3 = origin;
-    if (id === "preheat" || id === "ignition") speed = 0;
-    else if (id === "ascent") {
+    if (id === "preheat" || id === "ignition") {
+      if (b.fromOrbit) {
+        speed = b.parkSpeed * 1000;
+        frameName = "start";
+      }
+    } else if (id === "ascent") {
       speed = b.parkSpeed * 1000 * f;
       accel = (b.parkSpeed * 1000) / b.ascentS / G0;
       burn = "forward";
@@ -167,13 +172,20 @@ export function stateAt(trip: Trip, source: BodySource, playbackS: number): Stat
       speed = mix(b.parkSpeed, b.burnEndSpeed, f) * 1000;
       accel = (trip.dv.departure / b.burnS) / G0;
       burn = "forward";
+      frameName = b.fromOrbit ? "start" : "earth";
     } else if (id === "coast" || id === "flip") {
-      const tau = t - (b.ascentS + b.burnS);
-      const p = transferPoint(b.mu, b.r1, b.r2, b.theta0, Math.min(tau, b.transitS));
+      const tau = Math.max(0, Math.min(t - (b.ascentS + b.burnS), b.transitS));
+      const p = b.conic ? conicPoint(b.mu, b.conic, tau) : transferPoint(b.mu, b.r1, b.r2, b.theta0, tau);
       pos = [p.r * Math.cos(p.theta), p.r * Math.sin(p.theta), 0];
       speed = p.v * 1000;
-      frameName = trip.frame === "sun" ? "sun" : "earth";
-      done = arcAt(b.arc, Math.min(tau, b.transitS) / b.transitS);
+      frameName = b.conic ? "earth" : trip.frame === "sun" ? "sun" : "earth";
+      done = arcAt(b.arc, tau / b.transitS);
+    } else if (b.entry && b.conic) {
+      const p = conicPoint(b.mu, b.conic, b.transitS);
+      pos = [p.r * Math.cos(p.theta), p.r * Math.sin(p.theta), 0];
+      speed = p.v * 1000;
+      frameName = "earth";
+      done = trip.pathKm;
     } else {
       pos = dest(dateMs);
       done = trip.pathKm;

@@ -1,4 +1,4 @@
-// The journey page: choose a start, an end and a craft, then fly the trip. Draws with one 2D canvas, SVG and the package's own line drawing of the craft: no WebGL, so no context to make or let go.
+// The journey page: choose a start, an end and a craft, then fly the trip. The line views draw with one 2D canvas and the package's own line drawing. The painted side view is the package's element, loaded the first time it is asked for and dropped on leaving, so it is the page's one WebGL context.
 // It asks for a frame only while the trip plays and the page can be seen, at most 30 a second, and never when nothing moves.
 import { ROCKETS, SOURCES } from "../src/index.ts";
 import {
@@ -27,10 +27,13 @@ import {
   type State,
   type Trip,
 } from "../src/journey/index.ts";
+import { conicPoint } from "../src/journey/lunar.ts";
 import { transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
-import { stagedSvg } from "./journey-craft.ts";
+import { hidePainted, showPainted } from "./journey-painted.ts";
+import { viewOf, stagedSvg } from "./journey-craft.ts";
 import { WORDS } from "./words.js";
+import { destinationGrow, forwardStar } from "../src/journey/forward.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
@@ -54,6 +57,11 @@ const setText = (node: Element, text: string): void => {
   if (node.textContent !== text) node.textContent = text;
 };
 const reduced = (): boolean => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const VIEWS = ["side", "front", "rear", "cockpit", "map"] as const;
+type JourneyView = (typeof VIEWS)[number];
+const VIEW_WORD: Record<JourneyView, string> = { side: "jSide", front: "jFront", rear: "jRear", cockpit: "jCockpit", map: "jMap" };
+const isView = (value: string | null): value is JourneyView => VIEWS.some((view) => view === value);
+const C_MS = 299_792_458;
 const DAY = 86_400_000;
 const AU_KM = 149_597_870.7;
 
@@ -67,12 +75,14 @@ const todayUtc = (): number => {
   const now = new Date();
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 };
+const askedView = query.get("view");
 const choice = {
-  from: pickOf("from", stopIds.filter((id) => id !== "moon"), "earth"),
+  from: pickOf("from", stopIds, "earth"),
   to: pickOf("to", stopIds, "mars"),
   craft: pickOf("craft", CRAFTS.map((craft) => craft.id), "falcon-heavy"),
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
-  view: query.get("view") === "map" ? "map" : "side",
+  view: isView(askedView) ? askedView : "side",
+  look: query.get("look") === "painted" ? "painted" : "line",
   base: todayUtc(),
 };
 if (choice.to === choice.from) choice.to = choice.from === "earth" ? "mars" : "earth";
@@ -86,6 +96,7 @@ function writeAddress(): void {
   if (choice.when > 0) next.set("w", String(choice.when));
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
+  if (choice.look === "painted") next.set("look", "painted");
   if (speed !== 1) next.set("speed", String(speed));
   const text = `${location.pathname}?${next.toString()}`;
   history.replaceState(null, "", text);
@@ -112,8 +123,9 @@ const dateWords = (ms: number, time = false): string =>
 function whenOptions(): Option[] {
   const craft = craftNow();
   const base = choice.base;
-  if (choice.from === "earth" && craft.drive === "ballistic" && choice.to !== "moon") {
-    return windows(SOURCE, choice.from, choice.to, base, 3).map((one, index) => ({ id: `w${index}`, label: dateWords(one.dateMs), ms: one.dateMs }));
+  // The Moon travels with the Earth, and the window search uses a heliocentric period. A lunar period would put the windows a month apart, so a departure from the Moon uses the Earth's windows.
+  if ((choice.from === "earth" || choice.from === "moon") && craft.drive === "ballistic" && choice.to !== "moon" && choice.to !== "earth") {
+    return windows(SOURCE, "earth", choice.to, base, 3).map((one, index) => ({ id: `w${index}`, label: dateWords(one.dateMs), ms: one.dateMs }));
   }
   if (craft.drive === "continuous" && choice.to !== "moon") {
     const best = bestDate(SOURCE, craft, choice.from, choice.to, base);
@@ -146,11 +158,13 @@ function chip(label: string, testid: string, pressed: boolean, on: () => void, d
 }
 
 function drawPickers(): void {
-  byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== "moon" && stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
+  byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
   byId("to").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.from).map((stop) => chip(stopName(stop.id), `to-${stop.id}`, stop.id === choice.to, () => change({ to: stop.id }))));
   byId("crafts").replaceChildren(...CRAFTS.map((craft) => chip(craftName(craft), `craft-${craft.id}`, craft.id === choice.craft, () => change({ craft: craft.id }))));
   byId("when").replaceChildren(...options.map((option, index) => chip(option.label, `when-${index}`, index === choice.when, () => change({ when: index }))));
-  byId("views").replaceChildren(...(["side", "map"] as const).map((view) => chip(say(view === "side" ? "jSide" : "jMap"), `view-${view}`, choice.view === view, () => setView(view))));
+  byId("views").replaceChildren(...VIEWS.map((view) => chip(say(VIEW_WORD[view]), `view-${view}`, choice.view === view, () => setView(view))));
+  const painted = choice.look === "painted";
+  byId("looks").replaceChildren(chip(say(painted ? "look_line" : "look_painted"), "look-painted", painted, () => setLook(painted ? "line" : "painted")));
   byId("speeds").replaceChildren(...([0.5, 1, 2, 4] as const).map((value) => chip(`×${value}`, `speed-${value}`, speed === value, () => setSpeed(value))));
 }
 
@@ -174,12 +188,34 @@ function change(next: Partial<{ from: string; to: string; craft: string; when: n
   start();
 }
 
-function setView(view: "side" | "map"): void {
+function setView(view: JourneyView): void {
   choice.view = view;
   stage.dataset.view = view;
   for (const button of byId("views").querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === `view-${view}`));
   writeAddress();
   layout();
+  draw(true);
+}
+
+function syncPainted(turn: string, lit: boolean, phase: string): void {
+  const host = byId("painted");
+  const bar = byId("painted-bar");
+  const credit = byId("painted-credit");
+  const on = choice.look === "painted" && choice.view === "side";
+  stage.dataset.look = on ? "painted" : "line";
+  if (!on) {
+    if (!host.hidden || host.childElementCount > 0) hidePainted(host, bar, credit);
+    return;
+  }
+  const craft = craftNow();
+  const shown = stageOf(craft, phase, onPad());
+  showPainted(host, bar, credit, { rocket: shown.rocket, variant: shown.variant, view: onPad() ? viewOf(craft) : "side", engines: lit ? "on" : "off" }, turn, craft.drive === "continuous" ? 90 : 45);
+}
+
+function setLook(look: "line" | "painted"): void {
+  choice.look = look;
+  for (const button of byId("looks").querySelectorAll("button")) button.setAttribute("aria-pressed", String(choice.look === "painted"));
+  writeAddress();
   draw(true);
 }
 
@@ -198,9 +234,18 @@ const routeSvg = byId<SVGSVGElement>("route");
 let litNow = false;
 let stageNow = "";
 
+/** A ballistic craft leaving the Moon is already in orbit, so the drawing is the payload, seen from the side, for the whole trip. */
+function onPad(): boolean {
+  return !(trip.from === "moon" && craftNow().drive === "ballistic");
+}
+
+let faceNow = "";
+
 function setCraft(lit: boolean, phase = "ascent"): void {
   litNow = lit;
-  const shown = stagedSvg(craftNow(), phase, lit);
+  const facing = choice.view === "front" ? "front" : choice.view === "rear" ? "back" : "side";
+  faceNow = facing;
+  const shown = stagedSvg(craftNow(), phase, lit, onPad(), facing);
   stageNow = shown.stage.name;
   const template = document.createElement("template");
   template.innerHTML = shown.svg;
@@ -213,7 +258,7 @@ function setCraft(lit: boolean, phase = "ascent"): void {
 function layout(): void {
   const box = stage.getBoundingClientRect();
   const length = Math.max(120, Math.min(box.width * 0.86, box.height * 1.45));
-  craftBox.style.setProperty("--len", `${Math.round(length)}px`);
+  stage.style.setProperty("--len", `${Math.round(length)}px`);
   const ratio = Math.min(2, devicePixelRatio || 1);
   const w = Math.round(box.width * ratio);
   const h = Math.round(box.height * ratio);
@@ -236,7 +281,7 @@ const stars = (() => {
 })();
 let skyOffset = 0;
 
-function drawSky(streak: number): void {
+function drawSky(streak: number, forward: boolean, beta: number): void {
   const ctx = sky.getContext("2d");
   if (!ctx) return;
   const w = sky.width;
@@ -244,6 +289,16 @@ function drawSky(streak: number): void {
   const ratio = w / Math.max(1, stage.clientWidth);
   ctx.clearRect(0, 0, w, h);
   for (const star of stars) {
+    if (forward) {
+      const place = forwardStar(star.x, star.y, beta);
+      const red = Math.round(255 - place.blue * 90);
+      const green = Math.round(200 + place.blue * 30);
+      const blue = Math.round(170 + place.blue * 85);
+      ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${star.alpha})`;
+      const size = Math.max(1, star.size * ratio * (1 + place.blue * beta));
+      ctx.fillRect(place.x * w, place.y * h, size, size);
+      continue;
+    }
     const x = (((star.x * w - skyOffset * star.depth * ratio) % w) + w) % w;
     const y = star.y * h;
     ctx.fillStyle = star.warm ? `rgba(255, 214, 160, ${star.alpha})` : `rgba(206, 224, 255, ${star.alpha})`;
@@ -289,9 +344,9 @@ function buildMap(): void {
       return [p[0] * AU_KM, p[1] * AU_KM] as [number, number];
     });
   };
-  // keep the planets out to the far end of the route (and the Earth's), no farther
+  // In the Earth's frame the Moon's orbit is the whole map: the Earth's own reach is its path round the Sun, which would shrink the Moon to a dot. In the Sun's frame, keep the planets out to the far end of the route and no farther.
   const reach = (id: string): number => Math.max(...orbit(id).map(([x, y]) => Math.hypot(x, y)));
-  const farthest = Math.max(reach(trip.from), reach(trip.to), ...(earthFrame ? [reach("moon")] : []));
+  const farthest = earthFrame ? reach("moon") : Math.max(reach(trip.from), reach(trip.to));
   const shown = sunFrame ? ids.filter((id) => reach(id) <= farthest * 1.02) : ids;
   const scale = Math.min(W * 0.4, H * 0.34) / (farthest * 1.04);
   const bodies = new Map<string, SVGElement>();
@@ -318,7 +373,8 @@ function buildMap(): void {
   if (trip.ballistic) {
     const b = trip.ballistic;
     for (let i = 0; i <= 360; i += 1) {
-      const p = transferPoint(b.mu, b.r1, b.r2, b.theta0, (b.transitS * i) / 360);
+      const t = (b.transitS * i) / 360;
+      const p = b.conic ? conicPoint(b.mu, b.conic, t) : transferPoint(b.mu, b.r1, b.r2, b.theta0, t);
       const [x, y] = point(p.r * Math.cos(p.theta), p.r * Math.sin(p.theta));
       pathPoints.push([x, y]);
     }
@@ -406,7 +462,8 @@ function buildRoute(): void {
   add(svgEl("line", { class: "tick", x1: x(0.5), y1: y - 8, x2: x(0.5), y2: y + 8 }), svgEl("text", { x: x(0.5), y: y + 30, "text-anchor": "middle" }, say("jHalfway")));
   if (trip.ballistic) {
     add(svgEl("text", { x: ROUTE_X0, y: y + 56, "text-anchor": "start", class: "warm burn-label" }, `${say("jPhase_burn")} · ${speedWords(trip.dv.departure)}`));
-    add(svgEl("text", { x: ROUTE_X1, y: y + 56, "text-anchor": "end", class: "warm burn-label" }, trip.verdict.level === "flyby" ? say("jPhase_flyby") : `${say("jPhase_brake")} · ${speedWords(trip.dv.arrival)}`));
+    const arrival = trip.ballistic.entry ? say("jEntry") : trip.verdict.level === "flyby" ? say("jPhase_flyby") : `${say("jPhase_brake")} · ${speedWords(trip.dv.arrival)}`;
+    add(svgEl("text", { x: ROUTE_X1, y: y + 56, "text-anchor": "end", class: "warm burn-label" }, arrival));
   }
   add(svgEl("circle", { cx: ROUTE_X0, cy: y, r: 9, fill: SOURCE.stops.find((s) => s.id === trip.from)?.colour ?? "#8fc9ff" }), svgEl("circle", { cx: ROUTE_X1, cy: y, r: 9, fill: SOURCE.stops.find((s) => s.id === trip.to)?.colour ?? "#ffb457" }));
   add(svgEl("text", { x: ROUTE_X0, y: y + 30, "text-anchor": "middle" }, stopName(trip.from).toUpperCase()), svgEl("text", { x: ROUTE_X1, y: y + 30, "text-anchor": "middle", class: "warm" }, stopName(trip.to).toUpperCase()));
@@ -447,7 +504,7 @@ function rows(listId: string, spec: [string, string][]): Map<string, Row> {
 function buildPanel(): void {
   const keys: [string, string][] = [
     ["date", "jDate"],
-    ["since", "jSince"],
+    ["since", trip.from === "moon" ? "jSinceDepart" : "jSince"],
     ["speed", "jSpeed"],
     ["light", "jLight"],
     ["gamma", "jGamma"],
@@ -620,7 +677,10 @@ let visible = true;
 let lastPhase = "";
 
 function draw(force = false): void {
-  if (!trip.verdict.playable || trip.phases.length === 0) return;
+  if (!trip.verdict.playable || trip.phases.length === 0) {
+    syncPainted("90deg", false, "ascent");
+    return;
+  }
   const state = stateAt(trip, SOURCE, playhead);
   const id = state.phase.id;
   if (id !== lastPhase || force) {
@@ -666,8 +726,11 @@ function draw(force = false): void {
   setText(byId("speed-sub"), say("jOfLight", { pct: percentOfLight(state.speedMs) }));
   // the craft: which way it faces, and whether its engines burn
   const lit = state.burn !== "off";
-  if (lit !== litNow || stageOf(craftNow(), id).name !== stageNow) setCraft(lit, id);
-  craftBox.style.setProperty("--turn", `${(90 - 180 * state.turned).toFixed(1)}deg`);
+  const facing = choice.view === "front" ? "front" : choice.view === "rear" ? "back" : "side";
+  if (lit !== litNow || stageOf(craftNow(), id, onPad()).name !== stageNow || facing !== faceNow) setCraft(lit, id);
+  const turn = `${(90 - 180 * state.turned).toFixed(1)}deg`;
+  craftBox.style.setProperty("--turn", turn);
+  syncPainted(turn, lit, id);
   drawRoute(state);
   if (choice.view === "map") drawMap(state);
   drawPanel(state);
@@ -677,8 +740,13 @@ function draw(force = false): void {
   // the sky: still when nothing moves, and always still for a reader who asked for less motion
   const moving = playing && !reduced() && state.speedMs > 0;
   const streak = moving ? Math.min(70, Math.log10(1 + state.speedMs / 50) * 14) : 0;
-  if (choice.view === "side") drawSky(streak);
-  else if (force) drawSky(0);
+  const forward = choice.view === "cockpit";
+  const beta = Math.min(0.99, Math.max(0, state.speedMs / C_MS));
+  const dest = byId("dest");
+  dest.style.setProperty("--grow", destinationGrow(total > 0 ? playhead / total : 0).toFixed(4));
+  setText(byId("dest-name"), stopName(trip.to));
+  if (choice.view !== "map") drawSky(forward || reduced() ? 0 : streak, forward, beta);
+  else if (force) drawSky(0, false, 0);
 }
 
 function frame(ts: number): void {
@@ -773,7 +841,7 @@ function start(): void {
   lastPhase = "";
   layout();
   draw(true);
-  if (!ok) drawSky(0);
+  if (!ok) drawSky(0, false, 0);
 }
 
 byId("play").addEventListener("click", () => (playing ? pause() : play()));

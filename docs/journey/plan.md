@@ -129,10 +129,10 @@ When 397 adds the cockpit and the painted 3D side view:
 | 397 | Views | Side and Map, buttons in a row | Front, Rear, Cockpit (aberration, Doppler colour, the destination growing), the kazoku-ui view controls, the painted 3D side view |
 | 398 | Flip and burn | The flip, the DECELERATION value and arrow, the plume ahead, speed falling to 0 at the destination | The "no braking" toggle on the log-scale line (phase 2) |
 | 399 | Summary | The card with route, distance, times, top speed, peak g, delta-v, fuel, signal delay, one comparison | The reachable-universe view (phase 2), image of the card |
-| 401 | Bodies as stops | The `BodySource` interface, the demo adapter, the picker built from it | The wakusei export and its test, the Moon as a start, moons of other planets, stars |
+| 401 | Bodies as stops | The `BodySource` interface, the demo adapter, the picker built from it, the Moon as a start (to the Earth and to Mars) | The wakusei export and its test, moons of other planets, stars |
 | 394 | Parent | The page, the address state, the craft verdicts | Interstellar, the fictional crew ships, cosmic views |
 
-Slice 1 craft: Saturn V, Space Launch System, Falcon Heavy, ISV Kaminari. Trips: Earth to the Moon and Earth to Mars, plus the other planets as destinations for the fleet ship.
+Slice 1 craft: Saturn V, Space Launch System, Falcon Heavy, ISV Kaminari. Trips: Earth to the Moon and Earth to Mars, the Moon to the Earth and to Mars, plus the other planets as destinations for the fleet ship.
 
 ## 8. Risks and how they are held
 

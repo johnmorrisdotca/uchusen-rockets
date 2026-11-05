@@ -11,7 +11,7 @@ import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
-import { canBeside } from "./beside.ts";
+import { besideCraft } from "./beside.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
@@ -72,11 +72,11 @@ const CSS = `
 .picture[data-state="3d"] .drawing { opacity: 0; filter: blur(2px); }
 .picture[data-state="3d"] .canvas { opacity: 1; filter: none; }
 .panel { font: 0.85rem/1.4 system-ui, sans-serif; margin-top: 0.5rem; }
-.panel .bar { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.panel button { min-height: 2rem; padding: 0.2rem 0.7rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.panel .bar { display: flex; flex-wrap: nowrap; gap: 0.3rem; overflow-x: auto; padding-bottom: 0.2rem; scrollbar-width: thin; }
+.panel button { flex: none; white-space: nowrap; min-height: 1.75rem; padding: 0.1rem 0.6rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; font-size: 0.8rem; cursor: pointer; }
 .panel button[aria-selected="true"], .panel button[aria-pressed="true"] { background: color-mix(in srgb, currentColor 22%, transparent); box-shadow: inset 0 0 0 1px currentColor; font-weight: 600; }
 .panel button:disabled { opacity: 0.5; cursor: default; }
-.panel .body { margin-top: 0.5rem; max-height: 14rem; overflow: auto; }
+.panel .body { margin-top: 0.4rem; max-height: 7rem; overflow: auto; }
 .panel .body button { margin: 0 0.35rem 0.35rem 0; }
 .panel td button.link { margin: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; text-decoration: underline; text-align: left; }
 .panel table { border-collapse: collapse; width: 100%; }
@@ -145,7 +145,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "labels", "inspector", "beside", "captions", "scale-note"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -282,6 +282,7 @@ export class UchusenRocket extends HTMLBase {
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
     if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
+    else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
       // choosing what to show leaves the flight
@@ -468,9 +469,17 @@ export class UchusenRocket extends HTMLBase {
     this.emit("uchusen-flight", this.flightState);
   }
 
-  /** Whether Starship stands beside it: `beside="on"`, and never beside Starship itself. */
-  private besideOn(description: Description): boolean {
-    return this.getAttribute("beside") === "on" && canBeside(description.rocket);
+  /** The craft that stand beside it: `beside="on"` is Starship (never beside Starship itself), and a list such as `beside="saturn-v:saturn-v,iss:iss"` is those craft, at most two, each named in the picture. */
+  private besideList(description: Description): Description[] {
+    return besideCraft(this.getAttribute("beside"), description.rocket);
+  }
+
+  /** The options of a build for what stands beside it. */
+  private besideOptions(description: Description): { beside: readonly Description[]; named: boolean } {
+    const beside = this.besideList(description);
+    // `captions` names the craft on screen even when it stands alone, so a phone's one craft still has its name
+    const named = this.hasAttribute("captions") || (beside.length > 0 && this.getAttribute("beside") !== "on");
+    return { beside, named };
   }
 
   /** Whether the engines are lit: `engines="on"`, and never for a reader who asked for reduced motion. */
@@ -486,11 +495,11 @@ export class UchusenRocket extends HTMLBase {
 
   private update(): void {
     const description = this.descriptionNow();
-    const key = `${JSON.stringify(description)}|${this.besideOn(description)}`;
+    const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description), beside: this.besideOn(description) });
+        this.builtNow = build(description, { detail: this.detailFor(description), ...this.besideOptions(description) });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -632,7 +641,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.detailFor(description) === "full") return;
     this.fine = true;
     try {
-      this.builtNow = build(description, { detail: "full", beside: this.besideOn(description) });
+      this.builtNow = build(description, { detail: "full", ...this.besideOptions(description) });
     } catch {
       return;
     }
@@ -651,6 +660,7 @@ export class UchusenRocket extends HTMLBase {
       this.panel?.el.remove();
       this.panel = null;
       this.panelFor = null;
+      delete this.dataset.panel;
       this.viewer?.setMarks(null);
       return;
     }
@@ -672,6 +682,7 @@ export class UchusenRocket extends HTMLBase {
       root.appendChild(this.panel.el);
       this.panelFor = inspector;
     }
+    this.dataset.panel = "on";
     this.panel.labels(this.getAttribute("labels") === "on");
   }
 
@@ -801,6 +812,7 @@ export class UchusenRocket extends HTMLBase {
       if (now.show !== show) made.setShow(now.show);
       this.lightViewer(made);
       made.setSpin(this.spin());
+      made.setScaleNote(this.getAttribute("scale-note"));
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
         if (generation === this.generation && this.viewer === made) {

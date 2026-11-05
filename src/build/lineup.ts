@@ -113,6 +113,18 @@ export interface LineupOptions {
 
 const isFleet = (key: string): boolean => key.startsWith("fleet-");
 
+/** A label broken at its spaces into lines of about `room` characters, one word at least to a line. A number keeps its unit: "30 m" is not broken. */
+function wrapWords(label: string, room: number): string[] {
+  const out: string[] = [];
+  for (const word of label.replace(/(\d) (m)\b/g, "$1\u0000$2").split(" ")) {
+    const text = word.replace("\u0000", " ");
+    const last = out[out.length - 1];
+    if (last !== undefined && last.length + 1 + text.length <= room) out[out.length - 1] = `${last} ${text}`;
+    else out.push(text);
+  }
+  return out.length ? out : [label];
+}
+
 function comparison(id: CompareId, x: number, base: number, unit: number, line: string, fill: string): string {
   const { height, width } = COMPARES[id];
   const h = height * unit;
@@ -149,10 +161,17 @@ export function lineupSvg(options: LineupOptions): { svg: string; items: LineupI
   let unit = options.unit;
   let drawn = draw({ ...options, items: standing }, fleetKeys, unit);
   const room = options.fit;
-  if (room) for (let i = 0; i < 40 && ((room.width !== undefined && drawn.width > room.width) || (room.height !== undefined && drawn.height > room.height)); i++) {
-    unit *= 0.88;
-    drawn = draw({ ...options, items: standing }, fleetKeys, unit);
-  }
+  if (room)
+    for (let i = 0; i < 40; i++) {
+      const tooWide = room.width !== undefined && drawn.width > room.width;
+      const tooTall = room.height !== undefined && drawn.height > room.height;
+      if (!tooWide && !tooTall) break;
+      const next = draw({ ...options, items: standing }, fleetKeys, unit * 0.88, Math.max(0.75, (unit * 0.88) / options.unit));
+      // a frame narrower than the cells themselves: shrinking the craft further would only make them unreadable, and the page's frame scrolls
+      if (!tooTall && next.width >= drawn.width - 0.5) break;
+      unit *= 0.88;
+      drawn = next;
+    }
   return { ...drawn, unit };
 }
 
@@ -176,7 +195,7 @@ export function lyingCamera(axis: "x" | "y", b: Bounds, x0: number, baseY: numbe
   };
 }
 
-function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number): { svg: string; items: LineupItem[]; real: LineupItem[]; width: number; height: number } {
+function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number, squeeze = 1): { svg: string; items: LineupItem[]; real: LineupItem[]; width: number; height: number } {
   const { items, look = DEFAULT_LOOK, view = "front", ruler = true, labels = true } = options;
   const angle = VIEWS[cleanView(view)];
   const known: { key: string; built?: Built; compare?: CompareId; height: number; width: number; label: string }[] = [];
@@ -197,19 +216,23 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
     const b = built.boundsOf(show);
     known.push({ key, built, height: b.max[1], width: Math.max(Math.abs(b.min[0]), Math.abs(b.max[0]), Math.abs(b.min[2]), Math.abs(b.max[2])) * 2, label: named.name });
   }
-  const gap = 28;
+  // a narrow frame shrinks the room between the craft along with the craft
+  const gap = 28 * squeeze;
   const top = 26;
-  const labelRoom = labels ? 44 : 0;
+  const minCell = 96 * squeeze;
+  // a label is wrapped to its own cell, so neighbours never run into each other
+  const cells = known.map((item) => Math.max(minCell, item.width * unit + gap));
+  const lines = known.map((item, i) => wrapWords(item.label, Math.floor((cells[i] - 12) / 5.5)));
+  const labelRoom = labels ? Math.max(44, 18 + 13 * Math.max(...lines.map((one) => one.length))) : 0;
   const rulerRoom = ruler ? 46 : 8;
   const tallest = known.length ? Math.max(10, ...known.map((item) => item.height)) : 0;
   const bandHeight = known.length ? top + tallest * unit + labelRoom + 10 : 0;
   const base = top + tallest * unit;
-  const minCell = 96;
   let x = rulerRoom;
   const body: string[] = [];
   const { line } = LOOKS[look];
-  for (const item of known) {
-    const cell = Math.max(minCell, item.width * unit + gap);
+  for (const [index, item] of known.entries()) {
+    const cell = cells[index];
     const cx = x + cell / 2;
     if (item.compare) body.push(comparison(item.compare, cx - (COMPARES[item.compare].width * unit) / 2, base, unit, line, "url(#metal)"));
     else if (item.built) {
@@ -225,10 +248,7 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
         if (part) body.push(drawPart(drawnPieces(part, show === "together"), place.at, cam, look, 0.7, edge));
       }
     }
-    if (labels) {
-      const words = item.label.length > 19 ? [item.label.slice(0, item.label.lastIndexOf(" ", 19)), item.label.slice(item.label.lastIndexOf(" ", 19) + 1)] : [item.label];
-      body.push(`<text x="${n(cx)}" y="${n(base + 16)}" text-anchor="middle" font-size="11" fill="currentColor">${words.map((word, i) => `<tspan x="${n(cx)}" dy="${i ? 13 : 0}">${xmlText(word)}</tspan>`).join("")}</text>`);
-    }
+    if (labels) body.push(`<text x="${n(cx)}" y="${n(base + 16)}" text-anchor="middle" font-size="11" fill="currentColor">${lines[index].map((word, i) => `<tspan x="${n(cx)}" dy="${i ? 13 : 0}">${xmlText(word)}</tspan>`).join("")}</text>`);
     x += cell;
   }
   let width = known.length ? x + 8 : rulerRoom + 8;
@@ -297,7 +317,8 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
       fleetY = baseY + 10;
     }
   if (ships.length) {
-    width = Math.max(width, rulerRoom + longest * unit + 8, realEnd + 8);
+    // the ruler's last number and its unit sit past the end of the longest ship
+    width = Math.max(width, rulerRoom + longest * unit + (ruler ? 34 : 8), realEnd + 8);
     if (ruler) {
       // the metres, along the ground of the fleet band, the same scale as the rockets' ruler
       const steps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000];
@@ -305,14 +326,15 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
       const yy = fleetY + 4;
       fleetBody.push(`<path d="M${n(rulerRoom)} ${n(yy)}H${n(rulerRoom + longest * unit)}" stroke="currentColor" stroke-width="1" opacity=".7"/>`);
       for (let m = 0; m <= longest + 0.001; m += step) fleetBody.push(`<path d="M${n(rulerRoom + m * unit)} ${n(yy)}v5" stroke="currentColor" stroke-width="1" opacity=".7"/><text x="${n(rulerRoom + m * unit)}" y="${n(yy + 16)}" text-anchor="middle" font-size="10" fill="currentColor" opacity=".85">${m.toLocaleString("en-US")}</text>`);
-      fleetBody.push(`<text x="${n(rulerRoom + longest * unit + 4)}" y="${n(yy + 16)}" font-size="10" fill="currentColor" opacity=".85">m</text>`);
+      fleetBody.push(`<text x="${n(rulerRoom + longest * unit + 22)}" y="${n(yy + 16)}" font-size="10" fill="currentColor" opacity=".85">m</text>`);
       fleetY = yy + 24;
     }
   }
   const height = known.length || ships.length ? Math.max(bandHeight, 0) + (ships.length ? fleetY - bandHeight : 0) : 36;
   let rule = "";
   if (ruler && known.length) {
-    const step = tallest * unit < 240 ? 10 : 20;
+    // a number every 24 pixels at the least, so the numbers never lie on each other
+    const step = [10, 20, 50, 100, 200, 500, 1000, 2000].find((v) => v * unit >= 24) ?? 2000;
     rule += `<path d="M${rulerRoom - 8} ${n(base)}V${n(base - tallest * unit)}" stroke="currentColor" stroke-width="1" opacity=".7"/>`;
     for (let m = 0; m <= tallest + 0.001; m += step) rule += `<path d="M${rulerRoom - 8} ${n(base - m * unit)}h-5" stroke="currentColor" stroke-width="1" opacity=".7"/><text x="${rulerRoom - 16}" y="${n(base - m * unit + 3.5)}" text-anchor="end" font-size="10" fill="currentColor" opacity=".85">${m}</text>`;
     rule += `<text x="${rulerRoom - 16}" y="${n(base - tallest * unit - 10)}" text-anchor="end" font-size="10" fill="currentColor" opacity=".85">m</text><path d="M${rulerRoom - 8} ${n(base)}H${n(width)}" stroke="currentColor" stroke-width=".6" opacity=".4"/>`;

@@ -134,7 +134,8 @@ test("in a painted lineup a rocket that is black all over takes a light outline,
 test("the lineup is to one scale: its picture's height is the tallest rocket's", () => {
   const { svg, items, height } = lineupSvg({ items: ["starship:v1", "starship:v3", "starship:v4", "person", "building", "<script>", "nothing:v1"], unit: 2, ruler: true, labels: true });
   assert.deepEqual(items.map((item) => item.key), ["starship:v1", "starship:v3", "starship:v4", "person", "building"]);
-  assert.ok(Math.abs(height - (26 + 142 * 2 + 44 + 10)) < 0.01);
+  // the longest label (Block 1 with the vented ring) is wrapped to three lines in its cell
+  assert.ok(Math.abs(height - (26 + 142 * 2 + 57 + 10)) < 0.01);
   assert.ok(!svg.includes("<script"));
   assert.ok(svg.includes("A person, 1.8 m"));
   readMetrics(svg);

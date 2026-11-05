@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!--family:head-->
+    <link rel="stylesheet" href="family.css" />
+    <link rel="stylesheet" href="demo.css" />
+    <link rel="stylesheet" href="compare.css" />
+  </head>
+  <body class="demo compare">
+    <main>
+      <!--family:header-->
+      <section class="cw" id="wide" aria-labelledby="cw-title">
+        <h2 id="cw-title" data-say="cmpTitle">Compare craft, side by side</h2>
+        <p data-say="cmpIntro">Up to three craft stand on one ground at their true sizes, with the Earth behind them. Choose a craft in the first row, then its maker, rocket and variant. On a phone one craft is shown.</p>
+        <div class="field">
+          <h3 id="cw-craft-title" data-say="cmpCraft">Craft</h3>
+          <div class="chips" id="cw-craft" data-testid="cw-craft" role="group" aria-labelledby="cw-craft-title"></div>
+        </div>
+        <div class="stage-box cw-stage">
+          <div class="view-space">
+            <div class="earth-back" id="earth-back" data-testid="earth" aria-hidden="true" hidden></div>
+            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter" captions></uchusen-rocket>
+          </div>
+          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address speed="5" theme="dark" controls="advanced"></kazoku-view-controls>
+        </div>
+        <div class="cw-pickers">
+          <div class="field">
+            <h3 id="maker-title" data-say="maker">Maker</h3>
+            <div class="chips" id="makers" role="group" aria-labelledby="maker-title"></div>
+          </div>
+          <div class="field">
+            <h3 id="rocket-title" data-say="rocket">Rocket</h3>
+            <div class="chips" id="rockets" role="group" aria-labelledby="rocket-title"></div>
+          </div>
+          <div class="field">
+            <h3 id="variant-title" data-say="variant">Variant</h3>
+            <div class="chips" id="variants" role="group" aria-labelledby="variant-title"></div>
+          </div>
+          <div class="field">
+            <h3 id="look-title" data-say="look">Look</h3>
+            <div class="chips" id="looks" role="group" aria-labelledby="look-title"></div>
+          </div>
+          <div class="field">
+            <h3 id="background-title" data-say="background">Background</h3>
+            <div class="chips" id="backgrounds" role="group" aria-labelledby="background-title"></div>
+          </div>
+        </div>
+        <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
+        <div class="table-wrap"><table id="cw-table" data-testid="cw-table"></table></div>
+      </section>
+      <!--family:unreviewed-->
+      <!--family:footer-->
+    </main>
+    <!--family:scripts js/compare.js-->
+  </body>
+</html>

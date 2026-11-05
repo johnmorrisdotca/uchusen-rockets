@@ -28,6 +28,9 @@ test("the stage at each phase: whole through the ascent, the upper stage with it
   assert.equal(stageOf(craftOf("falcon-heavy")!, "arrival").rocket, "dragon");
   assert.deepEqual(stageOf(craftOf("falcon-heavy")!, "arrival").slots, ["capsule", "trunk"]);
   assert.equal(stageOf(craftOf("kaminari")!, "brake").slots, null, "a ship that burns all the way stays whole");
+  assert.equal(stageOf(craftOf("saturn-v")!, "ascent", false).name, "Apollo command and service module");
+  assert.equal(stageOf(craftOf("saturn-v")!, "coast", false).name, "Apollo command and service module");
+  assert.equal(stagedSvg(craftOf("saturn-v")!, "coast", false, false).stage.name, "Apollo command and service module");
 });
 
 test("every stage is the rockets' own parts: its rocket, variant and slots exist, and each stage is part of the one before", () => {
@@ -123,4 +126,14 @@ test("the Payload row is its own: the figure for the target, at least, or n/a wi
   assert.match(none.payload.note, /no published payload figure covers a trip to Mars/);
   const ship = planTrip(S, craftOf("kaminari")!, "earth", "mars", NOW);
   assert.equal(ship.payload.kg, 1_000_000 * 1000);
+});
+
+test("front looks along the nose and rear looks at the engines, and the two drawings stay apart", () => {
+  const craft = craftOf("falcon-heavy")!;
+  const side = stagedSvg(craft, "coast", false, true, "side").svg;
+  const front = stagedSvg(craft, "coast", false, true, "front").svg;
+  const rear = stagedSvg(craft, "coast", false, true, "back").svg;
+  assert.notEqual(front, side);
+  assert.notEqual(rear, front);
+  assert.notEqual(rear, side);
 });

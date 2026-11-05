@@ -49,7 +49,10 @@ import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import type { Spin } from "../spin.ts";
 import { besideLabel } from "../beside.ts";
+import { fliesInSpace } from "../rockets.ts";
 import { GroundKit } from "./ground.ts";
+import { placeNameLabels } from "./namePlace.ts";
+import { plinthGroup, type Footprint } from "./plinth.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
 
 /** A label on a part: its text, where it points in the ship's own metres, the part it follows and where that part stands at rest (so the label moves with it). `number` draws a numbered disc. */
@@ -155,8 +158,10 @@ void main() {
 
 interface PartView {
   slot: string;
-  /** It belongs to the rocket standing beside the one on screen. */
+  /** It belongs to a craft standing beside the one on screen. */
   beside: boolean;
+  /** Which craft: -1 for the rocket itself, then 0, 1 for the ones beside it. */
+  craft: number;
   holder: Group;
   code: Group;
   model: Group | null;
@@ -243,8 +248,12 @@ export class RocketViewer {
   private settled: Promise<void> = Promise.resolve();
   private marks: { mark: ViewerMark; el: HTMLElement }[] = [];
   private markHost: HTMLElement | null = null;
-  /** The words that say what stands beside the craft: its name and length, under its foot. */
-  private besideEl: HTMLElement | null = null;
+  /** The words that say what stands beside the craft: its name and length, under its foot. One for each craft named, by craft (-1 is the rocket itself). */
+  private besideEls = new Map<number, HTMLElement>();
+  /** Platforms under craft that fly in space, so they are not read as rockets on a pad. Not part of the camera's box. */
+  private plinths: Group | null = null;
+  /** The words on a plinth. The compare page sets them in the reader's language. */
+  private scaleNote = "shown on the ground for scale";
   private focusing = false;
   private nearSaid = false;
   private nearAt = 0;
@@ -329,6 +338,14 @@ export class RocketViewer {
     this.canvas.setAttribute("aria-label", `3D view of ${label}. Drag or use the arrow keys to turn it and the wheel to zoom; double-click or Home puts it back.`);
   }
 
+  /** The words on the plinth under a craft that flies in space. Empty falls back to the English. */
+  setScaleNote(text: string | null): void {
+    const next = text?.trim() ? text : "shown on the ground for scale";
+    if (next === this.scaleNote) return;
+    this.scaleNote = next;
+    this.wake();
+  }
+
   /** Loads a rocket and shows it. The camera's angle stays when a rocket is already showing. */
   async load(built: Built, show: string, look: LookName, angle: Angle | null): Promise<void> {
     const generation = ++this.generation;
@@ -354,6 +371,7 @@ export class RocketViewer {
       const view: PartView = {
         slot: part.slot,
         beside: built.beside.includes(part),
+        craft: part.craft ?? -1,
         holder,
         code,
         model: null,
@@ -401,6 +419,7 @@ export class RocketViewer {
     this.canvas.dataset.ready = "true";
     this.canvas.dataset.parts = this.parts.filter((part) => !part.beside).map((part) => part.slot).join(" ");
     this.canvas.dataset.beside = built.beside.length ? "on" : "off";
+    this.fitPlinths();
     this.drivenDirty = this.driven !== null;
     this.wake();
     await this.settled;
@@ -1116,6 +1135,7 @@ export class RocketViewer {
 
   /** Lets the graphics card have back what the parts took: geometries, the thick lines' materials and a licensed model's own materials and pictures. */
   private disposeParts(): void {
+    this.clearPlinths();
     this.freePlumes();
     for (const part of this.parts) {
       part.holder.traverse((node) => {
@@ -1180,7 +1200,7 @@ export class RocketViewer {
     for (const { el } of this.marks) el.remove();
     this.marks = [];
     if (!marks || marks.length === 0) {
-      if (!this.besideEl) {
+      if (this.besideEls.size === 0) {
         this.markHost?.remove();
         this.markHost = null;
       }
@@ -1212,35 +1232,120 @@ export class RocketViewer {
     return this.markHost;
   }
 
-  /** What stands beside the craft is named: a caption under its foot, kept inside the picture. */
+  /** What stands beside the craft is named: a caption under its own foot, kept inside the picture. A picture built with names names every craft, the rocket too; otherwise only the one beside it is. A craft that flies in space adds the plinth's words on a second line. */
   private placeBeside(): void {
-    const view = this.parts.find((part) => part.beside);
-    if (!view) {
-      this.besideEl?.remove();
-      this.besideEl = null;
-      return;
-    }
-    if (!this.besideEl) {
-      const el = document.createElement("span");
-      el.dataset.besideLabel = "";
-      el.textContent = besideLabel();
-      el.style.cssText = "position:absolute;left:0;top:0;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.72);white-space:nowrap;will-change:transform;display:none";
-      this.hostOfMarks().appendChild(el);
-      this.besideEl = el;
-    }
-    const el = this.besideEl;
-    if (!view.holder.visible || this.clockNow) {
-      el.style.display = "none";
-      return;
+    const names = this.built?.names ?? [];
+    const labels = names.length ? names.map((text, index) => ({ craft: index - 1, text })) : this.parts.some((part) => part.beside) ? [{ craft: 0, text: besideLabel() }] : [];
+    for (const [craft, el] of this.besideEls) {
+      if (labels.some((label) => label.craft === craft)) continue;
+      el.remove();
+      this.besideEls.delete(craft);
     }
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
-    const point = new Vector3(view.holder.position.x, view.holder.position.y, view.holder.position.z).project(this.camera);
-    const w = besideLabel().length * 6.2 + 12;
-    const x = Math.min(Math.max(((point.x + 1) / 2) * width - w / 2, 4), Math.max(4, width - w - 4));
-    const y = Math.min(((1 - point.y) / 2) * height + 6, height - 20);
-    el.style.display = point.z < 1 ? "block" : "none";
-    el.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`;
+    if (width < 1 || height < 1) return;
+    const spots: { el: HTMLElement; footX: number; footY: number }[] = [];
+    for (const { craft, text } of labels) {
+      const foot = this.footScreen(craft);
+      let el = this.besideEls.get(craft);
+      if (!el) {
+        el = document.createElement("span");
+        el.dataset.besideLabel = "";
+        el.style.cssText = "position:absolute;left:0;top:0;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.72);text-align:center;will-change:transform;display:none";
+        this.hostOfMarks().appendChild(el);
+        this.besideEls.set(craft, el);
+      }
+      const note = foot?.flies && names.length ? this.scaleNote : "";
+      const caption = note ? `${text}\n${note}` : text;
+      if (el.dataset.caption !== caption) {
+        el.dataset.caption = caption;
+        el.replaceChildren(document.createTextNode(text));
+        if (note) {
+          el.append(document.createElement("br"));
+          const mark = document.createElement("span");
+          mark.dataset.scaleNote = "";
+          mark.textContent = note;
+          mark.style.color = "#f2c14e";
+          el.append(mark);
+        }
+      }
+      el.style.maxWidth = `${Math.max(40, width - 8)}px`;
+      if (!foot || !foot.visible || this.clockNow) {
+        el.style.display = "none";
+        continue;
+      }
+      el.style.display = "block";
+      el.style.transform = "translate(0px,0px)";
+      spots.push({ el, footX: foot.x, footY: foot.y });
+    }
+    const placed = placeNameLabels(
+      spots.map((spot) => ({ footX: spot.footX, footY: spot.footY, w: spot.el.offsetWidth, h: spot.el.offsetHeight || 16 })),
+      width,
+      height,
+    );
+    spots.forEach((spot, index) => {
+      const at = placed[index];
+      if (!at) return;
+      spot.el.style.transform = `translate(${Math.round(at.x)}px,${Math.round(at.y)}px)`;
+    });
+  }
+
+  /** The middle of a craft's foot, in CSS pixels, and whether that craft flies in space. */
+  private footScreen(craft: number): { x: number; y: number; flies: boolean; visible: boolean } | null {
+    const box = this.craftBoxes().find((one) => one.craft === craft);
+    if (!box) return null;
+    this.camera.updateMatrixWorld();
+    const point = new Vector3((box.min[0] + box.max[0]) / 2, box.min[1], (box.min[2] + box.max[2]) / 2).project(this.camera);
+    return {
+      x: ((point.x + 1) / 2) * this.canvas.clientWidth,
+      y: ((1 - point.y) / 2) * this.canvas.clientHeight,
+      flies: fliesInSpace(box.rocket),
+      visible: point.z < 1,
+    };
+  }
+
+  /** The box each visible craft fills, in metres. */
+  private craftBoxes(): { craft: number; rocket: string; min: Vec3; max: Vec3 }[] {
+    if (!this.built) return [];
+    const parts = [...this.built.parts, ...this.built.beside];
+    const boxes = new Map<number, { craft: number; rocket: string; min: Vec3; max: Vec3 }>();
+    for (const view of this.parts) {
+      if (!view.holder.visible) continue;
+      const built = parts.find((part) => part.slot === view.slot);
+      if (!built) continue;
+      const at = view.holder.position;
+      const have = boxes.get(view.craft);
+      boxes.set(view.craft, {
+        craft: view.craft,
+        rocket: built.record.rocket,
+        min: [Math.min(have?.min[0] ?? Infinity, at.x + built.bounds.min[0]), Math.min(have?.min[1] ?? Infinity, at.y + built.bounds.min[1]), Math.min(have?.min[2] ?? Infinity, at.z + built.bounds.min[2])],
+        max: [Math.max(have?.max[0] ?? -Infinity, at.x + built.bounds.max[0]), Math.max(have?.max[1] ?? -Infinity, at.y + built.bounds.max[1]), Math.max(have?.max[2] ?? -Infinity, at.z + built.bounds.max[2])],
+      });
+    }
+    return [...boxes.values()];
+  }
+
+  /** Stands a marked plinth under each craft that flies in space, when the picture names the craft. The plinth is not in the camera's box. */
+  private fitPlinths(): void {
+    this.clearPlinths();
+    const feet: Footprint[] = this.built?.names.length ? this.craftBoxes().filter((box) => fliesInSpace(box.rocket)).map((box) => ({ min: box.min, max: box.max })) : [];
+    this.plinths = plinthGroup(feet);
+    if (feet.length) this.root.add(this.plinths);
+    this.canvas.dataset.plinth = feet.length ? "on" : "off";
+  }
+
+  private clearPlinths(): void {
+    const group = this.plinths;
+    this.plinths = null;
+    if (!group) return;
+    const materials = new Set<Material>();
+    group.traverse((node) => {
+      if (!(node instanceof Mesh)) return;
+      node.geometry.dispose();
+      if (!Array.isArray(node.material)) materials.add(node.material);
+    });
+    for (const material of materials) material.dispose();
+    group.removeFromParent();
   }
 
   /** Put the labels where their parts are now. */

@@ -1,6 +1,5 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
 import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId } from "../src/index.ts";
-import { build } from "../src/build/index.ts";
 import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../src/beside.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
@@ -10,6 +9,8 @@ import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
 import { isListed } from "./listed.ts";
+import { fleetSize, isFleetVariant, keyOf } from "./sizes.ts";
+import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
@@ -92,7 +93,9 @@ const metres = (value: number) => `${value} m`;
 /** A blank figure says why in its own English; the one blank the page words itself, "No source", is said in the page's language. */
 const blankWords = (figure: Figure<number | string> | undefined) => (!figure?.brief ? say("noSource") : figureWords(figure));
 
-function figureCell(figure: Figure<number | string> | undefined, unit: (v: number) => string = metres): HTMLElement {
+const sizeFigure = (variant: Variant, pick: "length" | "beam" | "height"): Figure<number | string> => (isFleetVariant(variant) ? { value: Math.round(fleetSize(variant)[pick]), source: variant.facts.height.source, note: undefined } : { value: null, source: null, brief: say("compareNotFleet") });
+
+function figureCell(figure: Figure<number | string> | undefined, unit: (v: number) => string = metres, plain = false): HTMLElement {
   const cell = el("td");
   if (!figure || figure.value === null) {
     cell.append(el("span", { className: "blank", textContent: blankWords(figure) }));
@@ -101,9 +104,11 @@ function figureCell(figure: Figure<number | string> | undefined, unit: (v: numbe
   }
   cell.append(el("span", { className: "value", textContent: typeof figure.value === "number" ? unit(figure.value) : figure.value }));
   if (figure.brief) cell.append(el("span", { className: "brief", textContent: `, ${figure.brief}` }));
-  if (figure.source) {
+  // the SPX fleet is this package's own design, not something read from outside: it says SPX, with no date read, and a maker's line says it once
+  const own = figure.source?.startsWith("uchusen-") === true;
+  if (figure.source && !(own && plain)) {
     const source = SOURCES[figure.source];
-    const link = el("a", { href: source.url, textContent: `${source.publisher}${figure.date ? `, ${figure.date}` : source.date ? `, ${say("read", { date: source.date })}` : ""}`, rel: "noopener" });
+    const link = el("a", { href: source.url, textContent: own ? "SPX" : `${source.publisher}${figure.date ? `, ${figure.date}` : source.date ? `, ${say("read", { date: source.date })}` : ""}`, rel: "noopener" });
     cell.append(el("span", { className: "src" }, link));
   }
   if (figure.note) cell.append(el("span", { className: "src", textContent: figure.note }));
@@ -116,12 +121,14 @@ function factsFor(variant: Variant): HTMLElement[] {
   const name = showWord;
   // a row is found by its English label, whatever language it is said in
   const rows2: [string, string, Figure<number | string> | undefined][] = [];
-  if (show === "together" || show === "apart") {
+  const fleet = isFleetVariant(variant) && !Object.hasOwn(FLEET_KIT_ROCKETS, variant.rocket) && variant.rocket !== "fleet-insets-ship-03";
+  if (fleet && (show === "together" || show === "apart")) rows2.push(["Length", say("length"), sizeFigure(variant, "length")], ["Beam", say("beam"), sizeFigure(variant, "beam")], ["Height", say("heightStowed"), sizeFigure(variant, "height")]);
+  else if (show === "together" || show === "apart") {
     rows2.push(["Whole height", say("wholeHeight"), variant.facts.height]);
     // a ship of many modules has its heights in the apart view and its parts list, not a row each: the facts stay on the screen
     if (variant.slots.length <= 12) for (const slot of variant.slots) rows2.push([`${SLOT_NAMES[slot] ?? slot} height`, say("partHeight", { name: name(slot) }), variant.facts.parts[slot]]);
   } else rows2.push([`${SLOT_NAMES[show] ?? show} height`, say("partHeight", { name: name(show) }), variant.facts.parts[show]]);
-  rows2.push(["Diameter", say("diameter"), variant.facts.diameter]);
+  if (!fleet || (show !== "together" && show !== "apart")) rows2.push(["Diameter", say("diameter"), variant.facts.diameter]);
   for (const [label, figure] of Object.entries(variant.facts.sizes ?? {})) rows2.push([label, knownWord("size", label), figure]);
   // a part with no engines of its own has no row for them
   for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) if (variant.facts.engines[slot]) rows2.push([`${SLOT_NAMES[slot] ?? slot} engines`, say("partEngines", { name: name(slot) }), variant.facts.engines[slot]]);
@@ -130,7 +137,7 @@ function factsFor(variant: Variant): HTMLElement[] {
   const table = el("table", { className: "sizes" });
   for (const [key, label, figure] of rows2) {
     const row = el("tr");
-    row.append(el("th", { scope: "row", textContent: label }), figureCell(figure));
+    row.append(el("th", { scope: "row", textContent: label }), figureCell(figure, metres, key === "Made by"));
     row.dataset.row = key;
     table.append(row);
   }
@@ -210,6 +217,7 @@ function renderMain() {
   press(byId("views"), `view-${state.view}`);
   press(byId("backgrounds"), `background-${state.background}`);
   limitTilt(variant.view?.tiltMax ?? 45);
+  (byId("turn").querySelector('[data-testid="compare-open"]') as HTMLAnchorElement).href = `compare.html?${new URLSearchParams({ rocket: state.rocket, variant: state.variant })}`;
   hero.setAttribute("rocket", state.rocket);
   hero.setAttribute("variant", state.variant);
   hero.setAttribute("show", state.show);
@@ -322,6 +330,11 @@ function turnTo(way: "left" | "right") {
   drawEmbed();
 }
 turnBox.append(chip("Turn left", "turn-left", () => turnTo("left"), "turnLeft"), chip("Turn right", "turn-right", () => turnTo("right"), "turnRight"));
+// any craft can be taken to the wide page to stand beside another
+const compareLink = el("a", { className: "chip compare-open", href: "compare.html", textContent: say("cmpOpen") });
+compareLink.dataset.testid = "compare-open";
+compareLink.dataset.say = "cmpOpen";
+turnBox.append(compareLink);
 bar.addEventListener("kazoku-viewchange", drawTurn);
 // the speed buttons write the speed to the bar's `pace`
 new MutationObserver(() => drawEmbed()).observe(bar, { attributes: true, attributeFilter: ["pace"] });
@@ -423,7 +436,6 @@ renderMain();
 // ------------------------------------------------------------- compare
 const lineup = byId<UchusenLineup>("lineup");
 const every = Object.values(ROCKETS).flatMap((rocket) => rocket.variants);
-const keyOf = (variant: Variant) => `${variant.rocket}:${variant.id}`;
 const compared = new Set(["starship:v1-flight1", "starship:v1", "starship:v2", "starship:v3", "starship:v4"]);
 const comparePicks = byId("compare-picks");
 type CompareFilter = "all" | "rockets" | "fleet";
@@ -432,7 +444,6 @@ const askedFilter = new URLSearchParams(location.search).get("cmp") ?? "all";
 let compareFilter: CompareFilter = (FILTERS as readonly string[]).includes(askedFilter) ? (askedFilter as CompareFilter) : "all";
 // real craft for scale lie in the fleet band: on unless the address says `real=off`
 let compareReal = new URLSearchParams(location.search).get("real") !== "off";
-const isFleetVariant = (variant: Variant) => variant.rocket.startsWith("fleet-");
 const compareFrame = byId("compare-view");
 const compareBar = byId<HTMLElement>("compare-bar") as ViewControlsElement;
 // the family's controls zoom and pan the whole lineup; Fit is the lineup fitted to the frame
@@ -440,12 +451,6 @@ compareBar.addEventListener("kazoku-viewchange", (event) => {
   const { zoom, panX, panY } = (event as CustomEvent).detail as { zoom: number; panX: number; panY: number };
   lineup.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
 });
-/** What a fleet ship measures, from its own model: it lies lengthwise, so its size is a length, a beam and a stowed height. */
-const fleetSize = (variant: Variant): { length: number; beam: number; height: number } => {
-  const b = build({ rocket: variant.rocket, variant: variant.id }).boundsOf("together");
-  return { length: b.max[1] - b.min[1], beam: b.max[0] - b.min[0], height: b.max[2] - b.min[2] };
-};
-const sizeFigure = (variant: Variant, pick: "length" | "beam" | "height"): Figure<number | string> => (isFleetVariant(variant) ? { value: Math.round(fleetSize(variant)[pick]), source: variant.facts.height.source, note: undefined } : { value: null, source: null, brief: say("compareNotFleet") });
 function renderCompare() {
   for (const button of comparePicks.querySelectorAll("button")) {
     const key = (button.dataset.testid as string).slice(8);
@@ -516,7 +521,7 @@ byId("compare-real").replaceChildren(
 );
 new ResizeObserver(() => renderCompare()).observe(compareFrame);
 comparePicks.append(
-  ...every.map((variant) =>
+  ...every.filter((variant) => isListed(variant.rocket)).map((variant) =>
     chip(variant.name, `compare-${keyOf(variant)}`, () => {
       if (compared.has(keyOf(variant))) compared.delete(keyOf(variant));
       else compared.add(keyOf(variant));

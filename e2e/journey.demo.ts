@@ -1,5 +1,5 @@
 // Journey mode in a real browser: the page opens with a trip already shown, the choices are rows of buttons kept in the address, Play reaches the summary, a craft that cannot go says why in one line, no control is left in the
-// browser's own style, nothing scrolls sideways, and the page draws with no WebGL and asks for no frame while nothing moves.
+// browser's own style, nothing scrolls sideways. The line views draw with no WebGL and ask for no frame while nothing moves. The painted side view is the one context, and leaving it lets that context go.
 import { expect, test, type Page } from "@playwright/test";
 
 const URL = "/uchusen-rockets/journey.html?date=2026-11-04";
@@ -58,7 +58,7 @@ test("choosing a place, a craft, a date and a view changes the trip and the addr
 test("a craft that cannot go says why in one line and offers no Play; one that can only fly past says so", async ({ page }) => {
   await page.goto(`${URL}&from=mars&to=earth&craft=saturn-v`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
-  await expect(page.getByTestId("verdict")).toContainText("lift off from the Earth only");
+  await expect(page.getByTestId("verdict")).toContainText("leave from the Earth or the Moon");
   await expect(page.getByTestId("play")).toBeDisabled();
   await page.goto(`${URL}&craft=sls&to=mars`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "flyby");
@@ -66,6 +66,26 @@ test("a craft that cannot go says why in one line and offers no Play; one that c
   await expect(page.getByTestId("play")).toBeEnabled();
   await page.goto(`${URL}&craft=saturn-v&to=mars`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "not-rated");
+});
+
+test("leaving the Moon for the Earth is rated for Saturn V and can be played; Falcon Heavy cannot leave", async ({ page }) => {
+  await page.goto(`${URL}&from=moon&to=earth&craft=saturn-v`);
+  await expect(page.getByTestId("from-moon")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "rated");
+  await expect(page.getByTestId("verdict")).toContainText("Apollo 11");
+  await expect(page.getByTestId("route")).toContainText("ATMOSPHERE");
+  await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Apollo command and service module");
+  await expect(page.getByTestId("play")).toBeEnabled();
+  await expect(page.getByText("Since departure")).toBeVisible();
+  await page.getByTestId("view-map").click();
+  const path = await page.getByTestId("map").locator(".path-ahead").boundingBox();
+  // A phone's map is shorter than a desk's, so the bar is "not a dot", not a desk size.
+  expect(path).not.toBeNull();
+  expect(path!.width).toBeGreaterThan(20);
+  expect(path!.height).toBeGreaterThan(10);
+  await page.goto(`${URL}&from=moon&to=earth&craft=falcon-heavy`);
+  await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
+  await expect(page.getByTestId("play")).toBeDisabled();
 });
 
 test("Play counts down, flies, flips, brakes and ends on a summary; the numbers move and the clocks run", async ({ page }) => {
@@ -206,4 +226,57 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
   await page.goto(`${URL}&craft=kaminari&to=mars`);
   await expect(page.getByTestId("trip-fuel")).toContainText("/");
   await expect(page.getByTestId("trip-payload")).toContainText("million t");
+});
+
+test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the picture", async ({ page }) => {
+  const found = problems(page);
+  await page.goto(URL);
+  const names = ["side", "front", "rear", "cockpit", "map"];
+  const tops = [];
+  for (const name of names) {
+    const box = await page.getByTestId(`view-${name}`).boundingBox();
+    expect(box).not.toBeNull();
+    tops.push(box!.y);
+  }
+  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(8);
+  await page.getByTestId("view-front").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "front");
+  await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
+  expect(page.url()).toContain("view=front");
+  await page.getByTestId("view-rear").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "rear");
+  await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
+  await page.getByTestId("view-cockpit").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "cockpit");
+  await expect(page.getByTestId("dest")).toBeVisible();
+  await expect(page.getByTestId("dest")).toContainText("Mars");
+  await expect(page.getByTestId("craft")).toBeHidden();
+  expect(found).toEqual([]);
+});
+
+test("Painted is the one WebGL context, and leaving Side lets it go", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __gl: number };
+    w.__gl = 0;
+    const real = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...rest: unknown[]) {
+      if (/webgl/i.test(kind)) w.__gl += 1;
+      return (real as (...args: unknown[]) => unknown).call(this, kind, ...rest) as never;
+    } as typeof real;
+  });
+  await page.goto(URL);
+  expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(0);
+  await page.getByTestId("look-painted").click();
+  await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  await expect(page.getByTestId("painted-controls")).toBeVisible();
+  await expect.poll(() => page.getByTestId("painted-rocket").getAttribute("data-state")).toBe("3d");
+  expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBeGreaterThan(0);
+  await page.getByTestId("view-front").click();
+  await expect(page.getByTestId("painted-rocket")).toHaveCount(0);
+  const left = await page.evaluate(() => (window as unknown as { __gl: number }).__gl);
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(left);
+  await page.getByTestId("view-side").click();
+  await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  expect(page.url()).toContain("look=painted");
 });
