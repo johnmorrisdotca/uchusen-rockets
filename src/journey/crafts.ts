@@ -241,6 +241,7 @@ export const CRAFTS: readonly Craft[] = [
  *
  * @param craft A craft.
  * @param phase The phase of the trip, such as `coast`.
+ * @param onPad Whether the craft lifts off. A craft that is already in orbit (a departure from the Moon) is the payload throughout.
  * @returns The rocket, variant and slots to draw, and a name for them.
  * @example
  * ```ts
@@ -250,8 +251,9 @@ export const CRAFTS: readonly Craft[] = [
  * console.log(stageOf(saturn, "ascent").name, stageOf(saturn, "coast").name, stageOf(saturn, "brake").name);
  * ```
  */
-export function stageOf(craft: Craft, phase: string): Stage {
+export function stageOf(craft: Craft, phase: string, onPad = true): Stage {
   if (craft.drive === "continuous") return { rocket: craft.rocket, variant: craft.variant, slots: null, name: craft.name };
+  if (!onPad) return craft.stages.payload;
   if (phase === "burn" || phase === "coast") return craft.stages.upper;
   if (phase === "flip" || phase === "brake" || phase === "flyby" || phase === "arrival") return craft.stages.payload;
   return craft.stages.launch;

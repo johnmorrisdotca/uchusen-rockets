@@ -15,9 +15,10 @@ export const viewOf = (craft: Craft): "side" | "front" => (craft.drive === "ball
  * @param lit Whether its engines burn.
  * @returns The drawing as SVG text, and the stage it shows.
  */
-export function stagedSvg(craft: Craft, phase: string, lit: boolean): { svg: string; stage: Stage } {
-  const stage = stageOf(craft, phase);
-  const key = `${craft.id}:${stage.name}:${lit}`;
+export function stagedSvg(craft: Craft, phase: string, lit: boolean, onPad = true): { svg: string; stage: Stage } {
+  const stage = stageOf(craft, phase, onPad);
+  const view = onPad ? viewOf(craft) : "side";
+  const key = `${craft.id}:${stage.name}:${view}:${lit}`;
   let svg = cache.get(key);
   if (!svg) {
     let frame = frames.get(craft.id);
@@ -25,7 +26,7 @@ export function stagedSvg(craft: Craft, phase: string, lit: boolean): { svg: str
       frame = build({ rocket: craft.rocket, variant: craft.variant }).boundsOf("together", true);
       frames.set(craft.id, frame);
     }
-    const options = { look: "line", view: viewOf(craft), engines: lit, frame, ...(stage.slots ? { only: stage.slots } : {}) } as const;
+    const options = { look: "line", view, engines: lit, frame, ...(stage.slots ? { only: stage.slots } : {}) } as const;
     svg = build({ rocket: stage.rocket, variant: stage.variant }).svg(options).replace("<svg ", '<svg aria-hidden="true" ');
     cache.set(key, svg);
   }

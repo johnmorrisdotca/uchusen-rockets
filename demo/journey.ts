@@ -27,6 +27,7 @@ import {
   type State,
   type Trip,
 } from "../src/journey/index.ts";
+import { conicPoint } from "../src/journey/lunar.ts";
 import { transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { stagedSvg } from "./journey-craft.ts";
@@ -68,7 +69,7 @@ const todayUtc = (): number => {
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 };
 const choice = {
-  from: pickOf("from", stopIds.filter((id) => id !== "moon"), "earth"),
+  from: pickOf("from", stopIds, "earth"),
   to: pickOf("to", stopIds, "mars"),
   craft: pickOf("craft", CRAFTS.map((craft) => craft.id), "falcon-heavy"),
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
@@ -112,8 +113,9 @@ const dateWords = (ms: number, time = false): string =>
 function whenOptions(): Option[] {
   const craft = craftNow();
   const base = choice.base;
-  if (choice.from === "earth" && craft.drive === "ballistic" && choice.to !== "moon") {
-    return windows(SOURCE, choice.from, choice.to, base, 3).map((one, index) => ({ id: `w${index}`, label: dateWords(one.dateMs), ms: one.dateMs }));
+  // The Moon travels with the Earth, and the window search uses a heliocentric period. A lunar period would put the windows a month apart, so a departure from the Moon uses the Earth's windows.
+  if ((choice.from === "earth" || choice.from === "moon") && craft.drive === "ballistic" && choice.to !== "moon" && choice.to !== "earth") {
+    return windows(SOURCE, "earth", choice.to, base, 3).map((one, index) => ({ id: `w${index}`, label: dateWords(one.dateMs), ms: one.dateMs }));
   }
   if (craft.drive === "continuous" && choice.to !== "moon") {
     const best = bestDate(SOURCE, craft, choice.from, choice.to, base);
@@ -146,7 +148,7 @@ function chip(label: string, testid: string, pressed: boolean, on: () => void, d
 }
 
 function drawPickers(): void {
-  byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== "moon" && stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
+  byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
   byId("to").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.from).map((stop) => chip(stopName(stop.id), `to-${stop.id}`, stop.id === choice.to, () => change({ to: stop.id }))));
   byId("crafts").replaceChildren(...CRAFTS.map((craft) => chip(craftName(craft), `craft-${craft.id}`, craft.id === choice.craft, () => change({ craft: craft.id }))));
   byId("when").replaceChildren(...options.map((option, index) => chip(option.label, `when-${index}`, index === choice.when, () => change({ when: index }))));
@@ -198,9 +200,14 @@ const routeSvg = byId<SVGSVGElement>("route");
 let litNow = false;
 let stageNow = "";
 
+/** A ballistic craft leaving the Moon is already in orbit, so the drawing is the payload, seen from the side, for the whole trip. */
+function onPad(): boolean {
+  return !(trip.from === "moon" && craftNow().drive === "ballistic");
+}
+
 function setCraft(lit: boolean, phase = "ascent"): void {
   litNow = lit;
-  const shown = stagedSvg(craftNow(), phase, lit);
+  const shown = stagedSvg(craftNow(), phase, lit, onPad());
   stageNow = shown.stage.name;
   const template = document.createElement("template");
   template.innerHTML = shown.svg;
@@ -289,9 +296,9 @@ function buildMap(): void {
       return [p[0] * AU_KM, p[1] * AU_KM] as [number, number];
     });
   };
-  // keep the planets out to the far end of the route (and the Earth's), no farther
+  // In the Earth's frame the Moon's orbit is the whole map: the Earth's own reach is its path round the Sun, which would shrink the Moon to a dot. In the Sun's frame, keep the planets out to the far end of the route and no farther.
   const reach = (id: string): number => Math.max(...orbit(id).map(([x, y]) => Math.hypot(x, y)));
-  const farthest = Math.max(reach(trip.from), reach(trip.to), ...(earthFrame ? [reach("moon")] : []));
+  const farthest = earthFrame ? reach("moon") : Math.max(reach(trip.from), reach(trip.to));
   const shown = sunFrame ? ids.filter((id) => reach(id) <= farthest * 1.02) : ids;
   const scale = Math.min(W * 0.4, H * 0.34) / (farthest * 1.04);
   const bodies = new Map<string, SVGElement>();
@@ -318,7 +325,8 @@ function buildMap(): void {
   if (trip.ballistic) {
     const b = trip.ballistic;
     for (let i = 0; i <= 360; i += 1) {
-      const p = transferPoint(b.mu, b.r1, b.r2, b.theta0, (b.transitS * i) / 360);
+      const t = (b.transitS * i) / 360;
+      const p = b.conic ? conicPoint(b.mu, b.conic, t) : transferPoint(b.mu, b.r1, b.r2, b.theta0, t);
       const [x, y] = point(p.r * Math.cos(p.theta), p.r * Math.sin(p.theta));
       pathPoints.push([x, y]);
     }
@@ -406,7 +414,8 @@ function buildRoute(): void {
   add(svgEl("line", { class: "tick", x1: x(0.5), y1: y - 8, x2: x(0.5), y2: y + 8 }), svgEl("text", { x: x(0.5), y: y + 30, "text-anchor": "middle" }, say("jHalfway")));
   if (trip.ballistic) {
     add(svgEl("text", { x: ROUTE_X0, y: y + 56, "text-anchor": "start", class: "warm burn-label" }, `${say("jPhase_burn")} · ${speedWords(trip.dv.departure)}`));
-    add(svgEl("text", { x: ROUTE_X1, y: y + 56, "text-anchor": "end", class: "warm burn-label" }, trip.verdict.level === "flyby" ? say("jPhase_flyby") : `${say("jPhase_brake")} · ${speedWords(trip.dv.arrival)}`));
+    const arrival = trip.ballistic.entry ? say("jEntry") : trip.verdict.level === "flyby" ? say("jPhase_flyby") : `${say("jPhase_brake")} · ${speedWords(trip.dv.arrival)}`;
+    add(svgEl("text", { x: ROUTE_X1, y: y + 56, "text-anchor": "end", class: "warm burn-label" }, arrival));
   }
   add(svgEl("circle", { cx: ROUTE_X0, cy: y, r: 9, fill: SOURCE.stops.find((s) => s.id === trip.from)?.colour ?? "#8fc9ff" }), svgEl("circle", { cx: ROUTE_X1, cy: y, r: 9, fill: SOURCE.stops.find((s) => s.id === trip.to)?.colour ?? "#ffb457" }));
   add(svgEl("text", { x: ROUTE_X0, y: y + 30, "text-anchor": "middle" }, stopName(trip.from).toUpperCase()), svgEl("text", { x: ROUTE_X1, y: y + 30, "text-anchor": "middle", class: "warm" }, stopName(trip.to).toUpperCase()));
@@ -666,7 +675,7 @@ function draw(force = false): void {
   setText(byId("speed-sub"), say("jOfLight", { pct: percentOfLight(state.speedMs) }));
   // the craft: which way it faces, and whether its engines burn
   const lit = state.burn !== "off";
-  if (lit !== litNow || stageOf(craftNow(), id).name !== stageNow) setCraft(lit, id);
+  if (lit !== litNow || stageOf(craftNow(), id, onPad()).name !== stageNow) setCraft(lit, id);
   craftBox.style.setProperty("--turn", `${(90 - 180 * state.turned).toFixed(1)}deg`);
   drawRoute(state);
   if (choice.view === "map") drawMap(state);

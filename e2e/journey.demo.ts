@@ -58,7 +58,7 @@ test("choosing a place, a craft, a date and a view changes the trip and the addr
 test("a craft that cannot go says why in one line and offers no Play; one that can only fly past says so", async ({ page }) => {
   await page.goto(`${URL}&from=mars&to=earth&craft=saturn-v`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
-  await expect(page.getByTestId("verdict")).toContainText("lift off from the Earth only");
+  await expect(page.getByTestId("verdict")).toContainText("leave from the Earth or the Moon");
   await expect(page.getByTestId("play")).toBeDisabled();
   await page.goto(`${URL}&craft=sls&to=mars`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "flyby");
@@ -66,6 +66,22 @@ test("a craft that cannot go says why in one line and offers no Play; one that c
   await expect(page.getByTestId("play")).toBeEnabled();
   await page.goto(`${URL}&craft=saturn-v&to=mars`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "not-rated");
+});
+
+test("leaving the Moon for the Earth is rated for Saturn V and can be played; Falcon Heavy cannot leave", async ({ page }) => {
+  await page.goto(`${URL}&from=moon&to=earth&craft=saturn-v`);
+  await expect(page.getByTestId("from-moon")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "rated");
+  await expect(page.getByTestId("verdict")).toContainText("Apollo 11");
+  await expect(page.getByTestId("route")).toContainText("ATMOSPHERE");
+  await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Apollo command and service module");
+  await expect(page.getByTestId("play")).toBeEnabled();
+  await page.getByTestId("view-map").click();
+  const path = await page.getByTestId("map").locator(".path-ahead").boundingBox();
+  expect(path && path.width > 40 && path.height > 40).toBe(true);
+  await page.goto(`${URL}&from=moon&to=earth&craft=falcon-heavy`);
+  await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
+  await expect(page.getByTestId("play")).toBeDisabled();
 });
 
 test("Play counts down, flies, flips, brakes and ends on a summary; the numbers move and the clocks run", async ({ page }) => {

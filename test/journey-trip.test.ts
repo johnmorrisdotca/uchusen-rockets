@@ -84,11 +84,11 @@ test("Earth to Moon with Saturn V: 3.1 km/s out, 0.8 km/s in, about 5 days, the 
   near(trip.ballistic!.brakeS, 357, 60, "seconds");
 });
 
-test("a rocket lifts off from the Earth only, and says so", () => {
+test("a rocket leaves from the Earth or the Moon, and says so", () => {
   const trip = planTrip(S, craftOf("saturn-v")!, "mars", "earth", NOW);
   assert.equal(trip.verdict.level, "cannot");
   assert.equal(trip.verdict.playable, false);
-  assert.match(trip.verdict.line, /Earth only/);
+  assert.match(trip.verdict.line, /Earth or the Moon/);
 });
 
 test("a ship that burns all the way: Earth to Moon in about a day, to Mars in weeks, fuel in the low per cents, and a refusal that says why", () => {
@@ -204,6 +204,73 @@ test("the words: digits near c are never rounded up to 100 per cent, and speeds 
   assert.equal(speedWords(340), "340 m/s");
   assert.equal(duration(700), "11 min 40 s");
   assert.equal(duration(258.8 * 86400), "258 d 19 h");
+});
+
+test("the Moon to the Earth with Saturn V is the Apollo return: rated, about 1 km/s, about three days, the command module, no ascent and no braking burn", () => {
+  const trip = planTrip(S, craftOf("saturn-v")!, "moon", "earth", NOW);
+  assert.equal(trip.verdict.level, "rated");
+  assert.equal(trip.verdict.playable, true);
+  assert.match(trip.verdict.line, /Apollo 11/);
+  assert.match(trip.verdict.line, /3,279 ft\/s/);
+  assert.doesNotMatch(trip.verdict.line, /43\.5/);
+  assert.equal(trip.payload.kg, null);
+  assert.equal(trip.liftoffBeforeS, 0);
+  assert.equal(trip.frame, "earth");
+  assert.equal(trip.dv.arrival, 0);
+  near(trip.dv.departure, 1000, 150, "m/s");
+  near(trip.ballistic!.transitS / 3600, 72, 2, "hours");
+  assert.equal(trip.ballistic!.burnS, 151.4);
+  assert.equal(trip.ballistic!.entry, true);
+  assert.ok(trip.ballistic!.conic);
+  assert.deepEqual(
+    trip.phases.map((p) => p.id),
+    ["preheat", "ignition", "burn", "coast", "arrival"],
+  );
+  const burn = stateAt(trip, S, 10);
+  assert.equal(burn.phase.id, "burn");
+  assert.equal(burn.speedFrame, "start");
+  assert.ok(burn.speedMs > 1500 && burn.speedMs < 3000, String(burn.speedMs));
+  const coast = stateAt(trip, S, 16);
+  assert.equal(coast.phase.id, "coast");
+  assert.equal(coast.speedFrame, "earth");
+  const radius = Math.hypot(coast.positionKm[0], coast.positionKm[1], coast.positionKm[2]);
+  assert.ok(radius > 50_000 && radius < 400_000, `coast radius ${radius}`);
+  const end = stateAt(trip, S, playSeconds(trip) - 0.5);
+  near(Math.hypot(end.positionKm[0], end.positionKm[1], end.positionKm[2]), 6378 + 122, 200, "entry radius, km");
+});
+
+test("Orion's return is rated from Artemis I, and the line says that flight was not this three-day path", () => {
+  const trip = planTrip(S, craftOf("sls")!, "moon", "earth", NOW);
+  assert.equal(trip.verdict.level, "rated");
+  assert.equal(trip.verdict.playable, true);
+  assert.match(trip.verdict.line, /Artemis I/);
+  assert.match(trip.verdict.line, /not this three-day return/);
+  assert.ok(trip.dv.departure < 1050, String(trip.dv.departure));
+});
+
+test("Falcon Heavy cannot leave the Moon, and a lunar start never shows an Earth launch figure", () => {
+  const heavy = planTrip(S, craftOf("falcon-heavy")!, "moon", "earth", NOW);
+  assert.equal(heavy.verdict.level, "cannot");
+  assert.equal(heavy.verdict.playable, false);
+  assert.match(heavy.verdict.line, /no engine/);
+  assert.doesNotMatch(heavy.verdict.line, /16\.8|43\.5/);
+});
+
+test("leaving the Moon for Mars uses the Moon's orbital speed, and says when no figure covers it", () => {
+  const saturn = planTrip(S, craftOf("saturn-v")!, "moon", "mars", mars);
+  assert.equal(saturn.verdict.level, "not-rated");
+  assert.equal(saturn.verdict.playable, true);
+  assert.equal(saturn.frame, "sun");
+  assert.doesNotMatch(saturn.verdict.line, /43\.5/);
+  near(saturn.dv.departure / 1000, 1.6, 0.35, "km/s");
+  assert.ok(!saturn.phases.some((phase) => phase.id === "ascent"));
+  assert.ok(saturn.estimated.some((line) => /helping/.test(line)));
+  const sls = planTrip(S, craftOf("sls")!, "moon", "mars", mars);
+  assert.equal(sls.verdict.level, "cannot");
+  assert.match(sls.verdict.line, /1,050/);
+  const ship = planTrip(S, fleetShip, "moon", "mars", NOW);
+  assert.equal(ship.verdict.playable, true);
+  assert.equal(ship.frame, "sun");
 });
 
 test("a payload without an engine flies past and never brakes", () => {

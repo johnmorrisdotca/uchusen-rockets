@@ -60,11 +60,11 @@ console.log(Math.round(trip.frameS / 86_400), "days,", Math.round(AU), "km to an
 
 | Verdict | Meaning |
 | --- | --- |
-| `rated` | A published payload figure covers this trip, and the line names it. |
+| `rated` | A published payload figure covers this trip, or a flight that flew it, and the line names it. |
 | `at-least` | No figure for this trip, but one for a harder trip: a rocket that puts 16.8 t on a Mars transfer puts at least that on the way to the Moon. |
 | `not-rated` | No figure covers it. The burns are worked from the physics and nothing says the craft can lift them. |
 | `flyby` | It can leave, but the spacecraft's own fuel cannot brake it: Orion's 1,050 m/s against the 2.2 km/s Mars capture needs. |
-| `cannot` | Refused, with the reason in the line: not enough fuel, a rocket that lifts off from the Earth only, a straight path through the Sun. |
+| `cannot` | Refused, with the reason in the line: not enough fuel, a rocket that leaves from the Earth or the Moon only, a straight path through the Sun. |
 | `ok` | A ship that burns all the way, with fuel to spare. |
 
 Every figure of a craft names its source, or is marked as an estimate and says what it is worked from. The page shows an estimate with "est.".
