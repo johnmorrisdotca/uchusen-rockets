@@ -41,10 +41,10 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # A browser download or the system packages beside it hung for 25 minutes once: each try is cut off at 8 minutes, and tried up to three times.
+      # The runner's package mirror is sometimes slow (a few minutes for a font), and can fail: a failed install is tried again, and the step is cut off at 25 minutes. Never cut one off sooner: the package manager it started goes on holding its lock, and the next try fails on that.
       - name: The browser
-        timeout-minutes: 26
-        run: for try in 1 2 3; do timeout 8m pnpm exec playwright install --with-deps ${{ matrix.browser }} && exit 0; echo "try $try failed"; done; exit 1
+        timeout-minutes: 25
+        run: for try in 1 2 3; do pnpm exec playwright install --with-deps ${{ matrix.browser }} && exit 0; echo "try $try failed"; sleep 20; done; exit 1
       - name: The site and the documentation site, as the demo's tests read them
         run: pnpm site && node scripts/docs-site.mjs build
       - name: The demo, played in ${{ matrix.name }}
