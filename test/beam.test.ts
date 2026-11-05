@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { tractorBeam } from "../src/beam.ts";
+import { beamLight } from "../src/draw/beamLight.ts";
 import { drawPart, perspective } from "../src/draw/svg.ts";
 import { VIEWS } from "../src/framing.ts";
 import type { Plate } from "../src/model/pieces.ts";
@@ -40,6 +41,19 @@ test("reduced motion is a dotted line with gaps, and no flash", () => {
   assert.ok(lengths.reduce((sum, one) => sum + one, 0) < 8);
   assert.equal(dotted.some((piece) => piece.kind === "plate" && piece.material === "strobe"), false);
   assert.equal(solid.some((piece) => piece.kind === "plate" && piece.material === "strobe"), true);
+});
+
+test("the painted beam is light that fades out, brighter at the part", () => {
+  const cam = perspective({ min: [-2, -1, -2], max: [2, 10, 2] }, VIEWS.side);
+  const light = beamLight(ends.from, ends.part, 0.2, 1.2, cam, "painted", "t");
+  assert.match(light, /data-beam="light"/);
+  assert.match(light, /mix-blend-mode:screen/);
+  assert.match(light, /stop-opacity="0"/);
+  assert.match(light, /feGaussianBlur/);
+  assert.equal(light.includes('stroke="'), false);
+  const line = beamLight(ends.from, ends.part, 0.2, 1.2, cam, "line", "t");
+  assert.match(line, /data-beam="line"/);
+  assert.match(line, /fill="none"/);
 });
 
 test("the beam shortens as the part settles and is gone when the part is home", () => {

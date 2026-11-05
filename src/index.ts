@@ -40,6 +40,7 @@ export type { Spin, Way } from "./spin.ts";
 export { FLIGHTS } from "./data/flights.ts";
 export { burnsOf, clockWords, FlightClock, flightOf, frameAt, lastPosition, phaseAt, phasePosition, SECONDS_PER_PHASE } from "./flight.ts";
 export { tractorBeam } from "./beam.ts";
+export { beamLight } from "./draw/beamLight.ts";
 export type { BeamEnds, BeamPhase } from "./beam.ts";
 export type { Flight, FlightBurn, FlightFrame, FlightPhase, PartPose } from "./flight.ts";
 export { bellsOf, enginesWanted, FLAME_SETTLE_MS, pickBells, plumeLength, ringsOf } from "./engines.ts";
