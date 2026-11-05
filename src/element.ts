@@ -216,6 +216,19 @@ export class UchusenRocket extends HTMLBase {
     return this.viewer?.screenPoint([point[0], point[1], point[2]]) ?? null;
   }
 
+  /**
+   * Points the camera at one point of the model, in metres, and keeps every part on screen. A close picture of a lamp uses it, because the bow view frames the dome.
+   *
+   * @param target The point to look at.
+   * @param direction From that point toward the camera.
+   * @param distance How far the camera stands, in metres.
+   */
+  lookAt(target: readonly [number, number, number], direction: readonly [number, number, number], distance: number): void {
+    const slots = this.builtNow?.parts.map((part) => part.slot) ?? [];
+    if (slots.length === 0 || !this.viewer) return;
+    this.viewer.focusOn({ slots, target: [target[0], target[1], target[2]], direction: [direction[0], direction[1], direction[2]], distance });
+  }
+
   /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
   drive(choice: Partial<ViewChoice> | null): void {
     const before = this.driven;

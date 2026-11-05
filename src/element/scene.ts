@@ -1128,7 +1128,9 @@ export class RocketViewer {
       ms,
       moveParts,
     };
-    this.limits(Math.max(framing.distance, this.camera.position.distanceTo(this.controls.target)));
+    // a close look must be allowed inside the distance the whole ship was framed at
+    const reach = this.camera.position.distanceTo(this.controls.target);
+    this.limits(this.focusing ? framing.distance : Math.max(framing.distance, reach));
     this.wake();
   }
 
@@ -1761,7 +1763,7 @@ export class RocketViewer {
       this.canvas.dataset.triangles = String(info.triangles);
       this.placeMarks();
       this.placeBeside();
-      if (this.options.onNear && !this.nearSaid && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {
+      if (this.options.onNear && !this.nearSaid && !this.focusing && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {
         this.nearSaid = true;
         this.options.onNear();
       }
