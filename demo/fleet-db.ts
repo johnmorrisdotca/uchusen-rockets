@@ -25,7 +25,10 @@ const byId = (id: string): HTMLElement => {
 const metres = (n: number) => `${n >= 100 ? Math.round(n) : Number(n.toFixed(1))} m`;
 const slotLabel = (slot: string) => (slot === "together" ? say("show_together") : (`slot_${slot}` in WORDS.en ? say(`slot_${slot}`) : (SLOT_NAMES[slot] ?? slot)));
 
-const address = createAddressState({ defaults: { ship: "fleet-ship-01", show: "together" } });
+const address = createAddressState({ defaults: { ship: "fleet-ship-01", show: "together", module: "" } });
+
+const modulesOf = (variant: ReturnType<typeof variantOf>, show: string) =>
+  show === "together" ? [] : (variant?.inspector?.sections.filter((section) => section.slot === show) ?? []);
 
 const chosen = () => {
   const list = ships();
@@ -36,7 +39,10 @@ const chosen = () => {
   const slots = ["together", ...(variant?.slots ?? [])];
   const askedShow = address.get("show") ?? "";
   const show = slots.includes(askedShow) ? askedShow : "together";
-  return { ship, rocket, variant, show, slots };
+  const modules = modulesOf(variant, show);
+  const askedModule = address.get("module") ?? "";
+  const moduleId = modules.some((section) => section.id === askedModule) ? askedModule : "";
+  return { ship, rocket, variant, show, slots, modules, moduleId };
 };
 
 const chip = (label: string, testid: string, pressed: boolean, on: () => void): HTMLButtonElement => {
@@ -51,19 +57,30 @@ const chip = (label: string, testid: string, pressed: boolean, on: () => void): 
 };
 
 const draw = (): void => {
-  const { ship, rocket, variant, show, slots } = chosen();
+  const { ship, rocket, variant, show, slots, modules, moduleId } = chosen();
   const shipsRow = byId("db-ships");
   const sectionsRow = byId("db-sections");
+  const modulesRow = byId("db-modules");
   shipsRow.replaceChildren(...ships().map((one) => chip(one.name, `db-ship-${one.id}`, one.id === ship, () => {
     address.set("ship", one.id);
     address.set("show", "together");
+    address.set("module", "");
     draw();
   })));
   sectionsRow.replaceChildren(...slots.map((slot) => chip(slotLabel(slot), `db-show-${slot}`, slot === show, () => {
     address.set("ship", ship);
     address.set("show", slot);
+    address.set("module", "");
     draw();
   })));
+  modulesRow.replaceChildren(...modules.map((section) => chip(section.name, `db-module-${section.id}`, section.id === moduleId, () => {
+    address.set("ship", ship);
+    address.set("show", show);
+    address.set("module", section.id);
+    draw();
+  })));
+  const picked = modules.find((section) => section.id === moduleId);
+  byId("db-module-job").textContent = picked?.job ?? "";
   const hero = byId("hero");
   hero.setAttribute("rocket", ship);
   hero.setAttribute("variant", rocket.defaultVariant);

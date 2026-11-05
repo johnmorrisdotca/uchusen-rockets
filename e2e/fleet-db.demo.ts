@@ -17,6 +17,11 @@ test("the fleet record opens on a ship, then a section, and keeps both in the ad
   await part.click();
   await expect(page).toHaveURL(new RegExp(`show=${slot}`));
   await expect(page.getByTestId("db-hero")).toHaveAttribute("show", slot);
+  const module = page.getByTestId("db-modules").locator("button").first();
+  await expect(module).toBeVisible();
+  await module.click();
+  await expect(page).toHaveURL(/module=/);
+  await expect(page.getByTestId("db-module-job")).not.toHaveText("");
   await expect(page.getByTestId("db-facts")).toContainText("m");
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(wide).toBe(false);
