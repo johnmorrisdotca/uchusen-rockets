@@ -33,6 +33,14 @@ interface Shot {
   /** Clip everything on one side of a plane: [nx, ny, nz, d] keeps points with n.p + d >= 0. */
   clip?: [number, number, number, number];
   background?: string;
+  /** Haze for daylight: its colour and the distances it starts and ends at, metres. */
+  haze?: string;
+  /** Daylight without the ambient-occlusion pass. */
+  noAo?: boolean;
+  /** How strongly the ambient occlusion darkens, 0 to 1. */
+  ao?: number;
+  hazeNear?: number;
+  hazeFar?: number;
   /** Daylight inside a glazed hall: a warm sun, soft sky light from above, green bounce from below, and ambient occlusion in screen space (a GTAO pass). */
   daylight?: boolean;
   /** A view this many metres high instead of a perspective one: front, side and top at one scale for a drawing sheet. */
@@ -83,6 +91,10 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.append(renderer.domElement);
 const pmrem = new THREE.PMREMGenerator(renderer);
 const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+// a sky to reflect: blue overhead, warm at the horizon, green below: for daylight shots, so water and glass pick up a sky and not a room
+const skyScene = new THREE.Scene();
+skyScene.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, uniforms: {}, vertexShader: "varying vec3 p; void main(){ p = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }", fragmentShader: "varying vec3 p; void main(){ float h = normalize(p).y; vec3 up = vec3(0.45,0.67,0.92); vec3 hor = vec3(0.96,0.92,0.82); vec3 dn = vec3(0.45,0.58,0.36); vec3 c = h > 0.0 ? mix(hor, up, smoothstep(0.0, 0.7, h)) : mix(hor, dn, smoothstep(0.0, 0.4, -h)); gl_FragColor = vec4(c * 1.6, 1.0); }" })));
+const skyEnv = pmrem.fromScene(skyScene, 0.02).texture;
 const loader = new GLTFLoader();
 const load = (url) => new Promise((ok, no) => loader.load(url, ok, undefined, no));
 const dispose = (root) => root.traverse((o) => { o.geometry?.dispose?.(); const m = o.material; if (m) for (const one of Array.isArray(m) ? m : [m]) { for (const k of Object.keys(one)) one[k]?.isTexture && one[k].dispose(); one.dispose(); } });
@@ -107,7 +119,7 @@ window.draw = async (job, shot) => {
     if (o.isMesh) {
       o.castShadow = shot.look !== "line"; o.receiveShadow = shot.look !== "line";
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (OPACITY[m.name] && shot.look !== 'line') { m.transparent = true; m.opacity = shot.look === 'lit' ? OPACITY[m.name] : OPACITY[m.name] * 0.8; m.depthWrite = false; if (m.name === 'glass-clear') { m.color.set('#a9cdee'); m.metalness = 0.35; m.roughness = 0.05; m.envMapIntensity = 2.4; } } if (shot.look === 'lit') { const n = m.name || ''; const g = GLOW[n]; const glow = g ? [new THREE.Color(g.color), g.strength * (shot.glow ?? 1.6)] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
+      for (const m of mats) { m.side = THREE.DoubleSide; m.clippingPlanes = planes; if (OPACITY[m.name] && shot.look !== 'line') { m.transparent = true; m.opacity = shot.look === 'lit' ? OPACITY[m.name] : OPACITY[m.name] * 0.8; m.depthWrite = false; if (m.name === 'glass-clear') { m.color.set('#a9cdee'); m.metalness = 0.35; m.roughness = 0.05; m.envMapIntensity = 2.4; } } if (shot.look === 'lit') { const n = m.name || ''; const g = GLOW[n]; const glow = g ? [new THREE.Color(g.color), g.strength * (shot.glow ?? 1.6)] : null; if (glow) { m.emissive = glow[0]; m.emissiveIntensity = glow[1]; } } if (shot.daylight && m.name === 'flood') { m.emissive = new THREE.Color('#fff0c8'); m.emissiveIntensity = 3.2; m.fog = false; } if (shot.look === "line") { m.color.multiplyScalar(0.18); m.metalness = 0; m.roughness = 1; m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; } }
       if (shot.look === "line") { const e = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), new THREE.LineBasicMaterial({ color: "#8fd3ff", clippingPlanes: planes })); o.add(e); }
     } else if (o.material) { o.material.clippingPlanes = planes; }
   });
@@ -132,7 +144,7 @@ window.draw = async (job, shot) => {
   sun.shadow.camera.updateProjectionMatrix();
   const rim = new THREE.DirectionalLight("#9fc4ff", shot.look === "line" ? 0 : 0.8); rim.position.set(-0.6, -0.2, -0.8);
   const hemi = new THREE.HemisphereLight("#cfe0ff", "#1a1d24", shot.look === "line" ? 0.8 : 0.5);
-  if (shot.daylight) { scene.environmentIntensity = 0.3; sun.color.set("#ffd7a0"); sun.intensity = 3.6; sun.shadow.radius = 5; rim.intensity = 0; hemi.color.set("#bcd8ff"); hemi.groundColor.set("#b3bf93"); hemi.intensity = 1.3; }
+  if (shot.daylight) { scene.environment = skyEnv; scene.environmentIntensity = 0.7; scene.fog = new THREE.Fog(shot.haze ?? "#c3d8ee", shot.hazeNear ?? 45, shot.hazeFar ?? 320); sun.color.set("#ffd7a0"); sun.intensity = 3.6; sun.shadow.radius = 5; rim.intensity = 0; hemi.color.set("#bcd8ff"); hemi.groundColor.set("#b3bf93"); hemi.intensity = 1.6; }
   scene.add(sun, sun.target, rim, hemi);
   if (shot.fill && !shot.ortho) {
     // the silhouette comes from the vertices themselves (a thousand or so from each mesh), not from the box round them
@@ -176,13 +188,14 @@ window.draw = async (job, shot) => {
     const light = new THREE.PointLight('#7fc4ff', 1800, p.len * 3, 1.6); light.position.set(...p.at).addScaledVector(dir, p.r * 0.6); scene.add(light);
   }
   for (const sp of shot.spots ?? []) { const l = new THREE.SpotLight(sp.color, sp.intensity, 0, sp.angle, 0.4, 1); l.position.set(...sp.at); l.target.position.set(...sp.target); scene.add(l, l.target); }
-  if (shot.daylight) {
+  if (shot.daylight && !shot.noAo) {
     const composer = new EffectComposer(renderer);
     composer.setPixelRatio(1); composer.setSize(w, h);
     composer.addPass(new RenderPass(scene, camera));
     const gtao = new GTAOPass(scene, camera, w, h);
-    gtao.updateGtaoMaterial({ radius: 1.6, distanceExponent: 1.1, thickness: 1.2, scale: 1.0, samples: 16, distanceFallOff: 1, screenSpaceRadius: false });
+    gtao.updateGtaoMaterial({ radius: 1.1, distanceExponent: 2.2, thickness: 0.8, scale: 0.85, samples: 16, distanceFallOff: 1, screenSpaceRadius: false });
     gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+    gtao.blendIntensity = shot.ao ?? 0.4;
     composer.addPass(gtao);
     composer.addPass(new OutputPass());
     composer.render();

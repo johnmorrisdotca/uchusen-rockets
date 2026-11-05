@@ -1,7 +1,7 @@
 // Hanabusa's ring interiors at the painted bar (concepts for MODULES-433): trees of four species (trunks, branches, layered crowns and cones), houses with pitched and curved roofs, doors, chimneys and depth, landmarks (a vaulted theatre, a school with a tower, a market of awnings),
 // a canal with banks, reeds and an arched bridge, people at scale, lamps and benches, soft dark contact patches under everything for ambient occlusion, and for the garden ring racks of trays with seedlings, feed pipes and workers with carts. Built in the ring's own frame at azimuth 0
 // (x along the street, y along the axis, z outward: up is -z) and stamped round the ring. On demand, for the section view only. Pure: no three.js and no DOM.
-import { box, hoop, place, prism, quad, rod, type Lathe, type MaterialName, type Piece, type Vec3 } from "./adapter.ts";
+import { box, discX, hoop, place, prism, quad, rod, type Lathe, type MaterialName, type Piece, type Vec3 } from "./adapter.ts";
 import { cutaway4, dims, geoOf, glass, ground, hydroHall, ringPieces, rings, STEP, townHall } from "./rings.ts";
 
 const TAU = 2 * Math.PI;
@@ -67,12 +67,24 @@ export function tree(species: Species, x: number, y: number, z0: number, h: numb
 
 /** A shrub: three or four clustered spheres, dark below and light above. */
 const shrub = (x: number, y: number, z0: number, r: number, seed: number): Piece[] => [sph("shrub", [x, y, z0 - r * 0.6], r), sph(h01(seed) > 0.5 ? "leaf" : "lawn-dark", [x + r * 0.7, y + r * 0.3, z0 - r * 0.55], r * 0.75), sph("lawn", [x - r * 0.2, y - r * 0.4, z0 - r * 1.05], r * 0.7), sph("leaf", [x - r * 0.7, y + r * 0.3, z0 - r * 0.5], r * 0.65)];
-/** A tuft of grass: a fan of blades, each a thin triangle leaning out. */
-const tuft = (x: number, y: number, z0: number, seed: number, len = 0.4, m: MaterialName = "lawn"): Piece[] => Array.from({ length: 5 }, (_, i) => {
-  const a = TAU * (i / 5 + h01(seed, i) * 0.15);
-  const l = len * (0.7 + h01(seed, i + 3) * 0.6);
-  return tri(i % 2 ? m : "lawn-dark", [x + 0.04 * Math.cos(a + 1.5), y + 0.04 * Math.sin(a + 1.5), z0], [x - 0.04 * Math.cos(a + 1.5), y - 0.04 * Math.sin(a + 1.5), z0], [x + 0.2 * l * Math.cos(a), y + 0.2 * l * Math.sin(a), z0 - l]);
-});
+/** A tuft of grass: a clump of short wide blades, each bent over at the tip, in two or three greens. */
+const tuft = (x: number, y: number, z0: number, seed: number, len = 0.4, m: MaterialName = "lawn"): Piece[] => Array.from({ length: fineRound ? 8 : 4 }, (_, i) => {
+  const a = TAU * (i / 8 + h01(seed, i) * 0.12);
+  const l = len * (0.55 + h01(seed, i + 3) * 0.7);
+  const bend = 0.3 + h01(seed, i + 6) * 0.3;
+  const base = 0.045 + h01(seed, i + 9) * 0.03;
+  const ox = x + 0.05 * Math.cos(a);
+  const oy = y + 0.05 * Math.sin(a);
+  const mid: Vec3 = [ox + 0.1 * l * Math.cos(a), oy + 0.1 * l * Math.sin(a), z0 - l * 0.7];
+  const mat = i % 3 === 0 ? "lawn-dark" : i % 3 === 1 ? m : "meadow";
+  return [tri(mat, [ox + base * Math.cos(a + 1.57), oy + base * Math.sin(a + 1.57), z0], [ox - base * Math.cos(a + 1.57), oy - base * Math.sin(a + 1.57), z0], mid), tri(mat, [mid[0] + 0.03 * Math.cos(a + 1.57), mid[1] + 0.03 * Math.sin(a + 1.57), mid[2]], [mid[0] - 0.03 * Math.cos(a + 1.57), mid[1] - 0.03 * Math.sin(a + 1.57), mid[2]], [mid[0] + bend * 0.4 * l * Math.cos(a), mid[1] + bend * 0.4 * l * Math.sin(a), z0 - l])];
+}).flat();
+/** A scatter of wild flowers: little cones in white, yellow and pink on thin stems. */
+const wild = (x: number, y: number, z0: number, seed: number): Piece[] => Array.from({ length: 5 }, (_, i) => {
+  const px = x + (h01(seed, i) - 0.5) * 0.9;
+  const py = y + (h01(seed, i + 4) - 0.5) * 0.9;
+  return [rod("lawn-dark", [px, py, z0], [px, py, z0 - 0.28], 0.012, 4, { only: "mesh" }), ...cone((["hull-white", "hazard", "flower", "lamp-red"] as MaterialName[])[Math.floor(h01(seed, i + 8) * 4)], [px, py, z0 - 0.26], 0.06, 0.1, 5)];
+}).flat();
 /** A flower bed: soil with a row of small coloured cones. */
 const flowers = (x0: number, x1: number, y: number, z0: number, seed: number, n: number): Piece[] => [bx("soil", x0, x1, y - 0.3, y + 0.3, z0 - 0.12, z0), ...Array.from({ length: n }, (_, q): Piece[] => cone((["flower", "hazard", "lamp-red", "hull-white"] as MaterialName[])[Math.floor(h01(seed, q) * 4)], [x0 + ((x1 - x0) * (q + 0.5)) / n, y + (h01(seed, q + 20) - 0.5) * 0.4, z0 - 0.12], 0.11, 0.3, 5)).flat()];
 /** A low mound: a faceted dome of `rx` by `ry` metres, `h` high, centred at (cx, cy) on ground z0. */
@@ -89,17 +101,43 @@ function mound(m: MaterialName, cx: number, cy: number, rx: number, ry: number, 
   return out;
 }
 
-const CLOTHES: MaterialName[] = ["hull-blue", "hull-yellow", "hull-orange", "plant", "hull-white", "lamp-red", "fabric"];
-/** A person 1.7 m tall at (x, y) on ground z0: legs, a body in a coloured top, arms, a head and, for a worker, a hat. */
-export function person(x: number, y: number, z0: number, seed: number, hat = false): Piece[] {
+const CLOTHES: MaterialName[] = ["hull-blue", "hull-yellow", "hull-orange", "plant", "hull-white", "lamp-red", "fabric", "hull-dawn", "flower"];
+/** A person 1.7 m tall at (x, y) on ground z0: legs, a body in a coloured top, arms, a head and, for a worker, a hat. `pose` is standing, sitting (hips on a bench, legs forward along y) or bending to work (the body leaning along x), and `size` shrinks a child. */
+export function person(x: number, y: number, z0: number, seed: number, hat = false, pose: "stand" | "sit" | "bend" = "stand", size = 1): Piece[] {
   const c = CLOTHES[Math.floor(h01(seed) * CLOTHES.length)];
-  const s = 0.9 + h01(seed, 3) * 0.2;
-  const out: Piece[] = [rod("hull-grey-dark", [x - 0.1, y, z0], [x - 0.08, y, z0 - 0.85 * s], 0.09, 6, { only: "mesh" }), rod("hull-grey-dark", [x + 0.1, y, z0], [x + 0.08, y, z0 - 0.85 * s], 0.09, 6, { only: "mesh" }), rod(c, [x, y, z0 - 0.82 * s], [x, y, z0 - 1.45 * s], 0.2, 8, { only: "mesh" })];
-  if (fineRound) out.push(rod(c, [x - 0.22, y, z0 - 1.4 * s], [x - 0.3, y, z0 - 0.95 * s], 0.06, 5, { only: "mesh" }), rod(c, [x + 0.22, y, z0 - 1.4 * s], [x + 0.3, y + 0.2, z0 - 1.0 * s], 0.06, 5, { only: "mesh" }));
-  out.push(sph(h01(seed, 5) > 0.5 ? "wood" : "hull-orange-worn", [x, y, z0 - 1.6 * s], 0.12), sph("black", [x, y, z0 - 1.66 * s], 0.115));
-  if (hat) out.push(rod("hull-white", [x - 0.22, y, z0 - 1.74 * s], [x + 0.22, y, z0 - 1.74 * s], 0.04, 6, { only: "mesh" }), sph("hull-white", [x, y, z0 - 1.7 * s], 0.13));
+  const s = (0.9 + h01(seed, 3) * 0.2) * size;
+  const trousers: MaterialName = h01(seed, 7) > 0.5 ? "hull-grey-dark" : "hull-blue";
+  const out: Piece[] = [];
+  const skin: MaterialName = h01(seed, 5) > 0.5 ? "wood" : "hull-orange-worn";
+  if (pose === "sit") {
+    const hip = z0 - 0.48 * s;
+    out.push(rod(trousers, [x - 0.1, y, hip], [x - 0.1, y + 0.42 * s, hip], 0.09 * s, 6, { only: "mesh" }), rod(trousers, [x + 0.1, y, hip], [x + 0.1, y + 0.42 * s, hip], 0.09 * s, 6, { only: "mesh" }), rod(trousers, [x - 0.1, y + 0.42 * s, hip], [x - 0.1, y + 0.45 * s, z0], 0.08 * s, 6, { only: "mesh" }), rod(trousers, [x + 0.1, y + 0.42 * s, hip], [x + 0.1, y + 0.45 * s, z0], 0.08 * s, 6, { only: "mesh" }));
+    out.push(rod(c, [x, y, hip], [x, y, z0 - 1.0 * s], 0.2 * s, 8, { only: "mesh" }), sph(skin, [x, y, z0 - 1.16 * s], 0.12 * s), sph("black", [x, y, z0 - 1.2 * s], 0.115 * s));
+    return out;
+  }
+  if (pose === "bend") {
+    const hip = z0 - 0.85 * s;
+    out.push(rod(trousers, [x - 0.1, y, z0], [x - 0.08, y, hip], 0.09 * s, 6, { only: "mesh" }), rod(trousers, [x + 0.1, y, z0], [x + 0.08, y, hip], 0.09 * s, 6, { only: "mesh" }));
+    out.push(rod(c, [x, y, hip], [x + 0.55 * s, y, z0 - 1.2 * s], 0.2 * s, 8, { only: "mesh" }), rod(c, [x + 0.45 * s, y - 0.2, z0 - 1.15 * s], [x + 0.75 * s, y - 0.18, z0 - 0.45 * s], 0.06 * s, 5, { only: "mesh" }), rod(c, [x + 0.45 * s, y + 0.2, z0 - 1.15 * s], [x + 0.75 * s, y + 0.18, z0 - 0.45 * s], 0.06 * s, 5, { only: "mesh" }), sph(skin, [x + 0.68 * s, y, z0 - 1.25 * s], 0.12 * s), sph("black", [x + 0.7 * s, y, z0 - 1.3 * s], 0.115 * s));
+    if (hat) out.push(sph("hull-white", [x + 0.68 * s, y, z0 - 1.33 * s], 0.13 * s));
+    out.push(bx("wood", x + 0.9 * s, x + 1.4 * s, y - 0.25, y + 0.25, z0 - 0.3, z0), bx("crop-green", x + 0.92 * s, x + 1.38 * s, y - 0.2, y + 0.2, z0 - 0.4, z0 - 0.28));
+    return out;
+  }
+  out.push(rod(trousers, [x - 0.1, y, z0], [x - 0.08, y, z0 - 0.85 * s], 0.09 * s, 6, { only: "mesh" }), rod(trousers, [x + 0.1, y, z0], [x + 0.08, y, z0 - 0.85 * s], 0.09 * s, 6, { only: "mesh" }), rod(c, [x, y, z0 - 0.82 * s], [x, y, z0 - 1.45 * s], 0.2 * s, 8, { only: "mesh" }));
+  if (fineRound) out.push(rod(c, [x - 0.22, y, z0 - 1.4 * s], [x - 0.3, y, z0 - 0.95 * s], 0.06 * s, 5, { only: "mesh" }), rod(c, [x + 0.22, y, z0 - 1.4 * s], [x + 0.3, y + 0.2, z0 - 1.0 * s], 0.06 * s, 5, { only: "mesh" }));
+  out.push(sph(skin, [x, y, z0 - 1.6 * s], 0.12 * s), sph("black", [x, y, z0 - 1.66 * s], 0.115 * s));
+  if (hat) out.push(rod("hull-white", [x - 0.22, y, z0 - 1.74 * s], [x + 0.22, y, z0 - 1.74 * s], 0.04, 6, { only: "mesh" }), sph("hull-white", [x, y, z0 - 1.7 * s], 0.13 * s));
   return out;
 }
+
+/** A bicycle standing across the nave (its wheels in planes of x): two wheels with tyre and hub, a frame, a saddle, bars and a basket. */
+export const bicycle = (x: number, y: number, z0: number): Piece[] => [
+  discX("black", y - 0.55, z0 - 0.34, x - 0.03, x + 0.03, 0.34, 14), discX("hull-grey", y - 0.55, z0 - 0.34, x - 0.04, x + 0.04, 0.27, 14), discX("black", y + 0.55, z0 - 0.34, x - 0.03, x + 0.03, 0.34, 14), discX("hull-grey", y + 0.55, z0 - 0.34, x - 0.04, x + 0.04, 0.27, 14),
+  rod("red", [x, y - 0.55, z0 - 0.34], [x, y - 0.1, z0 - 0.75], 0.025, 5, { only: "mesh" }), rod("lamp-red", [x, y - 0.1, z0 - 0.75], [x, y + 0.5, z0 - 0.72], 0.025, 5, { only: "mesh" }), rod("lamp-red", [x, y + 0.5, z0 - 0.72], [x, y + 0.55, z0 - 0.34], 0.025, 5, { only: "mesh" }), rod("lamp-red", [x, y - 0.1, z0 - 0.75], [x, y + 0.5, z0 - 0.4], 0.025, 5, { only: "mesh" }),
+  bx("black", x - 0.07, x + 0.07, y - 0.22, y - 0.02, z0 - 0.8, z0 - 0.75), rod("hull-grey", [x - 0.25, y + 0.5, z0 - 0.78], [x + 0.25, y + 0.5, z0 - 0.78], 0.02, 5, { only: "mesh" }), bx("wood", x - 0.14, x + 0.14, y + 0.6, y + 0.85, z0 - 0.7, z0 - 0.55),
+];
+/** A small cart: a bed on two wheels with a handle. */
+export const cart = (x: number, y: number, z0: number): Piece[] => [bx("wood", x - 0.45, x + 0.45, y - 0.7, y + 0.7, z0 - 0.55, z0 - 0.4), bx("hull-grey-dark", x - 0.45, x + 0.45, y - 0.7, y - 0.65, z0 - 0.8, z0 - 0.55), discX("black", y, z0 - 0.28, x - 0.55, x - 0.48, 0.28, 12), discX("black", y, z0 - 0.28, x + 0.48, x + 0.55, 0.28, 12), rod("hull-grey", [x, y + 0.7, z0 - 0.5], [x, y + 1.3, z0 - 0.95], 0.03, 5, { only: "mesh" }), bx("crop-green", x - 0.4, x + 0.4, y - 0.6, y + 0.4, z0 - 0.7, z0 - 0.55)];
 
 const lamp = (x: number, y: number, z0: number): Piece[] => [rod("hull-grey", [x, y, z0], [x, y, z0 - 3.0], 0.05, 6, { only: "mesh" }), sph("lamp-amber", [x, y, z0 - 3.15], 0.2)];
 const bench = (x: number, y: number, z0: number): Piece[] => [bx("wood", x - 0.9, x + 0.9, y - 0.25, y + 0.25, z0 - 0.5, z0 - 0.42), bx("wood", x - 0.9, x + 0.9, y + 0.22, y + 0.28, z0 - 0.95, z0 - 0.5), bx("hull-grey-dark", x - 0.8, x - 0.7, y - 0.2, y + 0.2, z0 - 0.42, z0), bx("hull-grey-dark", x + 0.7, x + 0.8, y - 0.2, y + 0.2, z0 - 0.42, z0)];
@@ -108,33 +146,64 @@ const bench = (x: number, y: number, z0: number): Piece[] => [bx("wood", x - 0.9
 // houses and landmarks
 
 export type House = 0 | 1 | 2 | 3;
-/** A house on a terrace: walls, a door with a step, framed windows in two rows, a chimney, and a roof of its own kind (terracotta gable, slate gable, a green flat roof with a pergola, a barrel vault). `face` is +1 when the street is on its +y side. */
+const WALLS: MaterialName[] = ["hull-white", "hull-yellow", "hull-dawn", "hull-white", "sand", "hull-blue", "hull-white", "hull-orange-worn", "concrete"];
+const ROOFS: MaterialName[] = ["hull-orange-worn", "hull-blue", "hull-grey-dark", "hull-orange-worn", "bark", "hull-orange"];
+/** A hip roof: four slopes up to a ridge, over a wall top at `z`. */
+function hip(m: MaterialName, cx: number, w: number, y0: number, y1: number, z: number, h: number): Piece[] {
+  const o = 0.35;
+  const a: Vec3 = [cx - w / 2 - o, y0 - o, z];
+  const b: Vec3 = [cx + w / 2 + o, y0 - o, z];
+  const c: Vec3 = [cx + w / 2 + o, y1 + o, z];
+  const d: Vec3 = [cx - w / 2 - o, y1 + o, z];
+  const r0: Vec3 = [cx - w * 0.18, (y0 + y1) / 2 - (y1 - y0) * 0.12, z - h];
+  const r1: Vec3 = [cx + w * 0.18, (y0 + y1) / 2 + (y1 - y0) * 0.12, z - h];
+  return [quad(m, a, b, r1, r0, 0.08, { only: "mesh" }), tri(m, b, c, r1), quad(m, c, d, r0, r1, 0.08, { only: "mesh" }), tri(m, d, a, r0)];
+}
+/**
+ * A house on a terrace: walls of its own colour and size (one floor or two), a door with a step, framed windows in two rows with the lamps lit in some, a chimney, a roof of its own kind (terracotta, slate or timber gable; a hip roof; a green flat roof with a
+ * pergola; a barrel vault), a balcony with rails on a second floor, and a flower box. `face` is +1 when the street is on its +y side; `seed` (0 to 1) picks the size, colour, roof and floors.
+ */
 export function house(kind: House, x: number, y0: number, depth: number, z0: number, face: 1 | -1, seed: number, coarse = false): Piece[] {
-  const w = 5 - (kind === 3 ? 0.4 : 0);
-  const wall = ["hull-white", "hull-yellow", "hull-white", "concrete"][kind] as MaterialName;
-  const wh = 2.5;
+  const w = (5 - (kind === 3 ? 0.4 : 0)) * (0.84 + h01(seed * 97, 1) * 0.34);
+  const two = h01(seed * 31, 2) > 0.58 && kind !== 2;
+  const wall = WALLS[Math.floor(h01(seed * 57, 3) * WALLS.length)];
+  const roof = ROOFS[Math.floor(h01(seed * 43, 4) * ROOFS.length)];
+  const wh = two ? 5.0 : 2.5 + h01(seed * 13, 5) * 0.4;
   const y1 = y0 + depth;
   const front = face > 0 ? y1 : y0;
   const out: Piece[] = [bx(wall, x - w / 2, x + w / 2, y0, y1, z0 - wh, z0)];
   out.push(bx("hull-grey", x - w / 2 - 0.08, x + w / 2 + 0.08, y0 - 0.04, y1 + 0.04, z0 - 0.3, z0));
-  const roofs: [MaterialName, MaterialName] = [["hull-orange-worn", "hull-blue", "plant", "hull-grey"][kind] as MaterialName, "hull-grey-dark"];
-  if (kind === 0 || kind === 1) out.push(gable(roofs[0], x, w, y0, y1, z0 - wh, kind === 0 ? 1.7 : 2.2));
-  else if (kind === 2) out.push(bx("plant", x - w / 2 - 0.1, x + w / 2 + 0.1, y0 - 0.1, y1 + 0.1, z0 - wh - 0.3, z0 - wh), ...[-1, 1].map((s) => rod("wood", [x + s * (w / 2 - 0.2), front, z0 - wh], [x + s * (w / 2 - 0.2), front, z0 - wh - 1.4], 0.06, 6, { only: "mesh" })), rod("wood", [x - w / 2, front, z0 - wh - 1.4], [x + w / 2, front, z0 - wh - 1.4], 0.06, 6, { only: "mesh" }));
-  else out.push(vault(roofs[0], x, w, y0, y1, z0 - wh, 1.4));
-  // the front: a door, two rows of windows, a step and a flower box
+  const style = kind === 0 && h01(seed * 7, 6) > 0.5 ? 4 : kind;
+  if (style === 4) out.push(...hip(roof, x, w, y0, y1, z0 - wh, 1.9));
+  else if (style === 0 || style === 1) out.push(gable(roof, x, w, y0, y1, z0 - wh, style === 0 ? 1.7 : 2.2));
+  else if (style === 2) out.push(bx("plant", x - w / 2 - 0.1, x + w / 2 + 0.1, y0 - 0.1, y1 + 0.1, z0 - wh - 0.3, z0 - wh), ...[-1, 1].map((s) => rod("wood", [x + s * (w / 2 - 0.2), front, z0 - wh], [x + s * (w / 2 - 0.2), front, z0 - wh - 1.4], 0.06, 6, { only: "mesh" })), rod("wood", [x - w / 2, front, z0 - wh - 1.4], [x + w / 2, front, z0 - wh - 1.4], 0.06, 6, { only: "mesh" }));
+  else out.push(vault(roof, x, w, y0, y1, z0 - wh, 1.4));
   const fy = (d: number): [number, number] => (face > 0 ? [front, front + d] : [front - d, front]);
   const door = (kind + Math.floor(seed * 5)) % 2 ? -0.9 : 0.9;
   out.push(bx("wood", x + door - 0.35, x + door + 0.35, ...fy(0.08), z0 - 1.9, z0));
+  const pane = (px: number, zt: number, zb: number): void => {
+    const lit = h01(seed * 211, Math.round(px * 10) + Math.round(zt * 7)) > 0.72;
+    out.push(bx(lit ? "lamp-amber" : "window", x + px - 0.28, x + px + 0.28, ...fy(0.1), z0 - zt, z0 - zb));
+  };
   if (coarse) {
-    const wx = door > 0 ? -1.2 : 1.2;
-    out.push(bx("window", x + wx - 0.5, x + wx + 0.5, ...fy(0.1), z0 - 2.0, z0 - 1.0));
+    pane(door > 0 ? -1.2 : 1.2, 2.0, 1.0);
     return out;
   }
   out.push(bx("hull-grey", x + door - 0.55, x + door + 0.55, ...fy(0.4), z0 - 0.15, z0));
   for (const wx of [door > 0 ? -0.95 : 0.95, door > 0 ? -1.7 : 1.7]) {
-    for (const [zt, zb] of [[1.15, 0.45], [2.15, 1.45]] as const) if (!(Math.abs(wx - door) < 0.8)) out.push(bx("hull-white", x + wx - 0.34, x + wx + 0.34, ...fy(0.08), z0 - zt - 0.06, z0 - zb + 0.06), bx("window", x + wx - 0.28, x + wx + 0.28, ...fy(0.1), z0 - zt, z0 - zb));
+    for (const [zt, zb] of [[1.15, 0.45], [2.15, 1.45], ...(two ? [[3.65, 2.95], [4.65, 3.95]] : [])] as const) if (!(Math.abs(wx - door) < 0.8 && zt < 2)) {
+      out.push(bx("hull-white", x + wx - 0.34, x + wx + 0.34, ...fy(0.08), z0 - zt - 0.06, z0 - zb + 0.06));
+      pane(wx, zt, zb);
+    }
   }
   out.push(bx("plant", x + (door > 0 ? -1.4 : 1.4) - 0.5, x + (door > 0 ? -1.4 : 1.4) + 0.5, ...fy(0.35), z0 - 0.75, z0 - 0.55));
+  if (two) {
+    // a balcony on the second floor: a slab, a rail of posts and a top bar
+    const bw = w * 0.55;
+    const by: [number, number] = face > 0 ? [front, front + 0.9] : [front - 0.9, front];
+    const edge = face > 0 ? by[1] : by[0];
+    out.push(bx("hull-grey", x - bw / 2, x + bw / 2, ...by, z0 - 2.65, z0 - 2.55), bx("wood", x - bw / 2, x + bw / 2, edge - 0.04, edge + 0.04, z0 - 3.6, z0 - 3.5), ...[-1, -0.5, 0, 0.5, 1].map((k) => rod("hull-grey", [x + k * bw * 0.5, edge, z0 - 2.6], [x + k * bw * 0.5, edge, z0 - 3.55], 0.03, 5, { only: "mesh" })));
+  }
   if (kind < 2) out.push(bx("concrete", x + w / 2 - 0.7, x + w / 2 - 0.3, y0 + 0.4, y0 + 0.8, z0 - wh - 1.7, z0 - wh - 0.4));
   return out;
 }
@@ -204,11 +273,22 @@ function canal(z0: number, bay: number, i: number, level: Level): Piece[] {
     out.push(bx("concrete", -bay / 2, bay / 2, s > 0 ? 1.0 : -1.35, s > 0 ? 1.35 : -1.0, z0 - 0.4, z0 + 0.06));
     // the bank: lawn rising from the concrete edge to the nave's level, with a flat strip beyond it
     out.push(quad("lawn-dark", [-bay / 2, s * 1.35, z0 - 0.4], [bay / 2, s * 1.35, z0 - 0.4], [bay / 2, s * 2.4, z0 - 0.02], [-bay / 2, s * 2.4, z0 - 0.02], 0.05, { only: "mesh" }));
-    const reeds = level === "fine" ? 7 : 3;
+    const reeds = level === "fine" ? 9 : 3;
     for (let k = 0; k < reeds; k++) {
       const px = (h01(i, k + (s > 0 ? 0 : 5)) - 0.5) * bay;
-      out.push(rod("plant", [px, s * 1.5, z0 - 0.3], [px + 0.1, s * 1.6, z0 - 1.0 - h01(i, k) * 0.6], 0.035, 5, { only: "mesh" }), rod("leaf", [px + 0.15, s * 1.5, z0 - 0.3], [px + 0.2, s * 1.55, z0 - 0.9 - h01(k, i) * 0.5], 0.03, 5, { only: "mesh" }));
+      const hgt = 1.0 + h01(i, k) * 0.7;
+      out.push(rod("plant", [px, s * 1.5, z0 - 0.3], [px + 0.1, s * 1.6, z0 - hgt], 0.035, 5, { only: "mesh" }), rod("leaf", [px + 0.15, s * 1.5, z0 - 0.3], [px + 0.2, s * 1.55, z0 - 0.9 - h01(k, i) * 0.5], 0.03, 5, { only: "mesh" }));
+      if (k % 3 === 0) out.push(rod("bark", [px + 0.1, s * 1.6, z0 - hgt], [px + 0.1, s * 1.6, z0 - hgt - 0.28], 0.07, 6, { only: "mesh" }));
     }
+  }
+  // ripples on the water: short pale ridges across the stream, and a few lily pads
+  if (level === "fine") {
+    for (let k = 0; k < 6; k++) {
+      const px = (h01(i, k + 60) - 0.5) * bay;
+      const py = (h01(i, k + 70) - 0.5) * 1.2;
+      out.push(bx("frost", px - 0.35, px + 0.35, py - 0.03, py + 0.03, z0 - 0.058, z0 - 0.052), bx("frost", px - 0.18, px + 0.18, py + 0.14, py + 0.17, z0 - 0.058, z0 - 0.052));
+    }
+    for (let k = 0; k < 2; k++) out.push(sph("leaf", [(h01(i, k + 80) - 0.5) * bay, (h01(i, k + 83) - 0.5) * 1.0, z0 - 0.04], 0.16));
   }
   if (i % 11 === 5) {
     // a footbridge: a deck of five steps rising to the middle with rails and a lamp at each end
@@ -233,13 +313,17 @@ function nave(g: ReturnType<typeof geoOf>, i: number, level: Level): Piece[] {
     const hgt = (k === "spruce" ? 5.5 : k === "poplar" ? 6.5 : 4.6) * (0.85 + h01(i, s) * 0.35);
     if (i % 2 === (s > 0 ? 0 : 1)) out.push(...tree(k, (h01(i, s + 7) - 0.5) * 2.0, s * (nv * 0.62 + h01(i, 4) * 0.5), rg, hgt, h01(i, s), !fine));
     if (i % 4 === (s > 0 ? 1 : 3)) out.push(...lamp(2.6, s * 2.5, rg));
-    if (i % 9 === (s > 0 ? 2 : 6)) out.push(...bench(-1.5, s * 2.6, rg));
+    if (i % 9 === (s > 0 ? 2 : 6)) out.push(...bench(-1.5, s * 2.6, rg), ...person(-1.7, s * 2.6, rg, i * 5 + s, false, "sit"), ...(fine && i % 2 === 0 ? person(-1.2, s * 2.6, rg, i * 5 + s + 1, false, "sit") : []));
     if (i % 2 === (s > 0 ? 1 : 0)) out.push(...shrub((h01(i, s + 30) - 0.5) * 3, s * (4.35 + h01(i, 31) * 0.2), rg, 0.5 + h01(i, 32) * 0.3, i + s));
     if (i % 3 === 1) out.push(...flowers(-2.2, 2.2, s * 2.85, rg, i + s * 7, fine ? 14 : 6));
-    if (fine) for (let q = 0; q < 6; q++) out.push(...tuft((h01(i, q + 40 + s) - 0.5) * 6, s * (1.6 + h01(i, q + 50) * 2.2), rg, i * 9 + q, 0.35, h01(i, q) > 0.5 ? "lawn" : "meadow"));
+    if (fine) for (let q = 0; q < 12; q++) out.push(...tuft((h01(i, q + 40 + s) - 0.5) * 6, s * (1.6 + h01(i, q + 50) * 2.4), rg, i * 9 + q, 0.34, h01(i, q) > 0.5 ? "lawn" : "meadow"));
+    if (fine) for (let q = 0; q < 3; q++) out.push(...wild((h01(i, q + 90 + s) - 0.5) * 5.5, s * (1.7 + h01(i, q + 95) * 1.4), rg, i * 3 + q));
+    if (i % 7 === (s > 0 ? 3 : 5)) out.push(...bicycle(h01(i, 99) * 3 - 1.5, s * 3.0, rg));
+    if (i % 13 === (s > 0 ? 5 : 8)) out.push(...cart(1.4, s * 2.0, rg));
   }
-  if (i % 3 === 0) out.push(...person((h01(i, 11) - 0.5) * 4, (h01(i, 12) > 0.5 ? 1 : -1) * 2.7, rg, i * 3 + 1));
-  if (i % 5 === 2) out.push(...person(-1.6, 3.1, rg, i + 40), ...(fine ? person(-1.2, 3.2, rg, i + 41) : []));
+  if (i % 2 === 0) out.push(...person((h01(i, 11) - 0.5) * 4, (h01(i, 12) > 0.5 ? 1 : -1) * 3.0, rg, i * 3 + 1));
+  if (i % 4 === 1) out.push(...person(-1.6, 3.8, rg, i + 40), ...person(-1.2, 3.9, rg, i + 41), ...(fine ? person(-1.4, 3.85, rg, i + 42, false, "stand", 0.62) : []));
+  if (fine && i % 6 === 3) out.push(...person(0.5, -3.6, rg, i + 60), ...person(0.9, -3.7, rg, i + 61));
   return out;
 }
 
@@ -255,6 +339,10 @@ function terrace(g: ReturnType<typeof geoOf>, s: 1 | -1, k: number, i: number, l
   const edge = s > 0 ? e0 + 0.08 : -(e0 + 0.08);
   if (h01(i, k + 15) > 0.3) out.push(...shrub((h01(i, k + 16) - 0.5) * 4, edge, rk, 0.35 + h01(i, k + 17) * 0.25, i + k));
   if (level === "fine" && h01(i, k + 25) > 0.5) out.push(...shrub((h01(i, k + 26) - 0.5) * 4, edge, rk, 0.3, i + k + 9));
+  if (level === "fine" && h01(i, k + 40) > 0.45) {
+    const fy = s > 0 ? e0 + 0.02 : -(e0 + 0.02);
+    out.push(rod("wood", [-3.1, fy, rk - 0.45], [3.1, fy, rk - 0.45], 0.025, 5, { only: "mesh" }), rod("wood", [-3.1, fy, rk - 0.75], [3.1, fy, rk - 0.75], 0.025, 5, { only: "mesh" }), ...Array.from({ length: 8 }, (_, q) => rod("wood", [-3.0 + q * 0.86, fy, rk], [-3.0 + q * 0.86, fy, rk - 0.9], 0.03, 5, { only: "mesh" })));
+  }
   if (h01(i, k + 20) > 0.55) out.push(...person(0.3, s > 0 ? e0 - 0.2 : -(e0 - 0.2), rk + STEP * 0, i * 7 + k + (s > 0 ? 100 : 0)));
   if (h01(i, k + 30) > 0.7) out.push(...tree(h01(i, k + 31) > 0.5 ? "blossom" : "fruit", 1.9, s > 0 ? e0 + tread * 0.5 : -(e0 + tread * 0.5), rk, 3.0 + h01(i, k + 2), h01(i, 50), level === "coarse"));
   return out;
@@ -318,10 +406,15 @@ function crops(y0: number, y1: number, z0: number, bay: number, i: number, k: nu
   const lo = Math.min(y0, y1);
   const hi = Math.max(y0, y1);
   const out: Piece[] = [bx("soil", -bay / 2, bay / 2, lo, hi, z0 - 0.1, z0)];
-  const rows = Math.max(2, Math.floor((hi - lo - 0.3) / 0.38));
+  // a water channel along the edge nearest the nave, with a pale rim
+  const ch: [number, number] = s > 0 ? [lo, lo + 0.26] : [hi - 0.26, hi];
+  out.push(bx("hull-grey", -bay / 2, bay / 2, ch[0] - 0.03, ch[1] + 0.03, z0 - 0.06, z0 - 0.02), bx("water-clear", -bay / 2, bay / 2, ch[0], ch[1], z0 - 0.07, z0 - 0.04));
+  const rowLo = s > 0 ? lo + 0.36 : lo;
+  const rowHi = s > 0 ? hi : hi - 0.36;
+  const rows = Math.max(2, Math.floor((rowHi - rowLo - 0.3) / 0.38));
   const band = Math.floor(i / 9);
   for (let r = 0; r < rows; r++) {
-    const y = lo + 0.2 + ((hi - lo - 0.4) * (r + 0.5)) / rows;
+    const y = rowLo + 0.2 + ((rowHi - rowLo - 0.4) * (r + 0.5)) / rows;
     const gold = h01(band, k * 7 + (s > 0 ? 1 : 0) + Math.floor(r / 2) * 3) > 0.5;
     const hgt = gold ? 0.42 : 0.3;
     out.push(rod(gold ? "crop-gold" : "crop-green", [-bay / 2, y, z0 - hgt * 0.6], [bay / 2, y, z0 - hgt * 0.6], hgt * 0.55, 6, { only: "mesh" }));
@@ -330,6 +423,12 @@ function crops(y0: number, y1: number, z0: number, bay: number, i: number, k: nu
       const ears = gold ? 4 : 6;
       for (let e = 0; e < ears; e++) out.push(leaf(gold ? "crop-gold" : e % 2 ? "crop-green" : "leaf", x + (h01(i, r * 9 + q + e) - 0.5) * 0.3, y, z0 - hgt * 0.7, TAU * (e / ears) + h01(i, e), gold ? 0.75 : 0.55));
     }
+  }
+  // a trellis on the top tread: posts, three wires and a vine climbing each post
+  if (k === 3 && level === "fine") {
+    const ty = s > 0 ? hi - 0.1 : lo + 0.1;
+    for (const px of [-1.3, 1.3]) out.push(rod("wood", [px, ty, z0], [px, ty, z0 - 2.1], 0.05, 6, { only: "mesh" }), ...Array.from({ length: 6 }, (_, q) => rod("leaf", [px + (q % 2 ? 0.08 : -0.08), ty, z0 - 0.3 - q * 0.32], [px + (q % 2 ? -0.08 : 0.08), ty, z0 - 0.5 - q * 0.32], 0.03, 5, { only: "mesh" })), ...Array.from({ length: 4 }, (_, q) => leaf("leaf", px, ty, z0 - 0.6 - q * 0.4, (q % 2 ? 1 : -1) * 1.2, 0.5)));
+    for (const h of [0.7, 1.4, 2.05]) out.push(rod("hull-grey", [-bay / 2, ty, z0 - h], [bay / 2, ty, z0 - h], 0.012, 4, { only: "mesh" }));
   }
   return out;
 }
@@ -367,7 +466,7 @@ function garden(gap: number, level: Level): Piece[] {
       const e0 = nv + tread * (k - 1);
       const rk = rg - STEP * k;
       bay.push(...crops(s > 0 ? e0 + 0.1 : -(e0 + tread - 0.1), s > 0 ? e0 + tread - 0.1 : -(e0 + 0.1), rk, 5.2, i, k, s, level));
-      if (h01(i, k + (s > 0 ? 70 : 80)) > (fine ? 0.82 : 0.95)) bay.push(...person(1.8, s > 0 ? e0 + tread / 2 : -(e0 + tread / 2), rk, i * 5 + k + 300, true));
+      if (h01(i, k + (s > 0 ? 70 : 80)) > (fine ? 0.8 : 0.95)) bay.push(...person(1.4, s > 0 ? e0 + tread * 0.62 : -(e0 + tread * 0.62), rk, i * 5 + k + 300, true, h01(i, k + 120) > 0.3 ? "bend" : "stand"));
     }
     out.push(...place(bay, { at: [0, 0, 0], yaw: az }));
   }
