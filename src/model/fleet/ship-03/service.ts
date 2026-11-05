@@ -70,8 +70,9 @@ export function exteriorSaddles(bay: BayId): Piece[] {
   for (const [n, len] of [[0, BODY.booster], [1, BODY.ship]] as const) {
     const sx = outer + dir * (10 + n * (FIN_HALF * 2 + GAP));
     out.push(...ibeam("hull-yellow", [sx, a.y0, a.floor + 4], [sx, a.y0 + len, a.floor + 4], 0.8, 0.5, [0, 0, 1]));
-    out.push(...roundStrut("hull-grey", [outer, a.y0 + 6, a.floor + 4], [sx, a.y0 + 6, a.floor + 4], 0.45));
-    out.push(...roundStrut("hull-grey", [outer, a.y0 + len - 6, a.floor + 4], [sx, a.y0 + len - 6, a.floor + 4], 0.45));
+    // the outer joint is the ship's beam, so the coarse level keeps it
+    out.push(...roundStrut("hull-grey", [outer, a.y0 + 6, a.floor + 4], [sx, a.y0 + 6, a.floor + 4], 0.45, { outline: true }));
+    out.push(...roundStrut("hull-grey", [outer, a.y0 + len - 6, a.floor + 4], [sx, a.y0 + len - 6, a.floor + 4], 0.45, { outline: true }));
   }
   return out;
 }
