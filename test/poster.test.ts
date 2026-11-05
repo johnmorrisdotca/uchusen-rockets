@@ -37,6 +37,8 @@ test("the poster is one coloured sheet, with one scale line and the fleet band",
   assert.match(poster.svg, /linearGradient/);
   assert.match(poster.svg, /Saturn V/);
   assert.match(poster.svg, /SPX fleet, at 1\/\d+ the scale above/);
+  assert.match(poster.svg, /#dad8d0/);
+  assert.match(poster.svg, /#d17a3c/);
   assert.match(poster.svg, /To add later: .*Vulcan Centaur/);
   assert.ok(poster.height > poster.width);
   assert.deepEqual(poster.later, laterNames());

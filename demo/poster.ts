@@ -6,6 +6,7 @@ import { axesOf, directionOf, VIEWS, type Angle } from "../src/framing.ts";
 import { MAKERS, type MakerId } from "../src/data/makers.ts";
 import { figureWords } from "../src/data/types.ts";
 import type { LookName } from "../src/looks.ts";
+import { MATERIALS } from "../src/model/materials.ts";
 import { PLANNED_ROCKETS, ROCKETS, variantOf } from "../src/rockets.ts";
 
 /** The sheet's width in pixels. The height follows the rows, and it stays taller than it is wide. */
@@ -29,9 +30,9 @@ const MARK: Record<MakerId, string> = {
 };
 
 const PAD = 28;
-const GAP = 10;
-const MIN_CELL = 58;
-const LABEL = 36;
+const GAP = 4;
+const MIN_CELL = 36;
+const LABEL = 28;
 
 export interface PosterCopy {
   title: string;
@@ -105,7 +106,7 @@ export function laterNames(): string[] {
   return names;
 }
 
-const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 8, craft.name.length * 4.6);
+const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.min(72, craft.name.length * 3.2));
 
 /**
  * Rows of craft, shortest first, each row staying within the sheet. A row takes the next craft until the next one would pass the width.
@@ -146,9 +147,48 @@ const drawBuilt = (built: Built, facing: Angle, unit: number, look: LookName, x0
     .join("");
 };
 
-const shipSize = (built: Built): { length: number; tall: number; from: number; low: number } => {
-  const b = built.boundsOf(built.shows[0] ?? "together");
-  return { length: b.max[1] - b.min[1], tall: b.max[2] - b.min[2], from: b.min[1], low: b.min[2] };
+const dot3 = (a: readonly number[], b: readonly number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+
+/** How far a built craft reaches along one axis. */
+const span = (built: Built, axis: readonly [number, number, number]): { lo: number; hi: number } => {
+  const box = built.boundsOf(built.shows[0] ?? "together");
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const x of [box.min[0], box.max[0]])
+    for (const y of [box.min[1], box.max[1]])
+      for (const z of [box.min[2], box.max[2]]) {
+        const d = x * axis[0] + y * axis[1] + z * axis[2];
+        if (d < lo) lo = d;
+        if (d > hi) hi = d;
+      }
+  return { lo, hi };
+};
+
+const shipFill = (material: keyof typeof MATERIALS) => MATERIALS[material].color;
+
+/** One ship, side-on: the windward face, laid flat, in the mesh's own colours. */
+const drawShip = (built: Built, unit: number, look: LookName, x0: number, yTop: number): { svg: string; tall: number; length: number } => {
+  const direction = directionOf(VIEWS.front);
+  const { right, up, forward } = axesOf(direction);
+  const along = span(built, up);
+  const across = span(built, right);
+  const cam = {
+    project: (p: readonly [number, number, number]): [number, number] => [x0 + (dot3(p, up) - along.lo) * unit, yTop + (across.hi - dot3(p, right)) * unit],
+    depth: (p: readonly [number, number, number]) => dot3(p, forward),
+    toward: (): [number, number, number] => [direction[0], direction[1], direction[2]],
+    above: true,
+  };
+  const show = built.shows[0] ?? "together";
+  const svg = built
+    .placesOf(show)
+    .filter((place) => place.shown)
+    .sort((a, b) => dot3(a.at, forward) - dot3(b.at, forward))
+    .map((place) => {
+      const part = built.parts.find((one) => one.slot === place.slot);
+      return part ? drawPart(drawnPieces(part, show === "together"), place.at, cam, look, 0.45, undefined, shipFill) : "";
+    })
+    .join("");
+  return { svg, tall: Math.max(1, across.hi - across.lo), length: Math.max(1, along.hi - along.lo) };
 };
 
 /**
@@ -190,8 +230,7 @@ export function posterSvg(copy: PosterCopy = ENGLISH, look: LookName = "painted"
   let y = legendY + 32;
   for (const row of rows) {
     const cells = row.map((one) => cellOf(one, POSTER_UNIT));
-    const spare = Math.max(0, inner - cells.reduce((sum, cell) => sum + cell, 0) - GAP * Math.max(0, row.length - 1));
-    const gap = GAP + Math.min(16, spare / Math.max(1, row.length));
+    const gap = GAP;
     const block = cells.reduce((sum, cell) => sum + cell, 0) + gap * Math.max(0, row.length - 1);
     const tall = Math.max(...row.map((one) => one.metres));
     const base = y + tall * POSTER_UNIT;
@@ -207,36 +246,26 @@ export function posterSvg(copy: PosterCopy = ENGLISH, look: LookName = "painted"
       parts.push(`<text x="${x + cell / 2}" y="${base + 22}" text-anchor="middle" fill="#172033" font-size="8" font-family="sans-serif"><tspan x="${x + cell / 2}">${escape(one.name)}</tspan><tspan x="${x + cell / 2}" dy="10">${escape(one.height)}</tspan></text>`);
       x += cell + gap;
     }
-    y = base + LABEL + 16;
+    y = base + LABEL + 4;
   }
   const ships = fleetKeys().flatMap((key) => {
     const named = variantOf(key.split(":")[0] ?? "", key.split(":")[1]);
     if (!named || !check({ rocket: named.rocket, variant: named.id }).ok) return [];
     const built = build({ rocket: named.rocket, variant: named.id });
-    return [{ key, name: ROCKETS[named.rocket]?.name ?? named.name, built, size: shipSize(built) }];
+    return [{ name: ROCKETS[named.rocket]?.name ?? named.name, built }];
   });
-  const longest = Math.max(1, ...ships.map((ship) => ship.size.length));
+  const along = axesOf(directionOf(VIEWS.front)).up;
+  const longest = Math.max(1, ...ships.map((ship) => { const reach = span(ship.built, along); return reach.hi - reach.lo; }));
   const fleetUnit = Math.min(POSTER_UNIT, (inner * 0.96) / longest);
   const ratio = Math.max(1, Math.round(POSTER_UNIT / fleetUnit));
   y += 8;
   parts.push(`<text x="${PAD}" y="${y + 16}" fill="#172033" font-size="14" font-family="sans-serif">${escape(copy.fleet.replace("{n}", String(ratio)))}</text>`);
   y += 28;
   for (const ship of ships) {
-    const { tall, from, low } = ship.size;
-    const base = y + tall * fleetUnit;
-    const cam = {
-      project: (p: readonly [number, number, number]): [number, number] => [PAD + (p[1] - from) * fleetUnit, base - (p[2] - low) * fleetUnit],
-      depth: (p: readonly [number, number, number]) => -p[0],
-      toward: (): [number, number, number] => [1, 0, 0],
-      above: false,
-    };
-    const show = ship.built.shows[0] ?? "together";
-    for (const place of ship.built.placesOf(show).filter((one) => one.shown).sort((a, b) => a.at[0] - b.at[0])) {
-      const part = ship.built.parts.find((one) => one.slot === place.slot);
-      if (part) parts.push(drawPart(drawnPieces(part, show === "together"), place.at, cam, look, 0.55));
-    }
-    parts.push(`<text x="${PAD}" y="${base + 12}" fill="#172033" font-size="9" font-family="sans-serif">${escape(ship.name)}</text>`);
-    y = base + 20;
+    const drawn = drawShip(ship.built, fleetUnit, look, PAD, y);
+    parts.push(drawn.svg);
+    parts.push(`<text x="${PAD}" y="${y + drawn.tall * fleetUnit + 12}" fill="#172033" font-size="9" font-family="sans-serif">${escape(ship.name)}</text>`);
+    y += drawn.tall * fleetUnit + 22;
   }
   y += 10;
   parts.push(`<text x="${PAD}" y="${y}" fill="#3d4b60" font-size="12" font-family="sans-serif">${escape(`${copy.later}: ${later.join(", ")}`)}</text>`);
