@@ -22,6 +22,7 @@ import { ISS_VARIANTS } from "./data/iss.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import { FLEET_KIT_ROCKETS, FLEET_SLOT_NAMES } from "./data/fleet.ts";
+import { CONCEPT_SLOT_NAMES, KAMINARI_CONCEPT_VARIANTS } from "./data/kaminari-concepts.ts";
 import { ARIAKE_VARIANTS, SHIP_03_INSET_ROCKET, SHIP_03_SLOT_NAMES, SHIP_03_VARIANTS } from "./data/ship-03.ts";
 import { MADE_BY, type MakerId } from "./data/makers.ts";
 import type { Figure, Variant } from "./data/types.ts";
@@ -145,6 +146,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "fleet-ship-ariake": { id: "fleet-ship-ariake", name: "ISV 有明 Ariake, SPX-186", status: "built", ...MADE_BY["fleet-ship-ariake"], variants: ARIAKE_VARIANTS, defaultVariant: "ariake" },
   "fleet-insets-ship-03": { id: "fleet-insets-ship-03", name: SHIP_03_INSET_ROCKET.name, status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_INSET_ROCKET.variants, defaultVariant: SHIP_03_INSET_ROCKET.variants[0].id },
   "fleet-02": { id: "fleet-02", name: "ISV 加美鳴 Kaminari, SPX-207", status: "built", ...MADE_BY["fleet-02"], variants: SHIP_02_VARIANTS, defaultVariant: "fleet-02" },
+  "fleet-02-concepts": { id: "fleet-02-concepts", name: "ISV 加美鳴 (かみなり) Kaminari concepts, SPX-207", status: "built", ...MADE_BY["fleet-02-concepts"], variants: KAMINARI_CONCEPT_VARIANTS, defaultVariant: "kaminari-concept-a" },
   starbase: { id: "starbase", name: "Starbase", status: "built", ...MADE_BY["starbase"], variants: STARBASE_VARIANTS, defaultVariant: "launch-site" },
 });
 
@@ -212,6 +214,7 @@ export const partIdOf = (rocket: string, variant: string, slot: string): string 
  */
 export const SLOT_NAMES: Readonly<Record<string, string>> = {
   ...SHIP_02_SLOT_NAMES,
+  ...CONCEPT_SLOT_NAMES,
   ...FLEET_SLOT_NAMES,
   ...SHIP_03_SLOT_NAMES,
   booster: "Super Heavy",

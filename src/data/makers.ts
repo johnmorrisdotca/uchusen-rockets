@@ -55,6 +55,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   "fleet-ship-03": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-ship-ariake": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kit": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
+  "fleet-02-concepts": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-fleet-kaminari-concepts", note: "Original concept designs." } },
   "fleet-02": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-fleet-ship-02", note: "An original design." } },
   droneship: SITE,
   "landing-zone": SITE,
