@@ -179,15 +179,15 @@ function syncSky() {
   const showCredit = state.background !== "none";
   if (key === skyKey) return;
   skyKey = key;
-  placeSky(byId("sky-back"), byId("sky-moons"), state.background, companions, form, lang);
+  placeSky(byId("sky-back"), byId("sky-moons"), state.background, companions, form, lang, state.moon);
   credit.hidden = !showCredit;
   credit.textContent = "";
   if (!showCredit) return;
   void skyCredit(state.background, state.moon, form).then((text) => {
-    if (skyKey === key) {
-      credit.textContent = text;
-      credit.hidden = text === "";
-    }
+    if (skyKey !== key) return;
+    const bigger = state.moon !== "" && skyBodies?.enlarged(state.background, state.moon) ? ` ${say("moonsEnlarged")}` : "";
+    credit.textContent = `${text}${bigger}`.trim();
+    credit.hidden = credit.textContent === "";
   });
 }
 
@@ -372,7 +372,7 @@ const skyButton = (id: string, testid: string, on: () => void): HTMLButtonElemen
   button.dataset.sky = id;
   const named = id === "none" || id === "earth" || id === "moon" ? say(`background_${id}`) : (skyBodies?.name(id, japanese() ? "ja" : "en") ?? id);
   button.setAttribute("aria-label", named);
-  button.append(el("span", { className: "thumb-dot" }));
+  button.append(el("span", { className: "thumb-dot" }), el("span", { className: "thumb-name", textContent: named }));
   button.addEventListener("click", on);
   return button;
 };
@@ -382,8 +382,12 @@ const drawSkyButtons = () => {
   byId("backgrounds").replaceChildren(...order.map((id) => skyButton(id, `background-${id}`, () => pick({ background: id }))));
   const moons = skyBodies && state.background !== "none" && state.background !== "sun" ? skyBodies.moonsOf(state.background) : [];
   const row = byId("moons");
+  const heading = byId("moon-heading");
+  const planet = skyBodies?.name(state.background, lang) ?? "";
   row.hidden = moons.length === 0;
-  row.setAttribute("aria-label", say("moonsLabel"));
+  heading.hidden = moons.length === 0;
+  heading.textContent = moons.length === 0 ? "" : say("moonsOf", { name: planet });
+  row.setAttribute("aria-label", heading.textContent);
   row.replaceChildren(...moons.map((id) => skyButton(id, `moon-${id}`, () => pick({ moon: state.moon === id ? "" : id }))));
   press(byId("backgrounds"), `background-${state.background}`);
   press(row, state.moon ? `moon-${state.moon}` : "");
