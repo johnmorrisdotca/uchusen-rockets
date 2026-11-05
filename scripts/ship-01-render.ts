@@ -33,6 +33,8 @@ interface Shot {
   /** Clip everything on one side of a plane: [nx, ny, nz, d] keeps points with n.p + d >= 0. */
   clip?: [number, number, number, number];
   background?: string;
+  /** Daylight inside a glazed hall: a warm sun, soft sky light from above, green bounce from below, and ambient occlusion in screen space (a GTAO pass). */
+  daylight?: boolean;
   /** A view this many metres high instead of a perspective one: front, side and top at one scale for a drawing sheet. */
   ortho?: number;
   /** Fit the camera's distance so the models fill this share of the picture's width or height (0.8 is the review's rule). */
@@ -69,6 +71,10 @@ const OPACITY = ${OPACITY};
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { GTAOPass } from "three/addons/postprocessing/GTAOPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -125,7 +131,9 @@ window.draw = async (job, shot) => {
   sun.shadow.bias = shot.shadowBias ? -0.0015 : -0.0004; sun.shadow.normalBias = r * (shot.shadowBias ?? 0.0004);
   sun.shadow.camera.updateProjectionMatrix();
   const rim = new THREE.DirectionalLight("#9fc4ff", shot.look === "line" ? 0 : 0.8); rim.position.set(-0.6, -0.2, -0.8);
-  scene.add(sun, sun.target, rim, new THREE.HemisphereLight("#cfe0ff", "#1a1d24", shot.look === "line" ? 0.8 : 0.5));
+  const hemi = new THREE.HemisphereLight("#cfe0ff", "#1a1d24", shot.look === "line" ? 0.8 : 0.5);
+  if (shot.daylight) { scene.environmentIntensity = 0.3; sun.color.set("#ffd7a0"); sun.intensity = 3.6; sun.shadow.radius = 5; rim.intensity = 0; hemi.color.set("#bcd8ff"); hemi.groundColor.set("#b3bf93"); hemi.intensity = 1.3; }
+  scene.add(sun, sun.target, rim, hemi);
   if (shot.fill && !shot.ortho) {
     // the silhouette comes from the vertices themselves (a thousand or so from each mesh), not from the box round them
     const corners = [];
@@ -168,7 +176,18 @@ window.draw = async (job, shot) => {
     const light = new THREE.PointLight('#7fc4ff', 1800, p.len * 3, 1.6); light.position.set(...p.at).addScaledVector(dir, p.r * 0.6); scene.add(light);
   }
   for (const sp of shot.spots ?? []) { const l = new THREE.SpotLight(sp.color, sp.intensity, 0, sp.angle, 0.4, 1); l.position.set(...sp.at); l.target.position.set(...sp.target); scene.add(l, l.target); }
-  renderer.render(scene, camera);
+  if (shot.daylight) {
+    const composer = new EffectComposer(renderer);
+    composer.setPixelRatio(1); composer.setSize(w, h);
+    composer.addPass(new RenderPass(scene, camera));
+    const gtao = new GTAOPass(scene, camera, w, h);
+    gtao.updateGtaoMaterial({ radius: 1.6, distanceExponent: 1.1, thickness: 1.2, scale: 1.0, samples: 16, distanceFallOff: 1, screenSpaceRadius: false });
+    gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+    composer.addPass(gtao);
+    composer.addPass(new OutputPass());
+    composer.render();
+    composer.dispose();
+  } else renderer.render(scene, camera);
   camera.updateMatrixWorld();
   const points = (shot.points ?? []).map((p) => { const v = new THREE.Vector3(...p.at).project(camera); return { id: p.id, x: Math.round(((v.x + 1) / 2) * w), y: Math.round(((1 - v.y) / 2) * h), behind: v.z > 1 }; });
   const info = { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, geometries: renderer.info.memory.geometries, points };
