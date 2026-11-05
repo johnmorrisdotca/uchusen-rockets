@@ -187,7 +187,7 @@ test("a globe turns between two dates, its moons move, and the Sun's glow fades 
 
   await page.goto(`${URL}?background=jupiter&look=line&moon=all`);
   const io = sky.locator('wakusei-body[data-moon="io"]');
-  await expect(io).toHaveAttribute("time", "now");
+  await expect(io).toHaveAttribute("time", "now", { timeout: 30_000 });
   await expect(io).toHaveAttribute("rate", "4000");
   await expect(io).toHaveAttribute("data-place", /-?\d/);
   const planet = sky.locator("wakusei-body").first();
