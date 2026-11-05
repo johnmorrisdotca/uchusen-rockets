@@ -1,5 +1,5 @@
 // The construction swarm in the 3D view. Each drone is a box about a metre across, with a ringed emitter, two lamps and a small glow, a stand-in until the drone exists. The beam is a short translucent cone. One set of instanced meshes, disposed with the view.
-import { AdditiveBlending, BoxGeometry, Color, ConeGeometry, DoubleSide, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D } from "three";
+import { AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, DoubleSide, Group, InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D } from "three";
 
 const CAP = 100;
 const RINGS = 3;
@@ -20,6 +20,8 @@ export class SwarmRig {
   private readonly beams: InstancedMesh;
   private readonly rings: InstancedMesh;
   private readonly sparks: InstancedMesh;
+  private readonly paths: LineSegments;
+  private readonly pathPositions = new Float32Array(CAP * 6);
   private readonly scratch = new Matrix4();
   private readonly aim = new Quaternion();
   private readonly from = new Vector3();
@@ -46,6 +48,11 @@ export class SwarmRig {
       mesh.frustumCulled = false;
       this.group.add(mesh);
     }
+    const pathGeo = new BufferGeometry();
+    pathGeo.setAttribute("position", new BufferAttribute(this.pathPositions, 3));
+    this.paths = new LineSegments(pathGeo, new LineBasicMaterial({ color: new Color("#b7c6ff"), transparent: true, opacity: 0.45, blending: AdditiveBlending, depthWrite: false }));
+    this.paths.frustumCulled = false;
+    this.group.add(this.paths);
     const steel = new MeshStandardMaterial({ color: new Color("#8b93a1"), roughness: 0.6, metalness: 0.2 });
     const post = new BoxGeometry(2, 36, 2);
     const bar = new BoxGeometry(28, 2, 2);
@@ -119,6 +126,18 @@ export class SwarmRig {
     this.beams.instanceMatrix.needsUpdate = true;
     this.rings.instanceMatrix.needsUpdate = true;
     this.sparks.instanceMatrix.needsUpdate = true;
+    for (let i = 0; i < points.length; i += 1) {
+      const at = points[i] ?? [0, 0, 0];
+      this.pathPositions[i * 6] = dock[0];
+      this.pathPositions[i * 6 + 1] = dock[1];
+      this.pathPositions[i * 6 + 2] = dock[2];
+      this.pathPositions[i * 6 + 3] = at[0];
+      this.pathPositions[i * 6 + 4] = at[1];
+      this.pathPositions[i * 6 + 5] = at[2];
+    }
+    this.paths.geometry.setDrawRange(0, points.length * 2);
+    const position = this.paths.geometry.getAttribute("position");
+    position.needsUpdate = true;
     const frame = this.group.getObjectByName("dock");
     if (frame) frame.position.set(dock[0], dock[1], dock[2]);
     this.group.visible = true;

@@ -146,6 +146,7 @@ export interface Carry {
  * @param steps The ship's build order.
  * @param slotAt Where a finished slot stands.
  * @param dock The parts stack, beside the ship.
+ * @param length The ship's length, stern then bow, so drones in transit spread along it. Omitted, they spread from the stack to the slot.
  * @returns One carry per job.
  * @example
  * ```ts
@@ -156,7 +157,7 @@ export interface Carry {
  * console.log(carries(jobs, 0, steps, () => [0, 0, 0], [40, 0, 0]).length);
  * ```
  */
-export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly PlayStep[], slotAt: (slot: string) => readonly [number, number, number] | undefined, dock: readonly [number, number, number]): Carry[] {
+export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly PlayStep[], slotAt: (slot: string) => readonly [number, number, number] | undefined, dock: readonly [number, number, number], length?: readonly [number, number]): Carry[] {
   const frame = playFrame(steps, at);
   const going = frame.going;
   const n = jobs.length;
@@ -182,14 +183,13 @@ export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly P
       return { drone: job.drone, slot: job.slot, part: cargo, where, duty: "work" };
     }
     if (i < n - parkN) {
-      const along = 0.08 + ((job.drone * 3) % 10) / 10 * 0.84;
-      const lane = dock[0] - 6 - (job.drone % 4) * 8;
-      const lift = ((job.drone % 5) - 2) * 12;
-      const where: [number, number, number] = [
-        lane,
-        dock[1] + (slot[1] - dock[1]) * along + ((job.drone % 3) - 1) * 10,
-        dock[2] + (slot[2] - dock[2]) * along + lift,
-      ];
+      const transitIndex = i - workN;
+      const transitCount = Math.max(1, n - parkN - workN);
+      const stern = length ? Math.min(length[0], length[1]) : Math.min(dock[1], slot[1]);
+      const bow = length ? Math.max(length[0], length[1]) : Math.max(dock[1], slot[1]);
+      const t = transitCount === 1 ? 0.5 : transitIndex / (transitCount - 1);
+      const lane = dock[0] - 12 - (job.drone % 3) * 8;
+      const where: [number, number, number] = [lane, stern + (bow - stern) * t + ((job.drone % 3) - 1) * 4, dock[2] + ((job.drone % 5) - 2) * 8];
       return { drone: job.drone, slot: job.slot, part: aimOf(where, slot, 5), where, duty: "transit" };
     }
     const turn = job.drone * 2.399;

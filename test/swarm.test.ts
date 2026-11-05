@@ -59,6 +59,10 @@ test("drones split between the work, the path and the berth, and a part waits fo
     return distance > 8 && distance < 28;
   }));
   assert.ok(work.every((one) => one.part[0] > 40 && one.part[0] < 100));
+  const along = carries(jobs, at, steps, () => [0, 170, 0], dock, [0, 380]).filter((one) => one.duty === "transit");
+  const alongY = along.map((one) => one.where[1]);
+  assert.ok(Math.max(...alongY) - Math.min(...alongY) > 300);
+  assert.ok(along.every((one) => one.where[0] < dock[0] && one.where[0] > dock[0] - 40));
   assert.equal(carries(swarmJobs(steps, 24, 1), 1, steps, () => [0, 0, 0], dock).length, 0);
   const parked = berthRing(24, dock);
   assert.equal(parked.length, 24);

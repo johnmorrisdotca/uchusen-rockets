@@ -1224,7 +1224,8 @@ export class RocketViewer {
     }
     const count = swarmCount(built.report.variant?.id ?? "") ?? 0;
     const jobs = swarmJobs(steps, count, at);
-    const poses = carries(jobs, at, steps, (slot) => slotAt.get(slot), dock);
+    const ys = shown.map((place) => place.at[1]);
+    const poses = carries(jobs, at, steps, (slot) => slotAt.get(slot), dock, [Math.min(...ys), Math.max(...ys)]);
     this.swarm ??= new SwarmRig(this.root);
     this.swarm.show(poses, jobs.length ? [] : berthRing(count, dock), dock);
     this.canvas.dataset.swarm = String(count);
