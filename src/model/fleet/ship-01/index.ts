@@ -2,6 +2,7 @@
 // placed. Every builder works in ship metres (X across, Y from the tail, Z dorsal); `local` moves a part's pieces so its origin is the middle of its base on the spine, or its own place, as every part of the package has it. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
 import { COLLARS, isCoarse, place, type Piece } from "./adapter.ts";
+import { DOCK, dockingPieces } from "./docking.ts";
 import { boomPieces, hubPieces, SPINE, SPINE_Y } from "./hull.ts";
 import { industrialWheel } from "./wheelparts.ts";
 import { type Order, ringPieces, rings, sectionPieces } from "./rings.ts";
@@ -89,6 +90,18 @@ const hubs = (): HanabusaPart => ({
   pieces: (o) => local(hubPieces(), 0, 128, 0, o?.level),
 });
 
+const docks = (): HanabusaPart => ({
+  id: "docks",
+  name: "Docking arms: a crew port and a small-craft berth",
+  kind: "module",
+  y0: DOCK.face - 12.4,
+  place: { x: 0, z: 0 },
+  height: 17,
+  diameter: 2 * DOCK.reach + 10,
+  note: `Two arms on the still keel at the bow, outside the hull: an S-class port for a crew vehicle (Dragon) and an M-class berth with an empty cradle for the ship's own small craft, well clear of every turning part. Descends from ${ANCESTORS.node}.`,
+  pieces: (o) => local(dockingPieces(), 0, DOCK.face - 12.4, 0, o?.level),
+});
+
 const ring = (order: Order, use: "garden" | "research" | "living"): HanabusaPart => {
   const r = rings(order).find((one) => one.use === (use === "garden" ? "hydro" : use))!;
   return {
@@ -133,7 +146,7 @@ const section = (): HanabusaPart => {
 
 /** Every part of the ship, each once. */
 export function parts(): HanabusaPart[] {
-  return [...spine(), boom(-1), boom(1), hubs(), ring("bow", "garden"), ring("bow", "research"), ring("bow", "living"), ring("aft", "garden"), ring("aft", "research"), ring("aft", "living"), wheel(), section()];
+  return [...spine(), boom(-1), boom(1), hubs(), docks(), ring("bow", "garden"), ring("bow", "research"), ring("bow", "living"), ring("aft", "garden"), ring("aft", "research"), ring("aft", "living"), wheel(), section()];
 }
 
 export { COLLARS };

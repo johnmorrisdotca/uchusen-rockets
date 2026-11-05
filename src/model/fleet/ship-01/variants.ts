@@ -15,6 +15,7 @@ export const HANABUSA_VARIANT_SLOTS: Readonly<Record<string, Readonly<Record<str
       "boom-port": "boom-port",
       "boom-starboard": "boom-starboard",
       hubs: "hubs",
+      docks: "docks",
       "ring-garden": `ring-garden${sfx}`,
       "ring-research": `ring-research${sfx}`,
       "ring-living": o.section ? "ring-living-section" : `ring-living${sfx}`,

@@ -10,6 +10,7 @@ import { ANCESTORS, DRIVE, ENGINES, ENVELOPE, HISTORY, IDENTITY, journey, labelD
 import { rings, ship4 } from "../src/model/fleet/ship-01/rings.ts";
 import { gAt, rpmFor, SPIN, SPIN4 } from "../src/model/fleet/ship-01/spin.ts";
 import { SPINE_Y } from "../src/model/fleet/ship-01/hull.ts";
+import { clearance, DOCK, dockingPieces } from "../src/model/fleet/ship-01/docking.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);
@@ -111,7 +112,7 @@ test("no module has a bare surface: hundreds of pieces and many kinds of detail,
   for (const part of all) {
     const pieces = part.pieces();
     total += pieces.length;
-    if (["hubs", "wheel-industrial", "ring-living-section", "adapter", "drive"].includes(part.id)) continue;
+    if (["hubs", "wheel-industrial", "ring-living-section", "adapter", "drive", "docks"].includes(part.id)) continue;
     assert.ok(pieces.length >= 400, `${part.id}: ${pieces.length} pieces`);
     assert.ok(materialsOf(pieces).size >= 6, `${part.id}: ${materialsOf(pieces).size} materials`);
   }
@@ -211,4 +212,22 @@ test("every module names the real hardware it descends from, and there is no bel
 
 test("the ring order is one parameter, and both orders build the same pieces", () => {
   assert.equal(ship4("bow").length, ship4("aft").length);
+});
+
+test("the docking plan: a crew port and a small-craft berth outside the hull, no Starship berth, and clear of everything that turns", () => {
+  assert.equal(DOCK.small.collar, "S");
+  assert.equal(DOCK.medium.collar, "M");
+  const text = specification().map((line) => `${line.name} ${line.value} ${line.note ?? ""}`).join(" ");
+  assert.ok(/Docking/.test(text) && /Dragon/.test(text) && /no Starship berth/.test(text));
+  assert.ok(SECTIONS.some((s) => s.id === "dock-crew") && SECTIONS.some((s) => s.id === "dock-berth"));
+  assert.ok(LIFE.docking.includes("no berth for a Starship stack"));
+  // the nearest approach: a docked craft's lowest point against the boom tops and the garden ring, and its reach against the booms' inner radius
+  const c = clearance();
+  assert.ok(c.toBooms >= 25, `${c.toBooms} m to the tops of the booms`);
+  assert.ok(c.toRing >= 40, `${c.toRing} m to the garden ring`);
+  assert.ok(c.reach < 20, `a docked craft reaches ${c.reach} m from the axis`);
+  // and in the meshes: nothing of the docking arms is lower than the tops of the booms, or past 22 m from the keel's axis
+  const { min, max } = boundsOf(meshOf(dockingPieces()));
+  assert.ok(min[1] > 100 + 17 * 24 + 20, `the arms start ${min[1]} m up`);
+  assert.ok(Math.max(Math.abs(min[0]), Math.abs(max[0])) < 22, `the arms reach ${max[0]} m`);
 });

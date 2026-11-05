@@ -102,9 +102,19 @@ Every voyage the ring that turns slowest is given a name by the children; the ga
 - **The survey pod's lander bay** drops away at its collar to descend to a planet with its craft; the bay is shown empty, with its cradle and rails.
 - **The industrial wheel** can stay behind as a station at a destination.
 
-## Docking life
+## Docking plan
 
-Visitors dock at the hub node's four ports on the still keel; the inflatable habitat modules (descendants of the ISS BEAM and Sierra Space LIFE) stow small on the ports and inflate at a destination (a design for the full build; the concepts showed a stowed 9 m drum and an inflated 22 m hull).
+An explorer takes only what it needs, and everything docks outside the hull, as at a space station.
+
+| Port or berth | Class | Takes | Where |
+|---|---|---|---|
+| Crew port | S (3 m ring, 1.4 m bore) | a crew vehicle: Dragon, 4 m wide and 8.3 m long, docking nose-up from below | an arm of the still keel at the bow, 16 m from the axis, +X side, at 551 m from the tail |
+| Small-craft berth | M (6 m ring, 3 m bore) | the ship's own ATC (Auxiliary Transfer Craft), up to 6 m wide and 12 m long; shown empty, with guide rails, clamp arms and hazard chocks | the opposite arm, -X side |
+| Hub node | four L-class ports | the inflatable habitat modules (descendants of the ISS BEAM and Sierra Space LIFE), stowed small and inflated at a destination | the docking hub node at 482 m |
+
+Why: the ship's job is to carry people to a place, survey it and send small craft down, so it needs a way to take a crew vehicle and to keep its own craft. It does not carry or service other ships, so it has no berth for a Starship stack (124 m by 9 m): carriers and service ships such as Ariake take those, and the fleet as a whole handles craft of several sizes.
+
+Clearance from what turns: the arms stand on the still keel at the bow, beyond the tops of the rotating booms (508 m) and the garden ring (490 m). A craft docked at the S port reaches down to 539 m, so it is 31 m above the tops of the booms and 47 m above the garden ring, and 19.2 m from the axis at most. `clearance()` in `docking.ts` computes it and `test/ship-01.test.ts` holds it. The sheets mark both ports and one view (sheet 4) shows a Dragon docked at true scale, drawn from the package's own Dragon model.
 
 ## Looks
 

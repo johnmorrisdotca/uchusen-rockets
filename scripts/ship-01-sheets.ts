@@ -10,6 +10,8 @@ import { toGlb } from "../src/build/glb.ts";
 import { FLEET_PALETTE } from "../src/model/fleet/ship-01/adapter.ts";
 import { parts, type HanabusaPart } from "../src/model/fleet/ship-01/index.ts";
 import { CARDS, SHIP_INSETS } from "../src/model/fleet/ship-01/insets.ts";
+import { clearance, DOCK } from "../src/model/fleet/ship-01/docking.ts";
+import { PART_ENTRIES } from "../src/index.ts";
 import { ENGINES, ENVELOPE, HULL, IDENTITY, labels, deckSummary, OPERATOR, specification, STATUS, TITLE_BLOCK, ANCESTORS } from "../src/model/fleet/ship-01/specs.ts";
 import { HANABUSA_VARIANT_SLOTS } from "../src/model/fleet/ship-01/variants.ts";
 import { MATERIALS } from "../src/model/materials.ts";
@@ -72,7 +74,16 @@ const PPM = 3;
 const labelPoints = labels().map((label) => ({ id: label.id, at: label.at }));
 const modulePoints = all.filter((part) => slots("hanabusa").includes(part.id)).map((part, i) => ({ id: part.id, at: ((): V3 => { const [x, y, z] = explodedAt(part, i); return [x, y + part.height / 2, z + 6]; })() }));
 const shots = (name: string, size: [number, number], extra: Record<string, unknown>) => ({ name, size, shadowBias: 0.004, ...extra });
-const jobs: { glb: string; shots: Record<string, unknown>[] }[] = [
+// a crew vehicle docked at true scale: the package's own Dragon (trunk and capsule), nose up to the S-class port
+const dragon = (() => {
+  const pieces = (id: string) => (PART_ENTRIES.find((e) => e.record.id === id) as { pieces: () => Piece[] }).pieces();
+  const file = join(pics, "dragon.glb");
+  writeFileSync(file, toGlb([{ name: "trunk", mesh: meshOf(pieces("dragon-dragon-2-trunk")), at: [0, 0, 0] }, { name: "capsule", mesh: meshOf(pieces("dragon-dragon-2-capsule")), at: [0, 3.6, 0] }]).bytes);
+  return file;
+})();
+const dockView = glb("dockview", ["lab", "survey-pod", "solarium", "nav-deck", "dome", "docks", "tank-8", "node"]);
+const jobs: { glb: string; shots: Record<string, unknown>[]; more?: { glb: string; at: V3 }[] }[] = [
+  { glb: dockView, more: [{ glb: dragon, at: [DOCK.reach, DOCK.face - 8.1, 0] }], shots: [shots("docked", [1300, 700], { eye: [60, 505, 40], target: [0, 545, 0], fov: 34, shadow: 80, sunDir: [0.4, 0.3, 0.8] })] },
   { glb: files.together, shots: [
     shots("sheet1-tq", [2400, 1300], { fill: 0.8, eye: [620, 560, 360], target: [0, 300, 0], fov: 38, shadow: 360, sunDir: [0.35, 1, 0.45], points: labelPoints }),
     shots("ga-side", [ENVELOPE.length * PPM + 120, 240 * PPM], { eye: [900, 300, 0], target: [0, 300, 0], up: [0, 0, 1], ortho: 240, shadow: 340 }),
@@ -169,7 +180,7 @@ try {
 
   // 4: variants
   const cell = (title: string, name: string, note: string) => `<div class="panel"><h2>${esc(title)}</h2><img src="${img(name)}" style="width:100%"/><div style="color:#9fb4c8;margin-top:6px">${esc(note)}</div></div>`;
-  await shoot("4-variants.png", page(4, "VARIANTS: RING ORDER, SECTION VIEW, LIT", "PERSPECTIVE · NOT TO SCALE", `<div class="grid" style="grid-template-columns:1fr 1fr">${cell("THE RINGS STEP UP FROM THE BOW (DEFAULT)", "var-bow", "Garden 48 m, research 62 m, living 76 m: seen from ahead every ring has open sky above it.")}${cell("THE OTHER ORDER", "var-aft", "The smallest ring at the stern: one choice of the part list.")}${cell("SECTION VIEW OF THE LIVING RING (LINE LOOK)", "var-section", "The glass cut away, the section lines of the floor, the three terrace steps and the canal.")}${cell("LIT: LED LIGHTING", "var-lit", "Window bands, grow-lamps and the thruster coils lit; the glass shows the floors.")}</div>`));
+  await shoot("4-variants.png", page(4, "VARIANTS: RING ORDER, SECTION VIEW, LIT", "PERSPECTIVE · NOT TO SCALE", `<div class="grid" style="grid-template-columns:1fr 1fr">${cell("THE RINGS STEP UP FROM THE BOW (DEFAULT)", "var-bow", "Garden 48 m, research 62 m, living 76 m: seen from ahead every ring has open sky above it.")}${cell("THE OTHER ORDER", "var-aft", "The smallest ring at the stern: one choice of the part list.")}${cell("SECTION VIEW OF THE LIVING RING (LINE LOOK)", "var-section", "The glass cut away, the section lines of the floor, the three terrace steps and the canal.")}${cell("LIT: LED LIGHTING", "var-lit", "Window bands, grow-lamps and the thruster coils lit; the glass shows the floors.")}</div><div class="panel" style="margin-top:18px"><h2>DOCKING PLAN: AN EXPLORER TAKES ONLY WHAT IT NEEDS</h2><div style="display:flex;gap:24px"><img src="${img("docked")}" style="width:55%"/><div><b>S-class crew port</b>: a crew vehicle (Dragon, 4 m wide, 8.3 m long, shown docked at true scale, nose up).<br><b>M-class small-craft berth</b>: the ship's own ATC, with guide rails, clamp arms and chocks; shown empty.<br>Both stand on two arms of the still keel at the bow, outside the hull. The lowest point of a docked craft is ${clearance().toBooms.toFixed(0)} m above the tops of the booms and ${clearance().toRing.toFixed(0)} m above the garden ring, and it reaches ${clearance().reach.toFixed(0)} m from the axis, so nothing that turns can touch it.<br>No berth for a Starship stack: carriers and service ships take those. The hub node's four ports hold the inflatable modules.</div></div></div>`));
 
   // 5: hull layers
   const total = HULL.layers.reduce((s, l) => s + l.mm, 0);

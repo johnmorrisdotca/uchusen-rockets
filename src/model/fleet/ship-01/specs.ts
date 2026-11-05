@@ -4,6 +4,7 @@ import type { EngineCard, HullStack, Section, SectionRole, Vec3 } from "./adapte
 import { designation, FLEET_MAKER, HULL_STACKS } from "./adapter.ts";
 import { rings, RING_ORDER_DEFAULT } from "./rings.ts";
 import { SPINE, SPINE_Y } from "./hull.ts";
+import { DOCK } from "./docking.ts";
 import { gAt, rpmFor, SPIN, SPIN4 } from "./spin.ts";
 
 /** Speed of light, standard gravity, a light year and a Julian year, in SI units. */
@@ -143,6 +144,7 @@ export function specification(): Line[] {
     ...wheelLines(),
     { name: "Ship computer", value: IDENTITY.computer, note: "KAZE: Kinetic Autonomous Zonal Executive; its core sits in the navigation deck" },
     { name: "Small craft", value: "ATC (Auxiliary Transfer Craft) and survey probes in the survey pod's bay", note: "the bay is shown empty, with its cradle and rails" },
+    { name: "Docking", value: "1 S-class crew port and 1 M-class small-craft berth, on arms of the still keel at the bow", note: "a crew vehicle (Dragon) and the ship's own ATC; no Starship berth, since an explorer is not a carrier" },
     { name: "Power", value: "1 fusion reactor, 3 solar skirts as the rings' own supply", note: "the skirts carry the wheels' light and the greenhouse; the reactor carries the drive" },
     { name: "Acceleration", value: `${DRIVE.acceleration} g sustained`, note: "the fleet's fastest ship" },
     { name: "Peak speed", value: `${(j.peak * 100).toFixed(2)}% of c on the ${ROUTES.benchmark} light-year route`, note: `shield limit ${DRIVE.shieldLimitOfC} c` },
@@ -227,6 +229,8 @@ export const SECTIONS: readonly HanabusaSection[] = [
   s("ring-garden", "garden-terraces", "Garden ring: hydroponic terraces", "farm", ringAt("garden").y - 8, ringAt("garden").y + 8, 40, 0, "Three tiers of crop beds each side under LED grow-lamps, a service aisle with a gantry.", true),
   s("ring-garden", "garden-skirt", "Garden ring: solar skirt", "power", ringAt("garden").y - 7, ringAt("garden").y + 7, 49, 0, "The ring's band of cells."),
   inSpine("node", "hub-node", "Docking hub node: 4 ports", "dock", 0.05, 0.95, 7, 0, "Four docking ports on arms round a hub, for visiting craft and the inflatable modules.", true),
+  s("docks", "dock-crew", "Crew port: S-class, for a crew vehicle", "dock", DOCK.face - 4, DOCK.face, DOCK.reach, 0, "An S-class port on an arm of the keel's bow, looking down the keel: a Dragon docks nose-up from below.", true),
+  s("docks", "dock-berth", "Small-craft berth: M-class, with an empty cradle", "dock", DOCK.face - 12, DOCK.face, -DOCK.reach, 0, "An M-class berth with guide rails, clamp arms and hazard chocks for the ship's own ATC small craft; shown empty.", true),
   inSpine("adapter", "adapter", "Adapter", "structure", 0, 1, 6, 0, "The cone from the heavy spine to the bow sections."),
   inSpine("crew-drum", "crew-drum", "Crew drum", "crew", 0.05, 0.95, 0, 5, "Cabins of the bow watch.", true),
   inSpine("common-area", "common-area", "Common area", "common", 0.05, 0.95, 0, -5, "Mess, library and exercise room of the bow watch.", true),
@@ -290,7 +294,7 @@ export const LIFE = {
   places: "The favourite places are the canal bridge in the living ring, the research ring's atrium and the solarium beside the dome, where people watch the stars come back after a burn.",
   stories: "Every voyage the ring that turns slowest is given a name by the children; the garden ring's first harvest in 2462 was pressed into a single cup of juice that was shared by everyone aboard.",
   separations: "Two planned separations: the survey pod's lander bay, which drops away at its collar to descend with its craft; and the industrial wheel, which can stay behind as a station at a destination.",
-  docking: "Visitors dock at the hub node's four ports on the still keel; the inflatable habitat modules there are stowed small and inflated at a destination to add living space.",
+  docking: "An explorer takes only what it needs. Its own small craft berth at an M-class cradle and a crew vehicle (Dragon) docks at an S-class port, both on two arms of the still keel at the bow, outside the hull and 30 m or more clear of the booms and rings that turn. There is no berth for a Starship stack: carriers and service ships take those. The hub node's four ports hold the inflatable habitat modules, stowed small and inflated at a destination.",
 } as const;
 
 /** The title-block line of every sheet. */
