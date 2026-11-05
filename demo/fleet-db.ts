@@ -1,6 +1,7 @@
 // The fleet record: the SPX ships already in the package, then one ship's sections, chosen in one row and kept in the address. Nothing new is drawn.
 import { ROCKETS, SLOT_NAMES, variantOf } from "../src/index.ts";
-import { setAssetBase } from "../src/element.ts";
+import { setAssetBase, type UchusenRocket } from "../src/element.ts";
+import { build } from "../src/build/index.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import { isListed } from "./listed.ts";
@@ -9,8 +10,12 @@ import { WORDS } from "./words.js";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
-const ORDER = ["fleet-ship-01", "fleet-ship-03", "fleet-kaminari", "fleet-ship-ariake", "fleet-kyotori", "fleet-drone"];
-const ships = () => ORDER.filter((id) => id in ROCKETS && isListed(id)).map((id) => ROCKETS[id]);
+const FIRST = ["fleet-ship-01", "fleet-ship-03", "fleet-kaminari", "fleet-emiake", "fleet-romaryu", "fleet-ship-ariake", "fleet-kyotori", "fleet-drone"];
+const fleetShip = (id: string) => id in ROCKETS && isListed(id) && ROCKETS[id].maker === "fleet";
+const ships = () => {
+  const rest = Object.keys(ROCKETS).filter((id) => fleetShip(id) && !FIRST.includes(id));
+  return [...FIRST.filter(fleetShip), ...rest].map((id) => ROCKETS[id]);
+};
 
 type Chooser = { word(key: string): string | undefined };
 const say = (key: string): string => {
@@ -81,7 +86,16 @@ const draw = (): void => {
   })));
   const picked = modules.find((section) => section.id === moduleId);
   byId("db-module-job").textContent = picked?.job ?? "";
-  const hero = byId("hero");
+  byId("db-profile-rows").replaceChildren(...(variant?.inspector?.spec ?? []).map(([name, value]) => {
+    const row = document.createElement("tr");
+    const head = document.createElement("th");
+    head.textContent = name;
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.append(head, cell);
+    return row;
+  }));
+  const hero = byId("hero") as UchusenRocket;
   hero.setAttribute("rocket", ship);
   hero.setAttribute("variant", rocket.defaultVariant);
   hero.setAttribute("show", show);
@@ -90,7 +104,35 @@ const draw = (): void => {
     byId("db-length").textContent = metres(size.length);
     byId("db-beam").textContent = metres(size.beam);
     byId("db-height").textContent = metres(size.height);
+    const part = byId("db-part-facts");
+    if (show === "together") {
+      part.hidden = true;
+      part.replaceChildren();
+    } else {
+      const box = build({ rocket: variant.rocket, variant: variant.id }).boundsOf(show);
+      const row = (key: string, n: number) => {
+        const tr = document.createElement("tr");
+        const head = document.createElement("th");
+        head.textContent = say(key);
+        const cell = document.createElement("td");
+        cell.textContent = metres(n);
+        tr.append(head, cell);
+        return tr;
+      };
+      const caption = document.createElement("tr");
+      const title = document.createElement("th");
+      title.colSpan = 2;
+      title.textContent = slotLabel(show);
+      caption.append(title);
+      part.replaceChildren(caption, row("length", box.max[1] - box.min[1]), row("beam", box.max[0] - box.min[0]), row("heightStowed", box.max[2] - box.min[2]));
+      part.hidden = false;
+    }
   }
+  if (picked && variant) {
+    const box = build({ rocket: variant.rocket, variant: variant.id }).boundsOf(picked.slot);
+    const span = Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2], 8);
+    hero.focusAt({ slots: [picked.slot], target: [picked.at[0], picked.at[1], picked.at[2]], direction: [0.35, 0.25, 1], distance: span * 1.6 });
+  } else hero.focusAt(null);
 };
 
 draw();
