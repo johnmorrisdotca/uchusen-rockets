@@ -52,15 +52,21 @@ test("two planets and a moon stand behind the rocket, and the picture before is 
   await expect(sky).toHaveAttribute("data-draws", "jupiter");
   await expect(sky.locator("wakusei-body")).toHaveCount(1);
   await expect(sky.locator("svg")).toHaveCount(1);
+  await expect(sky).not.toHaveAttribute("data-moons");
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("moon")).toBeNull();
+  await page.locator('[data-testid="moon-all"]').click();
   await expect(sky).toHaveAttribute("data-moons", /io/);
+  await expect.poll(async () => Number(await sky.locator("wakusei-body").getAttribute("range")), { timeout: 3_000 }).toBeGreaterThan(26);
   await expect(page.locator('[data-testid="moon-heading"]')).toHaveText("Jupiter's moons");
   await expect(moons).toBeHidden();
-  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("moon")).toBeNull();
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("moon")).toBe("all");
   await shot(page, "jupiter-desk");
 
   await page.locator('[data-testid="background-saturn"]').click();
   await expect(sky).toHaveAttribute("data-draws", "saturn");
   await expect(page.locator('[data-testid="moon-heading"]')).toHaveText("Saturn's moons");
+  await expect(sky).not.toHaveAttribute("data-moons");
+  await page.locator('[data-testid="moon-titan"]').click();
   await expect(sky).toHaveAttribute("data-moons", /titan/);
   await expect(moons).toBeHidden();
   await shot(page, "saturn-desk");
@@ -81,6 +87,8 @@ test("two planets and a moon stand behind the rocket, and the picture before is 
   await page.locator('[data-testid="background-earth"]').click();
   await expect(sky).toBeHidden();
   await expect(sky.locator("svg")).toHaveCount(0);
+  await expect(moons).toBeHidden();
+  await page.locator('[data-testid="moon-moon"]').click();
   await expect(moons).toHaveAttribute("data-draws", "moon");
   await page.locator('[data-testid="hero"]').scrollIntoViewIfNeeded();
   await expect(earth.locator("svg")).toBeVisible({ timeout: 30_000 });
@@ -112,7 +120,7 @@ test("each look uses its own kind of picture for the body and for a moon beside 
   await expect(sky.locator("wakusei-body")).toHaveCount(1);
   await expect(sky.locator("svg")).toHaveCount(1);
 
-  await page.goto(`${URL}?background=jupiter&look=line`);
+  await page.goto(`${URL}?background=jupiter&look=line&moon=all`);
   await expect(sky).toHaveAttribute("data-form", "line");
   await expect(sky).toHaveAttribute("data-moons", /io/);
   await expect(sky.locator("wakusei-body")).toHaveCount(1);
@@ -126,7 +134,7 @@ test("each look uses its own kind of picture for the body and for a moon beside 
   await expect(sky.locator("wakusei-body")).toHaveCount(1);
   await expect.poll(() => texture(sky), { timeout: 30_000 }).toBeGreaterThan(0);
 
-  await page.goto(`${URL}?background=jupiter&look=painted`);
+  await page.goto(`${URL}?background=jupiter&look=painted&moon=io`);
   await hero.scrollIntoViewIfNeeded();
   await expect(sky).toHaveAttribute("data-form", "painted", { timeout: 30_000 });
   await expect(sky.locator("svg")).toHaveCount(0);
@@ -135,7 +143,7 @@ test("each look uses its own kind of picture for the body and for a moon beside 
   await expect(moons).toBeHidden();
   await expect.poll(() => texture(sky), { timeout: 30_000 }).toBeGreaterThan(0);
 
-  await page.goto(`${URL}?background=earth&look=painted`);
+  await page.goto(`${URL}?background=earth&look=painted&moon=moon`);
   await hero.scrollIntoViewIfNeeded();
   await expect(earth.locator("chikyu-earth-realistic")).toBeVisible({ timeout: 30_000 });
   await expect(earth.locator("svg")).toHaveCount(0);
@@ -167,7 +175,7 @@ test("a globe turns between two dates, its moons move, and the Sun's glow fades 
   await body.evaluate((node) => node.setAttribute("time", "2026-07-01T00:00:00Z"));
   await expect.poll(markup).not.toBe(turned);
 
-  await page.goto(`${URL}?background=jupiter&look=line`);
+  await page.goto(`${URL}?background=jupiter&look=line&moon=all`);
   await expect(sky.locator("svg circle").first()).toBeVisible();
   const nowPlaces = await circles();
   await body.evaluate((node) => node.setAttribute("time", "2026-01-01T00:00:00Z"));
@@ -191,13 +199,25 @@ test("a globe turns between two dates, its moons move, and the Sun's glow fades 
 
   if (process.env.SHOTS && test.info().project.name === "chromium-desk") {
     const texture = () => body.evaluate((node) => (node as unknown as { stats?: { textureWidth?: number } }).stats?.textureWidth ?? 0);
-    for (const id of ["jupiter", "saturn", "neptune", "sun"]) {
+    for (const id of ["sun", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]) {
       await page.goto(`${URL}?background=${id}&look=painted`);
       await page.locator('[data-testid="hero"]').scrollIntoViewIfNeeded();
       await expect.poll(texture, { timeout: 30_000 }).toBeGreaterThan(0);
       await shot(page, `${id}-globe`);
     }
-    await page.goto(`${URL}?background=earth&look=painted`);
+    for (const [query, name] of [
+      ["jupiter&moon=all", "jupiter-moons"],
+      ["jupiter&moon=io", "jupiter-io"],
+      ["saturn&moon=titan", "saturn-titan"],
+      ["mars&moon=phobos", "mars-phobos"],
+    ] as const) {
+      await page.goto(`${URL}?background=${query}&look=painted`);
+      await page.locator('[data-testid="hero"]').scrollIntoViewIfNeeded();
+      await expect.poll(texture, { timeout: 30_000 }).toBeGreaterThan(0);
+      await page.waitForTimeout(1200);
+      await shot(page, name);
+    }
+    await page.goto(`${URL}?background=earth&look=painted&moon=moon`);
     await page.locator('[data-testid="hero"]').scrollIntoViewIfNeeded();
     await expect(page.locator('[data-testid="earth"] chikyu-earth-realistic')).toBeVisible({ timeout: 30_000 });
     await expect.poll(() => page.locator('[data-testid="sky-moons"] wakusei-body').evaluate((node) => (node as unknown as { stats?: { textureWidth?: number } }).stats?.textureWidth ?? 0), { timeout: 30_000 }).toBeGreaterThan(0);

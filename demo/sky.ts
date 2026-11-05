@@ -1,4 +1,6 @@
 // Backgrounds other than the Earth, drawn by wakusei-planets and only after one is chosen. Nothing here copies a picture or a size.
+// The framing is the Earth's orbit view (demo/earth-model.ts): the same placement, through this element's own camera.
+import { placementIn } from "./earth-model.ts";
 
 type Lang = "en" | "ja";
 type SkyForm = "line" | "painted";
@@ -34,23 +36,70 @@ const DISC_FILL = 0.94;
 
 const trueWidth = (planet: { radiusKm: number }, moon: { radiusKm: number }, rings: number) => PLANET_WIDTH * (DISC_FILL / Math.max(1, rings)) * (moon.radiusKm / planet.radiusKm);
 
-/** Moons that read well behind a planet when no single moon is chosen. Any other moon waits until it is picked. */
+/** The moons to draw. None, until one is chosen; `all` is every moon of that planet. A planet on its own is the globe alone. */
 export const companionsFor = (body: string, moon: string, moonsOf: (id: string) => readonly string[]): string[] => {
+  if (!moon || body === "none" || body === "sun") return [];
   const list = moonsOf(body);
-  if (moon && list.includes(moon)) return [moon];
-  if (body === "earth" && list.includes("moon")) return ["moon"];
-  if (body === "jupiter") return ["io", "europa", "ganymede", "callisto"].filter((id) => list.includes(id));
-  if (body === "saturn" && list.includes("titan")) return ["titan"];
-  return [];
+  if (moon === "all") return [...list];
+  return list.includes(moon) ? [moon] : [];
 };
 
 let ticket = 0;
 let stopClock: (() => void) | null = null;
+let stopWatch: (() => void) | null = null;
 
 /** Simulated seconds for each real second. A body then turns on its own period and its own way, Venus and Uranus included, fast enough to see. */
 const SPIN_RATE = "4000";
-/** A moon farther out than this, in planet radii, stays out of the picture. One distant moon would shrink the planet to a speck. The package cuts there too. */
-const MOON_REACH = 80;
+/** The picture's half-width, in body radii, when a body is drawn on its own. The package uses the same room. */
+const ROOM = 2.2;
+/** Camera zoom that makes the disc's radius 0.86 of the longer side, which is what placementIn asks for, while the extent is ROOM. */
+const ORBIT_ZOOM = 1.72 * ROOM;
+/** How long the view takes to open from the orbit picture out to the chosen moons. */
+const RANGE_MS = 1000;
+
+type Framed = HTMLElement & {
+  setView(view: { yaw?: number; tilt?: number; zoom?: number; panX?: number; panY?: number }): void;
+};
+
+/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. `range` above ROOM pulls back and keeps that horizon where it is. `viewZoom` below 1 opens the same picture further. */
+const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: number) => {
+  const width = holder.clientWidth;
+  const height = holder.clientHeight;
+  if (width < 2 || height < 2 || typeof node.setView !== "function") return;
+  const side = Math.max(width, height);
+  node.style.width = `${side}px`;
+  node.style.height = `${side}px`;
+  node.style.aspectRatio = "auto";
+  const place = placementIn(width, height);
+  const moons = node.hasAttribute("moons");
+  const camera = moons ? ORBIT_ZOOM : ORBIT_ZOOM * viewZoom;
+  const shrink = moons ? ROOM / Math.max(ROOM, range) : viewZoom;
+  node.setView({
+    yaw: 0,
+    tilt: 0,
+    zoom: camera,
+    panX: (-2 * place.panX * shrink) / side,
+    panY: (2 * place.panY * shrink) / side,
+  });
+};
+
+/** The reader's zoom. Below 1 opens the picture further. A moon picture opens its range; a body alone opens the camera, and neither one adds moons. */
+export const frameSky = (node: HTMLElement, holder: HTMLElement, viewZoom = 1) => {
+  const zoom = Math.max(0.25, viewZoom);
+  node.dataset.viewZoom = String(zoom);
+  const base = Number(node.dataset.baseRange);
+  const range = node.hasAttribute("moons") ? (base > 0 ? base / zoom : Number(node.getAttribute("range")) || ROOM) : ROOM;
+  if (node.hasAttribute("moons") && base > 0) node.setAttribute("range", range.toFixed(2));
+  paintFrame(node as Framed, holder, range, zoom);
+};
+
+const watchFrame = (node: HTMLElement, holder: HTMLElement) => {
+  const apply = () => frameSky(node, holder, Number(node.dataset.viewZoom) || 1);
+  const size = new ResizeObserver(apply);
+  size.observe(holder);
+  apply();
+  return () => size.disconnect();
+};
 
 const clear = (holder: HTMLElement) => {
   holder.replaceChildren();
@@ -67,6 +116,8 @@ const clear = (holder: HTMLElement) => {
 export const placeSky = (planet: HTMLElement, moons: HTMLElement, body: string, companions: readonly string[], form: SkyForm, lang: Lang, chosen = "") => {
   stopClock?.();
   stopClock = null;
+  stopWatch?.();
+  stopWatch = null;
   const mine = ++ticket;
   clear(planet);
   clear(moons);
@@ -84,17 +135,23 @@ const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, body:
   if (body !== "earth" && known(body)) {
     await loadBody(body);
     if (mine !== ticket) return;
-    const facts = BODIES[body as keyof typeof BODIES];
-    const around = facts.parent === undefined && body !== "sun" ? system(body as "mars", Date.now()).moons.filter((item) => item.distance <= MOON_REACH) : [];
+    const wanted = companions.filter((id) => known(id));
     if (body === "sun") planet.append(sunGlow());
-    planet.append(globe(body, form, lang, around.length > 0));
-    if (mine !== ticket) return clear(planet);
+    const node = globe(body, form, lang, wanted.length > 0);
+    planet.append(node);
+    planet.hidden = false;
+    stopWatch = watchFrame(node, planet);
+    if (wanted.length > 0) settleRange(node as Framed, planet, body, wanted);
+    if (mine !== ticket) {
+      stopWatch?.();
+      stopWatch = null;
+      return clear(planet);
+    }
     planet.dataset.draws = body;
     planet.dataset.form = lookOf(form);
     planet.dataset.spin = "clock";
-    if (around.length > 0) planet.dataset.moons = around.map((item) => item.id).join(",");
+    if (wanted.length > 0) planet.dataset.moons = wanted.join(",");
     if (chosen) planet.dataset.chosen = chosen;
-    planet.hidden = false;
   }
   const moonId = body === "earth" ? companions.find(known) : undefined;
   if (!moonId) return;
@@ -123,21 +180,42 @@ const sunGlow = () => {
   return glow;
 };
 
-/** One globe. `withMoons` asks the package for the moons on their real orbits at `time`. */
+/** One globe, as the Earth sees it now, in the orbit framing. `withMoons` puts that planet's moons on their real orbits; the range then opens from the orbit view to them. */
 const globe = (body: string, form: SkyForm, lang: Lang, withMoons: boolean) => {
   const node = document.createElement("wakusei-body");
   node.setAttribute("body", body);
   node.setAttribute("look", lookOf(form));
   node.setAttribute("time", "now");
   node.setAttribute("rate", SPIN_RATE);
+  node.setAttribute("live", "always");
   node.setAttribute("labels", "off");
   node.setAttribute("lang", lang);
   if (withMoons) {
     node.setAttribute("moons", "");
-    // Ten radii keeps the inner moons and Saturn's rings at their real places, and leaves the globe big enough to see behind the craft. A moon farther out is simply outside this view.
-    node.setAttribute("range", "10");
-  } else if (body !== "sun") node.setAttribute("fit", "tight");
+    node.setAttribute("range", String(ROOM));
+  }
   return node;
+};
+
+/** Open the view from the orbit picture out to the farthest chosen moon, plus a margin so its orbit fits. The horizon stays where it is. Jupiter's four end near Callisto, about 26 radii. */
+const settleRange = (node: Framed, holder: HTMLElement, body: string, ids: readonly string[]) => {
+  void import("@johnmorrisdotca/wakusei-planets").then(({ system }) => {
+    const placed = system(body as "mars", Date.now()).moons.filter((item) => ids.includes(item.id));
+    const far = placed.reduce((max, item) => Math.max(max, item.distance), 0);
+    const target = Math.max(ROOM, far * 1.15);
+    const start = performance.now();
+    const step = (now: number) => {
+      if (!node.isConnected) return;
+      const t = Math.min(1, (now - start) / RANGE_MS);
+      const eased = 1 - (1 - t) ** 3;
+      const range = ROOM + (target - ROOM) * eased;
+      node.setAttribute("range", range.toFixed(2));
+      paintFrame(node, holder, range, Number(node.dataset.viewZoom) || 1);
+      if (t < 1) requestAnimationFrame(step);
+      else node.dataset.baseRange = target.toFixed(2);
+    };
+    requestAnimationFrame(step);
+  });
 };
 
 type MoonAt = { id: string; x: number; y: number; distance: number };

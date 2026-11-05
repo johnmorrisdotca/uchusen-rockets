@@ -37,8 +37,7 @@ section > p { color: var(--muted); margin: 0 0 1rem; max-width: 70ch; }
 .earth-back[hidden] { display: none; }
 .earth-back svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.55; }
 #sky-back > svg { width: min(88%, 760px); height: auto; }
-#sky-back wakusei-body { position: absolute; left: 50%; top: 50%; width: min(92%, 640px); transform: translate(-50%, -50%); opacity: 0.92; z-index: 1; background: none; }
-#sky-back[data-draws="sun"] wakusei-body { width: min(100%, 760px); }
+#sky-back wakusei-body { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.92; z-index: 1; background: none; }
 #sky-back .sun-glow {
   position: absolute;
   inset: 0;

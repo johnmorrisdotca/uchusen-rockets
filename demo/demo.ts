@@ -16,7 +16,7 @@ import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
-import { companionsFor, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { companionsFor, frameSky, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
 
@@ -54,7 +54,16 @@ const knownWord = (prefix: string, text: string) => (`${prefix}_${wordsKey(text)
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
-bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
+bar.addEventListener("kazoku-viewchange", (event) => {
+  const detail = (event as CustomEvent).detail as { zoom?: number };
+  hero.drive(detail);
+  const zoom = Math.max(0.25, detail.zoom ?? 1);
+  const holder = byId("sky-back");
+  const node = holder.querySelector("wakusei-body");
+  if (!(node instanceof HTMLElement)) return;
+  if (node.hasAttribute("moons") && !node.dataset.baseRange) return;
+  frameSky(node, holder, zoom);
+});
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
 const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
 const askedRocket = address.get("rocket") ?? "starship";
@@ -173,7 +182,7 @@ function syncSky() {
   const lang = japanese() ? "ja" : "en";
   const painted = state.background !== "none" && state.look === "painted" && !realisticBarred;
   const form = painted ? "painted" : "line";
-  const companions = skyBodies ? companionsFor(state.background, state.moon, (id) => skyBodies?.moonsOf(id) ?? []) : state.background === "earth" ? ["moon"] : state.moon ? [state.moon] : [];
+  const companions = skyBodies ? companionsFor(state.background, state.moon, (id) => skyBodies?.moonsOf(id) ?? []) : state.moon && state.moon !== "all" ? [state.moon] : [];
   const key = `${state.background}|${companions.join(",")}|${form}|${lang}`;
   const credit = byId("sky-credit");
   const showCredit = state.background !== "none";
@@ -376,7 +385,7 @@ const skyButton = (id: string, testid: string, on: () => void): HTMLButtonElemen
   const button = el("button", { type: "button", className: id === "none" ? "thumb thumb-none" : "thumb" });
   button.dataset.testid = testid;
   button.dataset.sky = id;
-  const named = id === "none" || id === "earth" || id === "moon" ? say(`background_${id}`) : (skyBodies?.name(id, japanese() ? "ja" : "en") ?? id);
+  const named = id === "none" || id === "earth" || id === "moon" ? say(`background_${id}`) : id === "all" ? say("moonsAll") : (skyBodies?.name(id, japanese() ? "ja" : "en") ?? id);
   button.setAttribute("aria-label", named);
   button.append(el("span", { className: "thumb-dot" }), el("span", { className: "thumb-name", textContent: named }));
   button.addEventListener("click", on);
@@ -394,7 +403,7 @@ const drawSkyButtons = () => {
   heading.hidden = moons.length === 0;
   heading.textContent = moons.length === 0 ? "" : say("moonsOf", { name: planet });
   row.setAttribute("aria-label", heading.textContent);
-  row.replaceChildren(...moons.map((id) => skyButton(id, `moon-${id}`, () => pick({ moon: state.moon === id ? "" : id }))));
+  row.replaceChildren(skyButton("all", "moon-all", () => pick({ moon: state.moon === "all" ? "" : "all" })), ...moons.map((id) => skyButton(id, `moon-${id}`, () => pick({ moon: state.moon === id ? "" : id }))));
   press(byId("backgrounds"), `background-${state.background}`);
   press(row, state.moon ? `moon-${state.moon}` : "");
   void paintThumbs(byId("backgrounds"), lang);
@@ -406,7 +415,7 @@ void skyList().then((got) => {
   if (!got.known(state.background)) {
     state.background = "none";
     state.moon = "";
-  } else if (state.moon && !got.moonsOf(state.background).includes(state.moon)) state.moon = "";
+  } else if (state.moon && state.moon !== "all" && !got.moonsOf(state.background).includes(state.moon)) state.moon = "";
   skyKey = "";
   drawSkyButtons();
   syncEarth();
