@@ -185,8 +185,7 @@ function syncSky() {
   if (!showCredit) return;
   void skyCredit(state.background, state.moon, form).then((text) => {
     if (skyKey !== key) return;
-    const bigger = state.moon !== "" && skyBodies?.enlarged(state.background, state.moon) ? ` ${say("moonsEnlarged")}` : "";
-    credit.textContent = `${text}${bigger}`.trim();
+    credit.textContent = text.trim();
     credit.hidden = credit.textContent === "";
   });
 }
