@@ -1434,6 +1434,10 @@ export class RocketViewer {
     else delete this.canvas.dataset.weld;
     this.canvas.dataset.swarm = String(count);
     this.canvas.dataset.going = frame.going.join(" ");
+    this.canvas.dataset.arc = this.parts
+      .filter((part) => part.holder.visible && (part.slot.includes("ring") || part.slot.includes("wheel")))
+      .map((part) => `${part.slot}:${String(part.holder.userData.arcStat ?? "whole")}`)
+      .join(" ");
     this.canvas.dataset.built = frame.done.filter((slot) => grounded(slot, frame.done)).join(" ");
     this.canvas.dataset.showing = this.parts.filter((part) => !part.beside && part.holder.visible).map((part) => part.slot).join(" ");
     if (!this.progressFramed) {

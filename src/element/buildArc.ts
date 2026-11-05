@@ -106,14 +106,20 @@ export function growPart(holder: Group, grown: number, ring: boolean): void {
   const bucket = Math.round(grown * 32);
   holder.updateWorldMatrix(true, true);
   intoHolder.copy(holder.matrixWorld).invert();
+  let kept = 0;
+  let full = 0;
   holder.traverse((child) => {
     if (!(child instanceof Mesh)) return;
-    if (child.userData.arcBucket === bucket) return;
     const source = sourceOf.get(child) ?? child.geometry;
-    sourceOf.set(child, source);
-    if (child.geometry !== source) child.geometry.dispose();
-    meshToHolder.copy(intoHolder).multiply(child.matrixWorld);
-    child.geometry = wedgeOf(source, meshToHolder, major, grown);
-    child.userData.arcBucket = bucket;
+    full += source.getIndex()?.count ?? source.getAttribute("position")?.count ?? 0;
+    if (child.userData.arcBucket !== bucket) {
+      sourceOf.set(child, source);
+      if (child.geometry !== source) child.geometry.dispose();
+      meshToHolder.copy(intoHolder).multiply(child.matrixWorld);
+      child.geometry = wedgeOf(source, meshToHolder, major, grown);
+      child.userData.arcBucket = bucket;
+    }
+    kept += child.geometry.getIndex()?.count ?? 0;
   });
+  holder.userData.arcStat = `${kept}/${full}`;
 }
