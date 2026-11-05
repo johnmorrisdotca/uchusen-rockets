@@ -92,14 +92,14 @@ const hubs = (): HanabusaPart => ({
 
 const docks = (): HanabusaPart => ({
   id: "docks",
-  name: "Docking arms: a crew port and a small-craft berth",
+  name: "Docking crown and Starship berth",
   kind: "module",
-  y0: DOCK.face - 12.4,
+  y0: DOCK.berth.y0 - 0.5,
   place: { x: 0, z: 0 },
-  height: 17,
-  diameter: 2 * DOCK.reach + 10,
-  note: `Two arms on the still keel at the bow, outside the hull: an S-class port for a crew vehicle (Dragon) and an M-class berth with an empty cradle for the ship's own small craft, well clear of every turning part. Descends from ${ANCESTORS.node}.`,
-  pieces: (o) => local(dockingPieces(), 0, DOCK.face - 12.4, 0, o?.level),
+  height: DOCK.shield.y0 + DOCK.shield.stay + DOCK.shield.depth - (DOCK.berth.y0 - 0.5),
+  diameter: 2 * DOCK.shield.radius + 4,
+  note: `On the still keel at the bow, outside the hull and beyond the tops of the turning booms: three arms with an S-class crew port, an S-class visitor port and an M-class small-craft berth with an empty cradle, a berth along the keel with saddles, stays, a hard-dock collar and umbilicals for a Starship upper stage, pressurised walkways from every berth to the keel's lift, and the bow dust shield ahead of them. Descends from ${ANCESTORS.node} and the ISS's visiting-vehicle berths.`,
+  pieces: (o) => local(dockingPieces(), 0, DOCK.berth.y0 - 0.5, 0, o?.level),
 });
 
 const ring = (order: Order, use: "garden" | "research" | "living"): HanabusaPart => {

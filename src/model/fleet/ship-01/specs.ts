@@ -52,7 +52,7 @@ export const DRIVE = { acceleration: 0.06, exhaustOfC: 0.7, shieldLimitOfC: 0.55
 export const MASS = { inert: 60_000, propellant: 265_000, reserve: 12_000, full: 325_000, crew: 1_200 } as const;
 
 /** What the ship measures: its length from the thruster flares to the dome, and the beam and height of its largest wheel. */
-export const ENVELOPE = { length: 595, beam: 225, height: 225 } as const;
+export const ENVELOPE = { length: 611, beam: 225, height: 225 } as const;
 
 /** The trip between two places `distance` light years apart, accelerating at `g` and turning round at halfway. */
 export interface Journey {
@@ -144,7 +144,8 @@ export function specification(): Line[] {
     ...wheelLines(),
     { name: "Ship computer", value: IDENTITY.computer, note: "KAZE: Kinetic Autonomous Zonal Executive; its core sits in the navigation deck" },
     { name: "Small craft", value: "ATC (Auxiliary Transfer Craft) and survey probes in the survey pod's bay", note: "the bay is shown empty, with its cradle and rails" },
-    { name: "Docking", value: "1 S-class crew port and 1 M-class small-craft berth, on arms of the still keel at the bow", note: "a crew vehicle (Dragon) and the ship's own ATC; no Starship berth, since an explorer is not a carrier" },
+    { name: "Docking", value: "4 L-class hub ports for short calls; at the bow 2 S-class ports, 1 M-class berth and a Starship upper-stage berth, all long stay, all on the still keel", note: "each with a hard-dock collar or saddles, umbilicals (power, coolant, water, air, data) and a pressurised walkway to the keel's lift: Dragon, Starliner, Orion, Soyuz, Progress, HTV-X, the SPX ATC and a Starship upper stage can park for the voyage; a full stack is not berthed" },
+    { name: "Bow dust shield", value: "24 m radius, a dished disc of tile on eight stays", note: "the berths sit in its shadow" },
     { name: "Power", value: "1 fusion reactor, 3 solar skirts as the rings' own supply", note: "the skirts carry the wheels' light and the greenhouse; the reactor carries the drive" },
     { name: "Acceleration", value: `${DRIVE.acceleration} g sustained`, note: "the fleet's fastest ship" },
     { name: "Peak speed", value: `${(j.peak * 100).toFixed(2)}% of c on the ${ROUTES.benchmark} light-year route`, note: `shield limit ${DRIVE.shieldLimitOfC} c` },
@@ -229,8 +230,12 @@ export const SECTIONS: readonly HanabusaSection[] = [
   s("ring-garden", "garden-terraces", "Garden ring: hydroponic terraces", "farm", ringAt("garden").y - 8, ringAt("garden").y + 8, 40, 0, "Three tiers of crop beds each side under LED grow-lamps, a service aisle with a gantry.", true),
   s("ring-garden", "garden-skirt", "Garden ring: solar skirt", "power", ringAt("garden").y - 7, ringAt("garden").y + 7, 49, 0, "The ring's band of cells."),
   inSpine("node", "hub-node", "Docking hub node: 4 ports", "dock", 0.05, 0.95, 7, 0, "Four docking ports on arms round a hub, for visiting craft and the inflatable modules.", true),
-  s("docks", "dock-crew", "Crew port: S-class, for a crew vehicle", "dock", DOCK.face - 4, DOCK.face, DOCK.reach, 0, "An S-class port on an arm of the keel's bow, looking down the keel: a Dragon docks nose-up from below.", true),
-  s("docks", "dock-berth", "Small-craft berth: M-class, with an empty cradle", "dock", DOCK.face - 12, DOCK.face, -DOCK.reach, 0, "An M-class berth with guide rails, clamp arms and hazard chocks for the ship's own ATC small craft; shown empty.", true),
+  s("docks", "dock-crew", "Crew port: S-class, long stay", "dock", DOCK.face - 4, DOCK.face, DOCK.reach, 0, "An S-class port on an arm of the keel's bow, looking down the keel: Dragon, Starliner or Orion dock nose-up from below and may stay the whole voyage on umbilicals.", true),
+  s("docks", "dock-visitor", "Visitor port: S-class, long stay", "dock", DOCK.face - 4, DOCK.face, 0, -DOCK.reach, "An S-class port on the opposite arm for Soyuz and Progress.", true),
+  s("docks", "dock-berth", "Small-craft berth: M-class, with an empty cradle", "dock", DOCK.face - 12, DOCK.face, -DOCK.reach, 0, "An M-class port with guide rails, clamp arms and hazard chocks for the ship's own ATC small craft, and HTV-X at the port ring.", true),
+  s("docks", "dock-starship", "Starship upper-stage berth, long stay", "dock", DOCK.berth.y0, DOCK.berth.y0 + DOCK.berth.length, 0, DOCK.berth.z, "Three saddles on I-beam stays, a hard-dock collar, umbilicals and a walkway along the keel for the upper stage of a Starship (52 m by 9 m): the large visitor, parked for the voyage.", true),
+  s("docks", "dock-walkways", "Pressurised walkways to the keel's lift", "hatch", DOCK.face - 1, DOCK.face + 1, 11, 0, "A tube from every long-stay berth to a lock on the solarium's hull and the keel's lift, so a parked ship's crew live aboard."),
+  s("docks", "bow-shield", "Bow dust shield", "shield", DOCK.shield.y0 + DOCK.shield.stay, DOCK.shield.y0 + DOCK.shield.stay + DOCK.shield.depth, 0, 12, "A dished disc of tile 24 m in radius on eight stays: dust at a large fraction of c hits like bullets, and the whole crown and the berth sit in its shadow."),
   inSpine("adapter", "adapter", "Adapter", "structure", 0, 1, 6, 0, "The cone from the heavy spine to the bow sections."),
   inSpine("crew-drum", "crew-drum", "Crew drum", "crew", 0.05, 0.95, 0, 5, "Cabins of the bow watch.", true),
   inSpine("common-area", "common-area", "Common area", "common", 0.05, 0.95, 0, -5, "Mess, library and exercise room of the bow watch.", true),
@@ -294,7 +299,7 @@ export const LIFE = {
   places: "The favourite places are the canal bridge in the living ring, the research ring's atrium and the solarium beside the dome, where people watch the stars come back after a burn.",
   stories: "Every voyage the ring that turns slowest is given a name by the children; the garden ring's first harvest in 2462 was pressed into a single cup of juice that was shared by everyone aboard.",
   separations: "Two planned separations: the survey pod's lander bay, which drops away at its collar to descend with its craft; and the industrial wheel, which can stay behind as a station at a destination.",
-  docking: "An explorer takes only what it needs. Its own small craft berth at an M-class cradle and a crew vehicle (Dragon) docks at an S-class port, both on two arms of the still keel at the bow, outside the hull and 30 m or more clear of the booms and rings that turn. There is no berth for a Starship stack: carriers and service ships take those. The hub node's four ports hold the inflatable habitat modules, stowed small and inflated at a destination.",
+  docking: "Hanabusa is a habitat, so visiting ships park for the whole journey and their crews live aboard. Every port is on the still keel, never on a ring, and outside the hull. The hub node keeps four L-class ports for short calls and the inflatable habitat modules. At the bow, beyond the tops of the turning booms and in the shadow of the bow dust shield, a docking crown of three arms holds long-stay berths of two collar classes: an S-class crew port (Dragon, Starliner, Orion), an S-class visitor port (Soyuz, Progress) and an M-class berth with a cradle for the ship's own ATC small craft and the port ring for HTV-X. Along the keel a fourth long-stay berth, with saddles, stays, a hard-dock collar and umbilicals, takes the upper stage of a Starship (52 m by 9 m) as the large visitor. Each long-stay berth has power, coolant, water, air and data umbilicals so the ship can be shut down, and a pressurised walkway to the keel's lift. She is a habitat and not a carrier, so a full stack is not berthed.",
 } as const;
 
 /** The title-block line of every sheet. */

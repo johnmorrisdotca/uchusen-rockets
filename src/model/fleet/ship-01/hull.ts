@@ -1,4 +1,4 @@
-// The still hull and the two rotating propellant booms of ISV Hanabusa: about 595 m of large real modules, and the cross-frames, hub drums and the axial lift. Pure: no three.js and no DOM.
+// The still hull and the two rotating propellant booms of ISV Hanabusa: about 589 m of large real modules, and the cross-frames, hub drums and the axial lift. Pure: no three.js and no DOM.
 import { BUILDERS, box, ibeam, KIT, place, type KitModule, type Lathe, type Piece } from "./adapter.ts";
 import { DRIVE, mnThruster } from "./drive.ts";
 import { SPIN } from "./spin.ts";

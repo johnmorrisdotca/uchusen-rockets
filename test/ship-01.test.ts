@@ -10,7 +10,7 @@ import { ANCESTORS, DRIVE, ENGINES, ENVELOPE, HISTORY, IDENTITY, journey, labelD
 import { rings, ship4 } from "../src/model/fleet/ship-01/rings.ts";
 import { gAt, rpmFor, SPIN, SPIN4 } from "../src/model/fleet/ship-01/spin.ts";
 import { SPINE_Y } from "../src/model/fleet/ship-01/hull.ts";
-import { clearance, DOCK, dockingPieces } from "../src/model/fleet/ship-01/docking.ts";
+import { clearance, craftBox, DOCK, dockingPieces, gapTo, PORTS } from "../src/model/fleet/ship-01/docking.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);
@@ -67,9 +67,9 @@ test("the identity and the specification: the SPX designation, the Japanese name
   assert.equal(IDENTITY.maker, "SPX");
   assert.equal(IDENTITY.japanese, "花房");
   assert.equal(IDENTITY.meaning, "flower cluster");
-  assert.deepEqual([ENVELOPE.length, ENVELOPE.beam, ENVELOPE.height], [595, 225, 225]);
+  assert.deepEqual([ENVELOPE.length, ENVELOPE.beam, ENVELOPE.height], [611, 225, 225]);
   const lines = specification().map((line) => `${line.name}: ${line.value} ${line.note ?? ""}`).join("\n");
-  for (const text of ["ISV Hanabusa, SPX-013", "KAZE core v4", "MND", "595 m", "225 m", "325,000 t", "16.62 years aboard", "17.36 years", "0.06 g sustained"]) assert.ok(lines.includes(text), text);
+  for (const text of ["ISV Hanabusa, SPX-013", "KAZE core v4", "MND", "611 m", "225 m", "325,000 t", "16.62 years aboard", "17.36 years", "0.06 g sustained"]) assert.ok(lines.includes(text), text);
   assert.ok(HISTORY.service.includes("2461") && IDENTITY.firstFlight === 2461 && STATUS === "STATUS: PLANNED · FIRST FLIGHT 2461");
   assert.ok(!/in service|serving|was commissioned/i.test(Object.values(HISTORY).join(" ")), "the history reads as a plan");
   assert.ok(Object.keys(LIFE).length === 6);
@@ -180,7 +180,7 @@ test("sections and decks: a label for every few percent of the length, and far m
   for (let i = 1; i < decks.length; i++) assert.ok(decks[i].to <= decks[i - 1].to + 1e-9, "bow to stern");
   for (const module of ["drive", "reactor", "tank-1", "drum-farm-1", "node", "lab", "solarium", "dome", "ring-garden", "ring-research", "ring-living", "wheel-industrial", "boom-port", "hubs"]) assert.ok(SECTIONS.some((section) => section.module === module), module);
   assert.ok(labels().some((label) => label.side === "left") && labels().some((label) => label.side === "right"));
-  for (const label of labels()) assert.ok(Math.abs(label.at[0]) <= 125 && label.at[1] >= -8 && label.at[1] <= 600 && Math.abs(label.at[2]) <= 125, label.id);
+  for (const label of labels()) assert.ok(Math.abs(label.at[0]) <= 125 && label.at[1] >= -8 && label.at[1] <= 620 && Math.abs(label.at[2]) <= 125, label.id);
 });
 
 for (const variant of ["hanabusa", "hanabusa-aft"] as const) test(`the build budget, ${variant}: the first picture inside a second, the full detail inside three, on this computer`, () => {
@@ -214,20 +214,43 @@ test("the ring order is one parameter, and both orders build the same pieces", (
   assert.equal(ship4("bow").length, ship4("aft").length);
 });
 
-test("the docking plan: a crew port and a small-craft berth outside the hull, no Starship berth, and clear of everything that turns", () => {
-  assert.equal(DOCK.small.collar, "S");
-  assert.equal(DOCK.medium.collar, "M");
+test("the docking plan: ports as data, long-stay berths with services and walkways, a Starship upper-stage berth, all on the still keel and clear of everything that turns", () => {
   const text = specification().map((line) => `${line.name} ${line.value} ${line.note ?? ""}`).join(" ");
-  assert.ok(/Docking/.test(text) && /Dragon/.test(text) && /no Starship berth/.test(text));
-  assert.ok(SECTIONS.some((s) => s.id === "dock-crew") && SECTIONS.some((s) => s.id === "dock-berth"));
-  assert.ok(LIFE.docking.includes("no berth for a Starship stack"));
-  // the nearest approach: a docked craft's lowest point against the boom tops and the garden ring, and its reach against the booms' inner radius
+  for (const word of ["Docking", "Dragon", "Soyuz", "HTV-X", "Orion", "Starship upper stage", "not berthed", "Bow dust shield"]) assert.ok(text.includes(word), word);
+  for (const id of ["dock-crew", "dock-visitor", "dock-berth", "dock-starship", "dock-walkways", "bow-shield"]) assert.ok(SECTIONS.some((s) => s.id === id), id);
+  assert.ok(LIFE.docking.includes("never on a ring") && LIFE.docking.includes("live aboard"));
+  // the data: every port has a name, a class, a position, a unit direction, a mount that does not turn and a list of craft
+  assert.equal(new Set(PORTS.map((port) => port.id)).size, PORTS.length);
+  for (const port of PORTS) {
+    assert.ok(port.name && port.allows.length > 0 && ["S", "M", "L"].includes(port.collar), port.id);
+    assert.ok(port.at.every(Number.isFinite) && port.at[1] > 0, `${port.id}: position`);
+    assert.ok(Math.abs(Math.hypot(...port.dir) - 1) < 1e-9, `${port.id}: direction`);
+    assert.ok(port.mount && !/ring|boom|wheel|hub/i.test(port.mount) || port.id.startsWith("hub"), `${port.id}: mount ${port.mount}`);
+    // clear of the rings' rims and everything that turns, with its craft in place
+    const box = craftBox(port);
+    const gap = gapTo(box.r0, box.r1, box.y0, box.y1);
+    assert.ok(gap.gap >= (port.longStay ? 10 : 4), `${port.id}: ${gap.gap.toFixed(1)} m from the ${gap.name}`);
+  }
+  // long-stay berths: at least four besides the hub ports, each with the five services, a walkway and a spread of sizes from crew vehicle to the Starship upper stage
+  const longStay = PORTS.filter((port) => port.longStay);
+  assert.ok(longStay.length >= 4 && longStay.every((port) => port.id.startsWith("hub") === false));
+  for (const port of longStay) assert.deepEqual([...port.services], ["power", "coolant", "water", "air", "data"], port.id);
+  assert.ok(longStay.every((port) => port.walkway));
+  assert.ok(new Set(longStay.map((port) => port.collar)).size >= 2);
+  assert.ok(longStay.some((port) => port.craft.length >= 52) && longStay.some((port) => port.craft.length <= 8.3));
+  assert.deepEqual(PORTS.filter((port) => !port.longStay).map((port) => port.collar), ["L", "L", "L", "L"]);
+  // the nearest approach, with the craft in place: the berth's tail (the lowest thing docked) against the tops of the booms and the garden ring
   const c = clearance();
-  assert.ok(c.toBooms >= 25, `${c.toBooms} m to the tops of the booms`);
-  assert.ok(c.toRing >= 40, `${c.toRing} m to the garden ring`);
-  assert.ok(c.reach < 20, `a docked craft reaches ${c.reach} m from the axis`);
-  // and in the meshes: nothing of the docking arms is lower than the tops of the booms, or past 22 m from the keel's axis
+  assert.ok(c.toBooms >= 10 && c.toRing >= 25 && c.worst >= 10, `${c.toBooms} m to the booms, ${c.toRing} m to the ring, worst ${c.worst}`);
+  assert.ok(c.reach < 21 && c.berthReach < 20, `reach ${c.reach} and ${c.berthReach} m from the axis`);
+  // the stage fits along the keel, and the shield stands ahead of every berth
+  assert.ok(DOCK.berth.y0 + DOCK.berth.length <= SPINE_Y.end && DOCK.shield.y0 >= DOCK.berth.y0 + DOCK.berth.length);
+  assert.ok(DOCK.shield.radius > c.reach, "every berth is in the shield's shadow");
+  // the real models, placed: the package's own Starship upper stage, Dragon and the Soyuz of 1975, none of them lower than the tops of the booms plus ten metres
+  const lowest = (id: string, base: number) => base + boundsOf(meshOf(PART_ENTRIES.find((e) => e.record.id === id)!.pieces())).min[1];
+  for (const [id, base] of [["starship-v3-ship", DOCK.berth.y0], ["dragon-dragon-2-trunk", DOCK.face - 8.1], ["apollo-soyuz-apollo-soyuz-soyuz", DOCK.face - 7.5]] as const) assert.ok(lowest(id, base) > 100 + 17 * 24 + 10, id);
+  // and in the meshes: nothing of the crown is lower than the tops of the booms plus ten metres, or past 25 m from the keel's axis
   const { min, max } = boundsOf(meshOf(dockingPieces()));
-  assert.ok(min[1] > 100 + 17 * 24 + 20, `the arms start ${min[1]} m up`);
-  assert.ok(Math.max(Math.abs(min[0]), Math.abs(max[0])) < 22, `the arms reach ${max[0]} m`);
+  assert.ok(min[1] > 100 + 17 * 24 + 10, `the crown starts ${min[1]} m up`);
+  assert.ok(Math.max(Math.abs(min[0]), Math.abs(max[0]), Math.abs(min[2]), Math.abs(max[2])) < 25, `the crown reaches ${max[0]} m`);
 });

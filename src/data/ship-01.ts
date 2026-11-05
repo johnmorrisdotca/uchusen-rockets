@@ -10,7 +10,7 @@ const fiction = (brief: string) => blank<number>(FICTION, brief);
 const metres = (value: number) => `${Number(value.toFixed(1))} m, as designed`;
 
 const NOTES: Readonly<Record<string, string>> = {
-  hanabusa: "ISV 花房 Hanabusa, SPX-013, IXV class, the fleet's explorer and its wheel ship: a 595 m keel of drive, tanks, farms and habitat drums, two rotating propellant booms, and three glazed rings that step up in size from the bow (48, 62 and 76 m radius, at 3.43 rpm, 0.63, 0.82 and 1.00 g), with a closed industrial wheel of 112 m radius set apart behind them. Status: planned, first flight 2461. All numbers are design targets; the drive and its limits are described in the ship's bible.",
+  hanabusa: "ISV 花房 Hanabusa, SPX-013, IXV class, the fleet's explorer and its wheel ship: a 589 m keel and a 22 m bow shield, 611 m overall, of drive, tanks, farms and habitat drums, two rotating propellant booms, and three glazed rings that step up in size from the bow (48, 62 and 76 m radius, at 3.43 rpm, 0.63, 0.82 and 1.00 g), with a closed industrial wheel of 112 m radius set apart behind them. Status: planned, first flight 2461. All numbers are design targets; the drive and its limits are described in the ship's bible.",
   "hanabusa-aft": "Hanabusa with the rings in the other order: the smallest at the stern, the largest nearest the bow, as in the first sketches of the programme.",
   "hanabusa-section": "Hanabusa with the living ring opened for a section view, drawn flat: the glass cut away, the section lines of the floor, the three terrace steps and the canal at each cut, no furnishing.",
 };
@@ -53,7 +53,7 @@ const variantOf = ([id, slots]: [string, Readonly<Record<string, string>>]): Var
     inspector: inspectorOf(slots),
     view: { tiltMax: 90 },
     facts: {
-      height: fiction(metres(595)),
+      height: fiction(metres(611)),
       diameter: fiction(metres(225)),
       parts: Object.fromEntries(Object.entries(slots).map(([slot, part]) => [slot, fiction(metres(HANABUSA_PARTS.find((one) => one.id === part)?.height ?? 0))])),
       engines: { drive: blank<string>(FICTION, "19 MND (Magnetic Nozzle Drive) thrusters, 6 plasma trim pods") },

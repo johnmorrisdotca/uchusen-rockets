@@ -17,7 +17,7 @@ Title block: *ISV Hanabusa, SPX-013 · Hanabusa class · IXV · SPX · MND ×19 
 
 ## The ship in one paragraph
 
-A 595 m keel of large real modules (a drive of nineteen thrusters, a fusion reactor, eight propellant tanks, two farm drums, two habitat drums, a four-port docking hub, and the crew, laboratory, survey, solarium, navigation and dome sections of the bow), two propellant booms of seventeen tanks each that turn round it, and four wheels that turn with the booms: three glazed rings, 48, 62 and 76 m in radius, stepping up from the bow so that seen from ahead every ring has open sky above it, and a closed industrial wheel of 112 m radius set apart behind them. Garden, research and living: a hydroponic farm and orchard, laboratories and ateliers, and a town of about a thousand people with a canal down its street.
+A 589 m keel and a 22 m bow shield, 611 m overall, of large real modules (a drive of nineteen thrusters, a fusion reactor, eight propellant tanks, two farm drums, two habitat drums, a four-port docking hub, and the crew, laboratory, survey, solarium, navigation and dome sections of the bow), two propellant booms of seventeen tanks each that turn round it, and four wheels that turn with the booms: three glazed rings, 48, 62 and 76 m in radius, stepping up from the bow so that seen from ahead every ring has open sky above it, and a closed industrial wheel of 112 m radius set apart behind them. Garden, research and living: a hydroponic farm and orchard, laboratories and ateliers, and a town of about a thousand people with a canal down its street.
 
 ## The wheels
 
@@ -104,17 +104,25 @@ Every voyage the ring that turns slowest is given a name by the children; the ga
 
 ## Docking plan
 
-An explorer takes only what it needs, and everything docks outside the hull, as at a space station.
+John's rules: every port is on the still keel, never on a turning ring, and outside the hull as at a space station. Hanabusa is a habitat, so visiting ships can park for the whole journey and their crews live aboard; she is not a carrier, so a full Starship stack is not berthed, but one Starship upper stage (52 m by 9 m) is. Every port and berth is recorded as typed data (`PORTS` in `src/model/fleet/ship-01/docking.ts`: name, collar class, position, direction, mount, the craft that may use it, long stay or not, services, walkway, and the size of the biggest craft it takes) for the shared docking feature to read.
 
-| Port or berth | Class | Takes | Where |
+| Port or berth | Class | Takes | Stay |
 |---|---|---|---|
-| Crew port | S (3 m ring, 1.4 m bore) | a crew vehicle: Dragon, 4 m wide and 8.3 m long, docking nose-up from below | an arm of the still keel at the bow, 16 m from the axis, +X side, at 551 m from the tail |
-| Small-craft berth | M (6 m ring, 3 m bore) | the ship's own ATC (Auxiliary Transfer Craft), up to 6 m wide and 12 m long; shown empty, with guide rails, clamp arms and hazard chocks | the opposite arm, -X side |
-| Hub node | four L-class ports | the inflatable habitat modules (descendants of the ISS BEAM and Sierra Space LIFE), stowed small and inflated at a destination | the docking hub node at 482 m |
+| Hub node, 4 ports | L (12 m ring) | the inflatable habitat modules, stowed small (descendants of the ISS BEAM and Sierra Space LIFE), the SPX ATC and a small craft on a short call | short calls |
+| Crew port | S (3 m ring, 1.4 m bore) | Dragon (SpaceX), Starliner and Orion (USA) with its adapter | long stay |
+| Visitor port | S | Soyuz and Progress (Russia) | long stay |
+| Small-craft berth, with a cradle | M (6 m ring, 3 m bore) | the SPX ATC small craft (the cradle, shown empty) and HTV-X (Japan) at the port ring | long stay |
+| Starship upper-stage berth | three saddles on I-beam stays, an M-class hard-dock collar | the upper stage of a Starship, 52 m by 9 m: it brings crews, cargo and propellant in one trip | long stay |
 
-Why: the ship's job is to carry people to a place, survey it and send small craft down, so it needs a way to take a crew vehicle and to keep its own craft. It does not carry or service other ships, so it has no berth for a Starship stack (124 m by 9 m): carriers and service ships such as Ariake take those, and the fleet as a whole handles craft of several sizes.
+Long stay: the four berths at the bow each have a clamp, a cradle or saddles, a hard-dock collar, and five service umbilicals (power, coolant, water, air and data), so a parked ship can be shut down and kept alive, and a pressurised walkway (a round tube with a flange and a lit hatch at each end) from the berth to a lock on the solarium's hull and the keel's lift, so the crew of a parked ship live aboard. The sizes run from a crew vehicle (Dragon, 8.3 m) to the Starship upper stage (52 m).
 
-Clearance from what turns: the arms stand on the still keel at the bow, beyond the tops of the rotating booms (508 m) and the garden ring (490 m). A craft docked at the S port reaches down to 539 m, so it is 31 m above the tops of the booms and 47 m above the garden ring, and 19.2 m from the axis at most. `clearance()` in `docking.ts` computes it and `test/ship-01.test.ts` holds it. The sheets mark both ports and one view (sheet 4) shows a Dragon docked at true scale, drawn from the package's own Dragon model.
+Where: a docking crown of three arms at 551 m on the keel's bow (the solarium), the ports looking down the keel so a craft docks nose-up from below; the Starship berth along the keel at 520 to 572 m on the +Z side, 14 m from the axis. All of it stands on the still keel beyond the tops of the rotating booms (508 m) and well beyond the garden ring (490 m).
+
+Shield: a bow dust shield (a dished disc of tile, 24 m in radius, on eight stays, ahead of the dome) stands ahead of the crown and the berth, so every parked ship sits in its shadow: at a large fraction of c dust hits like bullets, and nothing docked reaches more than 20.2 m from the axis, inside the shield's 24 m.
+
+Clearance from what turns: the berth's tail, the lowest thing docked, is 12 m above the tops of the booms and 27 m above the garden ring; Dragon, Soyuz and the small-craft berth hang to 539 m, 31 m above the booms. `clearance()`, `gapTo()` and `craftBox()` in `docking.ts` compute it, and `test/ship-01.test.ts` checks every port: a position, a unit direction, a mount that does not turn, and at least 10 m (4 m for the hub's short-call ports) from the booms, the ring rims and the industrial wheel with its craft in place. The same test places the package's own Starship upper stage, Dragon and the Soyuz of 1975 and checks each against the tops of the booms.
+
+The sheets mark the ports and the berth. Sheet 4 shows Dragon, Soyuz and a Starship upper stage docked at true scale at the crown, and the ship with the three parked, drawn from the package's own models. Gaps: the package has no model of Starliner, Progress or HTV-X (and its Soyuz model is the 1975 Apollo-Soyuz craft, not a Soyuz MS), so those are listed and never drawn or improvised; the ATC is the fleet's own small craft and is designed separately, so its cradle is shown empty. Orion has models in the package (capsule and service module) but is not drawn docked.
 
 ## Looks
 
