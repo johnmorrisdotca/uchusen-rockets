@@ -4,6 +4,7 @@
 // Real ancestors: a ship's keel and frames, the Space Shuttle's payload-bay longerons, the ISS pressurised modules' plating, Gateway's HALO and the Mars transfer vehicle studies' radiator fins. Pure: no three.js and no DOM.
 import { type Face, facesOf, hatch, PLATE, plating, rng as numRng, stencil as faceStencil, vent } from "../ship-02/adapter.ts";
 import { container } from "../ship-02/cargo.ts";
+import { lampHalo } from "../lights.ts";
 import { cub, iBeam, type Piece, place, prism, rod, stamp, type Vec3 } from "./adapter.ts";
 import { berthSlot } from "./berth.ts";
 import { type ConceptSlot, reactorRows, repeatedTank, stackOf } from "./common.ts";
@@ -267,7 +268,7 @@ const bridgeSlot: ConceptSlot = { slot: "bridge", name: "Bridge tower: docking n
 
 /** The slots, tail to bow. */
 export const SLOTS_B: readonly ConceptSlot[] = [
-  { slot: "frame", name: "Ribs and longerons", kind: "spacecraft", at: [0, B.y0, 0], height: B.plated[1] + 70 - B.y0, diameter: 168, note: "Forty-seven transverse ribs every 30 m, hexagonal rings of round tube, and six longerons along the corners of the wedge. Descends from a ship's frames and the Space Shuttle's payload-bay longerons.", pieces: () => local([...frames(), ...decks(), ...longerons(B.y0, B.plated[1] + 70)], B.y0) },
+  { slot: "frame", name: "Ribs and longerons", kind: "spacecraft", at: [0, B.y0, 0], height: B.plated[1] + 70 - B.y0, diameter: 168, note: "Forty-seven transverse ribs every 30 m, hexagonal rings of round tube, and six longerons along the corners of the wedge. Descends from a ship's frames and the Space Shuttle's payload-bay longerons.", pieces: () => local([...frames(), ...decks(), ...longerons(B.y0, B.plated[1] + 70), ...lampHalo("port", [-24, 420, 0], 4), ...lampHalo("starboard", [24, 420, 0], 4), ...lampHalo("strobe", [0, 780, 0], 4), ...lampHalo("beacon", [0, 1080, 0], 3), ...lampHalo("nav-white", [0, 180, 0], 3), ...lampHalo("strobe", [22, 1420, 0], 3), ...lampHalo("port", [-22, 1280, 0], 3)], B.y0) },
   { slot: "keel", name: "Armoured keel girder", kind: "spacecraft", at: [0, B.y0, -B.H / 2 - 14], height: B.length - 20 - B.y0, diameter: 18, note: "A box girder under the centreline, 14 m wide and 14 m deep, plated, with a service rail each side. It carries the thrust of the drive the whole length of the ship. Descends from a ship's keel and the ISS truss's main beam.", pieces: () => local(keel(B.y0, B.length - 20), B.y0, 0, -B.H / 2 - 14) },
   { slot: "ridge", name: "Dorsal ridge truss", kind: "arms", at: [0, B.y0, B.H / 2 + 2.4], height: B.plated[1] - B.y0, diameter: 8, note: "A light truss along the top of the wedge that carries the antennas and the roots of the radiator fins. Descends from the ISS truss's upper rail.", pieces: () => local(ridge(B.y0, B.plated[1]), B.y0, 0, B.H / 2 + 2.4) },
   { slot: "thrusters", name: "Drive grid: 27 magnetic-nozzle thrusters", kind: "engine", at: [0, 0, 0], height: 62, diameter: 140, note: "Twenty-seven magnetic-nozzle thrusters in three rows of nine across the stern face. Descends from the VASIMR VX-200 and the X3 nested Hall thruster.", pieces: drive },

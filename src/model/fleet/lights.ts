@@ -120,11 +120,12 @@ function bead(material: MaterialName, at: Vec3, radius: number): Piece {
   return { kind: "lathe", material, at: [at[0], at[2]], segs: 18, only: "mesh", body: true, profile };
 }
 
-/** The glow around a running light, a strobe or a beacon. Empty for a colour that has no halo. */
-export function lampHalo(colour: string, at: Vec3): Piece[] {
+/** The glow around a running light, a strobe or a beacon. Empty for a colour that has no halo. `scale` grows it for a ship so long that the ordinary bead is a dot. */
+export function lampHalo(colour: string, at: Vec3, scale = 1): Piece[] {
   const halo = HALO[colour];
   if (!halo) return [];
-  return [bead(halo.soft, at, halo.radius), bead(halo.core, at, halo.radius * 0.22)];
+  const radius = halo.radius * scale;
+  return [bead(halo.soft, at, radius), bead(halo.core, at, radius * 0.22)];
 }
 
 /** A small dome. `at` is metres; the dome stands up from that point. */

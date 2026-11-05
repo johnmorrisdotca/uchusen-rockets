@@ -1,5 +1,6 @@
 // The radiator wings: two flat wings, one each side, in the plane between the upper and lower tanks. Each is six panels (a header pipe, tube rows, ribs and a hinge edge) hung from a boom, deployed. A stowed
 // pack of folded panels rides on each side of the spine as well, shown as the folded stack with its latch brackets: the same panel, folded.
+import { lampHalo } from "../lights.ts";
 import { beam, box, forDrawing, pipe, rng, span, type MaterialName, type Piece, stencil, facesOf } from "./adapter.ts";
 
 /** One wing, from the hull's flank outward on the x axis, from y 0 to its length. `side` is the sign of x. */
@@ -38,6 +39,7 @@ export function wing(side: 1 | -1, length = 560, panels = 6, panelWidth = 56, ro
   // end-cap stencil and the tip lamps
   const tip = s * (root + 3 + panels * (panelWidth + 2));
   out.push(box("hull-yellow", [tip, 4, 0], [4, 6, 4]), box("lamp-red", [tip, length - 4, 0], [4, 6, 4]));
+  out.push(...lampHalo(s < 0 ? "port" : "starboard", [s * (root + 120), length * 0.42, 0], 4), ...lampHalo(s < 0 ? "beacon" : "nav-white", [s * (root + 120), length * 0.7, 0], 4));
   void stencil;
   void facesOf;
   return out;
