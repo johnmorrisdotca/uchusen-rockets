@@ -23,7 +23,7 @@ test("real craft lie in the fleet band, the switch is in the address, and the ba
   });
   expect(fit).not.toBeNull();
   // a desk's frame holds the band; a phone's frame scrolls a wide band itself, and the page does not
-  if (test.info().project.name === "chromium-phone") {
+  if (test.info().project.name.endsWith("phone")) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
     await expect(frame).toHaveCSS("overflow-x", "auto");
   } else {

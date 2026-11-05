@@ -18,7 +18,7 @@ const watch = (page: Page) => {
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 
 test("the page opens with two craft on one ground, its stage is wide, and the table names both", async ({ page, browserName }, info) => {
-  test.skip(info.project.name === "chromium-phone", "A desk's layout");
+  test.skip(info.project.name.endsWith("phone"), "A desk's layout: a phone's width shows one craft");
   const problems = watch(page);
   await page.goto(URL);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
@@ -40,7 +40,7 @@ test("the page opens with two craft on one ground, its stage is wide, and the ta
 });
 
 test("a third craft is added, the choices are kept in the address, and a reload brings them back", async ({ page }, info) => {
-  test.skip(info.project.name === "chromium-phone", "A desk's layout");
+  test.skip(info.project.name.endsWith("phone"), "A desk's layout: a phone's width shows one craft");
   await page.goto(URL);
   await page.locator('[data-testid="cw-add"]').click();
   await expect(craftChips(page)).toHaveCount(3);
@@ -99,7 +99,7 @@ test("the view controls tip as far as the first craft allows, and Fit holds all 
 });
 
 test("on a phone one craft is shown, with no way to add another, and the page does not scroll sideways", async ({ page }, info) => {
-  test.skip(info.project.name !== "chromium-phone", "A phone's width");
+  test.skip(!info.project.name.endsWith("phone"), "A phone's width");
   await page.goto(`${URL}?with=saturn-v:saturn-v,iss:iss`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(craftChips(page)).toHaveCount(1);

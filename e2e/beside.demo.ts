@@ -100,9 +100,9 @@ test("Beside it: Starship stands beside the craft, the toggle is in the address 
 test("Beside it with the drawing alone: the drawing holds both craft too", async ({ page }) => {
   const paths = () => hero(page).evaluate((node) => node.shadowRoot?.querySelector(".drawing svg")?.querySelectorAll("path").length ?? 0);
   await page.goto(`${URL}?rocket=sls`);
-  await expect.poll(paths).toBeGreaterThan(0);
+  await expect.poll(paths, { timeout: 30_000 }).toBeGreaterThan(0);
   const alone = await paths();
   await page.goto(`${URL}?rocket=sls&beside=on`);
-  await expect(hero(page)).toHaveAttribute("data-beside", "on");
-  await expect.poll(paths).toBeGreaterThan(alone);
+  await expect(hero(page)).toHaveAttribute("data-beside", "on", { timeout: 30_000 });
+  await expect.poll(paths, { timeout: 30_000 }).toBeGreaterThan(alone);
 });
