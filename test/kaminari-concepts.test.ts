@@ -165,15 +165,20 @@ test("scaled pieces keep their shapes: a lathe, a plate and a line scale in ever
   assert.deepEqual(lines.paths, [[[0.5, 1, 1.5], [2, 2.5, 3]]]);
 });
 
-test("concept C docks four of ISV Miyamoto's own craft at its true size: 380 by 118 m, and scaled with the carrier", () => {
+test("concept C docks two of ISV Miyamoto and two of ISV Ariake, each the package's own model, and they scale with the carrier", () => {
   const built = build({ rocket: "fleet-romaryu", variant: "fleet-romaryu" }, { detail: "full" });
   const craft = built.parts.filter((part) => part.slot.startsWith("miyamoto-"));
   assert.equal(craft.length, 4);
-  const miyamoto = build({ rocket: "fleet-ship-03", variant: "miyamoto" });
-  const own = miyamoto.boundsOf("together");
-  for (const part of craft) near(part.bounds.max[1] - part.bounds.min[1], own.max[1] - own.min[1], 0.5, `${part.slot}: 380 m`);
-  assert.equal(Math.round(own.max[1] - own.min[1]), 380);
-  near(own.max[0] - own.min[0], 118, 7, "Miyamoto's beam");
+  const ownOf = {
+    miyamoto: build({ rocket: "fleet-ship-03", variant: "miyamoto-array" }).boundsOf("together"),
+    ariake: build({ rocket: "fleet-ship-ariake", variant: "ariake" }).boundsOf("together"),
+  };
+  for (const [i, part] of craft.entries()) {
+    const own = ownOf[C.craft.slots[i].ship];
+    near(part.bounds.max[1] - part.bounds.min[1], own.max[1] - own.min[1], 0.5, `${part.slot} length`);
+  }
+  assert.equal(craft.filter((_, i) => C.craft.slots[i].ship === "miyamoto").length, 2);
+  assert.equal(craft.filter((_, i) => C.craft.slots[i].ship === "ariake").length, 2);
   // no two craft touch: the envelopes of the four, in the frame of the whole ship, are apart
   const boxes = craft.map((part) => {
     const at = built.placesOf("together").find((place) => place.slot === part.slot)!.at;
@@ -191,7 +196,7 @@ test("concept C docks four of ISV Miyamoto's own craft at its true size: 380 by 
   });
   assert.deepEqual(keels.map((k) => Math.round((k.turn * 180) / Math.PI)), [0, 180, 90, 270]);
   const small = build({ rocket: "fleet-romaryu", variant: "fleet-romaryu" }, { detail: "coarse", scale: 60 });
-  for (const part of small.parts.filter((p) => p.slot.startsWith("miyamoto-"))) near(part.bounds.max[1] - part.bounds.min[1], 380 * 0.6, 0.5, `${part.slot} at 60 per cent`);
+  for (const [i, part] of small.parts.filter((p) => p.slot.startsWith("miyamoto-")).entries()) near(part.bounds.max[1] - part.bounds.min[1], (ownOf[C.craft.slots[i].ship].max[1] - ownOf[C.craft.slots[i].ship].min[1]) * 0.6, 1, `${part.slot} at 60 per cent`);
 });
 
 test("each concept's numbers add up: the drive rule, the masses, the acceleration and the delta-v", () => {

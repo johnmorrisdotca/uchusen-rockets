@@ -34,7 +34,7 @@ const inspectorOf = (key: ConceptKey): Inspector => {
       ["Dry mass", t(spec.dryT)],
       ["Full mass", t(spec.fullT)],
       ["Propellant", `${t(spec.propellantT)} in ${spec.tanks} tanks`],
-      ["Cargo", spec.containers ? `${t(spec.cargoT)}, ${spec.containers} containers` : "four Miyamoto-size craft"],
+      ["Cargo", spec.containers ? `${t(spec.cargoT)}, ${spec.containers} containers` : "two of ISV Miyamoto and two of ISV Ariake"],
       ["Drive", spec.thrusters.layout],
       ["Reactor cells", String(spec.reactorCells)],
       ["Main thrust", `${n(spec.thrustN / 1e6)} MN at full mass`],
@@ -59,7 +59,7 @@ const inspectorOf = (key: ConceptKey): Inspector => {
 const NOTES: Readonly<Record<ConceptKey, string>> = {
   a: "ISV Kaminari, the Quiver: thinner cylinders. One long truss carries rings of slim propellant tanks like the barrels of a revolver, rings of cargo containers, reactor cells and two counter-rotating carousels of slim habitat drums. The drive is a ring array of 19 magnetic-nozzle thrusters behind a stack of fusion coil rings. Visiting craft berth on the open truss, outside the hull. Use the size slider to try 60 to 100 per cent.",
   b: "ISV Emiake, smiling dawn: a hull that is not a tube. A flattened wedge built like a ship: an armoured keel, six longerons and ribs every 30 m, open aft where the slim tanks and containers lie in rows, plated forward where the crew's town sits under a glazed gallery. Three radiator sails stand on the dorsal ridge; the outer two swing down and out, and the middle stays up. The drive is a grid of 27 magnetic-nozzle thrusters across the stern. Visiting craft berth outside the hull. Use the size slider to try 60 to 100 per cent.",
-  c: "ISV Romaryū, dragon of Rome: a spine with four Miyamoto-size craft docked round it in two pairs, ISV Miyamoto's own model at its true size, and a Starship stack, two tankers and a Dragon berthed outside the shaft beside them. Two stations of propellant barrels aft, two counter-rotating habitat rings, and a drive of four flank pods of seven magnetic-nozzle thrusters with one large thruster on the axis. Use the size slider to try 60 to 100 per cent.",
+  c: "ISV Romaryū, dragon of Rome: a spine with two of ISV Miyamoto, gold array out, and two of ISV Ariake, four boxes and dawn-gold bands, docked round it in two pairs, each the package's own model at its true size, and a Starship stack, two tankers and a Dragon berthed outside the shaft beside them. Two stations of propellant barrels aft, two counter-rotating habitat rings, and a drive of four flank pods of seven magnetic-nozzle thrusters with one large thruster on the axis. Use the size slider to try 60 to 100 per cent.",
 };
 
 const variantOf = (key: ConceptKey): Variant => {
@@ -153,6 +153,6 @@ export const CONCEPT_SLOT_NAMES: Readonly<Record<string, string>> = {
   ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`quiver-${i}`, `Tank quiver ${i}`])),
   ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`cargo-${i}`, `Cargo ring ${i}`])),
   ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`tanks-${i}`, `Tank group ${i}`])),
-  ...Object.fromEntries([1, 2, 3, 4].map((i) => [`miyamoto-${i}`, `Docked craft ${i}`])),
+  ...Object.fromEntries([1, 2, 3, 4].map((i) => [`miyamoto-${i}`, i % 2 === 1 ? "Miyamoto" : "Ariake"])),
   ...Object.fromEntries([1, 2, 3, 4].map((i) => [`cradle-${i}`, `Docking cradle ${i}`])),
 };

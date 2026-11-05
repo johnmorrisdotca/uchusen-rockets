@@ -114,7 +114,7 @@ export const SPECS: Readonly<Record<"a" | "b" | "c", ConceptSpec>> = {
     id: "fleet-romaryu",
     letter: "C",
     name: "Carrier",
-    idea: "A carrier spine with four Miyamoto-size craft docked round it in two pairs.",
+    idea: "A carrier spine with two of ISV Miyamoto and two of ISV Ariake docked round it.",
     length: C.length,
     beamHull: 2 * (C.craft.rKeel + 74),
     beamOverall: 2 * 165 * C.ring.scale + 4,

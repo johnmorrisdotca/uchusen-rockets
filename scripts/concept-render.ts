@@ -218,7 +218,7 @@ try {
       await page.setViewportSize({ width: w, height: h });
       const wire = { glb: `/glb/${resolve(job.glb)}`, more: (job.more ?? []).map((m) => ({ ...m, glb: `/glb/${resolve(m.glb)}` })) };
       const info = await page.evaluate(([j, s]) => (window as unknown as { draw: (a: unknown, b: unknown) => Promise<unknown> }).draw(j, s), [wire, shot] as const);
-      await page.locator("canvas").screenshot({ path: join(outDir, `${shot.name}.png`) });
+      await page.locator("canvas").screenshot({ path: join(outDir, `${shot.name}.png`), timeout: 120_000 });
       const { points, ...rest } = info as { points: unknown[] } & Record<string, unknown>;
       if (points.length) writeFileSync(join(outDir, `${shot.name}.points.json`), JSON.stringify(points));
       console.log(shot.name, JSON.stringify(rest));

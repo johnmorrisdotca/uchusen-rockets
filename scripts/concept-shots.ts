@@ -8,7 +8,7 @@ import { toGlb } from "../src/build/glb.ts";
 import { build } from "../src/build/index.ts";
 import { coarsen, detail } from "../src/model/detail.ts";
 import { BERTHS, CONCEPT_KEYS, CONCEPT_SLOTS, type ConceptKey, ROCKET_OF, SPECS } from "../src/model/fleet/kaminari-concepts/index.ts";
-import { miyamoto } from "../src/model/fleet/kaminari-concepts/c.ts";
+import { docked } from "../src/model/fleet/kaminari-concepts/c.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
 const out = process.argv[2];
@@ -29,9 +29,12 @@ const refs: { id: string; name: string; file: string; min: V3; max: V3 }[] = [];
   const b = stack.boundsOf("together");
   writeFileSync(join(out, "ref-starship.glb"), stack.glb().bytes);
   refs.push({ id: "starship", name: "Starship with Super Heavy", file: join(out, "ref-starship.glb"), min: b.min as V3, max: b.max as V3 });
-  const m = coarsen(miyamoto(1, "fine"));
+  const m = docked("miyamoto", 1, "fine");
   const mb = boundsOf(meshOf(m));
   refs.push({ id: "miyamoto", name: "ISV Miyamoto", file: save("ref-miyamoto", m), min: mb.min as V3, max: mb.max as V3 });
+  const a = docked("ariake", 1, "fine");
+  const ab = boundsOf(meshOf(a));
+  refs.push({ id: "ariake", name: "ISV Ariake", file: save("ref-ariake", a), min: ab.min as V3, max: ab.max as V3 });
   const w4 = process.env.HANABUSA_W4 ?? "";
   if (w4 && existsSync(w4)) {
     const { ship4 } = (await import(w4)) as { ship4: () => Piece[] };
@@ -43,7 +46,12 @@ const refs: { id: string; name: string; file: string; min: V3; max: V3 }[] = [];
 
 const concepts = CONCEPT_KEYS.map((key) => {
   detail.level = "coarse";
-  const parts = CONCEPT_SLOTS[key].map((slot) => ({ name: slot.slot, mesh: meshOf(coarsen(slot.pieces())), at: slot.at }));
+  const parts = CONCEPT_SLOTS[key].map((slot) => {
+    const near = key === "c" && slot.slot.startsWith("miyamoto-");
+    detail.level = near ? "full" : "coarse";
+    const pieces = near ? slot.pieces() : coarsen(slot.pieces());
+    return { name: slot.slot, mesh: meshOf(pieces), at: slot.at };
+  });
   detail.level = "full";
   const file = join(out, `concept-${key}.glb`);
   writeFileSync(file, toGlb(parts).bytes);
@@ -126,6 +134,13 @@ for (const c of concepts) {
     { name: "b-sails-end", eye: [0, 1040, 36], target: [0, 480, 36], up: [0, 0, 1], fov: 26, size: [1400, 900], look: "painted", shadow: 240, sunDir: [0.3, -0.5, 0.85] },
     { name: "b-sail-hinge", eye: [42, 990, 30], target: [42, 640, 30], up: [0, 0, 1], fov: 20, size: [1400, 900], look: "painted", shadow: 90, sunDir: [0.4, -0.3, 0.85] },
   ] });
+}
+// a docked Miyamoto, and a docked Ariake, each beside the same ship drawn alone, so the two can be compared
+{
+  const carrier = concepts.find((c) => c.key === "c")!;
+  const alone = (id: string): string => refs.find((r) => r.id === id)!.file;
+  jobs.push({ glb: carrier.file, more: [{ glb: alone("miyamoto"), at: [354, 980, 0] }], shots: [{ name: "c-miyamoto-beside", eye: [214, 1170, -520], target: [214, 1170, 0], up: [0, 1, 0], fov: 42, size: [1600, 1000], look: "painted", shadow: 400, sunDir: [0.2, 0.45, -0.85] }] });
+  jobs.push({ glb: carrier.file, more: [{ glb: alone("ariake"), at: [-354, 980, 0] }], shots: [{ name: "c-ariake-beside", eye: [-214, 1170, 520], target: [-214, 1170, 0], up: [0, 1, 0], fov: 42, size: [1600, 1000], look: "painted", shadow: 400, sunDir: [-0.2, 0.45, 0.85] }] });
 }
 // all three side by side, with the craft beside once, from the dorsal side and from starboard
 {

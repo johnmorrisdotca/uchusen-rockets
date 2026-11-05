@@ -32,14 +32,14 @@ A flattened wedge, 48 m thick, tapering in plan from 164 m across at the stern t
 - Mass guess: dry 210,000 t, propellant 1,156,000 t in 66 tanks, cargo 135,000 t in 26 containers, full 1.51 million t. 0.081 g, delta-v 0.58 c, 18.5 years to Proxima on board.
 - Real ancestors: a ship's keel and frames, the Space Shuttle's payload-bay longerons, the ISS pressurised modules' plating, the ISS Cupola and arcade roofs for the gallery, the Mars transfer vehicle studies' radiators.
 
-## C. Carrier: a spine with four Miyamoto-size craft
+## C. Carrier: a spine with two of ISV Miyamoto and two of ISV Ariake
 
-A 36 m square truss round a pressurised transit tube, 1.3 km long. Two stations of six propellant barrels (30 m across, 110 m long) aft. In the middle four slots, in two pairs, where ISV Miyamoto's own model, at its true size of 380 by 118 m, docks by its keel: the first pair at the top and bottom of the shaft, the second pair a quarter turn on, so no craft's hangar shoulders meet another's. Two counter-rotating habitat rings (the shipped Kaminari's ring at 62 per cent: 100 m from the axis), and a bow stack with two farm drums and two passenger drums.
+A 36 m square truss round a pressurised transit tube, 1.3 km long. Two stations of six propellant barrels (30 m across, 110 m long) aft. In the middle four slots, in two pairs: ISV Miyamoto, with her gold solar array out, and ISV Ariake, with her four hangar boxes, hex engine end and dawn-gold bands. Each is the package's own model, docked by its keel: the first pair at the top and bottom of the shaft, the second pair a quarter turn on, so no craft's hangar shoulders meet another's. Two counter-rotating habitat rings (the shipped Kaminari's ring at 62 per cent: 100 m from the axis), and a bow stack with two farm drums and two passenger drums.
 
 - Size: 1,775 m long, 216 m across the hull with its craft, 238 m across the rings.
 - Drive: the flank-pod kind. Four hexagonal pods of seven magnetic-nozzle thrusters on outrigger trusses on the diagonals, clear of the docked craft, and one large thruster on the axis behind a stack of ten coil rings. 400 MN, 14 MN each on average.
 - Mass guess: dry 332,000 t (with the four craft at their 21,000 t each), propellant 757,000 t in 12 tanks, full 1.09 million t. 0.037 g, delta-v 0.47 c, 24.7 years to Proxima on board. Its cargo is the four craft.
-- Real ancestors: the Space Shuttle on its carrier aircraft, the ISS's visiting-vehicle ports, the Saturn V's outboard engines on outriggers, Nautilus-X's docked modules, ISV Miyamoto.
+- Real ancestors: the Space Shuttle on its carrier aircraft, the ISS's visiting-vehicle ports, the Saturn V's outboard engines on outriggers, Nautilus-X's docked modules, ISV Miyamoto and ISV Ariake.
 
 ## The size slider
 
