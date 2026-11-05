@@ -405,30 +405,48 @@ const leaf = (m: MaterialName, x: number, y: number, z0: number, a: number, len:
 function crops(y0: number, y1: number, z0: number, bay: number, i: number, k: number, s: number, level: Level): Piece[] {
   const lo = Math.min(y0, y1);
   const hi = Math.max(y0, y1);
-  const out: Piece[] = [bx("soil", -bay / 2, bay / 2, lo, hi, z0 - 0.1, z0)];
-  // a water channel along the edge nearest the nave, with a pale rim
-  const ch: [number, number] = s > 0 ? [lo, lo + 0.26] : [hi - 0.26, hi];
-  out.push(bx("hull-grey", -bay / 2, bay / 2, ch[0] - 0.03, ch[1] + 0.03, z0 - 0.06, z0 - 0.02), bx("water-clear", -bay / 2, bay / 2, ch[0], ch[1], z0 - 0.07, z0 - 0.04));
-  const rowLo = s > 0 ? lo + 0.36 : lo;
-  const rowHi = s > 0 ? hi : hi - 0.36;
-  const rows = Math.max(2, Math.floor((rowHi - rowLo - 0.3) / 0.38));
-  const band = Math.floor(i / 9);
+  const out: Piece[] = [bx("soil", -bay / 2, bay / 2, lo, hi, z0 - 0.12, z0), bx("hull-white", -bay / 2, bay / 2, s > 0 ? lo - 0.04 : hi - 0.1, s > 0 ? lo + 0.1 : hi + 0.04, z0 - 0.3, z0)];
+  // a water channel along the edge nearest the nave, wide enough to read from the street: dark rim, bright water
+  const ch: [number, number] = s > 0 ? [lo + 0.1, lo + 0.62] : [hi - 0.62, hi - 0.1];
+  out.push(bx("hull-grey", -bay / 2, bay / 2, ch[0] - 0.05, ch[1] + 0.05, z0 - 0.1, z0 - 0.02), bx("water-clear", -bay / 2, bay / 2, ch[0], ch[1], z0 - 0.13, z0 - 0.06), bx("frost", -bay / 2, bay / 2, (ch[0] + ch[1]) / 2 - 0.03, (ch[0] + ch[1]) / 2 + 0.03, z0 - 0.14, z0 - 0.13));
+  const rowLo = s > 0 ? lo + 0.72 : lo + 0.1;
+  const rowHi = s > 0 ? hi - 0.1 : hi - 0.72;
+  const rows = Math.max(2, Math.floor((rowHi - rowLo) / 0.5));
+  const band = Math.floor(i / 7);
   for (let r = 0; r < rows; r++) {
-    const y = rowLo + 0.2 + ((rowHi - rowLo - 0.4) * (r + 0.5)) / rows;
-    const gold = h01(band, k * 7 + (s > 0 ? 1 : 0) + Math.floor(r / 2) * 3) > 0.5;
-    const hgt = gold ? 0.42 : 0.3;
-    out.push(rod(gold ? "crop-gold" : "crop-green", [-bay / 2, y, z0 - hgt * 0.6], [bay / 2, y, z0 - hgt * 0.6], hgt * 0.55, 6, { only: "mesh" }));
-    if (level === "fine") for (let q = 0; q < 4; q++) {
-      const x = -bay / 2 + (bay * (q + 0.5)) / 4;
-      const ears = gold ? 4 : 6;
-      for (let e = 0; e < ears; e++) out.push(leaf(gold ? "crop-gold" : e % 2 ? "crop-green" : "leaf", x + (h01(i, r * 9 + q + e) - 0.5) * 0.3, y, z0 - hgt * 0.7, TAU * (e / ears) + h01(i, e), gold ? 0.75 : 0.55));
+    const y = rowLo + ((rowHi - rowLo) * (r + 0.5)) / rows;
+    const gold = h01(band, k * 7 + (s > 0 ? 1 : 0) + r * 3) > 0.45;
+    const hgt = gold ? 0.5 : 0.36;
+    // each row stands on its own raised ridge of soil, with bare soil between the rows
+    out.push(bx("hull-grey-dark", -bay / 2, bay / 2, y - 0.2, y + 0.2, z0 - 0.2, z0 - 0.1), rod(gold ? "crop-gold" : "crop-green", [-bay / 2, y, z0 - 0.2 - hgt * 0.5], [bay / 2, y, z0 - 0.2 - hgt * 0.5], hgt * 0.42, 6, { only: "mesh" }));
+    if (level === "fine") for (let q = 0; q < 6; q++) {
+      const x = -bay / 2 + (bay * (q + 0.5)) / 6;
+      const ears = gold ? 4 : 5;
+      for (let e = 0; e < ears; e++) out.push(leaf(gold ? "crop-gold" : e % 2 ? "crop-green" : "leaf", x + (h01(i, r * 9 + q + e) - 0.5) * 0.25, y, z0 - 0.2 - hgt * 0.6, TAU * (e / ears) + h01(i, e), gold ? 0.8 : 0.55));
     }
   }
-  // a trellis on the top tread: posts, three wires and a vine climbing each post
-  if (k === 3 && level === "fine") {
-    const ty = s > 0 ? hi - 0.1 : lo + 0.1;
-    for (const px of [-1.3, 1.3]) out.push(rod("wood", [px, ty, z0], [px, ty, z0 - 2.1], 0.05, 6, { only: "mesh" }), ...Array.from({ length: 6 }, (_, q) => rod("leaf", [px + (q % 2 ? 0.08 : -0.08), ty, z0 - 0.3 - q * 0.32], [px + (q % 2 ? -0.08 : 0.08), ty, z0 - 0.5 - q * 0.32], 0.03, 5, { only: "mesh" })), ...Array.from({ length: 4 }, (_, q) => leaf("leaf", px, ty, z0 - 0.6 - q * 0.4, (q % 2 ? 1 : -1) * 1.2, 0.5)));
-    for (const h of [0.7, 1.4, 2.05]) out.push(rod("hull-grey", [-bay / 2, ty, z0 - h], [bay / 2, ty, z0 - h], 0.012, 4, { only: "mesh" }));
+  // a trellis on every tread: posts every bay, a top bar and two wires, with a vine climbing each post: tall enough to read from the street
+  const ty = s > 0 ? hi - 0.12 : lo + 0.12;
+  for (const px of level === "fine" ? [-2.0, 0, 2.0] : [-1.3]) out.push(rod("wood", [px, ty, z0], [px, ty, z0 - 2.8], 0.07, 6, { only: "mesh" }));
+  out.push(rod("wood", [-bay / 2, ty, z0 - 2.8], [bay / 2, ty, z0 - 2.8], 0.05, 5, { only: "mesh" }));
+  if (level === "fine") {
+    for (const h of [0.9, 1.8]) out.push(rod("hull-grey", [-bay / 2, ty, z0 - h], [bay / 2, ty, z0 - h], 0.015, 4, { only: "mesh" }));
+    for (const px of [-2.0, 0, 2.0]) out.push(...Array.from({ length: 9 }, (_, q) => rod("leaf", [px + (q % 2 ? 0.1 : -0.1), ty, z0 - 0.2 - q * 0.3], [px + (q % 2 ? -0.1 : 0.1), ty, z0 - 0.45 - q * 0.3], 0.04, 5, { only: "mesh" })), ...Array.from({ length: 6 }, (_, q) => leaf("leaf", px, ty, z0 - 0.5 - q * 0.4, (q % 2 ? 1 : -1) * 1.2, 0.6)));
+  }
+  return out;
+}
+
+/** The terrace wall below tread `k`: seven courses of crop in rods, bands of gold and green with a dark course of soil between them, along the wall's face towards the nave, so the steps read as stepped fields from the street. */
+function wall(e0: number, z0: number, bay: number, i: number, k: number, s: number, level: Level): Piece[] {
+  const y = s > 0 ? e0 - 0.18 : -(e0 - 0.18);
+  const courses = level === "fine" ? 7 : 4;
+  const h = STEP / courses;
+  const out: Piece[] = [];
+  const band = Math.floor(i / 5);
+  for (let j = 0; j < courses; j++) {
+    const z = z0 + STEP - h * (j + 0.5) - STEP; // from the tread's level (z0, high) down by one step (z0 + STEP)
+    const gold = h01(band, j * 5 + k * 3 + (s > 0 ? 1 : 0)) > 0.42;
+    out.push(rod(gold ? "crop-gold" : j % 2 ? "crop-green" : "leaf", [-bay / 2, y, z + STEP], [bay / 2, y, z + STEP], h * 0.36, 6, { only: "mesh" }), bx("soil", -bay / 2, bay / 2, y - 0.12, y + 0.12, z + STEP + h * 0.5 - 0.06, z + STEP + h * 0.5 + 0.06));
   }
   return out;
 }
@@ -450,7 +468,7 @@ function garden(gap: number, level: Level): Piece[] {
   const { nave: nv, tread } = dims(g);
   const n = Math.round((TAU * rg) / 5.2);
   const fine = level === "fine";
-  const out: Piece[] = [...glass(g, 0, gap), ...hydroHall(g, 0, gap, true).map((p): Piece => (p.kind === "lathe" && p.material === "hull-white" ? { ...p, material: (["meadow", "crop-gold", "crop-green"] as const)[Math.max(0, Math.min(2, Math.round((ground(g) - p.profile[0][0]) / STEP) - 1))] } : p))];
+  const out: Piece[] = [...glass(g, 0, gap), ...hydroHall(g, 0, gap, true).map((p): Piece => (p.kind === "lathe" && p.material === "hull-white" ? { ...p, material: "soil" } : p))];
   for (let i = 0; i < n; i++) {
     const az = (360 * i) / n;
     if (az < gap || az > 360 - gap) continue;
@@ -465,7 +483,7 @@ function garden(gap: number, level: Level): Piece[] {
     for (const s of [1, -1] as const) for (let k = 1; k <= 3; k++) {
       const e0 = nv + tread * (k - 1);
       const rk = rg - STEP * k;
-      bay.push(...crops(s > 0 ? e0 + 0.1 : -(e0 + tread - 0.1), s > 0 ? e0 + tread - 0.1 : -(e0 + 0.1), rk, 5.2, i, k, s, level));
+      bay.push(...crops(s > 0 ? e0 + 0.1 : -(e0 + tread - 0.1), s > 0 ? e0 + tread - 0.1 : -(e0 + 0.1), rk, 5.2, i, k, s, level), ...wall(e0, rk, 5.2, i, k, s, level));
       if (h01(i, k + (s > 0 ? 70 : 80)) > (fine ? 0.8 : 0.95)) bay.push(...person(1.4, s > 0 ? e0 + tread * 0.62 : -(e0 + tread * 0.62), rk, i * 5 + k + 300, true, h01(i, k + 120) > 0.3 ? "bend" : "stand"));
     }
     out.push(...place(bay, { at: [0, 0, 0], yaw: az }));

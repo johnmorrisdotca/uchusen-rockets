@@ -33,7 +33,7 @@ for (const use of ["living", "hydro"] as const) {
     for (const faces of mesh.faces.values()) triangles += faces.indices.length / 3;
     console.log(use, level, "ground radius", rg.toFixed(1), "pieces", pieces.length, "triangles", triangles, "build+mesh ms", took, "glb MB", (glb.length / 1e6).toFixed(1));
   }
-  const shot = (name: string, eye: V3, target: V3, up: V3, fov: number, shadow = 120, extra: Record<string, unknown> = {}) => ({ name: `${use}-${name}`, eye, target, up, size: [1800, 900], fov, shadow, shadowBias: 0.004, look: "painted", daylight: true, background: "#79a9e0", sunDir: [...upAt(75).map((v, i) => v + (i === 1 ? 0.35 : 0))] as V3, ...extra });
+  const shot = (name: string, eye: V3, target: V3, up: V3, fov: number, shadow = 120, extra: Record<string, unknown> = {}) => ({ name: `${use}-${name}`, eye, target, up, size: [1800, 900], fov, shadow, shadowBias: 0.004, look: "painted", daylight: true, ...(use === "hydro" ? { golden: true } : {}), background: "#79a9e0", sunDir: [...upAt(75).map((v, i) => v + (i === 1 ? 0.35 : 0))] as V3, ...extra });
   jobs.push({ glb: files.fine, shots: [
     shot("mouth", at(61, rg - 3.4, 1.5), at(128, rg - 11, 0.4), upAt(61), 78, 150),
     shot("street", at(63, rg - 1.7, 2.2), at(98, rg - 2.2, 4), upAt(63), 62, 100),

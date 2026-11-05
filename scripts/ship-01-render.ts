@@ -35,6 +35,8 @@ interface Shot {
   background?: string;
   /** Haze for daylight: its colour and the distances it starts and ends at, metres. */
   haze?: string;
+  /** The warm light of the Bernal agriculture painting: a deep gold sun, a gold haze and a warm sky fill. */
+  golden?: boolean;
   /** Daylight without the ambient-occlusion pass. */
   noAo?: boolean;
   /** How strongly the ambient occlusion darkens, 0 to 1. */
@@ -144,7 +146,7 @@ window.draw = async (job, shot) => {
   sun.shadow.camera.updateProjectionMatrix();
   const rim = new THREE.DirectionalLight("#9fc4ff", shot.look === "line" ? 0 : 0.8); rim.position.set(-0.6, -0.2, -0.8);
   const hemi = new THREE.HemisphereLight("#cfe0ff", "#1a1d24", shot.look === "line" ? 0.8 : 0.5);
-  if (shot.daylight) { scene.environment = skyEnv; scene.environmentIntensity = 0.7; scene.fog = new THREE.Fog(shot.haze ?? "#c3d8ee", shot.hazeNear ?? 45, shot.hazeFar ?? 320); sun.color.set("#ffd7a0"); sun.intensity = 3.6; sun.shadow.radius = 5; rim.intensity = 0; hemi.color.set("#bcd8ff"); hemi.groundColor.set("#b3bf93"); hemi.intensity = 1.6; }
+  if (shot.daylight) { scene.environment = skyEnv; scene.environmentIntensity = 0.7; scene.fog = new THREE.Fog(shot.haze ?? (shot.golden ? "#f1d9a0" : "#c3d8ee"), shot.hazeNear ?? 45, shot.hazeFar ?? 320); sun.color.set(shot.golden ? "#ffbd5c" : "#ffd7a0"); sun.intensity = shot.golden ? 4.4 : 3.6; sun.shadow.radius = 5; rim.intensity = 0; hemi.color.set(shot.golden ? "#ffe2b0" : "#bcd8ff"); hemi.groundColor.set(shot.golden ? "#c9a867" : "#b3bf93"); hemi.intensity = 1.6; }
   scene.add(sun, sun.target, rim, hemi);
   if (shot.fill && !shot.ortho) {
     // the silhouette comes from the vertices themselves (a thousand or so from each mesh), not from the box round them
