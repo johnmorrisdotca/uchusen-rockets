@@ -3,7 +3,7 @@
 import { chamfered, collar, cub, designation, type Piece, prism, rng, rod } from "./adapter.ts";
 import { BOW_LAYERS, STATION } from "./dims.ts";
 import { dressedFace } from "./hulls.ts";
-import { beaconLamp, lampHalo, lightPool } from "../lights.ts";
+import { beaconLamp, lightPool } from "../lights.ts";
 import { marking } from "../marking.ts";
 import { conceptStyle } from "../markingSets.ts";
 import { frame, lamp, on, SHUTTER } from "./faces.ts";
@@ -90,8 +90,7 @@ export function bow(cut: boolean, detail = 1, seed = "bow", marks = "452"): Piec
   }
   out.push(...marking(designation(marks), { at: [-l0.hx - 0.2, Y0 + 6, -4], right: [0, 0, 1], up: [0, 1, 0], height: 1.35, align: "middle" }, conceptStyle("goldman")));
   out.push(...lightPool({ o: [-l0.hx - 0.12, Y0 + 6, -7], u: [0, 0, 1], v: [0, 1, 0], w: [-1, 0, 0] }, 5.5));
-  out.push(...lampHalo("port", [-72, 270, 22]), ...lampHalo("starboard", [72, 154, 22]), ...lampHalo("strobe", [0, 210, 36]), ...beaconLamp([0, 374, 6]));
-  out.push(...lightPool({ o: [0, 268, 30], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, 20));
+  out.push(...beaconLamp([0, 366, 4]));
   out.push(...collar("L", Y0, -1));
   return out;
 }

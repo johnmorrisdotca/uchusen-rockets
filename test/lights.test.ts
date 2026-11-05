@@ -47,7 +47,7 @@ test("the white flash is 60 a minute and the red beacon 40, both steady when mot
 
 test("a closed hull carries port, starboard, stern, strobe, beacon and a flood pool", () => {
   const have = names(drum(contextOf("lights", "industrial", { detail: 0.25 }), { R: 3, L: 8, top: "M", bottom: "M", junk: 0, hatches: 0, conduits: 0, trays: 0, vents: 0, ladders: 0, panels: false, hazard: false }));
-  for (const material of ["nav-red", "nav-green", "nav-white", "strobe", "beacon", "flood", "light-pool", "halo-port", "halo-starboard", "halo-strobe"]) assert.ok(have.has(material), material);
+  for (const material of ["nav-red", "nav-green", "nav-white", "strobe", "beacon", "flood", "light-pool"]) assert.ok(have.has(material), material);
 });
 
 test("a docking ring and the repair drone carry the same lamps", () => {

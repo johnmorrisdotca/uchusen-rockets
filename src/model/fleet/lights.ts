@@ -129,7 +129,7 @@ export function lampHalo(colour: string, at: Vec3): Piece[] {
 
 /** A small dome. `at` is metres; the dome stands up from that point. */
 function dome(material: "beacon" | "nav-white" | "lamp-amber", at: Vec3, size: number): Piece {
-  return { kind: "lathe", material, at: [at[0], at[2]], segs: 8, only: "mesh", body: true, profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [0.001, at[1] + size * 0.8]] };
+  return { kind: "lathe", material, at: [at[0], at[2]], segs: 8, only: "mesh", profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [0.001, at[1] + size * 0.8]] };
 }
 
 /**
@@ -146,7 +146,7 @@ function dome(material: "beacon" | "nav-white" | "lamp-amber", at: Vec3, size: n
  * ```
  */
 export function beaconLamp(at: Vec3, size = 0.14): Piece[] {
-  return [dome("beacon", at, size), ...lampHalo("beacon", at)];
+  return [dome("beacon", at, size)];
 }
 
 /**
@@ -163,7 +163,7 @@ export function beaconLamp(at: Vec3, size = 0.14): Piece[] {
  * ```
  */
 export function sternLamp(at: Vec3, size = 0.14): Piece[] {
-  return [dome("nav-white", at, size), ...lampHalo("nav-white", at)];
+  return [dome("nav-white", at, size)];
 }
 
 /**
@@ -180,7 +180,7 @@ export function sternLamp(at: Vec3, size = 0.14): Piece[] {
  * ```
  */
 export function workLamp(at: Vec3, size = 0.08): Piece[] {
-  return [dome("lamp-amber", at, size), ...lampHalo("work", at)];
+  return [dome("lamp-amber", at, size)];
 }
 
 /**

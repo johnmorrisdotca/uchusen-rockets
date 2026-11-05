@@ -6,7 +6,7 @@
 import { deg } from "../../framing.ts";
 import type { MaterialName } from "../materials.ts";
 import { type Frame, type Lathe, type Lines, type Piece, type Plate, pointOf, type Vec3 } from "../pieces.ts";
-import { lampHalo, lightPool } from "./lights.ts";
+import { lightPool } from "./lights.ts";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // numbers
@@ -610,7 +610,7 @@ const LAMP_MATERIAL: Readonly<Record<Lamp["colour"], MaterialName>> = { amber: "
 
 /** Lamps: small domes in a bright colour. They glow with the Lights choice. */
 export function lamps(list: readonly Lamp[]): Piece[] {
-  return list.flatMap(({ at, colour, size = 0.1 }): Piece[] => [{ kind: "lathe", material: LAMP_MATERIAL[colour], at: [at[0], at[2]], segs: 8, only: "mesh", body: true, profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [size * 0.001, at[1] + size * 0.8]] }, ...lampHalo(colour, at)]);
+  return list.map(({ at, colour, size = 0.1 }): Piece => ({ kind: "lathe", material: LAMP_MATERIAL[colour], at: [at[0], at[2]], segs: 8, only: "mesh", profile: [[size, at[1]], [size * 0.85, at[1] + size * 0.5], [size * 0.001, at[1] + size * 0.8]] }));
 }
 
 /** A navigation light on a hull of radius `r` at azimuth `az` (radians) and height `y`: a housing, a stalk and a lens, red (`port`) or green (`starboard`), or a white `strobe`. The red and the green stay steady. The strobe flashes. */
@@ -630,7 +630,7 @@ export function floodlight(r: number, az: number, y: number, tilt = 0): Piece[] 
   const dir: Vec3 = unit(add(mul(f.w, Math.cos(tilt)), mul(f.v, Math.sin(tilt))));
   const mouth = add(base, mul(dir, 0.42));
   out.push(rod("hull-grey", pointOf(f, 0, -0.1, 0.1), base, 0.04, 6), rod("hull-grey", base, mouth, 0.2, 12), rod("hull-grey-dark", add(base, mul(dir, 0.04)), add(base, mul(dir, 0.1)), 0.23, 12), rod("hull-grey-dark", add(base, mul(dir, 0.16)), add(base, mul(dir, 0.22)), 0.23, 12), rod("flood", mouth, add(mouth, mul(dir, 0.03)), 0.17, 12));
-  out.push(...lightPool({ o: pointOf(f, 0, -0.2, 0.06), u: f.u, v: f.v, w: f.w }, 8));
+  out.push(...lightPool({ o: pointOf(f, 0, -0.2, 0.06), u: f.u, v: f.v, w: f.w }, 0.9));
   return out;
 }
 

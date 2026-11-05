@@ -2,6 +2,7 @@
 // berthing rings at both ends and a ring of portholes, like the ISS's modules. The crew decks stand perpendicular to thrust, so they are round floors one above another up the spine. The dorsal and ventral rails carry the
 // radiator banks. A cutaway opens the starboard side. Descends from the ISS's Destiny and Node modules and Skylab's wet workshop, with Orion's armoured shell. Pure: no three.js and no DOM.
 import { collar, contextOf, cub, drum, type Piece, place, rng, rod } from "./adapter.ts";
+import { lampHalo, lightPool } from "../lights.ts";
 import { STATION } from "./dims.ts";
 import { capsule, ringAt, tubeAt } from "./shapes.ts";
 
@@ -87,5 +88,6 @@ export function habitat(cut: boolean, detail = 1, seed = "habitat", theme: Theme
   for (const [y, n, s0] of [[Y0 + 10, 12, 0.1], [Y0 + 24, 12, 0.4], [Y0 + 38, 12, 0.2]] as const) if (!cut) out.push(...portholes(y, n, s0));
   else out.push(...portholes(y, n, s0).filter((_, i) => Math.sin(s0 + (Math.PI * 2 * Math.floor(i / 3)) / n) < 0));
   void collar;
+  out.push(...lampHalo("port", [-72, 270, 22]), ...lampHalo("strobe", [0, 276, 20]), ...lightPool({ o: [0, 276, 16], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, 14));
   return out;
 }

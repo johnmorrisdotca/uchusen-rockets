@@ -3,7 +3,7 @@
 // stand where they stood on the square bow. Ariake keeps the square bow (`bow.ts`). A cutaway opens the starboard side to the crush cells. Pure: no three.js and no DOM.
 import { collar, cub, designation, type Lathe, type MaterialName, type Piece, rng, rod } from "./adapter.ts";
 import { STATION } from "./dims.ts";
-import { beaconLamp, lampHalo, lightPool } from "../lights.ts";
+import { beaconLamp, lightPool } from "../lights.ts";
 import { marking } from "../marking.ts";
 import { conceptStyle } from "../markingSets.ts";
 import { frame, lamp, on } from "./faces.ts";
@@ -128,8 +128,7 @@ export function noseRounded(cut: boolean, detail = 1, seed = "bow", marks = "452
   out.push(cub("hull-white-worn", [-r0 - 0.9, -r0 + 0.3], [Y0 + 3, Y0 + 9], [-7, 0]));
   out.push(...marking(designation(marks), { at: [-r0 - 1.05, Y0 + 6, -3.5], right: [0, 0, 1], up: [0, 1, 0], height: 1.35, align: "middle" }, conceptStyle("goldman")));
   out.push(...lightPool({ o: [-r0 - 0.98, Y0 + 6, -6.2], u: [0, 0, 1], v: [0, 1, 0], w: [-1, 0, 0] }, 5.5));
-  out.push(...lampHalo("port", [-72, 270, 22]), ...lampHalo("starboard", [72, 154, 22]), ...lampHalo("strobe", [0, 210, 36]), ...beaconLamp([0, 374, 6]));
-  out.push(...lightPool({ o: [0, 268, 30], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, 20));
+  out.push(...beaconLamp([0, 366, 4]));
   out.push(...collar("L", Y0, -1));
   return out;
 }
