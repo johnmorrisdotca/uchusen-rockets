@@ -108,6 +108,8 @@ async function mountDrum(file: string): Promise<void> {
   for (const node of drum.getRoot().listNodes()) node.setRotation(q as [number, number, number, number]);
   const fittings = await io.readBinary(new Uint8Array(readFileSync(file)));
   mergeDocuments(fittings, drum);
+  await hangArm(io, fittings, [1.15, 1.15, -0.05], 1);
+  await hangArm(io, fittings, [-1.15, 1.15, -0.05], -1);
   const scene = fittings.getRoot().listScenes()[0];
   for (const extra of fittings.getRoot().listScenes()) {
     if (extra === scene) continue;
@@ -124,4 +126,18 @@ async function mountDrum(file: string): Promise<void> {
   }
   for (const buffer of fittings.getRoot().listBuffers()) if (buffer !== keep) buffer.dispose();
   writeFileSync(file, await io.writeBinary(fittings));
+}
+
+/** One InSight arm, hung under the drum. `sign` mirrors it to the other side. The arm file stands on Y; this turns that axis downward. */
+async function hangArm(io: NodeIO, fittings: Awaited<ReturnType<NodeIO["readBinary"]>>, at: [number, number, number], sign: number): Promise<void> {
+  const arm = await io.readBinary(new Uint8Array(readFileSync(join("models", "insight-arm-arm.glb"))));
+  const scene = arm.getRoot().listScenes()[0];
+  const parent = arm.createNode(sign < 0 ? "arm-right" : "arm-left");
+  for (const child of scene.listChildren().slice()) parent.addChild(child);
+  scene.addChild(parent);
+  const down = -Math.PI / 2;
+  parent.setRotation([Math.sin(down / 2), 0, 0, Math.cos(down / 2)]);
+  parent.setTranslation(at);
+  parent.setScale([sign * 0.42, 0.42, 0.42]);
+  mergeDocuments(fittings, arm);
 }

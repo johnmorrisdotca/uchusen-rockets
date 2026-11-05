@@ -1,7 +1,7 @@
 // The five construction machines. Shapes come from the reference notes; no mark or text is copied.
 import type { MaterialName } from "../../materials.ts";
 import { disc, discZ, hoop, post, rod } from "../detail.ts";
-import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, GOLD, limb, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
+import { bar, BLUE, bolts, DARK, deck, emitter, GLASS, GLOW, GOLD, METAL, ORANGE, panel, vents, whip, WHITE, YELLOW } from "./dress.ts";
 import type { Piece, Vec3 } from "../../pieces.ts";
 
 /**
@@ -86,16 +86,6 @@ function repairArm(root: Vec3, elbow: Vec3, wrist: Vec3, grasp: Vec3): Piece[] {
   ];
 }
 
-/** Four round housings, a motor cap at each joint, a cable, and a gripper. Sized for the 2.9 m drum. */
-function fittedArm(sign: number): Piece[] {
-  const root: Vec3 = [sign * 0.55, 1.2, 0.15];
-  const shoulder: Vec3 = [sign * 0.95, 1.7, -0.15];
-  const elbow: Vec3 = [sign * 0.7, 2.15, -0.55];
-  const wrist: Vec3 = [sign * 0.35, 2.45, -0.85];
-  const grasp: Vec3 = [sign * 0.15, 2.7, -1.05];
-  return [...limb(root, [shoulder, elbow, wrist], grasp, 0.07), rod(DARK, root, wrist, 0.012, 5)];
-}
-
 function repairDrone(): Machine {
   const grip: Vec3 = [-0.15, 2.7, -1.05];
   const pieces: Piece[] = [
@@ -113,8 +103,7 @@ function repairDrone(): Machine {
     rod(GLOW, [-0.7, 0.55, 1.95], [-0.74, 0.62, 2.08], 0.02, 6),
     rod(METAL, [0.45, 0.3, 1.22], [0.62, 0.7, 1.9], 0.014, 6),
     rod(GLOW, [0.62, 0.7, 1.9], [0.66, 0.78, 2.04], 0.02, 6),
-    ...fittedArm(-1),
-    ...fittedArm(1),
+    // the arms are InSight's own arm, merged onto the drum for the picture
   ];
   return { id: "drone-repair", role: "repair", pieces, mouth: [0, 1.66, 0.55], tool: grip, toolKind: "laser" };
 }
