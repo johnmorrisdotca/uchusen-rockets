@@ -1197,6 +1197,7 @@ export class RocketViewer {
       delete this.canvas.dataset.going;
       delete this.canvas.dataset.built;
       delete this.canvas.dataset.showing;
+      delete this.canvas.dataset.weld;
       if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
       this.wake();
@@ -1227,7 +1228,14 @@ export class RocketViewer {
     const ys = shown.map((place) => place.at[1]);
     const poses = carries(jobs, at, steps, (slot) => slotAt.get(slot), dock, [Math.min(...ys), Math.max(...ys)]);
     this.swarm ??= new SwarmRig(this.root);
-    this.swarm.show(poses, jobs.length ? [] : berthRing(count, dock), dock);
+    this.swarm.show(
+      poses.map((pose) => ({ where: pose.where, part: pose.part, weld: pose.duty === "work" })),
+      jobs.length ? [] : berthRing(count, dock),
+      dock,
+      this.options.reducedMotion,
+    );
+    if (poses.some((pose) => pose.duty === "work")) this.canvas.dataset.weld = this.options.reducedMotion ? "dot" : "live";
+    else delete this.canvas.dataset.weld;
     this.canvas.dataset.swarm = String(count);
     this.canvas.dataset.going = frame.going.join(" ");
     this.canvas.dataset.built = frame.done.filter((slot) => grounded(slot, frame.done)).join(" ");
@@ -1607,6 +1615,11 @@ export class RocketViewer {
     }
     const motioning = this.motionOn && !this.clockNow;
     if (motioning) this.stepMotion(now);
+    const welding = (this.swarm?.live() ?? false) && !this.options.reducedMotion;
+    if (welding) {
+      this.swarm?.step(now / 1000);
+      this.needsDraw = true;
+    }
     const flaming = this.burningNow > 0 && !this.options.reducedMotion && (flying || performance.now() < this.flameUntil);
     if (flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
       this.flameDrawn = now;
@@ -1639,7 +1652,7 @@ export class RocketViewer {
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 

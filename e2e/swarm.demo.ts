@@ -19,4 +19,5 @@ test("day 100 of Miyamoto shows the drive underway and 24 drones", async ({ page
   await expect(canvas).toHaveAttribute("data-swarm", "24", { timeout: 45_000 });
   await expect(canvas).toHaveAttribute("data-going", "drive");
   await expect(canvas).toHaveAttribute("data-built", "");
+  await expect(canvas).toHaveAttribute("data-weld", "dot");
 });

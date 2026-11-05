@@ -102,3 +102,50 @@ test("two planets and a moon stand behind the rocket, and the picture before is 
   }
   expect(problems).toEqual([]);
 });
+
+test("each look uses its own kind of picture for the body and for a moon beside it", async ({ page }) => {
+  const problems = watch(page);
+  const sky = page.locator('[data-testid="sky"]');
+  const moons = page.locator('[data-testid="sky-moons"]');
+  const earth = page.locator('[data-testid="earth"]');
+  const hero = page.locator('[data-testid="hero"]');
+  const texture = (root: ReturnType<typeof page.locator>) => root.locator("wakusei-body").first().evaluate((node) => (node as unknown as { stats?: { textureWidth?: number } }).stats?.textureWidth ?? 0);
+
+  await page.goto(`${URL}?background=mars&look=line`);
+  await expect(sky).toHaveAttribute("data-form", "line");
+  await expect(sky.locator("svg")).toHaveCount(1);
+  await expect(sky.locator("wakusei-body")).toHaveCount(0);
+
+  await page.goto(`${URL}?background=jupiter&look=line`);
+  await expect(moons).toHaveAttribute("data-form", "line");
+  await expect(moons.locator("svg")).toHaveCount(4);
+  await expect(moons.locator("wakusei-body")).toHaveCount(0);
+
+  await page.goto(`${URL}?background=mars&look=painted`);
+  await hero.scrollIntoViewIfNeeded();
+  await expect(sky).toHaveAttribute("data-form", "painted");
+  await expect(sky.locator("svg")).toHaveCount(0);
+  await expect(sky.locator("wakusei-body")).toHaveCount(1);
+  await expect.poll(() => texture(sky), { timeout: 30_000 }).toBeGreaterThan(0);
+
+  await page.goto(`${URL}?background=jupiter&look=painted`);
+  await hero.scrollIntoViewIfNeeded();
+  await expect(sky).toHaveAttribute("data-form", "painted", { timeout: 30_000 });
+  await expect(sky.locator("svg")).toHaveCount(0);
+  await expect(sky.locator("wakusei-body")).toHaveCount(1);
+  await expect(moons).toHaveAttribute("data-form", "painted");
+  await expect(moons.locator("svg")).toHaveCount(0);
+  await expect(moons.locator("wakusei-body")).toHaveCount(4);
+
+  await page.goto(`${URL}?background=earth&look=painted`);
+  await hero.scrollIntoViewIfNeeded();
+  await expect(earth.locator("chikyu-earth-realistic")).toBeVisible({ timeout: 30_000 });
+  await expect(earth.locator("svg")).toHaveCount(0);
+  await expect(moons).toHaveAttribute("data-draws", "moon");
+  await expect(moons).toHaveAttribute("data-form", "painted");
+  await expect(moons.locator("svg")).toHaveCount(0);
+  await expect(moons.locator("wakusei-body")).toHaveCount(1);
+  await expect.poll(() => texture(moons), { timeout: 30_000 }).toBeGreaterThan(0);
+  await shot(page, "earth-moon-painted");
+  expect(problems).toEqual([]);
+});
