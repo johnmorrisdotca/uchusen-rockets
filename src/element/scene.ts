@@ -1332,6 +1332,7 @@ export class RocketViewer {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        for (const lines of part.feature) lines.visible = true;
         part.holder.visible = place.shown;
       }
       this.swarm?.hide();
@@ -1365,15 +1366,18 @@ export class RocketViewer {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        for (const lines of part.feature) lines.visible = true;
         part.holder.visible = place.shown;
       } else if (frame.going.includes(step.slot) && seated && fit.grown > 0.02) {
         // a section grows where it belongs; a ring opens as an arc
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         growPart(part.holder, fit.grown, ring);
+        for (const lines of part.feature) lines.visible = !(ring && fit.grown < 0.995);
         part.holder.visible = place.shown;
       } else {
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        for (const lines of part.feature) lines.visible = true;
         part.holder.visible = false;
       }
     }
