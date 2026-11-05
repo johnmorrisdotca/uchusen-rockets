@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildOf, playFrame } from "../src/buildPlay.ts";
+import { sparkAt } from "../src/element/swarm.ts";
 import { approachPath, berthRing, carries, grounded, pathClears, SWARM_CAP, swarmCount, swarmJobs, type HullBox } from "../src/swarm.ts";
 
 const hull: HullBox = { min: [-69, 0, -40], max: [69, 380, 34] };
@@ -91,4 +92,14 @@ test("the path stays outside the hull until the last leg, and each drone has its
       assert.ok(pathClears(path, hull));
     }
   }
+});
+
+test("a weld spark flies straight out and is not pulled down", () => {
+  assert.deepEqual(sparkAt(2, 0), [0, 0, 0]);
+  const near = sparkAt(2, 0.3);
+  const far = sparkAt(2, 0.6);
+  assert.ok(Math.hypot(...near) > 0);
+  for (const axis of [0, 1, 2] as const) assert.ok(Math.abs(far[axis] - near[axis] * 2) < 1e-9, String(axis));
+  const wrapped = sparkAt(2, 20);
+  assert.ok(Math.hypot(...wrapped) < 2.21);
 });
