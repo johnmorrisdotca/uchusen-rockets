@@ -2,7 +2,7 @@
 // are made here. When the kit changes, this is the only file of the ship to touch. Pure: no three.js and no DOM.
 import { iBeam as kitIBeam, pipeRun as kitPipeRun, strut as kitStrut } from "../detail.ts";
 import type { MaterialName } from "../../materials.ts";
-import type { Frame, Lathe, Piece, Plate, Vec3 } from "../../pieces.ts";
+import type { Frame, Lathe, Move, Piece, Plate, Vec3 } from "../../pieces.ts";
 
 export { annulus, antenna, ball, beam, box, channel, disc, floodlight, horn, hoop, lamps, LIVERY, navLight, observationDome, place, porthole, post, radiator, ringOf, rng, rod, room, seams, separationJoint, stamp, tileShield } from "../detail.ts";
 export { assemble, BUILDERS, KIT } from "../kit.ts";
@@ -94,3 +94,6 @@ export function roundStrut(material: MaterialName, a: Vec3, b: Vec3, r: number, 
   const ball = (p: Vec3): Piece => ({ kind: "lathe", material: o.joint ?? "hull-white", at: [p[0], p[2]], segs: sides, profile: [[0.001, p[1] - r * 1.5], [r * 1.1, p[1] - r * 1.05], [r * 1.5, p[1]], [r * 1.1, p[1] + r * 1.05], [0.001, p[1] + r * 1.5]], only: "mesh" });
   return [...kitStrut(material, a, b, r, sides), ball(a), ball(b)];
 }
+
+/** Tags every piece with a `Move` (a name, a pivot and an axis) so the viewer or `moved` can turn the group: the same as the fleet's `moving` of MODULES-450. */
+export const moving = (pieces: readonly Piece[], move: Move): Piece[] => pieces.map((piece) => ({ ...piece, move }));
