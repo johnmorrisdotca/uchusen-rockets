@@ -61,7 +61,7 @@ scaleButton.className = "chip";
 scaleButton.dataset.testid = "true-scale";
 scaleButton.dataset.say = "trueScale";
 scaleButton.textContent = say("trueScale");
-bar.insertAdjacentElement("afterend", scaleButton);
+byId("turn").append(scaleButton);
 function setScale(on: boolean): void {
   hero.setAttribute("scale", String(on));
   scaleButton.setAttribute("aria-pressed", String(on));

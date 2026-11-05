@@ -359,7 +359,7 @@ export class RocketViewer {
     const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, "");
     if (this.disposed || generation !== this.generation) return;
     const old = this.built;
-    const changingCraft = Boolean(this.scaleMode && old && old.report.variant?.id !== built.report.variant?.id);
+    const changingCraft = Boolean(this.scaleMode && old && (old.report.variant?.rocket !== built.report.variant?.rocket || old.report.variant?.id !== built.report.variant?.id));
     if (changingCraft) this.makeGhost();
     this.disposeParts();
     this.root.clear();
