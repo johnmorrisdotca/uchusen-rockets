@@ -84,6 +84,28 @@ export function paintTiles(across: number): HTMLCanvasElement {
   return c;
 }
 
+/** One cell of a gold blanket: a bright face, a copper bus and a dark gap. Repeated across a sheet. */
+export function paintCells(): HTMLCanvasElement {
+  const n = 128;
+  const c = canvas(n, n);
+  const ctx = c.getContext("2d");
+  if (!ctx) return c;
+  ctx.fillStyle = "#f0c56a";
+  ctx.fillRect(0, 0, n, n);
+  ctx.fillStyle = "#f6d48a";
+  ctx.fillRect(8, 7, n - 16, 16);
+  ctx.fillStyle = "#d7a84a";
+  ctx.fillRect(8, n - 24, n - 16, 12);
+  ctx.fillStyle = "#c4843c";
+  ctx.fillRect(0, 18, n, 3);
+  ctx.fillStyle = "#1a140c";
+  ctx.fillRect(0, 0, n, 3);
+  ctx.fillRect(0, n - 3, n, 3);
+  ctx.fillRect(0, 0, 3, n);
+  ctx.fillRect(n - 3, 0, 3, n);
+  return c;
+}
+
 /** A soft round glow: the pool of light under a rocket. */
 export function paintGlow(inner: string, outer: string): HTMLCanvasElement {
   const n = 128;

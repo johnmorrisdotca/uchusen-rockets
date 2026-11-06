@@ -384,20 +384,65 @@ function plateFaces(mesh: PartMesh, piece: Plate): void {
   const n = outline.length;
   if (piece.facets) {
     const out = buffersOf(mesh, piece.material);
+    const gold = piece.material === "cell-gold";
+    let u0 = 0;
+    let u1 = 1;
+    let v0 = 0;
+    let v1 = 1;
+    if (gold) {
+      u0 = Infinity;
+      u1 = -Infinity;
+      v0 = Infinity;
+      v1 = -Infinity;
+      for (const tri of piece.facets) for (const p of tri) {
+        if (p[0] < u0) u0 = p[0];
+        if (p[0] > u1) u1 = p[0];
+        if (p[1] < v0) v0 = p[1];
+        if (p[1] > v1) v1 = p[1];
+      }
+      out.hasUv = true;
+    }
+    const du = u1 - u0 || 1;
+    const dv = v1 - v0 || 1;
     for (const [a, b, c] of piece.facets) {
       const p = [pointOf(frame, ...a), pointOf(frame, ...b), pointOf(frame, ...c)] as const;
       const normal = unit3(cross3(diff3(p[1], p[0]), diff3(p[2], p[0])));
-      addTriangle(out, [p[0], p[1], p[2]], [normal, normal, normal]);
+      const base = out.positions.length / 3;
+      for (let i = 0; i < 3; i++) {
+        out.positions.push(...p[i]);
+        out.normals.push(...normal);
+        out.uvs.push(gold ? ( [a, b, c][i][0] - u0) / du : 0, gold ? ([a, b, c][i][1] - v0) / dv : 0);
+      }
+      if (dot3(normal, normal) >= 0) out.indices.push(base, base + 1, base + 2);
     }
     return;
   }
   const addFan = (material: MaterialName, c: number, normal: Vec3, reverse: boolean) => {
     const out = buffersOf(mesh, material);
     const base = out.positions.length / 3;
+    let u0 = 0;
+    let u1 = 1;
+    let v0 = 0;
+    let v1 = 1;
+    if (material === "cell-gold") {
+      u0 = Infinity;
+      u1 = -Infinity;
+      v0 = Infinity;
+      v1 = -Infinity;
+      for (const [a, b] of outline) {
+        if (a < u0) u0 = a;
+        if (a > u1) u1 = a;
+        if (b < v0) v0 = b;
+        if (b > v1) v1 = b;
+      }
+      out.hasUv = true;
+    }
+    const du = u1 - u0 || 1;
+    const dv = v1 - v0 || 1;
     for (const [a, b] of outline) {
       out.positions.push(...pointOf(frame, a, b, c));
       out.normals.push(...normal);
-      out.uvs.push(0, 0);
+      out.uvs.push(material === "cell-gold" ? (a - u0) / du : 0, material === "cell-gold" ? (b - v0) / dv : 0);
     }
     for (let i = 1; i + 1 < n; i++) {
       if (reverse) out.indices.push(base, base + i + 1, base + i);

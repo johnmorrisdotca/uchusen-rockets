@@ -78,7 +78,8 @@ test("each part is built where it says, in metres, and stands on its origin", ()
     // the part is as long as it says, give or take what stands past the ends: collars, antennas, the bow's mounts
     assert.ok(max[1] <= part.height + 8, `${part.id}: ${max[1]} against ${part.height}`);
     assert.ok(max[1] >= part.height * 0.85, `${part.id}: only ${max[1]} of ${part.height}`);
-    if (part.place) assert.ok(Math.abs(min[0]) < 130 && Math.abs(max[0]) < 130, `${part.id}: ${min[0]}..${max[0]}`);
+    // the bird wing's span is the wing: 228 m out from the hull, so it stands past the beam on purpose
+    if (part.place && part.id !== "bird-wing") assert.ok(Math.abs(min[0]) < 130 && Math.abs(max[0]) < 130, `${part.id}: ${min[0]}..${max[0]}`);
   }
   // the hangars stand where the layout drawing puts them: starboard aft, port forward
   assert.ok(HANGAR.starboard.y[1] < HANGAR.port.y[1] && HANGAR.starboard.x[0] > 0 && HANGAR.port.x[1] < 0);
@@ -338,16 +339,20 @@ test("the class table, the variant records, the docs and the viewer agree: pod, 
   }
 });
 
-test("the bird wing is two jointed wings of flat gold feathers, and the elbow folds them", () => {
+test("the bird wing is two continuous cell wings on a jointed spar, and the elbow folds them", () => {
   const part = parts().find((one) => one.id === "bird-wing")!;
   const pieces = part.pieces();
   const names = new Set(pieces.flatMap((piece) => (piece.move ? [piece.move.name] : [])));
   assert.deepEqual([...names].sort(), ["bird-port", "bird-starboard"]);
-  const sheets = pieces.filter((piece) => piece.kind === "plate" && piece.top === "gold" && piece.sheet);
-  assert.ok(sheets.length >= 16, `${sheets.length} feathers`);
-  assert.ok(sheets.every((piece) => piece.kind === "plate" && piece.ribs && piece.ribs.length > 0));
+  const sheets = pieces.filter((piece) => piece.kind === "plate" && piece.top === "cell-gold" && piece.sheet);
+  assert.ok(sheets.length >= 16, `${sheets.length} sheets`);
+  const { min, max } = boundsOf(meshOf(pieces));
+  // 228 m from the shoulder, and the root sheet reaches about a third of that aft
+  assert.ok(max[0] > 240 && max[0] < 290, `span ${max[0]}`);
+  assert.ok(min[0] < -240 && min[0] > -290, `span ${min[0]}`);
+  assert.ok(max[1] - min[1] > 70, `chord ${max[1] - min[1]}`);
   const fold = motionsOf("fleet-ship-03").filter((motion) => motion.group.startsWith("bird-"));
   assert.deepEqual(fold.map((motion) => motion.kind), ["swing", "swing"]);
-  assert.equal(fold[0].to, 130);
-  assert.equal(fold[1].to, -130);
+  assert.equal(fold[0].to, 80);
+  assert.equal(fold[1].to, -80);
 });
