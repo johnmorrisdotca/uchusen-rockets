@@ -22,15 +22,15 @@ function jointLamp(at: V3): Piece[] {
 export function boxTruss(x: number, z: number, y0: number, y1: number, half = 26): Piece[] {
   const out: Piece[] = [];
   const corners: V3[] = [[x - half, 0, z - half], [x + half, 0, z - half], [x + half, 0, z + half], [x - half, 0, z + half]];
-  for (const c of corners) out.push(...iBeam("hull-grey", [c[0], y0, c[2]], [c[0], y1, c[2]], UP, 18, 14));
+  for (const c of corners) out.push(...iBeam("hull-white", [c[0], y0, c[2]], [c[0], y1, c[2]], UP, 18, 14));
   for (let y = y0; y <= y1; y += 140) {
     out.push(...iBeam("hull-grey-dark", [x - half, y, z - half], [x + half, y, z - half], UP, 12, 9));
     out.push(...iBeam("hull-grey-dark", [x + half, y, z - half], [x + half, y, z + half], UP, 12, 9));
     out.push(...iBeam("hull-grey-dark", [x + half, y, z + half], [x - half, y, z + half], UP, 12, 9));
     out.push(...iBeam("hull-grey-dark", [x - half, y, z + half], [x - half, y, z - half], UP, 12, 9));
     const y2 = Math.min(y + 140, y1);
-    out.push(...strut("hull-grey", [x - half, y, z + half], [x + half, y2, z + half], 4));
-    out.push(...strut("hull-grey", [x - half, y, z - half], [x - half, y2, z + half], 4));
+    out.push(...strut("hull-grey-dark", [x - half, y, z + half], [x + half, y2, z + half], 4));
+    out.push(...strut("hull-grey-dark", [x - half, y, z - half], [x - half, y2, z + half], 4));
     for (const c of corners) out.push(...jointLamp([c[0], y, c[2]]));
   }
   return out;
@@ -39,11 +39,11 @@ export function boxTruss(x: number, z: number, y0: number, y1: number, half = 26
 /** An open lattice in a horizontal plane: ribs, a walkway, a cable and a cluster of floods. No solid panel. */
 export function lattice(x0: number, x1: number, y0: number, y1: number, z: number): Piece[] {
   const out: Piece[] = [];
-  for (let y = y0; y <= y1; y += 90) out.push(...iBeam("hull-grey", [x0, y, z], [x1, y, z], UP, 14, 10));
+  for (let y = y0; y <= y1; y += 90) out.push(...iBeam("hull-white", [x0, y, z], [x1, y, z], UP, 14, 10));
   for (let x = x0; x <= x1; x += 90) out.push(...iBeam("hull-grey-dark", [x, y0, z], [x, y1, z], UP, 12, 8));
-  for (let y = y0; y < y1; y += 180) out.push(...strut("hull-grey", [x0, y, z], [x1, Math.min(y + 90, y1), z], 3.5));
+  for (let y = y0; y < y1; y += 180) out.push(...strut("hull-grey-dark", [x0, y, z], [x1, Math.min(y + 90, y1), z], 3.5));
   const mid = (x0 + x1) / 2;
-  out.push(cub("hull-grey", [mid - 7, mid + 7], [y0, y1], [z - 3, z]));
+  out.push(cub("blanket", [mid - 7, mid + 7], [y0, y1], [z - 3, z]));
   out.push(...pipeRun([[x0 + 16, y0, z - 10], [x1 - 16, y0, z - 10], [x1 - 16, y1, z - 10]], 2.4, "coolant"));
   for (let y = y0; y <= y1; y += 180) for (let x = x0; x <= x1; x += 180) out.push(...jointLamp([x, y, z]));
   for (let y = y0 + 50; y < y1; y += 260) {
@@ -58,9 +58,9 @@ export function lattice(x0: number, x1: number, y0: number, y1: number, z: numbe
 export function latticeWall(x: number, y0: number, y1: number, z0: number, z1: number): Piece[] {
   const out: Piece[] = [];
   const up: V3 = [1, 0, 0];
-  for (let y = y0; y <= y1; y += 90) out.push(...iBeam("hull-grey", [x, y, z0], [x, y, z1], up, 14, 10));
+  for (let y = y0; y <= y1; y += 90) out.push(...iBeam("hull-white", [x, y, z0], [x, y, z1], up, 14, 10));
   for (let z = z0; z <= z1; z += 70) out.push(...iBeam("hull-grey-dark", [x, y0, z], [x, y1, z], up, 12, 8));
-  for (let y = y0; y < y1; y += 180) out.push(...strut("hull-grey", [x, y, z0], [x, Math.min(y + 90, y1), z1], 3.5));
+  for (let y = y0; y < y1; y += 180) out.push(...strut("hull-grey-dark", [x, y, z0], [x, Math.min(y + 90, y1), z1], 3.5));
   out.push(...pipeRun([[x, y0, z0 + 8], [x, y1, z0 + 8]], 2.4, "hull-orange"));
   return out;
 }
@@ -76,18 +76,18 @@ export function boom(shoulder: V3, elbow: V3, wrist: V3, held: "tank" | "crate")
     ball("engine-metal", elbow, 20),
     ...iBeam("hull-white", elbow, wrist, UP, 30, 22),
     ball("hull-grey-dark", wrist, 16),
-    ...strut("hull-grey", wrist, claw, 7),
+    ...strut("hull-white", wrist, claw, 7),
     ...strut("hull-grey-dark", claw, [claw[0] + 16, claw[1] + 22, claw[2] + 12], 5),
     ...strut("hull-grey-dark", claw, [claw[0] + 16, claw[1] - 20, claw[2] - 12], 5),
   ];
   if (held === "tank") out.push(rod("hull-white", claw, [claw[0], claw[1] + 48, claw[2]], 12, 12));
-  else out.push(cub("hull-grey", [claw[0] - 16, claw[0] + 16], [claw[1] - 12, claw[1] + 28], [claw[2] - 14, claw[2] + 14]));
+  else out.push(cub("hull-white", [claw[0] - 16, claw[0] + 16], [claw[1] - 12, claw[1] + 28], [claw[2] - 14, claw[2] + 14]));
   return out;
 }
 
 /** Booms riding one rail, several along the slot, each holding something. */
 export function boomsOnRail(x: number, z: number, y0: number, y1: number, reach: number): Piece[] {
-  const out: Piece[] = [...iBeam("hull-grey", [x, y0, z], [x, y1, z], UP, 22, 16)];
+  const out: Piece[] = [...iBeam("hull-white", [x, y0, z], [x, y1, z], UP, 22, 16)];
   let n = 0;
   for (let y = y0 + 80; y < y1 - 40; y += 300) {
     const shoulder: V3 = [x, y, z];
@@ -166,8 +166,8 @@ function booth(x: number, y: number, z: number): Piece[] {
   const dy = 36;
   const dz = 22;
   return [
-    cub("hull-grey", [x, x + dx], [y, y + dy], [z, z + 2]),
-    cub("hull-grey", [x, x + dx], [y, y + dy], [z + dz - 2, z + dz]),
+    cub("hull-white", [x, x + dx], [y, y + dy], [z, z + 2]),
+    cub("hull-white", [x, x + dx], [y, y + dy], [z + dz - 2, z + dz]),
     cub("hull-white", [x + dx - 2, x + dx], [y, y + dy], [z, z + dz]),
     cub("hull-white", [x, x + dx], [y, y + 2], [z, z + dz]),
     cub("hull-white", [x, x + dx], [y + dy - 2, y + dy], [z, z + dz]),
@@ -208,11 +208,11 @@ export function crane(y: number, x0: number, x1: number, z: number): Piece[] {
   const mid = (x0 + x1) / 2;
   const up: V3 = [1, 0, 0];
   return [
-    ...iBeam("hull-grey", [x0, y, z - 160], [x0, y, z], up, 24, 16),
-    ...iBeam("hull-grey", [x1, y, z - 160], [x1, y, z], up, 24, 16),
+    ...iBeam("hull-white", [x0, y, z - 160], [x0, y, z], up, 24, 16),
+    ...iBeam("hull-white", [x1, y, z - 160], [x1, y, z], up, 24, 16),
     beam("hull-white", [x0, y, z], [x1, y, z], 28, 16),
     ...iBeam("hull-grey-dark", [mid, y, z], [mid, y, z - 90], up, 12, 8),
-    cub("hull-grey", [mid - 14, mid + 14], [y - 10, y + 10], [z - 100, z - 78]),
+    cub("hull-grey-dark", [mid - 14, mid + 14], [y - 10, y + 10], [z - 100, z - 78]),
     cub("flood", [mid - 30, mid - 12], [y - 6, y + 6], [z - 8, z + 8]),
     cub("flood", [mid + 12, mid + 30], [y - 6, y + 6], [z - 8, z + 8]),
   ];
@@ -221,10 +221,10 @@ export function crane(y: number, x0: number, x1: number, z: number): Piece[] {
 /** A hatch platform under floodlights: a deck, a dark hatch, and the lights that pick it out. */
 export function hatchDeck(x: number, y: number, z: number): Piece[] {
   return [
-    cub("hull-grey", [x - 36, x + 36], [y, y + 10], [z, z + 48]),
+    cub("hull-white", [x - 36, x + 36], [y, y + 10], [z, z + 48]),
     cub("hull-grey-dark", [x - 12, x + 12], [y + 10, y + 16], [z + 14, z + 34]),
-    ...iBeam("hull-grey", [x - 36, y + 5, z], [x - 36, y + 5, z + 48], [1, 0, 0], 8, 6),
-    ...iBeam("hull-grey", [x + 36, y + 5, z], [x + 36, y + 5, z + 48], [1, 0, 0], 8, 6),
+    ...iBeam("hull-white", [x - 36, y + 5, z], [x - 36, y + 5, z + 48], [1, 0, 0], 8, 6),
+    ...iBeam("hull-white", [x + 36, y + 5, z], [x + 36, y + 5, z + 48], [1, 0, 0], 8, 6),
     cub("flood", [x - 30, x - 14], [y + 18, y + 28], [z + 2, z + 12]),
     cub("flood", [x + 14, x + 30], [y + 18, y + 28], [z + 2, z + 12]),
     cub("flood", [x - 6, x + 6], [y + 22, y + 32], [z + 36, z + 48]),
