@@ -1,7 +1,7 @@
-// The change from a rocket's drawing to its 3D view: the drawing stays a moment even when the 3D view is ready sooner, then a slow crossfade; under reduced motion, a plain short fade. Pure.
+// The change from a rocket's drawing to its 3D view: the first picture fades in, and the drawing and the 3D view cross-fade, both over about 0.4 s. The drawing does not sit on screen waiting. Pure.
 
 /**
- * The drawing stays at least this long after it first comes on screen.
+ * The drawing does not linger once the 3D view is ready. Zero means the cross-fade starts as soon as the view is ready.
  *
  * @example
  * ```ts
@@ -10,9 +10,9 @@
  * console.log(DRAWING_HOLD_MS);
  * ```
  */
-export const DRAWING_HOLD_MS = 1200;
+export const DRAWING_HOLD_MS = 0;
 /**
- * How long the drawing and the 3D view cross-fade, in milliseconds.
+ * How long the first picture fades in, and how long the drawing and the 3D view cross-fade, in milliseconds.
  *
  * @example
  * ```ts
@@ -21,7 +21,7 @@ export const DRAWING_HOLD_MS = 1200;
  * console.log(CROSSFADE_MS);
  * ```
  */
-export const CROSSFADE_MS = 1500;
+export const CROSSFADE_MS = 400;
 /**
  * How long the cross-fade lasts for a reader who asked for reduced motion, in milliseconds.
  *

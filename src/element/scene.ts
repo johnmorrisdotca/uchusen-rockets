@@ -1367,8 +1367,11 @@ export class RocketViewer {
   private useModel(part: PartView, painted: boolean): void {
     if (!part.modelFile) return;
     if (part.model) {
-      part.model.visible = painted;
-      this.showCode(part, painted);
+      if (painted && !part.model.visible) this.beginPaintFade(part);
+      else {
+        part.model.visible = painted;
+        this.showCode(part, painted);
+      }
       return;
     }
     part.code.visible = true;
@@ -1396,8 +1399,7 @@ export class RocketViewer {
         });
         part.holder.add(gltf.scene);
         part.modelState = "ready";
-        if (this.options.reducedMotion) this.useModel(part, this.look === "painted");
-        else this.beginPaintFade(part);
+        this.beginPaintFade(part);
         void this.prepare(true).then(() => this.reportPainted());
         this.wake();
       })

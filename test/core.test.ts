@@ -31,11 +31,13 @@ test("the camera holds the whole box, and a taller thing needs a farther camera"
   assert.ok(short.position[2] > 0);
 });
 
-test("the crossfade: the drawing holds, reduced motion does not wait", () => {
-  assert.equal(revealDelay(1000, 1100, false), DRAWING_HOLD_MS - 100);
+test("the crossfade: the first picture fades in over 0.4 s and the drawing does not linger", () => {
+  assert.equal(DRAWING_HOLD_MS, 0);
+  assert.equal(revealDelay(1000, 1100, false), 0);
   assert.equal(revealDelay(1000, 5000, false), 0);
   assert.equal(revealDelay(1000, 1100, true), 0);
-  assert.ok(CROSSFADE_MS > REDUCED_FADE_MS);
+  assert.equal(CROSSFADE_MS, 400);
+  assert.equal(REDUCED_FADE_MS, 400);
 });
 
 test("tilt: asked for only where it must be, off under reduced motion or a mouse", () => {

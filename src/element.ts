@@ -68,7 +68,12 @@ const CSS = `
 :host([hidden]) { display: none; }
 .picture { position: relative; width: 100%; aspect-ratio: var(--uchusen-aspect, 3 / 4); margin: 0; border-radius: inherit; }
 .drawing, .drawing svg { display: block; width: 100%; height: 100%; }
-.drawing, .canvas { transition: opacity var(--uchusen-fade, 1500ms) ease-in-out, filter var(--uchusen-fade, 1500ms) ease-in-out; }
+.drawing { opacity: 0; }
+.drawing, .canvas { transition: opacity var(--uchusen-fade, 400ms) ease-in-out, filter var(--uchusen-fade, 400ms) ease-in-out; }
+.picture.shown[data-state="picture"] .drawing,
+.picture.shown[data-state="loading"] .drawing,
+.picture.shown[data-state="fallback"] .drawing,
+.picture.shown[data-state="error"] .drawing { opacity: 1; }
 .stage { position: absolute; inset: 0; }
 :host([data-driven]) .picture { overflow: hidden; }
 .canvas { display: block; width: 100%; height: 100%; opacity: 0; filter: blur(3px); cursor: grab; border-radius: inherit; }
@@ -163,6 +168,7 @@ export class UchusenRocket extends HTMLBase {
   private watch: IntersectionObserver | null = null;
   private releaseTimer = 0;
   private revealTimer = 0;
+  private revealFrame = 0;
   private generation = 0;
   private builtNow: Built | null = null;
   private queued = false;
@@ -400,6 +406,7 @@ export class UchusenRocket extends HTMLBase {
     this.watch = null;
     window.clearTimeout(this.releaseTimer);
     window.clearTimeout(this.revealTimer);
+    window.cancelAnimationFrame(this.revealFrame);
     window.cancelAnimationFrame(this.placeFrame);
     window.cancelAnimationFrame(this.flightFrame);
     this.flightFrame = 0;
@@ -644,6 +651,9 @@ export class UchusenRocket extends HTMLBase {
     this.drawing = drawing;
     this.holder = holder;
     this.startWatching();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (this.picture === picture) picture.classList.add("shown");
+    }));
   }
 
   /** The drawing for what the attributes say now. It is made from code, so it needs no file. A zoom or a move only changes which part of it the box shows (its viewBox), so the drawing is as sharp as the box and never grows past it. */
@@ -920,14 +930,26 @@ export class UchusenRocket extends HTMLBase {
       made.setFloating(this.hasAttribute("float"));
       made.setEdges(this.getAttribute("edges") === "open");
       made.setNameLabels(this.getAttribute("names") !== "off");
-      const wait = revealDelay(this.shownAt, performance.now(), reduced);
-      this.revealTimer = window.setTimeout(() => {
+      const wait = Math.max(revealDelay(this.shownAt, performance.now(), reduced), reduced ? REDUCED_FADE_MS : CROSSFADE_MS);
+      const picture = this.picture;
+      const reveal = () => {
         if (generation === this.generation && this.viewer === made) {
           this.setState("3d");
           this.emit("uchusen-ready", { frames: made.frames });
           this.startTilt();
         }
-      }, wait);
+      };
+      if (picture) {
+        picture.classList.remove("shown");
+        void picture.getBoundingClientRect();
+        this.revealFrame = requestAnimationFrame(() => {
+          this.revealFrame = requestAnimationFrame(() => {
+            if (generation !== this.generation || this.picture !== picture) return;
+            picture.classList.add("shown");
+            this.revealTimer = window.setTimeout(reveal, wait);
+          });
+        });
+      } else this.revealTimer = window.setTimeout(reveal, wait);
     } catch (error) {
       if (generation === this.generation) {
         this.emit("uchusen-error", { error });
