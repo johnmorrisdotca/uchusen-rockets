@@ -11,3 +11,9 @@ test("Romaryu's docked Miyamoto has the same pieces as Miyamoto on its own", () 
   assert.ok(alone.length > 100);
   assert.ok(Math.abs(drawn.length - alone.length) / alone.length < 0.1, `${drawn.length} against ${alone.length}`);
 });
+
+test("a second copy of the same docked ship is the first build", () => {
+  assert.equal(docked("miyamoto", 1), docked("miyamoto", 1));
+  assert.equal(docked("ariake", 1), docked("ariake", 1));
+  assert.notEqual(docked("miyamoto", 1), docked("ariake", 1));
+});
