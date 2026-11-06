@@ -1,17 +1,19 @@
 // One yard of three bays side by side: a long hall, an open spine and a gantry dock, crossed by one elevator. The ships are placed by the picture script.
 import type { Piece } from "../../pieces.ts";
 import { cub, hoop, iBeam, place } from "../kaminari-concepts/adapter.ts";
-import { boomsOnRail, boxTruss, crane, hatchDeck, lattice, latticeWall, mouth, parking } from "./structure.ts";
+import { boomsOnRail, boxTruss, crane, hatchDeck, lattice, latticeWall, parking } from "./structure.ts";
 
 type V3 = [number, number, number];
 const UP: V3 = [0, 0, 1];
 
-/** Where each bay's ship stands, and where the hub lounge's camera sits. */
+/** Where each bay's ship stands, and where the hub lounge and the latch are looked at. */
 export const BAYS = {
   hall: { shipAt: [0, 160, 0] as const, length: 2000 },
-  spine: { shipAt: [760, 180, 0] as const, length: 980 },
+  spine: { shipAt: [760, 180, 0] as const, length: 980, backbone: 540 },
   dock: { shipAt: [1520, 180, 20] as const, length: 1280 },
+  loose: { shipAt: [-720, 180, 0] as const, backbone: -540 },
   lounge: { eye: [-150, 168, 78] as const, at: [400, 168, 40] as const },
+  latch: { eye: [490, -48, 22] as const, at: [540, 18, 0] as const },
 };
 
 /** A pressurised lounge. Z is up. The high-x face is open, so a camera inside looks across the bays. */
@@ -40,17 +42,63 @@ function hallBay(): Piece[] {
   return out;
 }
 
-/** The spine bay: open rails, booms and a mouth, shifted out along x. */
-function spineBay(): Piece[] {
-  const x = BAYS.spine.shipAt[0];
+/** One latch, used by every spine. The port is the hub's ring; the plug is the spine's end. */
+function latchPort(x: number, y: number, z: number): Piece[] {
+  const dogs: Piece[] = [];
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    const px = x + Math.cos(a) * 24;
+    const pz = z + Math.sin(a) * 24;
+    dogs.push(cub("lamp-amber", [px - 3.5, px + 3.5], [y - 3, y + 7], [pz - 3.5, pz + 3.5]));
+  }
+  return [
+    ...place([hoop("hull-white", 26, y, 4, 32, 8)], { at: [x, 0, z] }),
+    ...dogs,
+    cub("hull-grey-dark", [x - 8, x + 8], [y - 10, y - 6], [z - 8, z + 8]),
+    ...iBeam("hull-grey", [x, y - 48, z], [x, y - 6, z], UP, 18, 14),
+  ];
+}
+
+/** The plug that seats in {@link latchPort}. The neck runs toward +Y, into the backbone. */
+function latchPlug(x: number, y: number, z: number): Piece[] {
+  const dogs: Piece[] = [];
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    const px = x + Math.cos(a) * 18;
+    const pz = z + Math.sin(a) * 18;
+    dogs.push(cub("hull-orange", [px - 2.5, px + 2.5], [y - 2, y + 6], [pz - 2.5, pz + 2.5]));
+  }
+  return [
+    ...place([hoop("engine-metal", 18, y, 3, 28, 8)], { at: [x, 0, z] }),
+    ...dogs,
+    ...iBeam("hull-white", [x, y, z], [x, y + 36, z], UP, 16, 12),
+  ];
+}
+
+/** An open backbone and its arms. Nothing stands on the far side of the ship, so a drone can reach every face. */
+function openSpine(x: number, y0: number, reach: number): Piece[] {
   const len = BAYS.spine.length;
-  const out: Piece[] = [];
-  for (const [dx, z] of [[-200, -150], [200, -150], [200, 150], [-200, 150]] as const) out.push(...boxTruss(x + dx, z, 0, len));
-  out.push(...mouth(x - 160, x + 160, -140, 140, 40));
-  out.push(...boomsOnRail(x - 200, 150, 40, len - 40, 110));
-  out.push(...boomsOnRail(x + 200, -150, 40, len - 40, -110));
-  out.push(...crane(420, x - 180, x + 180, 200));
-  return out;
+  return [
+    ...latchPlug(x, y0, 0),
+    ...boxTruss(x, 0, y0 + 30, y0 + len, 16),
+    ...boomsOnRail(x, 0, y0 + 50, y0 + len - 40, reach),
+  ];
+}
+
+/** Bay 2, latched to the hub, plus a second port of the same latch left empty. */
+function spineBay(): Piece[] {
+  const x = BAYS.spine.backbone;
+  return [
+    ...openSpine(x, 4, 150),
+    ...latchPort(x, 0, 0),
+    ...latchPort(400, 0, 0),
+    ...iBeam("hull-white", [400, -40, 0], [x, -40, 0], UP, 16, 12),
+  ];
+}
+
+/** The same spine, unlatched, with its own plug, parked off the hub. */
+function looseSpine(): Piece[] {
+  return openSpine(BAYS.loose.backbone, 4, -150);
 }
 
 /** The dock bay: gantries over an open side and a hatch. */
@@ -91,5 +139,5 @@ function shared(): Piece[] {
 
 /** The three bays, the crossing elevator, the lounges, the hangar and the parking field. */
 export function multiBay(): Piece[] {
-  return [...hallBay(), ...spineBay(), ...dockBay(), ...shared()];
+  return [...hallBay(), ...spineBay(), ...looseSpine(), ...dockBay(), ...shared()];
 }

@@ -22,6 +22,7 @@ const pieces: Piece[] = [
   ...multiBay(),
   ...place(kaminari, { at: [...BAYS.hall.shipAt] }),
   ...place(miyamoto, { at: [...BAYS.spine.shipAt] }),
+  ...place(miyamoto, { at: [...BAYS.loose.shipAt] }),
 ];
 const hanabusa = build({ rocket: "fleet-ship-01", variant: "hanabusa" }, { detail: "coarse" });
 const hFile = join(out, "hanabusa.glb");
@@ -36,10 +37,10 @@ const min: V3 = [Math.min(box.min[0], BAYS.dock.shipAt[0] + hBox.min[0]), Math.m
 const max: V3 = [Math.max(box.max[0], BAYS.dock.shipAt[0] + hBox.max[0]), Math.max(box.max[1], BAYS.dock.shipAt[1] + hBox.max[1]), Math.max(box.max[2], BAYS.dock.shipAt[2] + hBox.max[2])];
 const centre: V3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2];
 const len = Math.max(max[1] - min[1], max[0] - min[0]);
-const eye: V3 = [centre[0] + len * 0.35, centre[1] - len * 1.35, centre[2] + len * 0.55];
+const eye: V3 = [centre[0] + len * 0.05, centre[1] - len * 1.15, centre[2] + len * 0.48];
 console.log("yard span", len.toFixed(0), "eye", eye.map((n) => n.toFixed(0)).join(","));
 
-const wide = { eye, target: centre, up: [0, 0, 1] as V3, fov: 28, far: 16000, size: [1440, 900] as [number, number], shadow: len * 0.7 };
+const wide = { eye, target: centre, up: [0, 0, 1] as V3, fov: 38, far: 16000, size: [1440, 900] as [number, number], shadow: len * 0.7 };
 const more = [{ glb: hFile, at: [...BAYS.dock.shipAt] as V3 }];
 const jobs = [{
   glb: yardFile,
@@ -50,6 +51,7 @@ const jobs = [{
     { name: "lounge", eye: [...BAYS.lounge.eye], target: [...BAYS.lounge.at], up: [0, 0, 1], fov: 70, size: [1440, 900], look: "painted", sunDir: [0.4, 0.5, 0.6], shadow: 400 },
     { name: "hall", eye: [160, -40, 320], target: [0, 700, 20], up: [0, 0, 1], fov: 34, size: [1440, 900], look: "painted", shadow: 500 },
     { name: "spine", eye: [980, 20, 300], target: [760, 500, 0], up: [0, 0, 1], fov: 34, size: [1440, 900], look: "painted", shadow: 400 },
+    { name: "latch", eye: [...BAYS.latch.eye], target: [...BAYS.latch.at], up: [0, 0, 1], fov: 42, size: [1440, 900], look: "painted", shadow: 80 },
     { name: "dock", eye: [1760, 40, 320], target: [1520, 600, 20], up: [0, 0, 1], fov: 34, size: [1440, 900], look: "painted", shadow: 500 },
   ],
 }];
