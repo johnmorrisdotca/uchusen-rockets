@@ -192,13 +192,19 @@ export function mountCamera(opts: {
     const height = canvas.clientHeight;
     const list = document.createElement("ul");
     list.className = "cw-craft-list";
+    // The picture already names a craft that is on screen. This list is only for one the picture is not naming.
+    const pictureNames = hero.getAttribute("names") !== "off";
     names.forEach((name, index) => {
       const box = pageBox(index);
       const off = !box || !box.on || box.x + box.w < 0 || box.y + box.h < 0 || box.x > width || box.y > height;
-      const item = document.createElement("li");
-      item.textContent = off ? `${name} · ${say("cmpOffScreen")}` : name;
-      list.append(item);
-      if (edges === "open" && off && box) {
+      if (pictureNames && !off) return;
+      const showEdge = edges === "open" && off && !!box;
+      if (!showEdge) {
+        const item = document.createElement("li");
+        item.textContent = off ? `${name} · ${say("cmpOffScreen")}` : name;
+        list.append(item);
+      }
+      if (showEdge && box) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "cw-edge";
@@ -227,7 +233,7 @@ export function mountCamera(opts: {
         arrows.append(mark);
       }
     });
-    arrows.append(list);
+    if (list.childElementCount) arrows.append(list);
     const metres = Number(canvas.dataset.distance ?? "0");
     const zoom = Math.max(0.000001, bar.state.zoom || 1);
     const far = metres / zoom;

@@ -1,5 +1,5 @@
 // The wide comparison page: two or three craft chosen from the picker stand on one ground in one 3D view, each at its true size, with the Earth behind them and one set of view controls. What is chosen is kept in the address. A phone shows one craft.
-import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, spaceSlots, variantOf, type LookName, type MakerId, type Variant } from "../src/index.ts";
+import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, spaceLength, variantOf, type LookName, type MakerId, type Variant } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
@@ -95,11 +95,7 @@ function drawnMetres(craft: Craft, variant: Variant): number | string | null {
   if (isFleetVariant(variant)) return Math.round(fleetSize(variant).length);
   const whole = variant.facts.height.value;
   if (craft.form !== "space") return whole ?? null;
-  const slots = spaceSlots(craft.rocket, variant.slots);
-  if (!slots) return whole ?? null;
-  const parts = variant.facts.parts ?? {};
-  const sum = slots.reduce((total, slot) => total + (typeof parts[slot]?.value === "number" ? parts[slot].value : 0), 0);
-  return sum > 0 ? Math.round(sum) : whole ?? null;
+  return spaceLength(craft.rocket, variant.slots, variant.facts.parts) ?? whole ?? null;
 }
 
 // ------------------------------------------------------------- the Earth behind: nothing of it is loaded until it is chosen

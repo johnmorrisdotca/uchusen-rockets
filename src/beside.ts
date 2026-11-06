@@ -2,6 +2,7 @@
 import type { Description } from "./fit.ts";
 import type { Vec3 } from "./framing.ts";
 import type { Bounds } from "./model/pieces.ts";
+import { spaceLength } from "./inspace.ts";
 import { ROCKETS, variantOf } from "./rockets.ts";
 
 /**
@@ -54,7 +55,9 @@ export function craftName(description: Readonly<Description>, tall: number): str
   if (!rocket || !variant) return description.rocket;
   const name = variant.name.includes(rocket.name) || rocket.name.includes(variant.name) ? variant.name : `${rocket.name}, ${variant.name}`;
   const sourced = variant.facts.height.value;
-  const metres = typeof sourced === "number" && !description.rocket.startsWith("fleet-") ? sourced : Math.round(tall);
+  const whole = typeof sourced === "number" && !description.rocket.startsWith("fleet-") ? sourced : Math.round(tall);
+  const flying = description.form === "space" ? spaceLength(description.rocket, variant.slots, variant.facts.parts) : null;
+  const metres = flying ?? whole;
   return `${name}, ${metres.toLocaleString("en-US")} m`;
 }
 

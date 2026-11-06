@@ -3,12 +3,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { besideCraft } from "../src/beside.ts";
 import { build } from "../src/build/index.ts";
-import { spaceSlots } from "../src/inspace.ts";
+import { spaceLength, spaceSlots } from "../src/inspace.ts";
 import { variantOf } from "../src/rockets.ts";
 
 test("in space a launch stack keeps the part that is still flying, closed up on the axis", () => {
-  const ship = build({ rocket: "starship", variant: "v3", form: "space" });
+  const ship = build({ rocket: "starship", variant: "v3", form: "space" }, { named: true });
   assert.deepEqual(ship.parts.map((part) => part.slot), ["ship"]);
+  assert.match(ship.names[0], /, 52 m$/);
+  const starship = variantOf("starship", "v3");
+  assert.equal(spaceLength("starship", starship?.slots ?? [], starship?.facts.parts), 52);
   const height = ship.boundsOf("together").max[1] - ship.boundsOf("together").min[1];
   assert.ok(height > 45 && height < 70, String(height));
   assert.ok(build({ rocket: "starship", variant: "v3" }).parts.some((part) => part.slot === "booster"));

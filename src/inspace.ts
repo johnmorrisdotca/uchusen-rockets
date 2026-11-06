@@ -30,3 +30,11 @@ export function spaceSlots(rocket: string, slots: readonly string[]): readonly s
   if (kept.length === 0 || kept.length === slots.length) return null;
   return kept;
 }
+
+/** The length still flying, in metres, rounded, or null when the picture is the whole variant. The table and the picture's name both use this. */
+export function spaceLength(rocket: string, slots: readonly string[], parts: Readonly<Record<string, { value: unknown }>> | undefined): number | null {
+  const kept = spaceSlots(rocket, slots);
+  if (!kept) return null;
+  const sum = kept.reduce((total, slot) => total + (typeof parts?.[slot]?.value === "number" ? parts[slot].value : 0), 0);
+  return sum > 0 ? Math.round(sum) : null;
+}

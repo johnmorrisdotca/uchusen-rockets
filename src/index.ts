@@ -17,7 +17,7 @@ export type { CreditId, ModelCredit } from "./data/credits.ts";
 export type { Joint, PartKind, PartRecord } from "./parts.ts";
 export { PART_ENTRIES, partEntry } from "./model/registry.ts";
 export { check } from "./fit.ts";
-export { spaceSlots } from "./inspace.ts";
+export { spaceLength, spaceSlots } from "./inspace.ts";
 export type { Description, FitCode, FitIssue, FitReport, SlotPart } from "./fit.ts";
 export { axesOf, cleanView, DEFAULT_VIEW, directionOf, easedDistance, easeInOut, FOV_DEG, frameFor, PICTURE_H, PICTURE_W, rolledUp, turnedBy, VIEW_NAMES, VIEWS } from "./framing.ts";
 export type { Angle, Framing, Vec3, ViewChoice, ViewName } from "./framing.ts";
