@@ -2,7 +2,7 @@
 import type { Piece } from "../../pieces.ts";
 import { ball, cub, hoop, place, rod } from "../kaminari-concepts/adapter.ts";
 import { stackOf } from "../kaminari-concepts/common.ts";
-import { boomsOnRail, boxTruss, cabinWindows, crane, hatchDeck, lattice, latticeWall, mouth } from "./structure.ts";
+import { boomsOnRail, boxTruss, cabinWindows, crane, hatchDeck, lattice, latticeWall, mouth, parking } from "./structure.ts";
 
 /** How long the slot is, metres: room for a 1.8 km ship and the approach. */
 export const YARD_LENGTH = 2000;
@@ -70,7 +70,7 @@ const spine = (): Piece[] => {
     out.push(...crane(y, 20, 300, 210));
     out.push(...crane(y, 20, 300, -170));
   }
-  return [...out, ...racks(-80, 40), ...berths(-40, 50, 200), ...approach(0), ...furnish(-90, 60, 140)];
+  return [...out, ...racks(-80, 40), ...berths(-40, 50, 200), ...approach(0), ...furnish(-90, 60, 140), ...parking(400, 20, -40)];
 };
 
 /** A ring at the near end and a ribbed lattice bay, with no solid roof. */
@@ -82,7 +82,7 @@ const hall = (): Piece[] => {
   out.push(hoop("hull-grey", 78, 220, 10, 32, 8));
   out.push(...lattice(-SPAN + 40, SPAN - 40, 80, YARD_LENGTH - 80, SPAN - 10));
   out.push(...latticeWall(-SPAN, 80, YARD_LENGTH - 80, -SPAN + 40, SPAN - 40));
-  return [...out, ...racks(-SPAN + 50, SPAN - 40), ...berths(-120, 50, -SPAN + 30), ...approach(0), ...furnish(-SPAN + 70, 20, 160)];
+  return [...out, ...racks(-SPAN + 50, SPAN - 40), ...berths(-120, 50, -SPAN + 30), ...approach(0), ...furnish(-SPAN + 70, 20, 160), ...parking(360, 20, -40)];
 };
 
 /** A dock open on one side, with gantries above and below the slot and a floodlit hatch. */
@@ -97,7 +97,7 @@ const dock = (): Piece[] => {
     out.push(...crane(y, -SPAN, SPAN, -80));
   }
   out.push(...hatchDeck(0, 90, -SPAN + 20));
-  return [...out, ...racks(-SPAN + 46, 16), ...berths(-110, 48, -SPAN + 36), ...approach(-SPAN + 16), ...furnish(-SPAN + 64, 8, 150)];
+  return [...out, ...racks(-SPAN + 46, 16), ...berths(-110, 48, -SPAN + 36), ...approach(-SPAN + 16), ...furnish(-SPAN + 64, 8, 150), ...parking(360, 20, -40)];
 };
 
 /** The three yards, in the order they are shown. */

@@ -6,6 +6,15 @@ type V3 = [number, number, number];
 
 const UP: V3 = [0, 0, 1];
 
+/** A lamp on each face of a joint: a white point outside and an amber point inside, plus a small warm pool. */
+function jointLamp(at: V3): Piece[] {
+  return [
+    ball("strobe", [at[0], at[1], at[2] + 8], 4),
+    ball("lamp-amber", [at[0], at[1], at[2] - 8], 4),
+    cub("flood", [at[0] - 7, at[0] + 7], [at[1] - 5, at[1] + 5], [at[2] - 1, at[2] + 1]),
+  ];
+}
+
 /** Four long chords and a frame every bay, so a line of the yard is a truss and not a single rod. */
 export function boxTruss(x: number, z: number, y0: number, y1: number, half = 26): Piece[] {
   const out: Piece[] = [];
@@ -19,6 +28,7 @@ export function boxTruss(x: number, z: number, y0: number, y1: number, half = 26
     const y2 = Math.min(y + 140, y1);
     out.push(...strut("hull-grey", [x - half, y, z + half], [x + half, y2, z + half], 4));
     out.push(...strut("hull-grey", [x - half, y, z - half], [x - half, y2, z + half], 4));
+    for (const c of corners) out.push(...jointLamp([c[0], y, c[2]]));
   }
   return out;
 }
@@ -32,6 +42,7 @@ export function lattice(x0: number, x1: number, y0: number, y1: number, z: numbe
   const mid = (x0 + x1) / 2;
   out.push(cub("hull-grey", [mid - 7, mid + 7], [y0, y1], [z - 3, z]));
   out.push(...pipeRun([[x0 + 16, y0, z - 10], [x1 - 16, y0, z - 10], [x1 - 16, y1, z - 10]], 2.4, "coolant"));
+  for (let y = y0; y <= y1; y += 180) for (let x = x0; x <= x1; x += 180) out.push(...jointLamp([x, y, z]));
   for (let y = y0 + 50; y < y1; y += 260) {
     out.push(cub("flood", [mid - 22, mid - 8], [y, y + 10], [z - 22, z - 10]));
     out.push(cub("flood", [mid + 8, mid + 22], [y, y + 10], [z - 22, z - 10]));
@@ -56,6 +67,8 @@ export function boom(shoulder: V3, elbow: V3, wrist: V3, held: "tank" | "crate")
   const claw: V3 = [wrist[0] + Math.sign(wrist[0] - shoulder[0] || 1) * 40, wrist[1] - 6, wrist[2] - 8];
   const out: Piece[] = [
     ball("engine-metal", shoulder, 26),
+    ball("strobe", [shoulder[0], shoulder[1] + 8, shoulder[2] + 32], 5),
+    ball("lamp-amber", [elbow[0], elbow[1] + 8, elbow[2] + 28], 5),
     ...iBeam("hull-white", shoulder, elbow, UP, 40, 28),
     ball("engine-metal", elbow, 20),
     ...iBeam("hull-white", elbow, wrist, UP, 30, 22),
@@ -91,7 +104,70 @@ export function mouth(x0: number, x1: number, z0: number, z1: number, y: number)
     ...iBeam("hull-white", [x0, y, z1], [x1, y, z1], UP, 34, 24),
     ...iBeam("hull-white", [x0, y, z0], [x0, y, z1], up, 34, 24),
     ...iBeam("hull-white", [x1, y, z0], [x1, y, z1], up, 34, 24),
+    ...jointLamp([x0, y, z0]),
+    ...jointLamp([x1, y, z0]),
+    ...jointLamp([x0, y, z1]),
+    ...jointLamp([x1, y, z1]),
+    ...jointLamp([(x0 + x1) / 2, y, z1]),
   ];
+}
+
+/** Rows of drone stalls, a few craft and visiting-ship berths, and three empty pads marked off for stores. */
+export function parking(x0: number, y0: number, z0: number): Piece[] {
+  const out: Piece[] = [];
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 12; col++) {
+      const x = x0 + col * 26;
+      const y = y0 + row * 30;
+      out.push(rod("hull-grey", [x - 8, y, z0], [x - 8, y, z0 + 16], 2.2, 6));
+      out.push(rod("hull-grey", [x + 8, y, z0], [x + 8, y, z0 + 16], 2.2, 6));
+      out.push(cub("lamp-amber", [x - 3, x + 3], [y + 1, y + 7], [z0 + 14, z0 + 18]));
+      out.push(ball("hull-white", [x, y + 4, z0 + 8], 5));
+      if (col % 3 === 0) out.push(cub("flood", [x - 6, x + 6], [y - 2, y + 6], [z0 - 0.6, z0 + 0.4]));
+    }
+  }
+  for (let i = 0; i < 6; i++) {
+    const y = y0 + i * 48;
+    const x = x0 + 340;
+    out.push(rod("hull-grey", [x, y, z0], [x + 40, y, z0], 3, 6));
+    out.push(rod("hull-white", [x + 16, y + 6, z0 + 8], [x + 16, y + 36, z0 + 8], 5, 8));
+    out.push(cub("nav-green", [x + 36, x + 42], [y + 40, y + 46], [z0 + 6, z0 + 12]));
+    out.push(cub("nav-red", [x - 2, x + 4], [y, y + 6], [z0 + 6, z0 + 12]));
+    out.push(cub("flood", [x + 10, x + 22], [y + 16, y + 24], [z0 + 16, z0 + 22]));
+  }
+  for (let i = 0; i < 4; i++) {
+    const y = y0 + i * 90;
+    const x = x0 + 430;
+    out.push(rod("hull-grey", [x, y, z0], [x, y + 70, z0], 4, 8));
+    out.push(rod("hull-white", [x + 22, y + 8, z0 + 10], [x + 22, y + 62, z0 + 10], 8, 10));
+    out.push(cub("nav-green", [x - 6, x], [y + 64, y + 72], [z0 + 6, z0 + 12]));
+    out.push(cub("flood", [x + 6, x + 16], [y + 30, y + 40], [z0 + 18, z0 + 26]));
+  }
+  for (let k = 0; k < 8; k++) {
+    const y = y0 - 36 - k * 26;
+    out.push(cub("nav-green", [x0 - 16, x0 - 8], [y, y + 6], [z0 + 4, z0 + 12]));
+    out.push(cub("nav-red", [x0 + 300, x0 + 308], [y, y + 6], [z0 + 4, z0 + 12]));
+  }
+  const pads: readonly (readonly [number, number, number, number])[] = [
+    [x0, x0 + 180, y0 + 270, y0 + 400],
+    [x0 + 210, x0 + 390, y0 + 270, y0 + 400],
+    [x0 + 420, x0 + 620, y0 + 270, y0 + 430],
+  ];
+  for (const [xa, xb, ya, yb] of pads) {
+    out.push(rod("hull-grey-dark", [xa, ya, z0], [xb, ya, z0], 2.4, 6));
+    out.push(rod("hull-grey-dark", [xb, ya, z0], [xb, yb, z0], 2.4, 6));
+    out.push(rod("hull-grey-dark", [xb, yb, z0], [xa, yb, z0], 2.4, 6));
+    out.push(rod("hull-grey-dark", [xa, yb, z0], [xa, ya, z0], 2.4, 6));
+    for (const [px, py] of [[xa, ya], [xb, ya], [xa, yb], [xb, yb]] as const) {
+      out.push(rod("hull-grey", [px, py, z0], [px, py, z0 + 30], 3.2, 6));
+      out.push(ball("lamp-amber", [px, py, z0 + 32], 5));
+    }
+  }
+  out.push(ball("hull-grey", [x0 + 250, y0 + 330, z0 + 16], 14));
+  out.push(ball("hull-grey", [x0 + 300, y0 + 360, z0 + 16], 14));
+  out.push(cub("hull-grey", [x0 + 470, x0 + 476], [y0 + 320, y0 + 350], [z0 + 2, z0 + 24]));
+  out.push(cub("hull-grey", [x0 + 494, x0 + 500], [y0 + 320, y0 + 350], [z0 + 2, z0 + 24]));
+  return out;
 }
 
 /** A bridge crane across the slot, with a hoist and floods on the bridge. */

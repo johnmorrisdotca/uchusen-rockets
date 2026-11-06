@@ -56,6 +56,17 @@ for (const yard of yardConcepts()) {
     glow: 2.6,
     sun: 0.08,
     shadow: len * 0.4,
+  }, {
+    name: `${yard.id}-night`,
+    eye: [yard.shipAt[0] + 120, -260, 220],
+    target: [yard.shipAt[0] + 280, 140, -20],
+    up: [0, 0, 1],
+    fov: 42,
+    size: [1440, 900],
+    look: "lit",
+    glow: 3.4,
+    sun: 0.04,
+    shadow: 400,
   }];
   for (const view of yard.close) {
     shots.push({
