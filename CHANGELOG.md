@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+- **Changing ship eases to its size** (MODULES-504): picking a ship of another size keeps the old scale at the switch and then eases to Fit, so going from Kyotori (447 m) to Kaminari (1,815 m) zooms out to show the much larger ship, and the reverse zooms in; reduced motion jumps.
+- **Shorter fleet jets** (MODULES-479): a quad's glow reaches about four nozzle lengths, with a bright core at the bell and a faint edge that fades into black.
+- **The yard is painted** (MODULES-499): truss chords are white painted members with darker metal joints and braces, the walkway is blanket, and the frames catch a sky reflection with panel breaks and bolt rows, from ISS truss and Canadarm2 photographs.
+- **The yard's build moves** (MODULES-501): while the build player plays on the yard page the drones fly and weld in real time at every speed, and 'Watch a flight' fits the flight under way into about 30 seconds.
+- **The Figma-style mouse** (kazoku-ui 0.18.0): the wheel moves the view and Shift and the wheel moves it sideways; Ctrl, Command or Alt with the wheel, or a pinch, zooms; Space and a drag, or the middle button, moves it; Shift and a drag, or a two-finger twist, rolls.
+## [0.14.0] - 2026-11-06
+
+Building in place with a working crew, the shipyard and its own page, the compare page's camera, orbit and deep zoom out to the Moon, the journey's date, planets in view, new views and arrival card, ship lights, three-axis turning, docked craft and module swaps, and Kyotori turning without jumps.
+
+- **Romaryū's docked ships are whole** (MODULES-496): the Miyamoto and Ariake berthed on Romaryū are drawn as those ships are on their own, not as bare hulls; a click on the stage no longer leaves a focus outline (the keyboard focus ring still shows).
 - **Compare camera and deep zoom** (MODULES-483, MODULES-484): camera choices Free, Keep all in view, Follow one craft and Follow with the planet, with smooth moves; orbit round the craft, which stay centred while the Earth turns below; an arrow at the frame edge for any craft out of view, which brings it back when clicked; Edges: Wrap or Open space, Wrap only with the free camera. The Earth is a globe at true size with the craft 400 km up and the Moon at its true place, and the zoom runs from about 100 m out past the whole Earth to the Moon, with distance marks; a craft too small to see becomes a name marker.
 - **The yard page** (MODULES-480): the multi-bay shipyard on its own demo page over the painted Earth: the whole yard, each bay with its ship at true size (Kaminari in the Hall, Miyamoto on the Spine, Hanabusa in the Dock), the lounge, the visitor port, the latch and the free spine, Day and Night with the yard's lamps, and the build player building the chosen bay's ship in place. The yard's name is a placeholder until it is named.
 - **No more jumps when large ships turn** (MODULES-481): a fleet ship small on screen (under about 220 px) leaves out its pipes, blankets, lamp housings and shadow, and brings them back above 260 px with a short fade; the engine glow stays. On the compare page Kyotori with Starship and the Shuttle went from 1,472 draws and a 218 ms hitch to 429 draws and an 18 ms worst frame.

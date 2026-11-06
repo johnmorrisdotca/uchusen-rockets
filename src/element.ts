@@ -6,6 +6,7 @@ import type { DetailLevel } from "./model/detail.ts";
 import { buildOf } from "./buildPlay.ts";
 import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
 import { lightMode } from "./model/fleet/lights.ts";
+import { thrusterMode } from "./thrusters.ts";
 import { motionsOf, motionSpeed, motionWanted } from "./model/fleet/motion.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
@@ -149,7 +150,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -251,7 +252,8 @@ export class UchusenRocket extends HTMLBase {
   }
 
   /** Lets a page choose the turn, tip, roll, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
-  drive(choice: Partial<ViewChoice> | null): void {
+  drive(choice: (Partial<ViewChoice> & { reason?: string }) | null): void {
+    const reason = typeof choice?.reason === "string" ? choice.reason : "";
     const before = this.driven;
     if (choice === null) {
       this.driven = null;
@@ -270,7 +272,7 @@ export class UchusenRocket extends HTMLBase {
     }
     const now = this.driven;
     if (before && now && (Object.keys(now) as (keyof ViewChoice)[]).every((key) => before[key] === now[key])) return;
-    this.viewer?.drive(this.driven);
+    this.viewer?.drive(this.driven, reason);
     this.place();
   }
 
@@ -329,7 +331,7 @@ export class UchusenRocket extends HTMLBase {
     else if (name === "motion") {
       if (this.viewer) this.lightViewer(this.viewer);
       this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
-    } else if (name === "lights") {
+    } else if (name === "lights" || name === "thrusters") {
       if (this.viewer) this.lightViewer(this.viewer);
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
@@ -570,6 +572,7 @@ export class UchusenRocket extends HTMLBase {
     viewer.setScaleMode(this.getAttribute("scale") === "true");
     viewer.setEngines(this.engineLights() ? "full" : null);
     viewer.setLights(lightMode(this.getAttribute("lights")));
+    viewer.setThrusters(thrusterMode(this.getAttribute("thrusters")));
     viewer.setMotion(motionsOf(this.descriptionNow().rocket), motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")), motionSpeed(this.getAttribute("motion")));
   }
 

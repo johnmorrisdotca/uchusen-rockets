@@ -22,6 +22,7 @@ import { aimOrbit, applyTurn, companionsFor, frameSky, orbitCatalogue, paceFromS
 import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
+import { hasThrusters } from "../src/thrusters.ts";
 import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
 import { separationOf } from "../src/separation.ts";
 
@@ -112,21 +113,23 @@ function setScale(on: boolean): void {
 }
 scaleButton.addEventListener("click", () => setScale(hero.getAttribute("scale") !== "true"));
 setScale(address.get("scale") === "true");
-const PANELS = ["look", "background", "motion", "build", "lights", "docked"] as const;
+const PANELS = ["look", "background", "motion", "build", "lights", "thrusters", "docked"] as const;
 type PanelName = (typeof PANELS)[number];
 
-/** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. */
+/** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. Thrusters share that panel when Lights is already there, so the tab row does not grow a line. */
 function panelOffered(name: PanelName): boolean {
   if (name === "motion") return !byId("motion-field").hidden;
   if (name === "build") return !byId("build-field").hidden;
-  if (name === "lights" || name === "docked") {
-    const field = byId(name === "lights" ? "lights-field" : "docked-field");
-    return !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
+  if (name === "lights" || name === "docked" || name === "thrusters") {
+    const field = byId(name === "lights" ? "lights-field" : name === "thrusters" ? "thrusters-field" : "docked-field");
+    const shown = !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
+    if (name === "thrusters" && shown && !byId("lights-field").hidden) return false;
+    return shown;
   }
   return true;
 }
 
-/** One group at a time. The choice is `panel` in the address, and Look is left off it. */
+/** One group at a time. The choice is `panel` in the address, and Look is left off it. Thrusters live in the lights group. */
 function showPanels(): void {
   const asked = address.get("panel") ?? "look";
   const current: PanelName = (PANELS as readonly string[]).includes(asked) && panelOffered(asked as PanelName) ? (asked as PanelName) : "look";
@@ -138,7 +141,7 @@ function showPanels(): void {
       tab.hidden = !offered;
       tab.setAttribute("aria-selected", String(name === current));
     }
-    if (group instanceof HTMLElement) group.hidden = name !== current;
+    if (group instanceof HTMLElement) group.hidden = name !== current && !(name === "lights" && current === "thrusters");
   }
   if (asked !== current) address.set("panel", current === "look" ? null : current);
 }
@@ -151,6 +154,7 @@ for (const name of PANELS) {
   });
 }
 new MutationObserver(() => showPanels()).observe(byId("lights-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
+new MutationObserver(() => showPanels()).observe(byId("thrusters-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 new MutationObserver(() => showPanels()).observe(byId("docked-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
@@ -512,6 +516,7 @@ function renderMain() {
   showMotion();
   showDocked();
   showLights();
+  showThrusters();
   // the Kaminari concepts take a size, 60 to 100 per cent. scale="true" is the true-scale view, kept in the address apart from that size; a redraw must not clear it.
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
@@ -581,6 +586,7 @@ function renderMain() {
   syncEarth();
   sizeObject();
   byId("lights-field").hidden = !state.rocket.startsWith("fleet-");
+  byId("thrusters-field").hidden = !hasThrusters(state.rocket);
   showPanels();
 }
 
@@ -768,6 +774,26 @@ function chooseLights(choice: string) {
 }
 lightsBox.append(chip("Off", "lights-off", () => chooseLights("off"), "lights_off"), chip("Running only", "lights-running", () => chooseLights("running"), "lights_running"), chip("All", "lights-all", () => chooseLights("all"), "lights_all"));
 
+// ------------------------------------------------------------- the thrusters
+const thrustersBox = byId("thrusters");
+const THRUSTER_CHOICES = ["off", "show", "station-keeping"] as const;
+/** `off`, `show` or `station-keeping`: the same words as the element's `thrusters` attribute. Left out of the address, it is off. */
+let thrusterChoice = THRUSTER_CHOICES.includes(address.get("thrusters") as (typeof THRUSTER_CHOICES)[number]) ? (address.get("thrusters") as (typeof THRUSTER_CHOICES)[number]) : "off";
+function showThrusters() {
+  hero.setAttribute("thrusters", thrusterChoice);
+  press(thrustersBox, thrusterChoice === "station-keeping" ? "thrusters-keep" : `thrusters-${thrusterChoice}`);
+  const note = byId("thrusters-note");
+  note.hidden = !reducedMotion;
+  note.textContent = say("thrustersNote");
+  address.set("thrusters", thrusterChoice === "off" ? null : thrusterChoice);
+}
+function chooseThrusters(choice: (typeof THRUSTER_CHOICES)[number]) {
+  thrusterChoice = choice;
+  showThrusters();
+  drawEmbed();
+}
+thrustersBox.append(chip("Off", "thrusters-off", () => chooseThrusters("off"), "thrusters_off"), chip("Show", "thrusters-show", () => chooseThrusters("show"), "thrusters_show"), chip("Station-keeping", "thrusters-keep", () => chooseThrusters("station-keeping"), "thrusters_keep"));
+
 // ------------------------------------------------------------- the motion of a fleet ship's moving parts
 const motionBox = byId("motion");
 const speedBox = byId("motion-speed");
@@ -837,10 +863,11 @@ function embedOptions(): RocketOptions {
   const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
   const lights = hero.getAttribute("lights");
+  const thrusters = hero.getAttribute("thrusters");
   const motion = hero.getAttribute("motion");
   // what turns here by the controls turns there by itself, as fast: left is `cw`, the near side going left
   const turning = bar.state.turning ? { spin: String(Math.round(360 / (TURN_SPEED * (Number(bar.getAttribute("pace")) || 1)))), way: turnWay === "left" ? "cw" : "ccw" } : {};
-  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(lights === "off" || lights === "running" ? { lights } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(lights === "off" || lights === "running" ? { lights } : {}), ...(thrusters === "show" || thrusters === "station-keeping" ? { thrusters } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
 panel.kinds = KINDS;
 panel.labels = LABELS;
@@ -1139,6 +1166,7 @@ function speak() {
   lightEngines(hero.getAttribute("engines") === "on");
   showMotion();
   showLights();
+  showThrusters();
   drawTurn();
   byId("gallery").replaceChildren(...gallery());
   byId("planned-list").replaceChildren(...planned());

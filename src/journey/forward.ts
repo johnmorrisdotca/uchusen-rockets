@@ -24,3 +24,20 @@ export function destinationGrow(progress: number): number {
   const t = Math.min(1, Math.max(0, progress));
   return t * t;
 }
+
+const VIEW_RADIANS = Math.PI / 3;
+const BODY_FLOOR = 0.02;
+const BODY_CAP = 0.92;
+
+/**
+ * How much of the view a body fills, from its real size and how far it is. A body on the surface fills the view. A body far away stays a dot.
+ * @param radiusKm The body's radius, km.
+ * @param distanceKm How far the craft is from the body's centre, km.
+ * @returns The share of the view, from a small floor up to nearly the whole view.
+ */
+export function bodySpan(radiusKm: number, distanceKm: number): number {
+  const radius = Math.max(0, radiusKm);
+  const distance = Math.max(radius, distanceKm);
+  const angle = 2 * Math.atan(radius / Math.max(distance, 1));
+  return Math.min(BODY_CAP, Math.max(BODY_FLOOR, angle / VIEW_RADIANS));
+}

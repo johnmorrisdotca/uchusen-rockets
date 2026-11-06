@@ -2,6 +2,7 @@
 // where the package's own model of each ship, at its true size, docks by its keel: the first pair at the top and bottom of the shaft, the second pair a quarter turn on, so no craft's hangar shoulders meet another's.
 // The drive is the flank-pod kind LESSONS 29 allows: four outrigger pods of seven magnetic-nozzle thrusters each, and one large thruster on the axis in a stack of fusion coil rings. Real ancestors: the Space Shuttle on
 // its carrier aircraft and the ISS's docking ports, Gateway's visiting vehicles, the Saturn V's four outboard engines on their outriggers, Soyuz's strap-on boosters and Nautilus-X's docked modules. Pure: no three.js and no DOM.
+import { detail as sceneDetail } from "../../detail.ts";
 import { lampHalo } from "../lights.ts";
 import { parts as miyamotoParts } from "../ship-03/index.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../ship-03/variants.ts";
@@ -92,10 +93,17 @@ function barrels(): Piece[] {
 
 const DOCKED_VARIANT = { miyamoto: "miyamoto-array", ariake: "ariake" } as const;
 
-/** One of the package's own ships, in its own frame: Miyamoto with the gold array out, or Ariake with her four boxes and dawn-gold bands. */
+const dockedOnce = new Map<string, Piece[]>();
+
+/** One of the package's own ships, in its own frame: Miyamoto with the gold array out, or Ariake with her four boxes and dawn-gold bands. A second copy of the same ship is that build again. */
 export function docked(which: keyof typeof DOCKED_VARIANT, detail: number, level?: "coarse" | "fine"): Piece[] {
+  const key = `${which}:${detail}:${level ?? ""}`;
+  const kept = dockedOnce.get(key);
+  if (kept) return kept;
   const slots = new Set(Object.values(MIYAMOTO_VARIANT_SLOTS[DOCKED_VARIANT[which]]));
-  return miyamotoParts().filter((p) => slots.has(p.id)).flatMap((p) => place(p.pieces({ detail, ...(level ? { level } : {}) }), { at: [p.place?.x ?? 0, p.y0, p.place?.z ?? 0] }));
+  const pieces = miyamotoParts().filter((p) => slots.has(p.id)).flatMap((p) => place(p.pieces({ detail, ...(level ? { level } : {}) }), { at: [p.place?.x ?? 0, p.y0, p.place?.z ?? 0] }));
+  dockedOnce.set(key, pieces);
+  return pieces;
 }
 
 /** Miyamoto with the gold array out, the craft the reference pictures stand beside the carrier. */
@@ -141,8 +149,8 @@ export const SLOTS_C: readonly ConceptSlot[] = [
   { slot: "coil-stack", name: "Fusion coil stack and reactor cells", kind: "service-module", at: [0, C.coil.y[0], 0], height: C.shield.y[0] - C.coil.y[0] + 1, diameter: 64, note: "Ten superconducting coil rings on a ceramic bore, and eight reactor cells round it. Descends from Princeton's direct fusion drive and Kilopower.", pieces: () => local(stackAndReactors(), C.coil.y[0]) },
   { slot: "shadow-shield", name: "Shadow shield", kind: "fairing", at: [0, C.shield.y[0], 0], height: C.shield.y[1] - C.shield.y[0], diameter: 2 * C.shield.rBack, note: "A tiled cone that throws a shadow of the reactors' radiation forward over the shaft, the craft and the crew. Descends from the NERVA and Kilopower shadow shields.", pieces: () => local(shieldDisc(C.shield.rBack, C.shield.rFront, C.shield.y[0], C.shield.y[1], "c-shadow"), C.shield.y[0]) },
   { slot: "barrels", name: "Propellant barrels: two stations of six", kind: "tank", at: [0, C.barrels.y[0], 0], height: C.barrels.y[1] + C.barrels.L * 1.12 - C.barrels.y[0], diameter: 114, note: "Twelve propellant barrels 30 m across and 110 m long, in two rings of six round the shaft. Descends from the Space Shuttle's external tank and Soyuz's strap-on tanks.", pieces: () => local(barrels(), C.barrels.y[0]) },
-  // a docked ship is its own coarse level: the hull, at the full length, which is what reads when the carrier is the picture
-  ...C.craft.slots.map((s, i): ConceptSlot => ({ slot: `miyamoto-${i + 1}`, name: s.ship === "miyamoto" ? `Docked craft ${i + 1}: ISV Miyamoto, solar array out` : `Docked craft ${i + 1}: ISV Ariake`, kind: "module", at: [0, s.y, 0], height: 380, diameter: s.ship === "miyamoto" ? 200 : 207, note: s.ship === "miyamoto" ? "ISV Miyamoto's own model at its true size, the gold solar array deployed, docked by its keel in a cradle. Descends from the Space Shuttle on its carrier aircraft and the ISS's visiting vehicles." : "ISV Ariake's own model at its true size, four hangar boxes, the hex engine end and the dawn-gold bands, docked by its keel in a cradle. Descends from the Space Shuttle on its carrier aircraft and the ISS's visiting vehicles.", pieces: () => local(craft(s.az, s.y, s.ship, 1, "coarse"), s.y) })),
+  // A docked ship is that ship. The full pass builds it in full. The coarse pass builds the coarse ship, and the second of each pair is the first build again.
+  ...C.craft.slots.map((s, i): ConceptSlot => ({ slot: `miyamoto-${i + 1}`, name: s.ship === "miyamoto" ? `Docked craft ${i + 1}: ISV Miyamoto, solar array out` : `Docked craft ${i + 1}: ISV Ariake`, kind: "module", at: [0, s.y, 0], height: 380, diameter: s.ship === "miyamoto" ? 200 : 207, note: s.ship === "miyamoto" ? "ISV Miyamoto's own model at its true size, the gold solar array deployed, docked by its keel in a cradle. Descends from the Space Shuttle on its carrier aircraft and the ISS's visiting vehicles." : "ISV Ariake's own model at its true size, four hangar boxes, the hex engine end and the dawn-gold bands, docked by its keel in a cradle. Descends from the Space Shuttle on its carrier aircraft and the ISS's visiting vehicles.", pieces: () => local(craft(s.az, s.y, s.ship, 1, sceneDetail.level === "coarse" ? "coarse" : undefined), s.y) })),
   ...C.craft.slots.map((s, i): ConceptSlot => ({ slot: `cradle-${i + 1}`, name: `Docking cradle ${i + 1}`, kind: "mount", at: [0, s.y, 0], height: 366, diameter: 19, note: "Two rails, five clamp towers from the shaft, and umbilical lines that hold a docked craft by its keel. Descends from the ISS common berthing mechanism and the Shuttle's payload-bay latches.", pieces: () => local(cradle(s.az, s.y), s.y) })),
   berthSlot("c"),
   { slot: "rings", name: "Habitat rings (two, counter-rotating)", kind: "ring", at: [0, C.ring.y[0], 0], height: ringsHeight, diameter: 239, note: "Two counter-rotating habitat rings 100 m from the axis, at one turn in 24 s for a little under one Earth gravity, with running lights on the rims. Descends from Von Braun's wheel and NASA's Nautilus-X centrifuge.", pieces: habitatRings },
