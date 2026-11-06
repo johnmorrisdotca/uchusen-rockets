@@ -446,11 +446,13 @@ a.length === b.length; // true
 
 A mesh is a pure function of its description: the same description gives the same bytes. [Architecture](docs/guides/architecture.md) has the layers.
 
+A new control uses one that already exists, or extends it. The page shell is `scripts/page.ts` (the family header and the page bar). The view bar is `demo/viewBinder.ts`. The painted Earth is `demo/earth.ts` (`mountStillEarth`). A hand-off names the shared parts it used.
+
 ## Development
 
 ```sh
 pnpm install
-pnpm check          # lint, types, tests, the build and the packed package
+pnpm check          # lint, copies, types, tests, the build and the packed package
 pnpm test:readme    # run every example of the README, the docs and the guides
 pnpm test:usage     # every way to use it (CDN, Vite, webpack, React, Vue, Svelte, Angular, iframe, TypeScript, Node), built and opened from the package as npm packs it
 pnpm test:usage     # every way to use it (CDN, Vite, webpack, React, Vue, Svelte, Angular, iframe, TypeScript, Node), built and opened from the package as npm packs it
