@@ -1408,17 +1408,24 @@ test("every variant of every rocket lit, with the Earth behind: line and painted
         await settle(page, 120);
       }
   };
+  // The camera eases after a ship is in. A reading during that move, or before the first frame has uploaded the ship, counts only what is already on the card.
+  const atRest = async () => {
+    await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.moving ?? "false"), { timeout: 30_000 }).not.toBe("true");
+    await settle(page, 80);
+  };
   await walk("line");
   expect((await usage(page)).contexts).toBe(1);
   await walk("painted");
   await expect(earth(page).locator("chikyu-earth-realistic")).toHaveAttribute("data-state", "live", { timeout: 90_000 });
   await everyPicture(page);
+  await atRest();
   const first = await usage(page);
   expect(first.contexts).toBe(2);
   await walk("line");
   await walk("painted");
   await expect(earth(page).locator("chikyu-earth-realistic")).toHaveAttribute("data-state", "live", { timeout: 90_000 });
   await everyPicture(page);
+  await atRest();
   const last = await usage(page);
   console.log(`every variant lit with the Earth, first and second walk: buffers ${first.buffers} ${last.buffers}, arrays ${first.arrays} ${last.arrays}, textures ${first.textures} ${last.textures}, programs ${first.programs} ${last.programs}`);
   expect(last.contexts).toBe(2);

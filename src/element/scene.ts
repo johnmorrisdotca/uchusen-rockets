@@ -571,7 +571,10 @@ export class RocketViewer {
     const generation = ++this.generation;
     const bytes = built.glb().bytes;
     const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, "");
-    if (this.disposed || generation !== this.generation) return;
+    if (this.disposed || generation !== this.generation) {
+      this.dropParsed(gltf.scene);
+      return;
+    }
     const old = this.built;
     const craftChanged = Boolean(old && (old.report.variant?.rocket !== built.report.variant?.rocket || old.report.variant?.id !== built.report.variant?.id));
     if (this.scaleMode && craftChanged) this.makeGhost();
@@ -1394,7 +1397,10 @@ export class RocketViewer {
     new GLTFLoader()
       .loadAsync(`${this.options.assets}models/${part.modelFile}`)
       .then((gltf) => {
-        if (this.disposed || generation !== this.generation) return;
+        if (this.disposed || generation !== this.generation) {
+          this.dropParsed(gltf.scene);
+          return;
+        }
         part.model = gltf.scene;
         // the same sheen as this package's own steel, whichever author's hull it is
         gltf.scene.traverse((node) => {
@@ -2090,6 +2096,21 @@ export class RocketViewer {
       out.push({ ...one, slot: "", at: [at.x, at.y, at.z], dir: [dir.x, dir.y, dir.z] });
     }
     return out;
+  }
+
+  /** A model that lost the race to a newer one. It never joins the scene, so the ordinary cleanup never sees it. */
+  private dropParsed(root: Object3D): void {
+    root.traverse((node) => {
+      const mesh = node as Mesh;
+      mesh.geometry?.dispose();
+      const material = mesh.material;
+      if (!material) return;
+      for (const one of Array.isArray(material) ? material : [material]) {
+        const textured = one as Material & Partial<Record<(typeof MODEL_PICTURES)[number], { dispose(): void } | null>>;
+        for (const slot of MODEL_PICTURES) textured[slot]?.dispose();
+        one.dispose();
+      }
+    });
   }
 
   private disposeParts(): void {
