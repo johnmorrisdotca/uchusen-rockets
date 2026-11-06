@@ -160,7 +160,7 @@ const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
 const askedBeside = address.get("beside") ?? "off";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0, docked: address.get("docked") ?? dockPlan(firstRocket) };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", form: (address.get("form") === "space" ? "space" : "stack") as "stack" | "space", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0, docked: address.get("docked") ?? dockPlan(firstRocket) };
 
 /** The craft standing beside the one on screen, or nothing when the choice is off or is the craft itself. */
 function besideNow(): { id: string; rocket: string; variant: string } | null {
@@ -483,6 +483,7 @@ function renderMain() {
   press(showBox, `show-${state.show}`);
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
+  press(byId("forms"), `form-${state.form}`);
   press(byId("views"), `view-${state.view}`);
   drawSkyButtons();
   limitTilt(variant.view?.tiltMax ?? 45);
@@ -493,6 +494,8 @@ function renderMain() {
   applyLeave();
   hero.setAttribute("show", state.show);
   hero.setAttribute("look", state.look);
+  if (state.form === "space") hero.setAttribute("form", "space");
+  else hero.removeAttribute("form");
   hero.setAttribute("view", state.view);
   // a craft is not offered beside itself: Starship's own chip stays "Beside it", and the other three are Saturn V, SLS and the ISS
   const chosen = besideNow();
@@ -604,7 +607,7 @@ function drawMakers() {
 
 function pick(change: Partial<typeof state>) {
   // A new craft, variant or view is a new picture: zoom and pan go back to Fit. The angle stays, except a new view, which is itself the angle. A page opened at a zoom (a shared link) is left as it was until one of these changes.
-  const craft = (change.rocket !== undefined && change.rocket !== state.rocket) || (change.variant !== undefined && change.variant !== state.variant);
+  const craft = (change.rocket !== undefined && change.rocket !== state.rocket) || (change.variant !== undefined && change.variant !== state.variant) || (change.form !== undefined && change.form !== state.form);
   const viewChanged = change.view !== undefined && change.view !== state.view;
   if (viewChanged) bar.set({ yaw: 0, tilt: 0, zoom: 1, panX: 0, panY: 0 });
   else if (craft) bar.set({ zoom: 1, panX: 0, panY: 0 });
@@ -640,6 +643,7 @@ function pick(change: Partial<typeof state>) {
   address.set("variant", state.variant);
   address.set("show", state.show);
   address.set("look", state.look);
+  address.set("form", state.form === "space" ? "space" : null);
   address.set("view", state.view);
 }
 
@@ -657,6 +661,7 @@ function pickMaker(maker: MakerId) {
 byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker), `maker_${maker}`)));
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 byId("looks").append(...LOOK_NAMES.map((look) => chip(WORDS.en[`look_${look}`], `look-${look}`, () => pick({ look }), `look_${look}`)));
+byId("forms").append(chip(WORDS.en.cmpStack, "form-stack", () => pick({ form: "stack" }), "cmpStack"), chip(WORDS.en.cmpSpace, "form-space", () => pick({ form: "space" }), "cmpSpace"));
 byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.replaceAll("-", "_")}`], `view-${view}`, () => pick({ view }), `view_${view.replaceAll("-", "_")}`)));
 const skyButton = (id: string, testid: string, on: () => void): HTMLButtonElement => {
   const button = el("button", { type: "button", className: id === "none" ? "thumb thumb-none" : "thumb" });

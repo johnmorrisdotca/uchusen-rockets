@@ -87,10 +87,10 @@ export function besideCraft(value: string | null | undefined, rocket: string): D
   if (value === "on") return canBeside(rocket) ? [{ ...BESIDE_ROCKET }] : [];
   const out: Description[] = [];
   for (const key of (value ?? "").split(",")) {
-    const [id, variantId] = key.trim().split(":");
+    const [id, variantId, form] = key.trim().split(":");
     if (!id || !Object.hasOwn(ROCKETS, id)) continue;
     const variant = variantOf(id, variantId || undefined);
-    if (variant) out.push({ rocket: id, variant: variant.id });
+    if (variant) out.push({ rocket: id, variant: variant.id, ...(form === "space" ? { form: "space" as const } : {}) });
     if (out.length === BESIDE_MOST) break;
   }
   return out;

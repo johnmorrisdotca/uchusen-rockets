@@ -1,5 +1,5 @@
 // The wide comparison page: two or three craft chosen from the picker stand on one ground in one 3D view, each at its true size, with the Earth behind them and one set of view controls. What is chosen is kept in the address. A phone shows one craft.
-import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, variantOf, type LookName, type MakerId, type Variant } from "../src/index.ts";
+import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, spaceSlots, variantOf, type LookName, type MakerId, type Variant } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
@@ -34,15 +34,15 @@ const chip = (label: string, testid: string, on: () => void, pressed?: boolean):
   return button;
 };
 
-type Craft = { rocket: string; variant: string };
+type Craft = { rocket: string; variant: string; form: "stack" | "space" };
 const MOST = BESIDE_MOST + 1;
 /** What a craft added is, in turn: the first of these that is not on screen yet. */
 const NEXT: readonly Craft[] = [
-  { rocket: "saturn-v", variant: "saturn-v" },
-  { rocket: "starship", variant: "v3" },
-  { rocket: "fleet-ship-03", variant: "miyamoto" },
-  { rocket: "iss", variant: "iss" },
-  { rocket: "space-shuttle", variant: "stack" },
+  { rocket: "saturn-v", variant: "saturn-v", form: "stack" },
+  { rocket: "starship", variant: "v3", form: "stack" },
+  { rocket: "fleet-ship-03", variant: "miyamoto", form: "stack" },
+  { rocket: "iss", variant: "iss", form: "stack" },
+  { rocket: "space-shuttle", variant: "stack", form: "stack" },
 ];
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
@@ -61,7 +61,7 @@ turnButtons.addEventListener("kazoku-speedchange", (event) => {
   applyTurn(document);
 });
 
-const known = (rocket: string | null | undefined, variant: string | null | undefined): Craft | null => {
+const known = (rocket: string | null | undefined, variant: string | null | undefined): Omit<Craft, "form"> | null => {
   if (!rocket || !Object.hasOwn(ROCKETS, rocket)) return null;
   const found = variantOf(rocket, variant || undefined);
   return found ? { rocket, variant: found.id } : null;
@@ -74,8 +74,9 @@ const others = (askedWith === null ? "saturn-v:saturn-v" : askedWith).split(",")
   const one = known(rocket, variant);
   return one ? [one] : [];
 });
+const askedForm = (address.get("form") ?? "").split(",");
 const state = {
-  craft: [first, ...others].slice(0, MOST),
+  craft: [first, ...others].slice(0, MOST).map((craft, index) => ({ ...craft, form: askedForm[index] === "space" ? "space" as const : "stack" as const })),
   editing: 0,
   maker: ROCKETS[first.rocket].maker as MakerId,
   look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName,
@@ -88,6 +89,18 @@ const state = {
 const phone = matchMedia("(max-width: 820px)");
 const shown = (): Craft[] => (phone.matches ? state.craft.slice(0, 1) : state.craft);
 const variantFor = (craft: Craft) => variantOf(craft.rocket, craft.variant) as Variant;
+
+/** The length the table prints: the whole rocket, or, in space, the parts still flying. */
+function drawnMetres(craft: Craft, variant: Variant): number | string | null {
+  if (isFleetVariant(variant)) return Math.round(fleetSize(variant).length);
+  const whole = variant.facts.height.value;
+  if (craft.form !== "space") return whole ?? null;
+  const slots = spaceSlots(craft.rocket, variant.slots);
+  if (!slots) return whole ?? null;
+  const parts = variant.facts.parts ?? {};
+  const sum = slots.reduce((total, slot) => total + (typeof parts[slot]?.value === "number" ? parts[slot].value : 0), 0);
+  return sum > 0 ? Math.round(sum) : whole ?? null;
+}
 
 // ------------------------------------------------------------- the Earth behind: nothing of it is loaded until it is chosen
 const earthHolder = byId("earth-back");
@@ -140,6 +153,8 @@ function keep() {
   address.set("background", state.background);
   address.set("moon", state.moon);
   address.set("place", state.place);
+  const forms = state.craft.map((craft) => craft.form);
+  address.set("form", forms.some((form) => form === "space") ? forms.join(",") : null);
   address.set("labels", state.labels ? "on" : "off");
 }
 
@@ -176,6 +191,10 @@ function renderPickers() {
   byId("places").replaceChildren(
     chip(say("cmpFloat"), "place-float", () => pickPlace("float"), state.place === "float"),
     chip(say("cmpGround"), "place-ground", () => pickPlace("ground"), state.place === "ground"),
+  );
+  byId("forms").replaceChildren(
+    chip(say("cmpStack"), "form-stack", () => pickForm("stack"), editing.form !== "space"),
+    chip(say("cmpSpace"), "form-space", () => pickForm("space"), editing.form === "space"),
   );
   byId("label-toggle").replaceChildren(
     chip(say("cmpLabelsOn"), "labels-on", () => pickLabels(true), state.labels),
@@ -249,7 +268,7 @@ function renderTable() {
     const name = document.createElement("th");
     name.scope = "row";
     name.textContent = variant.name;
-    const height = isFleetVariant(variant) ? Math.round(fleetSize(variant).length) : variant.facts.height.value;
+    const height = drawnMetres(craft, variant);
     const length = tr.insertCell();
     length.textContent = typeof height === "number" ? `${height.toLocaleString("en-US")} m` : say("noSource");
     const made = tr.insertCell();
@@ -281,14 +300,16 @@ function renderStage() {
   hero.setAttribute("variant", one.variant);
   hero.setAttribute("show", "together");
   hero.setAttribute("look", state.look);
-  hero.setAttribute("beside", rest.length ? rest.map((craft) => `${craft.rocket}:${craft.variant}`).join(",") : "off");
+  hero.setAttribute("beside", rest.length ? rest.map((craft) => `${craft.rocket}:${craft.variant}${craft.form === "space" ? ":space" : ""}`).join(",") : "off");
+  if (one.form === "space") hero.setAttribute("form", "space");
+  else hero.removeAttribute("form");
   if (state.place === "float") hero.setAttribute("float", "");
   else hero.removeAttribute("float");
   if (state.labels) hero.removeAttribute("names");
   else hero.setAttribute("names", "off");
   hero.setAttribute("scale-note", say("cmpPlinth"));
   // the whole row is in the picture whenever it changes
-  const now = list.map((craft) => `${craft.rocket}:${craft.variant}`).join(",");
+  const now = list.map((craft) => `${craft.rocket}:${craft.variant}:${craft.form}`).join(",");
   if (now !== framed) {
     framed = now;
     bar.fit();
@@ -334,12 +355,17 @@ function pickMaker(maker: MakerId) {
   renderPickers();
 }
 function pickRocket(id: string) {
-  state.craft[state.editing] = { rocket: id, variant: ROCKETS[id].defaultVariant };
+  state.craft[state.editing] = { rocket: id, variant: ROCKETS[id].defaultVariant, form: "stack" };
   state.maker = ROCKETS[id].maker;
   renderAll();
 }
 function pickVariant(id: string) {
-  state.craft[state.editing] = { rocket: state.craft[state.editing].rocket, variant: id };
+  const craft = state.craft[state.editing];
+  state.craft[state.editing] = { rocket: craft.rocket, variant: id, form: craft.form };
+  renderAll();
+}
+function pickForm(form: "stack" | "space") {
+  state.craft[state.editing].form = form;
   renderAll();
 }
 function pickPlace(place: "ground" | "float") {
