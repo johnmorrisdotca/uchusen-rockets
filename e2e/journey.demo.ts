@@ -26,6 +26,8 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
   await expect(page.getByTestId("route").locator("text").first()).toBeVisible();
   await expect(page.getByTestId("trip-straight")).toContainText("km");
+  await expect(page.getByTestId("trip-radiation")).toContainText("No source");
+  await expect(page.getByTestId("trip-cmb")).toContainText("No source");
   await expect(page.getByTestId("trip-time")).toContainText("d");
   await expect(page.getByTestId("trip-dvout")).toContainText("km/s");
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");

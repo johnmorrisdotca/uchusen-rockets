@@ -22,8 +22,8 @@ These are in `src/journey/` and on `demo/journey.html`. They are not built again
 3. **The twin-paradox note.** The two clocks are already numbers. Add one sentence beside them: the travelling clock runs slow, and the summary is where the two times are stated together. No new formula.
 4. **Escape speed as its own line.** The burn is shown. The escape speed of the parking orbit, and the body's escape speed from the surface, are not labelled. One line each, from the same `mu` the burn already uses.
 5. **A gravity assist.** A direct Hohmann is what the page flies. A later slice can offer one swing past a third body (Jupiter on the way out), with the delta-v it saves and a path that says it is an assist. The Moon's help, above, stays as it is.
-6. **Radiation and dust.** At the speeds a fleet ship reaches, one note: what the ship is flying into, and that the figure is a design note from the ship's bible where one exists, or "no source" where it does not. Not a new simulation.
-7. **The CMB ahead.** At high speed the cosmic microwave background is hotter in front of the ship. One temperature on the panel when the speed is high enough to matter, with the formula and a source named. Off, or the rest temperature, at solar-system speeds.
+6. **Radiation and dust.** On the panel. The ship bibles describe shields and name no figure, so the row says no source. Not a simulation.
+7. **The CMB ahead.** On the panel. This package names no source for the temperature, so the row says no source and prints none. A temperature waits for a named source.
 
 ## What done looks like for this list
 
