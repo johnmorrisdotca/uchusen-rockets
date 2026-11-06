@@ -30,6 +30,8 @@ section > h2 { font-size: 1.35rem; margin: 0 0 0.4rem; font-weight: 600; }
 section > p { color: var(--muted); margin: 0 0 1rem; max-width: 70ch; }
 .stage-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: 1.5rem; align-items: start; margin-top: 1rem; }
 .stage-box { background: linear-gradient(180deg, #0d1729, #070c17); border: 1px solid var(--line); border-radius: 14px; padding: 0.5rem; position: sticky; top: 0.75rem; }
+/* An un-upgraded rocket is an empty inline box until its picture arrives. The page reserves that box before any script runs. The embed fills its frame by flex, so it is left out. */
+body:not(.embed) uchusen-rocket { display: block; aspect-ratio: var(--uchusen-aspect, 3 / 4); }
 .stage-box uchusen-rocket { max-width: min(620px, calc((100vh - 18.5rem) * 0.75)); margin: 0 auto; }
 .turn-row { justify-content: center; margin-top: 0.3rem; }
 .view-space { position: relative; isolation: isolate; overflow: hidden; border-radius: 10px; }

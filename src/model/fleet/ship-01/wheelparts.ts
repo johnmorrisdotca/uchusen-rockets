@@ -67,9 +67,13 @@ export function solar(g: Geo, y: number): Piece[] {
   const r = g.rOut + 1.4;
   const half = g.wide / 2 - 4;
   if (g.style === "ring") {
-    out.push({ kind: "lathe", material: "solar", segs: 192, only: "mesh", profile: [[r, y - half], [r, y + half]] } as Lathe, hoop("hull-grey", r, y - half, 0.4, 192, 8), hoop("hull-grey", r, y + half, 0.4, 192, 8));
-    const rib: Lathe = { kind: "lathe", material: "hull-grey", segs: 400, only: "mesh", arc: () => [-0.006, 0.006], profile: [[g.rOut, -half], [r + 0.15, -half], [r + 0.15, half], [g.rOut, half]] };
-    out.push(...poses(96, y).map((p) => place([rib], p)).flat());
+    const n = 80;
+    const gap = deg(1.1);
+    const sweep = deg(360 / n) - gap;
+    const cell: Lathe = { kind: "lathe", material: "solar", segs: 8, only: "mesh", arc: () => [-sweep / 2, sweep / 2], profile: [[r, -half], [r, half]] };
+    const rib: Lathe = { kind: "lathe", material: "hull-grey", segs: 8, only: "mesh", arc: () => [sweep / 2, sweep / 2 + gap * 0.7], profile: [[r + 0.12, -half], [r + 0.12, half]] };
+    out.push(hoop("hull-grey", r + 0.05, y - half, 0.35, 160, 8), hoop("hull-grey", r + 0.05, y + half, 0.35, 160, 8), hoop("hull-grey", r + 0.16, y - half / 3, 0.16, 160, 6), hoop("hull-grey", r + 0.16, y + half / 3, 0.16, 160, 6));
+    out.push(...poses(n, y).map((p) => place([cell, rib], p)).flat());
   } else {
     const step = 360 / BEADS;
     const half2 = deg(step / 2 - 4);

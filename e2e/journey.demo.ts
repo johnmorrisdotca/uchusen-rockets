@@ -119,8 +119,19 @@ test("seeking to a moment draws that moment on its own, and the end shows the su
   await page.goto(`${URL}&craft=kaminari&to=mars&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
+  await expect(page.getByTestId("summary-leaves")).toContainText("UTC");
+  await expect(page.getByTestId("summary-arrives")).toContainText("UTC");
   await expect(page.getByTestId("summary")).toContainText("runs slower than the clocks at the two ends");
   await expect(page.getByTestId("summary")).toContainText("smaller than the times above");
+  const fit = await page.getByTestId("summary").evaluate((el) => {
+    const stage = el.closest("[data-testid=stage]");
+    const card = el.getBoundingClientRect();
+    const box = stage?.getBoundingClientRect();
+    const inside = !!box && card.top >= box.top - 1 && card.bottom <= box.bottom + 1 && card.left >= box.left - 1 && card.right <= box.right + 1;
+    return { inside, slack: el.clientHeight - el.scrollHeight };
+  });
+  expect(fit.inside, "the arrival card stays inside the stage").toBe(true);
+  expect(fit.slack, "the arrival card shows every row").toBeGreaterThanOrEqual(-1);
   await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("summary")).not.toContainText("runs slower");
