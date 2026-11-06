@@ -52,6 +52,7 @@ export function mountCamera(opts: {
   let turn: "craft" | "camera" = address.get("turn") === "craft" ? "craft" : "camera";
   let moving = false;
   let applying = false;
+  let when = Date.now();
 
   const back = byId("cw-camera-back");
   const note = byId("cw-edges-note");
@@ -254,7 +255,7 @@ export function mountCamera(opts: {
 
   function paintMoon(width: number, height: number, far: number): void {
     if (far < 20_000_000) return;
-    const [x, y] = moonGeocentric(Date.now());
+    const [x, y] = moonGeocentric(when);
     const range = Math.hypot(x, y, 0) * 1000;
     const yaw = ((turn === "camera" ? bar.state.yaw : 0) * Math.PI) / 180;
     const angle = Math.atan2(x, y) - yaw;
@@ -279,7 +280,7 @@ export function mountCamera(opts: {
 
   function paintSolar(width: number, height: number, far: number): void {
     if (far < 20_000_000) return;
-    const ms = Date.now();
+    const ms = when;
     const yaw = ((turn === "camera" ? bar.state.yaw : 0) * Math.PI) / 180;
     for (const [id, key] of SOLAR) {
       const [x, y] = fromEarth(id, ms);
@@ -292,6 +293,7 @@ export function mountCamera(opts: {
       mark.type = "button";
       mark.className = "cw-mark";
       mark.dataset.testid = `body-${id}`;
+      mark.dataset.angle = angle.toFixed(5);
       mark.textContent = say(key);
       mark.style.left = `${Math.min(width - 8, Math.max(8, px))}px`;
       mark.style.top = `${py}px`;
@@ -373,7 +375,7 @@ export function mountCamera(opts: {
       const canvas = hero.shadowRoot?.querySelector("canvas");
       const fit = Number(canvas?.dataset.distance ?? "400");
       const live = key === "cmpBodyJupiter" ? "jupiter" : key === "cmpBodyNeptune" ? "neptune" : null;
-      const there = live ? Math.hypot(...fromEarth(live, Date.now())) : metres;
+      const there = live ? Math.hypot(...fromEarth(live, when)) : metres;
       bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(there, 1))) });
     })),
   );
@@ -382,6 +384,16 @@ export function mountCamera(opts: {
   });
   bar.addEventListener("kazoku-viewchange", onView);
   hero.addEventListener("uchusen-draw", () => paintOverlay());
+  const day = document.createElement("button");
+  day.type = "button";
+  day.className = "chip";
+  day.dataset.testid = "cmp-day";
+  day.textContent = say("cmpDay");
+  day.addEventListener("click", () => {
+    when += 86_400_000;
+    paintOverlay();
+  });
+  distance.insertAdjacentElement("afterend", day);
   paintModes();
   hero.setAttribute("edges", edges);
   paintOverlay();

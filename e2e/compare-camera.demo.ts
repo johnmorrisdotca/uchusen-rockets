@@ -81,6 +81,9 @@ test("one astronomical unit shows the Sun and Jupiter", async ({ page }, info) =
   await expect(page.getByTestId("body-sun")).toBeVisible();
   await expect(page.getByTestId("body-pluto")).toBeVisible();
   await expect(page.getByTestId("body-ceres")).toBeVisible();
+  const before = await page.getByTestId("body-mercury").getAttribute("data-angle");
+  await page.getByTestId("cmp-day").click();
+  await expect.poll(() => page.getByTestId("body-mercury").getAttribute("data-angle")).not.toBe(before);
   const text = await page.getByTestId("cw-distance").innerText();
   expect(Number(text.replaceAll(/[^0-9]/g, ""))).toBeGreaterThan(100_000_000);
 });
