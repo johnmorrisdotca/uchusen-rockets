@@ -19,6 +19,9 @@ test("one group shows at a time, and the tab is kept in the address", async ({ p
   await expect(page.locator('[data-testid="lights-off"]')).toBeVisible();
   await expect(page.locator('[data-testid="lights-running"]')).toBeVisible();
   await expect(page.locator('[data-testid="lights-all"]')).toBeVisible();
+  await expect(page.locator('[data-testid="lights-kind-dock"]')).toBeVisible();
+  await page.locator('[data-testid="lights-dock-off"]').click();
+  await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("lights")).toBe("running.steady,flash.flash,beacon.flash,flood.steady,window.steady,work.steady");
   await expect(page.locator('[data-testid="engines-off"]')).toBeHidden();
   await page.locator('[data-testid="panel-look"]').click();
   await expect(page.locator('[data-testid="engines-off"]')).toBeVisible();

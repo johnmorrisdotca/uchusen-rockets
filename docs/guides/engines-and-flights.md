@@ -114,4 +114,4 @@ A flight has no clock of its own: it moves inside the view's one frame loop. It 
 
 ## Lights
 
-The Lights tab is on every craft. A fleet ship offers Off, Running only and All. A craft whose lights are not drawn yet offers only Off and says so.
+The Lights tab is on every craft. A fleet ship offers Off, Running only and All, and a row for each kind: running lights, the anti-collision flash, the beacon, docking lights, floods, window glow and work lights. A row is Off, or Steady, Flash, Double flash or Pulse. Off, Running only and All set every row at once. The choice stays in the address. A reader who asked for reduced motion gets every pattern steady. A craft whose lights are not drawn yet offers only Off and says so.

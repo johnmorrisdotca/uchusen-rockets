@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { dronePieces } from "../src/model/fleet/drone/index.ts";
 import { contextOf, drum } from "../src/model/fleet/hull.ts";
 import { isCoarse } from "../src/model/fleet/levels.ts";
-import { dutyOf, lampFactor, lampHalo, lightMode } from "../src/model/fleet/lights.ts";
+import { dutyOf, kindFactor, kindOf, lampFactor, lampHalo, lightChoice, lightMode, lightWord } from "../src/model/fleet/lights.ts";
 import { dockingHardware } from "../src/model/fleet/ship-01/docking.ts";
 import { noseRounded } from "../src/model/fleet/ship-03/nose.ts";
 import type { Piece } from "../src/model/pieces.ts";
@@ -28,6 +28,35 @@ test("a light's job is the material, and anything else is the engines", () => {
   assert.equal(lightMode(null), "all");
   assert.equal(lightMode("running"), "running");
   assert.equal(lightMode("nope"), "all");
+});
+
+test("each lamp material has a kind, and a list of kinds round-trips", () => {
+  assert.equal(kindOf("nav-red"), "running");
+  assert.equal(kindOf("lamp-blue"), "dock");
+  assert.equal(kindOf("flood"), "flood");
+  assert.equal(kindOf("light-pool"), "flood");
+  assert.equal(kindOf("halo-window"), "window");
+  assert.equal(kindOf("lamp-amber"), "work");
+  assert.equal(kindOf("coil-lit"), "engine");
+  assert.equal(lightChoice("running").on.dock, false);
+  assert.equal(lightChoice("running").on.beacon, true);
+  assert.equal(lightChoice("nope").preset, "all");
+  assert.equal(lightWord(lightChoice("running.steady")), "running.steady");
+  assert.equal(lightChoice("running.steady").on.flash, false);
+  const dockOff = lightChoice("all");
+  dockOff.on.dock = false;
+  assert.equal(lightWord(dockOff), "running.steady,flash.flash,beacon.flash,flood.steady,window.steady,work.steady");
+  assert.equal(kindFactor("dock", lightChoice("running"), false, 0), 0);
+  assert.equal(kindFactor("flash", lightChoice("all"), false, 0), 1);
+  assert.equal(kindFactor("flash", lightChoice("all"), false, 0.09), 0.35);
+  assert.equal(kindFactor("beacon", lightChoice("all"), false, 0.5), 0.35);
+  assert.equal(kindFactor("flash", lightChoice("all"), true, 0), 0.45);
+  assert.equal(kindFactor("dock", lightChoice("dock.flash"), true, 0), 1);
+  assert.equal(kindFactor("running", lightChoice("running.double"), false, 0), 1);
+  assert.equal(kindFactor("running", lightChoice("running.double"), false, 0.1), 0.35);
+  assert.equal(kindFactor("running", lightChoice("running.double"), false, 0.2), 1);
+  assert.equal(kindFactor("running", lightChoice("running.pulse"), false, 0.625), 1);
+  assert.equal(kindFactor("running", lightChoice("running.double"), true, 0.1), 1);
 });
 
 test("the white flash is 60 a minute and the red beacon 40, both steady when motion is reduced", () => {

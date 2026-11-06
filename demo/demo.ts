@@ -3,6 +3,7 @@ import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNo
 import { besideBounds, besideLayout, craftName } from "../src/beside.ts";
 import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
 import { dockMenu, dockPlan } from "../src/model/fleet/docked.ts";
+import { LIGHT_KINDS, LIGHT_PATTERNS, lightChoice, lightWord, type LightKind, type LightPattern } from "../src/model/fleet/lights.ts";
 import { motionNote, motionsOf } from "../src/model/fleet/motion.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
@@ -749,24 +750,44 @@ press(enginesBox, "engines-off");
 
 // ------------------------------------------------------------- the lamps
 const lightsBox = byId("lights");
-/** `off`, `running` (position lights, the white flash and the red beacon) or `all` (those plus floods and work lights). The same words as the element's `lights` attribute and the address. Left out of the address, it is `all`. */
-let lightsChoice = ["off", "running", "all"].includes(address.get("lights") ?? "") ? (address.get("lights") as string) : "all";
+/** The address word: `off`, `running`, `all`, or one `kind.pattern` for each kind that is on. Left out of the address, it is `all`. */
+let lightsWord = lightWord(lightChoice(address.get("lights")));
+let lightPresets: HTMLElement | null = null;
 function showLights() {
-  hero.setAttribute("lights", lightsChoice);
-  press(lightsBox, `lights-${lightsChoice}`);
+  const choice = lightChoice(lightsWord);
+  const word = lightWord(choice);
+  hero.setAttribute("lights", word);
+  if (lightPresets) press(lightPresets, `lights-${choice.preset}`);
+  for (const kind of LIGHT_KINDS) {
+    const row = lightsBox.querySelector(`[data-testid="lights-kind-${kind}"]`);
+    if (row instanceof HTMLElement) press(row, choice.on[kind] ? `lights-${kind}-${choice.pattern[kind]}` : `lights-${kind}-off`);
+  }
   const note = byId("lights-note");
   note.hidden = !reducedMotion;
   note.dataset.say = "lightsNote";
   note.textContent = say("lightsNote");
-  address.set("lights", lightsChoice === "all" ? null : lightsChoice);
+  address.set("lights", word === "all" ? null : word);
 }
 
-/** Fleet ships keep Off, Running only and All. Any other craft offers only Off until its lights are drawn. */
+/** One row: Off, or a pattern. The word is the same one the element reads. */
+function lightKindRow(kind: LightKind): HTMLElement {
+  const row = el("div", { className: "chips" });
+  row.dataset.testid = `lights-kind-${kind}`;
+  row.setAttribute("role", "group");
+  const name = el("span", { textContent: say(`lightsKind_${kind}`) });
+  name.dataset.say = `lightsKind_${kind}`;
+  row.append(name, chip("", `lights-${kind}-off`, () => setLightKind(kind, "off"), "lights_off"));
+  for (const pattern of LIGHT_PATTERNS) row.append(chip("", `lights-${kind}-${pattern}`, () => setLightKind(kind, pattern), `lightsPat_${pattern}`));
+  return row;
+}
+
+/** Fleet ships keep Off, Running only and All, and a row for each kind. Any other craft offers only Off until its lights are drawn. */
 function fillLights(): void {
   const offer = state.rocket.startsWith("fleet-") ? "fleet" : "later";
   const box = byId("lights");
   const note = byId("lights-note");
   byId("lights-field").hidden = false;
+  lightPresets = null;
   if (offer === "later") {
     const only = chip("Off", "lights-off", () => {}, "lights_off");
     only.setAttribute("aria-pressed", "true");
@@ -776,16 +797,27 @@ function fillLights(): void {
     note.textContent = say("lightsYet");
     return;
   }
-  const chips = [
+  const presets = el("div", { className: "chips" });
+  presets.append(
     chip("Off", "lights-off", () => chooseLights("off"), "lights_off"),
     chip("Running only", "lights-running", () => chooseLights("running"), "lights_running"),
     chip("All", "lights-all", () => chooseLights("all"), "lights_all"),
-  ];
-  box.replaceChildren(...chips);
+  );
+  lightPresets = presets;
+  box.replaceChildren(presets, ...LIGHT_KINDS.map(lightKindRow));
   showLights();
 }
 function chooseLights(choice: string) {
-  lightsChoice = choice;
+  lightsWord = choice;
+  showLights();
+  drawEmbed();
+}
+function setLightKind(kind: LightKind, pattern: LightPattern | "off") {
+  const choice = lightChoice(lightsWord);
+  choice.on[kind] = pattern !== "off";
+  if (pattern !== "off") choice.pattern[kind] = pattern;
+  choice.preset = "custom";
+  lightsWord = lightWord(choice);
   showLights();
   drawEmbed();
 }
@@ -863,7 +895,7 @@ function embedOptions(): RocketOptions {
   const motion = hero.getAttribute("motion");
   // what turns here by the controls turns there by itself, as fast: left is `cw`, the near side going left
   const turning = bar.state.turning ? { spin: String(Math.round(360 / (TURN_SPEED * (Number(bar.getAttribute("pace")) || 1)))), way: turnWay === "left" ? "cw" : "ccw" } : {};
-  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(lights === "off" || lights === "running" ? { lights } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(lights && lights !== "all" ? { lights } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
 panel.kinds = KINDS;
 panel.labels = LABELS;

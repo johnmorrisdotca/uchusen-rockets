@@ -38,7 +38,7 @@ export interface RocketOptions {
   assets?: string;
   /** `on` lights every engine that is showing. `off` leaves them dark. Left out, the element follows reduced motion. */
   engines?: string;
-  /** `off` puts the lamps out. `running` is the position lights, the white flash and the red beacon. `all` adds the floods and the work lights. Left out, the lamps are all on. */
+  /** `off` puts the lamps out. `running` is the position lights, the white flash and the red beacon. `all` adds docking lights, floods, window glow and work lights. A list such as `dock.pulse` names the kinds that stay on. Left out, the lamps are all on. */
   lights?: string;
   /** A phase of the rocket's flight, by its id: the engines that burn there. */
   phase?: string;

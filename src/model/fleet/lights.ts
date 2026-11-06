@@ -73,6 +73,193 @@ export function lightMode(value: string | null | undefined): "off" | "running" |
   return value === "off" || value === "running" || value === "all" ? value : "all";
 }
 
+/** A kind a fleet ship can switch on its own. */
+export const LIGHT_KINDS = ["running", "flash", "beacon", "dock", "flood", "window", "work"] as const;
+export type LightKind = (typeof LIGHT_KINDS)[number];
+/** How a kind changes. Reduced motion keeps every one of these steady. */
+export const LIGHT_PATTERNS = ["steady", "flash", "double", "pulse"] as const;
+export type LightPattern = (typeof LIGHT_PATTERNS)[number];
+
+/** Which kinds are on, and the pattern each one uses. `preset` is `custom` when the rows do not match Off, Running only or All. */
+export type LightChoice = {
+  preset: "off" | "running" | "all" | "custom";
+  on: Record<LightKind, boolean>;
+  pattern: Record<LightKind, LightPattern>;
+};
+
+const DEFAULT_PATTERN: Readonly<Record<LightKind, LightPattern>> = {
+  running: "steady",
+  flash: "flash",
+  beacon: "flash",
+  dock: "steady",
+  flood: "steady",
+  window: "steady",
+  work: "steady",
+};
+
+const KIND: Readonly<Record<string, LightKind>> = {
+  "nav-red": "running",
+  "nav-green": "running",
+  "nav-white": "running",
+  "halo-port": "running",
+  "halo-port-soft": "running",
+  "halo-starboard": "running",
+  "halo-starboard-soft": "running",
+  "halo-stern": "running",
+  "halo-stern-soft": "running",
+  strobe: "flash",
+  "halo-strobe": "flash",
+  "halo-strobe-soft": "flash",
+  beacon: "beacon",
+  "halo-beacon": "beacon",
+  "halo-beacon-soft": "beacon",
+  "lamp-blue": "dock",
+  flood: "flood",
+  "light-pool": "flood",
+  "light-pool-mid": "flood",
+  "light-pool-edge": "flood",
+  "halo-window": "window",
+  "lamp-amber": "work",
+  "lamp-red": "work",
+};
+
+const kindName = (value: string): LightKind | null => (LIGHT_KINDS as readonly string[]).includes(value) ? value as LightKind : null;
+const patternName = (value: string | undefined): LightPattern | null => value !== undefined && (LIGHT_PATTERNS as readonly string[]).includes(value) ? value as LightPattern : null;
+
+function choiceOf(preset: "off" | "running" | "all"): LightChoice {
+  const on = preset !== "off";
+  const choice: LightChoice = { preset, on: {} as Record<LightKind, boolean>, pattern: { ...DEFAULT_PATTERN } };
+  for (const kind of LIGHT_KINDS) choice.on[kind] = on && (preset === "all" || kind === "running" || kind === "flash" || kind === "beacon");
+  return choice;
+}
+
+function sameChoice(a: LightChoice, b: LightChoice): boolean {
+  return LIGHT_KINDS.every((kind) => a.on[kind] === b.on[kind] && a.pattern[kind] === b.pattern[kind]);
+}
+
+/**
+ * Which kind a material belongs to. A name that is not a lamp is engine glow.
+ *
+ * @param material A material name.
+ * @returns A light kind, or `engine`.
+ * @example
+ * ```ts
+ * import { kindOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(kindOf("lamp-blue"), kindOf("flood"), kindOf("steel"));
+ * ```
+ */
+export function kindOf(material: string): LightKind | "engine" {
+  return KIND[material] ?? "engine";
+}
+
+/**
+ * The Lights choice, including one row per kind. `off`, `running` and `all` are the three presets. A list such as `dock.pulse,flood.steady` turns on only the kinds it names. Anything else is `all`.
+ *
+ * @param value The attribute or the address, or nothing when it was left out.
+ * @returns The choice. Each call returns a new one.
+ * @example
+ * ```ts
+ * import { lightChoice } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(lightChoice("running").on.dock, lightChoice("dock.pulse").pattern.dock);
+ * ```
+ */
+export function lightChoice(value: string | null | undefined): LightChoice {
+  if (value == null || value === "" || value === "all") return choiceOf("all");
+  if (value === "off" || value === "running") return choiceOf(value);
+  const choice = choiceOf("off");
+  choice.preset = "custom";
+  let any = false;
+  for (const token of value.split(",")) {
+    if (token === "") continue;
+    const [name, pattern] = token.split(".");
+    const kind = name ? kindName(name) : null;
+    if (!kind) continue;
+    any = true;
+    choice.on[kind] = true;
+    const named = patternName(pattern);
+    if (named) choice.pattern[kind] = named;
+  }
+  if (!any) return choiceOf("all");
+  if (sameChoice(choice, choiceOf("off"))) choice.preset = "off";
+  else if (sameChoice(choice, choiceOf("running"))) choice.preset = "running";
+  else if (sameChoice(choice, choiceOf("all"))) choice.preset = "all";
+  return choice;
+}
+
+/**
+ * The address word for a choice. A preset stays one word. Anything else names each lit kind and its pattern, so a single kind cannot be read as Running only.
+ *
+ * @param choice The choice.
+ * @returns `off`, `running`, `all`, or a comma list such as `running.steady`.
+ * @example
+ * ```ts
+ * import { lightChoice, lightWord } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(lightWord(lightChoice(null)));
+ * ```
+ */
+export function lightWord(choice: LightChoice): string {
+  if (sameChoice(choice, choiceOf("off"))) return "off";
+  if (sameChoice(choice, choiceOf("running"))) return "running";
+  if (sameChoice(choice, choiceOf("all"))) return "all";
+  const parts = LIGHT_KINDS.filter((kind) => choice.on[kind]).map((kind) => `${kind}.${choice.pattern[kind]}`);
+  return parts.join(",") || "off";
+}
+
+/** True when any kind is on. The night side follows this. */
+export function lightAnyOn(choice: LightChoice): boolean {
+  return LIGHT_KINDS.some((kind) => choice.on[kind]);
+}
+
+/** True when a lit kind uses a pattern that changes. Reduced motion does not. */
+export function lightPulses(choice: LightChoice): boolean {
+  return LIGHT_KINDS.some((kind) => choice.on[kind] && choice.pattern[kind] !== "steady");
+}
+
+function flashLevel(kind: LightKind, seconds: number): number {
+  const slow = kind === "beacon";
+  const period = 60 / (slow ? BEACON_PER_MIN : STROBE_PER_MIN);
+  const on = slow ? BEACON_ON_S : STROBE_ON_S;
+  return ((seconds % period) + period) % period < on ? 1 : 0.35;
+}
+
+function doubleFlash(seconds: number): number {
+  const t = ((seconds % 1) + 1) % 1;
+  return t < 0.08 || (t >= 0.16 && t < 0.24) ? 1 : 0.35;
+}
+
+function slowPulse(seconds: number): number {
+  const t = ((seconds % 2.5) + 2.5) % 2.5;
+  return 0.45 + 0.55 * (0.5 + 0.5 * Math.sin((2 * Math.PI * t) / 2.5));
+}
+
+/**
+ * How bright one kind is now, from 0 to 1. A kind that is off stays off. Flash, double flash and pulse hold steady when motion is reduced. The beacon's flash is the slow one.
+ *
+ * @param kind Which kind.
+ * @param choice The Lights choice.
+ * @param reduced Whether the reader asked for reduced motion.
+ * @param seconds Seconds since the view started.
+ * @returns The brightness, 0 to 1.
+ * @example
+ * ```ts
+ * import { kindFactor, lightChoice } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(kindFactor("dock", lightChoice("running"), false, 0), kindFactor("flash", lightChoice("all"), true, 0));
+ * ```
+ */
+export function kindFactor(kind: LightKind, choice: LightChoice, reduced: boolean, seconds: number): number {
+  if (!choice.on[kind]) return 0;
+  if (reduced) return kind === "flash" || kind === "beacon" ? 0.45 : 1;
+  const pattern = choice.pattern[kind];
+  if (pattern === "flash") return flashLevel(kind, seconds);
+  if (pattern === "double") return doubleFlash(seconds);
+  if (pattern === "pulse") return slowPulse(seconds);
+  return 1;
+}
+
 /**
  * How bright a lamp is now, from 0 to 1. Position lights stay on. The white flash and the red beacon pulse, and both hold steady when motion is reduced. Work lights (floods, pools, docking and work lamps)
  * are on only for `all`.

@@ -49,7 +49,7 @@ import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
-import { dutyOf, lampFactor } from "../model/fleet/lights.ts";
+import { kindFactor, kindOf, lightAnyOn, lightChoice, lightPulses, lightWord, type LightChoice, type LightKind } from "../model/fleet/lights.ts";
 import { angleAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
 import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, rolledUp, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
@@ -257,18 +257,18 @@ export class RocketViewer {
   private materialCache = new Map<string, Material>();
   /** The materials that glow, and the strength they take when fully on. */
   private glowing = new Map<MeshStandardMaterial, number>();
-  /** What each glowing material does: engine glow, or a lamp. */
-  private lampDuty = new Map<MeshStandardMaterial, ReturnType<typeof dutyOf>>();
+  /** What each glowing material does: engine glow, or one kind of lamp. */
+  private lampDuty = new Map<MeshStandardMaterial, LightKind | "engine">();
   /** Materials whose glow flashes, so a new rocket can keep the pulse after the material was cached. */
   private pulseMaterials = new WeakSet<Material>();
   private glowOn = false;
-  /** The Lights choice. `all` until the page says otherwise. */
-  private lightsMode: "off" | "running" | "all" = "all";
+  /** The Lights choice. All kinds on until the page says otherwise. */
+  private lights: LightChoice = lightChoice(null);
   /** This rocket has a strobe or a beacon, so the view keeps a frame going. */
   private hasPulse = false;
   private lampDrawn = 0;
   /** Screen-space lamp points. Cleared with each rocket, because they are not in the material cache. */
-  private lampPoints: { material: PointsMaterial; geometry: BufferGeometry; duty: ReturnType<typeof dutyOf> }[] = [];
+  private lampPoints: { material: PointsMaterial; geometry: BufferGeometry; kind: LightKind }[] = [];
   /** Lamp beads gathered while a ship is loaded, then drawn as one point cloud per part. */
   private lampPending: { carrier: Group; name: string; centers: Vector3[] }[] = [];
   /** The smooth flood sheets. Cached with their material, so a new rocket reuses them. */
@@ -748,7 +748,7 @@ export class RocketViewer {
       made.depthWrite = false;
     }
     if (spec.glow) {
-      const duty = dutyOf(name);
+      const duty = kindOf(name);
       made.emissive.set(spec.glowColor ?? spec.color);
       made.emissiveIntensity = this.lampStrength(duty, spec.glow, 0);
       this.glowing.set(made, spec.glow);
@@ -906,19 +906,19 @@ export class RocketViewer {
     this.wake();
   }
 
-  /** The Lights choice: `off`, running lights only, or running lights plus floods and work lights. */
-  setLights(mode: "off" | "running" | "all"): void {
-    this.lightsMode = mode;
+  /** The Lights choice: a preset, or a list of kinds. Left out, every kind is on. */
+  setLights(value: string | null): void {
+    this.lights = lightChoice(value);
     this.nightSide();
     this.applyLamps(performance.now() / 1000);
-    this.canvas.dataset.lights = mode;
+    this.canvas.dataset.lights = lightWord(this.lights);
     this.needsDraw = true;
     this.wake();
   }
 
   /** The Lit look of a named SPX ship is the night side. Daylight stays the default, so lamps glow in the sun, and a kit module stays in daylight. */
   private nightSide(): void {
-    const night = this.shipNight && this.lightsMode !== "off" && this.glowOn;
+    const night = this.shipNight && lightAnyOn(this.lights) && this.glowOn;
     this.sun.intensity = night ? 0.16 : 1.6;
     this.rim.intensity = night ? 0.04 : 1.1;
     this.fill.intensity = night ? 0.03 : 0.35;
@@ -927,9 +927,9 @@ export class RocketViewer {
   }
 
   /** How bright one glowing material is. Engine glow follows the engines. Lamps follow the Lights choice. */
-  private lampStrength(duty: ReturnType<typeof dutyOf>, strength: number, seconds: number): number {
+  private lampStrength(duty: LightKind | "engine", strength: number, seconds: number): number {
     if (duty === "engine") return this.glowOn ? strength : 0;
-    return strength * lampFactor(duty, this.lightsMode, Boolean(this.options.reducedMotion), seconds);
+    return strength * kindFactor(duty, this.lights, Boolean(this.options.reducedMotion), seconds);
   }
 
   /** Writes every lamp's brightness for this moment. A pool disappears when its light is off. */
@@ -940,9 +940,9 @@ export class RocketViewer {
       material.emissiveIntensity = level;
       if (material.userData.pool) material.opacity = (material.userData.poolOpacity ?? 0.42) * level;
     }
-    const flood = this.lampStrength("work", 0.95, seconds);
+    const flood = this.lampStrength("flood", 0.95, seconds);
     for (const sheet of this.poolSheets) sheet.opacity = flood;
-    for (const lamp of this.lampPoints) lamp.material.opacity = this.lampStrength(lamp.duty, 1, seconds);
+    for (const lamp of this.lampPoints) lamp.material.opacity = this.lampStrength(lamp.kind, 1, seconds);
   }
 
   /** Remember one lamp's place. The beads of a part are drawn together once the ship is in. */
@@ -954,23 +954,24 @@ export class RocketViewer {
 
   /** One point cloud per part, per job and per colour, so a ship is a few draws and not one draw per lamp. The colour is the material's, the same as a lamp drawn on its own. One sprite is shared. */
   private flushLamps(): void {
-    const byCarrier = new Map<Group, Map<string, { duty: ReturnType<typeof dutyOf>; tint: string; positions: number[] }>>();
+    const byCarrier = new Map<Group, Map<string, { kind: LightKind; tint: string; positions: number[] }>>();
     for (const spot of this.lampPending) {
-      const duty = dutyOf(spot.name);
+      const kind = kindOf(spot.name);
+      if (kind === "engine") continue;
       const tint = LAMP_TINT[spot.name] ?? "#fff6e4";
       let duties = byCarrier.get(spot.carrier);
       if (!duties) {
         duties = new Map();
         byCarrier.set(spot.carrier, duties);
       }
-      const key = `${duty}|${tint}`;
+      const key = `${kind}|${tint}`;
       let bucket = duties.get(key);
       if (!bucket) {
-        bucket = { duty, tint, positions: [] };
+        bucket = { kind, tint, positions: [] };
         duties.set(key, bucket);
       }
       for (const center of spot.centers) bucket.positions.push(center.x, center.y, center.z);
-      if (duty === "flash" || duty === "beacon") this.hasPulse = true;
+      if (kind === "flash" || kind === "beacon") this.hasPulse = true;
     }
     this.lampPending = [];
     for (const [carrier, duties] of byCarrier) {
@@ -988,7 +989,7 @@ export class RocketViewer {
           depthWrite: false,
           depthTest: false,
         });
-        this.lampPoints.push({ material, geometry, duty: bucket.duty });
+        this.lampPoints.push({ material, geometry, kind: bucket.kind });
         const points = new Points(geometry, material);
         points.renderOrder = 2;
         carrier.add(points);
@@ -2099,7 +2100,7 @@ export class RocketViewer {
       this.swarm?.step(now / 1000);
       this.needsDraw = true;
     }
-    const pulsing = this.hasPulse && this.lightsMode !== "off" && !this.options.reducedMotion;
+    const pulsing = lightPulses(this.lights) && !this.options.reducedMotion;
     if (pulsing && now - this.lampDrawn >= MOTION_GAP_MS) {
       this.lampDrawn = now;
       this.applyLamps(now / 1000);
