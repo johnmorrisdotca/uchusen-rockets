@@ -241,7 +241,10 @@ function renderCraft() {
   ask.replaceChildren();
   if (pending && state.asking !== null) {
     const name = variantFor(pending).name;
-    ask.append(document.createTextNode(say("cmpAsk", { name })), chip(say("cmpYes"), "cw-remove-yes", confirmRemove), chip(say("cmpNo"), "cw-remove-no", cancelRemove));
+    const actions = document.createElement("span");
+    actions.className = "cw-ask-actions";
+    actions.append(chip(say("cmpYes"), "cw-remove-yes", confirmRemove), chip(say("cmpNo"), "cw-remove-no", cancelRemove));
+    ask.append(document.createTextNode(say("cmpAsk", { name })), actions);
     const anchor = row.querySelector(`[data-testid="cw-craft-${state.asking}"] .cw-pic`);
     if (anchor) {
       const rect = anchor.getBoundingClientRect();
@@ -433,6 +436,7 @@ function renderStage() {
   if (state.labels) hero.removeAttribute("names");
   else hero.setAttribute("names", "off");
   hero.setAttribute("scale-note", say("cmpPlinth"));
+  hero.setAttribute("off-screen", say("cmpOffScreen"));
   // the whole row is in the picture whenever it changes
   const now = list.map((craft) => `${craft.rocket}:${craft.variant}`).join(",");
   if (now !== framed) {

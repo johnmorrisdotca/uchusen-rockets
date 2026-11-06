@@ -61,6 +61,18 @@ test("a third craft is added, the choices are kept in the address, and a reload 
   // remove asks first, and Cancel keeps the craft
   await page.locator('[data-testid="cw-remove-1"]').click();
   await expect(page.locator('[data-testid="cw-ask"]')).toBeVisible();
+  const yesBox = await page.locator('[data-testid="cw-remove-yes"]').boundingBox();
+  const noBox = await page.locator('[data-testid="cw-remove-no"]').boundingBox();
+  expect(Math.abs((yesBox?.y ?? 0) - (noBox?.y ?? 0))).toBeLessThan(4);
+  expect(yesBox?.height ?? 99).toBeLessThan(40);
+  const readable = await page.locator('[data-testid="cw-ask"]').evaluate((node) => {
+    const style = getComputedStyle(node);
+    const parse = (value: string): number[] => (value.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+    const lum = (channel: number): number => (channel / 255) ** 2.2;
+    const light = (rgb: number[]): number => 0.2126 * lum(rgb[0] ?? 0) + 0.7152 * lum(rgb[1] ?? 0) + 0.0722 * lum(rgb[2] ?? 0);
+    return Math.abs(light(parse(style.color)) - light(parse(style.backgroundColor))) > 0.2;
+  });
+  expect(readable).toBe(true);
   await page.locator('[data-testid="cw-remove-no"]').click();
   await expect(craftChips(page)).toHaveCount(4);
   await page.locator('[data-testid="cw-remove-1"]').click();
@@ -192,6 +204,10 @@ test("six craft stay on the page at a desk's width", async ({ page }, info) => {
   await expect(page.locator('[data-testid="cw-count"]')).toContainText("6 of up to");
   const line = await page.locator('[data-testid="cw-craft"]').boundingBox();
   expect(line?.height ?? 999).toBeLessThan(80);
+  await expect(page.locator(".cw-craft-list")).toHaveCount(0);
+  await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelectorAll("[data-beside-label]").length ?? 0), { timeout: 30_000 }).toBe(6);
+  const off = await hero(page).evaluate((node) => [...(node.shadowRoot?.querySelectorAll("[data-beside-label]") ?? [])].some((el) => (el.textContent ?? "").includes("off screen")));
+  expect(off).toBe(false);
   const stage = await page.locator(".cw-stage").boundingBox();
   expect(stage?.y ?? 999).toBeLessThan(360);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
@@ -220,6 +236,8 @@ test("a craft under about 12 px is marked with its name and size, and its chip o
   const mark = hero(page).locator("[data-craft-mark]");
   await expect(mark).toBeVisible({ timeout: 30_000 });
   await expect(mark).toContainText("1 m");
+  await expect(hero(page).locator("[data-beside-label]")).toHaveCount(2);
+  await expect(hero(page).locator("[data-beside-label]").filter({ hasText: "off screen" })).toHaveCount(0);
   await page.locator('[data-testid="cw-craft-1"]').hover();
   await page.locator('[data-testid="cw-glass-1"]').click();
   await expect(page.locator('[data-testid="cw-glass"]')).toBeVisible();

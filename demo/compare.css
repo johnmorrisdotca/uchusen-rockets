@@ -21,7 +21,9 @@ body.compare main { max-width: 1560px; }
 .picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr)); gap: 0.35rem; }
 .picker-grid .chip { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-height: 5.2rem; }
 .picker-grid .craft-pic { width: 2.4rem; height: 3.2rem; }
-.cw-ask { position: fixed; z-index: 30; display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; padding: 0.45rem 0.55rem; background: var(--paper, #121821); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 20px rgb(0 0 0 / 28%); white-space: nowrap; }
+.cw-ask { position: fixed; z-index: 30; display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; padding: 0.4rem 0.5rem; background: var(--raised); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 20px rgb(0 0 0 / 28%); white-space: nowrap; }
+.cw-ask-actions { display: flex; flex-direction: row; gap: 0.35rem; }
+.cw-ask .chip { min-height: 32px; padding: 0.1rem 0.55rem; font-size: 0.82rem; }
 .cw-ask[hidden] { display: none; }
 #cw-search { width: 100%; margin: 0 0 0.4rem; }
 #cw-glass { position: absolute; right: 0.6rem; bottom: 0.6rem; width: 9rem; height: 9rem; border-radius: 50%; overflow: hidden; border: 2px solid #fff; background: rgba(11, 17, 27, 0.72); z-index: 2; display: grid; place-items: center; }
@@ -32,7 +34,6 @@ body.compare main { max-width: 1560px; }
 .cw-arrows { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .cw-arrows button, .cw-mark { pointer-events: auto; position: absolute; transform: translate(-50%, -50%); }
 .cw-edge, .cw-mark { border: 1px solid var(--accent, #8fc9ff); border-radius: 999px; background: rgba(5, 10, 20, 0.9); color: var(--ink, #dfe9f6); font-size: 0.72rem; padding: 0.15rem 0.45rem; white-space: nowrap; }
-.cw-craft-list { position: absolute; top: 0.4rem; right: 0.4rem; margin: 0; padding: 0.3rem 0.5rem; list-style: none; background: rgba(5, 10, 20, 0.72); color: #e6edf6; font-size: 0.75rem; pointer-events: none; }
 #cw-distance { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.8rem; }
 #cw-edges-note { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.8rem; }
 .cw-stage uchusen-rocket { --uchusen-aspect: 2.3 / 1; max-width: none; width: 100%; margin: 0; }

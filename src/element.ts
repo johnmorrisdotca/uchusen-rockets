@@ -149,7 +149,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -332,6 +332,7 @@ export class UchusenRocket extends HTMLBase {
     } else if (name === "lights") {
       if (this.viewer) this.lightViewer(this.viewer);
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "off-screen") this.viewer?.setOffScreen(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "edges") this.viewer?.setEdges(after === "open");
     else if (name === "world") this.viewer?.setOrbit(after === "earth");
@@ -914,6 +915,7 @@ export class UchusenRocket extends HTMLBase {
       this.applyFrame();
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));
+      made.setOffScreen(this.getAttribute("off-screen"));
       made.setFloating(this.hasAttribute("float"));
       made.setEdges(this.getAttribute("edges") === "open");
       made.setNameLabels(this.getAttribute("names") !== "off");

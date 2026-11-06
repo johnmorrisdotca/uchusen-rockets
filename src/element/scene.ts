@@ -477,6 +477,16 @@ export class RocketViewer {
     this.wake();
   }
 
+  private offScreen = "";
+
+  /** The words added to a floating name when that craft is outside the frame. Empty adds nothing. */
+  setOffScreen(text: string | null): void {
+    const next = text?.trim() ?? "";
+    if (next === this.offScreen) return;
+    this.offScreen = next;
+    this.wake();
+  }
+
   /** Open space lets a craft leave the frame. Wrap, the older float, brings it back on the other side. */
   private edgesOpen = false;
 
@@ -2023,11 +2033,17 @@ export class RocketViewer {
         this.hostOfMarks().appendChild(el);
         this.besideEls.set(craft, el);
       }
+      const box = this.craftBoxes().find((one) => one.craft === craft);
+      const screen = box ? this.screenBox(box.min, box.max) : null;
+      const footIn = Boolean(foot && foot.visible && foot.x >= 0 && foot.y >= 0 && foot.x <= width && foot.y <= height);
+      const boxIn = Boolean(screen && screen.maxX >= 0 && screen.maxY >= 0 && screen.minX <= width && screen.minY <= height);
+      const outside = this.floating && !footIn && !boxIn;
+      const line = outside && this.offScreen ? `${text} · ${this.offScreen}` : text;
       const note = !this.floating && foot?.flies && names.length ? this.scaleNote : "";
-      const caption = note ? `${text}\n${note}` : text;
+      const caption = note ? `${line}\n${note}` : line;
       if (el.dataset.caption !== caption) {
         el.dataset.caption = caption;
-        el.replaceChildren(document.createTextNode(text));
+        el.replaceChildren(document.createTextNode(line));
         if (note) {
           el.append(document.createElement("br"));
           const mark = document.createElement("span");
@@ -2038,13 +2054,13 @@ export class RocketViewer {
         }
       }
       el.style.maxWidth = `${Math.max(40, width - 8)}px`;
-      if (!foot || !foot.visible || this.clockNow) {
+      if (this.clockNow || (!this.floating && (!foot || !foot.visible))) {
         el.style.display = "none";
         continue;
       }
       el.style.display = "block";
       el.style.transform = "translate(0px,0px)";
-      spots.push({ el, footX: foot.x, footY: foot.y });
+      spots.push({ el, footX: foot?.x ?? 0, footY: foot?.y ?? 0 });
     }
     if (this.floating) {
       let y = 8;
@@ -2459,7 +2475,6 @@ export class RocketViewer {
       this.needsDraw = false;
       this.frames++;
       this.canvas.dataset.frames = String(this.frames);
-      this.options.onDraw?.();
       const angle = this.currentAngle();
       this.canvas.dataset.azimuth = angle.az.toFixed(2);
       this.canvas.dataset.elevation = angle.el.toFixed(2);
@@ -2487,6 +2502,7 @@ export class RocketViewer {
           return `${box.craft}:${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX - screen.minX)},${Math.round(screen.maxY - screen.minY)},1`;
         })
         .join(" ");
+      this.options.onDraw?.();
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next

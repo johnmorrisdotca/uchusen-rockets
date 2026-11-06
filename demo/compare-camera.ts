@@ -190,14 +190,9 @@ export function mountCamera(opts: {
     if (!canvas) return;
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
-    const list = document.createElement("ul");
-    list.className = "cw-craft-list";
     names.forEach((name, index) => {
       const box = pageBox(index);
-      const off = !box || !box.on || box.x + box.w < 0 || box.y + box.h < 0 || box.x > width || box.y > height;
-      const item = document.createElement("li");
-      item.textContent = off ? `${name} · ${say("cmpOffScreen")}` : name;
-      list.append(item);
+      const off = Boolean(box && box.on && (box.x + box.w < 0 || box.y + box.h < 0 || box.x > width || box.y > height));
       if (edges === "open" && off && box) {
         const button = document.createElement("button");
         button.type = "button";
@@ -227,7 +222,6 @@ export function mountCamera(opts: {
         arrows.append(mark);
       }
     });
-    arrows.append(list);
     const metres = Number(canvas.dataset.distance ?? "0");
     const zoom = Math.max(0.000001, bar.state.zoom || 1);
     const far = metres / zoom;
