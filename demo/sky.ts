@@ -258,13 +258,14 @@ const placeMoons = (mine: number, planetNode: HTMLElement, holder: HTMLElement, 
     const facts = BODIES as Record<string, { radiusKm?: number }>;
     const biggest = Math.max(...placed.map((item) => facts[item.id]?.radiusKm ?? 1), 1);
     const ordered = [...placed].sort((a, b) => Math.atan2(a.x, a.z) - Math.atan2(b.x, b.z));
-    for (const [index, moon] of ordered.entries()) {
+    const far = placed.reduce((best, item) => (item.distance > best.distance ? item : best), placed[0]) as PlacedMoon;
+    for (const moon of ordered) {
       await loadBody(moon.id);
       if (mine !== ticket || !planetNode.isConnected) return;
-      holder.append(moonBody(moon, form, lang, index, ordered.length, (facts[moon.id]?.radiusKm ?? biggest) / biggest));
+      holder.append(moonBody(moon, form, lang, far.distance, (facts[moon.id]?.radiusKm ?? biggest) / biggest));
     }
-    const far = placed.reduce((best, item) => (item.distance > best.distance ? item : best), placed[0]) as PlacedMoon;
     holder.dataset.where = `${far.x.toFixed(2)},${far.y.toFixed(2)}`;
+    holder.dataset.reach = far.distance.toFixed(4);
     const start = performance.now();
     const step = (now: number) => {
       if (mine !== ticket || !planetNode.isConnected) return;
@@ -283,12 +284,15 @@ const placeMoons = (mine: number, planetNode: HTMLElement, holder: HTMLElement, 
   });
 };
 
-/** A moon in the sky above the horizon: its true bearing across the frame, at least 16 px, lit by the package for this instant. */
-const moonBody = (moon: PlacedMoon, form: SkyForm, lang: Lang, index: number, count: number, scale: number) => {
+/** A moon on its real bearing around the disc, at least 16 px, lit by the package for this instant. */
+const moonBody = (moon: PlacedMoon, form: SkyForm, lang: Lang, reach: number, scale: number) => {
   const node = globe(moon.id, form, lang);
   const px = Math.max(16, Math.round(56 * scale));
-  const left = count === 1 ? 22 : 12 + (76 * index) / (count - 1);
-  const top = 14 + (index % 2) * 8;
+  const along = reach > 0 ? Math.min(1, moon.distance / reach) : 1;
+  const radius = 18 + 26 * along;
+  const angle = Math.atan2(-moon.y, moon.x);
+  const left = Math.min(96, Math.max(4, 50 + Math.cos(angle) * radius));
+  const top = Math.min(96, Math.max(4, 50 + Math.sin(angle) * radius));
   node.dataset.moon = moon.id;
   node.dataset.place = `${moon.x.toFixed(2)},${moon.y.toFixed(2)},${moon.z.toFixed(2)}`;
   node.style.position = "absolute";
