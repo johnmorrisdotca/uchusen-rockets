@@ -100,11 +100,17 @@
       <section class="cmp" id="lineup-fold" hidden>
         <h2 id="cmp-title" data-say="more_compare">Compare to scale</h2>
         <p><a class="chip" href="compare.html" data-testid="cw-side" data-say="cmpTitle">Compare craft, side by side</a></p>
-        <div class="chips" id="cmp-picks" data-testid="cmp-picks" role="group" aria-labelledby="cmp-title"></div>
-        <div class="chips" id="cmp-views" data-testid="cmp-views" role="group" aria-labelledby="cmp-title"></div>
-        <div class="cmp-view" id="cmp-view" data-testid="cmp-view">
-          <uchusen-lineup id="lineup" data-testid="cmp-lineup" pose="stand" filter="fleet" ruler labels look="painted" wide></uchusen-lineup>
+        <div class="chips" id="cmp-looks" data-testid="cmp-looks" role="group" aria-labelledby="cmp-title"></div>
+        <div class="craft-bar">
+          <div class="craft-scroll">
+            <div class="craft-line" id="cmp-picks" data-testid="cmp-picks" role="group" aria-labelledby="cmp-title"></div>
+          </div>
         </div>
+        <div class="chips" id="cmp-views" data-testid="cmp-views" role="group" aria-labelledby="cmp-title"></div>
+        <div class="cmp-view" id="cmp-view" data-testid="cmp-view" tabindex="0">
+          <uchusen-lineup id="lineup" data-testid="cmp-lineup" pose="stand" filter="fleet" ruler labels look="painted" contain></uchusen-lineup>
+        </div>
+        <kazoku-view-controls id="cmp-bar" data-testid="cmp-bar" for="cmp-view" theme="dark" controls="advanced" zoom-min="0.25" zoom-max="8"></kazoku-view-controls>
         <p data-testid="cmp-length-source" data-say="lengthSource">Length is the figure in the ship's record.</p>
         <table class="cmp-facts" data-testid="cmp-facts">
           <thead id="cmp-head"></thead>

@@ -1002,7 +1002,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose", "wide"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose", "wide", "contain"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -1043,6 +1043,12 @@ export class UchusenLineup extends HTMLBase {
       node.removeAttribute("height");
       node.style.width = "100%";
       node.style.height = "auto";
+    }
+    // contain: the drawing scales to the frame, so a phone shows every ship instead of the left-hand part
+    if (this.hasAttribute("contain") && node instanceof SVGElement) {
+      node.setAttribute("width", "100%");
+      node.setAttribute("height", "100%");
+      node.setAttribute("preserveAspectRatio", "xMidYMid meet");
     }
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);
