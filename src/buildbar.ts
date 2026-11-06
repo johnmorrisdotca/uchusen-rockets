@@ -1,5 +1,5 @@
 // `<uchusen-build>`: play, pause, scrub and a rate for one ship's build. It keeps the story clock and how many slots are built. Reduced motion shows numbered stills and does not play. The page hides it for a ship with no build order, and writes `build` and `at` on the address.
-import { flightNow, playFrame, stills, type PlayStep } from "./buildPlay.ts";
+import { flightNow, playFrame, steppedPlace, stills, type PlayStep } from "./buildPlay.ts";
 
 const HTMLBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
 
@@ -12,7 +12,9 @@ slot[name="speed"] { display: contents; }
 button { min-width: 44px; min-height: 44px; padding: 0.3rem 0.75rem; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 button[aria-pressed="true"] { font-weight: 700; }
 button:disabled { opacity: 0.45; cursor: default; }
-button:focus-visible, input:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+button:focus-visible, input:focus-visible, ::slotted(button:focus-visible) { outline: 2px solid currentColor; outline-offset: 2px; }
+::slotted(button) { min-width: 44px; min-height: 44px; padding: 0.3rem 0.75rem; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+::slotted(button[aria-pressed="true"]) { font-weight: 700; }
 input[type="range"] { flex: 1 1 10rem; min-width: 8rem; min-height: 44px; margin: 0; accent-color: var(--uchusen-accent, currentColor); }
 .now { margin: 0.45rem 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 `;
@@ -79,12 +81,16 @@ export class UchusenBuild extends HTMLBase {
   onMove: ((at: number) => void) | null = null;
   /** Called when Repeat is pressed. The page keeps it in the address. */
   onRepeat: ((on: boolean) => void) | null = null;
+  /** Called when play starts or stops, so a page can keep drawing while the story clock runs. */
+  onPlay: ((playing: boolean) => void) | null = null;
   /** A short state after the day line, such as the ring being sealed. Empty shows nothing. */
   private stageText = "";
   private order: readonly PlayStep[] | null = null;
   private place = 0;
   /** Story seconds in one real second. 1 is real time. 86400 is one story day a real second. */
   private rate = 1;
+  /** One flight takes about 30 real seconds, whatever the speed buttons say. */
+  private watchOn = false;
   private repeatOn = false;
   private timer: ReturnType<typeof setInterval> | null = null;
   /** The last tick. A late tick counts at most two real seconds, so a stall does not skip the build. */
@@ -115,6 +121,15 @@ export class UchusenBuild extends HTMLBase {
   set at(value: number) {
     this.place = Math.min(1, Math.max(0, value));
     if (this.parts) this.draw();
+  }
+
+  /** True while Watch a flight is on. */
+  get watch(): boolean {
+    return this.watchOn;
+  }
+
+  set watch(on: boolean) {
+    this.watchOn = on;
   }
 
   /** Play again from the keel when the build reaches the end. */
@@ -172,9 +187,11 @@ export class UchusenBuild extends HTMLBase {
   }
 
   private stop(): void {
+    const was = this.timer !== null;
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.dataset.playing = "false";
+    if (was) this.onPlay?.(false);
   }
 
   private start(): void {
@@ -182,12 +199,14 @@ export class UchusenBuild extends HTMLBase {
     if (this.place >= 1) this.place = 0;
     this.dataset.playing = "true";
     this.mark = globalThis.performance?.now() ?? Date.now();
+    this.onPlay?.(true);
+    this.draw();
+    this.onMove?.(this.place);
     this.timer = setInterval(() => {
       const now = globalThis.performance?.now() ?? Date.now();
       const elapsed = Math.min(2, Math.max(0, (now - this.mark) / 1000));
       this.mark = now;
-      const total = Math.max(1, playFrame(this.order ?? [], 1).total);
-      this.place = Math.min(1, this.place + (this.rate * elapsed) / DAY_S / total);
+      this.place = steppedPlace(this.order ?? [], this.place, elapsed, this.rate, this.watchOn);
       if (this.place >= 1 && this.repeatOn) this.place = 0;
       this.draw();
       this.onMove?.(this.place);

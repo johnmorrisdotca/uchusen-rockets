@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The yard's build moves** (MODULES-501): while the build player plays on the yard page the drones fly and weld in real time at every speed, and 'Watch a flight' fits the flight under way into about 30 seconds.
+- **The Figma-style mouse** (kazoku-ui 0.18.0): the wheel moves the view and Shift and the wheel moves it sideways; Ctrl, Command or Alt with the wheel, or a pinch, zooms; Space and a drag, or the middle button, moves it; Shift and a drag, or a two-finger twist, rolls.
 ## [0.14.0] - 2026-11-06
 
 Building in place with a working crew, the shipyard and its own page, the compare page's camera, orbit and deep zoom out to the Moon, the journey's date, planets in view, new views and arrival card, ship lights, three-axis turning, docked craft and module swaps, and Kyotori turning without jumps.

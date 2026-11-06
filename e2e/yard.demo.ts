@@ -28,3 +28,32 @@ test("the yard page jumps to a bay, lights the night, slides the free spine and 
   const fit = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(fit).toBeLessThanOrEqual(1);
 });
+
+test.describe("the build keeps moving while it plays", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("frames run, a drone moves within a second, one flight finishes in about 30 seconds, and a pause draws nothing more", async ({ page }) => {
+    await page.goto(URL);
+    const stage = page.getByTestId("yard-stage");
+    await expect(stage).toHaveAttribute("data-ready", "yes", { timeout: 60_000 });
+    await page.getByTestId("yard-spine").click();
+    await page.getByTestId("yard-build").click();
+    await page.getByTestId("build-play").click();
+    await expect(stage).toHaveAttribute("data-playing", "yes");
+    await expect.poll(async () => Number(await stage.getAttribute("data-frames"))).toBeGreaterThan(2);
+    await expect.poll(async () => stage.getAttribute("data-drone")).toBeTruthy();
+    const firstDrone = await stage.getAttribute("data-drone");
+    await expect.poll(async () => stage.getAttribute("data-drone"), { timeout: 5_000 }).not.toBe(firstDrone);
+    const built = async () => Number(((await page.getByTestId("build-now").textContent()) ?? "").match(/(\d+) of /)?.[1] ?? "0");
+    const before = await built();
+    await page.getByTestId("yard-watch").click();
+    await expect(page.getByTestId("yard-watch")).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(built, { timeout: 45_000 }).toBeGreaterThan(before);
+    await page.getByTestId("build-play").click();
+    await expect(stage).toHaveAttribute("data-playing", "no");
+    await page.waitForTimeout(300);
+    const held = Number(await stage.getAttribute("data-frames"));
+    await page.waitForTimeout(700);
+    expect(Number(await stage.getAttribute("data-frames"))).toBe(held);
+  });
+});

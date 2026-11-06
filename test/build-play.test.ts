@@ -1,7 +1,7 @@
 // The player reads the build order: the keel is underway at the start, everything is finished at the end, and a ship with no order is not offered.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PLAY_RATES, buildOf, playFrame, playFrom, stills } from "../src/buildPlay.ts";
+import { PLAY_RATES, WATCH_FLIGHT_S, buildOf, playFrame, playFrom, steppedPlace, stills } from "../src/buildPlay.ts";
 import { BUILD_DAYS } from "../src/model/fleet/ship-03/buildOrder.ts";
 import { ROCKETS } from "../src/rockets.ts";
 
@@ -34,6 +34,19 @@ test("the long ships are offered, and the address keeps the place", () => {
   assert.equal(frames.length, 4);
   assert.equal(frames[0].day, 0);
   assert.equal(frames[3].done.length, buildOf("miyamoto")?.length);
+});
+
+test("watch a flight finishes the flight underway in about 30 seconds, and 1× does not", () => {
+  const steps = [
+    { slot: "keel", start: 0, days: 100 },
+    { slot: "hull", start: 100, days: 300 },
+  ];
+  const watched = steppedPlace(steps, 0, WATCH_FLIGHT_S, 1, true);
+  assert.ok(Math.abs(watched - 0.25) < 1e-9);
+  assert.ok(playFrame(steps, watched).done.includes("keel"));
+  const slow = steppedPlace(steps, 0, WATCH_FLIGHT_S, 1, false);
+  assert.ok(slow < 0.001);
+  assert.equal(playFrame(steps, slow).done.length, 0);
 });
 
 test("the build row is offered for every variant of those ships, and for no other variant in the catalogue", () => {
