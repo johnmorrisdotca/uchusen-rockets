@@ -252,7 +252,8 @@ export class UchusenRocket extends HTMLBase {
   }
 
   /** Lets a page choose the turn, tip, roll, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
-  drive(choice: Partial<ViewChoice> | null): void {
+  drive(choice: (Partial<ViewChoice> & { reason?: string }) | null): void {
+    const reason = typeof choice?.reason === "string" ? choice.reason : "";
     const before = this.driven;
     if (choice === null) {
       this.driven = null;
@@ -271,7 +272,7 @@ export class UchusenRocket extends HTMLBase {
     }
     const now = this.driven;
     if (before && now && (Object.keys(now) as (keyof ViewChoice)[]).every((key) => before[key] === now[key])) return;
-    this.viewer?.drive(this.driven);
+    this.viewer?.drive(this.driven, reason);
     this.place();
   }
 

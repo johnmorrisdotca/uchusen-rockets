@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Changing ship eases to its size** (MODULES-504): picking a ship of another size keeps the old scale at the switch and then eases to Fit, so going from Kyotori (447 m) to Kaminari (1,815 m) zooms out to show the much larger ship, and the reverse zooms in; reduced motion jumps.
 - **Shorter fleet jets** (MODULES-479): a quad's glow reaches about four nozzle lengths, with a bright core at the bell and a faint edge that fades into black.
 - **The yard is painted** (MODULES-499): truss chords are white painted members with darker metal joints and braces, the walkway is blanket, and the frames catch a sky reflection with panel breaks and bolt rows, from ISS truss and Canadarm2 photographs.
 - **The yard's build moves** (MODULES-501): while the build player plays on the yard page the drones fly and weld in real time at every speed, and 'Watch a flight' fits the flight under way into about 30 seconds.
