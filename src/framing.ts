@@ -293,7 +293,17 @@ export function transitionReferenceDistance(oldDistance: number, newDistance: nu
   return Math.max(oldDistance, newDistance) * 20;
 }
 
-/** Ease-in-out: slow at both ends, so a camera move does not start or stop with a jerk. */
+/**
+ * Ease-in-out: slow at both ends, so a camera move does not start or stop with a jerk.
+ * @param t How far through the move, from 0 to 1 (values outside are held at the ends).
+ * @returns The eased progress, from 0 to 1.
+ * @example
+ * ```ts
+ * import { easeInOut } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(easeInOut(0.5)); // 0.5
+ * ```
+ */
 export function easeInOut(t: number): number {
   const k = Math.min(1, Math.max(0, t));
   return k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2;
