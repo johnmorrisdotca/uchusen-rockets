@@ -31,6 +31,7 @@ async function read(page: Page): Promise<{ selected: string; shift: number; yaw:
 }
 
 async function craftPoint(page: Page): Promise<{ x: number; y: number }> {
+  await heroOf(page).scrollIntoViewIfNeeded();
   const spot = await heroOf(page).evaluate((node) => {
     const el = node as HTMLElement & { craftAt(x: number, y: number): number | null };
     const canvas = node.shadowRoot?.querySelector("canvas");
@@ -40,6 +41,8 @@ async function craftPoint(page: Page): Promise<{ x: number; y: number }> {
       for (let x = 0.3; x <= 0.75; x += 0.08) {
         const px = rect.x + rect.width * x;
         const py = rect.y + rect.height * y;
+        const top = document.elementFromPoint(px, py);
+        if (top !== el) continue;
         if (el.craftAt(px, py) !== null) return { x: px, y: py };
       }
     }
@@ -69,7 +72,11 @@ async function clickEmpty(page: Page): Promise<void> {
       { x: c.x + 6, y: c.bottom - 6 },
       { x: c.right - 6, y: c.bottom - 6 },
     ];
-    return corners.find((point) => point.x < r.left - 1 || point.x > r.right + 1 || point.y < r.top - 1 || point.y > r.bottom + 1) ?? null;
+    const hero = canvas.getRootNode() instanceof ShadowRoot ? (canvas.getRootNode() as ShadowRoot).host : null;
+    return corners.find((point) => {
+      const outside = point.x < r.left - 1 || point.x > r.right + 1 || point.y < r.top - 1 || point.y > r.bottom + 1;
+      return outside && document.elementFromPoint(point.x, point.y) === hero;
+    }) ?? null;
   });
   expect(spot).not.toBeNull();
   await page.mouse.click(spot!.x, spot!.y);
@@ -126,12 +133,13 @@ test("Escape clears the choice", async ({ page }) => {
 
 test("a drag moves only the chosen craft", async ({ page }) => {
   await ready(page, rockets);
-  const spot = await craftPoint(page);
+  let spot = await craftPoint(page);
   await page.mouse.click(spot.x, spot.y);
   await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
+  spot = await craftPoint(page);
   await page.mouse.move(spot.x, spot.y);
   await page.mouse.down();
-  await page.mouse.move(spot.x + 120, spot.y, { steps: 8 });
+  await page.mouse.move(spot.x + 70, spot.y, { steps: 8 });
   await page.mouse.up();
   await expect.poll(() => read(page).then((row) => row.shift)).toBeGreaterThan(1);
 });
@@ -149,8 +157,10 @@ test("the arrow keys move the chosen craft", async ({ page }) => {
 
 test("Shift and a drag tilts the chosen craft", async ({ page }) => {
   await ready(page, rockets);
-  const spot = await craftPoint(page);
+  let spot = await craftPoint(page);
   await page.mouse.click(spot.x, spot.y);
+  await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
+  spot = await craftPoint(page);
   await page.keyboard.down("Shift");
   await page.mouse.move(spot.x, spot.y);
   await page.mouse.down();
@@ -189,18 +199,20 @@ test("a tap chooses the craft", async ({ page }) => {
 
 test("a one-finger drag moves the chosen craft", async ({ page }) => {
   await ready(page, rockets);
-  const spot = await craftPoint(page);
+  let spot = await craftPoint(page);
   await touch(page, [spot]);
   await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
-  await touch(page, [spot], [{ x: spot.x + 100, y: spot.y }]);
+  spot = await craftPoint(page);
+  await touch(page, [spot], [{ x: spot.x + 70, y: spot.y }]);
   await expect.poll(() => read(page).then((row) => row.shift)).toBeGreaterThan(1);
 });
 
 test("a two-finger twist rolls the chosen craft", async ({ page }) => {
   await ready(page, rockets);
-  const spot = await craftPoint(page);
+  let spot = await craftPoint(page);
   await touch(page, [spot]);
   await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
+  spot = await craftPoint(page);
   await touch(
     page,
     [{ x: spot.x - 50, y: spot.y }, { x: spot.x + 50, y: spot.y }],
@@ -209,11 +221,79 @@ test("a two-finger twist rolls the chosen craft", async ({ page }) => {
   await expect.poll(() => read(page).then((row) => Math.abs(row.roll))).toBeGreaterThan(20);
 });
 
-test("Tab chooses the craft", async ({ page }) => {
+test("Tab chooses the craft and Enter opens the card", async ({ page }) => {
   await ready(page, rockets);
   await focusCanvas(page);
   await page.keyboard.press("Tab");
   await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
+  await expect(page.locator('[data-testid="craft-card"]')).not.toHaveAttribute("open", "");
+  await page.keyboard.press("Enter");
+  await expect(page.locator('[data-testid="craft-card"]')).toHaveAttribute("open", "");
+  await expect(page.locator('[data-testid="craft-name"]')).not.toBeEmpty();
+});
+
+test("Shift-Tab chooses the craft", async ({ page }) => {
+  await ready(page, rockets);
+  await focusCanvas(page);
+  await page.keyboard.press("Shift+Tab");
+  await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
+});
+
+test("Tab and Shift-Tab cycle the craft on the compare page", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) < 700, "a phone shows one craft, so there is nothing to cycle");
+  await ready(page, compare);
+  await focusCanvas(page);
+  await page.keyboard.press("Tab");
+  const first = await read(page).then((row) => row.selected);
+  expect(first).not.toBe("");
+  await page.keyboard.press("Tab");
+  const second = await read(page).then((row) => row.selected);
+  expect(second).not.toBe(first);
+  await page.keyboard.press("Shift+Tab");
+  await expect.poll(() => read(page).then((row) => row.selected)).toBe(first);
+});
+
+async function emptyPoint(page: Page): Promise<{ x: number; y: number }> {
+  const spot = await heroOf(page).evaluate((node) => {
+    const canvas = node.shadowRoot?.querySelector("canvas");
+    const ring = node.shadowRoot?.querySelector("[data-testid=craft-outline]");
+    if (!(canvas instanceof HTMLElement) || !(ring instanceof HTMLElement)) return null;
+    const c = canvas.getBoundingClientRect();
+    const r = ring.getBoundingClientRect();
+    const corners = [
+      { x: c.x + 6, y: c.y + 6 },
+      { x: c.right - 6, y: c.y + 6 },
+      { x: c.x + 6, y: c.bottom - 6 },
+      { x: c.right - 6, y: c.bottom - 6 },
+    ];
+    const hero = canvas.getRootNode() instanceof ShadowRoot ? (canvas.getRootNode() as ShadowRoot).host : null;
+    return corners.find((point) => {
+      const outside = point.x < r.left - 1 || point.x > r.right + 1 || point.y < r.top - 1 || point.y > r.bottom + 1;
+      return outside && document.elementFromPoint(point.x, point.y) === hero;
+    }) ?? null;
+  });
+  if (!spot) throw new Error("no empty ground");
+  return spot;
+}
+
+test("a two-finger drag down tilts the chosen craft", async ({ page }) => {
+  await ready(page, rockets);
+  let spot = await craftPoint(page);
+  await touch(page, [spot]);
+  await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
+  spot = await craftPoint(page);
+  await touch(page, [{ x: spot.x - 40, y: spot.y }, { x: spot.x + 40, y: spot.y }], [{ x: spot.x - 40, y: spot.y + 90 }, { x: spot.x + 40, y: spot.y + 90 }]);
+  await expect.poll(() => read(page).then((row) => Math.abs(row.tilt))).toBeGreaterThan(5);
+});
+
+test("a tap on empty ground clears the choice", async ({ page }) => {
+  await ready(page, rockets);
+  const spot = await craftPoint(page);
+  await touch(page, [spot]);
+  await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
+  const empty = await emptyPoint(page);
+  await touch(page, [empty]);
+  await expect.poll(() => read(page).then((row) => row.selected)).toBe("");
 });
 
 test("Compare uses the same card", async ({ page }) => {

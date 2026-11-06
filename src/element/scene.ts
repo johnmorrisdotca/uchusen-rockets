@@ -593,10 +593,13 @@ export class RocketViewer {
     return this.picked;
   }
 
-  /** Chooses a craft, or clears the choice. The gold box marks the one chosen. */
-  selectCraft(craft: number | null): void {
+  /** Chooses a craft, or clears the choice. The gold box marks the one chosen. `open` asks the page to show its card. */
+  selectCraft(craft: number | null, open = false): void {
     if (craft !== null && !this.craftBoxes().some((box) => box.craft === craft)) return;
-    if (craft === this.picked) return;
+    if (craft === this.picked) {
+      if (open) this.openCard();
+      return;
+    }
     this.picked = craft;
     if (craft === null) delete this.canvas.dataset.selected;
     else {
@@ -604,10 +607,15 @@ export class RocketViewer {
       this.aimOf(craft);
     }
     this.canvas.dataset.craftSpin = this.craftSpin;
+    this.canvas.style.touchAction = craft !== null || this.floating ? "none" : "pan-y";
     this.placeRing();
     this.writeCraft();
-    this.canvas.dispatchEvent(new CustomEvent("uchusen-select", { detail: { craft }, bubbles: true, composed: true }));
+    this.canvas.dispatchEvent(new CustomEvent("uchusen-select", { detail: { craft, open }, bubbles: true, composed: true }));
     this.wake();
+  }
+
+  private openCard(): void {
+    this.canvas.dispatchEvent(new CustomEvent("uchusen-card", { bubbles: true, composed: true }));
   }
 
   /** Puts a craft back where the address left it, and chooses it. Metres and degrees. */
@@ -621,7 +629,7 @@ export class RocketViewer {
     this.canvas.dataset.craftSpin = spin;
     this.picked = null;
     this.applyDrift();
-    this.selectCraft(craft);
+    this.selectCraft(craft, true);
   }
 
   /** Moves the chosen craft by a page distance, in pixels. */
@@ -2894,6 +2902,11 @@ export class RocketViewer {
       event.preventDefault();
       event.stopPropagation();
     };
+    if (event.key === "Enter") {
+      this.openCard();
+      take();
+      return true;
+    }
     if (event.key === "Escape") {
       this.selectCraft(null);
       take();
@@ -3145,7 +3158,7 @@ export class RocketViewer {
       if (this.picked !== null) this.selectCraft(null);
       return;
     }
-    if (craft !== this.picked) this.selectCraft(craft);
+    this.selectCraft(craft, true);
   }
 
   /** The named part under the pointer, walking from the hit face up to the part's holder. */
@@ -3318,8 +3331,9 @@ export class RocketViewer {
     const dy = mid.y - this.twistMid.y;
     this.twistBase = ang;
     this.twistMid = mid;
-    if (Math.abs(d) > 0.02) this.addAim(this.picked, 0, 0, (d * 180) / Math.PI);
-    else if (Math.abs(dx) >= Math.abs(dy)) this.addAim(this.picked, dx * 0.35, 0, 0);
+    if (Math.abs(d) > 0.004) this.addAim(this.picked, 0, 0, (d * 180) / Math.PI);
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    if (Math.abs(dx) >= Math.abs(dy)) this.addAim(this.picked, dx * 0.35, 0, 0);
     else this.addAim(this.picked, 0, -dy * 0.35, 0);
   }
 

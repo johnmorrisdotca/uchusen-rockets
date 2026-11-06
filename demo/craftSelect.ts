@@ -38,11 +38,31 @@ export function mountCraftSelect(opts: {
   card.title = say("craftCard");
   const body = document.createElement("div");
   body.className = "craft-card";
+  body.style.font = "1rem/1.35 system-ui, sans-serif";
+  body.style.minWidth = "12rem";
   const help = document.createElement("p");
   help.slot = "help";
   help.textContent = say("craftHelp");
   card.append(body, help);
-  document.body.append(card);
+  card.style.pointerEvents = "auto";
+  const layer = document.createElement("div");
+  layer.dataset.testid = "craft-card-layer";
+  layer.style.position = "fixed";
+  layer.style.top = "12px";
+  layer.style.right = "12px";
+  layer.style.bottom = "12px";
+  layer.style.left = "12px";
+  layer.style.pointerEvents = "none";
+  layer.style.zIndex = "30";
+  layer.append(card);
+  document.body.append(layer);
+  const narrow = window.matchMedia("(max-width: 700px)");
+  const fitCard = (): void => {
+    card.style.maxHeight = narrow.matches ? "36vh" : "";
+    card.style.overflow = narrow.matches ? "auto" : "";
+  };
+  fitCard();
+  narrow.addEventListener("change", fitCard);
   card.open = false;
 
   let craft: number | null = null;
@@ -92,7 +112,7 @@ export function mountCraftSelect(opts: {
   const place = read("craftPlace", "craft-place");
   const angle = read("craftAngle", "craft-angle");
 
-  const fill = (next: number | null): void => {
+  const fill = (next: number | null, open: boolean): void => {
     craft = next;
     if (next === null) {
       delete stage.dataset.selected;
@@ -122,7 +142,7 @@ export function mountCraftSelect(opts: {
       look.append(option);
     }
     card.title = facts?.name || say("craftCard");
-    card.open = true;
+    card.open = open;
     filling = false;
     address.set("pick", String(next));
     readPose();
@@ -160,19 +180,19 @@ export function mountCraftSelect(opts: {
     address.set("craftSpin", mode === "off" ? null : mode);
   });
 
-  new MutationObserver(() => {
-    if (craft !== null && !card.open) hero.selectCraft(null);
-  }).observe(card, { attributes: true, attributeFilter: ["open"] });
+  hero.addEventListener("uchusen-card", () => {
+    if (craft !== null) card.open = true;
+  });
 
   hero.addEventListener("uchusen-select", (event) => {
-    const detail = (event as CustomEvent<{ craft: number | null }>).detail;
+    const detail = (event as CustomEvent<{ craft: number | null; open?: boolean }>).detail;
     const next = detail?.craft ?? null;
     if (next !== null && hold === null) {
       const now = bar.state;
       hold = { yaw: now.yaw, tilt: now.tilt, roll: now.roll ?? 0, zoom: now.zoom, panX: now.panX, panY: now.panY };
     }
     if (next === null) hold = null;
-    fill(next);
+    fill(next, detail?.open === true);
   });
   hero.addEventListener("uchusen-draw", () => {
     if (craft !== null) readPose();
