@@ -684,7 +684,7 @@ function buildPanel(): void {
     ...(trip.escape ? ([[ "escsurf", say("jEscapeSurface"), speedWords(trip.escape.surfaceKmS * 1000) ], [ "escpark", say("jEscapePark"), speedWords(trip.escape.parkingKmS * 1000) ]] as [string, string, string][]) : []),
     ["peak", say("jPeakSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     ["radiation", say("jRadiation"), say("jRadiationNone")],
-    ["cmb", say("jCmb"), say("jCmbNone")],
+    ["cmb", say("jCmb"), say("jCmbValue")],
     ["fuel", say("jFuel"), fuelWords()],
     ["ratio", say("jMassRatio"), ratioWords()],
     ["payload", say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],

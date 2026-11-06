@@ -23,7 +23,7 @@ These are in `src/journey/` and on `demo/journey.html`. They are not built again
 4. **Escape speed as its own line.** The burn is shown. The escape speed of the parking orbit, and the body's escape speed from the surface, are not labelled. One line each, from the same `mu` the burn already uses.
 5. **A gravity assist.** A direct Hohmann is what the page flies. A later slice can offer one swing past a third body (Jupiter on the way out), with the delta-v it saves and a path that says it is an assist. The Moon's help, above, stays as it is.
 6. **Radiation and dust.** On the panel. The ship bibles describe shields and name no figure, so the row says no source. Not a simulation.
-7. **The CMB ahead.** On the panel. This package names no source for the temperature, so the row says no source and prints none. A temperature waits for a named source.
+7. **The CMB ahead.** On the panel: 2.72548 K ± 0.00057 K, Fixsen 2009, ApJ 707, 916, from COBE/FIRAS. Radiation and dust stay "no source".
 
 ## What done looks like for this list
 
