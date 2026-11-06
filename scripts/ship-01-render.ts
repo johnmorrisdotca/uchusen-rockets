@@ -49,6 +49,8 @@ interface Shot {
   ortho?: number;
   /** Fit the camera's distance so the models fill this share of the picture's width or height (0.8 is the review's rule). */
   fill?: number;
+  /** Far clip, metres. The default 3000 hides a yard seen from a few kilometres away. */
+  far?: number;
   /** Points of the model whose place in the picture is written beside it, in pixels, for callouts. */
   points?: { id: string; at: [number, number, number] }[];
   /** The lit look: drive flames (a cone from `at` along `dir`), lights that glow (nav lights, strobes) and floodlights. */
@@ -129,7 +131,7 @@ window.draw = async (job, shot) => {
   const [w, h] = shot.size ?? [1600, 900];
   renderer.setPixelRatio(1);
   renderer.setSize(w, h);
-  const camera = shot.ortho ? new THREE.OrthographicCamera((-shot.ortho * w) / h / 2, (shot.ortho * w) / h / 2, shot.ortho / 2, -shot.ortho / 2, 0.1, 3000) : new THREE.PerspectiveCamera(shot.fov ?? 35, w / h, 0.05, 3000);
+  const camera = shot.ortho ? new THREE.OrthographicCamera((-shot.ortho * w) / h / 2, (shot.ortho * w) / h / 2, shot.ortho / 2, -shot.ortho / 2, 0.1, 3000) : new THREE.PerspectiveCamera(shot.fov ?? 35, w / h, shot.far ? 2 : 0.05, shot.far ?? 3000);
   camera.up.set(...(shot.up ?? [0, 0, 1]));
   camera.position.set(...shot.eye);
   camera.lookAt(...shot.target);

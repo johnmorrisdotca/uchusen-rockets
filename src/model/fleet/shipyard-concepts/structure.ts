@@ -1,6 +1,9 @@
 // The yard's working structure: a box truss, a lattice in place of a slab, a jointed boom and a crane. Sized so a member reads beside a 1.8 km ship. Pure.
 import type { Piece } from "../../pieces.ts";
-import { ball, beam, cub, iBeam, pipeRun, rod, strut } from "../kaminari-concepts/adapter.ts";
+import { DRAGON_DRAWS, capsule, trunk } from "../../falcon.ts";
+import { dronePieces } from "../drone/index.ts";
+import { ball, beam, cub, hoop, iBeam, pipeRun, place, rod, strut } from "../kaminari-concepts/adapter.ts";
+import { scalePieces } from "../kaminari-concepts/scale.ts";
 
 type V3 = [number, number, number];
 
@@ -112,61 +115,91 @@ export function mouth(x0: number, x1: number, z0: number, z1: number, y: number)
   ];
 }
 
-/** Rows of drone stalls, a few craft and visiting-ship berths, and three empty pads marked off for stores. */
+let droneParked: Piece[] | null = null;
+const oneDrone = (): Piece[] => (droneParked ??= scalePieces(dronePieces(true), 8));
+
+let dragonParked: Piece[] | null = null;
+const oneDragon = (): Piece[] => {
+  if (dragonParked) return dragonParked;
+  const drawn = DRAGON_DRAWS["dragon-2"];
+  dragonParked = [...trunk(drawn), ...place(capsule(drawn), { at: [0, drawn.trunk - drawn.nest, 0] })];
+  return dragonParked;
+};
+
+/** A marked pad: an outline and a lamp on each corner, and nothing else. */
+function pad(x0: number, x1: number, y0: number, y1: number, z: number): Piece[] {
+  const out: Piece[] = [
+    rod("hull-grey-dark", [x0, y0, z], [x1, y0, z], 1.2, 6),
+    rod("hull-grey-dark", [x1, y0, z], [x1, y1, z], 1.2, 6),
+    rod("hull-grey-dark", [x1, y1, z], [x0, y1, z], 1.2, 6),
+    rod("hull-grey-dark", [x0, y1, z], [x0, y0, z], 1.2, 6),
+  ];
+  for (const [x, y] of [[x0, y0], [x1, y0], [x0, y1], [x1, y1]] as const) out.push(ball("lamp-amber", [x, y, z + 4], 1.4));
+  return out;
+}
+
+/** Drone rows and a few real small ships, each on a marked pad. Lamps are on the pad corners only. */
 export function parking(x0: number, y0: number, z0: number): Piece[] {
   const out: Piece[] = [];
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 12; col++) {
-      const x = x0 + col * 26;
-      const y = y0 + row * 30;
-      out.push(rod("hull-grey", [x - 8, y, z0], [x - 8, y, z0 + 16], 2.2, 6));
-      out.push(rod("hull-grey", [x + 8, y, z0], [x + 8, y, z0 + 16], 2.2, 6));
-      out.push(cub("lamp-amber", [x - 3, x + 3], [y + 1, y + 7], [z0 + 14, z0 + 18]));
-      out.push(ball("hull-white", [x, y + 4, z0 + 8], 5));
-      if (col % 3 === 0) out.push(cub("flood", [x - 6, x + 6], [y - 2, y + 6], [z0 - 0.6, z0 + 0.4]));
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 8; col++) {
+      const x = x0 + col * 22;
+      const y = y0 + row * 22;
+      out.push(...pad(x - 8, x + 8, y - 8, y + 8, z0));
+      out.push(...place(oneDrone(), { at: [x, y, z0 + 1] }));
     }
   }
-  for (let i = 0; i < 6; i++) {
-    const y = y0 + i * 48;
-    const x = x0 + 340;
-    out.push(rod("hull-grey", [x, y, z0], [x + 40, y, z0], 3, 6));
-    out.push(rod("hull-white", [x + 16, y + 6, z0 + 8], [x + 16, y + 36, z0 + 8], 5, 8));
-    out.push(cub("nav-green", [x + 36, x + 42], [y + 40, y + 46], [z0 + 6, z0 + 12]));
-    out.push(cub("nav-red", [x - 2, x + 4], [y, y + 6], [z0 + 6, z0 + 12]));
-    out.push(cub("flood", [x + 10, x + 22], [y + 16, y + 24], [z0 + 16, z0 + 22]));
+  for (let i = 0; i < 3; i++) {
+    const x = x0 + 200;
+    const y = y0 + i * 40;
+    out.push(...pad(x - 8, x + 8, y, y + 28, z0));
+    out.push(...place(oneDragon(), { at: [x, y + 2, z0] }));
   }
-  for (let i = 0; i < 4; i++) {
-    const y = y0 + i * 90;
-    const x = x0 + 430;
-    out.push(rod("hull-grey", [x, y, z0], [x, y + 70, z0], 4, 8));
-    out.push(rod("hull-white", [x + 22, y + 8, z0 + 10], [x + 22, y + 62, z0 + 10], 8, 10));
-    out.push(cub("nav-green", [x - 6, x], [y + 64, y + 72], [z0 + 6, z0 + 12]));
-    out.push(cub("flood", [x + 6, x + 16], [y + 30, y + 40], [z0 + 18, z0 + 26]));
-  }
-  for (let k = 0; k < 8; k++) {
-    const y = y0 - 36 - k * 26;
-    out.push(cub("nav-green", [x0 - 16, x0 - 8], [y, y + 6], [z0 + 4, z0 + 12]));
-    out.push(cub("nav-red", [x0 + 300, x0 + 308], [y, y + 6], [z0 + 4, z0 + 12]));
-  }
-  const pads: readonly (readonly [number, number, number, number])[] = [
-    [x0, x0 + 180, y0 + 270, y0 + 400],
-    [x0 + 210, x0 + 390, y0 + 270, y0 + 400],
-    [x0 + 420, x0 + 620, y0 + 270, y0 + 430],
+  out.push(...pad(x0, x0 + 150, y0 + 110, y0 + 220, z0));
+  out.push(...pad(x0 + 170, x0 + 300, y0 + 110, y0 + 240, z0));
+  return out;
+}
+
+/** A viewing room. Z is up. The low-x face is open toward the slot, so a camera inside looks out at the ship. */
+function booth(x: number, y: number, z: number): Piece[] {
+  const dx = 44;
+  const dy = 36;
+  const dz = 22;
+  return [
+    cub("hull-grey", [x, x + dx], [y, y + dy], [z, z + 2]),
+    cub("hull-grey", [x, x + dx], [y, y + dy], [z + dz - 2, z + dz]),
+    cub("hull-white", [x + dx - 2, x + dx], [y, y + dy], [z, z + dz]),
+    cub("hull-white", [x, x + dx], [y, y + 2], [z, z + dz]),
+    cub("hull-white", [x, x + dx], [y + dy - 2, y + dy], [z, z + dz]),
+    cub("window", [x - 1, x + 1], [y + 2, y + dy - 2], [z + dz - 4, z + dz - 2]),
   ];
-  for (const [xa, xb, ya, yb] of pads) {
-    out.push(rod("hull-grey-dark", [xa, ya, z0], [xb, ya, z0], 2.4, 6));
-    out.push(rod("hull-grey-dark", [xb, ya, z0], [xb, yb, z0], 2.4, 6));
-    out.push(rod("hull-grey-dark", [xb, yb, z0], [xa, yb, z0], 2.4, 6));
-    out.push(rod("hull-grey-dark", [xa, yb, z0], [xa, ya, z0], 2.4, 6));
-    for (const [px, py] of [[xa, ya], [xb, ya], [xa, yb], [xb, yb]] as const) {
-      out.push(rod("hull-grey", [px, py, z0], [px, py, z0 + 30], 3.2, 6));
-      out.push(ball("lamp-amber", [px, py, z0 + 32], 5));
-    }
+}
+
+/** A rectangular hangar, an elevator along the yard, four viewing booths and two visitor ports joined to the elevator by a walkway. */
+export function visitors(side: number, slotX: number): Piece[] {
+  const out: Piece[] = [];
+  const y0 = 160;
+  const y1 = 820;
+  const z0 = -50;
+  const z1 = 90;
+  const wide = 240;
+  out.push(...latticeWall(side, y0, y1, z0, z1));
+  out.push(...latticeWall(side + wide, y0, y1, z0, z1));
+  out.push(...lattice(side, side + wide, y0, y1, z1));
+  out.push(...lattice(side, side + wide, y0, y1, z0));
+  out.push(...iBeam("hull-white", [side - 30, 30, 48], [side - 30, 1970, 48], UP, 14, 8));
+  out.push(cub("hull-white", [side - 48, side - 12], [640, 690], [24, 78]));
+  out.push(...cabinWindows(side - 30, 648, 76));
+  out.push(cub("hull-white", [side - 48, side - 12], [1500, 1550], [24, 78]));
+  out.push(...cabinWindows(side - 30, 1508, 76));
+  out.push(...booth(side - 80, 40, 70));
+  out.push(...booth(side - 80, 420, 160));
+  out.push(...booth(slotX + 150, 940, 24));
+  out.push(...booth(side - 80, 1860, 70));
+  for (const y of [120, 1860]) {
+    out.push(...place([hoop("hull-white", 32, y, 4, 28, 8)], { at: [side + 80, 0, z0 - 40] }));
+    out.push(...iBeam("hull-white", [side - 30, y, 48], [side + 80, y, z0 - 40], UP, 10, 7));
   }
-  out.push(ball("hull-grey", [x0 + 250, y0 + 330, z0 + 16], 14));
-  out.push(ball("hull-grey", [x0 + 300, y0 + 360, z0 + 16], 14));
-  out.push(cub("hull-grey", [x0 + 470, x0 + 476], [y0 + 320, y0 + 350], [z0 + 2, z0 + 24]));
-  out.push(cub("hull-grey", [x0 + 494, x0 + 500], [y0 + 320, y0 + 350], [z0 + 2, z0 + 24]));
   return out;
 }
 

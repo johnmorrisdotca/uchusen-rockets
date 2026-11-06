@@ -29,44 +29,35 @@ const jobs: unknown[] = [];
 for (const yard of yardConcepts()) {
   const pieces = [...yard.pieces(), ...place(ship, { at: [yard.shipAt[0], yard.shipAt[1], yard.shipAt[2]] })];
   const made = write(yard.id, [{ name: yard.id, pieces, at: [0, 0, 0] }]);
-  const len = Math.max(made.max[1] - made.min[1], made.max[0] - made.min[0], made.max[2] - made.min[2]);
+  const centre: V3 = [(made.min[0] + made.max[0]) / 2, (made.min[1] + made.max[1]) / 2, (made.min[2] + made.max[2]) / 2];
+  const len = made.max[1] - made.min[1];
   console.log(yard.id, "pieces", pieces.length, "span", len.toFixed(0));
-  // Down the slot from outside the tail. No fill: a fit would back away the moment a chord crosses the lens.
-  const aim: V3 = [yard.shipAt[0], 640, yard.shipAt[2]];
-  const wide: V3 = [yard.shipAt[0] + 70, -420, yard.shipAt[2] + 90];
+  // Outside, above and to one side, a bit over two yard-lengths away. The same eye for day and night.
+  const eye: V3 = [centre[0] + len * 1.7, centre[1] - len * 1.15, centre[2] + len * 1.15];
   const shots: unknown[] = [{
     name: yard.id,
-    eye: wide,
-    target: aim,
+    eye,
+    target: centre,
     up: [0, 0, 1],
-    fov: 38,
+    fov: 18,
+    far: 14000,
     size: [1440, 900],
-    shadow: len * 0.5,
-    shadowBias: 0.006,
+    shadow: len * 0.8,
+    shadowBias: 0.004,
     look: "painted",
-    sunDir: [0.4, 0.8, 0.5],
-  }, {
-    name: `${yard.id}-lit`,
-    eye: [yard.shipAt[0] - 40, -280, yard.shipAt[2] + 140],
-    target: aim,
-    up: [0, 0, 1],
-    fov: 42,
-    size: [1440, 900],
-    look: "lit",
-    glow: 2.6,
-    sun: 0.08,
-    shadow: len * 0.4,
+    sunDir: [0.35, 0.7, 0.6],
   }, {
     name: `${yard.id}-night`,
-    eye: [yard.shipAt[0] + 120, -260, 220],
-    target: [yard.shipAt[0] + 280, 140, -20],
+    eye,
+    target: centre,
     up: [0, 0, 1],
-    fov: 42,
+    fov: 18,
+    far: 14000,
     size: [1440, 900],
     look: "lit",
-    glow: 3.4,
-    sun: 0.04,
-    shadow: 400,
+    glow: 3.2,
+    sun: 0.05,
+    shadow: len * 0.6,
   }];
   for (const view of yard.close) {
     shots.push({
@@ -74,7 +65,7 @@ for (const yard of yardConcepts()) {
       eye: [...view.eye],
       target: [...view.at],
       up: [0, 0, 1],
-      fov: 32,
+      fov: view.name === "booth" ? 78 : 32,
       size: [1440, 900],
       look: "painted",
       sunDir: [0.3, 0.7, 0.5],
