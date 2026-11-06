@@ -139,3 +139,54 @@ export function stills(steps: readonly PlayStep[], count = 6): PlayFrame[] {
   const n = Math.max(2, Math.floor(count));
   return Array.from({ length: n }, (_, i) => playFrame(steps, i / (n - 1)));
 }
+
+/** English names for the flights a reader sees. A slot with none is titled from its id. */
+const FLIGHT_TITLES: Readonly<Record<string, string>> = {
+  drive: "Drive",
+  engineering: "Engineering",
+  "fuel-aft": "Aft tanks",
+  "fuel-fore": "Forward tanks",
+  habitat: "Habitat ring",
+  command: "Command citadel",
+  bow: "Bow",
+  "drive-collar": "Shield collar",
+  "hangar-starboard": "Starboard hangar",
+  "hangar-port": "Port hangar",
+  "hangar-starboard-fore": "Forward starboard hangar",
+  "hangar-port-aft": "Aft port hangar",
+  pod: "Mission pod",
+  array: "Solar array",
+  "radiators-dorsal": "Dorsal radiators",
+  "radiators-ventral": "Ventral radiators",
+  "exterior-load": "Hung craft",
+  spine: "Spine",
+  keel: "Keel",
+  reactors: "Reactors",
+  shield: "Bow shield",
+};
+
+const flightTitle = (slot: string): string => FLIGHT_TITLES[slot] ?? slot.split("-").map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word)).join(" ");
+
+/**
+ * The assembly flight underway at `at`: flights are the build steps in the order they start, named like an ISS flight.
+ *
+ * @param steps The ship's build order.
+ * @param at How far through the build, from 0 to 1.
+ * @returns The flight number, the slot and its title, or null when there are no steps.
+ * @example
+ * ```ts
+ * import { buildOf, flightNow } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const now = flightNow(buildOf("miyamoto") ?? [], 0);
+ * console.log(now?.n, now?.title);
+ * ```
+ */
+export function flightNow(steps: readonly PlayStep[], at: number): { n: number; slot: string; title: string } | null {
+  if (steps.length === 0) return null;
+  const order = [...steps].sort((a, b) => a.start - b.start || a.slot.localeCompare(b.slot));
+  const frame = playFrame(steps, at);
+  const started = order.filter((step) => step.start <= frame.day + 1e-9);
+  const going = started.filter((step) => frame.going.includes(step.slot));
+  const current = (going.length > 0 ? going : started).at(-1) ?? order[0];
+  return { n: order.indexOf(current) + 1, slot: current.slot, title: flightTitle(current.slot) };
+}

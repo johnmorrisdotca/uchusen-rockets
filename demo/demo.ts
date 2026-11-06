@@ -21,6 +21,7 @@ import { aimOrbit, companionsFor, frameSky, orbitCatalogue, paintThumbs, placeSk
 import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
+import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
 
 defineUchusenBuild();
 
@@ -181,6 +182,39 @@ function chip(label: string, testid: string, on: () => void, key?: string): HTML
 const press = (group: HTMLElement, chosen: string) => {
   for (const button of group.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === chosen));
 };
+
+/** One row of modules for each hardpoint the ship can change. The choice stays in the address. */
+function drawSwaps(): void {
+  const mounts = mountsOf(state.rocket);
+  byId("swap-field").hidden = mounts.length === 0;
+  const box = byId("swaps");
+  box.replaceChildren();
+  if (mounts.length === 0) return;
+  const chosen = chosenSwap(state.rocket, state.variant, address.get("swap"));
+  for (const mount of mounts) {
+    const row = el("div", { className: "chips" });
+    row.setAttribute("role", "group");
+    row.setAttribute("aria-label", say(`swapSlot_${mount.slot}`));
+    for (const one of mount.choices) {
+      row.append(chip(one.name, `swap-${mount.slot}-${one.id}`, () => {
+        address.set("swap", swapQuery(state.rocket, state.variant, { ...chosen, [mount.slot]: one.id }));
+        renderMain();
+      }, `swap_${one.id}`));
+    }
+    press(row, `swap-${mount.slot}-${chosen[mount.slot]}`);
+    box.append(row);
+  }
+}
+
+/** Puts the address's modules on the ship. A choice that is already the variant is dropped. */
+function applySwap(): void {
+  const raw = address.get("swap");
+  const parts = swapParts(state.rocket, state.variant, raw);
+  if (raw && !parts) address.set("swap", null);
+  const next = parts ? { rocket: state.rocket, variant: state.variant, parts } : null;
+  if (JSON.stringify(hero.description) !== JSON.stringify(next)) hero.description = next;
+  drawSwaps();
+}
 
 const metres = (value: number) => `${value} m`;
 
@@ -402,6 +436,7 @@ function renderMain() {
   (byId("turn").querySelector('[data-testid="compare-open"]') as HTMLAnchorElement).href = `compare.html?${new URLSearchParams({ rocket: state.rocket, variant: state.variant })}`;
   hero.setAttribute("rocket", state.rocket);
   hero.setAttribute("variant", state.variant);
+  applySwap();
   hero.setAttribute("show", state.show);
   hero.setAttribute("look", state.look);
   hero.setAttribute("view", state.view);
@@ -979,7 +1014,11 @@ function setWords() {
     day: say("buildDay"),
     done: say("buildDone"),
     rate: say("buildRate"),
+    flight: say("buildFlight"),
   };
+  const titles: Record<string, string> = {};
+  for (const key of Object.keys(WORDS.en)) if (key.startsWith("flight_")) titles[key.slice("flight_".length)] = say(key);
+  byId<UchusenBuild>("build-bar").titles = titles;
 }
 function speak() {
   setWords();

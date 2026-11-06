@@ -39,7 +39,7 @@ export { cleanWay, DEFAULT_SPIN, spinOf } from "./spin.ts";
 export type { Spin, Way } from "./spin.ts";
 export { FLIGHTS } from "./data/flights.ts";
 export { burnsOf, clockWords, FlightClock, flightOf, frameAt, lastPosition, phaseAt, phasePosition, SECONDS_PER_PHASE } from "./flight.ts";
-export { PLAY_RATES, buildOf, playFrame, playFrom, stills } from "./buildPlay.ts";
+export { PLAY_RATES, buildOf, flightNow, playFrame, playFrom, stills } from "./buildPlay.ts";
 export { SWARM_CAP, approachPath, berthRing, carries, grounded, pathClears, swarmCount, swarmJobs } from "./swarm.ts";
 export type { Carry, HullBox, SwarmJob } from "./swarm.ts";
 export { DRONE } from "./model/fleet/drone/index.ts";
