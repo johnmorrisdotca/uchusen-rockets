@@ -38,7 +38,7 @@ function band(a: V, b: V, aAft: V, bAft: V, lift: number): Plate {
 }
 
 /** A box-truss boom between two joints: three longerons and a frame every few metres, thick enough to carry the wing. */
-function truss(a: V, b: V, thick: number, into: Piece[]): void {
+function truss(a: V, b: V, thick: number, detail: number, into: Piece[]): void {
   const span = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
   const n = Math.max(2, Math.round(span / 8));
   const side = unit(cross(sub(b, a), [0, 0, 1]));
@@ -53,7 +53,7 @@ function truss(a: V, b: V, thick: number, into: Piece[]): void {
     into.push(rod("hull-grey-dark", c[0], c[1], thick * 0.2, 5));
     into.push(rod("hull-grey-dark", c[1], c[2], thick * 0.2, 5));
     into.push(rod("hull-white", c[2], c[0], thick * 0.2, 5));
-    if (k % 2 === 0) into.push(box("copper", add(p, [0, 0, thick]), 0.28, 0.28, 0.28));
+    if (k % 2 === 0 && detail > 0.5) into.push(box("copper", add(p, [0, 0, thick]), 0.28, 0.28, 0.28));
   }
 }
 
@@ -70,7 +70,7 @@ function feathers(from: V, to: V, count: number, aftAt: (t: number) => number, s
 }
 
 /** One side. `sign` is −1 to port. The outer arm, from the elbow out, carries the move. */
-function wing(sign: -1 | 1): Piece[] {
+function wing(sign: -1 | 1, detail: number): Piece[] {
   const s = sign;
   const name = sign < 0 ? "bird-port" : "bird-starboard";
   // 228 m from the shoulder to the tip: six tenths of the 380 m hull. The root sheets reach 76 m aft.
@@ -87,7 +87,7 @@ function wing(sign: -1 | 1): Piece[] {
     box("hull-orange", shoulder, 4.2, 2.6, 3.4),
     ...lampHalo("window", add(shoulder, [0, 0, 2.4])),
   ];
-  truss(shoulder, elbow, 3.2, fixed);
+  truss(shoulder, elbow, 3.2, detail, fixed);
   feathers(shoulder, elbow, 4, (t) => 76 - 16 * t + Math.sin(t * Math.PI) * 6, s, fixed);
   const outer: Piece[] = [
     box("hull-orange", elbow, 3.6, 2.4, 3.2),
@@ -96,8 +96,8 @@ function wing(sign: -1 | 1): Piece[] {
     box("lamp-amber", add(tip, [0, 0, 1.6]), 0.45, 0.45, 0.45),
     ...lampHalo("window", add(tip, [0, 0, 2.2])),
   ];
-  truss(elbow, wrist, 2.8, outer);
-  truss(wrist, tip, 2.2, outer);
+  truss(elbow, wrist, 2.8, detail, outer);
+  truss(wrist, tip, 2.2, detail, outer);
   feathers(elbow, tip, 12, (t) => 60 - 36 * t + Math.sin(t * Math.PI) * 14, s, outer);
   return [...fixed, ...moving(outer, { name, pivot: elbow, axis: [0, 0, 1] })];
 }
@@ -105,9 +105,9 @@ function wing(sign: -1 | 1): Piece[] {
 /**
  * Both wings, in the ship's metres. At rest the wings are open. The elbow motion folds each outer arm back along the hull, outside it.
  *
- * @param _detail Kept so the part can ask for a level; the wing is the same at every level.
+ * @param detail How much of the spar's small hardware to build, 0.25 to 1. The sheets and the boom stay.
  * @returns The pieces of both wings.
  */
-export function birdWing(_detail = 1): Piece[] {
-  return [...wing(-1), ...wing(1)];
+export function birdWing(detail = 1): Piece[] {
+  return [...wing(-1, detail), ...wing(1, detail)];
 }
