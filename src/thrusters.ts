@@ -19,7 +19,7 @@ export interface Jet {
 export type ThrusterMode = "off" | "show" | "station-keeping";
 
 /** A puff is bright for this long, and it is gone by then. */
-export const PUFF_LIFE = 0.7;
+export const PUFF_LIFE = 0.5;
 /** How far a puff travels before it is gone, metres. Vacuum plumes stay short. */
 export const PUFF_REACH = 4;
 /** How long one pulse burns. */

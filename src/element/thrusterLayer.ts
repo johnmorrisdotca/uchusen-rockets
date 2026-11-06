@@ -1,9 +1,13 @@
-// One instanced draw for every nozzle, and one pool of puffs. Idle jets add nothing per frame.
-import { AdditiveBlending, BufferGeometry, CanvasTexture, ConeGeometry, Float32BufferAttribute, Group, InstancedMesh, Matrix4, MeshStandardMaterial, Points, PointsMaterial, Quaternion, Vector3 } from "three";
-import { KEEP_GAP, PUFF_LIFE, puffStep, turnPair, type Jet, type ThrusterMode } from "../thrusters.ts";
+// One instanced draw for every nozzle, and one pool of plume cones. Idle jets add nothing per frame.
+import { AdditiveBlending, BufferAttribute, Color, ConeGeometry, DoubleSide, Group, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial, Quaternion, Vector3 } from "three";
+import { KEEP_GAP, PUFF_LIFE, turnPair, type Jet, type ThrusterMode } from "../thrusters.ts";
 
 const POOL = 64;
 const DRIFT = 0.4;
+/** How many nozzle lengths the cone reaches, and the soft edge of it. */
+const NOZZLE_LENGTHS = 8;
+const SPREAD = (20 * Math.PI) / 180;
+const CORE = (7 * Math.PI) / 180;
 
 interface Live {
   at: Vector3;
@@ -12,20 +16,44 @@ interface Live {
   bell: number;
 }
 
-/** Nozzles and their puffs for one rocket. The nozzles are already in the rocket's space. */
+/** A cone with its tip at the origin and its base along +Y, so a jet's direction is the axis. */
+function plumeGeometry(radians: number): ConeGeometry {
+  const geo = new ConeGeometry(Math.tan(radians), 1, 24, 1, true);
+  geo.rotateX(Math.PI);
+  geo.translate(0, 0.5, 0);
+  const pos = geo.getAttribute("position");
+  const colours = new Float32Array(pos.count * 4);
+  for (let i = 0; i < pos.count; i++) {
+    const along = Math.max(0, 1 - pos.getY(i));
+    const alpha = along * along * along;
+    colours[i * 4] = 1;
+    colours[i * 4 + 1] = 1;
+    colours[i * 4 + 2] = 1;
+    colours[i * 4 + 3] = alpha;
+  }
+  geo.setAttribute("color", new BufferAttribute(colours, 4));
+  return geo;
+}
+
+/** Nozzles and their plumes for one rocket. The nozzles are already in the rocket's space. */
 export class ThrusterLayer {
   private readonly group = new Group();
   private readonly live: Live[] = [];
   private mesh: InstancedMesh | null = null;
-  private points: Points | null = null;
+  private outer: InstancedMesh | null = null;
+  private core: InstancedMesh | null = null;
   private readonly ages = new Float32Array(POOL);
   private readonly which = new Int16Array(POOL);
   private mode: Exclude<ThrusterMode, "off"> = "show";
   private reduced = false;
   private clock = 0;
   private nextPulse = 0.4;
-  private readonly disc: CanvasTexture;
   private puffCountNow = 0;
+  private readonly aim = new Quaternion();
+  private readonly basis = new Matrix4();
+  private readonly colour = new Color();
+  private readonly up = new Vector3(0, 1, 0);
+  private readonly hidden = new Matrix4().makeScale(0, 0, 0);
 
   constructor(parent: Group, jets: readonly Jet[], mode: Exclude<ThrusterMode, "off">, reduced: boolean) {
     this.mode = mode;
@@ -37,40 +65,21 @@ export class ThrusterLayer {
     this.mesh = new InstancedMesh(cone, metal, Math.max(1, this.live.length));
     this.mesh.count = this.live.length;
     this.mesh.frustumCulled = false;
-    const basis = new Matrix4();
-    const aim = new Quaternion();
-    const up = new Vector3(0, 1, 0);
     const place = new Vector3();
     for (let i = 0; i < this.live.length; i++) {
       const jet = this.live[i];
       if (!jet) continue;
-      aim.setFromUnitVectors(up, jet.dir.clone().negate());
+      this.aim.setFromUnitVectors(this.up, jet.dir.clone().negate());
       place.copy(jet.at).addScaledVector(jet.dir, -jet.bell / 2);
-      basis.compose(place, aim, new Vector3(jet.bell, jet.bell, jet.bell));
-      this.mesh.setMatrixAt(i, basis);
+      this.basis.compose(place, this.aim, new Vector3(jet.bell, jet.bell, jet.bell));
+      this.mesh.setMatrixAt(i, this.basis);
     }
     this.mesh.instanceMatrix.needsUpdate = true;
     this.group.add(this.mesh);
-    const geo = new BufferGeometry();
-    const positions = new Float32Array(POOL * 3);
-    const colours = new Float32Array(POOL * 3);
-    geo.setAttribute("position", new Float32BufferAttribute(positions, 3));
-    geo.setAttribute("color", new Float32BufferAttribute(colours, 3));
-    this.disc = this.softDisc();
-    const material = new PointsMaterial({
-      size: 14,
-      sizeAttenuation: false,
-      map: this.disc,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.95,
-      blending: AdditiveBlending,
-      depthWrite: false,
-    });
-    this.points = new Points(geo, material);
-    this.points.frustumCulled = false;
-    this.points.visible = false;
-    this.group.add(this.points);
+    const glow = new MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.55, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false, vertexColors: true });
+    const heart = glow.clone();
+    this.outer = this.pool(plumeGeometry(SPREAD), glow);
+    this.core = this.pool(plumeGeometry(CORE), heart);
     parent.add(this.group);
   }
 
@@ -89,32 +98,44 @@ export class ThrusterLayer {
       this.nextPulse = this.clock + KEEP_GAP;
       this.turn();
     }
-    const positions = this.points?.geometry.getAttribute("position");
-    const colours = this.points?.geometry.getAttribute("color");
-    if (!positions || !colours) return null;
+    if (!this.outer || !this.core) return null;
     let alive = 0;
     for (let i = 0; i < POOL; i++) {
       const index = this.which[i] ?? -1;
       const jet = index >= 0 ? this.live[index] : undefined;
       const age = (this.ages[i] ?? 0) + dt;
       this.ages[i] = age;
-      const puff = jet ? puffStep(age, [jet.at.x, jet.at.y, jet.at.z], [jet.dir.x, jet.dir.y, jet.dir.z]) : null;
-      if (!puff || !jet) {
+      if (!jet || age < 0 || age >= PUFF_LIFE) {
         this.which[i] = -1;
-        positions.setXYZ(i, 0, 0, 0);
-        colours.setXYZ(i, 0, 0, 0);
+        this.outer.setMatrixAt(i, this.hidden);
+        this.core.setMatrixAt(i, this.hidden);
+        this.colour.setRGB(0, 0, 0);
+        this.outer.setColorAt(i, this.colour);
+        this.core.setColorAt(i, this.colour);
         continue;
       }
       alive += 1;
-      const spread = (age / PUFF_LIFE) * 0.5;
-      positions.setXYZ(i, puff.at[0] + (i % 3 - 1) * spread, puff.at[1], puff.at[2] + ((i % 5) - 2) * spread * 0.4);
-      const orange = jet.fuel === "hypergolic";
-      colours.setXYZ(i, (orange ? 1 : 0.92) * puff.alpha, (orange ? 0.62 : 0.95) * puff.alpha, (orange ? 0.28 : 1) * puff.alpha);
+      const fade = 1 - age / PUFF_LIFE;
+      const alpha = fade * fade;
+      const reach = Math.max(2.2, jet.bell * NOZZLE_LENGTHS);
+      this.aim.setFromUnitVectors(this.up, jet.dir);
+      this.basis.compose(jet.at, this.aim, new Vector3(reach, reach, reach));
+      this.outer.setMatrixAt(i, this.basis);
+      this.basis.compose(jet.at, this.aim, new Vector3(reach * 0.42, reach * 0.42, reach * 0.42));
+      this.core.setMatrixAt(i, this.basis);
+      const hot = jet.fuel === "hypergolic";
+      this.colour.setRGB((hot ? 1 : 0.94) * alpha, (hot ? 0.72 : 0.97) * alpha, (hot ? 0.42 : 1) * alpha);
+      this.outer.setColorAt(i, this.colour);
+      this.colour.setRGB(alpha, (hot ? 0.94 : 1) * alpha, (hot ? 0.82 : 1) * alpha);
+      this.core.setColorAt(i, this.colour);
     }
-    positions.needsUpdate = true;
-    colours.needsUpdate = true;
+    this.outer.instanceMatrix.needsUpdate = true;
+    this.core.instanceMatrix.needsUpdate = true;
+    if (this.outer.instanceColor) this.outer.instanceColor.needsUpdate = true;
+    if (this.core.instanceColor) this.core.instanceColor.needsUpdate = true;
     this.puffCountNow = alive;
-    if (this.points) this.points.visible = alive > 0;
+    this.outer.visible = alive > 0;
+    this.core.visible = alive > 0;
     if (this.reduced || this.mode !== "station-keeping" || !awake) return alive > 0 ? { x: 0, y: 0, z: 0 } : null;
     const t = this.clock;
     return { x: Math.sin(t * 0.2) * DRIFT, y: 0, z: Math.sin(t * 0.13) * DRIFT * 0.6 };
@@ -131,6 +152,21 @@ export class ThrusterLayer {
     }
   }
 
+  /** Four nozzles that share one block, so a close view can show the whole quad. */
+  lightBlock(): void {
+    if (this.reduced) return;
+    const groups = new Map<string, number[]>();
+    this.live.forEach((jet, index) => {
+      const key = `${Math.round(jet.at.x)}:${Math.round(jet.at.y)}:${Math.round(jet.at.z)}`;
+      const list = groups.get(key) ?? [];
+      list.push(index);
+      groups.set(key, list);
+    });
+    let chosen: number[] = [];
+    for (const list of groups.values()) if (list.length > chosen.length) chosen = list;
+    for (const index of chosen.slice(0, 4)) this.light(index);
+  }
+
   /** The craft starts moving along `move`: the jets that push that way. */
   burst(move: Vector3): void {
     this.along(move, 1);
@@ -145,11 +181,26 @@ export class ThrusterLayer {
     this.group.removeFromParent();
     this.mesh?.geometry.dispose();
     (this.mesh?.material as MeshStandardMaterial | undefined)?.dispose();
-    this.points?.geometry.dispose();
-    (this.points?.material as PointsMaterial | undefined)?.dispose();
-    this.disc.dispose();
+    this.outer?.geometry.dispose();
+    (this.outer?.material as MeshBasicMaterial | undefined)?.dispose();
+    this.core?.geometry.dispose();
+    (this.core?.material as MeshBasicMaterial | undefined)?.dispose();
     this.mesh = null;
-    this.points = null;
+    this.outer = null;
+    this.core = null;
+  }
+
+  private pool(geo: ConeGeometry, material: MeshBasicMaterial): InstancedMesh {
+    const mesh = new InstancedMesh(geo, material, POOL);
+    mesh.count = POOL;
+    mesh.frustumCulled = false;
+    mesh.visible = false;
+    for (let i = 0; i < POOL; i++) {
+      mesh.setMatrixAt(i, this.hidden);
+      mesh.setColorAt(i, new Color(0, 0, 0));
+    }
+    this.group.add(mesh);
+    return mesh;
   }
 
   private along(move: Vector3, sign: 1 | -1): void {
@@ -165,7 +216,6 @@ export class ThrusterLayer {
       }
     });
     if (best >= 0) this.light(best);
-    // a pair on that side, when a second jet agrees
     let second = -1;
     score = 0.2;
     this.live.forEach((jet, index) => {
@@ -184,29 +234,9 @@ export class ThrusterLayer {
   }
 
   private emit(index: number): void {
-    for (let n = 0; n < 2; n++) {
-      const slot = this.which.indexOf(-1);
-      if (slot < 0) return;
-      this.which[slot] = index;
-      this.ages[slot] = n * 0.05;
-    }
-  }
-
-  private softDisc(): CanvasTexture {
-    const canvas = document.createElement("canvas");
-    canvas.width = 32;
-    canvas.height = 32;
-    const pen = canvas.getContext("2d");
-    if (pen) {
-      const glow = pen.createRadialGradient(16, 16, 1, 16, 16, 16);
-      glow.addColorStop(0, "rgba(255,255,255,1)");
-      glow.addColorStop(0.4, "rgba(255,255,255,0.45)");
-      glow.addColorStop(1, "rgba(255,255,255,0)");
-      pen.fillStyle = glow;
-      pen.fillRect(0, 0, 32, 32);
-    }
-    const texture = new CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    return texture;
+    const slot = this.which.indexOf(-1);
+    if (slot < 0) return;
+    this.which[slot] = index;
+    this.ages[slot] = 0;
   }
 }
