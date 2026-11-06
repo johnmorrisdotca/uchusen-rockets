@@ -189,6 +189,10 @@ test("six craft stay on the page at a desk's width", async ({ page }, info) => {
   await page.locator('[data-testid="rocket-sls"]').click();
   await expect(craftChips(page)).toHaveCount(6);
   await expect(page.locator('[data-testid="cw-count"]')).toContainText("6 of up to");
+  const line = await page.locator('[data-testid="cw-craft"]').boundingBox();
+  expect(line?.height ?? 999).toBeLessThan(80);
+  const stage = await page.locator(".cw-stage").boundingBox();
+  expect(stage?.y ?? 999).toBeLessThan(360);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
 });
 
@@ -214,6 +218,7 @@ test("a craft under about 12 px is marked with its name and size, and its chip o
   const mark = hero(page).locator("[data-craft-mark]");
   await expect(mark).toBeVisible({ timeout: 30_000 });
   await expect(mark).toContainText("1 m");
+  await page.locator('[data-testid="cw-craft-1"]').hover();
   await page.locator('[data-testid="cw-glass-1"]').click();
   await expect(page.locator('[data-testid="cw-glass"]')).toBeVisible();
   await expect(page.locator('[data-testid="cw-glass"]')).toContainText("1 m");

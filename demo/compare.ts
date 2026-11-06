@@ -183,6 +183,23 @@ function keep() {
   address.set("labels", state.labels ? "on" : "off");
 }
 
+function magnifierIcon(): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", "6.5");
+  circle.setAttribute("cy", "6.5");
+  circle.setAttribute("r", "4");
+  const handle = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  handle.setAttribute("x1", "9.6");
+  handle.setAttribute("y1", "9.6");
+  handle.setAttribute("x2", "13.5");
+  handle.setAttribute("y2", "13.5");
+  svg.append(circle, handle);
+  return svg;
+}
+
 function renderCraft() {
   const row = byId("cw-craft");
   const limit = room();
@@ -193,7 +210,30 @@ function renderCraft() {
     group.className = "cw-craft-chip";
     group.dataset.testid = `cw-craft-${index}`;
     group.tabIndex = 0;
-    group.append(craftPicture(craft.rocket, craft.variant));
+    const frame = document.createElement("span");
+    frame.className = "cw-pic";
+    frame.append(craftPicture(craft.rocket, craft.variant));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "cw-remove";
+    remove.dataset.testid = `cw-remove-${index}`;
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", say("cmpRemove", { name }));
+    remove.addEventListener("click", () => askRemove(index));
+    const glass = document.createElement("button");
+    glass.type = "button";
+    glass.className = "cw-magnify";
+    glass.dataset.testid = `cw-glass-${index}`;
+    glass.setAttribute("aria-label", say("cmpGlass"));
+    glass.setAttribute("aria-pressed", String(state.glass === index));
+    glass.append(magnifierIcon());
+    glass.addEventListener("click", () => {
+      state.glass = state.glass === index ? null : index;
+      renderGlass();
+      renderCraft();
+    });
+    frame.append(remove, glass);
+    group.append(frame);
     const label = document.createElement("button");
     label.type = "button";
     label.className = "chip";
@@ -202,39 +242,38 @@ function renderCraft() {
     label.setAttribute("aria-pressed", String(index === state.editing));
     label.addEventListener("click", () => edit(index));
     group.append(label);
-    const remove = chip("×", `cw-remove-${index}`, () => askRemove(index));
-    remove.classList.add("cw-remove");
-    remove.setAttribute("aria-label", say("cmpRemove", { name }));
-    group.append(remove);
-    const glass = chip(say("cmpGlass"), `cw-glass-${index}`, () => {
-      state.glass = state.glass === index ? null : index;
-      renderGlass();
-    });
-    group.append(glass);
     group.addEventListener("keydown", (event) => {
       if (event.key === "Delete") askRemove(index);
     });
-    if (state.asking === index) {
-      const ask = document.createElement("span");
-      ask.className = "cw-ask";
-      ask.dataset.testid = "cw-ask";
-      ask.append(document.createTextNode(say("cmpAsk", { name })), chip(say("cmpYes"), "cw-remove-yes", confirmRemove), chip(say("cmpNo"), "cw-remove-no", cancelRemove));
-      group.append(ask);
-    }
     chips.push(group);
   }
+  row.replaceChildren(...chips);
+  const scroll = row.parentElement;
+  if (scroll) scroll.classList.toggle("is-overflowing", row.scrollWidth > row.clientWidth + 1);
+  const tools = byId("cw-craft-tools");
   const count = document.createElement("p");
   count.dataset.testid = "cw-count";
   count.textContent = say("cmpCount", { n: state.craft.length, limit });
-  chips.push(count);
-  if (state.craft.length < limit) chips.push(chip(say("cmpAdd"), "cw-add", add));
-  if (state.refused) {
-    const note = document.createElement("p");
-    note.dataset.testid = "cw-budget";
-    note.textContent = state.refused;
-    chips.push(note);
+  const extras: HTMLElement[] = [count];
+  if (state.craft.length < limit) extras.push(chip(say("cmpAdd"), "cw-add", add));
+  tools.replaceChildren(...extras);
+  const note = byId("cw-budget");
+  note.hidden = !state.refused;
+  note.textContent = state.refused ?? "";
+  const ask = byId("cw-ask");
+  const pending = state.asking === null ? undefined : state.craft[state.asking];
+  ask.hidden = !pending;
+  ask.replaceChildren();
+  if (pending && state.asking !== null) {
+    const name = variantFor(pending).name;
+    ask.append(document.createTextNode(say("cmpAsk", { name })), chip(say("cmpYes"), "cw-remove-yes", confirmRemove), chip(say("cmpNo"), "cw-remove-no", cancelRemove));
+    const anchor = row.querySelector(`[data-testid="cw-craft-${state.asking}"] .cw-pic`);
+    if (anchor) {
+      const rect = anchor.getBoundingClientRect();
+      ask.style.left = `${Math.max(8, Math.round(rect.left))}px`;
+      ask.style.top = `${Math.round(rect.bottom + 6)}px`;
+    }
   }
-  row.replaceChildren(...chips);
   byId("cw-chip-look").replaceChildren(
     chip(say("cmpNamed"), "cw-named", () => {
       state.chipNames = true;
@@ -544,6 +583,15 @@ phone.addEventListener("change", renderAll);
 document.addEventListener("kazoku-languagechange", () => queueMicrotask(renderAll));
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && state.asking !== null) cancelRemove();
+});
+byId("cw-craft").parentElement?.addEventListener("scroll", () => {
+  if (state.asking === null) return;
+  const anchor = document.querySelector(`[data-testid="cw-craft-${state.asking}"] .cw-pic`);
+  const ask = byId("cw-ask");
+  if (!anchor || ask.hidden) return;
+  const rect = anchor.getBoundingClientRect();
+  ask.style.left = `${Math.max(8, Math.round(rect.left))}px`;
+  ask.style.top = `${Math.round(rect.bottom + 6)}px`;
 });
 const search = byId<HTMLInputElement>("cw-search");
 search.placeholder = say("cmpSearch");

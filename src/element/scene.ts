@@ -1915,7 +1915,7 @@ export class RocketViewer {
       ring.dataset.craftMark = String(box.craft);
       const cx = (screen.minX + screen.maxX) / 2;
       const cy = (screen.minY + screen.maxY) / 2;
-      ring.style.cssText = `position:absolute;left:${Math.round(cx)}px;top:${Math.round(cy)}px;width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid #fff;border-radius:50%;pointer-events:none`;
+      ring.style.cssText = `position:absolute;z-index:3;left:${Math.round(cx)}px;top:${Math.round(cy)}px;width:28px;height:28px;margin:-14px 0 0 -14px;border:3px solid #f2c14e;border-radius:50%;box-shadow:0 0 0 2px rgba(11,17,27,0.85);pointer-events:none`;
       const caption = document.createElement("span");
       caption.textContent = labels.find((one) => one.craft === box.craft)?.text ?? box.rocket;
       caption.style.cssText = `position:absolute;top:-2px;white-space:nowrap;color:#e6edf6;background:rgba(11,17,27,0.72);padding:1px 5px;${cx > width * 0.6 ? "right:20px" : "left:20px"}`;
