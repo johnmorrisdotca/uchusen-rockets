@@ -988,15 +988,28 @@ export class UchusenLineup extends HTMLBase {
     template.innerHTML = svg;
     const node = template.content.firstElementChild;
     if (!node) return;
-    // wide: the picture uses the width of its frame and grows taller than the frame, which scrolls. Left out, the picture keeps the pixel size it was drawn at.
-    if (this.hasAttribute("wide") && node instanceof SVGElement) {
-      node.setAttribute("width", "100%");
-      node.removeAttribute("height");
-      node.style.width = "100%";
-      node.style.height = "auto";
-    }
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);
+    // wide: the picture uses the width of its frame. Its height follows the drawing, so a frame of a fixed height scrolls. Left out, the picture keeps the pixel size it was drawn at.
+    const host = this as unknown as { wideFit?: ResizeObserver };
+    host.wideFit?.disconnect();
+    host.wideFit = undefined;
+    if (this.hasAttribute("wide") && node instanceof SVGSVGElement) {
+      const box = node.viewBox.baseVal;
+      const fit = () => {
+        const width = (this.parentElement?.clientWidth ?? this.clientWidth) - 2;
+        if (width > 0 && box.width > 0) {
+          node.style.width = "100%";
+          node.style.height = `${Math.round((width * box.height) / box.width)}px`;
+        }
+      };
+      node.setAttribute("width", "100%");
+      node.removeAttribute("height");
+      const observer = new ResizeObserver(fit);
+      observer.observe(this.parentElement ?? this);
+      host.wideFit = observer;
+      fit();
+    }
     this.dataset.count = String(shown.length);
     this.dataset.real = String(shownReal.length);
   }

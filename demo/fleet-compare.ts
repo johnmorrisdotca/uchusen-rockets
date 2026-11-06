@@ -112,6 +112,9 @@ const draw = (): void => {
   lineup.setAttribute("items", items.join(","));
   lineup.setAttribute("view", view);
   lineup.setAttribute("fit", fitOf());
+  // the long ship runs past the top of a first-screen frame; the feet, and the shorter ships, are what the frame opens on. The picture's height is known only after it has been laid out at the frame's width.
+  const frame = byId("cmp-view");
+  requestAnimationFrame(() => requestAnimationFrame(() => { frame.scrollTop = frame.scrollHeight; }));
   const head = document.createElement("tr");
   head.append(document.createElement("th"));
   for (const id of ships) {
@@ -147,4 +150,8 @@ const draw = (): void => {
 };
 
 draw();
-window.addEventListener("resize", () => byId("lineup").setAttribute("fit", fitOf()));
+window.addEventListener("resize", () => {
+  byId("lineup").setAttribute("fit", fitOf());
+  const frame = byId("cmp-view");
+  requestAnimationFrame(() => requestAnimationFrame(() => { frame.scrollTop = frame.scrollHeight; }));
+});

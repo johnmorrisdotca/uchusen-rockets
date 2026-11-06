@@ -14,9 +14,16 @@ test("the three ships stand at one scale, the view stays in the address, and the
   expect(transport).toBe(1818);
   expect(transport).toBeGreaterThan(command * 2);
   await expect(page.getByTestId("cmp-length-source")).toHaveText("Length is the figure in the ship's record.");
-  const frame = await page.getByTestId("cmp-view").boundingBox();
-  const drawn = await lineup.locator("svg").boundingBox();
-  expect(frame && drawn && frame.height > 600 && drawn.width > frame.width * 0.9).toBe(true);
+  const frame = page.getByTestId("cmp-view");
+  await expect.poll(async () => frame.evaluate((node) => {
+    const svg = node.querySelector("uchusen-lineup")?.shadowRoot?.querySelector("svg");
+    if (!(svg instanceof SVGElement)) return false;
+    const box = svg.getBoundingClientRect();
+    const view = node.getBoundingClientRect();
+    const wide = box.width > view.width * 0.9;
+    const feet = box.height > view.height ? box.bottom <= view.bottom + 4 && box.bottom >= view.bottom - 80 : box.top >= view.top - 4 && box.bottom <= view.bottom + 4;
+    return view.height > 400 && wide && feet;
+  })).toBe(true);
   const before = await lineup.locator("svg").innerHTML();
   await page.getByTestId("cmp-view-side").click();
   await expect(page).toHaveURL(/view=side/);
