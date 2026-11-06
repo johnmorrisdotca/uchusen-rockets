@@ -281,6 +281,16 @@ function addTriangle(out: Buffers, points: readonly [Vec3, Vec3, Vec3], normals:
   else out.indices.push(base, base + 2, base + 1);
 }
 
+/** The last triangle's corners, 0 to 1 across the face, so a repeating picture lands the same on every sheet. */
+function stampMetres(out: Buffers, coords: readonly (readonly [number, number])[]): void {
+  out.hasUv = true;
+  let at = out.uvs.length - coords.length * 2;
+  for (const [u, v] of coords) {
+    out.uvs[at++] = u;
+    out.uvs[at++] = v;
+  }
+}
+
 /** A flat four-cornered face with one normal. */
 function addQuad(out: Buffers, a: Vec3, b: Vec3, c: Vec3, d: Vec3, normal: Vec3): void {
   addTriangle(out, [a, b, c], [normal, normal, normal]);
@@ -317,6 +327,13 @@ function relief(mesh: PartMesh, piece: Plate, half: number): void {
   const quilt = piece.quilt;
   if (!quilt) {
     addQuad(field, at(f0, g0, floor), at(f1, g0, floor), at(f1, g1, floor), at(f0, g1, floor), up);
+    // a cell sheet is one face: coordinates run 0 to 1 across it, and the picture repeats, so the packed mesh (which keeps only that range) still tiles
+    if ((piece.top ?? piece.material) === "cell-gold") {
+      const du = f1 - f0 || 1;
+      const dv = g1 - g0 || 1;
+      const n = (u: number, v: number): [number, number] => [(u - f0) / du, (v - g0) / dv];
+      stampMetres(field, [n(f0, g0), n(f1, g0), n(f1, g1), n(f0, g0), n(f1, g1), n(f0, g1)]);
+    }
     return;
   }
   const cu = (f1 - f0) / quilt.nu;

@@ -54,6 +54,8 @@ export const MATERIALS = {
   black: { color: "#141518", metal: 0, rough: 0.45, fill: "dark" },
   "ink-worn": { color: "#6a6e74", metal: 0.15, rough: 0.72, fill: "dark" },
   gold: { color: "#c8a24c", metal: 1, rough: 0.28, fill: "metal" },
+  /** A solar cell sheet: the picture is the cells, and the low roughness is the streak that moves as the ship turns. */
+  "cell-gold": { color: "#fff6e4", metal: 1, rough: 0.14, fill: "metal" },
   solar: { color: "#10163a", metal: 0.4, rough: 0.22, fill: "dark" },
   glass: { color: "#141c26", metal: 0.1, rough: 0.08, fill: "dark" },
   blue: { color: "#1d4f96", metal: 0.25, rough: 0.5, fill: "metal" },

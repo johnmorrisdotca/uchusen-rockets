@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **Kaminari's blanket and ring** (MODULES-489): the blanket is two flat gold cell sheets on a lattice mast, and the ring is trapezoid panels on spokes that pay out into one annulus. The cells are one sheet each, with the gaps drawn as lines, so the glint is one sheen across the sheet.
+- **Kaminari's blanket and ring** (MODULES-489): one cell wing each side of the hull, 624 m by 120 m, about 1.3 km tip to tip, and a ring 900 m across, both on box trusses. The cells are one repeating picture on the sheet, bright gold, with a streak that moves as the ship turns.
 - **One page bar and an Embed page** (MODULES-506, MODULES-507): every page, the builder included, has the same top bar with the current page marked; Embed opens a page with the bar, a live picture, the rocket, look and view choices kept in the address, and the code to copy; embed.html stays the bare frame and, opened on its own, links back with Open in Uchusen Rockets.
 - **The journey, fixed** (MODULES-497): the planets are painted (the Chikyu Earth and the wakusei bodies), the destination starts small and fills the frame only on arrival, the body left behind sits behind the craft, the date, phase and speed sit on dark panels that read over any planet, the craft stays whole and clear of them, and a trip that cannot start says why with a Leave from the Earth button.
 - **Changing ship eases to its size** (MODULES-504): picking a ship of another size keeps the old scale at the switch and then eases to Fit, so going from Kyotori (447 m) to Kaminari (1,815 m) zooms out to show the much larger ship, and the reverse zooms in; reduced motion jumps.

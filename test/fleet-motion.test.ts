@@ -81,7 +81,11 @@ test("the Motion choice: still unless asked for, ten times on request, never und
   assert.equal(motionsOf("starship").length, 0);
   const blanket = motionsOf("fleet-kaminari").filter((m) => m.group.startsWith("blanket"));
   const ring = motionsOf("fleet-kaminari").filter((m) => m.group.startsWith("ring"));
-  near(Math.max(...blanket.map((m) => m.travel ?? 0)) + BLANKET.len, 400);
+  near(Math.max(...blanket.map((m) => m.travel ?? 0)) + BLANKET.len, BLANKET.panels * BLANKET.len);
+  near(2 * (BLANKET.root + BLANKET.panels * BLANKET.len), 1288, 1);
+  near(2 * (RING.hub + RING.len * RING.segments), 896, 1);
+  const cells = meshOf(blanketPieces()).faces.get("cell-gold");
+  assert.ok(cells?.hasUv, "the cell sheet carries coordinates so the picture can tile");
   near(2 * (RING.hub + RING.len * RING.segments), 2 * (RING.hub + Math.max(...ring.map((m) => m.travel ?? 0)) + RING.len));
   assert.equal(motionNote("starship"), "");
 });

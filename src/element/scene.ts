@@ -57,7 +57,7 @@ import { type Angle, directionOf, easedDistance, easeInOut, FOV_DEG, frameFor, P
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
-import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
+import { paintCells, paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { assemblyOf, inspectAlong, playFrame } from "../buildPlay.ts";
 import { clearArc, fitoutOf, growPart, spinUp } from "./buildArc.ts";
 import { fitTanks } from "./fitOut.ts";
@@ -314,6 +314,7 @@ export class RocketViewer {
   private outlineMaterial: ShaderMaterial;
   private textures: Texture[] = [];
   private steelMap: CanvasTexture | null = null;
+  private cellMap: CanvasTexture | null = null;
   private tileMap: CanvasTexture | null = null;
   private glow: Mesh | null = null;
   private controls: OrbitControls;
@@ -841,6 +842,15 @@ export class RocketViewer {
       this.tileMap ??= this.repeating(paintTiles(28), 2, 100 / 14.14);
       made.map = this.tileMap;
       made.color.set("#ffffff");
+    }
+    if (name === "cell-gold" && hasUv) {
+      // about thirty cells along a panel and seventy across it; the mips keep the grid from shimmering far off
+      this.cellMap ??= this.repeating(paintCells(), 32, 72);
+      made.map = this.cellMap;
+      made.color.set("#fff6e4");
+      made.metalness = 1;
+      made.roughness = 0.14;
+      made.envMapIntensity = 1.15;
     }
     this.dullTile(made, name);
     if (spec.opacity !== undefined) {
