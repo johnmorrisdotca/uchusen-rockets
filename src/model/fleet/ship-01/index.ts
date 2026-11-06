@@ -3,12 +3,14 @@
 import type { PartKind } from "../../../parts.ts";
 import { COLLARS, isCoarse, place, type Piece } from "./adapter.ts";
 import { moving } from "../motion.ts";
+import { dockedCraft } from "../docked.ts";
 import { DOCK, dockingPieces } from "./docking.ts";
 import { boomPieces, hubPieces, SPINE, SPINE_Y } from "./hull.ts";
 import { industrialWheel } from "./wheelparts.ts";
 import { type Order, ringPieces, rings, sectionPieces } from "./rings.ts";
 import { ANCESTORS } from "./specs.ts";
 import { SPIN } from "./spin.ts";
+import { lampHalo } from "../lights.ts";
 
 /** How much small detail to build, 0.25 to 1: coarse first, fine as the viewer comes near. */
 export const LEVELS = [0.25, 0.6, 1] as const;
@@ -76,7 +78,7 @@ const boom = (sx: number): HanabusaPart => ({
   height: 17 * 24,
   diameter: 12,
   note: `${sx < 0 ? "Port" : "Starboard"}: seventeen propellant tanks in a column that turns with the rings, with three small magnetic-nozzle trim thrusters at its tail. Descends from ${ANCESTORS.booms}.`,
-  pieces: (o) => local([...thin(boomPieces(sx, 0.3 * (o?.detail ?? 1))), { kind: "lathe", material: "hull-white", segs: 24, only: "drawing", body: true, outline: true, at: [sx * SPIN.boomX, 0], profile: [[5, 100], [5, 508]], rings: Array.from({ length: 16 }, (_, k) => 124 + 24 * k) } as Piece], sx * SPIN.boomX, 100, 0, o?.level),
+  pieces: (o) => local([...thin(boomPieces(sx, 0.3 * (o?.detail ?? 1))), { kind: "lathe", material: "hull-white", segs: 24, only: "drawing", body: true, outline: true, at: [sx * SPIN.boomX, 0], profile: [[5, 100], [5, 508]], rings: Array.from({ length: 16 }, (_, k) => 124 + 24 * k) } as Piece, ...lampHalo(sx < 0 ? "port" : "starboard", [sx * SPIN.boomX, 240, 8]), ...lampHalo(sx < 0 ? "beacon" : "nav-white", [sx * SPIN.boomX, 420, 8])], sx * SPIN.boomX, 100, 0, o?.level),
 });
 
 const hubs = (): HanabusaPart => ({
@@ -100,7 +102,7 @@ const docks = (): HanabusaPart => ({
   height: DOCK.shield.y0 + DOCK.shield.stay + DOCK.shield.depth - (DOCK.berth.y0 - 0.5),
   diameter: 2 * DOCK.shield.radius + 4,
   note: `On the still keel at the bow, outside the hull and beyond the tops of the turning booms: three arms with an S-class crew port, an S-class visitor port and an M-class small-craft berth with an empty cradle, a berth along the keel with saddles, stays, a hard-dock collar and umbilicals for a Starship upper stage, pressurised walkways from every berth to the keel's lift, and the bow dust shield ahead of them. Descends from ${ANCESTORS.node} and the ISS's visiting-vehicle berths.`,
-  pieces: (o) => local(dockingPieces(), 0, DOCK.berth.y0 - 0.5, 0, o?.level),
+  pieces: (o) => local([...dockingPieces(), ...dockedCraft("fleet-ship-01")], 0, DOCK.berth.y0 - 0.5, 0, o?.level),
 });
 
 const ring = (order: Order, use: "garden" | "research" | "living"): HanabusaPart => {

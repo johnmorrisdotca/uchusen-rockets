@@ -1,5 +1,5 @@
 // `<uchusen-build>`: play, pause, scrub and a rate for one ship's build. It keeps the story clock and how many slots are built. Reduced motion shows numbered stills and does not play. The page hides it for a ship with no build order, and writes `build` and `at` on the address.
-import { playFrame, stills, type PlayStep } from "./buildPlay.ts";
+import { flightNow, playFrame, stills, type PlayStep } from "./buildPlay.ts";
 
 const HTMLBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
 
@@ -37,6 +37,8 @@ export interface BuildWords {
   day: string;
   done: string;
   rate: string;
+  /** `{n}` is the flight number and `{name}` the module. */
+  flight: string;
 }
 
 const DAY_S = 86_400;
@@ -57,6 +59,7 @@ const WORDS: BuildWords = {
   day: "Day {day}, {clock}",
   done: "{done} of {total} built",
   rate: "x{rate}",
+  flight: "Flight {n}: {name}",
 };
 
 /**
@@ -87,6 +90,8 @@ export class UchusenBuild extends HTMLBase {
   /** The last tick. A late tick counts at most two real seconds, so a stall does not skip the build. */
   private mark = 0;
   private said: Partial<BuildWords> = {};
+  /** A page's names for flight slots, in the reader's language. A missing slot keeps the English title. */
+  private named: Readonly<Record<string, string>> = {};
   private parts: { play: HTMLButtonElement; start: HTMLButtonElement; repeat: HTMLButtonElement; range: HTMLInputElement; now: HTMLElement; stills: HTMLElement } | null = null;
 
   /** The build order. `null` hides the bar and stops the clock. */
@@ -129,6 +134,12 @@ export class UchusenBuild extends HTMLBase {
 
   set words(words: Partial<BuildWords>) {
     this.said = { ...words };
+    if (this.parts) this.draw();
+  }
+
+  /** Slot titles in the reader's language. Anything left out keeps its English title. */
+  set titles(value: Readonly<Record<string, string>>) {
+    this.named = value;
     if (this.parts) this.draw();
   }
 
@@ -257,7 +268,9 @@ export class UchusenBuild extends HTMLBase {
     parts.range.value = String(this.place);
     parts.range.setAttribute("aria-label", this.word("range"));
     const dayText = this.dayText(frame.day);
-    parts.range.setAttribute("aria-valuetext", dayText);
+    const flight = flightNow(order, this.place);
+    const flightText = flight ? this.fill("flight", { n: flight.n, name: this.named[flight.slot] || flight.title }) : "";
+    parts.range.setAttribute("aria-valuetext", flightText ? `${flightText}. ${dayText}` : dayText);
     parts.stills.replaceChildren();
     if (reduced) {
       const frames = stills(order);
@@ -271,8 +284,9 @@ export class UchusenBuild extends HTMLBase {
         parts.stills.append(button);
       }
     }
-    const doneText = `${dayText}, ${this.fill("done", { done: frame.done.length, total: order.length })}`;
-    parts.now.textContent = this.stageText ? `${doneText}, ${this.stageText}` : doneText;
+    const doneText = this.fill("done", { done: frame.done.length, total: order.length });
+    const line = flightText ? `${flightText}. ${dayText}, ${doneText}` : `${dayText}, ${doneText}`;
+    parts.now.textContent = this.stageText ? `${line}, ${this.stageText}` : line;
   }
 
   /** The ring's state, already in the reader's language. Set by the page from the view. */

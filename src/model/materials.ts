@@ -20,7 +20,7 @@ export interface MaterialSpec {
   rough: number;
   /** The fill it takes in a drawing. */
   fill: FillName;
-  /** How brightly it glows when the engines are lit (the viewer's "Engines: Lit" switch): the emissive strength. Left out: it never glows. */
+  /** How brightly it glows. Engine materials (`coil-lit`, `window`, `grow-lamp`) glow with the Engines switch. Lamp materials glow with the Lights choice. Left out: it never glows. */
   glow?: number;
   /** The colour of that glow; left out: its own colour. */
   glowColor?: string;
@@ -94,12 +94,28 @@ export const MATERIALS = {
   foil: { color: P.foil, metal: 1, rough: 0.3, fill: "metal" },
   kapton: { color: P.kapton, metal: 0.9, rough: 0.32, fill: "metal" },
   "pipe-steel": { color: P.pipe, metal: 0.85, rough: 0.36, fill: "metal" },
-  window: { color: "#16202c", metal: 0.1, rough: 0.1, fill: "dark", glow: 1.5, glowColor: P.windowLit },
+  window: { color: "#16202c", metal: 0.1, rough: 0.1, fill: "dark", glow: 4.2, glowColor: P.windowLit },
   "coil-lit": { color: P.coil, metal: 1, rough: 0.26, fill: "metal", glow: 2.4, glowColor: P.coilGlow },
   "nav-red": { color: "#9a1f1f", metal: 0, rough: 0.3, fill: "metal", glow: 3, glowColor: P.navRed },
   "nav-green": { color: "#1f8a46", metal: 0, rough: 0.3, fill: "metal", glow: 3, glowColor: P.navGreen },
+  "nav-white": { color: "#f4f4f4", metal: 0, rough: 0.25, fill: "white", glow: 3, glowColor: "#f7f7f7" },
   strobe: { color: "#e8e8e8", metal: 0, rough: 0.25, fill: "white", glow: 4, glowColor: P.strobe },
+  beacon: { color: "#b42323", metal: 0, rough: 0.3, fill: "metal", glow: 3, glowColor: P.navRed },
   flood: { color: "#e6dfc8", metal: 0, rough: 0.25, fill: "white", glow: 3, glowColor: P.flood },
+  "light-pool": { color: "#ffe2b0", metal: 0, rough: 1, fill: "white", glow: 1.8, glowColor: "#ffe8c0", opacity: 0.28 },
+  "light-pool-mid": { color: "#ffe2b0", metal: 0, rough: 1, fill: "white", glow: 1, glowColor: "#ffe2b0", opacity: 0.14 },
+  "light-pool-edge": { color: "#ffe2b0", metal: 0, rough: 1, fill: "white", glow: 0.5, glowColor: "#ffe2b0", opacity: 0.06 },
+  "halo-port": { color: "#ff5a4a", metal: 0, rough: 1, fill: "white", glow: 6, glowColor: P.navRed, opacity: 0.9 },
+  "halo-port-soft": { color: "#ff5a4a", metal: 0, rough: 1, fill: "white", glow: 3.4, glowColor: P.navRed, opacity: 0.22 },
+  "halo-starboard": { color: "#3dff7a", metal: 0, rough: 1, fill: "white", glow: 6, glowColor: P.navGreen, opacity: 0.9 },
+  "halo-starboard-soft": { color: "#3dff7a", metal: 0, rough: 1, fill: "white", glow: 3.4, glowColor: P.navGreen, opacity: 0.22 },
+  "halo-stern": { color: "#ffffff", metal: 0, rough: 1, fill: "white", glow: 6, glowColor: "#ffffff", opacity: 0.85 },
+  "halo-stern-soft": { color: "#ffffff", metal: 0, rough: 1, fill: "white", glow: 3.2, glowColor: "#ffffff", opacity: 0.2 },
+  "halo-strobe": { color: "#ffffff", metal: 0, rough: 1, fill: "white", glow: 7, glowColor: P.strobe, opacity: 0.95 },
+  "halo-strobe-soft": { color: "#ffffff", metal: 0, rough: 1, fill: "white", glow: 3.6, glowColor: P.strobe, opacity: 0.22 },
+  "halo-beacon": { color: "#ff4a4a", metal: 0, rough: 1, fill: "white", glow: 6, glowColor: P.navRed, opacity: 0.85 },
+  "halo-beacon-soft": { color: "#ff4a4a", metal: 0, rough: 1, fill: "white", glow: 3.2, glowColor: P.navRed, opacity: 0.2 },
+  "halo-window": { color: "#ffe6c0", metal: 0, rough: 1, fill: "white", glow: 5, glowColor: "#ffe6c0", opacity: 0.9 },
   "glass-clear": { color: "#c3dbe8", metal: 0.15, rough: 0.04, fill: "dark", opacity: 0.26 },
   "grow-lamp": { color: "#7a4a8a", metal: 0, rough: 0.3, fill: "metal", glow: 2.6, glowColor: P.growLamp },
   leaf: { color: "#3f8f45", metal: 0, rough: 0.7, fill: "dark" },

@@ -1,5 +1,6 @@
 // The ship-side hardware of Kyotori V2 that the boards called weak: tanks with insulation blankets and valve clusters, the payload bay with its doors drawn from the Shuttle photographs (sectioned doors, hinge fittings, centreline latch gangs, radiator
 // panels on the doors' inner faces, door drive units at the bulkheads), the figured JWST-style mirror with its backplane, the load-bearing latch frames between the two shafts, and two designed bows. Concepts for John's V2. Pure: no three.js and no DOM.
+import { lampHalo } from "../lights.ts";
 import { antenna, ball, beam, box, collar, hoop, horn, ibeam, lamps, navLight, pipeRun, place, quad, rod, roundStrut, type Lathe, type MaterialName, type Piece, type Vec3 } from "./adapter.ts";
 import { framedTank, payloadBay2 } from "./pods.ts";
 
@@ -159,7 +160,7 @@ export function bowLong(y0: number): Piece[] {
     const c: Vec3 = [7.1 * Math.sin(deg(a)), y0 + 19, 7.1 * Math.cos(deg(a))];
     out.push(box("hull-grey-dark", c, 1.4, 1.4, 1.6, a, { only: "mesh", plain: true }), ...[[-0.3, -0.4], [0.3, -0.4], [-0.3, 0.4], [0.3, 0.4]].flatMap(([dx, dy]) => horn("hull-grey", [c[0] + dx, c[1] + dy + 0.8, c[2]], [c[0] + dx * 1.4, c[1] + dy * 1.4 + 1.2, c[2]], [0.12, 0.2], 8)));
   }
-  out.push(...antenna("phased", [0, y0 + 24, 6.7], [0, 0.3, 1], 3.2, "bowL"), ...navLight("port", 6.8, -90, y0 + 18), ...navLight("starboard", 6.8, 90, y0 + 18), ...antenna("whip", [2.2, y0 + 22, 6.2], [0.5, 1, 0.3], 5, "bowLw"));
+  out.push(...antenna("phased", [0, y0 + 24, 6.7], [0, 0.3, 1], 3.2, "bowL"), ...navLight("port", 6.8, -90, y0 + 18), ...navLight("starboard", 6.8, 90, y0 + 18), ...lampHalo("port", [-6.8, y0 + 14, 0]), ...lampHalo("starboard", [6.8, y0 + 24, 0]), ...antenna("whip", [2.2, y0 + 22, 6.2], [0.5, 1, 0.3], 5, "bowLw"));
   for (const a of [60, 180, 300]) out.push(box("hull-grey-dark", [6.3 * Math.sin(deg(a)), y0 + 24.5, 6.3 * Math.cos(deg(a))], 0.5, 0.5, 0.9, a, { only: "mesh", plain: true }), rod("black", [6.3 * Math.sin(deg(a)), y0 + 25, 6.3 * Math.cos(deg(a))], [6.3 * Math.sin(deg(a)), y0 + 25.05, 6.3 * Math.cos(deg(a))], 0.3, 10, { only: "mesh" }));
   return out;
 }
@@ -184,6 +185,6 @@ export function bowRunner(y0: number): Piece[] {
   for (const s of [-1, 1]) {
     out.push(...roundStrut("hull-grey", [s * 6.5, y0 + 10, 3], [s * 9, y0 + 16, 3.5], 0.28), ...roundStrut("hull-grey", [s * 9, y0 + 16, 3.5], [s * 8.2, y0 + 21, 4.4], 0.22), box("hull-grey-dark", [s * 8.2, y0 + 21, 4.4], 1, 1, 1.4, 0, { only: "mesh", plain: true }), ...[-0.35, 0.35].map((d) => rod("hull-yellow", [s * 8.2 + d, y0 + 21.7, 4.4], [s * 8.2 + d * 1.6, y0 + 23, 4.4], 0.08, 6, { only: "mesh" })));
   }
-  out.push(...place(collar("L", 0, 1), { at: [0, y0 + 30.4, 0] }), rod("steel", [0, y0 + 30.6, 0], [0, y0 + 33.2, 0], 0.32, 10, { only: "mesh" }), ...horn("hull-grey", [0, y0 + 33.2, 0], [0, y0 + 34.6, 0], [0.9, 0.5], 12), ...antenna("dish", [-4.2, y0 + 20, -4.5], [-0.5, 0.4, -1], 3.4, "bowR"), ...navLight("port", 7.6, -90, y0 + 11), ...navLight("starboard", 7.6, 90, y0 + 11), ...lamps(Array.from({ length: 8 }, (_, i) => ({ at: [5.6 * Math.sin((Math.PI / 4) * i), y0 + 30.9, 5.6 * Math.cos((Math.PI / 4) * i)] as Vec3, colour: "blue" as const, size: 0.12 }))));
+  out.push(...place(collar("L", 0, 1), { at: [0, y0 + 30.4, 0] }), rod("steel", [0, y0 + 30.6, 0], [0, y0 + 33.2, 0], 0.32, 10, { only: "mesh" }), ...horn("hull-grey", [0, y0 + 33.2, 0], [0, y0 + 34.6, 0], [0.9, 0.5], 12), ...antenna("dish", [-4.2, y0 + 20, -4.5], [-0.5, 0.4, -1], 3.4, "bowR"), ...navLight("port", 7.6, -90, y0 + 11), ...navLight("starboard", 7.6, 90, y0 + 11), ...lampHalo("port", [-7.6, y0 + 12, 0]), ...lampHalo("starboard", [7.6, y0 + 22, 0]), ...lamps(Array.from({ length: 8 }, (_, i) => ({ at: [5.6 * Math.sin((Math.PI / 4) * i), y0 + 30.9, 5.6 * Math.cos((Math.PI / 4) * i)] as Vec3, colour: "blue" as const, size: 0.12 }))));
   return out;
 }

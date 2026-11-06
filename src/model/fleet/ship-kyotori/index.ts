@@ -6,9 +6,12 @@ import { bay, bowLong, bowRunner, latchHalf } from "./hardware.ts";
 import { crewPort, elevator, inlineDrive, mod, truss } from "./parts.ts";
 import { CLUSTER_SLOTS, SHAFT_X } from "./cluster.ts";
 import { housing, quarterPart, STATION, STUB_FACE, stationCore, wings, type WingState } from "./station.ts";
+import { dockedCraft } from "../docked.ts";
+import { dockedNow } from "../dockedState.ts";
 import { dragonPieces, starshipPieces } from "./visitors.ts";
 import { rolePieces, type Role } from "./roles.ts";
 import { insulatedTank } from "./hardware.ts";
+import { lampHalo } from "../lights.ts";
 import { KIT, ibeam } from "./adapter.ts";
 import { TOWER } from "./quarters.ts";
 
@@ -95,7 +98,7 @@ interface Group {
   build: (ship: ShipSpec) => Piece[];
 }
 
-const DRIVE_G: Group = { id: "drive", name: "Drive of coil rings", kind: "engine", y0: 0, height: 74, diameter: 24, note: "Twelve field coils flaring out of a reactor chamber, the field is the nozzle: no bell. Its exhaust is a narrow beam straight aft that the coils can steer three degrees outward, so four ships stand side by side and none fires into another.", build: () => inlineDrive(0, 11) };
+const DRIVE_G: Group = { id: "drive", name: "Drive of coil rings", kind: "engine", y0: 0, height: 74, diameter: 24, note: "Twelve field coils flaring out of a reactor chamber, the field is the nozzle: no bell. Its exhaust is a narrow beam straight aft that the coils can steer three degrees outward, so four ships stand side by side and none fires into another.", build: () => [...inlineDrive(0, 11), ...lampHalo("nav-white", [0, 18, 0]), ...lampHalo("beacon", [0, 44, 0]), ...lampHalo("strobe", [0, 30, 6])] };
 const TANKS_G: Group = { id: "tanks", name: "Tank bouquet", kind: "tank", y0: 90, height: 60, diameter: 58, note: "Seven framed tanks in insulation blankets, each with a valve cluster at its feed end, standing on the ship's outer faces only (a quarter of the circle) so that four ships fit together.", build: (sh) => tanks(sh.wedge) };
 const JOINTS_G = (hooks: boolean): Group => ({ id: "joints", name: `Latch frames, ${hooks ? "hook" : "keeper"} half`, kind: "module", y0: 40, height: 270, diameter: 20, note: `Eight load-bearing frames on the seam to the neighbour across X: clamp hoops, box girders, a face plate with shear pins, ${hooks ? "a hooked latch and an umbilical tower" : "keeper lugs, sockets and an umbilical tower"}.`, build: (sh) => JOINTS.flatMap(([y, wa, wb]) => latchHalf(y, sh.type === "long" ? wa : wb, -SHAFT_X, hooks)) });
 const ROLE_NOTE: Record<Role, [string, string]> = {
@@ -173,7 +176,7 @@ export function parts(): KyotoriPart[] {
     { id: "s-core", name: "Station core: hub, arms, rim, stem and mirror", kind: "module", y0: 340, height: 112, diameter: 128, note: "A hub with airlocks, lift houses and ports; four arms; the slim rim; the stem; and the figured mirror with its backplane and sunshield.", place: { x: 0, z: 0 }, pieces: (o) => local(stationCore(), 0, 340, 0, o?.level) },
     { id: "s-housing", name: "Station housing", kind: "module", y0: 328, height: 24, diameter: 60, note: "Four docking bays for the ships (a 2x2 cluster, or two ships and two empty bays): L collars, twelve capture latches and four umbilical plates each, guide petals, approach lamps and floodlights.", place: { x: 0, z: 0 }, pieces: (o) => local(housing(335, SHAFT_X), 0, 328, 0, o?.level) },
     ...(["stowed", "flared", "full"] as const).map((state: WingState): KyotoriPart => ({ id: `s-wings-${state}`, name: `Solar wings, ${state}`, kind: "module", y0: 369, height: state === "full" ? 70 : 40, diameter: 60, note: `Four wings on diagonal masts in the ISS manner, ${state === "stowed" ? "folded in canisters" : state === "flared" ? "swung out with half the blanket let out" : "the mast extended and the blanket unfolded to double length"}; the blankets are one group for the Motion choice.`, place: { x: 0, z: 0 }, pieces: (o) => local(wings(state), 0, 369, 0, o?.level) })),
-    { id: "s-visitors", name: "Visiting craft at the quarters' docks", kind: "module", y0: STUB_FACE - 60, height: 70, diameter: 140, note: "A Crew Dragon at the control quarter's dock (through an adapter from the H collar to its own port) and a Starship upper stage at the observatory quarter's, at true scale, as photographs show Dragon on the ISS.", place: { x: 0, z: 0 }, pieces: (o) => local([...dragonPieces(0), ...starshipPieces(2)], 0, STUB_FACE - 60, 0, o?.level) },
+    { id: "s-visitors", name: "Visiting craft at the quarters' docks", kind: "module", y0: STUB_FACE - 60, height: 70, diameter: 140, note: "A Crew Dragon at the control quarter's dock (through an adapter from the H collar to its own port) and a Starship upper stage at the observatory quarter's, at true scale, as photographs show Dragon on the ISS. A docked choice replaces that pair.", place: { x: 0, z: 0 }, pieces: (o) => local(dockedNow.spec === null ? [...dragonPieces(0), ...starshipPieces(2)] : dockedCraft("fleet-kyotori"), 0, STUB_FACE - 60, 0, o?.level) },
   );
   STATION.kinds.forEach((kind, k) => {
     for (const cut of [false, true]) out.push({ id: `s-quarter-${kind}${cut ? "-cut" : ""}`, name: `${kind[0].toUpperCase()}${kind.slice(1)} quarter${cut ? ", cut open" : ""}`, kind: "module", y0: 340, height: 60, diameter: 80, note: `A tower of eight decks of furnished rooms on its arm, with a docking stub for large ships (H collar on a despun ring, facing aft as the ISS nodes' zenith and nadir ports do)${cut ? "; cut open to show the rooms" : ""}.`, place: { x: 0, z: 0 }, pieces: (o) => local(quarterPart(k, { cut, furnish: o?.level !== "coarse" }), 0, 340, 0, o?.level) });

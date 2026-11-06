@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+- **Swap a module** (MODULES-415): a fleet ship's mounts take other modules that mate with them, starting with the mission pod, and the choice stays in the address. The build row names the assembly flight. On Romaryū, two Miyamoto ride berthed on the carrier shaft, and a Dragon comes in along a lit approach to a docking collar on a closed tunnel from the shaft.
+- **The date in the journey** (MODULES-475): every journey view shows the flight's date and time at the top left, moving with the playback, with the day of the trip under it (Day 85 of 265).
+- **Docked craft** (MODULES-438): a ship with docking ports has a Docked craft tab in the panel, where each port takes a craft or None, and the choice stays in the address.
+- **Ship lights** (MODULES-449): the SPX ships carry real lights: red and green running lights, white strobes, lit windows and a lit registry plate, drawn as soft points of light. A Lights choice in the panel's Lights tab picks Off, Running only or All; daylight is the default.
+- **Three axes** (MODULES-468): the camera follows the view controls' roll, so Angle, Tilt and Roll all move the rocket. The family's view controls are 0.17.0, which offers the three axes and a tumble. The journey's playback speeds are the family's speed buttons.
+- **True-scale ghost** (MODULES-460): the fading outline also clears on a two-second timer, so a frame loop that does not come back still ends the cycle. The WebKit skip on that test is gone.
+- **Hanabusa's bible** (MODULES-402): the opening crew figure matches the record, 1,200, and the page states the endurance and the limits the journey already uses.
+- **The fleet bibles** (MODULES-402): Kaminari's first-design page says so, and points at the Quiver's record. Emiake, Romaryū and the Quiver take their length and mass from that record. Kyotori's sheet says which rows the record does not give. Miyamoto's title carries the reading みやもと.
+- **A thrown craft drifts** (MODULES-469): letting go of a craft on the compare page sends it at a quarter of the drag, and never so fast that it would cross the view in under a minute.
+- **Turn speed** (MODULES-470): a background body turns once in about ten minutes, on its own day, and a Turn choice (still, slow, faster, real time) is kept in the address. Reduced motion keeps it still.
+
 ## [0.13.0] - 2026-11-05
 
 Three new SPX ships (Kaminari as the Quiver, Emiake, Romaryū), Hanabusa, the repair drone and builder mode on every large ship, planet and moon backgrounds seen from orbit, a floating compare page, the fleet record and the three-ship comparison, the Moon as a journey start and the journey views.

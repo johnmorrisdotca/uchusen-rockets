@@ -53,6 +53,8 @@ const RAW: Record<string, Raw> = {
   pipes_beside_lunar_module: { spec: { w: 1800, h: 1200, camera: "persp", target: [-96, 116, 64], from: [0.1, -0.55, 1], up: [0, 1, 0], fov: 38, dist: 22, shadow: 30, slots: ["drive"], extra: [{ id: "lunar-module-lunar-module-descent", at: [-92, 119, 61] }] } },
   close_layers: { spec: { w: 1800, h: 1200, camera: "persp", target: [0, 1610, -180], from: [1, 0, 0.1], up: Z, fov: 32, dist: 34, cut: 0, shadow: 40, slots: ["habitat-a"] } },
   beside_starship: { spec: { w: 2000, h: 1200, camera: "persp", target: [60, 880, 30], from: [1, -0.05, 0.05], up: Z, fov: 36, dist: 300, shadow: 260, slots: ["spine", "cargo-1", "cargo-2"], starship: [150, 860, 0] } },
+  // the plan: a Dragon and an Orion on the near arms, nose on the collar, body outboard
+  docked: { spec: { w: 1600, h: 900, camera: "persp", target: [175, 1381, 0], from: [0.35, -0.85, 0.4], up: Z, fov: 32, dist: 55, shadow: 120, slots: ["dock"], docked: "dragon@starboard-26,orion@port-26" } },
   family: { spec: { w: 2800, h: 1200, camera: "persp", target: [0, 700, 0], from: [0.9, -0.5, 0.5], up: Z, fov: 30, dist: 3000, shadow: 1500, starship: [-260, 400, 0], ghosts: [{ size: [118, 380, 74], at: [260, 200, 0], color: "#7fc8ff" }] } },
   // the swappable pod, two variants, and the engines on their own
   pod_survey: { spec: { w: 1400, h: 900, camera: "persp", target: [0, 540, 66], from: [0.8, -0.55, 0.45], up: Z, fov: 30, dist: 260, shadow: 200, slots: ["spine", "pod"] } },
@@ -217,6 +219,10 @@ async function sheets(page: Page): Promise<void> {
     const labels = Object.fromEntries(SHIP_02_SLOTS.map((s) => [s.slot, s.name]));
     const html = `<div class="sheet" style="width:${W}px"><h1>ISV KAMINARI · SPX-207 · EXPLODED ASSEMBLY: EVERY MODULE ON ITS MOUNTING AXIS (YELLOW MARKS ARE THE MOUNTING POINTS)</h1>${annotated("exploded", W, 1000, marksOf.exploded, (id) => labels[id] ?? id)}<div class="row"><div>${legend}</div><div>${titleBlock("4 of 8 · exploded assembly", "90 m added between modules; the spine is not exploded")}</div></div></div>`;
     await sheetPage(page, "sheet_exploded", html, W + 56);
+  }
+  if (want("sheet_docked") && marksOf.docked) {
+    const html = `<div class="sheet" style="width:1680px"><h1>ISV KAMINARI · SPX-207 · DOCKED CRAFT: A DRAGON ON THE STARBOARD ARM</h1><img src="${img("docked")}"/><p>The lower starboard collar. The Dragon's nose meets the ring and the craft hangs outboard. An Orion is on the matching port arm, and the same four arms are on the original arrangement.</p><div class="row"><div>${titleBlock("docked craft", "perspective, from the real model")}</div></div></div>`;
+    await sheetPage(page, "sheet_docked", html, 1736);
   }
   if (want("sheet_pods") && marksOf.pod_survey) {
     const html = `<div class="sheet" style="width:2900px"><h1>ISV KAMINARI · SPX-207 · SWAPPABLE MISSION POD: TWO VARIANTS ON ONE MOUNT</h1><div class="row"><div><h2>SURVEY POD</h2><img src="${img("pod_survey")}"/><p>Three laboratory decks, sample hangar, sensor masts, two dishes and a telescope barrel.</p></div><div><h2>SETTLEMENT POD</h2><img src="${img("pod_settlement")}"/><p>Two decks of round windows, a glazed greenhouse band and two docking ports.</p></div><div>${titleBlock("5 of 8 · mission pod", "same mount, same three clamp arms, same 12 m collar")}</div></div></div>`;

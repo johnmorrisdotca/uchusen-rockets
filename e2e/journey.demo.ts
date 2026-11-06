@@ -29,6 +29,12 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await expect(page.getByTestId("trip-time")).toContainText("d");
   await expect(page.getByTestId("trip-dvout")).toContainText("km/s");
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
+  await expect(page.getByTestId("when-stamp")).toBeVisible();
+  await expect(page.getByTestId("when-date")).toContainText("UTC");
+  await expect(page.getByTestId("when-day")).toContainText("Day");
+  const atStart = await page.getByTestId("when-date").innerText();
+  await page.getByTestId("scrub").fill("800");
+  await expect(page.getByTestId("when-date")).not.toHaveText(atStart);
   expect(await page.locator("details, [aria-expanded]").count()).toBe(0);
   expect(found).toEqual([]);
 });
@@ -42,6 +48,7 @@ test("choosing a place, a craft, a date and a view changes the trip and the addr
   await expect(page.getByTestId("verdict")).toContainText("Rated: 43.5 t to the Moon");
   await page.getByTestId("view-map").click();
   await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "map");
+  await expect(page.getByTestId("when-date")).toContainText("UTC");
   await expect(page.getByTestId("map").locator(".path-ahead")).toHaveCount(1);
   expect(page.url()).toContain("to=moon");
   expect(page.url()).toContain("craft=saturn-v");
@@ -165,7 +172,7 @@ test("the page makes no WebGL context and asks for no frame while nothing moves"
   const after = await page.evaluate(() => (window as unknown as { __raf: number }).__raf);
   expect(after - before).toBe(0);
   await page.getByTestId("view-map").click();
-  await page.getByTestId("speed-4").click();
+  await page.locator("#speeds").getByRole("button", { name: "4×" }).click();
   await page.getByTestId("play").click();
   await expect(page.getByTestId("phase")).not.toHaveText("READY");
   await page.getByTestId("play").click();

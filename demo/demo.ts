@@ -2,6 +2,7 @@
 import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId, buildOf, playFrom } from "../src/index.ts";
 import { besideBounds, besideLayout, craftName } from "../src/beside.ts";
 import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
+import { dockMenu, dockPlan } from "../src/model/fleet/docked.ts";
 import { motionNote, motionsOf } from "../src/model/fleet/motion.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
@@ -17,10 +18,12 @@ import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
-import { aimOrbit, companionsFor, frameSky, orbitCatalogue, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { aimOrbit, applyTurn, companionsFor, frameSky, orbitCatalogue, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
 import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
+import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
+import { separationOf } from "../src/separation.ts";
 
 defineUchusenBuild();
 
@@ -74,7 +77,18 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   else earth?.dispatchEvent(new Event("orbit"));
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look", spin: "slow" } });
+setTurnPace(paceNamed(address.get("spin")));
+const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
+turnButtons.value = paceStep(paceNamed(address.get("spin")));
+turnButtons.addEventListener("kazoku-speedchange", (event) => {
+  const detail = (event as CustomEvent<{ value: number; reason: string }>).detail;
+  if (detail?.reason !== "user") return;
+  const pace = paceFromStep(detail.value);
+  setTurnPace(pace);
+  address.set("spin", pace === "slow" ? null : pace);
+  applyTurn(document);
+});
 /** What can stand beside the craft on screen. `on` is Starship with Super Heavy, the one the address has always used. The others are the same real craft the fleet band lies down. */
 const BESIDE_CHOICES: readonly { id: string; rocket: string; variant: string; testid: string; key?: string }[] = [
   { id: "on", rocket: "starship", variant: "v3", testid: "beside-on", key: "beside" },
@@ -98,15 +112,15 @@ function setScale(on: boolean): void {
 }
 scaleButton.addEventListener("click", () => setScale(hero.getAttribute("scale") !== "true"));
 setScale(address.get("scale") === "true");
-const PANELS = ["look", "background", "motion", "build", "lights"] as const;
+const PANELS = ["look", "background", "motion", "build", "lights", "docked"] as const;
 type PanelName = (typeof PANELS)[number];
 
 /** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. */
 function panelOffered(name: PanelName): boolean {
   if (name === "motion") return !byId("motion-field").hidden;
   if (name === "build") return !byId("build-field").hidden;
-  if (name === "lights") {
-    const field = byId("lights-field");
+  if (name === "lights" || name === "docked") {
+    const field = byId(name === "lights" ? "lights-field" : "docked-field");
     return !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
   }
   return true;
@@ -137,11 +151,12 @@ for (const name of PANELS) {
   });
 }
 new MutationObserver(() => showPanels()).observe(byId("lights-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
+new MutationObserver(() => showPanels()).observe(byId("docked-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
 const askedBeside = address.get("beside") ?? "off";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0 };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0, docked: address.get("docked") ?? dockPlan(firstRocket) };
 
 /** The craft standing beside the one on screen, or nothing when the choice is off or is the craft itself. */
 function besideNow(): { id: string; rocket: string; variant: string } | null {
@@ -181,6 +196,66 @@ function chip(label: string, testid: string, on: () => void, key?: string): HTML
 const press = (group: HTMLElement, chosen: string) => {
   for (const button of group.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === chosen));
 };
+
+/** One row of modules for each hardpoint the ship can change. The choice stays in the address. */
+function drawSwaps(): void {
+  const mounts = mountsOf(state.rocket);
+  byId("swap-field").hidden = mounts.length === 0;
+  const box = byId("swaps");
+  box.replaceChildren();
+  if (mounts.length === 0) return;
+  const chosen = chosenSwap(state.rocket, state.variant, address.get("swap"));
+  for (const mount of mounts) {
+    const row = el("div", { className: "chips" });
+    row.setAttribute("role", "group");
+    row.setAttribute("aria-label", say(`swapSlot_${mount.slot}`));
+    for (const one of mount.choices) {
+      row.append(chip(one.name, `swap-${mount.slot}-${one.id}`, () => {
+        address.set("swap", swapQuery(state.rocket, state.variant, { ...chosen, [mount.slot]: one.id }));
+        renderMain();
+      }, `swap_${one.id}`));
+    }
+    press(row, `swap-${mount.slot}-${chosen[mount.slot]}`);
+    box.append(row);
+  }
+}
+
+/** Slides the planned module clear of the ship. The distance stays in the address. */
+function applyLeave(): void {
+  const plan = separationOf(state.rocket);
+  const field = byId("leave-field");
+  field.hidden = plan === null;
+  const range = byId<HTMLInputElement>("leave-range");
+  if (!plan) {
+    if (address.get("leave")) address.set("leave", null);
+    hero.removeAttribute("leave");
+    return;
+  }
+  const reason = byId("leave-reason");
+  reason.dataset.say = plan.reason;
+  reason.textContent = say(plan.reason);
+  range.setAttribute("aria-label", say("leaveTitle"));
+  const at = Math.min(1, Math.max(0, Number(address.get("leave") ?? "0") || 0));
+  if (document.activeElement !== range) range.value = String(at);
+  if (at > 0) hero.setAttribute("leave", `${plan.slot}:${at.toFixed(2)}`);
+  else hero.removeAttribute("leave");
+}
+
+byId<HTMLInputElement>("leave-range").addEventListener("input", () => {
+  const value = Number(byId<HTMLInputElement>("leave-range").value);
+  address.set("leave", value > 0 ? value.toFixed(2) : null);
+  applyLeave();
+});
+
+/** Puts the address's modules on the ship. A choice that is already the variant is dropped. */
+function applySwap(): void {
+  const raw = address.get("swap");
+  const parts = swapParts(state.rocket, state.variant, raw);
+  if (raw && !parts) address.set("swap", null);
+  const next = parts ? { rocket: state.rocket, variant: state.variant, parts } : null;
+  if (JSON.stringify(hero.description) !== JSON.stringify(next)) hero.description = next;
+  drawSwaps();
+}
 
 const metres = (value: number) => `${value} m`;
 
@@ -402,6 +477,8 @@ function renderMain() {
   (byId("turn").querySelector('[data-testid="compare-open"]') as HTMLAnchorElement).href = `compare.html?${new URLSearchParams({ rocket: state.rocket, variant: state.variant })}`;
   hero.setAttribute("rocket", state.rocket);
   hero.setAttribute("variant", state.variant);
+  applySwap();
+  applyLeave();
   hero.setAttribute("show", state.show);
   hero.setAttribute("look", state.look);
   hero.setAttribute("view", state.view);
@@ -425,6 +502,8 @@ function renderMain() {
   }
   press(byId("beside"), chosen ? (BESIDE_CHOICES.find((choice) => choice.id === chosen.id)?.testid ?? "") : "");
   showMotion();
+  showDocked();
+  showLights();
   // the Kaminari concepts take a size, 60 to 100 per cent. scale="true" is the true-scale view, kept in the address apart from that size; a redraw must not clear it.
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
@@ -493,6 +572,7 @@ function renderMain() {
   drawEmbed();
   syncEarth();
   sizeObject();
+  byId("lights-field").hidden = !state.rocket.startsWith("fleet-");
   showPanels();
 }
 
@@ -517,6 +597,7 @@ function pick(change: Partial<typeof state>) {
   const orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
+  if (change.rocket !== undefined && change.docked === undefined) state.docked = dockPlan(state.rocket);
   if (change.background !== undefined && change.moon === undefined) state.moon = "";
   if (change.background !== undefined) address.set("background", state.background);
   if (change.background !== undefined || change.moon !== undefined) address.set("moon", state.moon ? state.moon : null);
@@ -660,11 +741,65 @@ function lightEngines(on: boolean) {
 enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false), "engines_off"), chip("Lit", "engines-on", () => lightEngines(true), "engines_on"));
 press(enginesBox, "engines-off");
 
+// ------------------------------------------------------------- the lamps
+const lightsBox = byId("lights");
+/** `off`, `running` (position lights, the white flash and the red beacon) or `all` (those plus floods and work lights). The same words as the element's `lights` attribute and the address. Left out of the address, it is `all`. */
+let lightsChoice = ["off", "running", "all"].includes(address.get("lights") ?? "") ? (address.get("lights") as string) : "all";
+function showLights() {
+  hero.setAttribute("lights", lightsChoice);
+  press(lightsBox, `lights-${lightsChoice}`);
+  const note = byId("lights-note");
+  note.hidden = !reducedMotion;
+  note.textContent = say("lightsNote");
+  address.set("lights", lightsChoice === "all" ? null : lightsChoice);
+}
+function chooseLights(choice: string) {
+  lightsChoice = choice;
+  showLights();
+  drawEmbed();
+}
+lightsBox.append(chip("Off", "lights-off", () => chooseLights("off"), "lights_off"), chip("Running only", "lights-running", () => chooseLights("running"), "lights_running"), chip("All", "lights-all", () => chooseLights("all"), "lights_all"));
+
 // ------------------------------------------------------------- the motion of a fleet ship's moving parts
 const motionBox = byId("motion");
 const speedBox = byId("motion-speed");
 /** `on` (real speed), `fast` (ten times) or `off`: the same words as the element's `motion` attribute and the address. */
 let motionChoice = ["on", "fast", "off"].includes(address.get("motion") ?? "") ? (address.get("motion") as string) : "on";
+/** One row of buttons for each port that can take a craft. The choice is `docked` on the ship and in the address. */
+function showDocked() {
+  const menu = dockMenu(state.rocket);
+  const field = byId("docked-field");
+  field.hidden = menu.length === 0;
+  const box = byId("docked");
+  if (menu.length === 0) {
+    hero.removeAttribute("docked");
+    address.set("docked", null);
+    box.replaceChildren();
+    return;
+  }
+  const chosen = new Map(state.docked.split(",").filter(Boolean).map((pair) => {
+    const [craft, port] = pair.split("@");
+    return [port, craft] as const;
+  }));
+  box.replaceChildren(...menu.map((port) => {
+    const row = el("div", { className: "chips" });
+    row.dataset.testid = `docked-${port.id}`;
+    const current = chosen.get(port.id) ?? "";
+    const set = (craft: string) => {
+      const next = new Map(chosen);
+      if (craft) next.set(port.id, craft);
+      else next.delete(port.id);
+      const spec = menu.flatMap((one) => (next.get(one.id) ? [`${next.get(one.id)}@${one.id}`] : [])).join(",");
+      pick({ docked: spec });
+    };
+    row.append(el("span", { className: "docked-port", textContent: port.name }), chip(say("dockedNone"), `docked-${port.id}-none`, () => set(""), "dockedNone"), ...port.craft.map((craft) => chip(craft.label, `docked-${port.id}-${craft.id}`, () => set(craft.id))));
+    press(row, `docked-${port.id}-${current || "none"}`);
+    return row;
+  }));
+  hero.setAttribute("docked", state.docked);
+  address.set("docked", state.docked ? state.docked : null);
+}
+
 function showMotion() {
   const moves = motionsOf(state.rocket).length > 0;
   byId("motion-field").hidden = !moves;
@@ -693,10 +828,11 @@ const here = new URL(".", location.href).href;
 function embedOptions(): RocketOptions {
   const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
+  const lights = hero.getAttribute("lights");
   const motion = hero.getAttribute("motion");
   // what turns here by the controls turns there by itself, as fast: left is `cw`, the near side going left
   const turning = bar.state.turning ? { spin: String(Math.round(360 / (TURN_SPEED * (Number(bar.getAttribute("pace")) || 1)))), way: turnWay === "left" ? "cw" : "ccw" } : {};
-  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(lights === "off" || lights === "running" ? { lights } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
 panel.kinds = KINDS;
 panel.labels = LABELS;
@@ -981,7 +1117,11 @@ function setWords() {
     day: say("buildDay"),
     done: say("buildDone"),
     rate: say("buildRate"),
+    flight: say("buildFlight"),
   };
+  const titles: Record<string, string> = {};
+  for (const key of Object.keys(WORDS.en)) if (key.startsWith("flight_")) titles[key.slice("flight_".length)] = say(key);
+  byId<UchusenBuild>("build-bar").titles = titles;
 }
 function speak() {
   setWords();
@@ -990,6 +1130,7 @@ function speak() {
   renderBuilder();
   lightEngines(hero.getAttribute("engines") === "on");
   showMotion();
+  showLights();
   drawTurn();
   byId("gallery").replaceChildren(...gallery());
   byId("planned-list").replaceChildren(...planned());

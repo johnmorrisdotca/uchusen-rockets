@@ -7,7 +7,8 @@ import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-contro
 import type { EarthForm, EarthShow } from "./earth.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant } from "./sizes.ts";
-import { companionsFor, frameSky, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { applyTurn, companionsFor, frameSky, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
+import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -56,7 +57,18 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   const node = sky.querySelector("wakusei-body:not([data-moon])");
   if (node instanceof HTMLElement) frameSky(node, sky, zoom);
 });
-const address = createAddressState({ defaults: { rocket: "starship", variant: "v3", with: "saturn-v:saturn-v", look: "line", background: "earth", moon: "", place: "float", labels: "on" } });
+const address = createAddressState({ defaults: { rocket: "starship", variant: "v3", with: "saturn-v:saturn-v", look: "line", background: "earth", moon: "", place: "float", labels: "on", spin: "slow" } });
+setTurnPace(paceNamed(address.get("spin")));
+const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
+turnButtons.value = paceStep(paceNamed(address.get("spin")));
+turnButtons.addEventListener("kazoku-speedchange", (event) => {
+  const detail = (event as CustomEvent<{ value: number; reason: string }>).detail;
+  if (detail?.reason !== "user") return;
+  const pace = paceFromStep(detail.value);
+  setTurnPace(pace);
+  address.set("spin", pace === "slow" ? null : pace);
+  applyTurn(document);
+});
 
 const known = (rocket: string | null | undefined, variant: string | null | undefined): Craft | null => {
   if (!rocket || !Object.hasOwn(ROCKETS, rocket)) return null;

@@ -34,6 +34,7 @@ import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
 import { WORDS } from "./words.js";
+import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { destinationGrow, forwardStar } from "../src/journey/forward.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
@@ -90,6 +91,12 @@ const choice = {
 };
 if (choice.to === choice.from) choice.to = choice.from === "earth" ? "mars" : "earth";
 let speed: PlaySpeed = [0.5, 1, 2, 4].includes(Number(query.get("speed"))) ? (Number(query.get("speed")) as PlaySpeed) : 1;
+const speedButtons = byId<HTMLElement & { value: number }>("speeds");
+speedButtons.value = speed;
+speedButtons.addEventListener("kazoku-speedchange", (event) => {
+  const detail = (event as CustomEvent<{ value: number; reason: string }>).detail;
+  if (detail?.reason === "user" && detail.value !== speed) setSpeed(detail.value as PlaySpeed);
+});
 
 function writeAddress(): void {
   const next = new URLSearchParams();
@@ -197,7 +204,6 @@ function drawPickers(): void {
   byId("views").replaceChildren(...VIEWS.map((view) => chip(say(VIEW_WORD[view]), `view-${view}`, choice.view === view, () => setView(view))));
   const painted = choice.look === "painted";
   byId("looks").replaceChildren(chip(say(painted ? "look_line" : "look_painted"), "look-painted", painted, () => setLook(painted ? "line" : "painted")));
-  byId("speeds").replaceChildren(...([0.5, 1, 2, 4] as const).map((value) => chip(`×${value}`, `speed-${value}`, speed === value, () => setSpeed(value))));
 }
 
 function change(next: Partial<{ from: string; to: string; craft: string; when: number; pull: "ship" | "1"; via: "direct" | "jupiter" }>): void {
@@ -264,7 +270,7 @@ function setLook(look: "line" | "painted"): void {
 
 function setSpeed(value: PlaySpeed): void {
   speed = value;
-  for (const button of byId("speeds").querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === `speed-${value}`));
+  if (speedButtons.value !== value) speedButtons.value = value;
   writeAddress();
 }
 
@@ -801,6 +807,11 @@ function draw(force = false): void {
   drawRoute(state);
   if (choice.view === "map") drawMap(state);
   drawPanel(state);
+  setText(byId("when-date"), dateWords(state.dateMs, true));
+  const tripDays = Math.max(1, Math.ceil(trip.frameS / 86_400));
+  const sinceDepart = state.dateMs - trip.departMs;
+  const tripDay = sinceDepart < 0 ? 0 : Math.min(tripDays, Math.floor(sinceDepart / DAY) + 1);
+  setText(byId("when-day"), say("jDayOf", { day: tripDay, days: tripDays }));
   const scrub = byId<HTMLInputElement>("scrub");
   scrub.value = String(Math.round((playhead / total) * 1000));
   scrub.setAttribute("aria-valuetext", `${say(`jPhase_${id}`)}, ${duration(Math.abs(state.missionS))}`);

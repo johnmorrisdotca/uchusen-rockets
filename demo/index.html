@@ -33,12 +33,22 @@
             <h2 id="variant-title" data-say="variant">Variant</h2>
             <div class="chips" id="variants" role="group" aria-labelledby="variant-title"></div>
           </div>
+          <div class="field" id="swap-field" data-testid="swap-field" hidden>
+            <h2 id="swap-title" data-say="swapTitle">Modules</h2>
+            <div id="swaps"></div>
+          </div>
+          <div class="field" id="leave-field" data-testid="leave-field" hidden>
+            <h2 id="leave-title" data-say="leaveTitle">Separate</h2>
+            <p id="leave-reason" data-testid="leave-reason"></p>
+            <input id="leave-range" data-testid="leave-range" type="range" min="0" max="1" step="0.01" value="0">
+          </div>
           <div class="chips panel-tabs" id="panel-tabs" role="tablist" data-say-label="panelLabel" data-testid="panel-tabs">
             <button type="button" class="chip" role="tab" data-testid="panel-look" data-say="look" aria-selected="true">Look</button>
             <button type="button" class="chip" role="tab" data-testid="panel-background" data-say="background">Background</button>
             <button type="button" class="chip" role="tab" data-testid="panel-motion" data-say="motionTitle" hidden>Motion</button>
             <button type="button" class="chip" role="tab" data-testid="panel-build" data-say="buildTitle" hidden>The build</button>
             <button type="button" class="chip" role="tab" data-testid="panel-lights" data-say="panelLights" hidden>Lights</button>
+            <button type="button" class="chip" role="tab" data-testid="panel-docked" data-say="dockedTitle" hidden>Docked craft</button>
           </div>
           <div class="panel-group" data-panel="look">
             <div class="field">
@@ -80,6 +90,8 @@
             <div class="field">
               <h2 id="background-title" data-say="background">Background</h2>
               <div class="chips" id="backgrounds" role="group" aria-labelledby="background-title"></div>
+              <p class="moon-heading"><span data-say="turnPace">Turn</span> <span data-say="turnPaceNote">0 is still, 1 is slow, 10 is faster, and 100 is real time.</span></p>
+              <kazoku-speed-buttons id="turn-pace" data-testid="turn-pace" steps="0 1 10 100" value="1" unit="" no-label></kazoku-speed-buttons>
               <p class="moon-heading" id="moon-heading" data-testid="moon-heading" hidden></p>
               <div class="chips moon-row" id="moons" data-testid="moons" role="group" hidden></div>
               <p class="moon-heading" id="orbit-heading" data-say="orbitTitle" data-testid="orbit-heading" hidden>Distance</p>
@@ -109,7 +121,17 @@
             </div>
           </div>
           <div class="panel-group" data-panel="lights" hidden>
-            <div class="field" id="lights-field" data-testid="lights-field" hidden></div>
+            <div class="field" id="lights-field" data-testid="lights-field" hidden>
+              <h2 id="lights-title" data-say="lights">Lights</h2>
+              <div class="chips" id="lights" role="group" aria-labelledby="lights-title"></div>
+              <p class="note" id="lights-note" data-testid="lights-note" hidden></p>
+            </div>
+          </div>
+          <div class="panel-group" data-panel="docked" hidden>
+            <div class="field" id="docked-field" hidden>
+              <h2 id="docked-title" data-say="dockedTitle">Docked craft</h2>
+              <div id="docked" data-testid="docked"></div>
+            </div>
           </div>
           <div class="field flight-field" id="flight-field">
             <h2 id="flight-title" data-say="flight">Flight</h2>

@@ -43,7 +43,10 @@ body.journey { --bad: #a1262b; }
 .jr-big { display: block; font-size: clamp(1.7rem, 4.2vw, 3rem); line-height: 1.05; font-weight: 500; color: var(--warm); }
 .jr-mid { display: block; font-size: clamp(1.1rem, 2.4vw, 1.6rem); color: var(--warm); }
 .jr-sub { display: block; font-size: 0.82rem; color: var(--accent); letter-spacing: 0.06em; }
-.jr-accel { left: 1.1rem; top: 1rem; }
+.jr-when { left: 1.1rem; top: 0.7rem; }
+.jr-when-date { display: block; font-size: 0.95rem; color: var(--warm); }
+.jr-when-day { display: block; font-size: 0.78rem; color: var(--accent); }
+.jr-accel { left: 1.1rem; top: 4.4rem; }
 .jr-accel .jr-arrow { display: block; width: 7.5rem; height: 1.5rem; margin-top: 0.3rem; color: var(--warm); }
 .jr-accel[data-way="back"] .jr-arrow { transform: scaleX(-1); }
 .jr-accel[data-way="forward"] .jr-arrow { transform: none; }
@@ -76,7 +79,7 @@ body.journey { --bad: #a1262b; }
 .jr-route .chev { fill: none; stroke: #e6f2ff; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
 
 .jr-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 0.7rem; align-items: center; }
-.jr-controls .chips { margin-left: auto; }
+.jr-controls .chips, .jr-controls kazoku-speed-buttons { margin-left: auto; }
 .jr-play { min-width: 6.5rem; font-weight: 600; }
 .jr-scrub { flex: 1 1 10rem; display: block; min-width: 8rem; }
 .jr-visually { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -140,7 +143,7 @@ body.journey { --bad: #a1262b; }
   .jr-facts { grid-template-columns: minmax(0, 1fr); }
   .jr-cols { grid-template-columns: minmax(0, 1fr); }
   .jr-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .jr-controls .chips { margin-left: 0; }
+  .jr-controls .chips, .jr-controls kazoku-speed-buttons { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .jr-ring-fill { transition: none; }
