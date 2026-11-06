@@ -333,6 +333,8 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   await expect.poll(() => page.getByTestId("painted-rocket").getAttribute("data-state")).toBe("3d");
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBeGreaterThan(0);
   await page.getByTestId("view-front").click();
+  await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  await page.getByTestId("view-map").click();
   await expect(page.getByTestId("painted-rocket")).toHaveCount(0);
   const left = await page.evaluate(() => (window as unknown as { __gl: number }).__gl);
   await page.waitForTimeout(400);
@@ -375,4 +377,76 @@ test("a rocket to Saturn can swing past Jupiter, and the path says it is an assi
   await expect(page.getByTestId("via-field")).toBeHidden();
   await page.goto(`${URL}&from=moon&to=saturn&craft=saturn-v`);
   await expect(page.getByTestId("via-field")).toBeHidden();
+});
+
+test("perceived size is the default and the destination grows through the trip; true size is a choice", async ({ page }) => {
+  await page.goto(URL);
+  await expect(page.getByTestId("size-perceived")).toHaveAttribute("aria-pressed", "true");
+  expect(page.url()).not.toContain("size=");
+  const span = () => page.getByTestId("dest").getAttribute("data-span").then((value) => Number(value));
+  const start = await span();
+  await page.getByTestId("scrub").fill("400");
+  const mid = await span();
+  await page.getByTestId("scrub").fill("1000");
+  const end = await span();
+  expect(mid).toBeGreaterThan(start);
+  expect(end).toBeGreaterThan(mid);
+  await page.getByTestId("size-true").click();
+  expect(page.url()).toContain("size=true");
+  await expect(page.getByTestId("size-true")).toHaveAttribute("aria-pressed", "true");
+});
+
+test("Painted draws a painted planet and the craft's painted model", async ({ page }) => {
+  await page.goto(`${URL}&look=painted`);
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-look", "painted");
+  const planet = page.getByTestId("dest").locator("wakusei-body");
+  await expect(planet).toHaveAttribute("body", "mars");
+  await expect(planet).toHaveAttribute("look", "painted");
+  await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  await expect(page.getByTestId("from").locator("wakusei-body")).toHaveAttribute("look", "painted");
+});
+
+test("the arrival card closes by the cross, Escape and a click outside, and Summary opens it again", async ({ page }) => {
+  await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
+  const card = page.getByTestId("summary");
+  await expect(card).toBeVisible();
+  const stage = await page.getByTestId("stage").boundingBox();
+  const box = await card.boundingBox();
+  expect(stage && box && box.width < stage.width * 0.9).toBe(true);
+  await page.getByTestId("summary-close").click();
+  await expect(card).toBeHidden();
+  await page.getByTestId("summary-open").click();
+  await expect(card).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(card).toBeHidden();
+  await page.getByTestId("summary-open").click();
+  await page.getByTestId("sky").click({ position: { x: 8, y: 8 } });
+  await expect(card).toBeHidden();
+});
+
+test("a trip that cannot start says why on the stage and on Play, and can leave from the Earth", async ({ page }) => {
+  await page.goto(`${URL}&from=uranus&to=saturn&craft=falcon-heavy`);
+  await expect(page.getByTestId("blocked")).toBeVisible();
+  await expect(page.getByTestId("blocked-why")).toContainText("leave from the Earth or the Moon");
+  await expect(page.getByTestId("play")).toBeDisabled();
+  await expect(page.getByTestId("play")).toHaveAttribute("title", /leave from the Earth or the Moon/);
+  await page.getByTestId("leave-earth").click();
+  await expect(page.getByTestId("from-earth")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("blocked")).toBeHidden();
+  await expect(page.getByTestId("play")).toBeEnabled();
+});
+
+test("the page bar links every page on one row and marks this page", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(URL);
+  const bar = page.getByTestId("page-links");
+  for (const name of ["Rockets", "Compare", "Journey", "Fleet", "Yard", "Builder", "Docs", "Embed"]) {
+    await expect(bar.getByRole("link", { name })).toBeVisible();
+  }
+  await expect(bar.getByRole("button", { name: "Help" })).toBeVisible();
+  await expect(bar.getByRole("link", { name: "Journey" })).toHaveAttribute("aria-current", "page");
+  await expect(bar.getByRole("link", { name: "Compare" })).toHaveAttribute("href", "compare.html");
+  const tops = await bar.locator("a, button").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
+  expect(new Set(tops).size, tops.join(",")).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });

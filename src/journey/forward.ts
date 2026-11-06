@@ -41,3 +41,32 @@ export function bodySpan(radiusKm: number, distanceKm: number): number {
   const angle = 2 * Math.atan(radius / Math.max(distance, 1));
   return Math.min(BODY_CAP, Math.max(BODY_FLOOR, angle / VIEW_RADIANS));
 }
+
+const PERCEIVED_FLOOR = 0.14;
+const PERCEIVED_CAP = 0.92;
+
+/**
+ * How much of the view a body fills when size is perceived. It is logarithmic in distance: a visible disc at the far end, and nearly the whole view up close. Closing the distance grows it; opening the distance shrinks it.
+ * @param distanceKm How far the craft is from the body's centre, km.
+ * @param farKm The distance at which the body is smallest, km.
+ * @param nearKm The distance at which the body is largest, km.
+ * @returns The share of the view.
+ */
+export function perceivedSpan(distanceKm: number, farKm: number, nearKm: number): number {
+  const near = Math.max(1, nearKm);
+  const far = Math.max(near * 1.001, farKm);
+  const distance = Math.min(far, Math.max(near, distanceKm));
+  const grown = Math.log(far / distance) / Math.log(far / near);
+  return PERCEIVED_FLOOR + (PERCEIVED_CAP - PERCEIVED_FLOOR) * grown;
+}
+
+/**
+ * How much of the view the destination fills as the trip plays. The ease is logarithmic, so it is already a disc at the start and still has room to grow at the end, and it only grows.
+ * @param progress How much of the trip is behind, 0 to 1.
+ * @returns The share of the view.
+ */
+export function perceivedAlong(progress: number): number {
+  const t = Math.min(1, Math.max(0, progress));
+  const eased = Math.log1p(t * 9) / Math.log(10);
+  return PERCEIVED_FLOOR + (PERCEIVED_CAP - PERCEIVED_FLOOR) * eased;
+}

@@ -9,7 +9,8 @@ const CSS = `
 .row, .stills { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
 .stills { margin-top: 0.4rem; }
 slot[name="speed"] { display: contents; }
-button { min-width: 44px; min-height: 44px; padding: 0.3rem 0.75rem; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+button { display: inline-flex; align-items: center; gap: 0.35rem; min-width: 44px; min-height: 44px; padding: 0.3rem 0.75rem; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+button svg { width: 0.9rem; height: 0.9rem; fill: currentColor; flex: none; }
 button[aria-pressed="true"] { font-weight: 700; }
 button:disabled { opacity: 0.45; cursor: default; }
 button:focus-visible, input:focus-visible, ::slotted(button:focus-visible) { outline: 2px solid currentColor; outline-offset: 2px; }
@@ -43,6 +44,25 @@ export interface BuildWords {
   flight: string;
 }
 
+const NS = "http://www.w3.org/2000/svg";
+const ICON = { play: "M4 2.2 13 8 4 13.8z", pause: "M3 2h3.2v12H3zM9.8 2H13v12H9.8z", back: "M2 2h2.2v12H2zM14 3 6.2 8 14 13z" };
+
+function icon(kind: keyof typeof ICON): SVGElement {
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(NS, "path");
+  path.setAttribute("d", ICON[kind]);
+  svg.append(path);
+  return svg;
+}
+
+function labelled(kind: keyof typeof ICON, text: string): Node[] {
+  const word = document.createElement("span");
+  word.textContent = text;
+  return [icon(kind), word];
+}
+
 const DAY_S = 86_400;
 
 function clockOf(day: number): { day: number; clock: string } {
@@ -55,7 +75,7 @@ function clockOf(day: number): { day: number; clock: string } {
 const WORDS: BuildWords = {
   play: "Play",
   pause: "Pause",
-  start: "Start",
+  start: "Back to start",
   repeat: "Repeat",
   range: "Where in the build",
   day: "Day {day}, {clock}",
@@ -278,10 +298,14 @@ export class UchusenBuild extends HTMLBase {
     const reduced = this.reduced();
     const frame = playFrame(order, this.place);
     const playing = this.dataset.playing === "true";
-    parts.play.textContent = this.word(playing ? "pause" : "play");
+    const playWord = this.word(playing ? "pause" : "play");
+    const startWord = this.word("start");
+    parts.play.replaceChildren(...labelled(playing ? "pause" : "play", playWord));
+    parts.play.title = playWord;
     parts.play.disabled = reduced;
     parts.play.setAttribute("aria-pressed", String(playing));
-    parts.start.textContent = this.word("start");
+    parts.start.replaceChildren(...labelled("back", startWord));
+    parts.start.title = startWord;
     parts.repeat.textContent = this.word("repeat");
     parts.repeat.setAttribute("aria-pressed", String(this.repeatOn));
     parts.range.value = String(this.place);
