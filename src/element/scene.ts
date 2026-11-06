@@ -5,6 +5,7 @@ import {
   ACESFilmicToneMapping,
   AdditiveBlending,
   BackSide,
+  Box3,
   BufferGeometry,
   CanvasTexture,
   Color,
@@ -18,6 +19,7 @@ import {
   LineBasicMaterial,
   LinearMipmapLinearFilter,
   MathUtils,
+  Matrix4,
   type Material,
   Mesh,
   MeshBasicMaterial,
@@ -68,6 +70,8 @@ import { GroundKit } from "./ground.ts";
 import { placeNameLabels } from "./namePlace.ts";
 import { plinthGroup, type Footprint } from "./plinth.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
+import { ThrusterLayer } from "./thrusterLayer.ts";
+import { craftJets, endQuads, type Jet, type ThrusterMode } from "../thrusters.ts";
 
 /** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
 const NIGHT_SHIPS = new Set(["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-02", "fleet-02-original", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"]);
@@ -228,6 +232,10 @@ export class RocketViewer {
   private ghost: { group: Group; material: LineBasicMaterial; start: number | null; timer: number } | null = null;
   private scaleBar: HTMLElement | null = null;
   private parts: PartView[] = [];
+  private thrusterChoice: ThrusterMode = "off";
+  private thrusters: ThrusterLayer | null = null;
+  private lastThrow: Vector3 | null = null;
+  private lastYaw: number | null = null;
   private built: Built | null = null;
   private look: LookName = "line";
   private show = "together";
@@ -314,7 +322,7 @@ export class RocketViewer {
   private nameLabels = true;
   /** Where a thrown craft has got to, and how fast it is still going, in world metres. */
   private toss = new Map<number, { offset: Vector3; velocity: Vector3 }>();
-  private grab: { craft: number; x: number; y: number; t: number; sx: number; sy: number; t0: number } | null = null;
+  private grab: { craft: number; x: number; y: number; t: number; sx: number; sy: number; t0: number; burst: boolean } | null = null;
   private press: { x: number; y: number } | null = null;
   private readonly slotRay = new Raycaster();
   private swarm: SwarmRig | null = null;
@@ -550,6 +558,7 @@ export class RocketViewer {
       this.flightOn = false;
       this.setFlight(this.clockNow);
     }
+    this.mountThrusters();
     this.canvas.dataset.ready = "true";
     this.canvas.dataset.parts = this.parts.filter((part) => !part.beside).map((part) => part.slot).join(" ");
     this.canvas.dataset.beside = built.beside.length ? "on" : "off";
@@ -896,6 +905,7 @@ export class RocketViewer {
   setReduced(reduced: boolean): void {
     this.options.reducedMotion = reduced;
     this.applyLamps(performance.now() / 1000);
+    this.mountThrusters();
     this.wake();
   }
 
@@ -906,6 +916,14 @@ export class RocketViewer {
     this.applyLamps(performance.now() / 1000);
     this.canvas.dataset.lights = mode;
     this.needsDraw = true;
+    this.wake();
+  }
+
+  /** Thrusters off, shown, or station-keeping. Off draws nothing. Reduced motion keeps the nozzles and drops the puffs and the drift. */
+  setThrusters(mode: ThrusterMode): void {
+    this.thrusterChoice = mode;
+    this.canvas.dataset.thrusters = mode;
+    this.mountThrusters();
     this.wake();
   }
 
@@ -1453,6 +1471,7 @@ export class RocketViewer {
     this.controls.autoRotateSpeed = autoRotateOf(spin);
     this.controls.autoRotate = !this.driven && !this.options.reducedMotion && spin.seconds > 0;
     this.canvas.dataset.spin = `${spin.seconds}${spin.way}`;
+    if (spin.seconds > 0) this.thrusters?.turn();
     this.wake();
   }
 
@@ -1461,6 +1480,8 @@ export class RocketViewer {
     const same = choice !== null && this.driven !== null && (Object.keys(choice) as (keyof ViewChoice)[]).every((key) => choice[key] === this.driven?.[key]);
     if (same) return;
     this.driven = choice;
+    if (choice && this.lastYaw !== null && Math.abs(choice.yaw - this.lastYaw) > 12) this.thrusters?.turn();
+    this.lastYaw = choice ? choice.yaw : null;
     this.controls.enabled = choice === null;
     if (choice) this.controls.autoRotate = false;
     this.canvas.style.touchAction = choice ? "auto" : "pan-y";
@@ -1679,6 +1700,8 @@ export class RocketViewer {
     this.disposeParts();
     this.clearGhost();
     this.scaleBar?.remove();
+    this.thrusters?.dispose();
+    this.thrusters = null;
     this.plumes.dispose();
     this.ground?.dispose();
     this.glow?.geometry.dispose();
@@ -1693,7 +1716,58 @@ export class RocketViewer {
   }
 
   /** Lets the graphics card have back what the parts took: geometries, the thick lines' materials and a licensed model's own materials and pictures. */
+  /** Jets for this rocket, in the rocket's own space, one instanced draw. Off leaves the ship as it was. */
+  private mountThrusters(): void {
+    this.thrusters?.dispose();
+    this.thrusters = null;
+    this.root.position.set(0, 0, 0);
+    this.canvas.dataset.nozzles = "0";
+    this.canvas.dataset.puff = "0";
+    if (this.thrusterChoice === "off" || !this.built) return;
+    const rocket = this.built.report.variant?.rocket ?? "";
+    const variant = this.built.report.variant?.id ?? "";
+    const plan = craftJets(rocket, variant);
+    if (!plan) return;
+    const jets = plan === "ends" ? endQuads(...this.hullBox()) : this.placedJets(plan);
+    if (jets.length === 0) return;
+    this.thrusters = new ThrusterLayer(this.root, jets, this.thrusterChoice, Boolean(this.options.reducedMotion));
+    this.canvas.dataset.nozzles = String(this.thrusters.nozzleCount());
+  }
+
+  /** The ship's own box, in the rocket's space, for a quad on each face. */
+  private hullBox(): [Vec3, Vec3] {
+    const box = new Box3();
+    for (const part of this.parts) {
+      if (part.beside || !part.holder.visible) continue;
+      part.holder.updateWorldMatrix(true, true);
+      box.expandByObject(part.holder);
+    }
+    if (box.isEmpty()) return [[-1, 0, -1], [1, 10, 1]];
+    const root = new Matrix4().copy(this.root.matrixWorld).invert();
+    box.applyMatrix4(root);
+    return [[box.min.x, box.min.y, box.min.z], [box.max.x, box.max.y, box.max.z]];
+  }
+
+  /** A craft's own jets, moved from each part into the rocket's space. */
+  private placedJets(jets: readonly Jet[]): Jet[] {
+    const out: Jet[] = [];
+    const at = new Vector3();
+    const dir = new Vector3();
+    const into = new Matrix4().copy(this.root.matrixWorld).invert();
+    for (const one of jets) {
+      const part = this.parts.find((view) => view.slot === one.slot && !view.beside);
+      if (!part) continue;
+      part.holder.updateWorldMatrix(true, false);
+      at.set(one.at[0], one.at[1], one.at[2]).applyMatrix4(part.holder.matrixWorld).applyMatrix4(into);
+      dir.set(one.dir[0], one.dir[1], one.dir[2]).transformDirection(part.holder.matrixWorld).transformDirection(into);
+      out.push({ ...one, slot: "", at: [at.x, at.y, at.z], dir: [dir.x, dir.y, dir.z] });
+    }
+    return out;
+  }
+
   private disposeParts(): void {
+    this.thrusters?.dispose();
+    this.thrusters = null;
     this.swarm?.dispose();
     this.swarm = null;
     this.clearPlinths();
@@ -2096,6 +2170,13 @@ export class RocketViewer {
       }
     }
     this.coastDrift(dt);
+    const awake = now - this.lastActive < IDLE_STOP_MS;
+    const drift = this.thrusters?.step(dt, awake) ?? null;
+    if (drift) {
+      this.root.position.set(drift.x, drift.y, drift.z);
+      this.canvas.dataset.puff = String(this.thrusters?.puffCount() ?? 0);
+      this.needsDraw = true;
+    }
     const changed = this.controls.update(dt);
     if (this.needsDraw || changed || this.pose) {
       this.syncSizes();
@@ -2139,7 +2220,8 @@ export class RocketViewer {
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
     const drifting = this.drifting();
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || pulsing || drifting || this.ghost)) this.frame = requestAnimationFrame(this.tick);
+    const jetting = this.thrusterChoice === "station-keeping" && !this.options.reducedMotion && awake || (this.thrusters?.puffCount() ?? 0) > 0;
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || pulsing || drifting || jetting || this.ghost)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 
@@ -2205,7 +2287,7 @@ export class RocketViewer {
     const toss = this.tossOf(craft);
     toss.velocity.set(0, 0, 0);
     const now = performance.now();
-    this.grab = { craft, x: event.clientX, y: event.clientY, t: now, sx: event.clientX, sy: event.clientY, t0: now };
+    this.grab = { craft, x: event.clientX, y: event.clientY, t: now, sx: event.clientX, sy: event.clientY, t0: now, burst: false };
     this.canvas.dataset.hit = String(craft);
     window.addEventListener("pointermove", this.onPull);
     window.addEventListener("pointerup", this.onRelease);
@@ -2231,6 +2313,11 @@ export class RocketViewer {
     grab.x = event.clientX;
     grab.y = event.clientY;
     grab.t = performance.now();
+    if (!grab.burst && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+      grab.burst = true;
+      const { right, up } = this.cameraAxes();
+      this.thrusters?.burst(right.multiplyScalar(dx).addScaledVector(up, -dy));
+    }
     this.shiftCraft(grab.craft, dx, dy);
     this.wrapDrift();
     this.applyDrift();
@@ -2252,8 +2339,14 @@ export class RocketViewer {
     // A quarter of the drag, and never so fast that the craft crosses the view in under a minute.
     const cap = (Math.max(1, this.canvas.clientWidth) * step) / 60;
     const limit = Math.min(dragged.length() * 0.25, cap);
-    if (dragged.length() > 1e-9 && limit > 0) toss.velocity.copy(dragged).setLength(limit);
-    else toss.velocity.set(0, 0, 0);
+    if (dragged.length() > 1e-9 && limit > 0) {
+      toss.velocity.copy(dragged).setLength(limit);
+      this.lastThrow = toss.velocity.clone();
+      this.thrusters?.burst(toss.velocity);
+    } else {
+      toss.velocity.set(0, 0, 0);
+      if (grab.burst) this.thrusters?.brake(dragged);
+    }
     this.canvas.dataset.drift = toss.velocity.length().toFixed(2);
     this.canvas.dataset.driftCap = cap.toFixed(2);
     this.canvas.dataset.driftX = (toss.velocity.dot(right) / step).toFixed(1);
@@ -2391,6 +2484,8 @@ export class RocketViewer {
     for (const toss of this.toss.values()) if (toss.velocity.lengthSq() > 1e-6) moving = true;
     if (!moving) return;
     if (performance.now() - this.lastActive >= IDLE_STOP_MS) {
+      if (this.lastThrow) this.thrusters?.brake(this.lastThrow);
+      this.lastThrow = null;
       for (const toss of this.toss.values()) toss.velocity.set(0, 0, 0);
       this.canvas.dataset.drift = "0";
       return;
