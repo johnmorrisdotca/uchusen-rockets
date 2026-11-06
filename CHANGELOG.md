@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The journey, fixed** (MODULES-497): the planets are painted (the Chikyu Earth and the wakusei bodies), the destination starts small and fills the frame only on arrival, the body left behind sits behind the craft, the date, phase and speed sit on dark panels that read over any planet, the craft stays whole and clear of them, and a trip that cannot start says why with a Leave from the Earth button.
 - **Changing ship eases to its size** (MODULES-504): picking a ship of another size keeps the old scale at the switch and then eases to Fit, so going from Kyotori (447 m) to Kaminari (1,815 m) zooms out to show the much larger ship, and the reverse zooms in; reduced motion jumps.
 - **Shorter fleet jets** (MODULES-479): a quad's glow reaches about four nozzle lengths, with a bright core at the bell and a faint edge that fades into black.
 - **The yard is painted** (MODULES-499): truss chords are white painted members with darker metal joints and braces, the walkway is blanket, and the frames catch a sky reflection with panel breaks and bolt rows, from ISS truss and Canadarm2 photographs.
