@@ -70,8 +70,8 @@ export function solar(g: Geo, y: number): Piece[] {
     const n = 80;
     const gap = deg(1.1);
     const sweep = deg(360 / n) - gap;
-    const cell: Lathe = { kind: "lathe", material: "solar", segs: 8, only: "mesh", arc: () => [-sweep / 2, sweep / 2], profile: [[r, y - half], [r, y + half]] };
-    const rib: Lathe = { kind: "lathe", material: "hull-grey", segs: 8, only: "mesh", arc: () => [sweep / 2, sweep / 2 + gap * 0.7], profile: [[r + 0.12, y - half], [r + 0.12, y + half]] };
+    const cell: Lathe = { kind: "lathe", material: "solar", segs: 8, only: "mesh", arc: () => [-sweep / 2, sweep / 2], profile: [[r, -half], [r, half]] };
+    const rib: Lathe = { kind: "lathe", material: "hull-grey", segs: 8, only: "mesh", arc: () => [sweep / 2, sweep / 2 + gap * 0.7], profile: [[r + 0.12, -half], [r + 0.12, half]] };
     out.push(hoop("hull-grey", r + 0.05, y - half, 0.35, 160, 8), hoop("hull-grey", r + 0.05, y + half, 0.35, 160, 8), hoop("hull-grey", r + 0.16, y - half / 3, 0.16, 160, 6), hoop("hull-grey", r + 0.16, y + half / 3, 0.16, 160, 6));
     out.push(...poses(n, y).map((p) => place([cell, rib], p)).flat());
   } else {
