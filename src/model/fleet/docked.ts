@@ -6,8 +6,10 @@ import { boundsOfPieces, type Piece, type Vec3 } from "../pieces.ts";
 import { orionDocked, ORION_DOCKED_LENGTH } from "../sls.ts";
 import { shipPieces, STARSHIP_DRAWS } from "../starship.ts";
 import { place } from "./detail.ts";
+import { aimCraft } from "./dockedAim.ts";
 import { dockedNow } from "./dockedState.ts";
 import { DOCK, PORTS as HANABUSA } from "./ship-01/docking.ts";
+import { PORTS as MIYAMOTO } from "./ship-03/docking.ts";
 import { PORTS as KYOTORI } from "./ship-kyotori/docking.ts";
 
 export type CraftId = "dragon" | "soyuz" | "orion" | "starship";
@@ -27,6 +29,7 @@ const LABELS: Readonly<Record<CraftId, string>> = { dragon: "Dragon", soyuz: "So
 const FACES: Readonly<Record<string, readonly DockFace[]>> = {
   "fleet-ship-01": HANABUSA,
   "fleet-kyotori": KYOTORI,
+  "fleet-ship-03": MIYAMOTO,
 };
 
 /** The ports of a ship that a person can put a craft on, in the order the ship records them. */
@@ -93,6 +96,11 @@ export function dockedCraft(rocket: string, spec: string | null = dockedNow.spec
     const model = made(craft);
     if (face.seat) {
       out.push(...place(model.pieces, { at: [face.seat[0], face.seat[1], face.seat[2]] }));
+      continue;
+    }
+    const alongKeel = Math.abs(face.dir[1]) > 0.99 && Math.hypot(face.dir[0], face.dir[2]) < 0.01;
+    if (!alongKeel) {
+      out.push(...aimCraft(model.pieces, model.nose, face.at, face.dir));
       continue;
     }
     const down = face.dir[1] < 0;

@@ -36,6 +36,22 @@ test("a nose-down port holds the craft off the collar, not through it", () => {
   assert.ok(reach.max[1] > port.at[1] + 7);
 });
 
+test("a Dragon hangs below Miyamoto's ventral port, nose on the collar", () => {
+  const reach = dockedReach("fleet-ship-03", "dragon@dragon-ventral");
+  assert.ok(reach);
+  assert.ok(Math.abs(reach.max[2] - -28) < 0.2, reach.max[2]);
+  assert.ok(reach.min[2] < -34, reach.min[2]);
+  assert.ok(Math.abs((reach.min[0] + reach.max[0]) / 2 - 8) < 1.5);
+  assert.equal(dockedCraft("fleet-ship-03", "dragon@starship-ventral").length, 0);
+  assert.equal(dockMenu("fleet-ship-03").length, 2);
+  const bare = build({ rocket: "fleet-ship-03", variant: "miyamoto" }, { detail: "coarse" });
+  const docked = build({ rocket: "fleet-ship-03", variant: "miyamoto" }, { detail: "coarse", docked: "dragon@dragon-ventral" });
+  const again = build({ rocket: "fleet-ship-03", variant: "miyamoto" }, { detail: "coarse" });
+  const count = (built: typeof bare) => built.parts.find((part) => part.slot === "fuel-fore")?.pieces.length ?? 0;
+  assert.ok(count(docked) > count(bare));
+  assert.equal(count(again), count(bare));
+});
+
 test("the menu is the ports that name a craft, and a build does not keep a craft it was not asked for", () => {
   assert.ok(dockMenu("fleet-ship-01").some((port) => port.id === "crew-s" && port.craft.some((craft) => craft.id === "dragon")));
   assert.equal(dockMenu("starship").length, 0);
