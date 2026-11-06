@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - **Hanabusa's bible** (MODULES-402): the opening crew figure matches the record, 1,200, and the page states the endurance and the limits the journey already uses.
+- **The fleet bibles** (MODULES-402): Kaminari's first-design page says so, and points at the Quiver's record. Emiake, Romaryū and the Quiver take their length and mass from that record. Kyotori's sheet says which rows the record does not give. Miyamoto's title carries the reading みやもと.
 
 ## [0.13.0] - 2026-11-05
 
