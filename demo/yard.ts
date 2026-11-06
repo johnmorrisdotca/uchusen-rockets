@@ -1,4 +1,4 @@
-// The yard on a page: one mesh for the bays and one for the spine that can leave, drawn only when the view changes.
+// The yard on a page: one mesh for the bays and one for the spine that can leave. A still view draws once. While the build player plays, the frame loop stays running so the drones keep working.
 import { AmbientLight, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector3, WebGLRenderer, SRGBColorSpace } from "three";
 import { discRadius } from "@johnmorrisdotca/chikyu-earth/realistic";
 import type { ChikyuEarthRealistic } from "@johnmorrisdotca/chikyu-earth/realistic/element";
@@ -195,11 +195,41 @@ function draw(): void {
 }
 
 function poke(): void {
-  if (queued || document.hidden) return;
+  if (queued || playing || document.hidden) return;
   queued = requestAnimationFrame(() => {
     queued = 0;
     draw();
   });
+}
+
+let playing = false;
+let playQueued = 0;
+let playFrames = 0;
+
+function playLoop(now: number): void {
+  playQueued = 0;
+  if (!playing || document.hidden) return;
+  const bay = bayNow();
+  if (bay) {
+    const where = bays.paint(bay, along[bay] ?? 0, reduce, now / 1000);
+    bays.step(bay, now / 1000);
+    if (where) stage.dataset.drone = where.map((n) => n.toFixed(2)).join(",");
+  }
+  playFrames += 1;
+  stage.dataset.frames = String(playFrames);
+  draw();
+  playQueued = requestAnimationFrame(playLoop);
+}
+
+function setPlaying(on: boolean): void {
+  playing = on;
+  stage.dataset.playing = on ? "yes" : "no";
+  if (on) {
+    if (!playQueued) playQueued = requestAnimationFrame(playLoop);
+    return;
+  }
+  if (playQueued) cancelAnimationFrame(playQueued);
+  playQueued = 0;
 }
 
 function slide(): void {
@@ -231,9 +261,11 @@ function showShip(): void {
     bar.at = along[bay] ?? bays.rest(bay);
     bar.onMove = (at) => {
       if (bayNow() === bay) along[bay] = at;
+      if (playing) return;
       bays.paint(bayNow(), along[bayNow() ?? "hall"] ?? 0, reduce);
       poke();
     };
+    bar.onPlay = setPlaying;
     bar.onRepeat = () => undefined;
   }
   bays.paint(building ? bay : null, bay ? (along[bay] ?? 0) : 0, reduce);
@@ -288,6 +320,24 @@ canvas.addEventListener("webglcontextlost", (event) => {
   event.preventDefault();
   if (queued) cancelAnimationFrame(queued);
   queued = 0;
+  if (playQueued) cancelAnimationFrame(playQueued);
+  playQueued = 0;
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && playing && !playQueued) playQueued = requestAnimationFrame(playLoop);
+});
+
+const watch = document.querySelector<HTMLButtonElement>("[data-testid=yard-watch]");
+watch?.addEventListener("click", () => {
+  bar.watch = !bar.watch;
+  watch.setAttribute("aria-pressed", String(bar.watch));
+  if (bar.watch && bar.dataset.playing !== "true") bar.shadowRoot?.querySelector<HTMLButtonElement>("[data-testid=build-play]")?.click();
+});
+document.querySelector("kazoku-speed-buttons")?.addEventListener("kazoku-speedchange", (event) => {
+  if ((event as CustomEvent<{ reason?: string }>).detail?.reason !== "user") return;
+  bar.watch = false;
+  watch?.setAttribute("aria-pressed", "false");
 });
 
 new ResizeObserver(() => {
