@@ -73,7 +73,16 @@ test("the size slider: offered to the concepts only, 60 to 100 in steps of 5, in
     await expect.poll(() => param(page, "kscale")).toBe("85");
     await expect(hero(page)).toHaveAttribute("data-size", "85");
     await inView(page, "fleet-kaminari", 85, true);
-  } else await slider(page).fill("85");
+  } else {
+    // WebKit's fill fires no `change` here the second time: let the thumb go as a finger does
+    await slider(page).evaluate((node) => {
+      const input = node as HTMLInputElement;
+      input.value = "85";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await expect.poll(() => param(page, "kscale")).toBe("85");
+  }
 
   // a reload keeps it, and a size between two steps lands on the nearest
   await page.reload();

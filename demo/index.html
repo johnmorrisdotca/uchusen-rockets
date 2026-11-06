@@ -60,10 +60,6 @@
                 <h2 id="engines-title" data-say="engines">Engines</h2>
                 <div class="chips" id="engines" role="group" aria-labelledby="engines-title"></div>
               </div>
-              <div class="field">
-                <h2 id="lights-title" data-say="lights">Lights</h2>
-                <div class="chips" id="lights" role="group" aria-labelledby="lights-title"></div>
-              </div>
               <div class="field" id="beside-field">
                 <h2 id="beside-title" data-say="besideTitle">Scale</h2>
                 <div class="chips" id="beside" role="group" aria-labelledby="beside-title"></div>
@@ -78,7 +74,6 @@
               </div>
               <p class="note" id="kscale-note" data-testid="kscale-note" hidden></p>
               <p class="note" id="engines-note" data-testid="engines-note" hidden></p>
-              <p class="note" id="lights-note" data-testid="lights-note" hidden></p>
             </div>
           </div>
           <div class="panel-group" data-panel="background" hidden>
@@ -109,12 +104,16 @@
             <div class="field" id="build-field" hidden>
               <h2 id="build-title" data-say="buildTitle">The build</h2>
               <uchusen-build id="build-bar" data-testid="build-bar" aria-labelledby="build-title">
-                <kazoku-speed-buttons slot="speed" steps="1 60 600 3600 10000 100000" value="1" address address-key="build-speed" no-label></kazoku-speed-buttons>
+                <kazoku-speed-buttons slot="speed" steps="1 60 600 3600 10000 86400 100000" value="1" address address-key="build-speed" no-label></kazoku-speed-buttons>
               </uchusen-build>
             </div>
           </div>
           <div class="panel-group" data-panel="lights" hidden>
-            <div class="field" id="lights-field" data-testid="lights-field" hidden></div>
+            <div class="field" id="lights-field" data-testid="lights-field" hidden>
+              <h2 id="lights-title" data-say="lights">Lights</h2>
+              <div class="chips" id="lights" role="group" aria-labelledby="lights-title"></div>
+              <p class="note" id="lights-note" data-testid="lights-note" hidden></p>
+            </div>
           </div>
           <div class="field flight-field" id="flight-field">
             <h2 id="flight-title" data-say="flight">Flight</h2>

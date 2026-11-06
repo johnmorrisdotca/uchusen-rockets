@@ -9,9 +9,18 @@ test("one group shows at a time, and the tab is kept in the address", async ({ p
   await expect(page.locator('[data-testid="rocket-fleet-ship-01"]')).toBeVisible();
   await expect(page.locator('[data-testid="variant-hanabusa"]')).toBeVisible();
   await expect(page.locator('[data-testid="panel-look"]')).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator('[data-testid="panel-look"]')).toHaveCSS("background-color", "rgb(28, 53, 86)");
   await expect(page.locator('[data-testid="look-line"]')).toBeVisible();
   await expect(page.locator('[data-testid="background-none"]')).toBeHidden();
-  await expect(page.locator('[data-testid="panel-lights"]')).toBeHidden();
+  await expect(page.locator('[data-testid="panel-lights"]')).toBeVisible();
+  await expect(page.locator('[data-testid="lights-off"]')).toBeHidden();
+  await page.locator('[data-testid="panel-lights"]').click();
+  await expect(page.locator('[data-testid="lights-off"]')).toBeVisible();
+  await expect(page.locator('[data-testid="lights-running"]')).toBeVisible();
+  await expect(page.locator('[data-testid="lights-all"]')).toBeVisible();
+  await expect(page.locator('[data-testid="engines-off"]')).toBeHidden();
+  await page.locator('[data-testid="panel-look"]').click();
+  await expect(page.locator('[data-testid="engines-off"]')).toBeVisible();
   await expect(page.locator('[data-testid="panel-motion"]')).toBeVisible();
   await expect(page.locator('[data-testid="panel-build"]')).toBeVisible();
 
@@ -21,6 +30,8 @@ test("one group shows at a time, and the tab is kept in the address", async ({ p
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("panel")).toBe("background");
   await page.reload();
   await expect(page.locator('[data-testid="panel-background"]')).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator('[data-testid="panel-background"]')).toHaveCSS("background-color", "rgb(28, 53, 86)");
+  await expect(page.locator('[data-testid="panel-look"]')).not.toHaveCSS("background-color", "rgb(28, 53, 86)");
   await expect(page.locator('[data-testid="background-earth"]')).toBeVisible();
 
   await page.locator('[data-testid="panel-look"]').click();

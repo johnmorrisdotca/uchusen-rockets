@@ -35,6 +35,14 @@ test("the fleet record opens on a ship, then a section, and keeps both in the ad
   await expect(page.getByTestId("db-part-facts")).toBeVisible();
   await expect(page.getByTestId("db-part-facts")).toContainText("m");
   await expect(page.getByTestId("db-profile").locator("tr").nth(2)).toBeVisible();
+  await page.getByTestId("db-cutaway").click();
+  await expect(page).toHaveURL(/cut=on/);
+  await expect(page.getByTestId("db-hero")).toHaveAttribute("variant", /cutaway/);
+  await expect(page.getByTestId("db-cutaway")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("db-show-together")).toHaveAttribute("aria-pressed", "false");
+  const heroBox = await page.getByTestId("db-hero").boundingBox();
+  const barBox = await page.locator("kazoku-view-controls").boundingBox();
+  expect(heroBox && barBox && heroBox.y + heroBox.height <= barBox.y + 1).toBe(true);
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(wide).toBe(false);
 });

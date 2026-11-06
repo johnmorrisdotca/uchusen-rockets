@@ -1,10 +1,10 @@
-// Where a ship's build is at one moment of the time-lapse. A ship with no build order is not offered the player. The rate is story days in one real second: 60 finishes a four-year build in about 24 seconds, and 100000 finishes it at once. Pure.
+// Where a ship's build is at one moment of the time-lapse. A ship with no build order is not offered the player. A rate is story seconds in one real second: 1 is real time, and 86400 is one story day a second. Pure.
 import { emiakeBuild, kaminariBuild, romaryuBuild } from "./model/fleet/kaminari-concepts/buildOrder.ts";
 import { hanabusaBuild } from "./model/fleet/ship-01/buildOrder.ts";
 import { buildSteps } from "./model/fleet/ship-03/buildOrder.ts";
 
 /**
- * Story days that pass in one real second. The slowest is 60, which finishes a four-year build in about 24 seconds, and the fastest is 100000.
+ * Story seconds that pass in one real second. 1 is real time. 86400 is one story day a second. 100000 is the fastest step.
  *
  * @example
  * ```ts
@@ -13,7 +13,7 @@ import { buildSteps } from "./model/fleet/ship-03/buildOrder.ts";
  * console.log(PLAY_RATES[0], PLAY_RATES.at(-1));
  * ```
  */
-export const PLAY_RATES = [60, 600, 3_600, 10_000, 100_000] as const;
+export const PLAY_RATES = [1, 60, 600, 3_600, 10_000, 86_400, 100_000] as const;
 
 /**
  * One step the player reads: the slot, when it starts and how long it takes.

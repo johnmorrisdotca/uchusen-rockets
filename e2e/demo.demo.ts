@@ -561,6 +561,8 @@ test("the sections under the rocket are one at a time, in a row of tabs, and the
   await expect(page.locator('[data-testid="more-embed"]')).toHaveAttribute("aria-selected", "false");
   expect(new globalThis.URL(page.url()).hash).toBe("#builder");
   await page.goto(`${URL}#sources`);
+  // WebKit reports a module the page was still importing as a failure when the page is reloaded under it: let the imports end first
+  await page.waitForLoadState("networkidle");
   await page.reload();
   expect(await shown()).toEqual(["sources"]);
   expect(problems).toEqual([]);
