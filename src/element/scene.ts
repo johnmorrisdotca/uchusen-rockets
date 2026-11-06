@@ -74,6 +74,10 @@ import { PartPlumes, PlumeKit } from "./plumes.ts";
 /** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
 const NIGHT_SHIPS = new Set(["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-02", "fleet-02-original", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"]);
 
+/** Pipes, blankets and lamp housings. Below this shorter screen side they alias, so a small fleet ship draws its hull without them. */
+const FITTING = new Set(["pipe-steel", "coolant", "copper", "foil", "kapton", "blanket", "blanket-worn", "coil", "coil-lit", "lamp-amber", "lamp-red", "lamp-blue", "strobe", "beacon", "nav-red", "nav-green", "nav-white", "flood", "light-pool"]);
+const FITTING_PX = 240;
+
 /** A label on a part: its text, where it points in the ship's own metres, the part it follows and where that part stands at rest (so the label moves with it). `number` draws a numbered disc. */
 export interface ViewerMark {
   id: string;
@@ -273,6 +277,8 @@ export class RocketViewer {
   private lampPoints: { material: PointsMaterial; geometry: BufferGeometry; duty: ReturnType<typeof dutyOf> }[] = [];
   /** Lamp beads gathered while a ship is loaded, then drawn as one point cloud per part. */
   private lampPending: { carrier: Group; name: string; centers: Vector3[] }[] = [];
+  /** Whether the fleet ship's fittings are hidden because it is small on screen. `null` means the next draw decides. */
+  private lodSmall: boolean | null = null;
   /** The smooth flood sheets. Cached with their material, so a new rocket reuses them. */
   private poolSheets: MeshBasicMaterial[] = [];
   private lampTexture: CanvasTexture | null = null;
@@ -481,6 +487,7 @@ export class RocketViewer {
     }
     this.lampPoints = [];
     this.lampPending = [];
+    this.lodSmall = null;
     this.toss.clear();
     this.grab = null;
     this.built = built;
@@ -1301,6 +1308,7 @@ export class RocketViewer {
     if (this.progressAt === null) for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
     part.nozzleShown = nozzle;
     this.canvas.dataset.nozzle = this.parts.some((one) => one.nozzleShown) ? "own" : "";
+    this.lodSmall = null;
   }
 
   /** The key light looks at the middle of what shows, from far enough to take in all of it, and its shadow map covers just that. */
@@ -1975,6 +1983,53 @@ export class RocketViewer {
     };
   }
 
+  /** A fleet ship that is small on screen drops its fittings and its shadow, which are the draws that shimmer there. A full-size ship keeps both. */
+  private applyFittingLod(): void {
+    if (this.progressAt !== null) return;
+    const small = this.fleetIsSmall();
+    if (small === this.lodSmall) return;
+    this.lodSmall = small;
+    this.renderer.shadowMap.enabled = this.shadows && !small;
+    const fleet = new Set([...(this.built?.parts ?? []), ...(this.built?.beside ?? [])].filter((part) => part.record.rocket.startsWith("fleet-")).map((part) => part.slot));
+    for (const part of this.parts) {
+      if (!fleet.has(part.slot) || !part.code.visible) continue;
+      for (const face of part.faces) {
+        if (FITTING.has(face.name)) face.mesh.visible = !small;
+      }
+    }
+    this.canvas.dataset.lod = small ? "small" : "full";
+  }
+
+  /** True when a fleet craft's shorter side on screen is under {@link FITTING_PX}. A picture with no fleet craft stays full. */
+  private fleetIsSmall(): boolean {
+    const boxes = this.craftBoxes().filter((box) => box.rocket.startsWith("fleet-"));
+    if (boxes.length === 0) return false;
+    this.camera.updateMatrixWorld();
+    let shortest = Infinity;
+    for (const box of boxes) {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (const x of [box.min[0], box.max[0]]) {
+        for (const y of [box.min[1], box.max[1]]) {
+          for (const z of [box.min[2], box.max[2]]) {
+            const point = new Vector3(x, y, z).project(this.camera);
+            const sx = ((point.x + 1) / 2) * this.canvas.clientWidth;
+            const sy = ((1 - point.y) / 2) * this.canvas.clientHeight;
+            minX = Math.min(minX, sx);
+            maxX = Math.max(maxX, sx);
+            minY = Math.min(minY, sy);
+            maxY = Math.max(maxY, sy);
+          }
+        }
+      }
+      shortest = Math.min(shortest, maxX - minX, maxY - minY);
+    }
+    const limit = this.lodSmall ? FITTING_PX + 80 : FITTING_PX;
+    return shortest < limit;
+  }
+
   /** The box each visible craft fills, in metres. */
   private craftBoxes(): { craft: number; rocket: string; min: Vec3; max: Vec3 }[] {
     if (!this.built) return [];
@@ -2200,6 +2255,7 @@ export class RocketViewer {
         this.canvas.dataset.swarmNear = String(this.swarm.lod([this.camera.position.x, this.camera.position.y, this.camera.position.z]));
         this.canvas.dataset.swarmLod = (performance.now() - began).toFixed(3);
       }
+      this.applyFittingLod();
       const drawn = performance.now();
       this.renderer.render(this.scene, this.camera);
       const info = this.renderer.info.render;
