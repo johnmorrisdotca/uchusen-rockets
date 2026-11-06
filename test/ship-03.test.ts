@@ -5,6 +5,7 @@ import { toGlb } from "../src/build/glb.ts";
 import { build } from "../src/build/index.ts";
 import { BUILD_BUDGET_MS, MATERIALS, PART_ENTRIES, ROCKETS, check, motionsOf } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
+import { birdWing } from "../src/model/fleet/ship-03/bird.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
 import { readFileSync } from "node:fs";
 import { ARRAY_POWER, asBuilt, CLASS_FACTS, CLASS_TABLE, classTableMarkdown, fuelLimitedLy, ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, SHIPS, TITLE_BLOCK, titleBlockOf, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
@@ -347,12 +348,27 @@ test("the bird wing is two continuous cell wings on a jointed spar, and the elbo
   const sheets = pieces.filter((piece) => piece.kind === "plate" && piece.top === "cell-gold" && piece.sheet);
   assert.ok(sheets.length >= 16, `${sheets.length} sheets`);
   const { min, max } = boundsOf(meshOf(pieces));
-  // 228 m from the shoulder, and the root sheet reaches about a third of that aft
-  assert.ok(max[0] > 240 && max[0] < 290, `span ${max[0]}`);
-  assert.ok(min[0] < -240 && min[0] > -290, `span ${min[0]}`);
+  // at rest the wings lie along the hull, inside the beam a carrier can hold
+  assert.ok(Math.max(Math.abs(min[0]), max[0]) < 170, `folded ${min[0]}..${max[0]}`);
   assert.ok(max[1] - min[1] > 70, `chord ${max[1] - min[1]}`);
+  // swung open, the tip is 228 m from the shoulder
+  let reach = 0;
+  for (const piece of birdWing()) {
+    if (piece.kind !== "plate" || !piece.facets || !piece.move) continue;
+    const sign = piece.move.name === "bird-starboard" ? 1 : -1;
+    const a = sign * 80 * Math.PI / 180;
+    const c = Math.cos(a);
+    const s = Math.sin(a);
+    const [px, py] = piece.move.pivot;
+    for (const tri of piece.facets) for (const [x, y] of tri) {
+      const dx = x - px;
+      const dy = y - py;
+      reach = Math.max(reach, Math.abs(px + dx * c - dy * s));
+    }
+  }
+  assert.ok(reach > 240 && reach < 290, `open reach ${reach}`);
   const fold = motionsOf("fleet-ship-03").filter((motion) => motion.group.startsWith("bird-"));
   assert.deepEqual(fold.map((motion) => motion.kind), ["swing", "swing"]);
-  assert.equal(fold[0].to, 80);
-  assert.equal(fold[1].to, -80);
+  assert.equal(fold[0].to, -80);
+  assert.equal(fold[1].to, 80);
 });

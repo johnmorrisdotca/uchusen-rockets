@@ -107,12 +107,12 @@ const birdPart = (): MiyamotoPart => ({
   id: "bird-wing",
   name: "Bird-wing solar array",
   kind: "module",
-  y0: 248,
+  y0: 148,
   place: { x: 0, z: 0 },
-  height: 120,
+  height: 196,
   diameter: 540,
-  note: `A folding wing each side of the command citadel, rooted on the dorsal rim behind the glazed flank so the sheets never cross the glass. Each wing is one continuous surface, 228 m from shoulder to tip and 76 m deep at the root, of overlapping cell sheets on a box-truss spar with a shoulder, an elbow and a wrist. At rest the wings are open; the elbow swings the outer arm back along the hull, outside it. The starboard roll-out array stays where it is. Descends from ${ANCESTORS["bird-wing"]}.`,
-  pieces: (o) => local(birdWing(o?.detail ?? 1), 0, 248, 0, o?.level),
+  note: `A folding wing each side of the command citadel, rooted on the dorsal rim behind the glazed flank so the sheets never cross the glass. Each wing is one continuous surface, 228 m from shoulder to tip and 76 m deep at the root, of overlapping cell sheets on a box-truss spar with a shoulder, an elbow and a wrist. At rest the wings lie folded along the hull; the elbow swings them open, outside the hull. The starboard roll-out array stays where it is. Descends from ${ANCESTORS["bird-wing"]}.`,
+  pieces: (o) => local(birdWing(o?.detail ?? 1), 0, 148, 0, o?.level),
 });
 
 const solarPart = (state: ArrayState): MiyamotoPart => ({

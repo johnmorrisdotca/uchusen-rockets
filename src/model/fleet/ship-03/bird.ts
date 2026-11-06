@@ -16,6 +16,36 @@ const unit = (a: V): V => {
 };
 const lerp = (a: V, b: V, t: number): V => add(a, mul(sub(b, a), t));
 
+/** Turns pieces about a pivot on the vertical axis. The built wing is the folded one, so a ship that carries Miyamoto stays inside its beam; the elbow motion turns this back to open. */
+function folded(pieces: Piece[], pivot: V, deg: number): Piece[] {
+  const a = (deg * Math.PI) / 180;
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  const point = (p: V): V => {
+    const x = p[0] - pivot[0];
+    const y = p[1] - pivot[1];
+    return [pivot[0] + x * c - y * s, pivot[1] + x * s + y * c, p[2]];
+  };
+  const dir = (p: V): V => [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]];
+  return pieces.map((piece) => {
+    if (piece.kind === "lathe") {
+      const cy = piece.profile.reduce((sum, [, y]) => sum + y, 0) / piece.profile.length;
+      const moved = point([piece.at?.[0] ?? 0, cy, piece.at?.[1] ?? 0]);
+      const dy = moved[1] - cy;
+      return { ...piece, at: [moved[0], moved[2]], profile: piece.profile.map(([r, y]) => [r, y + dy] as [number, number]) };
+    }
+    if (piece.kind !== "plate") return piece;
+    if (piece.facets) {
+      return {
+        ...piece,
+        facets: piece.facets.map((tri) => [point(tri[0]), point(tri[1]), point(tri[2])] as [V, V, V]),
+        outline: piece.outline.map(([x, y]) => { const q = point([x, y, pivot[2]]); return [q[0], q[1]] as [number, number]; }),
+      };
+    }
+    return { ...piece, frame: { o: point(piece.frame.o), u: dir(piece.frame.u), v: dir(piece.frame.v), w: dir(piece.frame.w) } };
+  });
+}
+
 const box = (material: Plate["material"], at: V, hx: number, hy: number, hz: number): Plate => cub(material, [at[0] - hx, at[0] + hx], [at[1] - hy, at[1] + hy], [at[2] - hz, at[2] + hz]);
 
 /** One cell sheet, a quad from the spar back to the trailing edge. Neighbouring sheets share their corners, so the open wing is one surface and the trailing edge is one curve. */
@@ -99,7 +129,8 @@ function wing(sign: -1 | 1, detail: number): Piece[] {
   truss(elbow, wrist, 2.8, detail, outer);
   truss(wrist, tip, 2.2, detail, outer);
   feathers(elbow, tip, 12, (t) => 60 - 36 * t + Math.sin(t * Math.PI) * 14, s, outer);
-  return [...fixed, ...moving(outer, { name, pivot: elbow, axis: [0, 0, 1] })];
+  // rest is folded back along the hull; the motion swings by the opposite angle to open
+  return [...fixed, ...moving(folded(outer, elbow, -80 * s), { name, pivot: elbow, axis: [0, 0, 1] })];
 }
 
 /**

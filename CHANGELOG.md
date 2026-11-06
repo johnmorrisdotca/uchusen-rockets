@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **Miyamoto's bird wing** (MODULES-490): a folding solar wing each side of the command citadel, one continuous surface of overlapping cell sheets, 228 m from shoulder to tip and 76 m deep at the root, on a box-truss spar. The elbow swings the outer arm back along the hull. The starboard roll-out array stays.
+- **Miyamoto's bird wing** (MODULES-490): a folding solar wing each side of the command citadel, one continuous surface of overlapping cell sheets, 228 m from shoulder to tip and 76 m deep at the root, on a box-truss spar. At rest the wings lie folded along the hull, and the elbow swings them open. The starboard roll-out array stays.
 - **Craft line fixes** (MODULES-474): on a phone the count and Add a craft get their own line so the craft line has the full width; the page bar marks only the open page; Fit frames a row of craft whole, with the ground under their feet.
 - **The craft line on a phone** (MODULES-474): the count and Add a craft sit on their own line, so the scrolling line is the width of the phone and two chips show. Only the open page is marked in the page bar. A row of craft is framed with the ground under their feet, so none is cut off at the bottom of the stage.
 - **Compare any number of craft** (MODULES-474, MODULES-482, MODULES-486): the craft line holds up to what the device can draw, each chip with its painted thumbnail, the x on the picture and a confirm in the page colours; on a desk the line wraps so every name is whole, on a phone it scrolls with faded edges; craft too small to see get a marker ring with their name.
