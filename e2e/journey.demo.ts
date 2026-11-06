@@ -326,6 +326,7 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(0);
   await page.getByTestId("look-painted").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  await expect(page.getByTestId("painted-rocket")).toHaveAttribute("look", "painted");
   await expect(page.getByTestId("painted-controls")).toBeVisible();
   await expect(page.getByTestId("painted-note")).toBeHidden();
   const bar = await page.getByTestId("painted-bar").evaluate((node) => getComputedStyle(node).backgroundColor);
@@ -342,6 +343,40 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   await page.getByTestId("view-side").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
   expect(page.url()).toContain("look=painted");
+});
+
+test("the painted craft stays whole and every HUD block has the same backing", async ({ page }) => {
+  await page.goto(`${URL}&from=earth&to=jupiter&craft=falcon-heavy&look=painted`);
+  const rocket = page.getByTestId("painted-rocket");
+  await expect(rocket).toBeVisible();
+  await expect(rocket).toHaveAttribute("look", "painted");
+  const read = () => page.evaluate(() => {
+    const stage = document.querySelector(".jr-stage")!.getBoundingClientRect();
+    const craft = document.getElementById("painted-rocket")!.getBoundingClientRect();
+    const box = (id: string) => document.getElementById(id)!.getBoundingClientRect();
+    const hits = (a: DOMRect, b: DOMRect) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+    const speed = box("speed");
+    const when = box("when-stamp");
+    const phase = box("phase");
+    return {
+      inside: craft.width > 40 && craft.left >= stage.left - 1 && craft.right <= stage.right + 1 && craft.top >= stage.top - 1 && craft.bottom <= stage.bottom + 1,
+      clear: !hits(craft, speed) && !hits(craft, when) && !hits(craft, phase),
+      plate: getComputedStyle(document.getElementById("speed")!).backgroundColor,
+    };
+  });
+  await expect.poll(async () => (await read()).inside).toBe(true);
+  const start = await read();
+  expect(start.clear).toBe(true);
+  expect(start.plate).toBe("rgba(5, 10, 20, 0.82)");
+  await page.getByTestId("scrub").evaluate((node) => {
+    const input = node as HTMLInputElement;
+    input.value = input.max;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.getByTestId("summary-close").click();
+  await expect(page.getByTestId("phase")).toHaveText("ARRIVED");
+  await expect.poll(async () => (await read()).inside).toBe(true);
+  await expect.poll(async () => (await read()).clear).toBe(true);
 });
 
 test("a ship that burns all the way can be asked for 1 g, and a rocket is not offered the choice", async ({ page }) => {
