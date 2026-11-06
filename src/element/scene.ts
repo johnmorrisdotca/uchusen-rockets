@@ -29,6 +29,7 @@ import {
   PlaneGeometry,
   PCFSoftShadowMap,
   PMREMGenerator,
+  Raycaster,
   RepeatWrapping,
   Scene,
   ShaderMaterial,
@@ -316,6 +317,8 @@ export class RocketViewer {
   /** Where a thrown craft has got to, and how fast it is still going, in world metres. */
   private toss = new Map<number, { offset: Vector3; velocity: Vector3 }>();
   private grab: { craft: number; x: number; y: number; t: number; sx: number; sy: number; t0: number } | null = null;
+  private press: { x: number; y: number } | null = null;
+  private readonly slotRay = new Raycaster();
   private swarm: SwarmRig | null = null;
   private progressAt: number | null = null;
   private progressFramed = false;
@@ -401,12 +404,16 @@ export class RocketViewer {
       "pointerdown",
       (event) => {
         this.canvas.focus({ preventScroll: true });
+        this.press = { x: event.clientX, y: event.clientY };
         this.grabCraft(event);
       },
       true,
     );
     this.canvas.addEventListener("pointermove", (event) => this.pullCraft(event));
-    this.canvas.addEventListener("pointerup", (event) => this.releaseCraft(event));
+    this.canvas.addEventListener("pointerup", (event) => {
+      this.releaseCraft(event);
+      this.pickSlot(event);
+    });
     this.canvas.addEventListener("pointercancel", (event) => this.releaseCraft(event));
     this.canvas.addEventListener("dblclick", () => {
       if (!this.driven) this.setAngle(this.homeAngle, true);
@@ -2345,6 +2352,34 @@ export class RocketViewer {
       const place = places.find((one) => one.slot === part.slot);
       if (place) part.holder.position.set(place.at[0], place.at[1], place.at[2]);
     }
+  }
+
+  /** A short click on a part names that part's slot. A drag still throws a craft or turns the view. */
+  private pickSlot(event: PointerEvent): void {
+    const press = this.press;
+    this.press = null;
+    if (!press || event.button !== 0 || Math.hypot(event.clientX - press.x, event.clientY - press.y) > 8) return;
+    const slot = this.slotUnder(event);
+    if (!slot) return;
+    this.canvas.dataset.slot = slot;
+    this.canvas.dispatchEvent(new CustomEvent("uchusen-slot", { detail: slot, bubbles: true }));
+  }
+
+  /** The named part under the pointer, walking from the hit face up to the part's holder. */
+  private slotUnder(event: PointerEvent): string | null {
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return null;
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.slotRay.setFromCamera(new Vector2(x, y), this.camera);
+    for (const hit of this.slotRay.intersectObject(this.root, true)) {
+      let node: Object3D | null = hit.object;
+      while (node) {
+        if (this.parts.some((part) => part.slot === node?.name)) return node.name;
+        node = node.parent;
+      }
+    }
+    return null;
   }
 
   /** The craft whose picture the pointer is on. A line drawing has no face to hit, so the craft's box on screen is the target. The smallest box wins where they overlap. */

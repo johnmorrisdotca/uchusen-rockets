@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The shipyard** (MODULES-446, MODULES-447): a model of a large multi-bay yard: a big bay with an enclosed frame, an open spine bay and a gantry bay, one ship under way in each, a second spine that can unlatch and fly free, a visitor elevator across the bays with viewing booths and observation lounges, visitor docking ports, a parking field for drones and small craft, and lamps at the joints. Rendered by scripts; not yet on a demo page.
+- **Click a part to swap it** (MODULES-416): a short click on a fleet ship's part opens the row of modules that fit that mount (Miyamoto's pod: relay, relief, survey). A drag still turns the view or throws a craft.
 - **Swap a module** (MODULES-415): a fleet ship's mounts take other modules that mate with them, starting with the mission pod, and the choice stays in the address. The build row names the assembly flight. On Romaryū, two Miyamoto ride berthed on the carrier shaft, and a Dragon comes in along a lit approach to a docking collar on a closed tunnel from the shaft.
 - **The date in the journey** (MODULES-475): every journey view shows the flight's date and time at the top left, moving with the playback, with the day of the trip under it (Day 85 of 265).
 - **Docked craft** (MODULES-438): a ship with docking ports has a Docked craft tab in the panel, where each port takes a craft or None, and the choice stays in the address.

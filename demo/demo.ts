@@ -207,6 +207,7 @@ function drawSwaps(): void {
   const chosen = chosenSwap(state.rocket, state.variant, address.get("swap"));
   for (const mount of mounts) {
     const row = el("div", { className: "chips" });
+    row.dataset.slot = mount.slot;
     row.setAttribute("role", "group");
     row.setAttribute("aria-label", say(`swapSlot_${mount.slot}`));
     for (const one of mount.choices) {
@@ -326,6 +327,13 @@ let earthForm: EarthForm | null = null;
 let earthAsked = 0;
 /** No WebGL here, or a picture would not load: the line globe needs neither. */
 let realisticBarred = false;
+hero.addEventListener("uchusen-slot", (event) => {
+  const slot = (event as CustomEvent<string>).detail;
+  const row = document.querySelector(`[data-slot="${slot}"]`);
+  if (!(row instanceof HTMLElement)) return;
+  for (const one of document.querySelectorAll("[data-slot]")) one.removeAttribute("data-picked");
+  row.dataset.picked = "on";
+});
 hero.addEventListener("uchusen-fallback", () => {
   realisticBarred = true;
   syncEarth();
