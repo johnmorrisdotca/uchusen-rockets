@@ -2199,8 +2199,15 @@ export class RocketViewer {
     const step = this.metresPerPixel(grab.craft);
     const { right, up } = this.cameraAxes();
     const toss = this.tossOf(grab.craft);
-    toss.velocity.copy(right).multiplyScalar(((event.clientX - grab.sx) / elapsed) * step).addScaledVector(up, -((event.clientY - grab.sy) / elapsed) * step);
+    const dragged = right.clone().multiplyScalar(((event.clientX - grab.sx) / elapsed) * step).addScaledVector(up, -((event.clientY - grab.sy) / elapsed) * step);
+    // A quarter of the drag, and never so fast that the craft crosses the view in under a minute.
+    const cap = (Math.max(1, this.canvas.clientWidth) * step) / 60;
+    const limit = Math.min(dragged.length() * 0.25, cap);
+    if (dragged.length() > 1e-9 && limit > 0) toss.velocity.copy(dragged).setLength(limit);
+    else toss.velocity.set(0, 0, 0);
     this.canvas.dataset.drift = toss.velocity.length().toFixed(2);
+    this.canvas.dataset.driftCap = cap.toFixed(2);
+    this.canvas.dataset.driftX = (toss.velocity.dot(right) / step).toFixed(1);
     this.wake();
   }
 

@@ -6,6 +6,7 @@
 - **True-scale ghost** (MODULES-460): the fading outline also clears on a two-second timer, so a frame loop that does not come back still ends the cycle. The WebKit skip on that test is gone.
 - **Hanabusa's bible** (MODULES-402): the opening crew figure matches the record, 1,200, and the page states the endurance and the limits the journey already uses.
 - **The fleet bibles** (MODULES-402): Kaminari's first-design page says so, and points at the Quiver's record. Emiake, Romaryū and the Quiver take their length and mass from that record. Kyotori's sheet says which rows the record does not give. Miyamoto's title carries the reading みやもと.
+- **A thrown craft drifts** (MODULES-469): letting go of a craft on the compare page sends it at a quarter of the drag, and never so fast that it would cross the view in under a minute.
 
 ## [0.13.0] - 2026-11-05
 
