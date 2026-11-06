@@ -17,6 +17,14 @@ test("the mission pod swaps, and the choice stays in the address", async ({ page
   }), { timeout: 20000 }).toBe("fleet-ship-03-pod-relief");
 });
 
+test("a click on a hardpoint opens that hardpoint's modules", async ({ page }) => {
+  await page.goto(miyamoto);
+  await expect(page.getByTestId("swap-field")).toBeVisible();
+  await page.locator("#hero").evaluate((node) => node.dispatchEvent(new CustomEvent("uchusen-slot", { detail: "pod", bubbles: true })));
+  await expect(page.locator("[data-slot=pod]")).toHaveAttribute("data-picked", "on");
+  await expect(page.locator("[data-slot=pod] [data-testid=swap-pod-survey]")).toBeVisible();
+});
+
 test("the build row names the assembly flight", async ({ page }) => {
   const steps = buildOf("miyamoto");
   if (!steps) throw new Error("Miyamoto has no build");
