@@ -4,7 +4,7 @@ import { discRadius } from "@johnmorrisdotca/chikyu-earth/realistic";
 import type { ChikyuEarthRealistic } from "@johnmorrisdotca/chikyu-earth/realistic/element";
 import "@johnmorrisdotca/chikyu-earth/realistic/element";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import { bindStage } from "./viewBinder.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { paintSky } from "../src/element/paint.ts";
 import { setAssetBase } from "../src/element.ts";
@@ -399,8 +399,15 @@ document.querySelector<HTMLButtonElement>("[data-testid=yard-build]")!.addEventL
   poke();
 });
 
-document.querySelector("#view-bar")!.addEventListener("kazoku-viewchange", (event) => {
-  choice = (event as CustomEvent<ViewChoice>).detail;
+bindStage(canvas, (detail) => {
+  choice = {
+    yaw: detail.yaw ?? choice.yaw,
+    tilt: detail.tilt ?? choice.tilt,
+    zoom: detail.zoom ?? choice.zoom,
+    panX: detail.panX ?? choice.panX,
+    panY: detail.panY ?? choice.panY,
+    ...(detail.roll === undefined ? {} : { roll: detail.roll }),
+  };
   poke();
 });
 

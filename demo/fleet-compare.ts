@@ -6,6 +6,7 @@ import { isListed } from "./listed.ts";
 import { fleetSize } from "./sizes.ts";
 import { WORDS } from "./words.js";
 import { chip } from "./chip.ts";
+import { bindStage, placeZoom } from "./viewBinder.ts";
 
 defineUchusenRocket();
 
@@ -135,6 +136,9 @@ const draw = (): void => {
     }),
   );
 };
+
+const lineup = byId("lineup");
+bindStage(byId("cmp-view"), (detail) => placeZoom(lineup, detail), { overlay: true, flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "4", testid: "view-bar" });
 
 draw();
 window.addEventListener("resize", () => byId("lineup").setAttribute("fit", fitOf()));

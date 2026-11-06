@@ -2,7 +2,6 @@
 import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, variantOf, type LookName, type MakerId, type Variant } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
-import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant } from "./sizes.ts";

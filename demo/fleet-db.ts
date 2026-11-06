@@ -3,7 +3,7 @@ import { ROCKETS, SLOT_NAMES, variantOf } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { build } from "../src/build/index.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
-import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import { bindStage } from "./viewBinder.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize } from "./sizes.ts";
 import { WORDS } from "./words.js";
@@ -144,9 +144,9 @@ const draw = (): void => {
   } else hero.focusAt(null);
 };
 
-document.querySelector("kazoku-view-controls")?.addEventListener("kazoku-viewchange", (event) => {
-  const rocket = document.getElementById("hero") as UchusenRocket | null;
-  rocket?.drive((event as CustomEvent).detail);
-});
+{
+  const rocket = byId("hero") as UchusenRocket;
+  bindStage(rocket, (detail) => rocket.drive(detail));
+}
 
 draw();
