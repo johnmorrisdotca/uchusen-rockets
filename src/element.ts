@@ -690,6 +690,7 @@ export class UchusenRocket extends HTMLBase {
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
     this.dataset.variant = this.builtNow.report.variant?.id ?? "";
+    this.dataset.detail = this.detailFor(this.descriptionNow());
     this.dataset.custom = String(this.builtNow.report.custom);
   }
 
