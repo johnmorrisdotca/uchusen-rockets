@@ -952,46 +952,43 @@ export class RocketViewer {
     this.lampPending.push({ carrier, name, centers: clusterCenters(position, 2) });
   }
 
-  /** One point cloud per part and per job, so a ship is a few draws and not one draw per lamp. The colour is on each point. One sprite is shared. */
+  /** One point cloud per part, per job and per colour, so a ship is a few draws and not one draw per lamp. The colour is the material's, the same as a lamp drawn on its own. One sprite is shared. */
   private flushLamps(): void {
-    const byCarrier = new Map<Group, Map<ReturnType<typeof dutyOf>, { positions: number[]; colors: number[] }>>();
+    const byCarrier = new Map<Group, Map<string, { duty: ReturnType<typeof dutyOf>; tint: string; positions: number[] }>>();
     for (const spot of this.lampPending) {
       const duty = dutyOf(spot.name);
+      const tint = LAMP_TINT[spot.name] ?? "#fff6e4";
       let duties = byCarrier.get(spot.carrier);
       if (!duties) {
         duties = new Map();
         byCarrier.set(spot.carrier, duties);
       }
-      let bucket = duties.get(duty);
+      const key = `${duty}|${tint}`;
+      let bucket = duties.get(key);
       if (!bucket) {
-        bucket = { positions: [], colors: [] };
-        duties.set(duty, bucket);
+        bucket = { duty, tint, positions: [] };
+        duties.set(key, bucket);
       }
-      const tint = new Color(LAMP_TINT[spot.name] ?? "#fff6e4");
-      for (const center of spot.centers) {
-        bucket.positions.push(center.x, center.y, center.z);
-        bucket.colors.push(tint.r, tint.g, tint.b);
-      }
+      for (const center of spot.centers) bucket.positions.push(center.x, center.y, center.z);
       if (duty === "flash" || duty === "beacon") this.hasPulse = true;
     }
     this.lampPending = [];
     for (const [carrier, duties] of byCarrier) {
-      for (const [duty, bucket] of duties) {
+      for (const bucket of duties.values()) {
         const geometry = new BufferGeometry();
         geometry.setAttribute("position", new Float32BufferAttribute(bucket.positions, 3));
-        geometry.setAttribute("color", new Float32BufferAttribute(bucket.colors, 3));
         const material = new PointsMaterial({
+          color: bucket.tint,
           size: 42,
           sizeAttenuation: false,
           map: this.lampDisc(),
-          vertexColors: true,
           transparent: true,
           opacity: 0.95,
           blending: AdditiveBlending,
           depthWrite: false,
           depthTest: false,
         });
-        this.lampPoints.push({ material, geometry, duty });
+        this.lampPoints.push({ material, geometry, duty: bucket.duty });
         const points = new Points(geometry, material);
         points.renderOrder = 2;
         carrier.add(points);
