@@ -1,7 +1,7 @@
 // One yard of three bays side by side: a long hall, an open spine and a gantry dock, crossed by one elevator. The ships are placed by the picture script.
 import type { Piece } from "../../pieces.ts";
 import { dronePieces } from "../drone/index.ts";
-import { cub, hoop, iBeam, place, rod } from "../kaminari-concepts/adapter.ts";
+import { cub, hoop, iBeam, lamps, place, rod } from "../kaminari-concepts/adapter.ts";
 import { scalePieces } from "../kaminari-concepts/scale.ts";
 import { boomsOnRail, boxTruss, crane, hatchDeck, lattice, latticeWall, parking } from "./structure.ts";
 
@@ -35,8 +35,7 @@ function observation(x: number, y: number, z: number): Piece[] {
     cub("hull-white", [x, x + dx], [y, y + 0.4], [z, z + dz]),
     cub("hull-white", [x, x + dx], [y + dy - 0.4, y + dy], [z, z + dz]),
     cub("glass-clear", [x + dx - 0.3, x + dx + 0.3], [y + 2, y + dy - 2], [z + 1.2, z + dz - 0.8]),
-    cub("window", [x + dx - 0.55, x + dx + 0.55], [y + 1.5, y + dy - 1.5], [z + 0.9, z + 1.5]),
-    cub("window", [x + dx - 0.55, x + dx + 0.55], [y + 1.5, y + dy - 1.5], [z + dz - 1.3, z + dz - 0.6]),
+    cub("window", [x + dx + 0.5, x + dx + 1.4], [y + 1.5, y + dy - 1.5], [z + 2, z + dz - 1.2]),
     cub("flood", [x + dx + 0.4, x + dx + 2.2], [y + 4, y + dy - 4], [z + 1.4, z + 2.2]),
   ];
   for (let yy = y + 8; yy < y + dy - 2; yy += 8) out.push(cub("hull-white", [x + dx - 0.5, x + dx + 0.5], [yy, yy + 0.4], [z + 1.2, z + dz - 0.8]));
@@ -65,7 +64,7 @@ function hallBay(): Piece[] {
   out.push(...lattice(-span + 30, span - 30, 80, 260, 170));
   out.push(...lattice(-span + 30, span - 30, 1620, BAYS.hall.length - 60, 170));
   out.push(...latticeWall(-span, 80, BAYS.hall.length - 60, -140, 140));
-  out.push(...crew([70, 520, 90]), ...crew([-40, 760, 60], 40));
+  for (let i = 0; i < 8; i++) out.push(...crew([i % 2 === 0 ? 60 : -50, 420 + i * 90, 70 + (i % 3) * 16], i * 20));
   return out;
 }
 
@@ -120,8 +119,7 @@ function spineBay(): Piece[] {
     ...latchPort(x, 0, 0),
     ...latchPort(400, 0, 0),
     ...iBeam("hull-white", [400, -40, 0], [x, -40, 0], UP, 16, 12),
-    ...crew([700, 360, 70], 20),
-    ...crew([820, 560, 40], -30),
+    ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => crew([680 + (i % 2) * 90, 280 + i * 70, 36 + (i % 3) * 18], i * 15)),
   ];
 }
 
@@ -140,7 +138,7 @@ function dockBay(): Piece[] {
   out.push(...latticeWall(x + 200, 40, len - 40, -140, 60));
   for (const y of [280, 640, 1000]) out.push(...crane(y, x - 200, x + 200, 190));
   out.push(...hatchDeck(x, 80, -140));
-  out.push(...crew([1640, 460, 90]), ...crew([1680, 300, 120], 25), ...crew([1480, 720, 50], 15));
+  for (let i = 0; i < 8; i++) out.push(...crew([1500 + (i % 2) * 140, 320 + i * 80, 48 + (i % 3) * 24], i * 18));
   return out;
 }
 
@@ -150,17 +148,21 @@ function shared(): Piece[] {
   const z = 48;
   const out: Piece[] = [...iBeam("hull-white", [-280, y, z], [1860, y, z], UP, 16, 10)];
   out.push(cub("hull-white", [200, 248], [y - 16, y + 16], [z - 18, z + 22]));
-  out.push(cub("window", [206, 242], [y + 12, y + 17], [z - 2, z + 14]));
+  out.push(cub("window", [204, 244], [y + 14, y + 20], [z + 2, z + 18]));
   out.push(cub("hull-white", [900, 948], [y - 16, y + 16], [z - 18, z + 22]));
-  out.push(cub("window", [906, 942], [y + 12, y + 17], [z - 2, z + 14]));
+  out.push(cub("window", [904, 944], [y + 14, y + 20], [z + 2, z + 18]));
   out.push(...observation(-280, 480, 40));
   out.push(...observation(588, 240, 30));
   out.push(...observation(1360, 400, 36));
-  for (const x of [-40, 1700]) {
+  for (const x of [-40, -980]) {
     out.push(...place([hoop("hull-white", 28, y, 4, 24, 8)], { at: [x, 0, z - 70] }));
     out.push(...iBeam("hull-white", [x, y, z], [x, y, z - 70], UP, 10, 7));
   }
-  out.push(...iBeam("hull-white", [1712, 30, z - 70], [1712, y, z - 56], UP, 6, 4));
+  out.push(...iBeam("hull-white", [-968, 30, z - 70], [-968, y, z - 56], UP, 6, 4));
+  for (let yy = 36; yy <= y; yy += 14) out.push(...lamps([{ at: [-964, yy, z - 62], colour: "amber", size: 2.4 }]));
+  out.push(cub("window", [-400, -330], [360, 430], [70, 82]));
+  out.push(cub("window", [470, 540], [300, 370], [70, 82]));
+  out.push(cub("window", [1780, 1850], [360, 430], [70, 82]));
   const hx = 1860;
   out.push(...latticeWall(hx, 200, 860, -40, 90));
   out.push(...latticeWall(hx + 220, 200, 860, -40, 90));

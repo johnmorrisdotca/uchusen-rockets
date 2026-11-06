@@ -5,8 +5,8 @@ import { join, resolve } from "node:path";
 import process from "node:process";
 import { build } from "../src/build/index.ts";
 import { toGlb } from "../src/build/glb.ts";
+import { DRAGON_DRAWS, capsule, trunk } from "../src/model/falcon.ts";
 import { place } from "../src/model/fleet/kaminari-concepts/adapter.ts";
-import { STARSHIP_DRAWS, boosterPieces, shipPieces } from "../src/model/starship.ts";
 import { SLOTS_A } from "../src/model/fleet/kaminari-concepts/a.ts";
 import { docked } from "../src/model/fleet/kaminari-concepts/c.ts";
 import { BAYS, multiBay } from "../src/model/fleet/shipyard-concepts/multibay.ts";
@@ -25,10 +25,10 @@ const pieces: Piece[] = [
   ...place(miyamoto, { at: [...BAYS.spine.shipAt] }),
   ...place(miyamoto, { at: [...BAYS.loose.shipAt] }),
 ];
-const draw = STARSHIP_DRAWS.v3;
-const stack = [...boosterPieces(draw), ...place(shipPieces(draw), { at: [0, draw.boosterHeight, 0] })];
-const stackNose = draw.boosterHeight + draw.shipHeight;
-pieces.push(...place(stack, { at: [1700, 150 - stackNose - 6, -22] }));
+const dragonDraw = DRAGON_DRAWS["dragon-2"];
+const dragonNose = dragonDraw.trunk + dragonDraw.capsule - dragonDraw.nest;
+const visitor = [...trunk(dragonDraw), ...place(capsule(dragonDraw), { at: [0, dragonDraw.trunk - dragonDraw.nest, 0] })];
+pieces.push(...place(visitor, { at: [-980, 150 - dragonNose - 4, -22] }));
 const hanabusa = build({ rocket: "fleet-ship-01", variant: "hanabusa" }, { detail: "coarse" });
 const hFile = join(out, "hanabusa.glb");
 writeFileSync(hFile, hanabusa.glb().bytes);
@@ -59,6 +59,8 @@ const jobs = [{
     { name: "hall", eye: [160, -40, 320], target: [0, 700, 20], up: [0, 0, 1], fov: 34, size: [1440, 900], look: "painted", shadow: 500 },
     { name: "spine", eye: [980, 20, 300], target: [760, 500, 0], up: [0, 0, 1], fov: 34, size: [1440, 900], look: "painted", shadow: 400 },
     { name: "latch", eye: [...BAYS.latch.eye], target: [...BAYS.latch.at], up: [0, 0, 1], fov: 42, size: [1440, 900], look: "painted", shadow: 80 },
+    { name: "visitor", eye: [-1016, 108, 12], target: [-980, 140, -22], up: [0, 0, 1], fov: 28, size: [1440, 900], look: "painted", shadow: 24 },
+    { name: "visitor-night", eye: [-1016, 108, 12], target: [-980, 140, -22], up: [0, 0, 1], fov: 28, size: [1440, 900], look: "lit", glow: 3.2, sun: 0.05, shadow: 24 },
     { name: "dock", eye: [1760, 40, 320], target: [1520, 600, 20], up: [0, 0, 1], fov: 34, size: [1440, 900], look: "painted", shadow: 500 },
   ],
 }];
