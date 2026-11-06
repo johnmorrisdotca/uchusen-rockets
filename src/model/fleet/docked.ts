@@ -9,6 +9,7 @@ import { place } from "./detail.ts";
 import { aimCraft } from "./dockedAim.ts";
 import { dockedNow } from "./dockedState.ts";
 import { DOCK, PORTS as HANABUSA } from "./ship-01/docking.ts";
+import { PORTS as KAMINARI } from "./ship-02/docking.ts";
 import { PORTS as MIYAMOTO } from "./ship-03/docking.ts";
 import { PORTS as KYOTORI } from "./ship-kyotori/docking.ts";
 
@@ -30,6 +31,8 @@ const FACES: Readonly<Record<string, readonly DockFace[]>> = {
   "fleet-ship-01": HANABUSA,
   "fleet-kyotori": KYOTORI,
   "fleet-ship-03": MIYAMOTO,
+  "fleet-02": KAMINARI,
+  "fleet-02-original": KAMINARI,
 };
 
 /** The ports of a ship that a person can put a craft on, in the order the ship records them. */

@@ -52,6 +52,15 @@ test("a Dragon hangs below Miyamoto's ventral port, nose on the collar", () => {
   assert.equal(count(again), count(bare));
 });
 
+test("a Dragon hangs off the first design's starboard dock arm", () => {
+  const reach = dockedReach("fleet-02", "dragon@starboard-26");
+  assert.ok(reach);
+  assert.ok(Math.abs(reach.min[0] - 158) < 0.3, reach.min[0]);
+  assert.ok(reach.max[0] > 164, reach.max[0]);
+  assert.equal(dockMenu("fleet-02").length, 4);
+  assert.equal(dockMenu("fleet-02-original").length, 4);
+});
+
 test("the menu is the ports that name a craft, and a build does not keep a craft it was not asked for", () => {
   assert.ok(dockMenu("fleet-ship-01").some((port) => port.id === "crew-s" && port.craft.some((craft) => craft.id === "dragon")));
   assert.equal(dockMenu("starship").length, 0);
