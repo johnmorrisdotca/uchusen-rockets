@@ -10,6 +10,7 @@ import { applyTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumb
 import { mountCamera } from "./compare-camera.ts";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
+import { chip, fillLooks } from "./chip.ts";
 import { craftBudget, craftPicture, kindOf, type PickerKind } from "./shipPicker.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -24,17 +25,6 @@ const say = (key: string, values: Record<string, string | number> = {}): string 
   const chooser = (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage;
   return (chooser?.word(key) ?? WORDS.en[key] ?? key).replace(/\{(\w+)\}/g, (all, name: string) => String(values[name] ?? all));
 };
-const chip = (label: string, testid: string, on: () => void, pressed?: boolean): HTMLButtonElement => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "chip";
-  button.textContent = label;
-  button.dataset.testid = testid;
-  if (pressed !== undefined) button.setAttribute("aria-pressed", String(pressed));
-  button.addEventListener("click", on);
-  return button;
-};
-
 type Craft = { rocket: string; variant: string };
 const MOST = BESIDE_MOST + 1;
 /** What a craft added is, in turn: the first of these that is not on screen yet. */
@@ -321,7 +311,7 @@ function renderPickers() {
     chip(say("cmpLabelsOn"), "labels-on", () => pickLabels(true), state.labels),
     chip(say("cmpLabelsOff"), "labels-off", () => pickLabels(false), !state.labels),
   );
-  byId("looks").replaceChildren(...LOOK_NAMES.map((look) => chip(say(`look_${look}`), `look-${look}`, () => pickLook(look), look === state.look)));
+  fillLooks(byId("looks"), state.look, (look) => pickLook(look as LookName));
   drawSky();
 }
 

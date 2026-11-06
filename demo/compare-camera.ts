@@ -4,6 +4,7 @@ import type { UchusenRocket } from "../src/element.ts";
 import { VIEWS } from "../src/framing.ts";
 import { frameSky } from "./sky.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
+import { chip } from "./chip.ts";
 
 type Detail = { yaw?: number; tilt?: number; roll?: number; zoom?: number; panX?: number; panY?: number; reason?: string };
 type Mode = "free" | "all" | "follow" | "selected" | "planet";
@@ -41,17 +42,6 @@ export function mountCamera(opts: {
   const note = byId("cw-edges-note");
   const arrows = byId("cw-arrows");
   const distance = byId("cw-distance");
-
-  const chip = (label: string, testid: string, pressed: boolean, on: () => void): HTMLButtonElement => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "chip";
-    button.textContent = label;
-    button.dataset.testid = testid;
-    button.setAttribute("aria-pressed", String(pressed));
-    button.addEventListener("click", on);
-    return button;
-  };
 
   function readBoxes(): Box[] {
     const raw = hero.shadowRoot?.querySelector("canvas")?.dataset.craftBoxes ?? "";
