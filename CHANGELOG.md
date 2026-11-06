@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Turn speed** (MODULES-470): a background body turns once in about ten minutes, on its own day, and a Turn choice (still, slow, faster, real time) is kept in the address. Reduced motion keeps it still.
+
 ## [0.13.0] - 2026-11-05
 
 Three new SPX ships (Kaminari as the Quiver, Emiake, Romaryū), Hanabusa, the repair drone and builder mode on every large ship, planet and moon backgrounds seen from orbit, a floating compare page, the fleet record and the three-ship comparison, the Moon as a journey start and the journey views.
