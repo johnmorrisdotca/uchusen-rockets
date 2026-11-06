@@ -6,6 +6,7 @@ import { embedCode, embedNote, LOOK_NAMES, MAKERS, OPTION_ATTRIBUTES, ROCKETS, V
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { isListed } from "./listed.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
+import { fillChoices, fillLooks } from "./chip.ts";
 
 /** Fills the builder's rows. `address` keeps the choice in the query, which the Embed page does and the builder does not. */
 export function mountCodePage(options: { address: boolean }): void {
@@ -18,20 +19,8 @@ export function mountCodePage(options: { address: boolean }): void {
   const panel = byId<EmbedPanelElement>("embed-panel");
   const here = new URL(".", location.href).href;
 
-  function chip(label: string, testid: string, on: () => void): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "chip";
-    button.textContent = label;
-    button.dataset.testid = testid;
-    button.addEventListener("click", on);
-    return button;
-  }
-
   function fill(id: string, choices: readonly { id: string; label: string }[], chosen: string, prefix: string, on: (id: string) => void): void {
-    const group = byId(id);
-    group.replaceChildren(...choices.map((choice) => chip(choice.label, `${prefix}-${choice.id}`, () => on(choice.id))));
-    for (const button of group.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === `${prefix}-${chosen}`));
+    fillChoices(byId(id), choices, chosen, prefix, on);
   }
 
   function chosenOptions(): RocketOptions {
@@ -81,7 +70,7 @@ export function mountCodePage(options: { address: boolean }): void {
       state.show = id;
       draw();
     });
-    fill("looks", LOOK_NAMES.map((id) => ({ id, label: id })), state.look, "look", (id) => {
+    fillLooks(byId("looks"), state.look, (id) => {
       state.look = id;
       draw();
     });

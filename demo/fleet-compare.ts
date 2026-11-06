@@ -5,6 +5,7 @@ import { ROCKETS, variantOf } from "../src/index.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize } from "./sizes.ts";
 import { WORDS } from "./words.js";
+import { chip } from "./chip.ts";
 
 defineUchusenRocket();
 
@@ -56,17 +57,6 @@ const picked = (): string[] => {
 const chosen = (): View => {
   const asked = address.get("view") ?? "";
   return (VIEWS as readonly string[]).includes(asked) ? (asked as View) : "three-quarter";
-};
-
-const chip = (label: string, testid: string, pressed: boolean, on: () => void): HTMLButtonElement => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "chip";
-  button.textContent = label;
-  button.dataset.testid = testid;
-  button.setAttribute("aria-pressed", pressed ? "true" : "false");
-  button.addEventListener("click", on);
-  return button;
 };
 
 const fitOf = (): string => {
