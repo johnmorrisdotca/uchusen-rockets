@@ -4,6 +4,8 @@
 
 - **Three axes** (MODULES-468): the camera follows the view controls' roll, so Angle, Tilt and Roll all move the rocket. The family's view controls are 0.17.0, which offers the three axes and a tumble. The journey's playback speeds are the family's speed buttons.
 - **True-scale ghost** (MODULES-460): the fading outline also clears on a two-second timer, so a frame loop that does not come back still ends the cycle. The WebKit skip on that test is gone.
+- **Hanabusa's bible** (MODULES-402): the opening crew figure matches the record, 1,200, and the page states the endurance and the limits the journey already uses.
+- **The fleet bibles** (MODULES-402): Kaminari's first-design page says so, and points at the Quiver's record. Emiake, Romaryū and the Quiver take their length and mass from that record. Kyotori's sheet says which rows the record does not give. Miyamoto's title carries the reading みやもと.
 
 ## [0.13.0] - 2026-11-05
 
