@@ -170,7 +170,17 @@ function shared(): Piece[] {
   return out;
 }
 
+/** The bays, the lounges and the field, without the spine that can leave its latch. */
+export function yardFixed(): Piece[] {
+  return [...hallBay(), ...spineBay(), ...dockBay(), ...shared()];
+}
+
+/** The spine parked off its latch, so a page can slide it out and back. */
+export function yardLoose(): Piece[] {
+  return looseSpine();
+}
+
 /** The three bays, the crossing elevator, the lounges, the hangar and the parking field. */
 export function multiBay(): Piece[] {
-  return [...hallBay(), ...spineBay(), ...looseSpine(), ...dockBay(), ...shared()];
+  return [...yardFixed(), ...yardLoose()];
 }
