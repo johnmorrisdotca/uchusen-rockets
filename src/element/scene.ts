@@ -55,8 +55,8 @@ import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
-import { assemblyOf, playFrame } from "../buildPlay.ts";
-import { clearArc, fitoutOf, growPart } from "./buildArc.ts";
+import { assemblyOf, inspectAlong, playFrame } from "../buildPlay.ts";
+import { clearArc, fitoutOf, growPart, spinUp } from "./buildArc.ts";
 import { fitTanks } from "./fitOut.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
@@ -210,7 +210,7 @@ const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
 /** How brightly a painted model's glow picture shines when the lights are on. */
 const MODEL_GLOW = 1.5;
 /** A drone is drawn this many times life size at most, and a ship's longest side over this many metres: a saucer about a fiftieth of the ship across (Miyamoto, 380 m, gets 7.6). */
-const DRONE_SCALE_MAX = 8;
+const DRONE_SCALE_MAX = 16;
 const DRONE_SHIP_RATIO = 50;
 const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
@@ -856,7 +856,9 @@ export class RocketViewer {
     for (const part of this.parts) {
       for (const move of part.moves) {
         const motion = this.motionOn ? this.motions.find((one) => one.group === move.name) : undefined;
-        const angle = motion ? angleAt(motion, seconds, this.motionSpeed) : 0;
+        const held = this.progressAt === null ? [] : this.parts.filter((one) => one.holder.visible && one.moves.some((item) => item.name === move.name) && typeof one.holder.userData.arcSpin === "number").map((one) => one.holder.userData.arcSpin as number);
+        const turned = spinUp(held);
+        const angle = turned === null ? (motion ? angleAt(motion, seconds, this.motionSpeed) : 0) : turned;
         if (motion && shown === undefined) shown = angle;
         if (Math.abs(angle - move.angle) < 0.005) continue;
         move.angle = angle;
@@ -1584,6 +1586,7 @@ export class RocketViewer {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
         fitTanks(part.holder, 0);
         for (const lines of part.feature) lines.visible = true;
         part.holder.visible = place.shown;
@@ -1622,6 +1625,7 @@ export class RocketViewer {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
         fitTanks(part.holder, 0);
         for (const lines of part.feature) lines.visible = true;
         for (const outline of part.outlines) outline.visible = this.look !== "painted";
@@ -1630,9 +1634,11 @@ export class RocketViewer {
         // a section grows where it belongs; a ring opens as an arc, with no wireframe of the part still to come
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         growPart(part.holder, fit.grown, ring);
+        const along = ring ? inspectAlong(step, frame.day) : null;
+        if (ring) part.holder.userData.arcSpin = along === null ? 0 : along * 360;
         if (ring) {
           fitTanks(part.holder, fit.grown);
-          const stage = fitoutOf(fit.grown);
+          const stage = along === null ? fitoutOf(fit.grown) : "spin";
           if (stage) fitout.push({ grown: fit.grown, stage, slot: step.slot });
         }
         const openRing = ring && fit.grown < 0.995;
@@ -1642,6 +1648,7 @@ export class RocketViewer {
       } else {
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
         fitTanks(part.holder, 0);
         for (const lines of part.feature) lines.visible = true;
         for (const outline of part.outlines) outline.visible = this.look !== "painted";
@@ -1664,8 +1671,17 @@ export class RocketViewer {
     this.swarm.show(
       poses.map((pose) => {
         const box = pose.duty === "work" ? boxOf.get(pose.slot) : undefined;
+        const ringSlot = pose.slot.includes("ring") || pose.slot.includes("wheel");
+        let where = pose.where;
+        if (ringSlot && box && pose.duty === "work") {
+          const dx = pose.where[0] - pose.part[0];
+          const dz = pose.where[2] - pose.part[2];
+          const dist = Math.hypot(dx, dz) || 1;
+          const rim = Math.max(Math.hypot(box.min[0], box.min[2]), Math.hypot(box.max[0], box.max[2])) + 18;
+          if (dist < rim) where = [pose.part[0] + (dx / dist) * rim, pose.where[1], pose.part[2] + (dz / dist) * rim];
+        }
         return {
-          where: pose.where,
+          where,
           part: pose.part,
           weld: pose.duty === "work",
           duty: pose.duty,

@@ -133,6 +133,12 @@ export const PHASE_SHARE: Record<BuildPhase, number> = { bring: 0.08, join: 0.27
  */
 export const SHOP_LIMIT_M = 30;
 
+/** How far the last phase has gone, from 0 to 1, or null while the ring is still being built or the step is over. The bearing stays still until this, then turns with it. */
+export function inspectAlong(step: PlayStep, day: number): number | null {
+  const now = stepPhase(step, day);
+  return now?.phase === "inspect" ? now.along : null;
+}
+
 /**
  * Which phase a step is in on `day`, and how far through that phase. Nothing before it starts or after it finishes.
  *

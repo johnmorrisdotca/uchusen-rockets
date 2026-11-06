@@ -14,21 +14,31 @@ const RIM_DONE = 0.8;
 const SHELL = new Set(["hull-white", "hull-grey", "hull-grey-dark", "glass-clear", "glass", "solar", "steel", "window"]);
 const DECK = new Set(["concrete", "deck"]);
 const PLANTS = new Set(["plant", "leaf", "soil", "flower", "shrub", "lawn", "lawn-dark", "meadow", "bark", "ground", "crop-green", "crop-gold", "water", "water-clear"]);
+const FURNISH = 0.928;
 
 /** Bare frames until the ring is pressurised, then decks, then furnishings, and plants last. A colour that is not the shell waits with the furnishings. */
 function due(name: string, grown: number): boolean {
   if (SHELL.has(name)) return true;
-  if (PLANTS.has(name)) return grown >= 0.98;
-  if (DECK.has(name)) return grown >= 0.93;
-  return grown >= 0.96;
+  if (PLANTS.has(name)) return grown >= 0.942;
+  if (DECK.has(name)) return grown >= 0.915;
+  return grown >= FURNISH;
 }
 
-/** The build bar's state while a ring is past its shell and not yet furnished. */
+/** The build bar's state while a ring is past its shell and the plants are not yet in. */
 export function fitoutOf(grown: number): "" | "sealed" | "air" | "pressure" {
-  if (grown >= 0.9 && grown < 0.93) return "pressure";
+  if (grown >= 0.9 && grown < 0.915) return "pressure";
   if (grown >= 0.84 && grown < 0.9) return "air";
   if (grown >= 0.8 && grown < 0.84) return "sealed";
   return "";
+}
+
+/**
+ * Degrees to hold a bearing at while a build is on. 0 while any ring on it is still being built. Null when none is, and the ship's own spin takes over.
+ * @param held Each ring's angle. Empty once every ring on the bearing is finished.
+ */
+export function spinUp(held: readonly number[]): number | null {
+  if (held.length === 0) return null;
+  return Math.min(...held);
 }
 
 /** The spoke a point stands on, or null when it is out in the tube. The angle is the spoke's, so two ends of one lift match. */
@@ -82,7 +92,37 @@ export function ringPiece(x: number, z: number, major: number, grown: number): b
   return Math.abs(Math.atan2(x, z)) <= half + 1e-6;
 }
 
-function wedgeOf(source: BufferGeometry, toHolder: Matrix4, major: number, grown: number): BufferGeometry {
+/** A compact white mesh in the tube is a room. The hub, a lift and the outer skin are the shell, and they rise with the arc. */
+function roomOf(mesh: Mesh, toHolder: Matrix4, major: number): boolean {
+  if (mesh.name !== "hull-white" && mesh.name !== "window") return false;
+  const position = mesh.geometry.getAttribute("position");
+  if (!position) return false;
+  const step = Math.max(1, Math.floor(position.count / 24));
+  let minR = Infinity;
+  let maxR = 0;
+  let near = 0;
+  let n = 0;
+  let minA = Infinity;
+  let maxA = -Infinity;
+  for (let i = 0; i < position.count; i += step) {
+    scratch.fromBufferAttribute(position, i).applyMatrix4(toHolder);
+    const radius = Math.hypot(scratch.x, scratch.z);
+    minR = Math.min(minR, radius);
+    maxR = Math.max(maxR, radius);
+    if (radius > major * 0.9) near += 1;
+    const angle = Math.atan2(scratch.x, scratch.z);
+    minA = Math.min(minA, angle);
+    maxA = Math.max(maxA, angle);
+    n += 1;
+  }
+  if (n === 0 || maxR < HUB_M) return false;
+  if (minR < major * 0.5 && maxR > major * 0.58 && maxA - minA < 0.8) return false;
+  if (maxA - minA > 1.2) return false;
+  if (near / n > 0.45) return false;
+  return true;
+}
+
+function wedgeOf(source: BufferGeometry, toHolder: Matrix4, major: number, grown: number, spoke: boolean): BufferGeometry {
   const made = source.clone();
   const position = made.getAttribute("position");
   if (!position) return made;
@@ -101,7 +141,7 @@ function wedgeOf(source: BufferGeometry, toHolder: Matrix4, major: number, grown
     const corners: [number, number][] = [at(a), at(b), at(c)];
     const drawn = corners.every(([x, z]) => ringPiece(x, z, major, grown));
     // a triangle that reaches the unbuilt arc is left out; a lift that reaches the hub stays, and a hall slice on that line does not
-    if (drawn || spokeTriangle(corners, major)) keep.push(a, b, c);
+    if (drawn || (spoke && spokeTriangle(corners, major))) keep.push(a, b, c);
   }
   made.setIndex(keep);
   return made;
@@ -164,7 +204,9 @@ export function growPart(holder: Group, grown: number, ring: boolean): void {
   let full = 0;
   holder.traverse((child) => {
     if (!(child instanceof Mesh) || child.name === "fit-tank") return;
-    if (child.name !== "outline" && !due(child.name, grown)) {
+    meshToHolder.copy(intoHolder).multiply(child.matrixWorld);
+    const room = child.name !== "outline" && roomOf(child, meshToHolder, major);
+    if (child.name !== "outline" && (room ? grown < FURNISH : !due(child.name, grown))) {
       child.visible = false;
       return;
     }
@@ -174,8 +216,7 @@ export function growPart(holder: Group, grown: number, ring: boolean): void {
     if (child.userData.arcBucket !== bucket) {
       sourceOf.set(child, source);
       if (child.geometry !== source) child.geometry.dispose();
-      meshToHolder.copy(intoHolder).multiply(child.matrixWorld);
-      child.geometry = wedgeOf(source, meshToHolder, major, grown);
+      child.geometry = wedgeOf(source, meshToHolder, major, grown, !room);
       child.userData.arcBucket = bucket;
     }
     kept += child.geometry.getIndex()?.count ?? 0;
