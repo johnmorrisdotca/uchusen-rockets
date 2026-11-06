@@ -179,7 +179,8 @@ test("a globe turns between two dates, its moons move, and the Sun's glow fades 
   await page.goto(`${URL}?background=venus&look=line`);
   await expect(sky).toHaveAttribute("data-spin", "clock", { timeout: 30_000 });
   await expect(body).toHaveAttribute("time", "now");
-  await expect(body).toHaveAttribute("rate", "4000");
+  // The suite asks for reduced motion, so a background stays still. The calm pace is turn-pace.demo.ts.
+  await expect(body).toHaveAttribute("rate", "0");
   await expect(body.locator("svg")).toHaveCount(1);
   const before = await markup();
   await body.evaluate((node) => node.setAttribute("time", "2026-01-01T00:00:00Z"));
@@ -191,7 +192,7 @@ test("a globe turns between two dates, its moons move, and the Sun's glow fades 
   await page.goto(`${URL}?background=jupiter&look=line&moon=all`);
   const io = sky.locator('wakusei-body[data-moon="io"]');
   await expect(io).toHaveAttribute("time", "now");
-  await expect(io).toHaveAttribute("rate", "4000");
+  await expect(io).toHaveAttribute("rate", "0");
   await expect(io).toHaveAttribute("data-place", /-?\d/);
   const planet = sky.locator("wakusei-body").first();
   const jupiterBefore = await planet.locator("svg").innerHTML();
