@@ -2,6 +2,7 @@
 import { STARSHIP_DRAWS, shipPieces } from "../../starship.ts";
 import { aimedPort, berthArm, deepTruss, transferCoupling } from "../dockJoints.ts";
 import { cub, ibeam, type Piece, place, rod, roundStrut } from "./adapter.ts";
+import type { Vec3 } from "../../pieces.ts";
 import { type BayId, bayBox } from "./dims.ts";
 
 const DRAW = STARSHIP_DRAWS.v3;
@@ -85,24 +86,50 @@ export function exteriorLoad(): Piece[] {
   return [...body(x0, a.y0, z), ...body(x0 + FIN_HALF * 2 + GAP, a.y0, z)];
 }
 
-/** The ship, and the two depot tanks beside its mid point. Super Heavy is not berthed. */
+/** Turn a ship end for end about its tail, so the bells stay put and the nose goes the other way. */
+function aboutTail(pieces: readonly Piece[]): Piece[] {
+  const flip = (p: Vec3): Vec3 => [p[0], -p[1], -p[2]];
+  return pieces.map((piece) => {
+    const move = piece.move ? { ...piece.move, pivot: flip(piece.move.pivot), axis: flip(piece.move.axis) } : undefined;
+    const common = move ? { move } : {};
+    if (piece.kind === "plate") {
+      const f = piece.frame;
+      return { ...piece, ...common, frame: { o: flip(f.o), u: flip(f.u), v: flip(f.v), w: flip(f.w) } };
+    }
+    if (piece.kind === "lines") return { ...piece, ...common, paths: piece.paths.map((path) => path.map(flip)) };
+    const [ox, oz] = piece.at ?? [0, 0];
+    const arc = piece.arc;
+    return {
+      ...piece,
+      ...common,
+      at: [ox, -oz] as const,
+      // Negating y reverses the profile, which would face the shell inward, so the points are put back in upward order.
+      profile: piece.profile.map(([r, y]) => [r, -y] as const).reverse(),
+      ...(piece.rings ? { rings: piece.rings.map((y) => -y) } : {}),
+      ...(piece.welds ? { welds: piece.welds.map((y) => -y) } : {}),
+      ...(arc ? { arc: (y: number) => arc(-y) } : {}),
+    };
+  });
+}
+
+/** A Starship ship and a tanker, tails together at the transfer coupling. The tanker is the same ship turned end for end. Super Heavy is not berthed. */
 function stackAt(x: number, y0: number, z: number): Piece[] {
-  const out = [...body(x, y0, z)];
-  const mid = y0 + BODY.ship / 2;
-  out.push(rod("hull-orange", [x + 16, mid - 14, z], [x + 16, mid + 14, z], 4, 24), rod("hull-white", [x - 16, mid - 14, z], [x - 16, mid + 14, z], 4, 24));
-  out.push(...place(transferCoupling(), { at: [x, y0, z] }));
-  out.push(...deepTruss([x + 16, mid, z], [x + 6, mid, z], 3), ...deepTruss([x - 16, mid, z], [x - 6, mid, z], 3));
-  return out;
+  const gap = 1.2;
+  return [
+    ...place(shipBody(), { at: [x, y0 + gap, z] }),
+    ...place(aboutTail(shipBody()), { at: [x, y0 - gap, z] }),
+    ...place(transferCoupling(), { at: [x, y0, z] }),
+  ];
 }
 
-/** Placement (a): the stack under the spine, aft of the bow, on a run of 140 m. */
+/** The pair under the spine, a few metres clear of the keel. */
 export function keelBerth(): Piece[] {
-  return stackAt(0, 214, -42);
+  return stackAt(0, 214, -18);
 }
 
-/** Placement (b): the stack to port, on the run the moved boxes leave, 146 m clear. */
+/** The pair to port, a few metres clear of the spine. */
 export function portBerth(): Piece[] {
-  return stackAt(-80, 108, 6);
+  return stackAt(-16, 160, 0);
 }
 
 /** Miyamoto's two visiting collars, side by side on the ventral side, ahead of the keel dock. Collar L faces a Starship, collar M a Dragon. */

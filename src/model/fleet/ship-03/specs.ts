@@ -352,7 +352,7 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   array: "the ISS's solar array wings and iROSA's roll-out blankets: cells on a flexible blanket, a lattice mast, a beta gimbal at each bay and a rotary joint at each end of the beam that turns the wing to face the star",
   radiators: "the ISS's radiator panels on booms, large thin plates set away from the hull, and the folding radiators of the Mars transfer vehicle studies",
   "exterior-load": "the Shuttle on its carrier aircraft: two Starship ships clamped side by side on the outside of a hangar box",
-  "stack-berth": "the ISS visiting vehicles: a Starship ship lying alongside, with a methane and oxygen depot and umbilicals",
+  "stack-berth": "the ISS visiting vehicles: a Starship ship and a tanker, tails together at a transfer coupling, with methane and oxygen plates on it",
 };
 
 /** Miyamoto's solar array in watts: gold cells of 30% efficiency, 89% of the blanket covered, in the 1,361 W per square metre of sunlight at one astronomical unit from a Sun-like star. It is for time near a star; far out it falls with the square of the distance, and the fusion plants are the ship's power. */
