@@ -99,15 +99,15 @@ function setScale(on: boolean): void {
 }
 scaleButton.addEventListener("click", () => setScale(hero.getAttribute("scale") !== "true"));
 setScale(address.get("scale") === "true");
-const PANELS = ["look", "background", "motion", "build", "lights"] as const;
+const PANELS = ["look", "background", "motion", "build", "lights", "docked"] as const;
 type PanelName = (typeof PANELS)[number];
 
 /** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. */
 function panelOffered(name: PanelName): boolean {
   if (name === "motion") return !byId("motion-field").hidden;
   if (name === "build") return !byId("build-field").hidden;
-  if (name === "lights") {
-    const field = byId("lights-field");
+  if (name === "lights" || name === "docked") {
+    const field = byId(name === "lights" ? "lights-field" : "docked-field");
     return !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
   }
   return true;
@@ -138,6 +138,7 @@ for (const name of PANELS) {
   });
 }
 new MutationObserver(() => showPanels()).observe(byId("lights-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
+new MutationObserver(() => showPanels()).observe(byId("docked-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";

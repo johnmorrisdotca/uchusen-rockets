@@ -39,6 +39,7 @@
             <button type="button" class="chip" role="tab" data-testid="panel-motion" data-say="motionTitle" hidden>Motion</button>
             <button type="button" class="chip" role="tab" data-testid="panel-build" data-say="buildTitle" hidden>The build</button>
             <button type="button" class="chip" role="tab" data-testid="panel-lights" data-say="panelLights" hidden>Lights</button>
+            <button type="button" class="chip" role="tab" data-testid="panel-docked" data-say="dockedTitle" hidden>Docked craft</button>
           </div>
           <div class="panel-group" data-panel="look">
             <div class="field">
@@ -75,10 +76,6 @@
               <p class="note" id="kscale-note" data-testid="kscale-note" hidden></p>
               <p class="note" id="engines-note" data-testid="engines-note" hidden></p>
             </div>
-            <div class="field" id="docked-field" hidden>
-              <h2 id="docked-title" data-say="dockedTitle">Docked craft</h2>
-              <div id="docked" data-testid="docked"></div>
-            </div>
           </div>
           <div class="panel-group" data-panel="background" hidden>
             <div class="field">
@@ -114,6 +111,12 @@
           </div>
           <div class="panel-group" data-panel="lights" hidden>
             <div class="field" id="lights-field" data-testid="lights-field" hidden></div>
+          </div>
+          <div class="panel-group" data-panel="docked" hidden>
+            <div class="field" id="docked-field" hidden>
+              <h2 id="docked-title" data-say="dockedTitle">Docked craft</h2>
+              <div id="docked" data-testid="docked"></div>
+            </div>
           </div>
           <div class="field flight-field" id="flight-field">
             <h2 id="flight-title" data-say="flight">Flight</h2>
