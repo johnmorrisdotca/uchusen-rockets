@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-06
+
+Building in place with a working crew, the shipyard and its own page, the compare page's camera, orbit and deep zoom out to the Moon, the journey's date, planets in view, new views and arrival card, ship lights, three-axis turning, docked craft and module swaps, and Kyotori turning without jumps.
+
 - **Romaryū's docked ships are whole** (MODULES-496): the Miyamoto and Ariake berthed on Romaryū are drawn as those ships are on their own, not as bare hulls; a click on the stage no longer leaves a focus outline (the keyboard focus ring still shows).
 - **Compare camera and deep zoom** (MODULES-483, MODULES-484): camera choices Free, Keep all in view, Follow one craft and Follow with the planet, with smooth moves; orbit round the craft, which stay centred while the Earth turns below; an arrow at the frame edge for any craft out of view, which brings it back when clicked; Edges: Wrap or Open space, Wrap only with the free camera. The Earth is a globe at true size with the craft 400 km up and the Moon at its true place, and the zoom runs from about 100 m out past the whole Earth to the Moon, with distance marks; a craft too small to see becomes a name marker.
 - **The yard page** (MODULES-480): the multi-bay shipyard on its own demo page over the painted Earth: the whole yard, each bay with its ship at true size (Kaminari in the Hall, Miyamoto on the Spine, Hanabusa in the Dock), the lounge, the visitor port, the latch and the free spine, Day and Night with the yard's lamps, and the build player building the chosen bay's ship in place. The yard's name is a placeholder until it is named.
