@@ -74,8 +74,8 @@ import { PartPlumes, PlumeKit } from "./plumes.ts";
 /** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
 const NIGHT_SHIPS = new Set(["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-02", "fleet-02-original", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"]);
 
-/** Pipes, blankets and lamp housings. Below this shorter screen side they alias, so a small fleet ship draws its hull without them. */
-const FITTING = new Set(["pipe-steel", "coolant", "copper", "foil", "kapton", "blanket", "blanket-worn", "coil", "coil-lit", "lamp-amber", "lamp-red", "lamp-blue", "strobe", "beacon", "nav-red", "nav-green", "nav-white", "flood", "light-pool"]);
+/** Pipes, blankets and lamp housings. Below this shorter screen side they alias, so a small fleet ship draws its hull without them. Engine coils and plumes stay at every size. */
+const FITTING = new Set(["pipe-steel", "blanket", "blanket-worn", "lamp-amber", "lamp-red", "lamp-blue"]);
 /** Drop the fittings below this shorter side, and bring them back only above the higher one, so a slow zoom does not flicker on the line. */
 const FITTING_OFF = 220;
 const FITTING_ON = 260;
