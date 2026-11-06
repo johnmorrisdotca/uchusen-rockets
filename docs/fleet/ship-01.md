@@ -17,7 +17,7 @@ Title block: *ISV Hanabusa, SPX-013 · Hanabusa class · IXV · SPX · MND ×19 
 
 ## The ship in one paragraph
 
-A 589 m keel and a 22 m bow shield, 611 m overall, of large real modules (a drive of nineteen thrusters, a fusion reactor, eight propellant tanks, two farm drums, two habitat drums, a four-port docking hub, and the crew, laboratory, survey, solarium, navigation and dome sections of the bow), two propellant booms of seventeen tanks each that turn round it, and four wheels that turn with the booms: three glazed rings, 48, 62 and 76 m in radius, stepping up from the bow so that seen from ahead every ring has open sky above it, and a closed industrial wheel of 112 m radius set apart behind them. Garden, research and living: a hydroponic farm and orchard, laboratories and ateliers, and a town of about a thousand people with a canal down its street.
+A 589 m keel and a 22 m bow shield, 611 m overall, of large real modules (a drive of nineteen thrusters, a fusion reactor, eight propellant tanks, two farm drums, two habitat drums, a four-port docking hub, and the crew, laboratory, survey, solarium, navigation and dome sections of the bow), two propellant booms of seventeen tanks each that turn round it, and four wheels that turn with the booms: three glazed rings, 48, 62 and 76 m in radius, stepping up from the bow so that seen from ahead every ring has open sky above it, and a closed industrial wheel of 112 m radius set apart behind them. Garden, research and living: a hydroponic farm and orchard, laboratories and ateliers, and a town of about 1,200 people with a canal down its street.
 
 ## The wheels
 
@@ -46,6 +46,8 @@ One function (`journey` in `specs.ts`): constant proper acceleration, turning ro
 | Proxima Centauri, 4.25 light years | 16.39 years | 17.10 years | |
 
 The launch thrust is 191 MN, the arrival mass 74,713 t (the 60,000 t ship and more than its 12,000 t protected reserve), the jet power 23.4 PW (23 million gigawatts: the price of the drive) and 29% of the expelled mass-energy becomes directed. The shield limit is 0.55 c; the longest burn inside it is 6.37 light years; the ideal midpoint with the reserve is 0.483 c. The drive and its limits are fictional: near-light-speed exhaust is not established engineering, and a fictional drive is shown with its limits. Faster means more fictional, slower more plausible: 0.060 g is the fleet's highest sustained acceleration and the price is power, 23 PW against the command ship's 4.4.
+
+Strengths: that acceleration, a range of 6.37 light years inside the shield limit, and a crew that lives in the rings rather than enduring the crossing. Weaknesses: the garden ring gives 0.63 g, and the exhaust at 0.70 c is not established engineering. Operating limits: the shield at 0.55 c, and 40 years aboard at the normal complement, the endurance figure in `specs.ts`.
 
 ## Propulsion cards
 

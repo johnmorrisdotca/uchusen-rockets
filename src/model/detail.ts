@@ -24,5 +24,5 @@ const sizeOf = (piece: Piece): number => {
   return Infinity;
 };
 
-/** The coarse level of a part: what is drawn in the line drawings stays, and so does any 3D piece over `COARSE_MIN` metres; the small detail goes. */
-export const coarsen = (pieces: readonly Piece[]): Piece[] => pieces.filter((piece) => piece.only !== "mesh" || piece.kind === "lines" || sizeOf(piece) >= COARSE_MIN);
+/** The coarse level of a part: what is drawn in the line drawings stays, and so does any 3D piece over `COARSE_MIN` metres; the small detail goes. A lamp's bead is under a metre and stays, because the picture draws it as a point. */
+export const coarsen = (pieces: readonly Piece[]): Piece[] => pieces.filter((piece) => piece.only !== "mesh" || piece.kind === "lines" || sizeOf(piece) >= COARSE_MIN || ("material" in piece && typeof piece.material === "string" && piece.material.startsWith("halo-")));

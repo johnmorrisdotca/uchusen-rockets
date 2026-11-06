@@ -49,8 +49,40 @@ let ticket = 0;
 let stopClock: (() => void) | null = null;
 let stopWatch: (() => void) | null = null;
 
-/** Simulated seconds for each real second. A body then turns on its own period and its own way, Venus and Uranus included, fast enough to see. */
-const SPIN_RATE = "4000";
+/** How fast a background turns. Slow is one turn in about ten minutes, from the body's own day. Faster is ten of those. Real time is the day itself. */
+export type TurnPace = "still" | "slow" | "faster" | "real";
+const TURN_PACES: readonly TurnPace[] = ["still", "slow", "faster", "real"];
+const TURN_STEP: Record<TurnPace, number> = { still: 0, slow: 1, faster: 10, real: 100 };
+let turnPace: TurnPace = "slow";
+
+/** The pace named in the address, or the calm one. */
+export const paceNamed = (value: string | null): TurnPace => (TURN_PACES as readonly string[]).includes(value ?? "") ? (value as TurnPace) : "slow";
+
+/** The speed-button step for a pace. */
+export const paceStep = (pace: TurnPace): number => TURN_STEP[pace];
+
+/** The pace a speed button reports. */
+export const paceFromStep = (step: number): TurnPace => (Object.entries(TURN_STEP).find(([, value]) => value === step)?.[0] as TurnPace | undefined) ?? "slow";
+
+/** Remember the pace. A picture already on the page picks it up from `applyTurn`. */
+export const setTurnPace = (pace: TurnPace): void => {
+  turnPace = pace;
+};
+
+/** The `rate` a body should carry: signed, so a backward day stays backward. Reduced motion is still. */
+export const spinRate = (hours: number): string => {
+  if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) return "0";
+  if (turnPace === "still") return "0";
+  if (turnPace === "real") return "1";
+  const calm = Math.abs(hours) * 6;
+  const signed = Math.sign(hours) || 1;
+  return String(signed * (turnPace === "faster" ? calm * 10 : calm));
+};
+
+/** Give every globe on the page the rate its own day and the current pace ask for. */
+export const applyTurn = (root: ParentNode): void => {
+  for (const node of root.querySelectorAll<HTMLElement>("wakusei-body")) node.setAttribute("rate", spinRate(Number(node.dataset.dayHours) || 24));
+};
 /** The picture's half-width, in body radii, when a body is drawn on its own. The package uses the same room. */
 const ROOM = 2.2;
 /** Camera zoom that makes the disc's radius 0.86 of the longer side, which is what placementIn asks for, while the extent is ROOM. */
@@ -188,6 +220,9 @@ const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, body:
     const wanted = companions.filter((id) => known(id));
     if (body === "sun") planet.append(sunGlow());
     const node = globe(body, form, lang);
+    const hours = BODIES[body as keyof typeof BODIES]?.rotationHours;
+    node.dataset.dayHours = String(typeof hours === "number" && hours !== 0 ? hours : 24);
+    node.setAttribute("rate", spinRate(Number(node.dataset.dayHours)));
     if (body === "venus") {
       const light = system("venus", Date.now()).planet.light;
       node.dataset.face = (Math.atan2(light[1], light[2]) * (180 / Math.PI)).toFixed(2);
@@ -240,7 +275,8 @@ const globe = (body: string, form: SkyForm, lang: Lang) => {
   node.setAttribute("body", body);
   node.setAttribute("look", body === "venus" && form === "painted" ? "realistic" : lookOf(form));
   node.setAttribute("time", "now");
-  node.setAttribute("rate", SPIN_RATE);
+  node.dataset.dayHours = "24";
+  node.setAttribute("rate", spinRate(24));
   node.setAttribute("live", "always");
   node.setAttribute("labels", "off");
   node.setAttribute("lang", lang);
@@ -329,9 +365,9 @@ const followMoon = (node: HTMLElement, holder: HTMLElement, mine: number, moonId
     if (mine !== ticket) return;
     const { BODIES, system } = await import("@johnmorrisdotca/wakusei-planets");
     const elapsed = (performance.now() - started) / 1000;
-    const when = motion.matches || document.hidden ? t0 : t0 + elapsed * Number(SPIN_RATE) * 1000;
     const host = BODIES.earth;
     const body = BODIES[moonId as keyof typeof BODIES];
+    const when = motion.matches || document.hidden ? t0 : t0 + elapsed * Number(spinRate(body?.rotationHours ?? 24)) * 1000;
     const placed = system("earth", when).moons.find((item) => item.id === moonId);
     if (!host || !body || !placed || mine !== ticket) return;
     putMoon(node, holder, placed, host, body, when);

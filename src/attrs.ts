@@ -10,7 +10,7 @@
  * console.log(OPTION_ATTRIBUTES.join(", "));
  * ```
  */
-export const OPTION_ATTRIBUTES = ["rocket", "variant", "show", "look", "view", "build", "mode", "spin", "way", "label", "assets", "engines", "phase", "motion"] as const;
+export const OPTION_ATTRIBUTES = ["rocket", "variant", "show", "look", "view", "build", "mode", "spin", "way", "label", "assets", "engines", "lights", "phase", "motion"] as const;
 
 /**
  * Every choice that draws a rocket, as plain text: the same names and values as the element's attributes. Nothing here is trusted. A value outside its list falls back to a default when it is drawn.
@@ -38,6 +38,8 @@ export interface RocketOptions {
   assets?: string;
   /** `on` lights every engine that is showing. `off` leaves them dark. Left out, the element follows reduced motion. */
   engines?: string;
+  /** `off` puts the lamps out. `running` is the position lights, the white flash and the red beacon. `all` adds the floods and the work lights. Left out, the lamps are all on. */
+  lights?: string;
   /** A phase of the rocket's flight, by its id: the engines that burn there. */
   phase?: string;
   /** `on` moves the moving parts of a fleet ship (rings, doors, arrays, dishes) at their real speed, `fast` at ten times. `off` or left out keeps them still; a reader who asked for reduced motion always gets them still. */

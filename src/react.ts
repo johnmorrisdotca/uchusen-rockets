@@ -5,7 +5,7 @@ import type { ViewName } from "./framing.ts";
 import type { LookName } from "./looks.ts";
 
 /**
- * The props of the React wrapper: the element's attributes as props (`rocket`, `variant`, `show`, `look`, `view`, `mode`, `assets`, `spin`, `way`, `label`, `engines`, `phase`), `build` as an object, and any other HTML attribute.
+ * The props of the React wrapper: the element's attributes as props (`rocket`, `variant`, `show`, `look`, `view`, `mode`, `assets`, `spin`, `way`, `label`, `engines`, `lights`, `phase`), `build` as an object, and any other HTML attribute.
  *
  * @example
  * ```ts
@@ -31,6 +31,8 @@ export interface UchusenRocketProps extends Omit<HTMLAttributes<HTMLElement>, "s
   label?: string;
   /** "on" lights the engines, and a reader who asked for reduced motion has them off. */
   engines?: "on" | "off";
+  /** "off", "running" or "all". Left out, the lamps are all on. Reduced motion holds a flash steady. */
+  lights?: "off" | "running" | "all";
   /** A phase of the rocket's flight, by its id. */
   phase?: string;
   ref?: Ref<HTMLElement>;

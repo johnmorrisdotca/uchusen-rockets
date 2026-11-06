@@ -1,9 +1,12 @@
 // Miyamoto's rounded nose, station 350 to 380 m: the three staggered, spaced shield layers of the bow, but as round drums with rounded shoulders under a domed front, and every round surface covered in gold solar cells (a raised
 // plate each, in rows that follow the curve). The orange removable shield stays as a rim round the front of each layer; the steerable ranging apertures, the optical heads, the side apertures and the two debris-intercept mounts
 // stand where they stood on the square bow. Ariake keeps the square bow (`bow.ts`). A cutaway opens the starboard side to the crush cells. Pure: no three.js and no DOM.
-import { collar, cub, type Lathe, type MaterialName, type Piece, rng, rod } from "./adapter.ts";
+import { collar, cub, designation, type Lathe, type MaterialName, type Piece, rng, rod } from "./adapter.ts";
 import { STATION } from "./dims.ts";
-import { frame, lamp, on, stencil } from "./faces.ts";
+import { beaconLamp, lightPool } from "../lights.ts";
+import { marking } from "../marking.ts";
+import { conceptStyle } from "../markingSets.ts";
+import { frame, lamp, on } from "./faces.ts";
 import { hexClad } from "./hex.ts";
 import { OPEN_STARBOARD, ringAt, tubeAt } from "./shapes.ts";
 
@@ -122,7 +125,10 @@ export function noseRounded(cut: boolean, detail = 1, seed = "bow", marks = "452
       for (const i of [0, 1]) out.push(rod(random() < 0.5 ? "hull-orange-worn" : "foam", [0, (LAYERS[i].y[0] + LAYERS[i].y[1]) / 2, 0], [(LAYERS[i].r - 1.5) * Math.sin(an), (LAYERS[i].y[0] + LAYERS[i].y[1]) / 2, (LAYERS[i].r - 1.5) * Math.cos(an)], 0.14, 6));
     }
   }
-  out.push(cub("hull-white-worn", [-r0 - 0.9, -r0 + 0.3], [Y0 + 3, Y0 + 9], [-7, 0]), ...stencil({ n: "x", sign: -1, at: -r0 - 0.9, a: [Y0, Y0 + 12], b: [-7, 0] }, marks, Y0 + 6, -3.5, 2.2));
+  out.push(cub("hull-white-worn", [-r0 - 0.9, -r0 + 0.3], [Y0 + 3, Y0 + 9], [-7, 0]));
+  out.push(...marking(designation(marks), { at: [-r0 - 1.05, Y0 + 6, -3.5], right: [0, 0, 1], up: [0, 1, 0], height: 1.35, align: "middle" }, conceptStyle("goldman")));
+  out.push(...lightPool({ o: [-r0 - 1.0, Y0 + 6, -3.5], u: [0, 0, 1], v: [0, 1, 0], w: [-1, 0, 0] }, 5.5));
+  out.push(...beaconLamp([0, 366, 4]));
   out.push(...collar("L", Y0, -1));
   return out;
 }

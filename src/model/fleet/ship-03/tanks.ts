@@ -2,6 +2,7 @@
 // feed line to the spine so the four draw down symmetrically. The aft pair stands in the aft module, the fore pair in the fore module with the keyed dorsal collar's base and the ventral keel. A cutaway opens the
 // starboard barrel to show its baffles, its pumps and the propellant. Pure: no three.js and no DOM.
 import { collar, cub, discZ, HULL_STACKS, ibeam, layerShells, type Piece, pipeRun, place, rod, roundStrut } from "./adapter.ts";
+import { lampHalo } from "../lights.ts";
 import { BARREL, COLLAR, SPINE as S, STATION } from "./dims.ts";
 import { catwalk, pipe } from "./hulls.ts";
 import { faceOf, rail } from "./faces.ts";
@@ -163,5 +164,6 @@ export function fuelSection(which: "aft" | "fore", cut: boolean, detail = 1, xAb
     for (const s of [-1, 1]) out.push(...rail(faceOf({ x: [-7, 7], y: [k0, k1], z: [-S.hz - 30, -S.hz - 24] }, "x", s as 1 | -1), -S.hz - 27, k0 + 4, k1 - 4));
     if (xAbs === BARREL.x) out.push(...miyamotoPorts());
   }
+  if (which === "aft") out.push(...lampHalo("starboard", [72, 154, 22]));
   return out;
 }

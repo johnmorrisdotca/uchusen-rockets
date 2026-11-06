@@ -1,6 +1,6 @@
-# ISV 宮本 MIYAMOTO · SPX-452
+# ISV 宮本（みやもと） Miyamoto · SPX-452
 
-**宮本 · Miyamoto** — "at the foot of the shrine". Flagship. The stately ship that commands the whole fleet.
+**宮本（みやもと） · Miyamoto** — "at the foot of the shrine". Flagship. The stately ship that commands the whole fleet.
 
 | | |
 |---|---|

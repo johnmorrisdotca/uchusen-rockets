@@ -1,4 +1,5 @@
 // The spine: a square truss the whole length of the ship that every module hangs from. Chords, bay frames, diagonals, joint nodes, and on each face a cable tray, a pipe pair with clamps and a service rail.
+import { lampHalo } from "../lights.ts";
 import { beam, box, forDrawing, facesOf, hatch, onFace, pipe, plating, rng, span, stencil, type Piece } from "./adapter.ts";
 import { SPINE } from "./dims.ts";
 
@@ -53,5 +54,6 @@ export function spinePieces(): Piece[] {
     out.push(...plating(facesOf([0, i * SPINE.bay, 0], [2 * h, 3, 2 * h], ["z+"])[0], r, ["blanket", "hull-white"], 6, 1.4, { thick: 0.2, skip: 0 }));
   }
   void onFace;
+  out.push(...lampHalo("port", [-8, 220, 0]), ...lampHalo("starboard", [8, 740, 0]), ...lampHalo("strobe", [0, 1120, 0]), ...lampHalo("beacon", [0, 1500, 0]), ...lampHalo("nav-white", [0, 80, 0]));
   return out;
 }

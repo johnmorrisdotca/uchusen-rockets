@@ -9,6 +9,7 @@ import { housing, quarterPart, STATION, STUB_FACE, stationCore, wings, type Wing
 import { dragonPieces, starshipPieces } from "./visitors.ts";
 import { rolePieces, type Role } from "./roles.ts";
 import { insulatedTank } from "./hardware.ts";
+import { lampHalo } from "../lights.ts";
 import { KIT, ibeam } from "./adapter.ts";
 import { TOWER } from "./quarters.ts";
 
@@ -95,7 +96,7 @@ interface Group {
   build: (ship: ShipSpec) => Piece[];
 }
 
-const DRIVE_G: Group = { id: "drive", name: "Drive of coil rings", kind: "engine", y0: 0, height: 74, diameter: 24, note: "Twelve field coils flaring out of a reactor chamber, the field is the nozzle: no bell. Its exhaust is a narrow beam straight aft that the coils can steer three degrees outward, so four ships stand side by side and none fires into another.", build: () => inlineDrive(0, 11) };
+const DRIVE_G: Group = { id: "drive", name: "Drive of coil rings", kind: "engine", y0: 0, height: 74, diameter: 24, note: "Twelve field coils flaring out of a reactor chamber, the field is the nozzle: no bell. Its exhaust is a narrow beam straight aft that the coils can steer three degrees outward, so four ships stand side by side and none fires into another.", build: () => [...inlineDrive(0, 11), ...lampHalo("nav-white", [0, 18, 0]), ...lampHalo("beacon", [0, 44, 0]), ...lampHalo("strobe", [0, 30, 6])] };
 const TANKS_G: Group = { id: "tanks", name: "Tank bouquet", kind: "tank", y0: 90, height: 60, diameter: 58, note: "Seven framed tanks in insulation blankets, each with a valve cluster at its feed end, standing on the ship's outer faces only (a quarter of the circle) so that four ships fit together.", build: (sh) => tanks(sh.wedge) };
 const JOINTS_G = (hooks: boolean): Group => ({ id: "joints", name: `Latch frames, ${hooks ? "hook" : "keeper"} half`, kind: "module", y0: 40, height: 270, diameter: 20, note: `Eight load-bearing frames on the seam to the neighbour across X: clamp hoops, box girders, a face plate with shear pins, ${hooks ? "a hooked latch and an umbilical tower" : "keeper lugs, sockets and an umbilical tower"}.`, build: (sh) => JOINTS.flatMap(([y, wa, wb]) => latchHalf(y, sh.type === "long" ? wa : wb, -SHAFT_X, hooks)) });
 const ROLE_NOTE: Record<Role, [string, string]> = {
