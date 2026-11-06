@@ -42,7 +42,21 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await page.getByTestId("scrub").fill("1000");
   await expect(page.getByTestId("when-date")).not.toHaveText(atStart);
   expect(await width("dest")).toBeGreaterThan(destStart * 2);
-  expect(await page.locator("details, [aria-expanded]").count()).toBe(0);
+  // the shared view bar has its own More control once the painted model is up; the journey's rows stay buttons
+  const disclosures = await page.locator("details, [aria-expanded]").evaluateAll((nodes) =>
+    nodes
+      .filter((node) => {
+        let current: Element | null = node;
+        while (current) {
+          if (current.tagName === "KAZOKU-VIEW-CONTROLS") return false;
+          const root = current.getRootNode();
+          current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+        }
+        return true;
+      })
+      .map((node) => `${node.tagName} ${node.getAttribute("aria-label") ?? node.getAttribute("data-testid") ?? ""}`.trim()),
+  );
+  expect(disclosures).toEqual([]);
   expect(found).toEqual([]);
 });
 
@@ -183,7 +197,7 @@ test("the page makes no WebGL context and asks for no frame while nothing moves"
       return raf(callback);
     };
   });
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   await expect(page.getByTestId("phase")).toHaveText("READY");
   const before = await page.evaluate(() => (window as unknown as { __raf: number }).__raf);
   await page.waitForTimeout(900);
@@ -266,7 +280,7 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
 
 test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the picture", async ({ page }) => {
   const found = problems(page);
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   const names = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"];
   const tops = [];
   for (const name of names) {
@@ -322,7 +336,7 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
       return (real as (...args: unknown[]) => unknown).call(this, kind, ...rest) as never;
     } as typeof real;
   });
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(0);
   await page.getByTestId("look-painted").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
@@ -342,7 +356,7 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(left);
   await page.getByTestId("view-side").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
-  expect(page.url()).toContain("look=painted");
+  expect(page.url()).not.toContain("look=");
 });
 
 test("the painted craft stays whole and every HUD block has the same backing", async ({ page }) => {
@@ -457,7 +471,7 @@ test("the arrival card closes by the cross, Escape and a click outside, and Summ
   await page.keyboard.press("Escape");
   await expect(card).toBeHidden();
   await page.getByTestId("summary-open").click();
-  await page.getByTestId("sky").click({ position: { x: 8, y: 8 } });
+  await page.getByTestId("stage").click({ position: { x: 8, y: 8 } });
   await expect(card).toBeHidden();
 });
 

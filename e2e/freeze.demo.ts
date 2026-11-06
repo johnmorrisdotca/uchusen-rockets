@@ -1493,7 +1493,7 @@ test("the Earth on the page and the embed page: what is copied carries the lit r
   test.setTimeout(240_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(`${URL}?background=earth#embed`);
+  await page.goto(`${URL}?background=earth&look=line#embed`);
   await pause(page);
   // the address opens at the section, so the view may be out of sight, and then it rightly stays a picture
   await page.evaluate(() => window.scrollTo(0, 0));

@@ -26,6 +26,7 @@ test("two planets and a moon stand behind the rocket, and the picture before is 
   const earth = page.locator('[data-testid="earth"]');
   const moonRow = page.locator('[data-testid="moons"]');
   await page.goto(URL);
+  await page.locator('[data-testid="look-line"]').click();
   await page.locator('[data-testid="panel-background"]').click();
   await expect(page.locator('[data-testid="background-none"]')).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator('[data-testid="background-mars"]')).toBeVisible();
@@ -90,7 +91,7 @@ test("two planets and a moon stand behind the rocket, and the picture before is 
   await expect.poll(() => sky.locator("wakusei-body").evaluate((node) => (node as unknown as { stats?: { textureWidth?: number } }).stats?.textureWidth ?? 0), { timeout: 30_000 }).toBeGreaterThan(0);
   await shot(page, "painted-desk");
 
-  await page.goto(`${URL}?background=moon`);
+  await page.goto(`${URL}?background=moon&look=line`);
   await page.locator('[data-testid="panel-background"]').click();
   await expect(sky).toHaveAttribute("data-draws", "moon");
   await expect(moons).toBeHidden();
