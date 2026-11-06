@@ -122,9 +122,9 @@ function stackAt(x: number, y0: number, z: number): Piece[] {
   ];
 }
 
-/** The pair under the spine, a few metres clear of the keel. */
+/** The pair under the spine, just below the barrels, in the gap between them. */
 export function keelBerth(): Piece[] {
-  return stackAt(0, 214, -18);
+  return stackAt(0, 214, -32);
 }
 
 /** The pair to port, a few metres clear of the spine. */

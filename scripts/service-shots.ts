@@ -32,14 +32,14 @@ const jobs = [
   { glb: loaded, shots: [shot("saddles-loaded", [180, 150, 36], [90, 150, 8], { fov: 40 })] },
   { glb: empty, shots: [shot("saddles-empty", [180, 150, 36], [90, 150, 8], { fov: 40 })] },
   { glb: keel, shots: [
-    shot("berth-keel-side", [180, 276, -10], [0, 276, -42], { up: [0, 0, 1], fov: 26, size: [1800, 800] }),
-    shot("berth-keel-top", [0, 276, -200], [0, 276, -42], { up: [0, 1, 0], fov: 50, size: [1800, 800] }),
-    shot("berth-keel-3q", [150, 150, 30], [0, 276, -42], { fov: 30 }),
+    shot("berth-keel-side", [160, 214, 20], [0, 214, -8], { up: [0, 0, 1], fov: 28, size: [1800, 800] }),
+    shot("berth-keel-top", [0, 214, -180], [0, 214, -8], { up: [0, 1, 0], fov: 42, size: [1800, 800] }),
+    shot("berth-keel-3q", [140, 120, 50], [0, 214, -8], { fov: 32 }),
   ] },
   { glb: port, shots: [
-    shot("berth-port-side", [-240, 170, 30], [-80, 170, 6], { up: [0, 0, 1], fov: 26, size: [1800, 800] }),
-    shot("berth-port-top", [-80, 170, 240], [-80, 170, 6], { up: [0, 1, 0], fov: 48, size: [1800, 800] }),
-    shot("berth-port-3q", [-210, 50, 90], [-80, 170, 6], { fov: 30 }),
+    shot("berth-port-side", [-90, 160, 40], [-8, 160, 0], { up: [0, 0, 1], fov: 32, size: [1800, 800] }),
+    shot("berth-port-top", [-8, 160, 160], [-8, 160, 0], { up: [0, 1, 0], fov: 40, size: [1800, 800] }),
+    shot("berth-port-3q", [-70, 80, 70], [-8, 160, 0], { fov: 34 }),
   ] },
   { glb: miyamoto, more: [{ glb: stack, at: [-36, 140, -60] as V3 }, { glb: dragon, at: [0, 200, -75] as V3 }], shots: [shot("ports", [0, 190, -155], [0, 230, -40], { up: [0, 1, 0], fov: 50, hide: ["booster"] })] },
   { glb: stack, shots: [

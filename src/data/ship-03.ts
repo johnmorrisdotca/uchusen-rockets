@@ -18,8 +18,8 @@ const NOTES: Readonly<Record<string, string>> = {
   "miyamoto-no-collar": "ISV Miyamoto with the drive's neck bare: the shadow-shield collar swapped for none, to compare the two ways the engines meet the hull.",
   ariake: "ISV 有明 Ariake, SPX-186, \"daybreak\": the sister of ISV Miyamoto in the Romurusu class (ロムルス級), the service ship, with a Super Heavy and a Starship ship on one box's exterior saddles. Status: planned, first flight 2456.",
   "ariake-empty": "Ariake with the exterior saddles empty. The clamps stay; the two components are off.",
-  "ariake-berth-keel": "Ariake with a Starship ship berthed under the spine, the barrels moved 4 m inboard, and a methane and oxygen depot beside the ship.",
-  "ariake-berth-port": "Ariake with a Starship ship berthed to port, the two port boxes moved forward to leave a 146 m run, and a methane and oxygen depot beside the ship.",
+  "ariake-berth-keel": "Ariake with a Starship ship and a tanker under the spine, tails together at the transfer coupling, the barrels moved 4 m inboard.",
+  "ariake-berth-port": "Ariake with a Starship ship and a tanker to port, tails together at the transfer coupling, the two port boxes moved forward.",
   "ariake-cutaway": "Ariake opened to starboard at the habitation drum: the four decks in warm wood and dawn-gold.",
   "miyamoto-cutaway": "Miyamoto opened to starboard: the layers of its armour at the cut edge, the reactor and power rooms, the barrels, both bays, the decks of the habitat and the operations ring of the citadel.",
 };
