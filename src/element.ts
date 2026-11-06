@@ -262,7 +262,7 @@ export class UchusenRocket extends HTMLBase {
         yaw: number(choice.yaw, this.driven?.yaw ?? 0, -3600, 3600),
         tilt: number(choice.tilt, this.driven?.tilt ?? 0, -90, 90),
         roll: number(choice.roll, this.driven?.roll ?? 0, -180, 180),
-        zoom: number(choice.zoom, this.driven?.zoom ?? 1, 0.000001, 8),
+        zoom: number(choice.zoom, this.driven?.zoom ?? 1, 1e-12, 8),
         panX: number(choice.panX, this.driven?.panX ?? 0, -5000, 5000),
         panY: number(choice.panY, this.driven?.panY ?? 0, -5000, 5000),
       };

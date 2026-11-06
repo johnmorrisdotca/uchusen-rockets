@@ -1,5 +1,5 @@
 // The compare page's camera. Free is the view as it was. The other choices keep craft in frame, follow one, or keep the planet with them. Follow selected only reads `data-selected` on the stage, which MODULES-476 will set. The camera orbits when Turn is Camera: the craft stay where they are and the Earth moves. Edges Wrap is only the free camera.
-import { moonGeocentric } from "@johnmorrisdotca/wakusei-planets";
+import { BODIES, heliocentric, moonGeocentric, type HostId } from "@johnmorrisdotca/wakusei-planets";
 import type { UchusenRocket } from "../src/element.ts";
 import { frameSky } from "./sky.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
@@ -10,7 +10,19 @@ type Box = { craft: number; x: number; y: number; w: number; h: number; on: bool
 
 const HAND = new Set(["drag", "pinch", "wheel", "key", "pan"]);
 const MOON_M = 384_400_000;
+const AU = 149_597_870_700;
+const ZOOM_MIN = 1e-12;
 const MARK_PX = 4;
+const SOLAR: ["sun" | HostId, string][] = [
+  ["sun", "cmpBodySun"],
+  ["mercury", "cmpBodyMercury"],
+  ["venus", "cmpBodyVenus"],
+  ["mars", "cmpBodyMars"],
+  ["jupiter", "cmpBodyJupiter"],
+  ["saturn", "cmpBodySaturn"],
+  ["uranus", "cmpBodyUranus"],
+  ["neptune", "cmpBodyNeptune"],
+];
 
 const byId = (id: string): HTMLElement => {
   const node = document.getElementById(id);
@@ -179,7 +191,7 @@ export function mountCamera(opts: {
     const zoom = span > 1 ? bar.state.zoom / span : bar.state.zoom;
     const panX = bar.state.panX + (width / 2 - (minX + maxX) / 2);
     const panY = bar.state.panY + (height / 2 - (minY + maxY) / 2);
-    return { zoom: Math.max(0.000001, zoom), panX, panY };
+    return { zoom: Math.max(ZOOM_MIN, zoom), panX, panY };
   }
 
   function paintOverlay(): void {
@@ -228,10 +240,11 @@ export function mountCamera(opts: {
     });
     arrows.append(list);
     const metres = Number(canvas.dataset.distance ?? "0");
-    const zoom = Math.max(0.000001, bar.state.zoom || 1);
+    const zoom = Math.max(ZOOM_MIN, bar.state.zoom || 1);
     const far = metres / zoom;
     distance.textContent = far >= 1000 ? say("cmpKm", { n: Math.round(far / 1000).toLocaleString("en-US") }) : say("cmpM", { n: Math.round(far).toLocaleString("en-US") });
     paintMoon(width, height, far);
+    paintSolar(width, height, far);
   }
 
   function paintMoon(width: number, height: number, far: number): void {
@@ -253,6 +266,40 @@ export function mountCamera(opts: {
     if (far < MOON_M * 0.5) mark.dataset.place = "far";
   }
 
+  function fromEarth(id: "sun" | HostId, ms: number): [number, number, number] {
+    const earth = heliocentric("earth", ms);
+    const there = id === "sun" ? [0, 0, 0] : heliocentric(id, ms);
+    return [(there[0] - earth[0]) * AU, (there[1] - earth[1]) * AU, (there[2] - earth[2]) * AU];
+  }
+
+  function paintSolar(width: number, height: number, far: number): void {
+    if (far < 20_000_000) return;
+    const ms = Date.now();
+    const yaw = ((turn === "camera" ? bar.state.yaw : 0) * Math.PI) / 180;
+    for (const [id, key] of SOLAR) {
+      const [x, y] = fromEarth(id, ms);
+      const range = Math.hypot(x, y, 0);
+      const angle = Math.atan2(x, y) - yaw;
+      const span = (range / Math.max(far, 1)) * width;
+      const px = width / 2 + Math.sin(angle) * span;
+      const py = height / 2;
+      const mark = document.createElement("button");
+      mark.type = "button";
+      mark.className = "cw-mark";
+      mark.dataset.testid = `body-${id}`;
+      mark.textContent = say(key);
+      mark.style.left = `${Math.min(width - 8, Math.max(8, px))}px`;
+      mark.style.top = `${py}px`;
+      mark.style.borderColor = id === "sun" ? "#e6d38a" : BODIES[id].colour;
+      mark.addEventListener("click", () => {
+        const canvas = hero.shadowRoot?.querySelector("canvas");
+        const fit = Number(canvas?.dataset.distance ?? "400");
+        bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(range, 1))) });
+      });
+      arrows.append(mark);
+    }
+  }
+
   function onView(event: Event): void {
     const detail = (event as CustomEvent<Detail>).detail ?? {};
     if (applying) {
@@ -265,7 +312,7 @@ export function mountCamera(opts: {
       applyEdges();
     }
     hero.drive(detail);
-    const zoom = Math.max(0.000001, detail.zoom ?? bar.state.zoom ?? 1);
+    const zoom = Math.max(ZOOM_MIN, detail.zoom ?? bar.state.zoom ?? 1);
     const sky = byId("sky-back");
     sky.dataset.viewZoom = String(zoom);
     const node = sky.querySelector("wakusei-body:not([data-moon])");
@@ -311,12 +358,18 @@ export function mountCamera(opts: {
     ["cmpMark100k", 100_000],
     ["cmpMarkEarth", 12_742_000],
     ["cmpMarkMoon", MOON_M],
+    ["cmpMarkAu", AU],
+    ["cmpBodyJupiter", 0],
+    ["cmpBodyNeptune", 0],
+    ["cmpMarkKuiper", 50 * AU],
   ];
   byId("cw-marks").replaceChildren(
     ...marks.map(([key, metres]) => chip(say(key), `mark-${key}`, false, () => {
       const canvas = hero.shadowRoot?.querySelector("canvas");
       const fit = Number(canvas?.dataset.distance ?? "400");
-      bar.set({ zoom: Math.max(0.000001, Math.min(8, fit / metres)) });
+      const live = key === "cmpBodyJupiter" ? "jupiter" : key === "cmpBodyNeptune" ? "neptune" : null;
+      const there = live ? Math.hypot(...fromEarth(live, Date.now())) : metres;
+      bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(there, 1))) });
     })),
   );
   back.addEventListener("click", () => {

@@ -71,3 +71,14 @@ test("turning the camera keeps the craft near the middle and moves the Earth", a
   expect(Math.abs(after!.dx - before!.dx)).toBeLessThan(2);
   expect(Math.abs(after!.dy - before!.dy)).toBeLessThan(2);
 });
+
+test("one astronomical unit shows the Sun and Jupiter", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-desk", "WebGL is drawn on the desk");
+  await page.goto(URL);
+  await expect(page.locator("#hero")).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await page.getByTestId("mark-cmpMarkAu").click();
+  await expect(page.getByTestId("body-jupiter")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("body-sun")).toBeVisible();
+  const text = await page.getByTestId("cw-distance").innerText();
+  expect(Number(text.replaceAll(/[^0-9]/g, ""))).toBeGreaterThan(100_000_000);
+});
