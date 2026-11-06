@@ -115,7 +115,7 @@ setScale(address.get("scale") === "true");
 const PANELS = ["look", "background", "motion", "build", "lights", "docked"] as const;
 type PanelName = (typeof PANELS)[number];
 
-/** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. */
+/** A tab is offered when its group has something for this craft. Lights is on every craft; a craft with nothing drawn yet still offers Off. */
 function panelOffered(name: PanelName): boolean {
   if (name === "motion") return !byId("motion-field").hidden;
   if (name === "build") return !byId("build-field").hidden;
@@ -578,7 +578,7 @@ function renderMain() {
   drawEmbed();
   syncEarth();
   sizeObject();
-  byId("lights-field").hidden = !state.rocket.startsWith("fleet-");
+  fillLights();
   showPanels();
 }
 
@@ -756,15 +756,40 @@ function showLights() {
   press(lightsBox, `lights-${lightsChoice}`);
   const note = byId("lights-note");
   note.hidden = !reducedMotion;
+  note.dataset.say = "lightsNote";
   note.textContent = say("lightsNote");
   address.set("lights", lightsChoice === "all" ? null : lightsChoice);
+}
+
+/** Fleet ships keep Off, Running only and All. Any other craft offers only Off until its lights are drawn. */
+function fillLights(): void {
+  const offer = state.rocket.startsWith("fleet-") ? "fleet" : "later";
+  const box = byId("lights");
+  const note = byId("lights-note");
+  byId("lights-field").hidden = false;
+  if (offer === "later") {
+    const only = chip("Off", "lights-off", () => {}, "lights_off");
+    only.setAttribute("aria-pressed", "true");
+    box.replaceChildren(only);
+    note.hidden = false;
+    note.dataset.say = "lightsYet";
+    note.textContent = say("lightsYet");
+    return;
+  }
+  const chips = [
+    chip("Off", "lights-off", () => chooseLights("off"), "lights_off"),
+    chip("Running only", "lights-running", () => chooseLights("running"), "lights_running"),
+    chip("All", "lights-all", () => chooseLights("all"), "lights_all"),
+  ];
+  box.replaceChildren(...chips);
+  showLights();
 }
 function chooseLights(choice: string) {
   lightsChoice = choice;
   showLights();
   drawEmbed();
 }
-lightsBox.append(chip("Off", "lights-off", () => chooseLights("off"), "lights_off"), chip("Running only", "lights-running", () => chooseLights("running"), "lights_running"), chip("All", "lights-all", () => chooseLights("all"), "lights_all"));
+fillLights();
 
 // ------------------------------------------------------------- the motion of a fleet ship's moving parts
 const motionBox = byId("motion");

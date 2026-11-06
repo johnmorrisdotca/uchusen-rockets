@@ -111,3 +111,7 @@ A blank is a blank: a phase with no time says so, and a flame drawn with no coun
 ## What it costs the machine
 
 A flight has no clock of its own: it moves inside the view's one frame loop. It stands still out of sight and ends by itself. A flame flickers at most 30 times a second and stops moving after 15 seconds with nobody touching anything (`FLAME_SETTLE_MS`). Lighting and dousing engines makes and frees nothing on the graphics card after the first flame.
+
+## Lights
+
+The Lights tab is on every craft. A fleet ship offers Off, Running only and All. A craft whose lights are not drawn yet offers only Off and says so.
