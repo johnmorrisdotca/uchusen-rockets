@@ -73,6 +73,21 @@ test("each port offers its craft, and the choice stays in the address with Fit, 
   await expect(hero(page)).toHaveAttribute("docked", "dragon@crew-s");
 });
 
+test("Miyamoto's ventral collars and the first design's arms offer a craft", async ({ page }) => {
+  await page.goto(`${URL}?rocket=fleet-ship-03&variant=miyamoto`);
+  await expect(page.getByTestId("docked-dragon-ventral-dragon")).toBeVisible();
+  await expect(page.getByTestId("docked-starship-ventral-starship")).toBeVisible();
+  await page.getByTestId("docked-dragon-ventral-dragon").click();
+  await expect(hero(page)).toHaveAttribute("docked", "dragon@dragon-ventral");
+  await expect.poll(() => param(page, "docked")).toBe("dragon@dragon-ventral");
+
+  await page.goto(`${URL}?rocket=fleet-02&variant=fleet-02`);
+  await expect(page.getByTestId("docked-starboard-26-dragon")).toBeVisible();
+  await expect(page.getByTestId("docked-port-92-orion")).toBeVisible();
+  await page.getByTestId("docked-starboard-26-dragon").click();
+  await expect(hero(page)).toHaveAttribute("docked", "dragon@starboard-26");
+});
+
 test("taking the craft off gives the graphics buffers back", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "the graphics count is read from Chromium");
   await page.addInitScript(COUNT);
