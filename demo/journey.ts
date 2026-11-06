@@ -35,7 +35,8 @@ import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
 import { WORDS } from "./words.js";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import { destinationGrow, forwardStar } from "../src/journey/forward.ts";
+import { bodySpan, forwardStar } from "../src/journey/forward.ts";
+import { positionKm } from "../src/journey/trip.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
@@ -59,9 +60,9 @@ const setText = (node: Element, text: string): void => {
   if (node.textContent !== text) node.textContent = text;
 };
 const reduced = (): boolean => matchMedia("(prefers-reduced-motion: reduce)").matches;
-const VIEWS = ["side", "front", "rear", "cockpit", "map"] as const;
+const VIEWS = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"] as const;
 type JourneyView = (typeof VIEWS)[number];
-const VIEW_WORD: Record<JourneyView, string> = { side: "jSide", front: "jFront", rear: "jRear", cockpit: "jCockpit", map: "jMap" };
+const VIEW_WORD: Record<JourneyView, string> = { side: "jSide", front: "jFront", rear: "jRear", cockpit: "jCockpit", chase: "jChase", orbit: "jOrbit", map: "jMap" };
 const isView = (value: string | null): value is JourneyView => VIEWS.some((view) => view === value);
 const C_MS = 299_792_458;
 const DAY = 86_400_000;
@@ -87,6 +88,7 @@ const choice = {
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
   view: isView(askedView) ? askedView : "side",
   look: query.get("look") === "painted" ? "painted" : "line",
+  hold: query.get("hold") === "1",
   base: todayUtc(),
 };
 if (choice.to === choice.from) choice.to = choice.from === "earth" ? "mars" : "earth";
@@ -109,6 +111,7 @@ function writeAddress(): void {
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
   if (choice.look === "painted") next.set("look", "painted");
+  if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
   const text = `${location.pathname}?${next.toString()}`;
   history.replaceState(null, "", text);
@@ -127,6 +130,25 @@ const stopName = (id: string): string => {
   const stop = SOURCE.stops.find((one) => one.id === id);
   return stop ? (japanese() ? stop.name.ja : stop.name.en) : id;
 };
+function fromDistanceKm(state: State): number {
+  const radius = SOURCE.stops.find((one) => one.id === trip.from)?.radiusKm ?? 6371;
+  const id = state.phase.id;
+  if (id === "preheat" || id === "ignition") return radius;
+  if (id === "ascent") {
+    const park = trip.ballistic?.parkKm ?? radius;
+    return radius + (park - radius) * state.fraction;
+  }
+  const body = positionKm(SOURCE, trip.from, state.dateMs, trip.frame);
+  const [x, y, z] = state.positionKm;
+  return Math.max(radius, Math.hypot(x - body[0], y - body[1], z - body[2]));
+}
+function placeBody(which: "from" | "dest", id: string, distanceKm: number): void {
+  const node = byId(`body-${which}`);
+  const stop = SOURCE.stops.find((one) => one.id === id);
+  node.style.setProperty("--span", bodySpan(stop?.radiusKm ?? 1000, distanceKm).toFixed(4));
+  if (stop) node.style.setProperty("--ink", stop.colour);
+  setText(byId(`body-${which}-name`), stopName(id));
+}
 const craftNow = (): Craft => craftOf(choice.craft) ?? CRAFTS[0]!;
 const craftName = (craft: Craft): string => ROCKETS[craft.rocket]?.name ?? craft.name;
 const dateWords = (ms: number, time = false): string =>
@@ -202,6 +224,8 @@ function drawPickers(): void {
   );
   byId("when").replaceChildren(...options.map((option, index) => chip(option.label, `when-${index}`, index === choice.when, () => change({ when: index }))));
   byId("views").replaceChildren(...VIEWS.map((view) => chip(say(VIEW_WORD[view]), `view-${view}`, choice.view === view, () => setView(view))));
+  const holdButton = byId("hold");
+  holdButton.setAttribute("aria-pressed", String(choice.hold));
   const painted = choice.look === "painted";
   byId("looks").replaceChildren(chip(say(painted ? "look_line" : "look_painted"), "look-painted", painted, () => setLook(painted ? "line" : "painted")));
 }
@@ -278,6 +302,72 @@ function setSpeed(value: PlaySpeed): void {
 const stage = byId("stage");
 const sky = byId<HTMLCanvasElement>("sky");
 const craftBox = byId("craft");
+const pose = { yaw: 0, pitch: 0, roll: 0, nx: 0, ny: 0 };
+let poseEase = 0;
+function applyPose(): void {
+  craftBox.style.setProperty("--yaw", `${pose.yaw.toFixed(2)}deg`);
+  craftBox.style.setProperty("--pitch", `${pose.pitch.toFixed(2)}deg`);
+  craftBox.style.setProperty("--roll", `${pose.roll.toFixed(2)}deg`);
+  craftBox.style.setProperty("--nx", `${pose.nx.toFixed(1)}px`);
+  craftBox.style.setProperty("--ny", `${pose.ny.toFixed(1)}px`);
+  craftBox.dataset.yaw = String(Math.round(pose.yaw));
+}
+function easePose(): void {
+  if (choice.view === "orbit" || choice.hold || reduced()) return;
+  const from = { ...pose };
+  const began = performance.now();
+  const token = ++poseEase;
+  const step = (now: number): void => {
+    if (token !== poseEase) return;
+    const t = Math.min(1, (now - began) / 320);
+    const left = 1 - t;
+    pose.yaw = from.yaw * left;
+    pose.pitch = from.pitch * left;
+    pose.roll = from.roll * left;
+    pose.nx = from.nx * left;
+    pose.ny = from.ny * left;
+    applyPose();
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+let drag: { x: number; y: number; nudge: boolean } | null = null;
+craftBox.addEventListener("pointerdown", (event) => {
+  if (choice.view === "map" || choice.view === "cockpit") return;
+  if ((event.target as Element).closest("button")) return;
+  drag = { x: event.clientX, y: event.clientY, nudge: event.altKey };
+  poseEase += 1;
+  craftBox.setPointerCapture(event.pointerId);
+});
+craftBox.addEventListener("pointermove", (event) => {
+  if (!drag) return;
+  const dx = event.clientX - drag.x;
+  const dy = event.clientY - drag.y;
+  drag.x = event.clientX;
+  drag.y = event.clientY;
+  if (drag.nudge) {
+    pose.nx += dx;
+    pose.ny += dy;
+  } else if (event.shiftKey) pose.roll += dx * 0.45;
+  else {
+    pose.yaw += dx * 0.45;
+    pose.pitch = Math.max(-80, Math.min(80, pose.pitch + dy * 0.35));
+  }
+  applyPose();
+});
+const endDrag = (): void => {
+  if (!drag) return;
+  drag = null;
+  easePose();
+};
+craftBox.addEventListener("pointerup", endDrag);
+craftBox.addEventListener("pointercancel", endDrag);
+byId("hold").addEventListener("click", () => {
+  choice.hold = !choice.hold;
+  byId("hold").setAttribute("aria-pressed", String(choice.hold));
+  writeAddress();
+  if (!choice.hold) easePose();
+});
 const mapSvg = byId<SVGSVGElement>("map");
 const routeSvg = byId<SVGSVGElement>("route");
 let litNow = false;
@@ -575,7 +665,7 @@ function buildPanel(): void {
   for (const [key, row] of rows("now", keys.map(([k, w]) => [k, say(w)]))) nowRows.set(key, row);
   const tripRows: [string, string, string, boolean?][] = [
     ["leaves", say("jDeparts"), dateWords(trip.departMs, true)],
-    ["arrives", say("jArrives"), dateWords(trip.departMs - trip.liftoffBeforeS * 1000 + trip.frameS * 1000, true)],
+    ["arrives", say("jArrives"), dateWords(arrivalMs(), true)],
     ["straight", say("jStraight"), `${kilometres(trip.straightKm)} · ${astronomicalUnits(trip.straightKm)} · ${lightTime(trip.straightKm)}`],
     ["path", say("jPath"), kilometres(trip.pathKm)],
     ["time", say("jDuration"), trip.drive === "continuous" ? `${duration(trip.shipS)} / ${duration(trip.frameS)}` : duration(trip.frameS)],
@@ -618,6 +708,14 @@ function buildPanel(): void {
   );
 }
 
+function arrivalMs(): number {
+  return trip.departMs - trip.liftoffBeforeS * 1000 + trip.frameS * 1000;
+}
+
+function gammaWords(gamma: number): string {
+  return gamma.toFixed(gamma < 1.0001 ? 9 : 6).replace(/(\d{3})(?=\d)/g, "$1\u202f").replace(/^(\d)\u202f/, "$1");
+}
+
 function ratioWords(): string {
   if (trip.massRatio === null) return `${say("jNA")}: ${trip.fuel.note}`;
   const text = trip.massRatio >= 100 ? trip.massRatio.toFixed(0) : trip.massRatio.toFixed(3);
@@ -648,7 +746,7 @@ function drawPanel(state: State): void {
   set("since", t < 0 ? `T−${duration(-t)}` : `T+${duration(t)}`);
   set("speed", speedWords(state.speedMs));
   set("light", percentOfLight(state.speedMs));
-  set("gamma", state.gamma.toFixed(state.gamma < 1.0001 ? 9 : 6).replace(/(\d{3})(?=\d)/g, "$1\u202f").replace(/^(\d)\u202f/, "$1"));
+  set("gamma", gammaWords(state.gamma));
   set("accel", state.accelG === 0 ? "0 g" : `${state.accelG < 0 ? "−" : "+"}${gWords(state.accelG)}`);
   set("flown", `${kilometres(state.doneKm)} · ${astronomicalUnits(state.doneKm)}`);
   set("togo", `${kilometres(state.toDestinationKm)} · ${lightTime(state.toDestinationKm)}`);
@@ -708,27 +806,33 @@ const VOYAGER_KMS = 17.11;
 function showSummary(): void {
   const end = stateAt(trip, SOURCE, total);
   setText(byId("summary-route"), `${stopName(trip.from)} → ${stopName(trip.to)} · ${craftName(craftNow())}`);
-  const facts: [string, string][] = [
-    [say(`jLevel_${trip.verdict.level}`), trip.verdict.line],
-    [say("jStraight"), `${kilometres(trip.straightKm)} (${astronomicalUnits(trip.straightKm)})`],
-    [say("jPath"), kilometres(trip.pathKm)],
-    [say("jShip"), duration(trip.shipS)],
-    [say("jEarthT"), duration(trip.frameS)],
-    ...(trip.drive === "continuous" ? [[say("jClocks"), duration(trip.shipS) === duration(trip.frameS) ? `${say("jTwin")} ${say("jTwinSmall")}` : say("jTwin")] as [string, string]] : []),
-    [say("jTopSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
-    [say("jPeakG"), gWords(trip.peakG)],
-    [say("jDvAll"), speedWords(trip.dv.total)],
-    [say("jFuel"), fuelWords()],
-    [say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],
-    [say("jSignalEnd"), duration(end.signalS)],
-    [say("jCompare"), `${say("jLightTakes", { t: duration(trip.pathKm / 299_792.458) })} ${say("jVoyager", { t: duration(trip.pathKm / VOYAGER_KMS) })}`],
+  const facts: { key: string; label: string; value: string; wide?: boolean }[] = [
+    { key: "leaves", label: say("jDeparts"), value: dateWords(trip.departMs, true) },
+    { key: "arrives", label: say("jArrives"), value: dateWords(arrivalMs(), true) },
+    { key: "verdict", label: say(`jLevel_${trip.verdict.level}`), value: trip.verdict.line, wide: true },
+    { key: "straight", label: say("jStraight"), value: `${kilometres(trip.straightKm)} (${astronomicalUnits(trip.straightKm)})` },
+    { key: "path", label: say("jPath"), value: kilometres(trip.pathKm) },
+    { key: "ship", label: say("jShip"), value: duration(trip.shipS) },
+    { key: "frame", label: say("jEarthT"), value: duration(trip.frameS) },
+    ...(trip.drive === "continuous" ? [{ key: "clocks", label: say("jClocks"), value: duration(trip.shipS) === duration(trip.frameS) ? `${say("jTwin")} ${say("jTwinSmall")}` : say("jTwin"), wide: true }] : []),
+    { key: "peak", label: say("jTopSpeed"), value: `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}` },
+    { key: "gamma", label: say("jGamma"), value: gammaWords(trip.peakGamma) },
+    { key: "peakg", label: say("jPeakG"), value: gWords(trip.peakG) },
+    { key: "dv", label: say("jDvAll"), value: speedWords(trip.dv.total) },
+    { key: "fuel", label: say("jFuel"), value: fuelWords() },
+    { key: "ratio", label: say("jMassRatio"), value: ratioWords() },
+    { key: "payload", label: say("jPayloadTo", { to: stopName(trip.to) }), value: payloadWords() },
+    { key: "signal", label: say("jSignalEnd"), value: duration(end.signalS) },
+    { key: "compare", label: say("jCompare"), value: `${say("jLightTakes", { t: duration(trip.pathKm / 299_792.458) })} ${say("jVoyager", { t: duration(trip.pathKm / VOYAGER_KMS) })}`, wide: true },
   ];
   byId("summary-facts").replaceChildren(
-    ...facts.map(([label, value]) => {
+    ...facts.map(({ key, label, value, wide }) => {
       const wrap = document.createElement("div");
+      if (wide) wrap.className = "wide";
       const dt = document.createElement("dt");
       dt.textContent = label;
       const dd = document.createElement("dd");
+      dd.dataset.testid = `summary-${key}`;
       dd.textContent = value;
       wrap.append(dt, dd);
       return wrap;
@@ -820,9 +924,8 @@ function draw(force = false): void {
   const streak = moving ? Math.min(70, Math.log10(1 + state.speedMs / 50) * 14) : 0;
   const forward = choice.view === "cockpit";
   const beta = Math.min(0.99, Math.max(0, state.speedMs / C_MS));
-  const dest = byId("dest");
-  dest.style.setProperty("--grow", destinationGrow(total > 0 ? playhead / total : 0).toFixed(4));
-  setText(byId("dest-name"), stopName(trip.to));
+  placeBody("from", trip.from, fromDistanceKm(state));
+  placeBody("dest", trip.to, state.toDestinationKm);
   if (choice.view !== "map") drawSky(forward || reduced() ? 0 : streak, forward, beta);
   else if (force) drawSky(0, false, 0);
 }

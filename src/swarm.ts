@@ -117,30 +117,97 @@ export function approachPath(drone: number, count: number, slot: readonly [numbe
 }
 
 /**
- * One drone, where it is, and the point its beam aims at.
+ * A rank reads at a glance: one boss, one manager for every six to eight drones, and the rest builders and grunts about equally.
+ * @example
+ * ```ts
+ * import type { Rank } from "@johnmorrisdotca/uchusen-rockets";
  *
+ * const rank: Rank = "boss";
+ * console.log(rank);
+ * ```
+ */
+export type Rank = "boss" | "manager" | "builder" | "grunt";
+
+/**
+ * What the drone is doing. A boss or a manager is busy only while directing.
+ * @example
+ * ```ts
+ * import type { CrewTask } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const task: CrewTask = "weld";
+ * console.log(task);
+ * ```
+ */
+export type CrewTask = "direct" | "weld" | "inspect" | "spray" | "fasten" | "survey" | "carry" | "charge";
+
+/**
+ * One drone, where it is, and the point its beam aims at.
  * @example
  * ```ts
  * import type { Carry } from "@johnmorrisdotca/uchusen-rockets";
  *
- * const carry: Carry = { drone: 0, slot: "drive", part: [10, 0, 0], where: [14, 0, 6], duty: "work" };
+ * const carry: Carry = { drone: 0, slot: "drive", part: [10, 0, 0], where: [14, 0, 6], duty: "work", rank: "builder", task: "weld" };
  * console.log(carry.slot);
  * ```
  */
 export interface Carry {
   drone: number;
   slot: string;
-  /** Where the beam aims: the part, for a drone at the work, or a short point ahead. */
+  /** Where the beam aims: the part, where it is being built. */
   part: [number, number, number];
   /** Where the drone is. */
   where: [number, number, number];
-  /** Working a part, flying the path, or waiting at the berth. */
+  /** Working a part, flying out to fetch a shop-sized piece, or charging at a berth. */
   duty: "work" | "transit" | "berth";
+  rank: Rank;
+  task: CrewTask;
 }
 
 /**
- * Where each drone is at `at`. A few work each part that is being built, some fly the path from the stack, and some wait at the berth. Distances differ, so they do not sit in one ring.
+ * The rank of drone `drone` in a crew of `count`. Drone 0 is the boss.
+ * @param drone The drone's number, from 0.
+ * @param count How many drones are in the crew.
+ * @returns Boss, manager, builder or grunt.
+ * @example
+ * ```ts
+ * import { rankOf } from "@johnmorrisdotca/uchusen-rockets";
  *
+ * console.log(rankOf(0, 24));
+ * ```
+ */
+export function rankOf(drone: number, count: number): Rank {
+  if (drone <= 0 || count <= 1) return "boss";
+  const managers = Math.max(1, Math.floor(count / 7));
+  if (drone <= managers) return "manager";
+  const builders = Math.ceil((count - 1 - managers) / 2);
+  return drone <= managers + builders ? "builder" : "grunt";
+}
+
+const BUILDER_TASKS = ["weld", "fasten", "inspect"] as const;
+const GRUNT_TASKS = ["spray", "survey", "carry", "charge"] as const;
+
+/** Where a drone of this rank stands, and what it is doing. The part stays where it is built. Carriers fan out round the hull, and only a few sit at a berth to charge. */
+function placeCrew(job: SwarmJob, count: number, slot: readonly [number, number, number], dock: readonly [number, number, number], length?: readonly [number, number]): Carry {
+  const rank = rankOf(job.drone, count);
+  const mates = count;
+  const turn = (job.drone / Math.max(1, mates)) * Math.PI * 2;
+  let task: CrewTask = "survey";
+  if (rank === "boss" || rank === "manager") task = "direct";
+  else if (rank === "builder") task = BUILDER_TASKS[job.drone % BUILDER_TASKS.length] ?? "weld";
+  else task = GRUNT_TASKS[job.drone % GRUNT_TASKS.length] ?? "survey";
+  const duty = task === "charge" ? "berth" : task === "carry" ? "transit" : "work";
+  const radius = rank === "boss" ? 70 : rank === "manager" ? 48 : 34 + (job.drone % 3) * 8;
+  const lift = rank === "boss" ? 40 : (job.drone % 5) - 2;
+  const around = duty === "berth" ? 18 : radius;
+  const centre = duty === "berth" ? dock : slot;
+  const along = length && duty === "transit" ? Math.min(length[0], length[1]) + Math.abs(length[1] - length[0]) * (job.drone / Math.max(1, count)) : centre[1] + lift * 3;
+  const where: [number, number, number] = [centre[0] + Math.cos(turn) * around, along, centre[2] + Math.sin(turn) * around];
+  const aim = duty === "work" ? slot : aimOf(where, slot, 5);
+  return { drone: job.drone, slot: job.slot, part: [aim[0], aim[1], aim[2]], where, duty, rank, task };
+}
+
+/**
+ * Where each drone is at `at`. Most of the crew is at the part, spread all the way round it. A few fly out for a shop-sized piece, and a few charge at a berth. The part itself stays where it is built.
  * @param jobs Which slot each drone is on.
  * @param at How far through the build, from 0 to 1.
  * @param steps The ship's build order.
@@ -158,46 +225,9 @@ export interface Carry {
  * ```
  */
 export function carries(jobs: readonly SwarmJob[], at: number, steps: readonly PlayStep[], slotAt: (slot: string) => readonly [number, number, number] | undefined, dock: readonly [number, number, number], length?: readonly [number, number]): Carry[] {
-  const frame = playFrame(steps, at);
-  const going = frame.going;
-  const n = jobs.length;
-  const parkN = n >= 4 && going.length > 0 ? Math.max(1, Math.floor(n / 4)) : 0;
-  const workN = going.length === 0 ? 0 : Math.min(n - parkN, Math.max(1, Math.min(n - parkN, going.length * 3)));
-  const cargoOf = (slot: string): [number, number, number] => {
-    const place = slotAt(slot) ?? dock;
-    const step = steps.find((one) => one.slot === slot);
-    const span = step && step.days > 0 ? step.days : 1;
-    const done = step ? Math.min(1, Math.max(0, (frame.day - step.start) / span)) : 1;
-    // the part rides from the stack to the slot, and is in the slot for the last part of the step
-    const along = Math.min(1, done / 0.85);
-    return [dock[0] + (place[0] - dock[0]) * along, dock[1] + (place[1] - dock[1]) * along, dock[2] + (place[2] - dock[2]) * along];
-  };
-  return jobs.map((job, i) => {
-    const slot = slotAt(job.slot) ?? dock;
-    if (i < workN) {
-      const mates = jobs.slice(0, workN).filter((one) => one.slot === job.slot);
-      const place = Math.max(0, mates.findIndex((one) => one.drone === job.drone));
-      const turn = (place / Math.max(1, mates.length)) * Math.PI * 2 + 0.6;
-      const radius = 34 + (place % 3) * 8;
-      const cargo = cargoOf(job.slot);
-      const where: [number, number, number] = [cargo[0] + Math.cos(turn) * radius, cargo[1] + ((place % 5) - 2) * 3, cargo[2] + Math.sin(turn) * radius];
-      return { drone: job.drone, slot: job.slot, part: cargo, where, duty: "work" };
-    }
-    if (i < n - parkN) {
-      const transitIndex = i - workN;
-      const transitCount = Math.max(1, n - parkN - workN);
-      const stern = length ? Math.min(length[0], length[1]) : Math.min(dock[1], slot[1]);
-      const bow = length ? Math.max(length[0], length[1]) : Math.max(dock[1], slot[1]);
-      const t = transitCount === 1 ? 0.5 : transitIndex / (transitCount - 1);
-      const lane = dock[0] - 12 - (job.drone % 3) * 8;
-      const where: [number, number, number] = [lane, stern + (bow - stern) * t + ((job.drone % 3) - 1) * 4, dock[2] + ((job.drone % 5) - 2) * 8];
-      return { drone: job.drone, slot: job.slot, part: aimOf(where, slot, 5), where, duty: "transit" };
-    }
-    const turn = job.drone * 2.399;
-    const reach = 16 + (job.drone % 6) * 8;
-    const where: [number, number, number] = [dock[0] + 10 + Math.cos(turn) * 14, dock[1] + Math.sin(turn) * reach, dock[2] + Math.cos(turn * 1.7) * 12];
-    return { drone: job.drone, slot: job.slot, part: [where[0] - 3, where[1], where[2]], where, duty: "berth" };
-  });
+  const going = playFrame(steps, at).going;
+  if (going.length === 0 || jobs.length === 0) return [];
+  return jobs.map((job) => placeCrew(job, jobs.length, slotAt(job.slot) ?? dock, dock, length));
 }
 
 /** A point `metres` from `from` toward `toward`. */

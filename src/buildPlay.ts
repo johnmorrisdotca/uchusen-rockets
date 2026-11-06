@@ -104,6 +104,111 @@ export function playFrame(steps: readonly PlayStep[], at: number): PlayFrame {
   return { day, total, done, going };
 }
 
+/** The work inside one step, in order. Bring is the only transport, and it is under 15% of the step. */
+export const PHASES = ["bring", "join", "outfit", "inspect"] as const;
+
+/**
+ * Bring, join, outfit, then inspect. Bring is the only time a part is carried.
+ * @example
+ * ```ts
+ * import type { BuildPhase } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const phase: BuildPhase = "join";
+ * console.log(phase);
+ * ```
+ */
+export type BuildPhase = (typeof PHASES)[number];
+
+/** How the step's days are shared. They add up to 1, and bring stays under 15%. */
+export const PHASE_SHARE: Record<BuildPhase, number> = { bring: 0.08, join: 0.27, outfit: 0.33, inspect: 0.32 };
+
+/**
+ * The widest part the shop will hand to a drone, in metres. Anything larger is built where it will stand.
+ * @example
+ * ```ts
+ * import { SHOP_LIMIT_M } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(SHOP_LIMIT_M);
+ * ```
+ */
+export const SHOP_LIMIT_M = 30;
+
+/** How far the last phase has gone, from 0 to 1, or null while the ring is still being built or the step is over. The bearing stays still until this, then turns with it. */
+export function inspectAlong(step: PlayStep, day: number): number | null {
+  const now = stepPhase(step, day);
+  return now?.phase === "inspect" ? now.along : null;
+}
+
+/**
+ * Which phase a step is in on `day`, and how far through that phase. Nothing before it starts or after it finishes.
+ *
+ * @param step The build step.
+ * @param day Days after the keel was laid.
+ * @returns The phase, or null when the step is not underway.
+ * @example
+ * ```ts
+ * import { stepPhase } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(stepPhase({ slot: "drive", start: 0, days: 100 }, 4)?.phase);
+ * ```
+ */
+export function stepPhase(step: PlayStep, day: number): { phase: BuildPhase; along: number } | null {
+  if (!(day >= step.start && day < step.start + step.days)) return null;
+  const through = (day - step.start) / (step.days || 1);
+  let cursor = 0;
+  for (const phase of PHASES) {
+    const share = PHASE_SHARE[phase];
+    if (through < cursor + share || phase === "inspect") return { phase, along: Math.min(1, Math.max(0, (through - cursor) / share)) };
+    cursor += share;
+  }
+  return { phase: "inspect", along: 1 };
+}
+
+/**
+ * How a part stands at `day`. A shop-sized part rides in a beam while it is brought in. A larger one grows where it belongs, and a ring's `grown` is the fraction of the circle that is closed.
+ * @example
+ * ```ts
+ * import type { PartBuild } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const part: PartBuild = { slot: "drive", grown: 0.4, carried: false, phase: "join" };
+ * console.log(part.grown);
+ * ```
+ */
+export interface PartBuild {
+  slot: string;
+  /** 0 while it has not started, then up to 1. Below 1 the part is still being built, so it is not a finished piece appearing at once. */
+  grown: number;
+  /** True only while a part the shop may carry is in a beam. */
+  carried: boolean;
+  phase: BuildPhase | "wait" | "done";
+}
+
+/**
+ * The part at `day`. `spanMetres` is how wide it is. Over {@link SHOP_LIMIT_M} it is never carried.
+ *
+ * @param step The build step.
+ * @param day Days after the keel was laid.
+ * @param spanMetres How wide the part is, in metres.
+ * @returns Whether it is visible as a finished piece, how far it has grown, and whether a beam is carrying it.
+ * @example
+ * ```ts
+ * import { assemblyOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(assemblyOf({ slot: "drive", start: 0, days: 100 }, 4, 80).carried);
+ * ```
+ */
+export function assemblyOf(step: PlayStep, day: number, spanMetres: number): PartBuild {
+  if (day < step.start) return { slot: step.slot, grown: 0, carried: false, phase: "wait" };
+  if (day >= step.start + step.days) return { slot: step.slot, grown: 1, carried: false, phase: "done" };
+  const now = stepPhase(step, day) ?? { phase: "inspect" as const, along: 1 };
+  const small = spanMetres <= SHOP_LIMIT_M;
+  if (now.phase === "bring") return { slot: step.slot, grown: small ? 1 : 0.04 + 0.08 * now.along, carried: small, phase: "bring" };
+  if (small) return { slot: step.slot, grown: 1, carried: false, phase: now.phase };
+  // inspect keeps the last of the fit-out growing, so plants finish around the ring before the step is done
+  const grown = now.phase === "join" ? 0.15 + 0.4 * now.along : now.phase === "outfit" ? 0.55 + 0.4 * now.along : 0.95 + 0.05 * now.along;
+  return { slot: step.slot, grown, carried: false, phase: now.phase };
+}
+
 /**
  * Whether the address asked for the build, and how far through it. A missing or wild `at` is the start.
  *

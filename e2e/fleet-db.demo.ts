@@ -46,3 +46,10 @@ test("the fleet record opens on a ship, then a section, and keeps both in the ad
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(wide).toBe(false);
 });
+
+test("a click on the stage does not leave a ring", async ({ page }) => {
+  await page.goto(`${URL}?ship=fleet-romaryu`);
+  const canvas = page.getByTestId("db-hero").locator("canvas");
+  await canvas.click();
+  await expect.poll(() => canvas.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("none");
+});

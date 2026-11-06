@@ -12,14 +12,14 @@ const partOf = (slot: string): string => {
   return part;
 };
 
-/** The flown ship. The aft ring order and the opened living ring are states of a slot, not further steps. */
+/** The flown ship. The aft ring order and the opened living ring are states of a slot, not further steps. A ring waits for the spine module that reaches its station, and for the higher station the other order gives that same slot. */
 export function hanabusaBuild(): BuildStep[] {
   return buildSpan(HANABUSA_BUILD_DAYS, SPINE.map((one) => one.id), [
     { slot: "boom-port", after: "tank-1" },
     { slot: "boom-starboard", after: "tank-1" },
-    { slot: "ring-garden", after: "drum-habitat-1" },
-    { slot: "ring-research", after: "drum-habitat-1" },
-    { slot: "ring-living", after: "drum-habitat-1" },
+    { slot: "ring-garden", after: "tank-8" },
+    { slot: "ring-research", after: "tank-7" },
+    { slot: "ring-living", after: "tank-8" },
     { slot: "wheel-industrial", after: "drum-habitat-2" },
     { slot: "hubs", after: "node" },
     { slot: "docks", after: "node" },

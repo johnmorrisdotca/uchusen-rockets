@@ -28,6 +28,13 @@ body.compare main { max-width: 1560px; }
 #cw-glass .craft-pic { width: 4rem; height: 6rem; }
 #cw-glass p { margin: 0; font-size: 0.7rem; text-align: center; }
 #cw-empty { margin: 1rem; }
+.cw-stage .view-space { position: relative; }
+.cw-arrows { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.cw-arrows button, .cw-mark { pointer-events: auto; position: absolute; transform: translate(-50%, -50%); }
+.cw-edge, .cw-mark { border: 1px solid var(--accent, #8fc9ff); border-radius: 999px; background: rgba(5, 10, 20, 0.9); color: var(--ink, #dfe9f6); font-size: 0.72rem; padding: 0.15rem 0.45rem; white-space: nowrap; }
+.cw-craft-list { position: absolute; top: 0.4rem; right: 0.4rem; margin: 0; padding: 0.3rem 0.5rem; list-style: none; background: rgba(5, 10, 20, 0.72); color: #e6edf6; font-size: 0.75rem; pointer-events: none; }
+#cw-distance { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.8rem; }
+#cw-edges-note { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.8rem; }
 .cw-stage uchusen-rocket { --uchusen-aspect: 2.3 / 1; max-width: none; width: 100%; margin: 0; }
 .cw-pickers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem 1.6rem; margin-bottom: 1rem; }
 .cw-craft-chip .chip { margin: 0; }

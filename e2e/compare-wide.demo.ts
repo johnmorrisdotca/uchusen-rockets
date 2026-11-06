@@ -29,8 +29,9 @@ test("the page opens with two craft on one ground, its stage is wide, and the ta
   // two to two and a half times the main view's 620 px
   const box = await hero(page).boundingBox();
   expect(box!.width).toBeGreaterThan(1000);
-  // the Earth is behind it by default
-  await expect(page.locator('[data-testid="earth"]')).toBeVisible();
+  // the Earth is a globe in the scene, so the flat picture stays hidden
+  await expect(hero(page)).toHaveAttribute("world", "earth");
+  await expect(page.locator('[data-testid="earth"]')).toBeHidden();
   if (is3d(browserName)) {
     await reach3d(page);
     // every craft is named in the picture, the first too

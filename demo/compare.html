@@ -31,9 +31,26 @@
             <div class="sky-moons" id="sky-moons" data-testid="sky-moons" aria-hidden="true" hidden></div>
             <p id="cw-empty" data-testid="cw-empty" data-say="cmpEmpty" hidden>Nothing chosen. Choose a craft in the list.</p>
             <div id="cw-glass" data-testid="cw-glass" hidden></div>
-            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter" captions float inspector="off"></uchusen-rocket>
+            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter" captions float inspector="off" edges="open" world="earth"></uchusen-rocket>
+            <div class="cw-arrows" id="cw-arrows" data-testid="cw-arrows"></div>
           </div>
-          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address speed="5" theme="dark" controls="advanced"></kazoku-view-controls>
+          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address speed="5" theme="dark" controls="advanced" zoom-min="0.000001" zoom-max="8"></kazoku-view-controls>
+        </div>
+        <div class="field">
+          <h3 id="camera-title" data-say="cmpCamera">Camera</h3>
+          <div class="chips" id="cw-camera" data-testid="cw-camera" role="group" aria-labelledby="camera-title"></div>
+          <button type="button" class="chip" id="cw-camera-back" data-testid="cw-camera-back" hidden></button>
+          <div class="chips" id="cw-marks" data-testid="cw-marks"></div>
+          <p id="cw-distance" data-testid="cw-distance"></p>
+        </div>
+        <div class="field">
+          <h3 id="edges-title" data-say="cmpEdges">Edges</h3>
+          <div class="chips" id="cw-edges" data-testid="cw-edges" role="group" aria-labelledby="edges-title"></div>
+          <p id="cw-edges-note" data-testid="cw-edges-note" hidden></p>
+        </div>
+        <div class="field">
+          <h3 id="turn-mode-title" data-say="cmpTurnMode">Turn</h3>
+          <div class="chips" id="cw-turn" data-testid="cw-turn" role="group" aria-labelledby="turn-mode-title"></div>
         </div>
         <div class="cw-pickers">
           <div class="field">

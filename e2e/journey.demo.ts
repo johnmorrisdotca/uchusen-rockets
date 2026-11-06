@@ -32,9 +32,16 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await expect(page.getByTestId("when-stamp")).toBeVisible();
   await expect(page.getByTestId("when-date")).toContainText("UTC");
   await expect(page.getByTestId("when-day")).toContainText("Day");
+  await expect(page.getByTestId("from")).toContainText("Earth");
+  await expect(page.getByTestId("dest")).toContainText("Mars");
+  const width = (id: string) => page.getByTestId(id).evaluate((el) => el.getBoundingClientRect().width);
+  const fromStart = await width("from");
+  const destStart = await width("dest");
+  expect(fromStart).toBeGreaterThan(destStart * 4);
   const atStart = await page.getByTestId("when-date").innerText();
-  await page.getByTestId("scrub").fill("800");
+  await page.getByTestId("scrub").fill("1000");
   await expect(page.getByTestId("when-date")).not.toHaveText(atStart);
+  expect(await width("dest")).toBeGreaterThan(destStart * 2);
   expect(await page.locator("details, [aria-expanded]").count()).toBe(0);
   expect(found).toEqual([]);
 });
@@ -119,8 +126,19 @@ test("seeking to a moment draws that moment on its own, and the end shows the su
   await page.goto(`${URL}&craft=kaminari&to=mars&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
+  await expect(page.getByTestId("summary-leaves")).toContainText("UTC");
+  await expect(page.getByTestId("summary-arrives")).toContainText("UTC");
   await expect(page.getByTestId("summary")).toContainText("runs slower than the clocks at the two ends");
   await expect(page.getByTestId("summary")).toContainText("smaller than the times above");
+  const fit = await page.getByTestId("summary").evaluate((el) => {
+    const stage = el.closest("[data-testid=stage]");
+    const card = el.getBoundingClientRect();
+    const box = stage?.getBoundingClientRect();
+    const inside = !!box && card.top >= box.top - 1 && card.bottom <= box.bottom + 1 && card.left >= box.left - 1 && card.right <= box.right + 1;
+    return { inside, slack: el.clientHeight - el.scrollHeight };
+  });
+  expect(fit.inside, "the arrival card stays inside the stage").toBe(true);
+  expect(fit.slack, "the arrival card shows every row").toBeGreaterThanOrEqual(-1);
   await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("summary")).not.toContainText("runs slower");
@@ -249,7 +267,7 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
 test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the picture", async ({ page }) => {
   const found = problems(page);
   await page.goto(URL);
-  const names = ["side", "front", "rear", "cockpit", "map"];
+  const names = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"];
   const tops = [];
   for (const name of names) {
     const box = await page.getByTestId(`view-${name}`).boundingBox();
@@ -259,6 +277,8 @@ test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the p
   expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(8);
   await page.getByTestId("view-front").click();
   await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "front");
+  await expect(page.getByTestId("dest")).toBeVisible();
+  await expect(page.getByTestId("from")).toBeHidden();
   await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
   expect(page.url()).toContain("view=front");
   await page.getByTestId("view-rear").click();
@@ -268,7 +288,27 @@ test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the p
   await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "cockpit");
   await expect(page.getByTestId("dest")).toBeVisible();
   await expect(page.getByTestId("dest")).toContainText("Mars");
+  await expect(page.getByTestId("from")).toBeHidden();
   await expect(page.getByTestId("craft")).toBeHidden();
+  await page.getByTestId("view-chase").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "chase");
+  await expect(page.getByTestId("dest")).toBeVisible();
+  await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
+  await page.getByTestId("view-orbit").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "orbit");
+  await expect(page.getByTestId("dest")).toBeHidden();
+  await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
+  await page.getByTestId("hold").click();
+  await expect(page.getByTestId("hold")).toHaveAttribute("aria-pressed", "true");
+  expect(page.url()).toContain("hold=1");
+  const svg = page.getByTestId("craft").locator("svg");
+  const box = await svg.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box!.x + box!.width / 2 + 90, box!.y + box!.height / 2);
+  await page.mouse.up();
+  await expect(page.getByTestId("craft")).not.toHaveAttribute("data-yaw", "0");
   expect(found).toEqual([]);
 });
 

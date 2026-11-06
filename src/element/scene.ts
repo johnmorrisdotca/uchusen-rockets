@@ -56,7 +56,9 @@ import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
-import { playFrame } from "../buildPlay.ts";
+import { assemblyOf, inspectAlong, playFrame } from "../buildPlay.ts";
+import { clearArc, fitoutOf, growPart, spinUp } from "./buildArc.ts";
+import { fitTanks } from "./fitOut.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
 import { SwarmRig } from "./swarm.ts";
@@ -71,6 +73,12 @@ import { PartPlumes, PlumeKit } from "./plumes.ts";
 
 /** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
 const NIGHT_SHIPS = new Set(["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-02", "fleet-02-original", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"]);
+
+/** Pipes, blankets and lamp housings. Below this shorter screen side they alias, so a small fleet ship draws its hull without them. Engine coils and plumes stay at every size. */
+const FITTING = new Set(["pipe-steel", "blanket", "blanket-worn", "lamp-amber", "lamp-red", "lamp-blue"]);
+/** Drop the fittings below this shorter side, and bring them back only above the higher one, so a slow zoom does not flicker on the line. */
+const FITTING_OFF = 220;
+const FITTING_ON = 260;
 
 /** A label on a part: its text, where it points in the ship's own metres, the part it follows and where that part stands at rest (so the label moves with it). `number` draws a numbered disc. */
 export interface ViewerMark {
@@ -103,6 +111,8 @@ export interface ViewerOptions {
   onFlight?: () => void;
   /** Tells the page the view was drawn, so labels that follow a part can move with it. */
   onDraw?: () => void;
+  /** The Earth and Moon are in the scene, at their true sizes, so a metre and a planet can share one picture. */
+  orbit?: boolean;
 }
 
 const IDLE_STOP_MS = 90_000;
@@ -120,10 +130,15 @@ const autoRotateOf = (spin: Spin): number => (spin.seconds <= 0 ? 0 : (60 / spin
 const LINE_VERTEX = /* glsl */ `
 varying vec3 vNormal;
 varying vec2 vUv;
+bool isPerspectiveMatrix(mat4 m) {
+  return m[2][3] == -1.0;
+}
+#include <logdepthbuf_pars_vertex>
 void main() {
   vNormal = normalize(normalMatrix * normal);
   vUv = uv;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  #include <logdepthbuf_vertex>
 }`;
 
 const LINE_FRAGMENT = /* glsl */ `
@@ -134,6 +149,7 @@ uniform float hexMetres;
 uniform float hexOn;
 varying vec3 vNormal;
 varying vec2 vUv;
+#include <logdepthbuf_pars_fragment>
 float hexLine(vec2 p) {
   vec2 s = vec2(1.0, 1.7320508);
   vec2 a = mod(p, s) - s * 0.5;
@@ -143,6 +159,7 @@ float hexLine(vec2 p) {
   return max(dot(q, s * 0.5), q.x);
 }
 void main() {
+  #include <logdepthbuf_fragment>
   vec3 n = normalize(vNormal);
   float facing = pow(abs(n.z), 1.4);
   vec3 c = mix(edge, middle, facing);
@@ -160,17 +177,24 @@ void main() {
 const OUTLINE_VERTEX = /* glsl */ `
 uniform float width;
 uniform vec2 size;
+bool isPerspectiveMatrix(mat4 m) {
+  return m[2][3] == -1.0;
+}
+#include <logdepthbuf_pars_vertex>
 void main() {
   vec4 clip = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   vec3 n = normalize(normalMatrix * normal);
   vec2 away = normalize(n.xy + vec2(1e-5));
   clip.xy += away * width * 2.0 / size * clip.w;
   gl_Position = clip;
+  #include <logdepthbuf_vertex>
 }`;
 
 const OUTLINE_FRAGMENT = /* glsl */ `
 uniform vec3 color;
+#include <logdepthbuf_pars_fragment>
 void main() {
+  #include <logdepthbuf_fragment>
   gl_FragColor = vec4(color, 1.0);
   #include <colorspace_fragment>
 }`;
@@ -209,7 +233,7 @@ const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
 /** How brightly a painted model's glow picture shines when the lights are on. */
 const MODEL_GLOW = 1.5;
 /** A drone is drawn this many times life size at most, and a ship's longest side over this many metres: a saucer about a fiftieth of the ship across (Miyamoto, 380 m, gets 7.6). */
-const DRONE_SCALE_MAX = 8;
+const DRONE_SCALE_MAX = 16;
 const DRONE_SHIP_RATIO = 50;
 const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
@@ -271,6 +295,10 @@ export class RocketViewer {
   private lampPoints: { material: PointsMaterial; geometry: BufferGeometry; duty: ReturnType<typeof dutyOf> }[] = [];
   /** Lamp beads gathered while a ship is loaded, then drawn as one point cloud per part. */
   private lampPending: { carrier: Group; name: string; centers: Vector3[] }[] = [];
+  /** Whether the fleet ship's fittings are hidden because it is small on screen. `null` means the next draw decides. */
+  private lodSmall: boolean | null = null;
+  /** 1 is every fitting drawn, 0 is the small-ship hull. It moves over a fifth of a second so the switch does not pop. */
+  private lodFade = 1;
   /** The smooth flood sheets. Cached with their material, so a new rocket reuses them. */
   private poolSheets: MeshBasicMaterial[] = [];
   private lampTexture: CanvasTexture | null = null;
@@ -331,11 +359,19 @@ export class RocketViewer {
   private focusNow: ViewerFocus | null = null;
   private nearSaid = false;
   private nearAt = 0;
+  /** The compare page asked for the Earth in the scene. The depth stays logarithmic either way. */
+  private orbitOn = false;
+  private orbitGone: (() => void) | null = null;
+  /** The fit distance, kept while a zoom pulls the camera out to a planet. The page still reads this as the fit. */
+  private orbitFit = 0;
+  private moonSpot = new Vector3();
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
     this.holder = holder;
     this.options = options;
-    this.renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
+    this.orbitOn = options.orbit === true;
+    this.renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power", logarithmicDepthBuffer: this.orbitOn });
+    this.renderer.localClippingEnabled = true;
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
@@ -402,7 +438,7 @@ export class RocketViewer {
     this.canvas.addEventListener(
       "pointerdown",
       (event) => {
-        this.canvas.focus({ preventScroll: true });
+        this.canvas.focus(Object.assign({ preventScroll: true }, { focusVisible: false }));
         this.press = { x: event.clientX, y: event.clientY };
         this.grabCraft(event);
       },
@@ -439,6 +475,44 @@ export class RocketViewer {
     if (next === this.scaleNote) return;
     this.scaleNote = next;
     this.wake();
+  }
+
+  /** Open space lets a craft leave the frame. Wrap, the older float, brings it back on the other side. */
+  private edgesOpen = false;
+
+  setEdges(open: boolean): void {
+    this.edgesOpen = open;
+    this.canvas.dataset.edges = open ? "open" : "wrap";
+  }
+
+  /** Shows or hides the Earth and the Moon. The stars stay, because they are the only backdrop. */
+  setOrbit(on: boolean): void {
+    this.orbitOn = on;
+    this.scene.background = on ? new Color("#000108") : null;
+    const world = this.scene.getObjectByName("orbit-world");
+    if (world) world.visible = on;
+    else if (on || this.options.orbit) this.mountOrbit();
+    this.canvas.dataset.globe = on ? "earth" : "off";
+    if (!on) delete this.canvas.dataset.earth;
+    this.wake();
+  }
+
+  /** Brings the globe in once. A page that never asks never loads it. */
+  private mountOrbit(): void {
+    if (this.orbitGone || this.scene.getObjectByName("orbit-world")) return;
+    this.orbitGone = () => {};
+    void import("./orbitWorld.ts").then(({ orbitWorld }) => {
+      if (this.disposed) return;
+      const world = orbitWorld(() => {
+        this.canvas.dataset.earth = "painted";
+        this.wake();
+      });
+      world.group.visible = this.orbitOn;
+      this.scene.add(world.group);
+      this.orbitGone = world.dispose;
+      this.canvas.dataset.globe = this.orbitOn ? "earth" : "off";
+      this.wake();
+    });
   }
 
   /** Floating leaves the plinth out and stacks the names at the top right. */
@@ -481,6 +555,7 @@ export class RocketViewer {
     }
     this.lampPoints = [];
     this.lampPending = [];
+    this.lodSmall = null;
     this.toss.clear();
     this.grab = null;
     this.built = built;
@@ -870,8 +945,12 @@ export class RocketViewer {
     for (const part of this.parts) {
       for (const move of part.moves) {
         const motion = this.motionOn ? this.motions.find((one) => one.group === move.name) : undefined;
-        const angle = motion ? angleAt(motion, seconds, this.motionSpeed) : 0;
-        if (motion && shown === undefined) shown = angle;
+        const own = this.progressAt !== null && typeof part.holder.userData.arcSpin === "number" ? part.holder.userData.arcSpin : null;
+        const turned = this.progressAt === null ? null : spinUp(own);
+        // a ring still being built stays at its own angle, so an open arc does not swing with a sibling that has already spun up
+        const angle = turned !== null ? turned : this.progressAt !== null ? 0 : (motion ? angleAt(motion, seconds, this.motionSpeed) : 0);
+        if (typeof own === "number" && own > 0 && (shown === undefined || own > shown)) shown = own;
+        else if (motion && shown === undefined) shown = angle;
         if (Math.abs(angle - move.angle) < 0.005) continue;
         move.angle = angle;
         move.group.quaternion.setFromAxisAngle(move.axis, MathUtils.degToRad(angle));
@@ -1294,9 +1373,10 @@ export class RocketViewer {
     // in a flight a stage leaves the one below, so its nozzle shows then too
     const nozzle = nozzleOnly && (this.show !== "together" || this.flightOn);
     for (const { mesh, name } of part.faces) mesh.visible = !nozzleOnly || (nozzle && NOZZLE_MATERIALS.has(name));
-    for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
+    if (this.progressAt === null) for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
     part.nozzleShown = nozzle;
     this.canvas.dataset.nozzle = this.parts.some((one) => one.nozzleShown) ? "own" : "";
+    this.lodSmall = null;
   }
 
   /** The key light looks at the middle of what shows, from far enough to take in all of it, and its shadow map covers just that. */
@@ -1384,11 +1464,10 @@ export class RocketViewer {
   private limits(distance: number): void {
     if (!this.focusing) this.nearAt = Math.max(this.nearAt, distance * 0.3);
     this.fitGlow();
-    this.camera.near = Math.max(0.2, distance / 40);
-    this.camera.far = distance * 8;
+    this.clip(distance / 40, distance * 8);
     this.camera.updateProjectionMatrix();
-    this.controls.minDistance = distance * 0.12;
-    this.controls.maxDistance = distance * 1.8;
+    this.controls.minDistance = this.options.orbit ? 0.05 : distance * 0.12;
+    this.controls.maxDistance = this.options.orbit ? 2e9 : distance * 1.8;
     this.updateHexSize(distance);
     this.syncSizes();
   }
@@ -1529,7 +1608,10 @@ export class RocketViewer {
     const focus = this.focusing ? this.focusNow : null;
     const framing = focus ? { target: focus.target, distance: focus.distance } : this.framingFor(this.homeAngle);
     const direction = this.drivenDirection(angle);
-    this.camera.position.set(framing.target[0] + direction[0] * framing.distance, framing.target[1] + direction[1] * framing.distance, framing.target[2] + direction[2] * framing.distance);
+    const zoom = this.options.orbit ? Math.min(8, Math.max(this.driven?.zoom ?? 1, 1e-8)) : 1;
+    const reach = framing.distance / zoom;
+    this.orbitFit = framing.distance;
+    this.camera.position.set(framing.target[0] + direction[0] * reach, framing.target[1] + direction[1] * reach, framing.target[2] + direction[2] * reach);
     this.controls.target.set(...framing.target);
     if (Math.abs(framing.distance - this.lastDistance) > 1e-6) {
       this.lastDistance = framing.distance;
@@ -1541,12 +1623,25 @@ export class RocketViewer {
     this.camera.lookAt(framing.target[0], framing.target[1], framing.target[2]);
   }
 
+  /** A wider lens once the Earth would spill past the frame, so one Earth-diameter back shows the whole disc. */
+  private globeFrame(reach: number): number {
+    if (reach < 8_000_000) return 1;
+    const drop = 6_778_137;
+    const radius = 6_378_137;
+    const dist = Math.hypot(reach, drop);
+    const edge = Math.asin(Math.min(1, radius / dist)) + Math.atan(drop / reach);
+    const half = (12 * Math.PI) / 180;
+    if (edge < half * 0.85) return 1;
+    return Math.min(1, Math.tan(half) / Math.tan(Math.min(edge * 1.12, (75 * Math.PI) / 180)));
+  }
+
   /** Zoom is the camera's, and the pan moves the picture by pixels, so the view stays sharp at any zoom. */
   private lens(): void {
     const { zoom = 1, panX = 0, panY = 0 } = this.driven ?? {};
     const w = Math.max(1, this.holder.clientWidth);
     const h = Math.max(1, this.holder.clientHeight);
-    this.camera.zoom = zoom;
+    const claimed = this.orbitFit / Math.max(zoom, 1e-8);
+    this.camera.zoom = this.options.orbit ? this.globeFrame(claimed) : zoom;
     if (panX !== 0 || panY !== 0) this.camera.setViewOffset(w, h, -panX, -panY, w, h);
     else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
@@ -1614,6 +1709,11 @@ export class RocketViewer {
         const place = places.find((one) => one.slot === part.slot);
         if (!place) continue;
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.scale.setScalar(1);
+        clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
+        fitTanks(part.holder, 0);
+        for (const lines of part.feature) lines.visible = true;
         part.holder.visible = place.shown;
       }
       this.swarm?.hide();
@@ -1622,7 +1722,10 @@ export class RocketViewer {
       delete this.canvas.dataset.built;
       delete this.canvas.dataset.showing;
       delete this.canvas.dataset.weld;
+      delete this.canvas.dataset.fitout;
+      delete this.canvas.dataset.ringSpin;
       delete this.canvas.dataset.swarmNear;
+      this.stepMotion(performance.now(), true);
       if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
       this.applyLeave();
@@ -1634,20 +1737,52 @@ export class RocketViewer {
     if (shown.length === 0) return;
     const dock: [number, number, number] = [Math.max(...shown.map((place) => place.at[0])) + 40, shown.reduce((sum, place) => sum + place.at[1], 0) / shown.length, 0];
     const slotAt = new Map(shown.map((place) => [place.slot, place.at] as const));
+    const fitout: { grown: number; stage: string; slot: string }[] = [];
     for (const part of this.parts) {
       if (part.beside) continue;
       const place = places.find((one) => one.slot === part.slot);
       const step = steps.find((one) => one.slot === part.slot);
       if (!place || !step) continue;
       const seated = grounded(step.slot, frame.done);
+      const box = built.parts.find((one) => one.slot === step.slot)?.bounds;
+      const span = box ? Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]) : 80;
+      const fit = assemblyOf(step, frame.day, span);
+      const ring = step.slot.includes("ring") || step.slot.includes("wheel");
       if (frame.done.includes(step.slot) && seated) {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.scale.setScalar(1);
+        clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
+        fitTanks(part.holder, 0);
+        for (const lines of part.feature) lines.visible = true;
+        for (const outline of part.outlines) outline.visible = this.look !== "painted";
         part.holder.visible = place.shown;
-      } else if (frame.going.includes(step.slot) && seated) {
-        const flown = carries([{ drone: 0, slot: step.slot }], at, steps, (slot) => slotAt.get(slot), dock)[0];
-        if (flown) part.holder.position.set(flown.part[0], flown.part[1], flown.part[2]);
-        part.holder.visible = true;
-      } else part.holder.visible = false;
+      } else if (frame.going.includes(step.slot) && seated && fit.grown > 0.02) {
+        // a section grows where it belongs; a ring opens as an arc, with no wireframe of the part still to come
+        part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        growPart(part.holder, fit.grown, ring);
+        const along = ring ? inspectAlong(step, frame.day) : null;
+        // the plants finish while the ring is still; spin-up is the last part of the inspection
+        const spinning = along !== null && along >= 0.7;
+        if (ring) part.holder.userData.arcSpin = spinning ? ((along - 0.7) / 0.3) * 360 : 0;
+        if (ring) {
+          fitTanks(part.holder, fit.grown);
+          const stage = spinning ? "spin" : fitoutOf(fit.grown);
+          if (stage) fitout.push({ grown: fit.grown, stage, slot: step.slot });
+        }
+        const openRing = ring && fit.grown < 0.995;
+        for (const lines of [...part.feature, ...part.weld]) lines.visible = !openRing;
+        for (const outline of part.outlines) outline.visible = !openRing && this.look !== "painted";
+        part.holder.visible = place.shown;
+      } else {
+        part.holder.scale.setScalar(1);
+        clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
+        fitTanks(part.holder, 0);
+        for (const lines of part.feature) lines.visible = true;
+        for (const outline of part.outlines) outline.visible = this.look !== "painted";
+        part.holder.visible = false;
+      }
     }
     const open = frame.going.filter((slot) => grounded(slot, frame.done));
     const workSteps = steps.filter((step) => !frame.going.includes(step.slot) || open.includes(step.slot));
@@ -1665,11 +1800,21 @@ export class RocketViewer {
     this.swarm.show(
       poses.map((pose) => {
         const box = pose.duty === "work" ? boxOf.get(pose.slot) : undefined;
+        const ringSlot = pose.slot.includes("ring") || pose.slot.includes("wheel");
+        let where = pose.where;
+        if (ringSlot && box && pose.duty === "work") {
+          const dx = pose.where[0] - pose.part[0];
+          const dz = pose.where[2] - pose.part[2];
+          const dist = Math.hypot(dx, dz) || 1;
+          const rim = Math.max(Math.hypot(box.min[0], box.min[2]), Math.hypot(box.max[0], box.max[2])) + 18;
+          if (dist < rim) where = [pose.part[0] + (dx / dist) * rim, pose.where[1], pose.part[2] + (dz / dist) * rim];
+        }
         return {
-          where: pose.where,
+          where,
           part: pose.part,
           weld: pose.duty === "work",
           duty: pose.duty,
+          rank: pose.rank,
           skin: box
             ? {
                 min: [pose.part[0] + box.min[0], pose.part[1] + box.min[1], pose.part[2] + box.min[2]] as [number, number, number],
@@ -1688,8 +1833,22 @@ export class RocketViewer {
     else delete this.canvas.dataset.weld;
     this.canvas.dataset.swarm = String(count);
     this.canvas.dataset.going = frame.going.join(" ");
+    if (fitout.length > 0) {
+      const lead = fitout.reduce((best, one) => (one.grown > best.grown ? one : best));
+      this.canvas.dataset.fitout = [lead.stage, ...fitout.map((one) => `${one.slot}:${one.stage}`)].join(" ");
+    } else delete this.canvas.dataset.fitout;
+    this.canvas.dataset.arc = this.parts
+      .filter((part) => part.holder.visible && (part.slot.includes("ring") || part.slot.includes("wheel")))
+      .map((part) => `${part.slot}:${String(part.holder.userData.arcStat ?? "whole")}`)
+      .join(" ");
     this.canvas.dataset.built = frame.done.filter((slot) => grounded(slot, frame.done)).join(" ");
     this.canvas.dataset.showing = this.parts.filter((part) => !part.beside && part.holder.visible).map((part) => part.slot).join(" ");
+    this.canvas.dataset.ringSpin = this.parts
+      .filter((part) => typeof part.holder.userData.arcSpin === "number")
+      .map((part) => `${part.slot}:${Number(part.holder.userData.arcSpin).toFixed(1)}`)
+      .join(" ");
+    // motion may be off: the ring still has to take its own angle, or the spin-up stays at 0
+    this.stepMotion(performance.now(), true);
     if (!this.progressFramed) {
       this.progressFramed = true;
       this.setAngle({ az: this.homeAngle.az, el: -4 }, false);
@@ -1697,8 +1856,21 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** A planet and a craft share the picture only while the orbit world is on: the near plane stays close enough for a metre, and the far plane reaches the stars. */
+  private clip(nearFrom: number, far: number): void {
+    if (this.options.orbit) {
+      this.camera.near = 0.05;
+      this.camera.far = 2e9;
+      return;
+    }
+    this.camera.near = Math.max(0.2, nearFrom);
+    this.camera.far = far;
+  }
+
   dispose(): void {
     this.disposed = true;
+    this.orbitGone?.();
+    this.orbitGone = null;
     cancelAnimationFrame(this.frame);
     document.removeEventListener("visibilitychange", this.onVisibility);
     this.canvas.removeEventListener("wheel", this.onWheel);
@@ -1962,6 +2134,90 @@ export class RocketViewer {
     };
   }
 
+  /** A fleet ship that is small on screen drops its fittings and its shadow, which are the draws that shimmer there. A full-size ship keeps both. The first decision is instant; a later one fades. */
+  private applyFittingLod(dtMs: number): void {
+    if (this.progressAt !== null) return;
+    const small = this.fleetIsSmall();
+    const target = small ? 0 : 1;
+    if (this.lodSmall === null) {
+      this.lodSmall = small;
+      this.lodFade = target;
+      this.renderer.shadowMap.enabled = this.shadows && !small;
+      this.paintFittings(target);
+    } else if (small !== this.lodSmall) this.lodSmall = small;
+    if (this.lodFade !== target) {
+      const step = dtMs / 200;
+      this.lodFade = target === 1 ? Math.min(1, this.lodFade + step) : Math.max(0, this.lodFade - step);
+      this.paintFittings(this.lodFade);
+      if (this.lodFade === target) this.renderer.shadowMap.enabled = this.shadows && !small;
+      else this.needsDraw = true;
+    }
+    this.canvas.dataset.lod = this.lodFade === 0 ? "small" : this.lodFade === 1 ? "full" : "fade";
+  }
+
+  /** Draws the fittings at `level`, from gone to solid. The material's own opacity comes back at either end. */
+  private paintFittings(level: number): void {
+    const fleet = new Set([...(this.built?.parts ?? []), ...(this.built?.beside ?? [])].filter((part) => part.record.rocket.startsWith("fleet-")).map((part) => part.slot));
+    for (const part of this.parts) {
+      if (!fleet.has(part.slot) || !part.code.visible) continue;
+      for (const face of part.faces) {
+        if (!FITTING.has(face.name)) continue;
+        const material = face.mesh.material;
+        if (Array.isArray(material) || !("opacity" in material)) {
+          face.mesh.visible = level > 0;
+          continue;
+        }
+        const own = material as MeshStandardMaterial;
+        if (own.userData.fitOpacity === undefined) {
+          own.userData.fitOpacity = own.opacity;
+          own.userData.fitTransparent = own.transparent;
+        }
+        if (level <= 0 || level >= 1) {
+          own.opacity = own.userData.fitOpacity as number;
+          own.transparent = own.userData.fitTransparent as boolean;
+          own.depthWrite = !own.transparent;
+          face.mesh.visible = level >= 1;
+        } else {
+          own.transparent = true;
+          own.depthWrite = false;
+          own.opacity = (own.userData.fitOpacity as number) * level;
+          face.mesh.visible = true;
+        }
+      }
+    }
+  }
+
+  /** True when a fleet craft's shorter side is under the off line, and it stays small until it passes the on line. A picture with no fleet craft stays full. */
+  private fleetIsSmall(): boolean {
+    const boxes = this.craftBoxes().filter((box) => box.rocket.startsWith("fleet-"));
+    if (boxes.length === 0) return false;
+    this.camera.updateMatrixWorld();
+    let shortest = Infinity;
+    for (const box of boxes) {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (const x of [box.min[0], box.max[0]]) {
+        for (const y of [box.min[1], box.max[1]]) {
+          for (const z of [box.min[2], box.max[2]]) {
+            const point = new Vector3(x, y, z).project(this.camera);
+            const sx = ((point.x + 1) / 2) * this.canvas.clientWidth;
+            const sy = ((1 - point.y) / 2) * this.canvas.clientHeight;
+            minX = Math.min(minX, sx);
+            maxX = Math.max(maxX, sx);
+            minY = Math.min(minY, sy);
+            maxY = Math.max(maxY, sy);
+          }
+        }
+      }
+      shortest = Math.min(shortest, maxX - minX, maxY - minY);
+    }
+    this.canvas.dataset.lodSpan = String(Math.round(shortest));
+    const limit = this.lodSmall ? FITTING_ON : FITTING_OFF;
+    return shortest < limit;
+  }
+
   /** The box each visible craft fills, in metres. */
   private craftBoxes(): { craft: number; rocket: string; min: Vec3; max: Vec3 }[] {
     if (!this.built) return [];
@@ -2068,8 +2324,7 @@ export class RocketViewer {
     this.startPose({ target: focus.target, position: [focus.target[0] + dir.x, focus.target[1] + dir.y, focus.target[2] + dir.z], distance: focus.distance } as ReturnType<RocketViewer["framingFor"]>, MOVE_MS, false);
     this.controls.minDistance = focus.distance * 0.04;
     this.controls.maxDistance = Math.max(focus.distance * 3, this.camera.position.distanceTo(this.controls.target));
-    this.camera.near = Math.max(0.2, focus.distance / 80);
-    this.camera.far = Math.max(focus.distance * 10, this.camera.position.distanceTo(this.controls.target) * 4);
+    this.clip(focus.distance / 80, Math.max(focus.distance * 10, this.camera.position.distanceTo(this.controls.target) * 4));
     this.camera.updateProjectionMatrix();
     this.relight();
     this.wake();
@@ -2187,6 +2442,7 @@ export class RocketViewer {
         this.canvas.dataset.swarmNear = String(this.swarm.lod([this.camera.position.x, this.camera.position.y, this.camera.position.z]));
         this.canvas.dataset.swarmLod = (performance.now() - began).toFixed(3);
       }
+      this.applyFittingLod(dt * 1000);
       const drawn = performance.now();
       this.renderer.render(this.scene, this.camera);
       const info = this.renderer.info.render;
@@ -2208,7 +2464,13 @@ export class RocketViewer {
       this.canvas.dataset.azimuth = angle.az.toFixed(2);
       this.canvas.dataset.elevation = angle.el.toFixed(2);
       this.canvas.dataset.moving = this.pose ? "true" : "false";
-      this.canvas.dataset.distance = this.camera.position.distanceTo(this.controls.target).toFixed(2);
+      const reached = this.camera.position.distanceTo(this.controls.target);
+      this.canvas.dataset.distance = (this.options.orbit ? this.orbitFit || reached : reached).toFixed(2);
+      const moon = this.scene.getObjectByName("moon");
+      if (moon && this.orbitOn) {
+        const spot = moon.getWorldPosition(this.moonSpot).project(this.camera);
+        this.canvas.dataset.moon = `${spot.x.toFixed(3)},${spot.y.toFixed(3)}`;
+      } else delete this.canvas.dataset.moon;
       if (this.driven) {
         this.canvas.dataset.zoom = this.driven.zoom.toFixed(2);
         this.canvas.dataset.pan = `${Math.round(this.driven.panX)},${Math.round(this.driven.panY)}`;
@@ -2218,6 +2480,13 @@ export class RocketViewer {
         const screen = craft ? this.screenBox(craft.min, craft.max) : null;
         this.canvas.dataset.craft = screen ? `${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX)},${Math.round(screen.maxY)}` : "";
       }
+      this.canvas.dataset.craftBoxes = this.craftBoxes()
+        .map((box) => {
+          const screen = this.screenBox(box.min, box.max);
+          if (!screen) return `${box.craft}:0,0,0,0,0`;
+          return `${box.craft}:${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX - screen.minX)},${Math.round(screen.maxY - screen.minY)},1`;
+        })
+        .join(" ");
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
@@ -2492,6 +2761,7 @@ export class RocketViewer {
   }
 
   private wrapDrift(): void {
+    if (this.edgesOpen) return;
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
     if (width < 1 || height < 1) return;
