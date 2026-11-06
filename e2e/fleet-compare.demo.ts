@@ -1,0 +1,45 @@
+import { expect, test } from "@playwright/test";
+
+const URL = "/uchusen-rockets/fleet-compare.html";
+
+test("the three ships stand at one scale, the view stays in the address, and the transport is the long one", async ({ page }) => {
+  await page.goto(URL);
+  const lineup = page.getByTestId("cmp-lineup");
+  await expect(lineup).toHaveAttribute("pose", "stand");
+  await expect(lineup).toHaveAttribute("data-count", "3");
+  await expect(page.getByTestId("cmp-view-three-quarter")).toHaveAttribute("aria-pressed", "true");
+  const metresOf = async (testId: string) => Number.parseFloat((await page.getByTestId(testId).innerText()).replaceAll(",", ""));
+  const transport = await metresOf("cmp-length-fleet-kaminari");
+  const command = await metresOf("cmp-length-fleet-ship-03");
+  expect(transport).toBe(1818);
+  expect(transport).toBeGreaterThan(command * 2);
+  await expect(page.getByTestId("cmp-length-source")).toHaveText("Length is the figure in the ship's record.");
+  const frame = await page.getByTestId("cmp-view").boundingBox();
+  const drawn = await lineup.locator("svg").boundingBox();
+  expect(frame && drawn && frame.height > 600 && drawn.width > frame.width * 0.9).toBe(true);
+  const before = await lineup.locator("svg").innerHTML();
+  await page.getByTestId("cmp-view-side").click();
+  await expect(page).toHaveURL(/view=side/);
+  await expect(lineup).toHaveAttribute("view", "side");
+  await expect(page.getByTestId("cmp-view-side")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("cmp-view-three-quarter")).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(async () => lineup.locator("svg").innerHTML()).not.toBe(before);
+  await expect(page.getByTestId("cmp-dry-mass-fleet-kaminari")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-full-mass-fleet-ship-01")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-crew-fleet-kaminari")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-cargo-fleet-ship-03")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-cargo-fleet-ship-01")).toHaveText("— not given");
+  await expect(page.getByTestId("cmp-main-drive-fleet-kaminari")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-peak-speed-fleet-ship-03")).not.toHaveText("");
+  await expect(page.getByTestId("cmp-peak-speed-fleet-kaminari")).toHaveText("— not given");
+  const picks = page.getByTestId("cmp-picks");
+  await expect(picks.getByTestId("cmp-ship-fleet-emiake")).toBeVisible();
+  await expect(picks.locator("[aria-pressed='true']")).toHaveCount(3);
+  await picks.getByTestId("cmp-ship-fleet-emiake").click();
+  await expect(page).toHaveURL(/fleet-emiake/);
+  await expect(picks.locator("[aria-pressed='true']")).toHaveCount(3);
+  await expect(picks.getByTestId("cmp-ship-fleet-ship-01")).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByTestId("cmp-length-fleet-emiake")).not.toHaveText("");
+  const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+  expect(wide).toBe(false);
+});

@@ -33,21 +33,54 @@
             <h2 id="variant-title" data-say="variant">Variant</h2>
             <div class="chips" id="variants" role="group" aria-labelledby="variant-title"></div>
           </div>
-          <div class="field">
-            <h2 id="show-title" data-say="parts">The parts</h2>
-            <div class="chips" id="shows" role="group" aria-labelledby="show-title"></div>
+          <div class="chips panel-tabs" id="panel-tabs" role="tablist" data-say-label="panelLabel" data-testid="panel-tabs">
+            <button type="button" class="chip" role="tab" data-testid="panel-look" data-say="look" aria-selected="true">Look</button>
+            <button type="button" class="chip" role="tab" data-testid="panel-background" data-say="background">Background</button>
+            <button type="button" class="chip" role="tab" data-testid="panel-motion" data-say="motionTitle" hidden>Motion</button>
+            <button type="button" class="chip" role="tab" data-testid="panel-build" data-say="buildTitle" hidden>The build</button>
+            <button type="button" class="chip" role="tab" data-testid="panel-lights" data-say="panelLights" hidden>Lights</button>
           </div>
-          <div class="field-pair">
+          <div class="panel-group" data-panel="look">
             <div class="field">
-              <h2 id="look-title" data-say="look">Look</h2>
-              <div class="chips" id="looks" role="group" aria-labelledby="look-title"></div>
+              <h2 id="show-title" data-say="parts">The parts</h2>
+              <div class="chips" id="shows" role="group" aria-labelledby="show-title"></div>
             </div>
-            <div class="field">
-              <h2 id="view-title" data-say="from">From</h2>
-              <div class="chips" id="views" role="group" aria-labelledby="view-title"></div>
+            <div class="field-pair">
+              <div class="field">
+                <h2 id="look-title" data-say="look">Look</h2>
+                <div class="chips" id="looks" role="group" aria-labelledby="look-title"></div>
+              </div>
+              <div class="field">
+                <h2 id="view-title" data-say="from">From</h2>
+                <div class="chips" id="views" role="group" aria-labelledby="view-title"></div>
+              </div>
+            </div>
+            <div class="field-pair">
+              <div class="field">
+                <h2 id="engines-title" data-say="engines">Engines</h2>
+                <div class="chips" id="engines" role="group" aria-labelledby="engines-title"></div>
+              </div>
+              <div class="field" id="beside-field">
+                <h2 id="beside-title" data-say="besideTitle">Scale</h2>
+                <div class="chips" id="beside" role="group" aria-labelledby="beside-title"></div>
+              </div>
+              <p class="note" id="beside-note" data-testid="beside-note" data-say="besideNote" hidden>Starship with Super Heavy, at true size.</p>
+              <div class="field" id="kscale-field" hidden>
+                <h2 id="kscale-title" data-say="kscaleTitle">Ship size</h2>
+                <div class="slider">
+                  <input type="range" id="kscale" data-testid="kscale" min="60" max="100" step="5" value="100" aria-labelledby="kscale-title">
+                  <output id="kscale-out" data-testid="kscale-out" for="kscale">100%</output>
+                </div>
+              </div>
+              <p class="note" id="kscale-note" data-testid="kscale-note" hidden></p>
+              <p class="note" id="engines-note" data-testid="engines-note" hidden></p>
+            </div>
+            <div class="field" id="docked-field" hidden>
+              <h2 id="docked-title" data-say="dockedTitle">Docked craft</h2>
+              <div id="docked" data-testid="docked"></div>
             </div>
           </div>
-          <div class="field-pair">
+          <div class="panel-group" data-panel="background" hidden>
             <div class="field">
               <h2 id="background-title" data-say="background">Background</h2>
               <div class="chips" id="backgrounds" role="group" aria-labelledby="background-title"></div>
@@ -57,28 +90,10 @@
               <div class="chips moon-row" id="orbits" data-testid="orbits" role="group" aria-labelledby="orbit-heading" hidden></div>
               <p class="note" id="orbit-altitude" data-testid="orbit-altitude" hidden></p>
             </div>
-            <div class="field">
-              <h2 id="engines-title" data-say="engines">Engines</h2>
-              <div class="chips" id="engines" role="group" aria-labelledby="engines-title"></div>
-            </div>
-            <div class="field" id="beside-field">
-              <h2 id="beside-title" data-say="besideTitle">Scale</h2>
-              <div class="chips" id="beside" role="group" aria-labelledby="beside-title"></div>
-            </div>
-            <p class="note" id="beside-note" data-testid="beside-note" data-say="besideNote" hidden>Starship with Super Heavy, at true size.</p>
-            <div class="field" id="kscale-field" hidden>
-              <h2 id="kscale-title" data-say="kscaleTitle">Ship size</h2>
-              <div class="slider">
-                <input type="range" id="kscale" data-testid="kscale" min="60" max="100" step="5" value="100" aria-labelledby="kscale-title">
-                <output id="kscale-out" data-testid="kscale-out" for="kscale">100%</output>
-              </div>
-            </div>
-            <p class="note" id="kscale-note" data-testid="kscale-note" hidden></p>
-            <p class="note" id="engines-note" data-testid="engines-note" hidden></p>
-            <div class="field" id="docked-field" hidden>
-              <h2 id="docked-title" data-say="dockedTitle">Docked craft</h2>
-              <div id="docked" data-testid="docked"></div>
-            </div>
+            <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
+            <p class="earth-credit" id="sky-credit" data-testid="sky-credit" hidden></p>
+          </div>
+          <div class="panel-group" data-panel="motion" hidden>
             <div class="field" id="motion-field" hidden>
               <h2 id="motion-title" data-say="motionTitle">Motion</h2>
               <div class="chips" id="motion" role="group" aria-labelledby="motion-title"></div>
@@ -88,18 +103,21 @@
               <div class="chips" id="motion-speed" role="group" aria-labelledby="motion-speed-title"></div>
             </div>
             <p class="note" id="motion-note" data-testid="motion-note" hidden></p>
-            <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
-            <p class="earth-credit" id="sky-credit" data-testid="sky-credit" hidden></p>
+          </div>
+          <div class="panel-group" data-panel="build" hidden>
+            <div class="field" id="build-field" hidden>
+              <h2 id="build-title" data-say="buildTitle">The build</h2>
+              <uchusen-build id="build-bar" data-testid="build-bar" aria-labelledby="build-title">
+                <kazoku-speed-buttons slot="speed" steps="1 60 600 3600 10000 86400 100000" value="1" address address-key="build-speed" no-label></kazoku-speed-buttons>
+              </uchusen-build>
+            </div>
+          </div>
+          <div class="panel-group" data-panel="lights" hidden>
+            <div class="field" id="lights-field" data-testid="lights-field" hidden></div>
           </div>
           <div class="field flight-field" id="flight-field">
             <h2 id="flight-title" data-say="flight">Flight</h2>
             <uchusen-flight id="flight" data-testid="flight" for="hero" aria-labelledby="flight-title"></uchusen-flight>
-          </div>
-          <div class="field" id="build-field" hidden>
-            <h2 id="build-title" data-say="buildTitle">The build</h2>
-            <uchusen-build id="build-bar" data-testid="build-bar" aria-labelledby="build-title">
-              <kazoku-speed-buttons slot="speed" steps="1 60 600 3600 10000 100000" value="1" address address-key="build-speed" no-label></kazoku-speed-buttons>
-            </uchusen-build>
           </div>
           <div class="field" id="facts" data-testid="facts" aria-live="polite"></div>
           <p class="note" id="data-note" data-say="dataNote" hidden></p>

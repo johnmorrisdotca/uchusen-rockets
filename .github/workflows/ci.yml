@@ -6,6 +6,7 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         node: [22, 24]
@@ -18,8 +19,20 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+  # The demo's browser suite, split so every job ends in under an hour (one job took 1.3 to 2.4 hours): the graphics-memory file in two jobs (the fleet walk, which is 17 minutes on a quick runner and 30 on a slow one, and the rest of the file), every other file at a desk's width, then a phone's width in Chromium, then in WebKit. Every test still runs once.
   demo:
+    name: demo (${{ matrix.name }})
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: "graphics memory, fleet walk", set: freeze, project: chromium-desk, shard: "1/1", browser: chromium, only: "--grep \"the fleet kit\"" }
+          - { name: "graphics memory, the rest", set: freeze, project: chromium-desk, shard: "1/1", browser: chromium, only: "--grep-invert \"the fleet kit\"" }
+          - { name: "desk, Chromium", set: rest, project: chromium-desk, shard: "1/1", browser: chromium }
+          - { name: "phone, Chromium", set: all, project: chromium-phone, shard: "1/1", browser: chromium }
+          - { name: "phone, WebKit", set: all, project: webkit-phone, shard: "1/1", browser: webkit }
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -28,13 +41,33 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium webkit
-      - name: The demo, played in Chromium and WebKit at a phone's width and a desk's
-        run: pnpm test:demo
+      # The runner's package mirror is sometimes slow (a few minutes for a font), and can fail: a failed install is tried again, and the step is cut off at 25 minutes. Never cut one off sooner: the package manager it started goes on holding its lock, and the next try fails on that.
+      - name: The browser
+        timeout-minutes: 25
+        run: for try in 1 2 3; do pnpm exec playwright install --with-deps ${{ matrix.browser }} && exit 0; echo "try $try failed"; sleep 20; done; exit 1
+      - name: The site and the documentation site, as the demo's tests read them
+        run: pnpm site && node scripts/docs-site.mjs build
+      - name: The demo, played in ${{ matrix.name }}
+        run: pnpm exec playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }} ${{ matrix.only }}
+        env:
+          DEMO_SET: ${{ matrix.set }}
+  usage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
       - name: Every way to use it (a script tag, Vite, webpack, React, Vue, Svelte, Angular, an iframe, TypeScript, Node), from the package as npm packs it
         run: pnpm test:usage
   package:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -52,6 +85,7 @@ jobs:
         run: pnpm test:package
   readme:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

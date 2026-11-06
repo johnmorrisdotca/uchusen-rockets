@@ -334,7 +334,7 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
 });
 
 test("the fleet kit: every module and the sample ship drawn painted, then contexts and graphics memory stay flat as they are walked again, and it still draws once a frame", async ({ page }) => {
-  test.setTimeout(30 * 60_000);
+  test.setTimeout(45 * 60_000);
   await page.goto(URL);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);
@@ -350,7 +350,8 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
     }),
   );
   const walk = async (stride: number) => {
-    for (const rocket of fleet)
+    for (const rocket of fleet) {
+      const began = Date.now();
       for (const variant of rocket.variants.filter((_, i) => i % stride === 0)) {
         await press(page, `rocket-${rocket.id}`);
         await press(page, `variant-${variant.id}`);
@@ -359,6 +360,9 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
         await expect.poll(() => page.evaluate(() => (window as unknown as { __in?: string }).__in), { timeout: 90_000 }).toBe(`${rocket.id}/${variant.id}`);
         await settle(page, 80);
       }
+      // seconds a ship took, said as each ends, so a walk that slows down (or stops) says which ship did it
+      console.log(`fleet walk, ${rocket.id}: ${Math.round((Date.now() - began) / 1000)} s`);
+    }
   };
   await walk(1);
   const first = await usage(page);
@@ -952,7 +956,9 @@ const earthDraws = (page: Page) =>
   });
 /** The Earth in a look, and the rocket's picture in: everything loaded and at least one draw of each. */
 const earthIn = async (page: Page, look: string, form: string) => {
+  await press(page, "panel-look");
   await press(page, `look-${look}`);
+  await press(page, "panel-background");
   await press(page, "background-earth");
   await expect(earth(page)).toHaveAttribute("data-form", form, { timeout: 60_000 });
   if (form === "realistic") {
@@ -1284,6 +1290,7 @@ test.describe("50 rounds", () => {
     const startMB = processMB();
     const startHeap = await heapMB();
     const offNow = async () => {
+      await press(page, "panel-background");
       await press(page, "background-none");
       await expect(earth(page)).toBeHidden();
       await expect(earth(page).locator("*")).toHaveCount(0);
@@ -1303,9 +1310,11 @@ test.describe("50 rounds", () => {
       expect((await usage(page)).contexts).toBe(2);
       // straight off from the realistic Earth, and on and off again as lines
       await offNow();
+      await press(page, "panel-look");
       await pressAndDraw(page, "look-thick");
       await earthIn(page, "thick", "thick");
       await offNow();
+      await press(page, "panel-look");
       await pressAndDraw(page, "look-line");
       await pressAndDraw(page, "rocket-starship");
       await settle(page, 300);
@@ -1317,15 +1326,17 @@ test.describe("50 rounds", () => {
     await pressAndDraw(page, "variant-v2");
     await pressAndDraw(page, "variant-v3");
     await pressAndDraw(page, "look-line");
-    // the first round fills the rest; each round ends where it began
+    // the first round fills the rest; each round ends where it began. A second round is played before anything is read: on a slow runner the Earth's last pictures come in after the first round (20 textures read with the Earth on, where 24 are held
+    // from then on, and 24 again at round 50), so a first reading is a baseline only once they are in. A leak still shows, as growth from round 2 to the last.
+    await round();
     await round();
     await settle(page, 2500);
     const first = await usage(page);
     const firstOn = withEarth;
     const firstHeap = await heapMB();
     const firstMB = processMB();
-    log.push(`after round 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}, framebuffers ${first.framebuffers}, heap ${firstHeap} MB, process ${firstMB} MB`);
-    for (let index = 1; index < ROUNDS; index++) {
+    log.push(`after round 2: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}, framebuffers ${first.framebuffers}, heap ${firstHeap} MB, process ${firstMB} MB`);
+    for (let index = 2; index < ROUNDS; index++) {
       await round();
       if ((index + 1) % 10 === 0) log.push(`after round ${index + 1}: heap ${await heapMB()} MB, process ${processMB()} MB, contexts ${(await usage(page)).contexts}`);
     }
@@ -1333,7 +1344,7 @@ test.describe("50 rounds", () => {
     const last = await usage(page);
     const lastHeap = await heapMB();
     const lastMB = processMB();
-    log.push(`with the Earth on, round 1 then round ${ROUNDS}: buffers ${firstOn.buffers} ${withEarth.buffers}, textures ${firstOn.textures} ${withEarth.textures}, programs ${firstOn.programs} ${withEarth.programs}, contexts ${firstOn.contexts} ${withEarth.contexts}`);
+    log.push(`with the Earth on, round 2 then round ${ROUNDS}: buffers ${firstOn.buffers} ${withEarth.buffers}, textures ${firstOn.textures} ${withEarth.textures}, programs ${firstOn.programs} ${withEarth.programs}, contexts ${firstOn.contexts} ${withEarth.contexts}`);
     log.push(`at the start: heap ${startHeap} MB, process ${startMB} MB`);
     log.push(`after round ${ROUNDS}: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}, framebuffers ${last.framebuffers}, heap ${lastHeap} MB, process ${lastMB} MB`);
     console.log(log.join("\n"));
@@ -1370,6 +1381,14 @@ test("every variant of every rocket lit, with the Earth behind: line and painted
   await pause(page);
   await reach3d(page);
   await press(page, "engines-on");
+  // `data-variant` and `data-state` are set before a variant is built and drawn, and `data-state` stays "3d" through a change: the element says `uchusen-change` once the rocket and variant on screen are in. A slow runner read 12 buffers where 111 are made once
+  // the last variant's first frame is in, so each step waits for it (as the fleet kit's walk above does).
+  await hero(page).evaluate((node) =>
+    node.addEventListener("uchusen-change", (event) => {
+      const variant = (event as CustomEvent<{ report: { variant?: { rocket: string; id: string } } }>).detail.report.variant;
+      (window as unknown as { __in: string }).__in = `${variant?.rocket}/${variant?.id}`;
+    }),
+  );
   const walk = async (look: "line" | "painted") => {
     await press(page, `look-${look}`);
     await expect(earth(page)).toHaveAttribute("data-form", look === "line" ? "line" : "realistic", { timeout: 60_000 });
@@ -1382,6 +1401,7 @@ test("every variant of every rocket lit, with the Earth behind: line and painted
         await expect(hero(page), named).toHaveAttribute("data-variant", variant.id);
         await expect(hero(page), named).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
         if (look === "painted") await expect(hero(page), named).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
+        await expect.poll(() => page.evaluate(() => (window as unknown as { __in?: string }).__in), { message: named, timeout: 90_000 }).toBe(`${rocket.id}/${variant.id}`);
         // the flames the package says it has, and none where no source tells of an engine
         const flames = String(build({ rocket: rocket.id, variant: variant.id }).flamesOf("together").length);
         await expect.poll(() => canvasData(page, "plumes"), { message: named, timeout: 30_000 }).toBe(flames);
@@ -1427,6 +1447,7 @@ for (const { look, form, contexts } of LOOKS.filter((one) => one.look !== "thick
     await pause(page);
     await reach3d(page);
     await earthIn(page, look, form);
+    await press(page, "panel-look");
     await press(page, "engines-on");
     await expect.poll(() => canvasData(page, "plumes")).toBe("33");
     expect((await usage(page)).contexts).toBe(contexts);

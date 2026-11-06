@@ -1,8 +1,8 @@
 /* The fleet record: one row of ships, one row of that ship's sections, then the ship and its measures. Chips wrap so a phone does not scroll sideways. */
 .fleet-db .db { display: grid; gap: 12px; }
 .fleet-db .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.fleet-db .stage-box { min-height: 280px; }
-.fleet-db .stage-box uchusen-rocket { display: block; height: min(50vh, 420px); }
-.fleet-db .db-facts { border-collapse: collapse; width: max-content; max-width: 100%; }
+.fleet-db .stage-box uchusen-rocket { display: block; width: min(100%, calc((100vh - 26rem) * 0.75)); height: auto; margin: 0 auto; }
+.fleet-db .db-facts { border-collapse: collapse; width: 100%; max-width: 100%; }
 .fleet-db .db-facts th,
-.fleet-db .db-facts td { text-align: left; padding: 4px 12px 4px 0; }
+.fleet-db .db-facts td { text-align: left; padding: 4px 12px 4px 0; vertical-align: top; }
+.fleet-db .db-facts td { overflow-wrap: anywhere; }
