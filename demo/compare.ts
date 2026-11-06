@@ -275,7 +275,7 @@ function renderGlass() {
   box.append(craftPicture(craft.rocket, craft.variant));
   const note = document.createElement("p");
   const variant = variantFor(craft);
-  const height = isFleetVariant(variant) ? Math.round(fleetSize(variant).length) : variant.facts.height.value;
+  const height = drawnMetres(craft, variant);
   note.textContent = typeof height === "number" ? `${variant.name}, ${height.toLocaleString("en-US")} m` : variant.name;
   box.append(note);
 }
@@ -302,7 +302,7 @@ function renderPickers() {
   facts.replaceChildren();
   if (editing) {
     const variant = variantFor(editing);
-    const height = isFleetVariant(variant) ? Math.round(fleetSize(variant).length) : variant.facts.height.value;
+    const height = drawnMetres(editing, variant);
     const name = document.createElement("p");
     name.textContent = variant.name;
     const size = document.createElement("p");
