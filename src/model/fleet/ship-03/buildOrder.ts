@@ -32,6 +32,7 @@ const WHEN: Readonly<Record<string, { start: number; days: number; group: BuildS
   "hangar-port-aft": { start: 920, days: 541, group: "fit-out" },
   pod: { start: 1100, days: 250, group: "fit-out" },
   array: { start: 700, days: 761, group: "fit-out" },
+  bird: { start: 1100, days: 200, group: "fit-out" },
   "radiators-dorsal": { start: 380, days: 300, group: "fit-out" },
   "radiators-ventral": { start: 380, days: 300, group: "fit-out" },
   // the craft the starboard hangar services, so it waits until that hangar is finished

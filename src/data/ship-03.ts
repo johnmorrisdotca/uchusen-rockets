@@ -115,6 +115,7 @@ export const SHIP_03_SLOT_NAMES: Readonly<Record<string, string>> = {
   ...Object.fromEntries(Object.values(SHIP_INSETS).flatMap((inset) => inset.parts.map((one) => [`${inset.id}-${one.n}`, `${one.n}. ${one.name}`]))),
   engine: "Engine",
   "drive-collar": "Shadow-shield collar",
+  bird: "Bird wing",
   "hangar-starboard-fore": "Starboard fore hangar",
   "hangar-port-aft": "Port aft hangar",
   "stack-berth": "Stack berth",

@@ -3,6 +3,7 @@
 import type { PartKind } from "../../../parts.ts";
 import { dockedCraft } from "../docked.ts";
 import { isCoarse, type Piece, place } from "./adapter.ts";
+import { birdWing } from "./bird.ts";
 import { type ArrayState, solarArray } from "./solar.ts";
 import { bowLivery, citadelLivery, driveLivery, habitatLivery, hangarLivery } from "./ariake.ts";
 import { bow } from "./bow.ts";
@@ -102,6 +103,18 @@ const missionPod = (kind: PodKind): MiyamotoPart => ({
   pieces: (o) => local(pod(kind, o?.detail ?? 1), 0, 174, 0, o?.level),
 });
 
+const birdPart = (): MiyamotoPart => ({
+  id: "bird-wing",
+  name: "Bird-wing solar array",
+  kind: "module",
+  y0: 300,
+  place: { x: 0, z: 0 },
+  height: 52,
+  diameter: 130,
+  note: `A folding wing each side of the command citadel, rooted on the dorsal rim behind the glazed flank so the feathers never cross the glass. Each wing is a jointed spar, shoulder to elbow to wrist, with overlapping flat gold feathers, longest at the tip and bowed on the trailing edge. At rest the wings are open; the elbow swings the outer arm back along the hull, and the feathers ride with it into a slim bundle. The starboard roll-out array stays where it is. Descends from ${ANCESTORS["bird-wing"]}.`,
+  pieces: (o) => local(birdWing(o?.detail ?? 1), 0, 300, 0, o?.level),
+});
+
 const solarPart = (state: ArrayState): MiyamotoPart => ({
   id: `array-${state}`,
   name: `Solar array, ${state}`,
@@ -168,7 +181,7 @@ const sister = (): MiyamotoPart[] => [
 export function parts(): MiyamotoPart[] {
   const out: MiyamotoPart[] = [...STACK(false), ...STACK(true)];
   for (const cut of [false, true]) out.push(shoulder("starboard-aft", cut), shoulder("port-fore", cut));
-  out.push(...sister(), collarPart("plain"), collarPart("none"), collarPart("ariake"), missionPod("relay"), missionPod("relief"), missionPod("survey"), solarPart("stowed"), solarPart("deployed"));
+  out.push(...sister(), collarPart("plain"), collarPart("none"), collarPart("ariake"), missionPod("relay"), missionPod("relief"), missionPod("survey"), solarPart("stowed"), solarPart("deployed"), birdPart());
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   const moved = (bay: BayId, dy: number, dz: number): MiyamotoPart => {
     const base = shoulder(bay, false, true);

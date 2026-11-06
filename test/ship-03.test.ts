@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { toGlb } from "../src/build/glb.ts";
 import { build } from "../src/build/index.ts";
-import { BUILD_BUDGET_MS, MATERIALS, PART_ENTRIES, ROCKETS, check } from "../src/index.ts";
+import { BUILD_BUDGET_MS, MATERIALS, PART_ENTRIES, ROCKETS, check, motionsOf } from "../src/index.ts";
 import { ENVELOPE, HANGAR, MASS, RADIATOR_AREA } from "../src/model/fleet/ship-03/dims.ts";
 import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
 import { readFileSync } from "node:fs";
@@ -315,6 +315,8 @@ test("the class table, the variant records, the docs and the viewer agree: pod, 
   assert.ok("array-stowed" in Object.fromEntries(all.map((part) => [part.id, 1])) && "array-deployed" in Object.fromEntries(all.map((part) => [part.id, 1])));
   assert.equal(slotsOf("miyamoto-array").array, "array-deployed");
   assert.equal(slotsOf("miyamoto").array, "array-stowed");
+  assert.equal(slotsOf("miyamoto").bird, "bird-wing");
+  assert.equal("bird" in slotsOf("ariake"), false);
   assert.ok(ARRAY_POWER.auMW > 1.5 && ARRAY_POWER.auMW < 3 && ARRAY_POWER.auMW < ARRAY_POWER.fusionMW * 0.01);
   const power = (ship: "miyamoto" | "ariake") => Object.fromEntries(specification(ship).map((line) => [line.name, `${line.value} ${line.note ?? ""}`]));
   assert.match(power("miyamoto")["Solar array"], /MW\(e\) at one astronomical unit/);
@@ -334,4 +336,18 @@ test("the class table, the variant records, the docs and the viewer agree: pod, 
     assert.ok(ROCKETS[other].variants.some((v) => v.id === otherVariant), `${other}/${otherVariant} exists`);
     assert.ok(inspector.spec.some(([name, value]) => name === "Hangar boxes" && value.startsWith(`${CLASS_FACTS[variant.startsWith("ariake") ? "ariake" : "miyamoto"].sideBoxes} `)));
   }
+});
+
+test("the bird wing is two jointed wings of flat gold feathers, and the elbow folds them", () => {
+  const part = parts().find((one) => one.id === "bird-wing")!;
+  const pieces = part.pieces();
+  const names = new Set(pieces.flatMap((piece) => (piece.move ? [piece.move.name] : [])));
+  assert.deepEqual([...names].sort(), ["bird-port", "bird-starboard"]);
+  const sheets = pieces.filter((piece) => piece.kind === "plate" && piece.top === "gold" && piece.sheet);
+  assert.ok(sheets.length >= 16, `${sheets.length} feathers`);
+  assert.ok(sheets.every((piece) => piece.kind === "plate" && piece.ribs && piece.ribs.length > 0));
+  const fold = motionsOf("fleet-ship-03").filter((motion) => motion.group.startsWith("bird-"));
+  assert.deepEqual(fold.map((motion) => motion.kind), ["swing", "swing"]);
+  assert.equal(fold[0].to, 130);
+  assert.equal(fold[1].to, -130);
 });

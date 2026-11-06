@@ -261,6 +261,7 @@ const FLIGHT_TITLES: Readonly<Record<string, string>> = {
   "hangar-port-aft": "Aft port hangar",
   pod: "Mission pod",
   array: "Solar array",
+  bird: "Bird wing",
   "radiators-dorsal": "Dorsal radiators",
   "radiators-ventral": "Ventral radiators",
   "exterior-load": "Hung craft",

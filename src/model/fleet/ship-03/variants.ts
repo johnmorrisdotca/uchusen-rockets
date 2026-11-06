@@ -19,7 +19,7 @@ export const MIYAMOTO_VARIANT_SLOTS: Readonly<Record<string, Readonly<Record<str
       "drive-collar": o.bare ? "collar-none" : o.sister ? "shield-collar-ariake" : "shield-collar",
       ...(o.sister ? { "hangar-starboard-fore": "hangar-starboard-fore-ariake", "hangar-port-aft": o.berth === "port" ? "hangar-port-aft-ariake-moved" : "hangar-port-aft-ariake" } : {}),
       pod: `pod-${o.pod}`,
-      ...(o.sister ? {} : { array: `array-${o.array ? "deployed" : "stowed"}` }),
+      ...(o.sister ? {} : { array: `array-${o.array ? "deployed" : "stowed"}`, bird: "bird-wing" }),
       "radiators-dorsal": `radiators-dorsal-${o.deployed ? "deployed" : "stowed"}`,
       "radiators-ventral": `radiators-ventral-${o.deployed ? "deployed" : "stowed"}`,
       ...(o.loaded ? { "exterior-load": "exterior-load" } : {}),
