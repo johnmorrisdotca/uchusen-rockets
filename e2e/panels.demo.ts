@@ -12,8 +12,16 @@ test("one group shows at a time, and the tab is kept in the address", async ({ p
   await expect(page.locator('[data-testid="panel-look"]')).toHaveCSS("background-color", "rgb(28, 53, 86)");
   await expect(page.locator('[data-testid="look-line"]')).toBeVisible();
   await expect(page.locator('[data-testid="background-none"]')).toBeHidden();
-  await expect(page.locator('[data-testid="panel-lights"]')).toBeHidden();
+  await expect(page.locator('[data-testid="panel-lights"]')).toBeVisible();
   await expect(page.locator('[data-testid="panel-docked"]')).toBeVisible();
+  await expect(page.locator('[data-testid="lights-off"]')).toBeHidden();
+  await page.locator('[data-testid="panel-lights"]').click();
+  await expect(page.locator('[data-testid="lights-off"]')).toBeVisible();
+  await expect(page.locator('[data-testid="lights-running"]')).toBeVisible();
+  await expect(page.locator('[data-testid="lights-all"]')).toBeVisible();
+  await expect(page.locator('[data-testid="engines-off"]')).toBeHidden();
+  await page.locator('[data-testid="panel-look"]').click();
+  await expect(page.locator('[data-testid="engines-off"]')).toBeVisible();
   await expect(page.locator('[data-testid="panel-motion"]')).toBeVisible();
   await expect(page.locator('[data-testid="panel-build"]')).toBeVisible();
 

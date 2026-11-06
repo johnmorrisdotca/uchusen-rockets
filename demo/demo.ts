@@ -428,6 +428,7 @@ function renderMain() {
   press(byId("beside"), chosen ? (BESIDE_CHOICES.find((choice) => choice.id === chosen.id)?.testid ?? "") : "");
   showMotion();
   showDocked();
+  showLights();
   // the Kaminari concepts take a size, 60 to 100 per cent. scale="true" is the true-scale view, kept in the address apart from that size; a redraw must not clear it.
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
@@ -494,6 +495,7 @@ function renderMain() {
   drawEmbed();
   syncEarth();
   sizeObject();
+  byId("lights-field").hidden = !state.rocket.startsWith("fleet-");
   showPanels();
 }
 
@@ -662,6 +664,25 @@ function lightEngines(on: boolean) {
 enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false), "engines_off"), chip("Lit", "engines-on", () => lightEngines(true), "engines_on"));
 press(enginesBox, "engines-off");
 
+// ------------------------------------------------------------- the lamps
+const lightsBox = byId("lights");
+/** `off`, `running` (position lights, the white flash and the red beacon) or `all` (those plus floods and work lights). The same words as the element's `lights` attribute and the address. Left out of the address, it is `all`. */
+let lightsChoice = ["off", "running", "all"].includes(address.get("lights") ?? "") ? (address.get("lights") as string) : "all";
+function showLights() {
+  hero.setAttribute("lights", lightsChoice);
+  press(lightsBox, `lights-${lightsChoice}`);
+  const note = byId("lights-note");
+  note.hidden = !reducedMotion;
+  note.textContent = say("lightsNote");
+  address.set("lights", lightsChoice === "all" ? null : lightsChoice);
+}
+function chooseLights(choice: string) {
+  lightsChoice = choice;
+  showLights();
+  drawEmbed();
+}
+lightsBox.append(chip("Off", "lights-off", () => chooseLights("off"), "lights_off"), chip("Running only", "lights-running", () => chooseLights("running"), "lights_running"), chip("All", "lights-all", () => chooseLights("all"), "lights_all"));
+
 // ------------------------------------------------------------- the motion of a fleet ship's moving parts
 const motionBox = byId("motion");
 const speedBox = byId("motion-speed");
@@ -730,10 +751,11 @@ const here = new URL(".", location.href).href;
 function embedOptions(): RocketOptions {
   const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
+  const lights = hero.getAttribute("lights");
   const motion = hero.getAttribute("motion");
   // what turns here by the controls turns there by itself, as fast: left is `cw`, the near side going left
   const turning = bar.state.turning ? { spin: String(Math.round(360 / (TURN_SPEED * (Number(bar.getAttribute("pace")) || 1)))), way: turnWay === "left" ? "cw" : "ccw" } : {};
-  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(lights === "off" || lights === "running" ? { lights } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
 panel.kinds = KINDS;
 panel.labels = LABELS;
@@ -1027,6 +1049,7 @@ function speak() {
   renderBuilder();
   lightEngines(hero.getAttribute("engines") === "on");
   showMotion();
+  showLights();
   drawTurn();
   byId("gallery").replaceChildren(...gallery());
   byId("planned-list").replaceChildren(...planned());

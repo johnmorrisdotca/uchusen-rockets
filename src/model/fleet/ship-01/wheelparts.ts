@@ -1,5 +1,6 @@
 // The parts the rings and wheels of ISV Hanabusa are made of: the rounded section of a ring, bands and spheres, the solar skirt, a glazed lift tube and the closed industrial wheel. Pure: no three.js and no DOM.
 import { box, hoop, place, rod, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
+import { lampHalo } from "../lights.ts";
 import { SPIN } from "./spin.ts";
 
 const BEADS = 12;
@@ -110,6 +111,10 @@ export function industrialWheel(style: Style): Piece[] {
       const a = deg((360 / n) * k + 180 / n);
       out.push(sphere("hull-white", [rc * Math.sin(a), y, rc * Math.cos(a)], m + 2));
     }
+  }
+  for (let k = 0; k < 10; k++) {
+    const a = (Math.PI * 2 * k) / 10;
+    out.push(...lampHalo("window", [g.rOut * Math.sin(a), y, g.rOut * Math.cos(a)]));
   }
   for (let k = 0; k < 6; k++) {
     const a = deg(60 * k);

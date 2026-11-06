@@ -146,6 +146,8 @@ export const deg = (d: number) => (d * Math.PI) / 180;
 export interface ViewChoice {
   yaw: number;
   tilt: number;
+  /** Degrees about the view's forward axis. Left out, the camera stays upright. */
+  roll?: number;
   zoom: number;
   panX: number;
   panY: number;
@@ -167,6 +169,29 @@ export interface ViewChoice {
  */
 export function turnedBy(base: Angle, yaw: number, tilt: number): Angle {
   return { az: base.az - yaw, el: Math.min(87, Math.max(-87, base.el - tilt)) };
+}
+
+/**
+ * The camera's up axis after a roll about the direction it looks along. Zero roll is straight up. The direction is a unit vector from the subject towards the camera.
+ *
+ * @param direction Where the camera stands, as a unit vector.
+ * @param roll Degrees about that direction. Positive rolls the camera's right side down.
+ * @returns The up axis.
+ * @example
+ * ```ts
+ * import { rolledUp } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(rolledUp([0, 0, 1], 0));
+ * ```
+ */
+export function rolledUp(direction: Vec3, roll: number): Vec3 {
+  if (roll === 0) return [0, 1, 0];
+  const rad = (roll * Math.PI) / 180;
+  const c = Math.cos(rad);
+  const s = Math.sin(rad);
+  const [x, y, z] = direction;
+  const dot = y;
+  return [(-z) * s + x * dot * (1 - c), c + y * dot * (1 - c), x * s + z * dot * (1 - c)];
 }
 
 /**

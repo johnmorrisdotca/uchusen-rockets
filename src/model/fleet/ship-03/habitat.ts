@@ -2,6 +2,7 @@
 // berthing rings at both ends and a ring of portholes, like the ISS's modules. The crew decks stand perpendicular to thrust, so they are round floors one above another up the spine. The dorsal and ventral rails carry the
 // radiator banks. A cutaway opens the starboard side. Descends from the ISS's Destiny and Node modules and Skylab's wet workshop, with Orion's armoured shell. Pure: no three.js and no DOM.
 import { collar, contextOf, cub, drum, type Piece, place, rng, rod } from "./adapter.ts";
+import { lampHalo, lightPool } from "../lights.ts";
 import { STATION } from "./dims.ts";
 import { capsule, ringAt, tubeAt } from "./shapes.ts";
 
@@ -19,8 +20,8 @@ function portholes(y: number, n: number, start: number): Piece[] {
     const a = start + (Math.PI * 2 * k) / n;
     const u: [number, number, number] = [Math.cos(a), 0, -Math.sin(a)];
     const w: [number, number, number] = [Math.sin(a), 0, Math.cos(a)];
-    const ring = (material: "hull-grey-dark" | "glass" | "lamp-blue", rad: number, from: number, thick: number): Piece => ({ kind: "plate", material, frame: { o: [(R + from + thick / 2) * w[0], y, (R + from + thick / 2) * w[2]], u, v: [0, 1, 0], w }, outline: Array.from({ length: 12 }, (_, i) => [rad * Math.cos((Math.PI * 2 * i) / 12), rad * Math.sin((Math.PI * 2 * i) / 12)] as [number, number]), thickness: thick, plain: true, only: "mesh" });
-    out.push(ring("hull-grey-dark", 0.62, 0.0, 0.2), ring("glass", 0.46, 0.2, 0.06), ring("lamp-blue", 0.12, 0.26, 0.04));
+    const ring = (material: "hull-grey-dark" | "window" | "lamp-blue", rad: number, from: number, thick: number): Piece => ({ kind: "plate", material, frame: { o: [(R + from + thick / 2) * w[0], y, (R + from + thick / 2) * w[2]], u, v: [0, 1, 0], w }, outline: Array.from({ length: 12 }, (_, i) => [rad * Math.cos((Math.PI * 2 * i) / 12), rad * Math.sin((Math.PI * 2 * i) / 12)] as [number, number]), thickness: thick, plain: true, only: "mesh" });
+    out.push(ring("hull-grey-dark", 0.62, 0.0, 0.2), ring("window", 0.55, 0.2, 0.06), ring("lamp-blue", 0.16, 0.26, 0.04), ...lampHalo("window", [(R + 0.6) * w[0], y, (R + 0.6) * w[2]]));
     // the burn shutter: a plate on a hinge above the window, drawn back, with its actuator
     const at = (a2: number, b2: number, c2: number): [number, number, number] => [(R + c2) * w[0] + b2 * u[0], y + a2, (R + c2) * w[2] + b2 * u[2]];
     out.push(rod("hull-grey-dark", at(0.78, -0.7, 0.3), at(0.78, 0.7, 0.3), 0.07, 8), rod("hull-grey", at(0.8, -0.6, 0.45), at(1.5, -0.6, 0.45), 0.05, 8), rod("hull-orange", at(0.82, -0.62, 0.34), at(0.82, 0.62, 0.34), 0.05, 8));
@@ -87,5 +88,6 @@ export function habitat(cut: boolean, detail = 1, seed = "habitat", theme: Theme
   for (const [y, n, s0] of [[Y0 + 10, 12, 0.1], [Y0 + 24, 12, 0.4], [Y0 + 38, 12, 0.2]] as const) if (!cut) out.push(...portholes(y, n, s0));
   else out.push(...portholes(y, n, s0).filter((_, i) => Math.sin(s0 + (Math.PI * 2 * Math.floor(i / 3)) / n) < 0));
   void collar;
+  out.push(...lampHalo("port", [-72, 270, 22]), ...lampHalo("strobe", [0, 276, 20]), ...lightPool({ o: [0, 276, 16], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, 14));
   return out;
 }

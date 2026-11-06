@@ -5,6 +5,7 @@ import { build, buildPart, type Built, FitError } from "./build/index.ts";
 import type { DetailLevel } from "./model/detail.ts";
 import { buildOf } from "./buildPlay.ts";
 import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
+import { lightMode } from "./model/fleet/lights.ts";
 import { motionsOf, motionSpeed, motionWanted } from "./model/fleet/motion.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
@@ -148,7 +149,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "docked"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "docked"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -218,6 +219,20 @@ export class UchusenRocket extends HTMLBase {
     return this.viewer?.screenPoint([point[0], point[1], point[2]]) ?? null;
   }
 
+  /**
+   * Points the camera at one point of the model, in metres, and keeps every part on screen. A close picture of a lamp uses it, because the bow view frames the dome.
+   *
+   * @param target The point to look at.
+   * @param direction From that point toward the camera.
+   * @param distance How far the camera stands, in metres.
+   */
+  lookAt(target: readonly [number, number, number], direction: readonly [number, number, number], distance: number): void {
+    const slots = this.builtNow?.parts.map((part) => part.slot) ?? [];
+    if (slots.length === 0 || !this.viewer) return;
+    const aim = { slots, target: [target[0], target[1], target[2]] as [number, number, number], direction: [direction[0], direction[1], direction[2]] as [number, number, number], distance };
+    void this.upgrade().then(() => this.viewer?.focusOn(aim));
+  }
+
   /** Isolate the named slots, look at a point and, when `label` is given, mark that point. `null` shows the whole ship again. */
   focusAt(focus: ViewerFocus | null, label = ""): void {
     this.framed = focus;
@@ -235,7 +250,7 @@ export class UchusenRocket extends HTMLBase {
     this.viewer?.setMarks(focus && slot && this.frameLabel ? [{ id: "module", text: this.frameLabel, at: focus.target, slot }] : null);
   }
 
-  /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
+  /** Lets a page choose the turn, tip, roll, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
   drive(choice: Partial<ViewChoice> | null): void {
     const before = this.driven;
     if (choice === null) {
@@ -246,6 +261,7 @@ export class UchusenRocket extends HTMLBase {
       this.driven = {
         yaw: number(choice.yaw, this.driven?.yaw ?? 0, -3600, 3600),
         tilt: number(choice.tilt, this.driven?.tilt ?? 0, -90, 90),
+        roll: number(choice.roll, this.driven?.roll ?? 0, -180, 180),
         zoom: number(choice.zoom, this.driven?.zoom ?? 1, 0.25, 8),
         panX: number(choice.panX, this.driven?.panX ?? 0, -5000, 5000),
         panY: number(choice.panY, this.driven?.panY ?? 0, -5000, 5000),
@@ -313,6 +329,8 @@ export class UchusenRocket extends HTMLBase {
     else if (name === "motion") {
       if (this.viewer) this.lightViewer(this.viewer);
       this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
+    } else if (name === "lights") {
+      if (this.viewer) this.lightViewer(this.viewer);
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "names") this.viewer?.setNameLabels(after !== "off");
@@ -539,6 +557,7 @@ export class UchusenRocket extends HTMLBase {
     viewer.setReduced(media("(prefers-reduced-motion: reduce)"));
     viewer.setScaleMode(this.getAttribute("scale") === "true");
     viewer.setEngines(this.engineLights() ? "full" : null);
+    viewer.setLights(lightMode(this.getAttribute("lights")));
     viewer.setMotion(motionsOf(this.descriptionNow().rocket), motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")), motionSpeed(this.getAttribute("motion")));
   }
 
@@ -642,6 +661,7 @@ export class UchusenRocket extends HTMLBase {
     const unit = Math.min(this.drawing.clientWidth / w, this.drawing.clientHeight / h) || 1;
     const view = zoom === 1 && panX === 0 && panY === 0 ? [x, y, w, h] : [x + w / 2 - w / (2 * zoom) - panX / (unit * zoom), y + h / 2 - h / (2 * zoom) - panY / (unit * zoom), w / zoom, h / zoom];
     node.setAttribute("viewBox", view.map((n) => +n.toFixed(3)).join(" "));
+    if (node instanceof SVGElement) node.style.transform = (this.driven?.roll ?? 0) === 0 ? "" : `rotate(${this.driven?.roll}deg)`;
     this.drawing.dataset.zoom = zoom.toFixed(2);
     this.drawing.dataset.pan = `${Math.round(panX)},${Math.round(panY)}`;
   }

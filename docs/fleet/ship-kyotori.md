@@ -2,6 +2,26 @@
 
 Planned first flight 2469. The fleet's explorer of ships and a station: four ships of one class that dock into the housing at the stern of a station with a figured mirror ahead and four quarters of eight decks each. This package's own design; every figure is a design and says so. Concepts for John's V2, built to the standard of Hanabusa. Names of the four ships come later: A, B, C and D stand in.
 
+**鏡鳥 · Kyotori · "mirror bird".** Designation SPX-045. Class: explorer. The English is `IDENTITY.plain` in `src/model/fleet/ship-kyotori/specs.ts`. The record has no kana reading.
+
+## Identity
+
+What the record gives, from `specification()` in that file. A row it does not give is left as not given, not filled in.
+
+| | |
+|---|---|
+| Name | ISV 鏡鳥 Kyotori, SPX-045 |
+| Layout | Two ships (A and B) side by side, docked into the housing at the stern of a station that has room for four |
+| Station rim | 60 m, 3.86 rpm, 1.00 g, computed from the radius |
+| Quarters | four towers of eight decks |
+| Drive | two drives of twelve coil rings, no bell. One drive on each ship |
+| Length, beam, height | not given |
+| Dry mass, full mass, propellant, cargo | not given |
+| Crew | not given as a number. The class table says "the standard crew", and ship D adds about a hundred |
+| Max g, cruise, theoretical speed, range, endurance | not given |
+
+Strengths, from the page below: the four ships can part, and a ship alone is a lean runner while the station stays. Weaknesses the record states: the ships' names are not chosen, and the mast extension of the solar wings is a follow-up, not built.
+
 ## The class: four ships of one design
 
 The Kyotori class has four ships, A, B, C and D. They share one model (the drive of twelve coil rings, the tank bouquet on the outer faces, the truss, the latch frames, the bows and the docking arms) and each carries one group of its own. Each is its own variant record on the viewer's picker and shares every part it does not change.
