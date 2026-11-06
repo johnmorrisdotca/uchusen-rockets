@@ -35,7 +35,7 @@ import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
 import { WORDS } from "./words.js";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import { bodySpan, forwardStar } from "../src/journey/forward.ts";
+import { bodySpan, forwardStar, perceivedAlong, perceivedSpan } from "../src/journey/forward.ts";
 import { positionKm } from "../src/journey/trip.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
@@ -88,6 +88,7 @@ const choice = {
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
   view: isView(askedView) ? askedView : "side",
   look: query.get("look") === "painted" ? "painted" : "line",
+  size: query.get("size") === "true" ? "true" : "perceived",
   hold: query.get("hold") === "1",
   base: todayUtc(),
 };
@@ -111,6 +112,7 @@ function writeAddress(): void {
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
   if (choice.look === "painted") next.set("look", "painted");
+  if (choice.size === "true") next.set("size", "true");
   if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
   const text = `${location.pathname}?${next.toString()}`;
@@ -126,6 +128,7 @@ interface Option {
 let options: Option[] = [];
 let trip!: Trip;
 let total = 1;
+let reachKm = 1;
 const stopName = (id: string): string => {
   const stop = SOURCE.stops.find((one) => one.id === id);
   return stop ? (japanese() ? stop.name.ja : stop.name.en) : id;
@@ -142,11 +145,51 @@ function fromDistanceKm(state: State): number {
   const [x, y, z] = state.positionKm;
   return Math.max(radius, Math.hypot(x - body[0], y - body[1], z - body[2]));
 }
+const PLAY_ICON = "M4 2.2 13 8 4 13.8z";
+const PAUSE_ICON = "M3 2h3.2v12H3zM9.8 2H13v12H9.8z";
+let planetLoad: Promise<void> | null = null;
+
+function loadPlanets(): void {
+  planetLoad ??= Promise.all([import("@johnmorrisdotca/wakusei-planets/element"), import("@johnmorrisdotca/wakusei-planets/saturn")]).then(() => undefined);
+}
+
+function mountPlanet(node: HTMLElement, id: string): void {
+  loadPlanets();
+  let body = node.querySelector("wakusei-body");
+  if (!body) {
+    body = document.createElement("wakusei-body");
+    body.setAttribute("live", "off");
+    body.setAttribute("labels", "off");
+    body.setAttribute("fit", "tight");
+    node.prepend(body);
+  }
+  const look = id === "venus" ? "realistic" : "painted";
+  if (body.getAttribute("body") !== id) body.setAttribute("body", id);
+  if (body.getAttribute("look") !== look) body.setAttribute("look", look);
+  body.setAttribute("lang", japanese() ? "ja" : "en");
+}
+
+function clearPlanet(node: HTMLElement): void {
+  node.querySelector("wakusei-body")?.remove();
+}
+
+function spanOf(which: "from" | "dest", id: string, distanceKm: number): number {
+  const radius = SOURCE.stops.find((one) => one.id === id)?.radiusKm ?? 1000;
+  if (choice.size === "true") return bodySpan(radius, distanceKm);
+  const seen = perceivedSpan(distanceKm, Math.max(reachKm, distanceKm, radius * 2), radius);
+  if (which !== "dest") return seen;
+  return Math.max(seen, perceivedAlong(total > 0 ? playhead / total : 0));
+}
+
 function placeBody(which: "from" | "dest", id: string, distanceKm: number): void {
   const node = byId(`body-${which}`);
   const stop = SOURCE.stops.find((one) => one.id === id);
-  node.style.setProperty("--span", bodySpan(stop?.radiusKm ?? 1000, distanceKm).toFixed(4));
+  const span = spanOf(which, id, distanceKm);
+  node.style.setProperty("--span", span.toFixed(4));
+  node.dataset.span = span.toFixed(4);
   if (stop) node.style.setProperty("--ink", stop.colour);
+  if (choice.look === "painted") mountPlanet(node, id);
+  else clearPlanet(node);
   setText(byId(`body-${which}-name`), stopName(id));
 }
 const craftNow = (): Craft => craftOf(choice.craft) ?? CRAFTS[0]!;
@@ -183,6 +226,7 @@ function plan(): void {
   const date = options[choice.when]?.ms ?? choice.base;
   trip = planTrip(SOURCE, flown, choice.from, choice.to, date, flown.drive === "continuous" && choice.pull === "1" ? 1 : undefined, choice.via === "jupiter" ? "jupiter" : undefined);
   total = Math.max(1, playSeconds(trip));
+  reachKm = trip.verdict.playable && trip.phases.length > 0 ? Math.max(1, stateAt(trip, SOURCE, 0).toDestinationKm) : 1;
 }
 
 // ---- the pickers ----
@@ -228,6 +272,10 @@ function drawPickers(): void {
   holdButton.setAttribute("aria-pressed", String(choice.hold));
   const painted = choice.look === "painted";
   byId("looks").replaceChildren(chip(say(painted ? "look_line" : "look_painted"), "look-painted", painted, () => setLook(painted ? "line" : "painted")));
+  byId("sizes").replaceChildren(
+    chip(say("jSizePerceived"), "size-perceived", choice.size !== "true", () => setSize("perceived")),
+    chip(say("jSizeTrue"), "size-true", choice.size === "true", () => setSize("true")),
+  );
 }
 
 function change(next: Partial<{ from: string; to: string; craft: string; when: number; pull: "ship" | "1"; via: "direct" | "jupiter" }>): void {
@@ -264,13 +312,26 @@ function setView(view: JourneyView): void {
   draw(true);
 }
 
+function setSize(size: "perceived" | "true"): void {
+  choice.size = size;
+  writeAddress();
+  drawPickers();
+  draw(true);
+}
+
+function rocketView(): "side" | "front" | "back" {
+  if (choice.view === "front") return "front";
+  if (choice.view === "rear") return "back";
+  return "side";
+}
+
 function syncPainted(turn: string, lit: boolean, phase: string): void {
   const host = byId("painted");
   const bar = byId("painted-bar");
   const credit = byId("painted-credit");
   const note = byId("painted-note");
-  const on = choice.look === "painted" && choice.view === "side";
-  stage.dataset.look = on ? "painted" : "line";
+  const on = choice.look === "painted" && choice.view !== "map" && choice.view !== "cockpit";
+  stage.dataset.look = choice.look;
   if (!on) {
     if (!host.hidden || host.childElementCount > 0) hidePainted(host, bar, credit);
     note.hidden = true;
@@ -279,7 +340,7 @@ function syncPainted(turn: string, lit: boolean, phase: string): void {
   }
   const craft = craftNow();
   const shown = stageOf(craft, phase, onPad());
-  showPainted(host, bar, credit, { rocket: shown.rocket, variant: shown.variant, view: onPad() ? viewOf(craft) : "side", engines: lit ? "on" : "off" }, turn, craft.drive === "continuous" ? 90 : 45);
+  showPainted(host, bar, credit, { rocket: shown.rocket, variant: shown.variant, view: onPad() && choice.view === "side" ? viewOf(craft) : rocketView(), engines: lit ? "on" : "off" }, turn, craft.drive === "continuous" ? 90 : 45);
   const whole = shown.slots != null;
   note.hidden = !whole;
   note.textContent = whole ? say("jPaintWhole") : "";
@@ -839,9 +900,11 @@ function showSummary(): void {
     }),
   );
   byId("summary").hidden = false;
+  byId("summary-open").hidden = true;
 }
 function hideSummary(): void {
   byId("summary").hidden = true;
+  byId("summary-open").hidden = !(trip.verdict.playable && playhead >= total);
 }
 
 // ---- drawing a frame ----
@@ -962,9 +1025,12 @@ function frame(ts: number): void {
 
 function syncPlay(): void {
   const button = byId("play");
+  const word = playing ? say("jPause") : playhead >= total ? say("jAgain") : say("jPlay");
   button.setAttribute("aria-pressed", String(playing));
-  button.textContent = playing ? say("jPause") : playhead >= total ? say("jAgain") : say("jPlay");
+  setText(byId("play-label"), word);
+  byId("play-icon").setAttribute("d", playing ? PAUSE_ICON : PLAY_ICON);
   button.toggleAttribute("disabled", !trip.verdict.playable);
+  button.title = trip.verdict.playable ? word : trip.verdict.line;
 }
 
 function play(): void {
@@ -997,6 +1063,13 @@ function start(): void {
   stage.dataset.view = choice.view;
   hideSummary();
   const ok = trip.verdict.playable && trip.phases.length > 0;
+  const blocked = byId("blocked");
+  blocked.hidden = ok;
+  if (!ok) {
+    setText(byId("blocked-title"), say("jPhase_none"));
+    setText(byId("blocked-why"), trip.verdict.line);
+    byId("leave-earth").hidden = choice.from === "earth";
+  }
   byId("controls").toggleAttribute("data-off", !ok);
   byId<HTMLInputElement>("scrub").disabled = !ok;
   byId("restart").toggleAttribute("disabled", !ok);
@@ -1026,6 +1099,18 @@ function start(): void {
 }
 
 byId("play").addEventListener("click", () => (playing ? pause() : play()));
+byId("summary-close").addEventListener("click", () => hideSummary());
+byId("summary-open").addEventListener("click", () => showSummary());
+byId("leave-earth").addEventListener("click", () => change({ from: "earth" }));
+stage.addEventListener("click", (event) => {
+  const card = byId("summary");
+  const target = event.target as Element;
+  if (card.hidden || card.contains(target) || target.closest("#summary-open")) return;
+  hideSummary();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") hideSummary();
+});
 byId("restart").addEventListener("click", () => {
   pause();
   playhead = 0;

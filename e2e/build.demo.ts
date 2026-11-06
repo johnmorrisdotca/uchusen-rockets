@@ -125,6 +125,10 @@ test.describe("the build plays", () => {
     await page.locator('[data-testid="panel-build"]').click();
     const bar = page.locator("uchusen-build");
     await expect(bar.getByTestId("build-now")).not.toContainText("Day 0,");
+    await expect(bar.getByTestId("build-start")).toHaveText("Back to start");
+    await expect(bar.getByTestId("build-play").locator("svg")).toHaveCount(1);
+    await expect(bar.getByTestId("build-start").locator("svg")).toHaveCount(1);
+    await expect(bar.getByTestId("build-start")).toHaveAttribute("title", "Back to start");
     await bar.getByTestId("build-start").click();
     await expect(bar.getByTestId("build-now")).toContainText("Day 0");
     await expect.poll(() => new URL(page.url()).searchParams.get("at")).toBe(null);
