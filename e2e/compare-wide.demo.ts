@@ -216,6 +216,7 @@ test("a craft under about 12 px is marked with its name and size, and its chip o
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "WebGL is drawn in Chromium here, at a desk's width");
   await page.goto(`${URL}?rocket=starship&variant=v3&with=fleet-drone:repair-drone`);
   await reach3d(page);
+  await page.locator('[data-testid="cam-all"]').click();
   const mark = hero(page).locator("[data-craft-mark]");
   await expect(mark).toBeVisible({ timeout: 30_000 });
   await expect(mark).toContainText("1 m");
