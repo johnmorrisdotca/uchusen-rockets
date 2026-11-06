@@ -296,6 +296,35 @@ test("a tap on empty ground clears the choice", async ({ page }) => {
   await expect.poll(() => read(page).then((row) => row.selected)).toBe("");
 });
 
+async function outlineBox(page: Page): Promise<{ x: number; y: number; h: number } | null> {
+  return heroOf(page).evaluate((node) => {
+    const ring = node.shadowRoot?.querySelector("[data-testid=craft-outline]");
+    if (!(ring instanceof HTMLElement) || ring.hidden) return null;
+    const rect = ring.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, h: rect.height };
+  });
+}
+
+test("a tilt turns the whole craft and the outline follows", async ({ page }) => {
+  await ready(page, rockets);
+  const spot = await craftPoint(page);
+  await page.mouse.click(spot.x, spot.y);
+  await expect.poll(() => read(page).then((row) => row.selected)).toBe("-1");
+  const before = await outlineBox(page);
+  expect(before).not.toBeNull();
+  await focusCanvas(page);
+  await page.keyboard.press("Shift+ArrowRight");
+  await page.keyboard.press("Shift+ArrowRight");
+  const moved = await outlineBox(page);
+  expect(Math.abs((moved?.x ?? 0) - (before?.x ?? 0))).toBeGreaterThan(10);
+  for (let i = 0; i < 10; i += 1) await page.keyboard.press("Alt+ArrowUp");
+  await expect.poll(() => read(page).then((row) => Math.abs(row.tilt))).toBeGreaterThan(20);
+  const seam = await heroOf(page).evaluate((node) => Number(node.shadowRoot?.querySelector("canvas")?.dataset.seam ?? "1"));
+  expect(seam).toBeLessThan(0.2);
+  const turned = await outlineBox(page);
+  expect(Math.abs((turned?.y ?? 0) - (moved?.y ?? 0)) + Math.abs((turned?.h ?? 0) - (moved?.h ?? 0))).toBeGreaterThan(8);
+});
+
 test("Compare uses the same card", async ({ page }) => {
   await ready(page, compare);
   const spot = await craftPoint(page);

@@ -11,6 +11,7 @@ import {
   Color,
   DirectionalLight,
   EdgesGeometry,
+  Euler,
   DoubleSide,
   Float32BufferAttribute,
   Group,
@@ -26,6 +27,7 @@ import {
   MeshStandardMaterial,
   Points,
   PointsMaterial,
+  Quaternion,
   type Object3D,
   PerspectiveCamera,
   PlaneGeometry,
@@ -392,6 +394,10 @@ export class RocketViewer {
   private moonNode: Object3D | null = null;
   /** One corner, reused. A frame that projects a box used to allocate eight vectors, and the fleet walk draws a frame for every module. */
   private readonly corner = new Vector3();
+  private readonly aimEuler = new Euler(0, 0, 0, "YXZ");
+  private readonly aimQuat = new Quaternion();
+  private readonly aimPoint = new Vector3();
+  private readonly aimCentre = new Vector3();
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
     this.holder = holder;
@@ -1638,6 +1644,7 @@ export class RocketViewer {
         part.holder.position.set(...place.at);
         part.holder.visible = place.shown;
       }
+      this.applyDrift();
       this.pose = null;
       this.applyFraming(framing);
       this.relight();
@@ -1729,6 +1736,7 @@ export class RocketViewer {
       if (part.hideAtEnd) part.holder.visible = false;
       part.hideAtEnd = false;
     }
+    this.applyDrift();
     if (this.built) this.limits(this.framingFor(this.currentAngle()).distance);
   }
 
@@ -2556,14 +2564,29 @@ export class RocketViewer {
       if (!view.holder.visible) continue;
       const built = bySlot.get(view.slot);
       if (!built) continue;
-      const at = view.holder.position;
       const have = boxes.get(view.craft);
-      boxes.set(view.craft, {
-        craft: view.craft,
-        rocket: built.record.rocket,
-        min: [Math.min(have?.min[0] ?? Infinity, at.x + built.bounds.min[0]), Math.min(have?.min[1] ?? Infinity, at.y + built.bounds.min[1]), Math.min(have?.min[2] ?? Infinity, at.z + built.bounds.min[2])],
-        max: [Math.max(have?.max[0] ?? -Infinity, at.x + built.bounds.max[0]), Math.max(have?.max[1] ?? -Infinity, at.y + built.bounds.max[1]), Math.max(have?.max[2] ?? -Infinity, at.z + built.bounds.max[2])],
-      });
+      let minX = have?.min[0] ?? Infinity;
+      let minY = have?.min[1] ?? Infinity;
+      let minZ = have?.min[2] ?? Infinity;
+      let maxX = have?.max[0] ?? -Infinity;
+      let maxY = have?.max[1] ?? -Infinity;
+      let maxZ = have?.max[2] ?? -Infinity;
+      const q = view.holder.quaternion;
+      const p = view.holder.position;
+      for (const x of [built.bounds.min[0], built.bounds.max[0]]) {
+        for (const y of [built.bounds.min[1], built.bounds.max[1]]) {
+          for (const z of [built.bounds.min[2], built.bounds.max[2]]) {
+            this.corner.set(x, y, z).applyQuaternion(q).add(p);
+            minX = Math.min(minX, this.corner.x);
+            minY = Math.min(minY, this.corner.y);
+            minZ = Math.min(minZ, this.corner.z);
+            maxX = Math.max(maxX, this.corner.x);
+            maxY = Math.max(maxY, this.corner.y);
+            maxZ = Math.max(maxZ, this.corner.z);
+          }
+        }
+      }
+      boxes.set(view.craft, { craft: view.craft, rocket: built.record.rocket, min: [minX, minY, minZ], max: [maxX, maxY, maxZ] });
     }
     return [...boxes.values()];
   }
@@ -3133,9 +3156,13 @@ export class RocketViewer {
     this.canvas.dataset.drift = "0";
     const places = this.built?.placesOf(this.show) ?? [];
     for (const part of this.parts) {
+      if (this.aim.has(part.craft)) continue;
       const place = places.find((one) => one.slot === part.slot);
-      if (place) part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+      if (!place) continue;
+      part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+      part.holder.rotation.set(0, 0, 0);
     }
+    this.applyDrift();
   }
 
   /** A short click on a part names that part's slot. A drag still throws a craft or turns the view. */
@@ -3390,20 +3417,73 @@ export class RocketViewer {
     }
   }
 
+  /** The middle of a craft before it is moved, so a turn is about the whole stack and not about each part. */
+  private restCentre(craft: number, placeAt: Map<string, { at: readonly [number, number, number] }>): Vector3 | null {
+    const ship = this.built;
+    if (!ship) return null;
+    const bySlot = new Map<string, { bounds: { min: Vec3; max: Vec3 } }>();
+    for (const part of ship.parts) bySlot.set(part.slot, part);
+    for (const part of ship.beside) bySlot.set(part.slot, part);
+    let minX = Infinity;
+    let minY = Infinity;
+    let minZ = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let maxZ = -Infinity;
+    let any = false;
+    for (const part of this.parts) {
+      if (part.craft !== craft) continue;
+      const place = placeAt.get(part.slot);
+      if (!place) continue;
+      any = true;
+      const bounds = bySlot.get(part.slot)?.bounds;
+      const lo = bounds?.min ?? place.at;
+      const hi = bounds?.max ?? place.at;
+      minX = Math.min(minX, place.at[0] + lo[0]);
+      minY = Math.min(minY, place.at[1] + lo[1]);
+      minZ = Math.min(minZ, place.at[2] + lo[2]);
+      maxX = Math.max(maxX, place.at[0] + hi[0]);
+      maxY = Math.max(maxY, place.at[1] + hi[1]);
+      maxZ = Math.max(maxZ, place.at[2] + hi[2]);
+    }
+    if (!any) return null;
+    return this.aimCentre.set((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
+  }
+
   private applyDrift(): void {
     const places = this.built?.placesOf(this.show) ?? [];
+    const placeAt = new Map(places.map((place) => [place.slot, place]));
     const crafts = new Set<number>([...this.toss.keys(), ...this.aim.keys()]);
-    for (const part of this.parts) {
-      if (!crafts.has(part.craft)) continue;
-      const place = places.find((one) => one.slot === part.slot);
-      if (!place) continue;
-      const off = this.toss.get(part.craft)?.offset;
-      part.holder.position.set(place.at[0] + (off?.x ?? 0), place.at[1] + (off?.y ?? 0), place.at[2] + (off?.z ?? 0));
-      const aim = this.aim.get(part.craft);
-      part.holder.rotation.order = "YXZ";
-      if (aim) part.holder.rotation.set((aim.tilt * Math.PI) / 180, (aim.yaw * Math.PI) / 180, (aim.roll * Math.PI) / 180);
-      else part.holder.rotation.set(0, 0, 0);
+    for (const craft of crafts) {
+      const aim = this.aim.get(craft);
+      const off = this.toss.get(craft)?.offset;
+      this.aimEuler.set(((aim?.tilt ?? 0) * Math.PI) / 180, ((aim?.yaw ?? 0) * Math.PI) / 180, ((aim?.roll ?? 0) * Math.PI) / 180);
+      this.aimQuat.setFromEuler(this.aimEuler);
+      const centre = this.restCentre(craft, placeAt);
+      if (!centre) continue;
+      for (const part of this.parts) {
+        if (part.craft !== craft) continue;
+        const place = placeAt.get(part.slot);
+        if (!place) continue;
+        this.aimPoint.set(place.at[0] - centre.x, place.at[1] - centre.y, place.at[2] - centre.z).applyQuaternion(this.aimQuat);
+        part.holder.position.set(centre.x + this.aimPoint.x + (off?.x ?? 0), centre.y + this.aimPoint.y + (off?.y ?? 0), centre.z + this.aimPoint.z + (off?.z ?? 0));
+        part.holder.quaternion.copy(this.aimQuat);
+      }
     }
+    let seam = 0;
+    if (this.picked !== null) {
+      const posed = this.parts.filter((part) => part.craft === this.picked);
+      for (let i = 0; i < posed.length; i += 1) {
+        for (let j = i + 1; j < posed.length; j += 1) {
+          const a = placeAt.get(posed[i].slot);
+          const b = placeAt.get(posed[j].slot);
+          if (!a || !b) continue;
+          const rest = Math.hypot(a.at[0] - b.at[0], a.at[1] - b.at[1], a.at[2] - b.at[2]);
+          seam = Math.max(seam, Math.abs(posed[i].holder.position.distanceTo(posed[j].holder.position) - rest));
+        }
+      }
+      this.canvas.dataset.seam = seam.toFixed(3);
+    } else delete this.canvas.dataset.seam;
     this.writeCraft();
     this.placeRing();
   }
