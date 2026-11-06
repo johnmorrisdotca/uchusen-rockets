@@ -75,7 +75,7 @@ export function exteriorSaddles(bay: BayId): Piece[] {
   return out;
 }
 
-/** The two components on the starboard aft box's saddles: a Super Heavy and a Starship ship, side by side. */
+/** Two Starship ships on the starboard aft box's saddles, side by side. Super Heavy stays on Earth. */
 export function exteriorLoad(): Piece[] {
   const h = bayBox("starboard-aft");
   const a = cradleAxes("starboard-aft");

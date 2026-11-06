@@ -90,9 +90,14 @@ test("no module has a bare surface: hundreds of pieces and many kinds of detail,
   for (const part of all) {
     const pieces = part.pieces();
     total += pieces.length;
-    if (part.id.startsWith("radiators") || part.id === "collar-none") continue;
+    // a carried Starship is that ship's own model, not a Miyamoto interior, and a radiator is a set of leaves
+    if (part.id.startsWith("radiators") || part.id === "collar-none" || part.id === "exterior-load" || part.id.startsWith("stack-berth")) continue;
     assert.ok(pieces.length >= 250, `${part.id}: ${pieces.length} pieces`);
     assert.ok(materialsOf(pieces).size >= 9, `${part.id}: ${materialsOf(pieces).size} materials`);
+  }
+  for (const id of ["exterior-load", "stack-berth-keel", "stack-berth-port"]) {
+    const carried = all.find((part) => part.id === id);
+    assert.ok(carried && carried.pieces().length >= 40, `${id}: ${carried?.pieces().length ?? 0} pieces`);
   }
   const stowed = all.filter((part) => Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto).includes(part.id)).reduce((sum, part) => sum + part.pieces().length, 0);
   assert.ok(stowed >= 15_000, `${stowed} pieces in the stowed ship`);

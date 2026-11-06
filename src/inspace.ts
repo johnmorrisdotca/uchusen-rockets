@@ -31,7 +31,21 @@ export function spaceSlots(rocket: string, slots: readonly string[]): readonly s
   return kept;
 }
 
-/** The length still flying, in metres, rounded, or null when the picture is the whole variant. The table and the picture's name both use this. */
+/**
+ * The length still flying, in metres, rounded. Null when the picture is the whole variant. The table and the picture's name both use this.
+ *
+ * @param rocket The rocket's id.
+ * @param slots The variant's slots, from the bottom.
+ * @param parts The sourced length of each slot, when a source gave one.
+ * @returns The rounded length of the slots still flying, or null when nothing is spent.
+ * @example
+ * ```ts
+ * import { spaceLength, variantOf } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const starship = variantOf("starship", "v3");
+ * console.log(spaceLength("starship", starship?.slots ?? [], starship?.facts.parts));
+ * ```
+ */
 export function spaceLength(rocket: string, slots: readonly string[], parts: Readonly<Record<string, { value: unknown }>> | undefined): number | null {
   const kept = spaceSlots(rocket, slots);
   if (!kept) return null;
