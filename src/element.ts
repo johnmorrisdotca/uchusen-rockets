@@ -538,7 +538,7 @@ export class UchusenRocket extends HTMLBase {
     this.emit("uchusen-flight", this.flightState);
   }
 
-  /** The craft that stand beside it: `beside="on"` is Starship (never beside Starship itself), and a list such as `beside="saturn-v:saturn-v,iss:iss"` is those craft, at most two, each named in the picture. */
+  /** The craft that stand beside it: `beside="on"` is Starship (never beside Starship itself), and a list such as `beside="saturn-v:saturn-v,iss:iss"` is those craft, at most seven, each named in the picture. */
   private besideList(description: Description): Description[] {
     return besideCraft(this.getAttribute("beside"), description.rocket);
   }

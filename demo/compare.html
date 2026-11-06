@@ -11,30 +11,38 @@
       <!--family:header-->
       <section class="cw" id="wide" aria-labelledby="cw-title">
         <h2 id="cw-title" data-say="cmpTitle">Compare craft, side by side</h2>
-        <p data-say="cmpIntro">Up to three craft float at their true sizes, with the Earth behind them. Choose a craft in the first row, then its maker, rocket and variant. Ground puts them back on a pad. On a phone one craft is shown.</p>
+        <p data-say="cmpIntro">Choose craft up to what this device can draw. They float at their true sizes, with the Earth behind them. On a phone one craft is on the stage and the rest stay in the line.</p>
         <div class="field">
           <h3 id="cw-craft-title" data-say="cmpCraft">Craft</h3>
-          <div class="chips" id="cw-craft" data-testid="cw-craft" role="group" aria-labelledby="cw-craft-title"></div>
+          <div class="chips" id="cw-chip-look" data-testid="cw-chip-look"></div>
+          <div class="chips craft-line" id="cw-craft" data-testid="cw-craft" role="group" aria-labelledby="cw-craft-title"></div>
         </div>
         <div class="stage-box cw-stage">
           <div class="view-space">
             <div class="earth-back" id="earth-back" data-testid="earth" aria-hidden="true" hidden></div>
             <div class="earth-back" id="sky-back" data-testid="sky" aria-hidden="true" hidden></div>
             <div class="sky-moons" id="sky-moons" data-testid="sky-moons" aria-hidden="true" hidden></div>
+            <p id="cw-empty" data-testid="cw-empty" data-say="cmpEmpty" hidden>Nothing chosen. Choose a craft in the list.</p>
+            <div id="cw-glass" data-testid="cw-glass" hidden></div>
             <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter" captions float inspector="off"></uchusen-rocket>
           </div>
           <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address speed="5" theme="dark" controls="advanced"></kazoku-view-controls>
         </div>
         <div class="cw-pickers">
           <div class="field">
+            <h3 id="kind-title" data-say="cmpKinds">Kind</h3>
+            <div class="chips" id="kinds" data-testid="cw-kinds" role="group" aria-labelledby="kind-title"></div>
             <h3 id="maker-title" data-say="maker">Maker</h3>
             <div class="chips" id="makers" role="group" aria-labelledby="maker-title"></div>
           </div>
           <div class="field">
             <h3 id="rocket-title" data-say="rocket">Rocket</h3>
-            <div class="chips" id="rockets" role="group" aria-labelledby="rocket-title"></div>
+            <input id="cw-search" data-testid="cw-search" type="search" />
+            <div class="chips picker-grid" id="rockets" role="group" aria-labelledby="rocket-title"></div>
           </div>
           <div class="field">
+            <h3 id="facts-title" data-say="cmpFacts">Chosen craft</h3>
+            <div id="cw-facts" data-testid="cw-facts"></div>
             <h3 id="variant-title" data-say="variant">Variant</h3>
             <div class="chips" id="variants" role="group" aria-labelledby="variant-title"></div>
           </div>

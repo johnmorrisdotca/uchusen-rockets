@@ -406,7 +406,10 @@ export class RocketViewer {
       },
       true,
     );
-    this.canvas.addEventListener("pointermove", (event) => this.pullCraft(event));
+    this.canvas.addEventListener("pointermove", (event) => {
+      this.pullCraft(event);
+      if (!this.grab) this.nameUnder(event);
+    });
     this.canvas.addEventListener("pointerup", (event) => {
       this.releaseCraft(event);
       this.pickSlot(event);
@@ -1795,9 +1798,11 @@ export class RocketViewer {
 
   /** What stands beside the craft is named: a caption under its own foot, kept inside the picture. A picture built with names names every craft, the rocket too; otherwise only the one beside it is. A craft that flies in space adds the plinth's words on a second line. */
   private placeBeside(): void {
+    this.canvas.dataset.partNames = this.floating ? "hover" : "";
     if (!this.nameLabels) {
       for (const el of this.besideEls.values()) el.remove();
       this.besideEls.clear();
+      this.markSmall();
       return;
     }
     const names = this.built?.names ?? [];
@@ -1851,6 +1856,7 @@ export class RocketViewer {
         spot.el.style.transform = `translate(${Math.round(width - w - 8)}px,${y}px)`;
         y += (spot.el.offsetHeight || 16) + 4;
       }
+      this.markSmall();
       return;
     }
     const placed = placeNameLabels(
@@ -1863,6 +1869,58 @@ export class RocketViewer {
       if (!at) return;
       spot.el.style.transform = `translate(${Math.round(at.x)}px,${Math.round(at.y)}px)`;
     });
+    this.markSmall();
+  }
+
+  /** A craft drawn smaller than about 12 px gets a ring at its centre, with its name and size, so a metre-long drone is not lost beside a stack. */
+  private markSmall(): void {
+    const host = this.markHost;
+    if (host) for (const old of host.querySelectorAll("[data-craft-mark]")) old.remove();
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    if (width < 1 || height < 1 || !this.built) return;
+    const names = this.built.names ?? [];
+    const labels = names.length ? names.map((text, index) => ({ craft: index - 1, text })) : [];
+    for (const box of this.craftBoxes()) {
+      const screen = this.screenBox(box.min, box.max);
+      if (!screen) continue;
+      const span = Math.max(screen.maxX - screen.minX, screen.maxY - screen.minY);
+      if (span >= 12) continue;
+      const ring = document.createElement("div");
+      ring.dataset.craftMark = String(box.craft);
+      const cx = (screen.minX + screen.maxX) / 2;
+      const cy = (screen.minY + screen.maxY) / 2;
+      ring.style.cssText = `position:absolute;left:${Math.round(cx)}px;top:${Math.round(cy)}px;width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid #fff;border-radius:50%;pointer-events:none`;
+      const caption = document.createElement("span");
+      caption.textContent = labels.find((one) => one.craft === box.craft)?.text ?? box.rocket;
+      caption.style.cssText = `position:absolute;top:-2px;white-space:nowrap;color:#e6edf6;background:rgba(11,17,27,0.72);padding:1px 5px;${cx > width * 0.6 ? "right:20px" : "left:20px"}`;
+      ring.append(caption);
+      this.hostOfMarks().appendChild(ring);
+    }
+  }
+
+  /** The part under the pointer, named beside it, on a floating picture. */
+  private nameUnder(event: PointerEvent): void {
+    if (this.canvas.dataset.partNames !== "hover" || !this.built) return;
+    const host = this.markHost;
+    const slot = this.slotUnder(event);
+    let tip = host?.querySelector("[data-part-tip]") as HTMLElement | null;
+    if (!slot) {
+      tip?.remove();
+      return;
+    }
+    const named = [...this.built.parts, ...this.built.beside].find((part) => part.slot === slot);
+    const text = named?.record.name ?? slot;
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.dataset.partTip = "";
+      tip.style.cssText = "position:absolute;z-index:2;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.8);pointer-events:none;white-space:nowrap";
+      this.hostOfMarks().appendChild(tip);
+    }
+    tip.textContent = text;
+    const rect = this.holder.getBoundingClientRect();
+    tip.style.left = `${Math.round(event.clientX - rect.left + 12)}px`;
+    tip.style.top = `${Math.round(event.clientY - rect.top + 12)}px`;
   }
 
   /** The middle of a craft's foot, in CSS pixels, and whether that craft flies in space. */

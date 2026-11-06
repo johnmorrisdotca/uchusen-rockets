@@ -44,28 +44,38 @@ test("a third craft is added, the choices are kept in the address, and a reload 
   await page.goto(URL);
   await page.locator('[data-testid="cw-add"]').click();
   await expect(craftChips(page)).toHaveCount(3);
-  await expect(page.locator('[data-testid="cw-add"]')).toHaveCount(0);
+  await expect(page.locator('[data-testid="cw-add"]')).toBeVisible();
+  await expect(page.locator('[data-testid="cw-count"]')).toContainText("3 of up to");
   await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(3);
-  // the new craft is the one the rows now choose: take its maker's other rocket
+  // the added craft is a fleet ship, so the browser is on that kind: come back to the real rockets, then SLS joins the row
+  await page.locator('[data-testid="kind-rocket"]').click();
   await page.locator('[data-testid="maker-nasa"]').click();
   await page.locator('[data-testid="rocket-sls"]').click();
   await expect.poll(() => param(page, "with")).toContain("sls:");
-  expect(param(page, "with")?.split(",").length).toBe(2);
+  expect(param(page, "with")?.split(",").length).toBe(3);
   const kept = page.url();
   await page.goto(kept);
+  await expect(craftChips(page)).toHaveCount(4);
+  await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(4);
+  // remove asks first, and Cancel keeps the craft
+  await page.locator('[data-testid="cw-remove-1"]').click();
+  await expect(page.locator('[data-testid="cw-ask"]')).toBeVisible();
+  await page.locator('[data-testid="cw-remove-no"]').click();
+  await expect(craftChips(page)).toHaveCount(4);
+  await page.locator('[data-testid="cw-remove-1"]').click();
+  await page.locator('[data-testid="cw-remove-yes"]').click();
   await expect(craftChips(page)).toHaveCount(3);
-  await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(3);
-  // remove the middle one
   await page.locator('[data-testid="cw-remove-1"]').click();
-  await expect(craftChips(page)).toHaveCount(2);
-  await expect.poll(() => param(page, "with")?.split(",").length).toBe(1);
+  await page.locator('[data-testid="cw-remove-yes"]').click();
   await page.locator('[data-testid="cw-remove-1"]').click();
+  await page.locator('[data-testid="cw-remove-yes"]').click();
   await expect(craftChips(page)).toHaveCount(1);
   await expect.poll(() => param(page, "with")).toBe("none");
-  await expect(page.locator('[data-testid="cw-remove-0"]')).toHaveCount(0);
-  await expect(hero(page)).toHaveAttribute("data-beside", "off");
-  await page.reload();
-  await expect(craftChips(page)).toHaveCount(1);
+  await page.locator('[data-testid="cw-remove-0"]').click();
+  await page.locator('[data-testid="cw-remove-yes"]').click();
+  await expect(craftChips(page)).toHaveCount(0);
+  await expect(page.locator('[data-testid="cw-empty"]')).toBeVisible();
+  await expect(hero(page)).toBeHidden();
 });
 
 test("a hostile address leaves one craft and no error", async ({ page }) => {
@@ -98,14 +108,14 @@ test("the view controls tip as far as the first craft allows, and Fit holds all 
   expect(problems).toEqual([]);
 });
 
-test("on a phone one craft is shown, with no way to add another, and the page does not scroll sideways", async ({ page }, info) => {
+test("on a phone one craft is on the stage, the others stay in the line, and the page does not scroll sideways", async ({ page }, info) => {
   test.skip(!info.project.name.endsWith("phone"), "A phone's width");
   await page.goto(`${URL}?with=saturn-v:saturn-v,iss:iss`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
-  await expect(craftChips(page)).toHaveCount(1);
-  await expect(page.locator('[data-testid="cw-add"]')).toHaveCount(0);
+  await expect(craftChips(page)).toHaveCount(3);
+  await expect(page.locator('[data-testid="cw-add"]')).toBeVisible();
   await expect(hero(page)).toHaveAttribute("data-beside", "off");
-  await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(1);
+  await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(3);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
   // the address keeps what was asked for, so a wider screen shows it
   expect(param(page, "with")).toContain("iss:iss");
@@ -167,4 +177,44 @@ test("any craft on the main page can be taken to the wide one", async ({ page },
   await link.click();
   await expect(page).toHaveURL(/compare\.html/);
   await expect(page.locator('[data-testid="cw-craft-0"]')).toContainText("Saturn V");
+});
+
+test("six craft stay on the page at a desk's width", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-desk", "A desk's width");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(URL);
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="rocket-sls"]').click();
+  await expect(craftChips(page)).toHaveCount(6);
+  await expect(page.locator('[data-testid="cw-count"]')).toContainText("6 of up to");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+});
+
+test("past the device's budget, adding says why", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-desk", "The budget message");
+  await page.addInitScript(() => Object.defineProperty(navigator, "deviceMemory", { configurable: true, get: () => 0.25 }));
+  await page.goto(URL);
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await expect(craftChips(page)).toHaveCount(4);
+  await expect(page.locator('[data-testid="cw-add"]')).toHaveCount(0);
+  await page.locator('[data-testid="kind-rocket"]').click();
+  await page.locator('[data-testid="maker-nasa"]').click();
+  await page.locator('[data-testid="rocket-sls"]').click();
+  await expect(page.locator('[data-testid="cw-budget"]')).toContainText("4");
+  await expect(craftChips(page)).toHaveCount(4);
+});
+
+test("a craft under about 12 px is marked with its name and size, and its chip opens a magnifier", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "WebGL is drawn in Chromium here, at a desk's width");
+  await page.goto(`${URL}?rocket=starship&variant=v3&with=fleet-drone:repair-drone`);
+  await reach3d(page);
+  const mark = hero(page).locator("[data-craft-mark]");
+  await expect(mark).toBeVisible({ timeout: 30_000 });
+  await expect(mark).toContainText("1 m");
+  await page.locator('[data-testid="cw-glass-1"]').click();
+  await expect(page.locator('[data-testid="cw-glass"]')).toBeVisible();
+  await expect(page.locator('[data-testid="cw-glass"]')).toContainText("1 m");
 });
