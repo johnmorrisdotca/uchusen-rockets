@@ -35,7 +35,6 @@ function observation(x: number, y: number, z: number): Piece[] {
     cub("hull-white", [x, x + dx], [y, y + 0.4], [z, z + dz]),
     cub("hull-white", [x, x + dx], [y + dy - 0.4, y + dy], [z, z + dz]),
     cub("glass-clear", [x + dx - 0.3, x + dx + 0.3], [y + 2, y + dy - 2], [z + 1.2, z + dz - 0.8]),
-    cub("window", [x + dx + 0.5, x + dx + 1.4], [y + 1.5, y + dy - 1.5], [z + 2, z + dz - 1.2]),
     cub("flood", [x + dx + 0.4, x + dx + 2.2], [y + 4, y + dy - 4], [z + 1.4, z + 2.2]),
   ];
   for (let yy = y + 8; yy < y + dy - 2; yy += 8) out.push(cub("hull-white", [x + dx - 0.5, x + dx + 0.5], [yy, yy + 0.4], [z + 1.2, z + dz - 0.8]));
