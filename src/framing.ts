@@ -293,6 +293,43 @@ export function transitionReferenceDistance(oldDistance: number, newDistance: nu
   return Math.max(oldDistance, newDistance) * 20;
 }
 
+/**
+ * Ease-in-out: slow at both ends, so a camera move does not start or stop with a jerk.
+ * @param t How far through the move, from 0 to 1 (values outside are held at the ends).
+ * @returns The eased progress, from 0 to 1.
+ * @example
+ * ```ts
+ * import { easeInOut } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(easeInOut(0.5)); // 0.5
+ * ```
+ */
+export function easeInOut(t: number): number {
+  const k = Math.min(1, Math.max(0, t));
+  return k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2;
+}
+
+/**
+ * A distance between two camera distances, even in scale. The halfway point is the geometric mean, so 60 m to 1 800 m does not rush the far end.
+ *
+ * @param from The distance at the start, in metres.
+ * @param to The distance at the end, in metres.
+ * @param t How far along the move is, from 0 to 1.
+ * @returns The distance at `t`, in metres.
+ * @example
+ * ```ts
+ * import { easedDistance } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(easedDistance(60, 1800, 0.5).toFixed(0));
+ * ```
+ */
+export function easedDistance(from: number, to: number, t: number): number {
+  const e = easeInOut(t);
+  const lo = Math.log(Math.max(1e-4, from));
+  const hi = Math.log(Math.max(1e-4, to));
+  return Math.exp(lo + (hi - lo) * e);
+}
+
 /** The scale bar's length in metres: the shortest mark that is at least 50 pixels, or the longest that fits when the picture is too narrow for that. */
 export function scaleBarMetres(metresPerPixel: number, width: number): number {
   const candidates = [0.1, 1, 10, 100, 1000];

@@ -30,7 +30,8 @@ interface Bay {
 
 /** Builds the three ships once and parents them on `root`. `addMesh` is the yard's own mesh builder. */
 export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Group) => void, wake: () => void): {
-  paint: (active: BayId | null, at: number, reduced: boolean) => void;
+  paint: (active: BayId | null, at: number, reduced: boolean, age?: number) => [number, number, number] | null;
+  step: (id: BayId, age: number) => void;
   steps: (id: BayId) => readonly PlayStep[];
   rest: (id: BayId) => number;
   variant: (id: BayId) => string;
@@ -72,7 +73,14 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
     };
   });
 
-  const paint = (active: BayId | null, at: number, reduced: boolean): void => {
+  const roam = (point: readonly [number, number, number], age: number, index: number, reach: number): [number, number, number] => {
+    if (reach === 0) return [point[0], point[1], point[2]];
+    const lap = age * 0.9 + index * 0.7;
+    return [point[0] + Math.cos(lap) * reach, point[1] + Math.sin(age * 1.4 + index) * reach * 0.35, point[2] + Math.sin(lap) * reach];
+  };
+
+  const paint = (active: BayId | null, at: number, reduced: boolean, age = 0): [number, number, number] | null => {
+    let lead: [number, number, number] | null = null;
     for (const bay of bays) {
       const here = active === bay.id ? at : bay.rest;
       const frame = playFrame(bay.steps, here);
@@ -91,10 +99,13 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
       const working = active === bay.id;
       const open = frame.going.filter((slot) => grounded(slot, frame.done));
       const jobs = working && open.length > 0 ? swarmJobs(bay.steps.filter((step) => !frame.going.includes(step.slot) || open.includes(step.slot)), count, here) : [];
-      const poses: SwarmPose[] = carries(jobs, here, bay.steps, (slot) => bay.places.get(slot), dock, bay.length).map((pose) => {
+      const reach = working && !reduced ? 14 : 0;
+      const poses: SwarmPose[] = carries(jobs, here, bay.steps, (slot) => bay.places.get(slot), dock, bay.length).map((pose, index) => {
         const box = bay.boxes.get(pose.slot);
+        const where = roam(pose.where, age, index, reach);
+        if (working && lead === null) lead = where;
         return {
-          where: pose.where,
+          where,
           part: pose.part,
           weld: pose.duty === "work",
           duty: pose.duty,
@@ -104,12 +115,18 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
             : undefined,
         };
       });
-      bay.swarm.show(poses, jobs.length ? [] : berthRing(count, dock), dock, reduced || !working, bay.scale);
+      const berths = (jobs.length ? [] : berthRing(count, dock)).map((point, index) => roam(point, age, index, reach));
+      if (working && lead === null && berths[0]) lead = berths[0];
+      bay.swarm.show(poses, berths, dock, reduced || !working, bay.scale);
     }
+    return lead;
   };
 
   return {
     paint,
+    step: (id, age) => {
+      bays.find((bay) => bay.id === id)?.swarm.step(age);
+    },
     steps: (id) => bays.find((bay) => bay.id === id)?.steps ?? [],
     rest: (id) => bays.find((bay) => bay.id === id)?.rest ?? 0,
     variant: (id) => bays.find((bay) => bay.id === id)?.variant ?? "",
