@@ -1,5 +1,5 @@
 // One instanced draw for every nozzle, and one pool of plume cones. Idle jets add nothing per frame.
-import { AdditiveBlending, BufferAttribute, Color, ConeGeometry, DoubleSide, Group, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial, Quaternion, Vector3 } from "three";
+import { AddEquation, BufferGeometry, Color, ConeGeometry, CustomBlending, DoubleSide, Float32BufferAttribute, Group, InstancedMesh, Matrix4, MeshStandardMaterial, OneFactor, PointLight, Quaternion, ShaderMaterial, Vector3 } from "three";
 import { KEEP_GAP, PUFF_LIFE, turnPair, type Jet, type ThrusterMode } from "../thrusters.ts";
 
 const POOL = 64;
@@ -16,23 +16,62 @@ interface Live {
   bell: number;
 }
 
-/** A cone with its tip at the origin and its base along +Y, so a jet's direction is the axis. */
-function plumeGeometry(radians: number): ConeGeometry {
-  const geo = new ConeGeometry(Math.tan(radians), 1, 24, 1, true);
-  geo.rotateX(Math.PI);
-  geo.translate(0, 0.5, 0);
-  const pos = geo.getAttribute("position");
-  const colours = new Float32Array(pos.count * 4);
-  for (let i = 0; i < pos.count; i++) {
-    const along = Math.max(0, 1 - pos.getY(i));
-    const alpha = along * along * along;
-    colours[i * 4] = 1;
-    colours[i * 4 + 1] = 1;
-    colours[i * 4 + 2] = 1;
-    colours[i * 4 + 3] = alpha;
-  }
-  geo.setAttribute("color", new BufferAttribute(colours, 4));
+const PLUME_VERT = /* glsl */ `
+varying vec3 vTint;
+varying vec3 vLocal;
+void main() {
+  vTint = instanceColor;
+  vLocal = position;
+  vec4 origin = instanceMatrix * vec4(0.0, position.y, 0.0, 1.0);
+  vec3 axis = normalize((instanceMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+  vec3 view = normalize(cameraPosition - origin.xyz);
+  vec3 side = cross(axis, view);
+  if (length(side) < 0.001) side = cross(axis, vec3(0.0, 0.0, 1.0));
+  side = normalize(side);
+  float scale = length((instanceMatrix * vec4(1.0, 0.0, 0.0, 0.0)).xyz);
+  vec3 placed = origin.xyz + side * position.x * scale;
+  gl_Position = projectionMatrix * viewMatrix * vec4(placed, 1.0);
+}
+`;
+
+const PLUME_FRAG = /* glsl */ `
+uniform float spread;
+varying vec3 vTint;
+varying vec3 vLocal;
+void main() {
+  float along = clamp(vLocal.y, 0.0, 1.0);
+  float radius = max(spread * along, 0.02);
+  float radial = clamp(abs(vLocal.x) / radius, 0.0, 1.0);
+  float body = exp(-radial * radial * 1.6) * exp(-along * 2.2);
+  if (body < 0.02) discard;
+  gl_FragColor = vec4(vTint * body, body);
+}
+`;
+
+/** One plane through the jet axis. The vertex shader turns it to face the camera, so the fade has an interior and no hard rim. */
+function plumeGeometry(radians: number): BufferGeometry {
+  const w = Math.tan(radians) * 2.4;
+  const tip = 0.002;
+  const geo = new BufferGeometry();
+  geo.setAttribute("position", new Float32BufferAttribute([-tip, 0, 0, tip, 0, 0, -w, 1, 0, w, 1, 0], 3));
+  geo.setIndex([0, 2, 1, 1, 2, 3]);
   return geo;
+}
+
+function plumeMaterial(radians: number): ShaderMaterial {
+  return new ShaderMaterial({
+    uniforms: { spread: { value: Math.tan(radians) } },
+    vertexShader: PLUME_VERT,
+    fragmentShader: PLUME_FRAG,
+    transparent: true,
+    depthWrite: false,
+    blending: CustomBlending,
+    blendEquation: AddEquation,
+    blendSrc: OneFactor,
+    blendDst: OneFactor,
+    side: DoubleSide,
+    toneMapped: false,
+  });
 }
 
 /** Nozzles and their plumes for one rocket. The nozzles are already in the rocket's space. */
@@ -54,6 +93,7 @@ export class ThrusterLayer {
   private readonly colour = new Color();
   private readonly up = new Vector3(0, 1, 0);
   private readonly hidden = new Matrix4().makeScale(0, 0, 0);
+  private readonly lamps: PointLight[] = [];
 
   constructor(parent: Group, jets: readonly Jet[], mode: Exclude<ThrusterMode, "off">, reduced: boolean) {
     this.mode = mode;
@@ -76,10 +116,14 @@ export class ThrusterLayer {
     }
     this.mesh.instanceMatrix.needsUpdate = true;
     this.group.add(this.mesh);
-    const glow = new MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.55, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false, vertexColors: true });
-    const heart = glow.clone();
-    this.outer = this.pool(plumeGeometry(SPREAD), glow);
-    this.core = this.pool(plumeGeometry(CORE), heart);
+    this.outer = this.pool(plumeGeometry(SPREAD), plumeMaterial(SPREAD));
+    this.core = this.pool(plumeGeometry(CORE), plumeMaterial(CORE));
+    for (let i = 0; i < 6; i++) {
+      const lamp = new PointLight("#ffffff", 0, 8, 2);
+      lamp.visible = false;
+      this.lamps.push(lamp);
+      this.group.add(lamp);
+    }
     parent.add(this.group);
   }
 
@@ -100,6 +144,8 @@ export class ThrusterLayer {
     }
     if (!this.outer || !this.core) return null;
     let alive = 0;
+    let lit = 0;
+    for (const lamp of this.lamps) lamp.visible = false;
     for (let i = 0; i < POOL; i++) {
       const index = this.which[i] ?? -1;
       const jet = index >= 0 ? this.live[index] : undefined;
@@ -116,8 +162,9 @@ export class ThrusterLayer {
       }
       alive += 1;
       const fade = 1 - age / PUFF_LIFE;
-      const alpha = fade * fade;
-      const reach = Math.max(2.2, jet.bell * NOZZLE_LENGTHS);
+      const flicker = age < 0.16 ? 0.78 + 0.22 * Math.sin(age * 80 + i * 1.7) : 1;
+      const alpha = fade * fade * flicker;
+      const reach = Math.max(6, jet.bell * NOZZLE_LENGTHS);
       this.aim.setFromUnitVectors(this.up, jet.dir);
       this.basis.compose(jet.at, this.aim, new Vector3(reach, reach, reach));
       this.outer.setMatrixAt(i, this.basis);
@@ -128,6 +175,15 @@ export class ThrusterLayer {
       this.outer.setColorAt(i, this.colour);
       this.colour.setRGB(alpha, (hot ? 0.94 : 1) * alpha, (hot ? 0.82 : 1) * alpha);
       this.core.setColorAt(i, this.colour);
+      const lamp = this.lamps[lit];
+      if (lamp && alpha > 0.2) {
+        lit += 1;
+        lamp.visible = true;
+        lamp.position.copy(jet.at);
+        lamp.color.set(hot ? "#ffb060" : "#f4f7ff");
+        lamp.intensity = alpha * 14;
+        lamp.distance = Math.max(8, reach);
+      }
     }
     this.outer.instanceMatrix.needsUpdate = true;
     this.core.instanceMatrix.needsUpdate = true;
@@ -182,15 +238,16 @@ export class ThrusterLayer {
     this.mesh?.geometry.dispose();
     (this.mesh?.material as MeshStandardMaterial | undefined)?.dispose();
     this.outer?.geometry.dispose();
-    (this.outer?.material as MeshBasicMaterial | undefined)?.dispose();
+    (this.outer?.material as ShaderMaterial | undefined)?.dispose();
     this.core?.geometry.dispose();
-    (this.core?.material as MeshBasicMaterial | undefined)?.dispose();
+    (this.core?.material as ShaderMaterial | undefined)?.dispose();
+    for (const lamp of this.lamps) lamp.dispose();
     this.mesh = null;
     this.outer = null;
     this.core = null;
   }
 
-  private pool(geo: ConeGeometry, material: MeshBasicMaterial): InstancedMesh {
+  private pool(geo: BufferGeometry, material: ShaderMaterial): InstancedMesh {
     const mesh = new InstancedMesh(geo, material, POOL);
     mesh.count = POOL;
     mesh.frustumCulled = false;
