@@ -11,18 +11,19 @@ export const RING = { y: 1660, hub: 22, len: 60, petals: 8, segments: 3, half: 8
 
 const tag = (pieces: readonly Piece[], move: Move): Piece[] => pieces.map((piece) => ({ ...piece, move }));
 
-function panel(x0: number, y: number, len: number, half: number, tip: Vec3 | null): Piece[] {
+function panel(x0: number, y: number, len: number, half: number, tip: Vec3 | null, stack: number): Piece[] {
   const x1 = x0 + len;
-  const plate = cub("solar", [x0, x1], [y - 0.12, y + 0.12], [-half, half], { only: undefined, plain: false, sheet: true, quilt: { nu: 6, nv: 3, bulge: 0.1 } });
-  const boom = rod("hull-grey", [x0, y, 0], [x1, y, 0], 0.45, 6, { only: undefined });
-  return tip ? [plate, boom, ...lampHalo("nav-white", tip, 4)] : [plate, boom];
+  const plate = cub("solar", [x0, x1], [y - half, y + half], [stack - 0.08, stack + 0.08], { only: undefined, plain: false, sheet: true, quilt: { nu: 8, nv: 4, bulge: 0.12 } });
+  const boom = rod("hull-grey", [x0, y, stack], [x1, y, stack], 0.55, 6, { only: undefined });
+  const lampAt: Vec3 | null = tip ? [x1, y, stack] : null;
+  return lampAt ? [plate, boom, ...lampHalo("nav-white", lampAt, 4)] : [plate, boom];
 }
 
 /** The blanket, in ship coordinates. Panel 0 stays; each later panel slides out by its own length. */
 export function blanketPieces(): Piece[] {
   const { y, root, len, panels, half } = BLANKET;
   return Array.from({ length: panels }, (_, k) => {
-    const pieces = panel(root, y, len, half, k === panels - 1 ? [root + len, y, 0] : null);
+    const pieces = panel(root, y, len, half, k === panels - 1 ? [root + len, y, k * 0.3] : null, k * 0.3);
     return k === 0 ? pieces : tag(pieces, { name: `blanket-${k}`, pivot: [root, y, 0], axis: [1, 0, 0] });
   }).flat();
 }
@@ -33,8 +34,8 @@ export function ringPieces(): Piece[] {
   const out: Piece[] = [];
   for (let p = 0; p < petals; p++) {
     for (let s = 0; s < segments; s++) {
-      const tip = s === segments - 1 ? ([hub + len, y, 0] as Vec3) : null;
-      const pieces = panel(hub, y, len, half, tip);
+      const tip = s === segments - 1 ? ([hub + len, y, s * 0.3] as Vec3) : null;
+      const pieces = panel(hub, y, len, half, tip, s * 0.3);
       const tagged = s === 0 ? pieces : tag(pieces, { name: `ring-${p}-${s}`, pivot: [hub, y, 0], axis: [1, 0, 0] });
       out.push(...place(tagged, { at: [0, 0, 0], yaw: (360 * p) / petals }));
     }
