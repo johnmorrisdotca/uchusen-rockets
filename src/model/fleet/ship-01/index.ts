@@ -3,6 +3,7 @@
 import type { PartKind } from "../../../parts.ts";
 import { COLLARS, isCoarse, place, type Piece } from "./adapter.ts";
 import { moving } from "../motion.ts";
+import { dockedCraft } from "../docked.ts";
 import { DOCK, dockingPieces } from "./docking.ts";
 import { boomPieces, hubPieces, SPINE, SPINE_Y } from "./hull.ts";
 import { industrialWheel } from "./wheelparts.ts";
@@ -101,7 +102,7 @@ const docks = (): HanabusaPart => ({
   height: DOCK.shield.y0 + DOCK.shield.stay + DOCK.shield.depth - (DOCK.berth.y0 - 0.5),
   diameter: 2 * DOCK.shield.radius + 4,
   note: `On the still keel at the bow, outside the hull and beyond the tops of the turning booms: three arms with an S-class crew port, an S-class visitor port and an M-class small-craft berth with an empty cradle, a berth along the keel with saddles, stays, a hard-dock collar and umbilicals for a Starship upper stage, pressurised walkways from every berth to the keel's lift, and the bow dust shield ahead of them. Descends from ${ANCESTORS.node} and the ISS's visiting-vehicle berths.`,
-  pieces: (o) => local(dockingPieces(), 0, DOCK.berth.y0 - 0.5, 0, o?.level),
+  pieces: (o) => local([...dockingPieces(), ...dockedCraft("fleet-ship-01")], 0, DOCK.berth.y0 - 0.5, 0, o?.level),
 });
 
 const ring = (order: Order, use: "garden" | "research" | "living"): HanabusaPart => {

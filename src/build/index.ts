@@ -7,6 +7,7 @@ import { type Angle, cleanView, DEFAULT_VIEW, PICTURE_H, PICTURE_W, VIEWS, type 
 import { cleanShow, placesFor, showsOf } from "../layout.ts";
 import { DEFAULT_LOOK, type LookName } from "../looks.ts";
 import { detail, type DetailLevel } from "../model/detail.ts";
+import { dockedNow } from "../model/fleet/dockedState.ts";
 import { type PartMesh, boundsOf, boundsOfPieces, type Bounds, meshOf, type Piece } from "../model/pieces.ts";
 import { moved } from "../model/moves.ts";
 import { partEntry } from "../model/registry.ts";
@@ -135,7 +136,7 @@ export interface Built {
 export const HEAVY_PIECES = 2000;
 
 const memo = new Map<string, { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }>();
-const memoKey = (id: string, k: number) => `${detail.level}/${id}${k === 1 ? "" : `@${k}`}`;
+const memoKey = (id: string, k: number) => `${detail.level}/${dockedNow.spec ?? "-"}/${id}${k === 1 ? "" : `@${k}`}`;
 function made(id: string, k = 1) {
   const known = memo.get(memoKey(id, k));
   if (known) return known;
@@ -320,11 +321,13 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * console.log(rocket.report.label, rocket.glb().bytes.length > 1000);
  * ```
  */
-export function build(description: Description, options: { detail?: DetailLevel; beside?: boolean | readonly Description[]; named?: boolean; scale?: number } = {}): Built {
+export function build(description: Description, options: { detail?: DetailLevel; beside?: boolean | readonly Description[]; named?: boolean; scale?: number; docked?: string } = {}): Built {
   const report = check(description);
   if (!report.ok) throw new FitError(report);
   const before = detail.level;
+  const beforeDock = dockedNow.spec;
   detail.level = options.detail ?? "full";
+  dockedNow.spec = "docked" in options ? (options.docked ?? "") : null;
   try {
     const asked = options.beside === true ? (canBeside(description.rocket) ? [BESIDE_ROCKET] : []) : (options.beside || []);
     const others = asked.map((one) => build(one, { detail: "full" }));
@@ -335,6 +338,7 @@ export function build(description: Description, options: { detail?: DetailLevel;
     return built;
   } finally {
     detail.level = before;
+    dockedNow.spec = beforeDock;
   }
 }
 

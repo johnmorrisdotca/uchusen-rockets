@@ -2,8 +2,11 @@
 import { DRAGON_DRAWS, capsule, trunk } from "../../falcon.ts";
 import type { Piece, Vec3 } from "../../pieces.ts";
 import { STARSHIP_DRAWS, boosterPieces, shipPieces } from "../../starship.ts";
+import { dockedNow, visitorsOf } from "../dockedState.ts";
 import { hoop, place, revolve, rod } from "./adapter.ts";
 import type { ConceptSlot } from "./common.ts";
+
+const ROCKET = { a: "fleet-kaminari", b: "fleet-emiake", c: "fleet-romaryu" } as const;
 
 const DRAW = STARSHIP_DRAWS.v3;
 const DRAGON = DRAGON_DRAWS["dragon-2"];
@@ -58,11 +61,17 @@ function saddle(hullX: number, craft: readonly [number, number, number], yUp: nu
 
 const end = (from: Vec3, to: Vec3, material: "hull-orange" | "hull-white" | "pipe-steel"): Piece => rod(material, from, to, 0.32, 8);
 
-/** The berth's pieces in its own frame: the origin is the plan's `at` on the ship. */
-export function berthPieces(plan: BerthPlan): Piece[] {
+/** The craft the berth draws when nobody has chosen: a stack, two tankers and a Dragon, in the berth's own frame. */
+function parked(plan: BerthPlan): Piece[] {
   const out: Piece[] = [...place(stackTemplate(), { at: atOf(plan.stack) })];
   for (const at of plan.tankers) out.push(...place(tankerTemplate(), { at: atOf(at) }));
   out.push(...place(dragonTemplate(), { at: atOf(plan.dragon) }));
+  return out;
+}
+
+/** The berth's pieces in its own frame: the origin is the plan's `at` on the ship. `craft` replaces the parked visitors; the saddles stay. */
+export function berthPieces(plan: BerthPlan, craft: Piece[] = parked(plan)): Piece[] {
+  const out: Piece[] = [...craft];
   out.push(depot(plan.methane, "hull-orange"), depot(plan.oxygen, "hull-white"));
   out.push(...saddle(plan.hullX, plan.stack, 28), ...saddle(plan.hullX, plan.stack, 78), ...saddle(plan.hullX, plan.stack, 110));
   for (const at of plan.tankers) out.push(...saddle(plan.hullX, at, 18));
@@ -145,6 +154,18 @@ const portsOf = (plan: BerthPlan): readonly ShipPort[] => [
 /** Each ship's ports and berths, beside the parts that draw them. */
 export const BERTHS: Readonly<Record<"a" | "b" | "c", readonly ShipPort[]>> = { a: portsOf(PLANS.a), b: portsOf(PLANS.b), c: portsOf(PLANS.c) };
 
+/** The ports a person can fill, in the berth's own frame. A Dragon meets its collar nose-up. A Starship sits in a saddle, origin at `seat`. */
+export function choicePorts(key: "a" | "b" | "c"): { id: string; name: string; at: readonly [number, number, number]; dir: readonly [number, number, number]; models: readonly ("dragon" | "starship")[]; seat?: readonly [number, number, number] }[] {
+  const plan = PLANS[key];
+  const saddle = (id: string, name: string, at: readonly [number, number, number]) => ({ id, name, at: [0, 0, 0] as const, dir: [0, 1, 0] as const, models: ["starship"] as const, seat: at });
+  return [
+    saddle("stack", "Starship stack berth", plan.stack),
+    saddle("methane", "Methane tanker berth", plan.tankers[0]),
+    saddle("oxygen", "Oxygen tanker berth", plan.tankers[1]),
+    { id: "dragon", name: "Dragon port", at: [plan.dragon[0], plan.dragon[1] + DRAGON_M, plan.dragon[2]], dir: [0, 1, 0], models: ["dragon"] },
+  ];
+}
+
 /** The visiting-craft slot for one ship. */
 export function berthSlot(key: "a" | "b" | "c"): ConceptSlot {
   const plan = PLANS[key];
@@ -156,6 +177,6 @@ export function berthSlot(key: "a" | "b" | "c"): ConceptSlot {
     height: plan.height,
     diameter: plan.diameter,
     note: plan.note,
-    pieces: () => berthPieces(plan),
+    pieces: () => berthPieces(plan, dockedNow.spec === null ? parked(plan) : visitorsOf(ROCKET[key])),
   };
 }

@@ -13,6 +13,7 @@ test("one group shows at a time, and the tab is kept in the address", async ({ p
   await expect(page.locator('[data-testid="look-line"]')).toBeVisible();
   await expect(page.locator('[data-testid="background-none"]')).toBeHidden();
   await expect(page.locator('[data-testid="panel-lights"]')).toBeVisible();
+  await expect(page.locator('[data-testid="panel-docked"]')).toBeVisible();
   await expect(page.locator('[data-testid="lights-off"]')).toBeHidden();
   await page.locator('[data-testid="panel-lights"]').click();
   await expect(page.locator('[data-testid="lights-off"]')).toBeVisible();
@@ -44,6 +45,7 @@ test("a craft with no build and no moving parts hides those tabs", async ({ page
   await expect(page.locator('[data-testid="panel-build"]')).toBeHidden();
   await expect(page.locator('[data-testid="panel-motion"]')).toBeHidden();
   await expect(page.locator('[data-testid="panel-lights"]')).toBeHidden();
+  await expect(page.locator('[data-testid="panel-docked"]')).toBeHidden();
   await expect(page.locator('[data-testid="panel-look"]')).toBeVisible();
   await expect(page.locator('[data-testid="panel-background"]')).toBeVisible();
 });
