@@ -20,6 +20,7 @@ import {
   LinearMipmapLinearFilter,
   MathUtils,
   Matrix4,
+  Quaternion,
   type Material,
   Mesh,
   MeshBasicMaterial,
@@ -53,6 +54,7 @@ import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
 import { dutyOf, lampFactor } from "../model/fleet/lights.ts";
 import { angleAt, slideAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
+import { trackAngle } from "../model/fleet/tracking.ts";
 import { type Angle, directionOf, easedDistance, easeInOut, FOV_DEG, frameFor, PICTURE_H, rolledUp, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
@@ -264,6 +266,10 @@ export class RocketViewer {
   private look: LookName = "line";
   private show = "together";
   private sun: DirectionalLight;
+  /** Where the key light comes from. Motion walks it slowly around the ship, and the arrays follow it. */
+  private sunDir = new Vector3(3, 5, 4).normalize();
+  private trackQ = new Quaternion();
+  private trackSun = new Vector3();
   /** The fleet is lit with a shadow: its ships are big enough for one part to fall on another. A rocket is not, so it keeps the one light it has. */
   private shadows = false;
   /** Named SPX ships. The Lit look turns their sun down. A kit module stays in daylight. */
@@ -636,9 +642,27 @@ export class RocketViewer {
         const group = new Group();
         group.name = node.name;
         group.position.copy(node.position);
+        if (node.userData.under) group.userData.under = node.userData.under;
         code.add(group);
         this.takeMeshes(node, group, view);
         view.moves.push({ name: String(node.userData.group), group, axis: new Vector3(axis[0], axis[1], axis[2]).normalize(), angle: 0, home: null });
+      }
+      // a joint that says which joint it turns inside is parented there, so a gimbal rides on the rotary joint
+      const ranked: PartView["moves"] = [];
+      const left = view.moves.slice();
+      for (let n = 0; n < left.length && left.length > 0; n++) {
+        const i = left.findIndex((move) => {
+          const under = String(move.group.userData.under ?? "");
+          return under === "" || ranked.some((one) => one.name === under);
+        });
+        if (i < 0) break;
+        ranked.push(left.splice(i, 1)[0]);
+      }
+      view.moves = [...ranked, ...left];
+      for (const move of view.moves) {
+        const under = String(move.group.userData.under ?? "");
+        const parent = under === "" ? undefined : view.moves.find((one) => one.name === under);
+        if (parent) parent.group.attach(move.group);
       }
       const place = places.find((p) => p.slot === part.slot);
       holder.position.set(...(place?.at ?? [0, 0, 0]));
@@ -983,12 +1007,36 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** The key light walks around the ship while motion is on, and stands at its usual place when motion is off. */
+  private aimSun(seconds: number): void {
+    if (this.motionOn) {
+      const turn = ((seconds * this.motionSpeed) / 90) * Math.PI * 2;
+      this.sunDir.set(Math.sin(turn), 0.55, Math.cos(turn)).normalize();
+    } else this.sunDir.set(3, 5, 4).normalize();
+    const target = this.sun.target.position;
+    const reach = Math.max(8, this.sun.position.distanceTo(target));
+    this.sun.position.copy(target).addScaledVector(this.sunDir, reach);
+  }
+
+  /** Degrees to turn this joint so its face points at the sun, in the frame of the joint it sits on. */
+  private tracked(move: PartView["moves"][number], motion: Motion): number {
+    const face = motion.face;
+    const parent = move.group.parent;
+    if (!face || !parent) return 0;
+    parent.updateMatrixWorld();
+    parent.getWorldQuaternion(this.trackQ).invert();
+    this.trackSun.copy(this.sunDir).applyQuaternion(this.trackQ);
+    return trackAngle([this.trackSun.x, this.trackSun.y, this.trackSun.z], [move.axis.x, move.axis.y, move.axis.z], face);
+  }
+
   /** Puts every tagged group at its angle for `now`, or at rest when motion is off. Only a group whose angle changed is touched. */
   private stepMotion(now: number, force = false): void {
     if (!this.built) return;
     if (!force && now - this.motionDrawn < MOTION_GAP_MS) return;
     this.motionDrawn = now;
     const seconds = (now - this.motionT0) / 1000;
+    this.aimSun(seconds);
+    if (this.motionOn) this.root.updateMatrixWorld(true);
     let changed = false;
     let shown: number | undefined;
     const byGroup = new Map<string, (typeof this.motions)[number]>();
@@ -999,7 +1047,7 @@ export class RocketViewer {
         const own = this.progressAt !== null && typeof part.holder.userData.arcSpin === "number" ? part.holder.userData.arcSpin : null;
         const turned = this.progressAt === null ? null : spinUp(own);
         // a ring still being built stays at its own angle, so an open arc does not swing with a sibling that has already spun up
-        const angle = turned !== null ? turned : this.progressAt !== null ? 0 : (motion ? angleAt(motion, seconds, this.motionSpeed) : 0);
+        const angle = turned !== null ? turned : this.progressAt !== null ? 0 : motion?.kind === "track" ? this.tracked(move, motion) : motion ? angleAt(motion, seconds, this.motionSpeed) : 0;
         const along = motion?.kind === "slide" ? slideAt(motion, seconds, this.motionSpeed) : 0;
         if (typeof own === "number" && own > 0 && (shown === undefined || own > shown)) shown = own;
         else if (motion && shown === undefined) shown = motion.kind === "slide" ? along : angle;
@@ -1018,7 +1066,10 @@ export class RocketViewer {
             moved = true;
           }
         }
-        if (moved) changed = true;
+        if (moved) {
+          move.group.updateMatrixWorld();
+          changed = true;
+        }
       }
     }
     if (changed) {
@@ -1531,7 +1582,7 @@ export class RocketViewer {
     const { min, max } = this.built.boundsOf(this.show);
     const centre = new Vector3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
     const radius = Math.max(1, Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) / 2);
-    const direction = new Vector3(3, 5, 4).normalize();
+    const direction = this.sunDir.clone();
     this.sun.position.copy(centre).addScaledVector(direction, radius * 2);
     this.sun.target.position.copy(centre);
     const shadow = this.sun.shadow;

@@ -1,12 +1,12 @@
 // How the fleet's moving parts move: one table, one helper, shared by every ship. A part that moves is tagged with a `Move` (a name, a pivot and an axis) where its ship builds it, and this file says what each name does over time: a ring that
 // spins at its stated rpm, a door leaf that swings up and comes back, an array or a dish that sweeps. It moves only parts that exist: no geometry is made here, and nothing is rebuilt; the viewer turns each tagged group about its pivot. A
 // `Move` turns about its axis, and a slide moves along that same axis. A roller shutter is still drawn as its leaf swinging up about the lintel (a real one winds on a drum). Pure: no three.js and no DOM.
-import type { Move, Piece } from "../pieces.ts";
+import type { Move, Piece, Vec3 } from "../pieces.ts";
 import { ARRAY_MOTIONS } from "./kaminari-concepts/arrays.ts";
 import { rpmFor } from "./ship-01/spin.ts";
 
 /**
- * What a moving group does: `spin` turns without end at `rate` degrees a second; `swing` goes from rest to `to` and back, with holds; `sweep` goes from `from` to `to` and back like a pendulum; `slide` moves along its axis from `from` to `travel` metres and back, on the same holds as a swing.
+ * What a moving group does: `spin` turns without end at `rate` degrees a second; `swing` goes from rest to `to` and back, with holds; `sweep` goes from `from` to `to` and back like a pendulum; `slide` moves along its axis from `from` to `travel` metres and back, on the same holds as a swing; `track` turns about its axis to face the sun (`face` is the direction that face points at rest).
  *
  * @example
  * ```ts
@@ -16,7 +16,7 @@ import { rpmFor } from "./ship-01/spin.ts";
  * console.log(kind);
  * ```
  */
-export type MotionKind = "spin" | "swing" | "sweep" | "slide";
+export type MotionKind = "spin" | "swing" | "sweep" | "slide" | "track";
 
 /**
  * One moving group of a ship: which ship and which tagged group, what it does and how fast, and its note.
@@ -46,6 +46,8 @@ export interface Motion {
   period?: number;
   /** Where in the cycle it starts, 0 to 1, so the five leaves of a door open one after another. */
   phase?: number;
+  /** Track: the direction the face points at rest, in the joint's own frame. The viewer turns the joint so this faces the sun. */
+  face?: Vec3;
   /** What it is in the ship's words, with its real rate. */
   note: string;
 }
@@ -89,7 +91,7 @@ const swingShape = (u: number): number => (u < 0.2 ? 0 : u < 0.45 ? smooth((u - 
 export function angleAt(motion: Motion, seconds: number, speed: MotionSpeed = 1): number {
   const t = seconds * speed;
   if (motion.kind === "spin") return (((motion.rate ?? 0) * t) % 360 + 360) % 360;
-  if (motion.kind === "slide") return 0;
+  if (motion.kind === "slide" || motion.kind === "track") return 0;
   const period = motion.period ?? 20;
   const u = (((t / period + (motion.phase ?? 0)) % 1) + 1) % 1;
   const from = motion.from ?? 0;

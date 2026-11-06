@@ -20,6 +20,8 @@ export interface Move {
   name: string;
   pivot: Vec3;
   axis: Vec3;
+  /** The group this one turns inside. Left out, it turns on the part itself. */
+  under?: string;
 }
 
 /** A body of revolution: `profile` is [radius, y] points going up the outside (going the other way faces inward). */
@@ -149,6 +151,8 @@ export interface MoveMesh {
   id: string;
   pivot: Vec3;
   axis: Vec3;
+  /** The group this one turns inside, when it is not the part itself. */
+  under?: string;
   mesh: PartMesh;
 }
 
@@ -566,14 +570,14 @@ export function meshOf(pieces: readonly Piece[]): PartMesh {
     for (const buffers of part.faces.values()) shift(buffers.positions);
     shift(part.feature.positions);
     shift(part.weld.positions);
-    mesh.moves.push({ name: group.name, id: group.id, pivot: group.pivot, axis: group.axis, mesh: part });
+    mesh.moves.push({ name: group.name, id: group.id, pivot: group.pivot, axis: group.axis, under: group.under, mesh: part });
   }
   return mesh;
 }
 
 /** The groups a flight can turn: the pieces with a `move`, by name and pivot, in the order they come, each with a node name of its own. */
-export function moveGroups(pieces: readonly Piece[]): { name: string; id: string; pivot: Vec3; axis: Vec3; pieces: Piece[] }[] {
-  const groups: { name: string; id: string; pivot: Vec3; axis: Vec3; pieces: Piece[]; key: string }[] = [];
+export function moveGroups(pieces: readonly Piece[]): { name: string; id: string; pivot: Vec3; axis: Vec3; under?: string; pieces: Piece[] }[] {
+  const groups: { name: string; id: string; pivot: Vec3; axis: Vec3; under?: string; pieces: Piece[]; key: string }[] = [];
   const counts = new Map<string, number>();
   for (const piece of pieces) {
     if (!piece.move) continue;
@@ -582,12 +586,12 @@ export function moveGroups(pieces: readonly Piece[]): { name: string; id: string
     if (!group) {
       const n = counts.get(piece.move.name) ?? 0;
       counts.set(piece.move.name, n + 1);
-      group = { name: piece.move.name, id: `${piece.move.name}~${n}`, pivot: piece.move.pivot, axis: piece.move.axis, pieces: [], key };
+      group = { name: piece.move.name, id: `${piece.move.name}~${n}`, pivot: piece.move.pivot, axis: piece.move.axis, under: piece.move.under, pieces: [], key };
       groups.push(group);
     }
     group.pieces.push(piece);
   }
-  return groups.map((group) => ({ name: group.name, id: group.id, pivot: group.pivot, axis: group.axis, pieces: group.pieces }));
+  return groups.map((group) => ({ name: group.name, id: group.id, pivot: group.pivot, axis: group.axis, under: group.under, pieces: group.pieces }));
 }
 
 function meshOfFixed(pieces: readonly Piece[]): PartMesh {

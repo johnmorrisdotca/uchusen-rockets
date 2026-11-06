@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Kaminari's arrays follow the sun** (MODULES-489): each blanket pair turns on a rotary joint at the hull and each wing turns on a gimbal at its root; the ring tilts on its mast and each petal turns on its own gimbal. One shared turn aims every joint at the sun.
 - **Kaminari's blanket and ring** (MODULES-489): three pairs of cell wings spread along the truss with bare hull between them, each wing 624 m by 120 m and standing above the tanks, and a ring 900 m across, all on box trusses, so the open ship reads as arrays first. The cells are one repeating picture on the sheet, bright gold, with a streak that moves as the ship turns.
 - **Craft line fixes** (MODULES-474): on a phone the count and Add a craft get their own line so the craft line has the full width; the page bar marks only the open page; Fit frames a row of craft whole, with the ground under their feet.
 - **The craft line on a phone** (MODULES-474): the count and Add a craft sit on their own line, so the scrolling line is the width of the phone and two chips show. Only the open page is marked in the page bar. A row of craft is framed with the ground under their feet, so none is cut off at the bottom of the stage.

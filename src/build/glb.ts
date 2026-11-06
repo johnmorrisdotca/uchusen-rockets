@@ -157,7 +157,7 @@ export function toGlb(parts: readonly GlbPart[]): Glb {
     const children = [packMesh(mesh, part.name)];
     for (const group of mesh.moves) {
       const inside = packMesh(group.mesh, `${part.name}~${group.id}`);
-      nodes.push({ name: `${part.name}~${group.id}`, children: [inside], translation: group.pivot.map(round6), extras: { axis: group.axis.map(round6), group: group.name } });
+      nodes.push({ name: `${part.name}~${group.id}`, children: [inside], translation: group.pivot.map(round6), extras: { axis: group.axis.map(round6), group: group.name, ...(group.under ? { under: group.under } : {}) } });
       children.push(nodes.length - 1);
     }
     nodes.push({ name: part.name, children, translation: part.at.map(round6) });

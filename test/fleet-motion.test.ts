@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { angleAt, MOTIONS, motionNote, motionsOf, motionSpeed, motionWanted, slideAt, type Motion } from "../src/index.ts";
+import { angleAt, MOTIONS, motionNote, motionsOf, motionSpeed, motionWanted, slideAt, trackAngle, type Motion } from "../src/index.ts";
 import { parts as hanabusa } from "../src/model/fleet/ship-01/index.ts";
 import { parts as miyamoto } from "../src/model/fleet/ship-03/index.ts";
 import { rpmFor } from "../src/model/fleet/ship-01/spin.ts";
@@ -84,8 +84,25 @@ test("the Motion choice: still unless asked for, ten times on request, never und
   near(Math.max(...blanket.map((m) => m.travel ?? 0)) + BLANKET.len, BLANKET.panels * BLANKET.len);
   near(2 * (BLANKET.root + BLANKET.panels * BLANKET.len), 1288, 1);
   near(2 * (RING.hub + RING.len * RING.segments), 896, 1);
-  const cells = meshOf(blanketPieces()).faces.get("cell-gold");
-  assert.ok(cells?.hasUv, "the cell sheet carries coordinates so the picture can tile");
+  const cells = meshOf(blanketPieces());
+  const gold = [cells, ...cells.moves.map((move) => move.mesh)].map((mesh) => mesh.faces.get("cell-gold")).find(Boolean);
+  assert.ok(gold?.hasUv, "the cell sheet carries coordinates so the picture can tile");
   near(2 * (RING.hub + RING.len * RING.segments), 2 * (RING.hub + Math.max(...ring.map((m) => m.travel ?? 0)) + RING.len));
   assert.equal(motionNote("starship"), "");
+});
+
+test("one turn faces a joint at the sun, and a gimbal rides on the joint under it", () => {
+  near(trackAngle([0, 0, 1], [0, 1, 0], [0, 0, 1]), 0, 1e-6);
+  near(trackAngle([1, 0, 0], [0, 1, 0], [0, 0, 1]), 90, 1e-6);
+  near(trackAngle([0, 1, 0], [1, 0, 0], [0, 0, 1]), -90, 1e-6);
+  near(trackAngle([0, 1, 0], [0, 1, 0], [0, 0, 1]), 0, 1e-6);
+  const wing = meshOf(blanketPieces()).moves;
+  assert.equal(wing.find((move) => move.name === "blanket-a-s-beta")?.under, "blanket-a-alpha");
+  assert.equal(wing.find((move) => move.name === "blanket-a-s-1")?.under, "blanket-a-s-beta");
+  const ring = meshOf(ringPieces()).moves;
+  assert.equal(ring.find((move) => move.name === "ring-petal-3")?.under, "ring-tilt");
+  assert.equal(ring.find((move) => move.name === "ring-3-1")?.under, "ring-petal-3");
+  const tracked = motionsOf("fleet-kaminari").filter((motion) => motion.kind === "track");
+  assert.equal(tracked.length, 3 * 3 + 1 + RING.petals);
+  for (const motion of tracked) near(angleAt(motion, 10), 0);
 });
