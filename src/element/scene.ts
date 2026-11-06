@@ -267,7 +267,9 @@ export class RocketViewer {
   private hasPulse = false;
   private lampDrawn = 0;
   /** Screen-space lamp points. Cleared with each rocket, because they are not in the material cache. */
-  private lampPoints: { material: PointsMaterial; duty: ReturnType<typeof dutyOf> }[] = [];
+  private lampPoints: { material: PointsMaterial; geometry: BufferGeometry; duty: ReturnType<typeof dutyOf> }[] = [];
+  /** Lamp beads gathered while a ship is loaded, then drawn as one point cloud per part. */
+  private lampPending: { carrier: Group; name: string; centers: Vector3[] }[] = [];
   /** The smooth flood sheets. Cached with their material, so a new rocket reuses them. */
   private poolSheets: MeshBasicMaterial[] = [];
   private lampTexture: CanvasTexture | null = null;
@@ -459,8 +461,12 @@ export class RocketViewer {
     this.disposeParts();
     this.root.clear();
     this.parts = [];
-    for (const lamp of this.lampPoints) lamp.material.dispose();
+    for (const lamp of this.lampPoints) {
+      lamp.material.dispose();
+      lamp.geometry.dispose();
+    }
     this.lampPoints = [];
+    this.lampPending = [];
     this.toss.clear();
     this.grab = null;
     this.built = built;
@@ -517,6 +523,7 @@ export class RocketViewer {
       this.root.add(holder);
       this.parts.push(view);
     }
+    this.flushLamps();
     this.addGlow();
     this.stepMotion(performance.now(), true);
     this.fitShadow();
@@ -927,37 +934,58 @@ export class RocketViewer {
     for (const lamp of this.lampPoints) lamp.material.opacity = this.lampStrength(lamp.duty, 1, seconds);
   }
 
-  /** One soft point per lamp, a few pixels of core and a halo that fades out. The bead in the model only marks the place. */
+  /** Remember one lamp's place. The beads of a part are drawn together once the ship is in. */
   private addLampPoint(carrier: Group, geometry: BufferGeometry, name: string): void {
     const position = geometry.getAttribute("position");
     if (!position || position.count === 0) return;
-    const centers = clusterCenters(position, 2);
-    const geo = new BufferGeometry();
-    const data = new Float32Array(centers.length * 3);
-    centers.forEach((center, i) => {
-      data[i * 3] = center.x;
-      data[i * 3 + 1] = center.y;
-      data[i * 3 + 2] = center.z;
-    });
-    geo.setAttribute("position", new Float32BufferAttribute(data, 3));
-    const material = new PointsMaterial({
-      color: LAMP_TINT[name] ?? "#fff6e4",
-      size: 42,
-      sizeAttenuation: false,
-      map: this.lampDisc(),
-      transparent: true,
-      opacity: 0.95,
-      blending: AdditiveBlending,
-      depthWrite: false,
-      depthTest: false,
-    });
-    material.name = name;
-    const duty = dutyOf(name);
-    this.lampPoints.push({ material, duty });
-    if (duty === "flash" || duty === "beacon") this.hasPulse = true;
-    const points = new Points(geo, material);
-    points.renderOrder = 2;
-    carrier.add(points);
+    this.lampPending.push({ carrier, name, centers: clusterCenters(position, 2) });
+  }
+
+  /** One point cloud per part and per job, so a ship is a few draws and not one draw per lamp. The colour is on each point. One sprite is shared. */
+  private flushLamps(): void {
+    const byCarrier = new Map<Group, Map<ReturnType<typeof dutyOf>, { positions: number[]; colors: number[] }>>();
+    for (const spot of this.lampPending) {
+      const duty = dutyOf(spot.name);
+      let duties = byCarrier.get(spot.carrier);
+      if (!duties) {
+        duties = new Map();
+        byCarrier.set(spot.carrier, duties);
+      }
+      let bucket = duties.get(duty);
+      if (!bucket) {
+        bucket = { positions: [], colors: [] };
+        duties.set(duty, bucket);
+      }
+      const tint = new Color(LAMP_TINT[spot.name] ?? "#fff6e4");
+      for (const center of spot.centers) {
+        bucket.positions.push(center.x, center.y, center.z);
+        bucket.colors.push(tint.r, tint.g, tint.b);
+      }
+      if (duty === "flash" || duty === "beacon") this.hasPulse = true;
+    }
+    this.lampPending = [];
+    for (const [carrier, duties] of byCarrier) {
+      for (const [duty, bucket] of duties) {
+        const geometry = new BufferGeometry();
+        geometry.setAttribute("position", new Float32BufferAttribute(bucket.positions, 3));
+        geometry.setAttribute("color", new Float32BufferAttribute(bucket.colors, 3));
+        const material = new PointsMaterial({
+          size: 42,
+          sizeAttenuation: false,
+          map: this.lampDisc(),
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.95,
+          blending: AdditiveBlending,
+          depthWrite: false,
+          depthTest: false,
+        });
+        this.lampPoints.push({ material, geometry, duty });
+        const points = new Points(geometry, material);
+        points.renderOrder = 2;
+        carrier.add(points);
+      }
+    }
   }
 
   /** White in the middle, gone at the edge, so a coloured point reads as a lamp and not a disc. */
