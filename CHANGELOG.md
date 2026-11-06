@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Click a part to swap it** (MODULES-416): a short click on a fleet ship's part opens the row of modules that fit that mount (Miyamoto's pod: relay, relief, survey). A drag still turns the view or throws a craft.
 - **Swap a module** (MODULES-415): a fleet ship's mounts take other modules that mate with them, starting with the mission pod, and the choice stays in the address. The build row names the assembly flight. On Romaryū, two Miyamoto ride berthed on the carrier shaft, and a Dragon comes in along a lit approach to a docking collar on a closed tunnel from the shaft.
 - **The date in the journey** (MODULES-475): every journey view shows the flight's date and time at the top left, moving with the playback, with the day of the trip under it (Day 85 of 265).
 - **Docked craft** (MODULES-438): a ship with docking ports has a Docked craft tab in the panel, where each port takes a craft or None, and the choice stays in the address.
