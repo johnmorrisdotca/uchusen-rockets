@@ -39,6 +39,7 @@ import { loadBody } from "./sky.ts";
 import { WORDS } from "./words.js";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { bodySpan, forwardStar, perceivedSpan } from "../src/journey/forward.ts";
+import { chip } from "./chip.ts";
 import { positionKm } from "../src/journey/trip.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
@@ -290,18 +291,6 @@ function plan(): void {
 }
 
 // ---- the pickers ----
-function chip(label: string, testid: string, pressed: boolean, on: () => void, disabled = false): HTMLButtonElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "chip";
-  button.textContent = label;
-  button.dataset.testid = testid;
-  button.setAttribute("aria-pressed", String(pressed));
-  if (disabled) button.disabled = true;
-  button.addEventListener("click", on);
-  return button;
-}
-
 function drawPickers(): void {
   byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
   byId("to").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.from).map((stop) => chip(stopName(stop.id), `to-${stop.id}`, stop.id === choice.to, () => change({ to: stop.id }))));

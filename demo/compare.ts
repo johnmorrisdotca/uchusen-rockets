@@ -10,6 +10,7 @@ import { applyTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumb
 import { mountCamera } from "./compare-camera.ts";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
+import { chip, fillChoices, fillLooks } from "./chip.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -23,17 +24,6 @@ const say = (key: string, values: Record<string, string | number> = {}): string 
   const chooser = (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage;
   return (chooser?.word(key) ?? WORDS.en[key] ?? key).replace(/\{(\w+)\}/g, (all, name: string) => String(values[name] ?? all));
 };
-const chip = (label: string, testid: string, on: () => void, pressed?: boolean): HTMLButtonElement => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "chip";
-  button.textContent = label;
-  button.dataset.testid = testid;
-  if (pressed !== undefined) button.setAttribute("aria-pressed", String(pressed));
-  button.addEventListener("click", on);
-  return button;
-};
-
 type Craft = { rocket: string; variant: string };
 const MOST = BESIDE_MOST + 1;
 /** What a craft added is, in turn: the first of these that is not on screen yet. */
@@ -166,13 +156,15 @@ function renderCraft() {
 function renderPickers() {
   const editing = state.craft[Math.min(state.editing, state.craft.length - 1)];
   const makers = (Object.keys(MAKERS) as MakerId[]).filter((maker) => Object.values(ROCKETS).some((rocket) => rocket.maker === maker && isListed(rocket.id)));
-  byId("makers").replaceChildren(...makers.map((maker) => chip(say(`maker_${maker}`), `maker-${maker}`, () => pickMaker(maker), maker === state.maker)));
-  byId("rockets").replaceChildren(
-    ...Object.values(ROCKETS)
-      .filter((rocket) => rocket.maker === state.maker && isListed(rocket.id))
-      .map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pickRocket(rocket.id), rocket.id === editing.rocket)),
+  fillChoices(byId("makers"), makers.map((maker) => ({ id: maker, label: say(`maker_${maker}`) })), state.maker, "maker", (id) => pickMaker(id as MakerId));
+  fillChoices(
+    byId("rockets"),
+    Object.values(ROCKETS).filter((rocket) => rocket.maker === state.maker && isListed(rocket.id)).map((rocket) => ({ id: rocket.id, label: rocket.name })),
+    editing.rocket,
+    "rocket",
+    pickRocket,
   );
-  byId("variants").replaceChildren(...ROCKETS[editing.rocket].variants.map((one) => chip(one.name, `variant-${one.id}`, () => pickVariant(one.id), one.id === editing.variant)));
+  fillChoices(byId("variants"), ROCKETS[editing.rocket].variants.map((one) => ({ id: one.id, label: one.name })), editing.variant, "variant", pickVariant);
   byId("places").replaceChildren(
     chip(say("cmpFloat"), "place-float", () => pickPlace("float"), state.place === "float"),
     chip(say("cmpGround"), "place-ground", () => pickPlace("ground"), state.place === "ground"),
@@ -181,7 +173,7 @@ function renderPickers() {
     chip(say("cmpLabelsOn"), "labels-on", () => pickLabels(true), state.labels),
     chip(say("cmpLabelsOff"), "labels-off", () => pickLabels(false), !state.labels),
   );
-  byId("looks").replaceChildren(...LOOK_NAMES.map((look) => chip(say(`look_${look}`), `look-${look}`, () => pickLook(look), look === state.look)));
+  fillLooks(byId("looks"), state.look, (look) => pickLook(look as LookName));
   drawSky();
 }
 
