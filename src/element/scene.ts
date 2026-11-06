@@ -288,6 +288,10 @@ export class RocketViewer {
   private swarm: SwarmRig | null = null;
   private progressAt: number | null = null;
   private progressFramed = false;
+  /** A module that has left its mount, and how far along that separation is, from 0 to 1. */
+  private leaveSlot: string | null = null;
+  private leaveAt = 0;
+  private leaveFramed = false;
   private progressSteps: readonly { slot: string; start: number; days: number }[] | null = null;
   private focusing = false;
   private focusNow: ViewerFocus | null = null;
@@ -1322,6 +1326,43 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Slides `slot` clear of the ship, up to 180 m, and looks at it. `null` puts it back. A build in progress keeps the parts where the build put them. */
+  setLeave(slot: string | null, at: number): void {
+    this.leaveSlot = slot;
+    this.leaveAt = slot ? Math.min(1, Math.max(0, at)) : 0;
+    if (this.built && this.parts.length) this.applyLeave();
+    this.wake();
+  }
+
+  private applyLeave(): void {
+    if (this.progressAt !== null || this.clockNow) return;
+    const built = this.built;
+    if (!built) return;
+    const slot = this.leaveSlot;
+    const places = built.placesOf(this.show);
+    const part = slot ? this.parts.find((one) => one.slot === slot && !one.beside) : undefined;
+    const place = part ? places.find((one) => one.slot === part.slot) : undefined;
+    if (!part || !place || this.leaveAt <= 0) {
+      if (part && place) part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+      delete this.canvas.dataset.leave;
+      delete this.canvas.dataset.leaveAt;
+      if (this.leaveFramed) {
+        this.leaveFramed = false;
+        this.setAngle(this.homeAngle, false);
+      }
+      return;
+    }
+    const away = this.leaveAt * 180;
+    part.holder.position.set(place.at[0] + away, place.at[1], place.at[2]);
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    this.controls.target.set(place.at[0] + away, place.at[1], place.at[2]);
+    if (offset.lengthSq() > 0) this.camera.position.copy(this.controls.target).add(offset);
+    this.controls.update();
+    this.canvas.dataset.leave = slot ?? "";
+    this.canvas.dataset.leaveAt = this.leaveAt.toFixed(2);
+    this.leaveFramed = true;
+  }
+
   /** Shows the build at `at`, or the finished ship when `at` is null. Slots not yet begun are hidden. A slot being built is on its way from the stack, with the drones around it. */
   setProgress(at: number | null, steps: readonly { slot: string; start: number; days: number }[] | null): void {
     this.progressAt = at;
@@ -1352,6 +1393,7 @@ export class RocketViewer {
       delete this.canvas.dataset.swarmNear;
       if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
+      this.applyLeave();
       this.wake();
       return;
     }

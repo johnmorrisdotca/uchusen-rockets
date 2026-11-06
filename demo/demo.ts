@@ -22,6 +22,7 @@ import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
 import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
+import { separationOf } from "../src/separation.ts";
 
 defineUchusenBuild();
 
@@ -205,6 +206,33 @@ function drawSwaps(): void {
     box.append(row);
   }
 }
+
+/** Slides the planned module clear of the ship. The distance stays in the address. */
+function applyLeave(): void {
+  const plan = separationOf(state.rocket);
+  const field = byId("leave-field");
+  field.hidden = plan === null;
+  const range = byId<HTMLInputElement>("leave-range");
+  if (!plan) {
+    if (address.get("leave")) address.set("leave", null);
+    hero.removeAttribute("leave");
+    return;
+  }
+  const reason = byId("leave-reason");
+  reason.dataset.say = plan.reason;
+  reason.textContent = say(plan.reason);
+  range.setAttribute("aria-label", say("leaveTitle"));
+  const at = Math.min(1, Math.max(0, Number(address.get("leave") ?? "0") || 0));
+  if (document.activeElement !== range) range.value = String(at);
+  if (at > 0) hero.setAttribute("leave", `${plan.slot}:${at.toFixed(2)}`);
+  else hero.removeAttribute("leave");
+}
+
+byId<HTMLInputElement>("leave-range").addEventListener("input", () => {
+  const value = Number(byId<HTMLInputElement>("leave-range").value);
+  address.set("leave", value > 0 ? value.toFixed(2) : null);
+  applyLeave();
+});
 
 /** Puts the address's modules on the ship. A choice that is already the variant is dropped. */
 function applySwap(): void {
@@ -437,6 +465,7 @@ function renderMain() {
   hero.setAttribute("rocket", state.rocket);
   hero.setAttribute("variant", state.variant);
   applySwap();
+  applyLeave();
   hero.setAttribute("show", state.show);
   hero.setAttribute("look", state.look);
   hero.setAttribute("view", state.view);

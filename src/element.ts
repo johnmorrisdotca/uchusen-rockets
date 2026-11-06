@@ -148,7 +148,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -317,6 +317,7 @@ export class UchusenRocket extends HTMLBase {
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "names") this.viewer?.setNameLabels(after !== "off");
     else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
+    else if (name === "leave") this.viewer?.setLeave(...this.leaveNow());
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
       // choosing what to show leaves the flight
@@ -326,6 +327,15 @@ export class UchusenRocket extends HTMLBase {
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------
+
+  private leaveNow(): [string | null, number] {
+    const raw = this.getAttribute("leave");
+    if (!raw) return [null, 0];
+    const [slot, at] = raw.split(":");
+    const value = Number(at);
+    if (!slot || !Number.isFinite(value)) return [null, 0];
+    return [slot, value];
+  }
 
   private progress(): number | null {
     const raw = this.getAttribute("progress");
@@ -673,6 +683,7 @@ export class UchusenRocket extends HTMLBase {
         if (now.look !== look) viewer.setLook(now.look);
         if (now.show !== show) viewer.setShow(now.show);
         viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
+        viewer.setLeave(...this.leaveNow());
         this.lightViewer(viewer);
         this.applyFrame();
       }
@@ -867,6 +878,7 @@ export class UchusenRocket extends HTMLBase {
       if (now.look !== look) made.setLook(now.look);
       if (now.show !== show) made.setShow(now.show);
       made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
+      made.setLeave(...this.leaveNow());
       this.lightViewer(made);
       this.applyFrame();
       made.setSpin(this.spin());
