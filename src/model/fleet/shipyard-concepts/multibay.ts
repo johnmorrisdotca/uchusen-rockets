@@ -29,8 +29,8 @@ function observation(x: number, y: number, z: number): Piece[] {
   const dy = 56;
   const dz = 12;
   const out: Piece[] = [
-    cub("hull-grey", [x, x + dx], [y, y + dy], [z, z + 0.35]),
-    cub("hull-grey", [x, x + dx], [y, y + dy], [z + dz - 0.4, z + dz]),
+    cub("hull-white", [x, x + dx], [y, y + dy], [z, z + 0.35]),
+    cub("hull-white", [x, x + dx], [y, y + dy], [z + dz - 0.4, z + dz]),
     cub("hull-white", [x, x + 0.4], [y, y + dy], [z, z + dz]),
     cub("hull-white", [x, x + dx], [y, y + 0.4], [z, z + dz]),
     cub("hull-white", [x, x + dx], [y + dy - 0.4, y + dy], [z, z + dz]),
@@ -80,7 +80,7 @@ function latchPort(x: number, y: number, z: number): Piece[] {
     ...place([hoop("hull-white", 26, y, 4, 32, 8)], { at: [x, 0, z] }),
     ...dogs,
     cub("hull-grey-dark", [x - 8, x + 8], [y - 10, y - 6], [z - 8, z + 8]),
-    ...iBeam("hull-grey", [x, y - 48, z], [x, y - 6, z], UP, 18, 14),
+    ...iBeam("hull-grey-dark", [x, y - 48, z], [x, y - 6, z], UP, 18, 14),
   ];
 }
 
