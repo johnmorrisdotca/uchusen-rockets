@@ -4,13 +4,15 @@ import type { Move, Piece, Plate } from "../../pieces.ts";
 import { lampHalo } from "../lights.ts";
 import { cub, disc, place } from "./adapter.ts";
 
-/** Blanket: twelve panels of 52 m, stacked into 52 m and paid out to 624 m, 120 m wide. One wing each side, about 1.3 km from tip to tip. Three pairs along the hull, so the open ship reads as arrays first. */
-export const BLANKET = { y: 90, root: 20, len: 52, panels: 12, half: 60 } as const;
-/** Where the three pairs sit, tail to bow: aft of the shield, then two in the radiator bay, clear of the tanks. */
+/** Blanket: twelve panels of 52 m, stacked into 52 m and paid out to 624 m, 120 m wide. One wing each side, about 1.3 km from tip to tip. */
+export const BLANKET = { y: 620, root: 20, len: 52, panels: 12, half: 60 } as const;
+/** The wings sit above the tanks and the cargo, on the dorsal edge of the truss. */
+const MOUNT_Z = 46;
+/** Three pairs spread along the truss, with a few hundred metres of bare truss between them. The quiver, the cargo and the carousel fill the sides, so the wings stand above that. */
 export const BLANKET_STATIONS = [
-  { id: "a", y: 90 },
-  { id: "b", y: 280 },
-  { id: "c", y: 430 },
+  { id: "a", y: 620 },
+  { id: "b", y: 980 },
+  { id: "c", y: 1340 },
 ] as const;
 /** Ring: twelve petals, six segments of 70 m, a 28 m hub, so the open ring is 900 m across. The wedges are built at the hub and slide out. */
 export const RING = { y: 1660, hub: 28, len: 70, petals: 12, segments: 6, half: 4 } as const;
@@ -51,10 +53,14 @@ function canister(sign: number, y: number, half: number): Piece[] {
   const lo = Math.min(inner, outer);
   const hi = Math.max(inner, outer);
   const yoke = sign * 12;
+  const post: [number, number] = [Math.min(sign * 10, sign * 14), Math.max(sign * 10, sign * 14)];
   return [
-    cub("hull-grey", [lo, hi], [y - half, y + half], [-1.8, 2.6], { plain: true }),
-    cub("hull-grey", [Math.min(yoke, lo), Math.max(yoke, lo)], [y - half + 3, y - half + 6], [-0.5, 1.1], { plain: false }),
-    cub("hull-grey", [Math.min(yoke, lo), Math.max(yoke, lo)], [y + half - 6, y + half - 3], [-0.5, 1.1], { plain: false }),
+    cub("hull-grey", [lo, hi], [y - half, y + half], [MOUNT_Z - 2.2, MOUNT_Z + 2.2], { plain: true }),
+    cub("hull-grey", [Math.min(yoke, lo), Math.max(yoke, lo)], [y - half + 3, y - half + 6], [MOUNT_Z - 0.8, MOUNT_Z + 0.8], { plain: false }),
+    cub("hull-grey", [Math.min(yoke, lo), Math.max(yoke, lo)], [y + half - 6, y + half - 3], [MOUNT_Z - 0.8, MOUNT_Z + 0.8], { plain: false }),
+    cub("hull-grey", post, [y - 3, y + 3], [12, MOUNT_Z], { plain: true }),
+    cub("hull-grey", post, [y - half + 2, y - half + 6], [14, MOUNT_Z - 2], { plain: false }),
+    cub("hull-grey", post, [y + half - 6, y + half - 2], [14, MOUNT_Z - 2], { plain: false }),
   ];
 }
 
@@ -74,9 +80,9 @@ export function blanketPair(id: string, y: number): Piece[] {
   for (const sign of [1, -1]) {
     out.push(...canister(sign, y, half));
     for (let k = 0; k < panels; k++) {
-      const pieces = blanketPanel(sign, y, len, half, k * 0.42, k === panels - 1);
+      const pieces = blanketPanel(sign, y, len, half, MOUNT_Z + k * 0.42, k === panels - 1);
       const side = sign > 0 ? "s" : "p";
-      out.push(...(k === 0 ? pieces : tag(pieces, { name: `blanket-${id}-${side}-${k}`, pivot: [sign * BLANKET.root, y, 0], axis: [sign, 0, 0] })));
+      out.push(...(k === 0 ? pieces : tag(pieces, { name: `blanket-${id}-${side}-${k}`, pivot: [sign * BLANKET.root, y, MOUNT_Z], axis: [sign, 0, 0] })));
     }
   }
   return out;
