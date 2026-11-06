@@ -215,7 +215,7 @@ export class RocketViewer {
   private root = new Group();
   private scaleMode = false;
   private scaleZoom: { from: number; to: number } | null = null;
-  private ghost: { group: Group; material: LineBasicMaterial; start: number | null } | null = null;
+  private ghost: { group: Group; material: LineBasicMaterial; start: number | null; timer: number } | null = null;
   private scaleBar: HTMLElement | null = null;
   private parts: PartView[] = [];
   private built: Built | null = null;
@@ -534,6 +534,7 @@ export class RocketViewer {
 
   private clearGhost(): void {
     if (!this.ghost) return;
+    window.clearTimeout(this.ghost.timer);
     this.ghost.group.traverse((node) => { if (node instanceof LineSegments) node.geometry.dispose(); });
     this.ghost.material.dispose();
     this.ghost.group.removeFromParent();
@@ -558,7 +559,9 @@ export class RocketViewer {
     }
     group.position.x = -(oldBounds.max[0] - oldBounds.min[0]) - 5;
     this.scene.add(group);
-    this.ghost = { group, material, start: null };
+    // The fade also ends from the frame loop. A timer ends it even when that loop does not get another frame, which is what left the third cycle on in WebKit.
+    const timer = window.setTimeout(() => this.clearGhost(), 2000);
+    this.ghost = { group, material, start: null, timer };
     this.canvas.dataset.ghost = "on";
   }
 

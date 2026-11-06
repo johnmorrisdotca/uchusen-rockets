@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - **Three axes** (MODULES-468): the camera follows the view controls' roll, so Angle, Tilt and Roll all move the rocket. The family's view controls are 0.17.0, which offers the three axes and a tumble. The journey's playback speeds are the family's speed buttons.
+- **True-scale ghost** (MODULES-460): the fading outline also clears on a two-second timer, so a frame loop that does not come back still ends the cycle. The WebKit skip on that test is gone.
 
 ## [0.13.0] - 2026-11-05
 
