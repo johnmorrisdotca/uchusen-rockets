@@ -697,6 +697,7 @@ export class UchusenRocket extends HTMLBase {
     this.dataset.variant = this.builtNow.report.variant?.id ?? "";
     this.dataset.slots = this.builtNow.parts.map((part) => part.slot).join(",");
     this.dataset.form = this.descriptionNow().form ?? "stack";
+    this.dataset.detail = this.detailFor(this.descriptionNow());
     this.dataset.custom = String(this.builtNow.report.custom);
   }
 

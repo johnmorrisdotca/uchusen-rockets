@@ -128,6 +128,7 @@ test("Miyamoto is in the registry: four variants, every slot's part exists, the 
   assert.equal(rocket.variants.length, 6);
   for (const variant of rocket.variants) {
     assert.equal(variant.status, "fictional");
+    assert.ok(variant.name?.trim(), `${variant.id} has no name`);
     assert.ok(!/fictional/i.test(variant.name), variant.name);
     assert.deepEqual(Object.keys(variant.partIds ?? {}), [...variant.slots]);
     for (const id of Object.values(variant.partIds ?? {})) assert.ok(PART_ENTRIES.some((entry) => entry.record.id === id), id);
@@ -147,6 +148,7 @@ test("Miyamoto is in the registry: four variants, every slot's part exists, the 
   assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.habitat, "habitat-ariake");
   assert.equal(MIYAMOTO_VARIANT_SLOTS.ariake.command, "command-ariake");
   assert.equal(MIYAMOTO_VARIANT_SLOTS["ariake-cutaway"].habitat, "habitat-ariake-cutaway");
+  assert.equal(rocket.variants.find((variant) => variant.id === "miyamoto-array")?.name, "ISV 宮本 Miyamoto, SPX-452, solar array out");
   assert.equal(check({ rocket: "fleet-ship-ariake", variant: "ariake" }).ok, true);
   assert.equal(check({ rocket: "fleet-ship-ariake", variant: "ariake-cutaway" }).ok, true);
   // the shadow-shield collar swaps for none in one slot
@@ -154,6 +156,10 @@ test("Miyamoto is in the registry: four variants, every slot's part exists, the 
   assert.equal(MIYAMOTO_VARIANT_SLOTS["miyamoto-no-collar"]["drive-collar"], "collar-none");
   // the mission pod swaps: two parts, one mount
   assert.ok(PART_ENTRIES.some((entry) => entry.record.id === "fleet-ship-03-pod-relay") && PART_ENTRIES.some((entry) => entry.record.id === "fleet-ship-03-pod-relief"));
+});
+
+test("every variant the catalogue lists has a name on its chip", () => {
+  for (const rocket of Object.values(ROCKETS)) for (const variant of rocket.variants) assert.ok(variant.name?.trim(), `${rocket.id} ${variant.id}`);
 });
 
 test("every variant builds in every look and view, and no mark of a maker is on it", () => {

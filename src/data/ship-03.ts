@@ -13,6 +13,7 @@ const metres = (value: number) => `${Number(value.toFixed(1))} m, as designed`;
 const NOTES: Readonly<Record<string, string>> = {
   miyamoto: "ISV 宮本 Miyamoto, SPX-452, Romurusu class (ロムルス級, ICV type), the flagship and command vessel, stowed, with the relay pod on its keyed collar. A narrow spine, two staggered hangar shoulders, a layered bow and two recessed drives, 380 m by 138 m by 74 m, 105,000 t at departure. Status: planned, first flight 2456. All numbers are design targets; the drive and its limits are described in the ship's bible.",
   "miyamoto-deployed": "Miyamoto with both radiator banks out: four leaves of 25 by 60 m on each, clear of the hangar corridors. Sustained main burn needs every leaf out.",
+  "miyamoto-array": "Miyamoto with the gold solar array out: ten bays of lattice masts, a cell blanket each side of each mast, for time near a star.",
   "miyamoto-relief": "Miyamoto with the relief pod on its collar: six relief and equipment containers under a gantry, in place of the relay pod.",
   "miyamoto-no-collar": "ISV Miyamoto with the drive's neck bare: the shadow-shield collar swapped for none, to compare the two ways the engines meet the hull.",
   ariake: "ISV 有明 Ariake, SPX-186, \"daybreak\": the sister of ISV Miyamoto in the Romurusu class (ロムルス級), the service ship, with a Super Heavy and a Starship ship on one box's exterior saddles. Status: planned, first flight 2456.",
@@ -23,7 +24,7 @@ const NOTES: Readonly<Record<string, string>> = {
   "miyamoto-cutaway": "Miyamoto opened to starboard: the layers of its armour at the cut edge, the reactor and power rooms, the barrels, both bays, the decks of the habitat and the operations ring of the citadel.",
 };
 
-const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", ariake: "ISV 有明 Ariake, SPX-186", "ariake-empty": "ISV 有明 Ariake, SPX-186, empty mounts", "ariake-berth-keel": "ISV 有明 Ariake, SPX-186, ventral berth", "ariake-berth-port": "ISV 有明 Ariake, SPX-186, port berth", "ariake-cutaway": "ISV 有明 Ariake, SPX-186, cutaway" };
+const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-array": "ISV 宮本 Miyamoto, SPX-452, solar array out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", ariake: "ISV 有明 Ariake, SPX-186", "ariake-empty": "ISV 有明 Ariake, SPX-186, empty mounts", "ariake-berth-keel": "ISV 有明 Ariake, SPX-186, ventral berth", "ariake-berth-port": "ISV 有明 Ariake, SPX-186, port berth", "ariake-cutaway": "ISV 有明 Ariake, SPX-186, cutaway" };
 
 /** What the viewer's panel shows for a variant: the labels of every named section, the specification (with the sister ship's row as a link), and the notes. The other ship is one click away. */
 const inspectorOf = (id: string, slots: Readonly<Record<string, string>>): Inspector => {
