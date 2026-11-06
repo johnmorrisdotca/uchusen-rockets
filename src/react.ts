@@ -33,6 +33,8 @@ export interface UchusenRocketProps extends Omit<HTMLAttributes<HTMLElement>, "s
   engines?: "on" | "off";
   /** "off", "running" or "all". Left out, the lamps are all on. Reduced motion holds a flash steady. */
   lights?: "off" | "running" | "all";
+  /** "off", "show" or "station-keeping". Left out, the jets are off. Reduced motion keeps the nozzles still. */
+  thrusters?: "off" | "show" | "station-keeping";
   /** A phase of the rocket's flight, by its id. */
   phase?: string;
   ref?: Ref<HTMLElement>;
