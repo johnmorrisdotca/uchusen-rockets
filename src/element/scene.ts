@@ -446,7 +446,7 @@ export class RocketViewer {
     this.canvas.addEventListener(
       "pointerdown",
       (event) => {
-        this.canvas.focus({ preventScroll: true });
+        this.canvas.focus(Object.assign({ preventScroll: true }, { focusVisible: false }));
         this.press = { x: event.clientX, y: event.clientY };
         this.grabCraft(event);
       },
