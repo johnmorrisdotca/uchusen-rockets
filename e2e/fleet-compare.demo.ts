@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-const URL = "/uchusen-rockets/fleet-compare.html";
+const URL = "/uchusen-rockets/compare.html?layout=lineup";
+
+test("the old fleet page opens the line-up on the compare page", async ({ page }) => {
+  await page.goto("/uchusen-rockets/fleet-compare.html");
+  await expect(page).toHaveURL(/layout=lineup/);
+  await expect(page.getByTestId("cmp-lineup")).toHaveAttribute("pose", "stand");
+});
 
 test("the three ships stand at one scale, the view stays in the address, and the transport is the long one", async ({ page }) => {
   await page.goto(URL);

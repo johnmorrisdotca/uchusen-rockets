@@ -35,6 +35,14 @@ const NEXT: readonly Craft[] = [
   { rocket: "iss", variant: "iss" },
   { rocket: "space-shuttle", variant: "stack" },
 ];
+if (new URLSearchParams(location.search).get("layout") === "lineup") {
+  document.body.classList.add("fleet-cmp");
+  const wide = document.getElementById("wide");
+  const fold = document.getElementById("lineup-fold");
+  if (wide) wide.hidden = true;
+  if (fold) fold.hidden = false;
+  await import("./fleet-compare.ts");
+} else {
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // A plain drag turns the picture. Move, a second finger, Shift and the other mouse buttons still pan. A drag that starts on a craft throws that craft.
@@ -578,3 +586,4 @@ search.addEventListener("input", () => {
 });
 renderAll();
 document.documentElement.dataset.ready = "true";
+}

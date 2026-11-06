@@ -5,12 +5,14 @@
     <link rel="stylesheet" href="family.css" />
     <link rel="stylesheet" href="demo.css" />
     <link rel="stylesheet" href="compare.css" />
+    <link rel="stylesheet" href="fleet-compare.css" />
   </head>
   <body class="demo compare">
     <main>
       <!--family:header-->
       <section class="cw" id="wide" aria-labelledby="cw-title">
         <h2 id="cw-title" data-say="cmpTitle">Compare craft, side by side</h2>
+        <p><a class="chip" href="compare.html?layout=lineup" data-testid="cw-lineup" data-say="more_compare">Compare to scale</a></p>
         <p data-say="cmpIntro">Choose craft up to what this device can draw. They float at their true sizes, with the Earth behind them. On a phone one craft is on the stage and the rest stay in the line.</p>
         <div class="field">
           <h3 id="cw-craft-title" data-say="cmpCraft">Craft</h3>
@@ -94,6 +96,20 @@
         <p class="earth-credit" id="sky-credit" data-testid="sky-credit" hidden></p>
         <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
         <div class="table-wrap"><table id="cw-table" data-testid="cw-table"></table></div>
+      </section>
+      <section class="cmp" id="lineup-fold" hidden>
+        <h2 id="cmp-title" data-say="more_compare">Compare to scale</h2>
+        <p><a class="chip" href="compare.html" data-testid="cw-side" data-say="cmpTitle">Compare craft, side by side</a></p>
+        <div class="chips" id="cmp-picks" data-testid="cmp-picks" role="group" aria-labelledby="cmp-title"></div>
+        <div class="chips" id="cmp-views" data-testid="cmp-views" role="group" aria-labelledby="cmp-title"></div>
+        <div class="cmp-view" id="cmp-view" data-testid="cmp-view">
+          <uchusen-lineup id="lineup" data-testid="cmp-lineup" pose="stand" filter="fleet" ruler labels look="painted" wide></uchusen-lineup>
+        </div>
+        <p data-testid="cmp-length-source" data-say="lengthSource">Length is the figure in the ship's record.</p>
+        <table class="cmp-facts" data-testid="cmp-facts">
+          <thead id="cmp-head"></thead>
+          <tbody id="cmp-rows"></tbody>
+        </table>
       </section>
       <!--family:unreviewed-->
       <!--family:footer-->

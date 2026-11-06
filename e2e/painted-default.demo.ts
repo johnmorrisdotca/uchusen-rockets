@@ -63,6 +63,7 @@ test("every page opens painted, and a part stays painted", async ({ page }) => {
   for (const href of pages) {
     if (NOT_A_ROCKET.has(href)) continue;
     await page.goto(href === "index.html" ? URL : `${URL}${href}`);
+    if (href === "fleet-compare.html") await page.waitForURL(/layout=lineup/);
     if (href === "poster.html") {
       await expect(page.locator("#look")).toHaveText("Line drawing");
       continue;
