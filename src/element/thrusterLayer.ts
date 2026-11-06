@@ -22,14 +22,14 @@ varying vec3 vLocal;
 void main() {
   vTint = instanceColor;
   vLocal = position;
-  vec4 origin = instanceMatrix * vec4(0.0, position.y, 0.0, 1.0);
-  vec3 axis = normalize((instanceMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
-  vec3 view = normalize(cameraPosition - origin.xyz);
-  vec3 side = cross(axis, view);
-  if (length(side) < 0.001) side = cross(axis, vec3(0.0, 0.0, 1.0));
+  vec3 origin = (instanceMatrix * vec4(0.0, position.y, 0.0, 1.0)).xyz;
+  vec3 view = normalize(cameraPosition - origin);
+  vec3 side = cross(view, vec3(0.0, 1.0, 0.0));
+  if (length(side) < 0.001) side = cross(view, vec3(1.0, 0.0, 0.0));
   side = normalize(side);
+  vec3 lift = normalize(cross(side, view));
   float scale = length((instanceMatrix * vec4(1.0, 0.0, 0.0, 0.0)).xyz);
-  vec3 placed = origin.xyz + side * position.x * scale;
+  vec3 placed = origin + (side * position.x + lift * position.z) * scale;
   gl_Position = projectionMatrix * viewMatrix * vec4(placed, 1.0);
 }
 `;
@@ -40,21 +40,36 @@ varying vec3 vTint;
 varying vec3 vLocal;
 void main() {
   float along = clamp(vLocal.y, 0.0, 1.0);
-  float radius = max(spread * along, 0.02);
-  float radial = clamp(abs(vLocal.x) / radius, 0.0, 1.0);
-  float body = exp(-radial * radial * 1.6) * exp(-along * 2.2);
-  if (body < 0.02) discard;
+  float radius = max(spread * max(along, 0.08), 0.02);
+  float radial = length(vLocal.xz) / radius;
+  float body = exp(-radial * radial * 2.8) * exp(-along * 1.7);
+  if (body < 0.012) discard;
+  body *= 0.28;
   gl_FragColor = vec4(vTint * body, body);
 }
 `;
 
-/** One plane through the jet axis. The vertex shader turns it to face the camera, so the fade has an interior and no hard rim. */
+/** A stack of discs along the jet. Each one faces the camera, and the brightness dies inside the disc, so the mesh edge is never drawn. */
 function plumeGeometry(radians: number): BufferGeometry {
-  const w = Math.tan(radians) * 2.4;
-  const tip = 0.002;
+  const slices = 48;
+  const segments = 32;
+  const width = Math.tan(radians) * 3.2;
+  const positions: number[] = [];
+  const indices: number[] = [];
+  for (let s = 0; s < slices; s++) {
+    const y = (s + 1) / slices;
+    const radius = Math.max(width * y, width * 0.14);
+    const base = s * (segments + 1);
+    positions.push(0, y, 0);
+    for (let i = 0; i < segments; i++) {
+      const angle = (i / segments) * Math.PI * 2;
+      positions.push(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+    }
+    for (let i = 0; i < segments; i++) indices.push(base, base + 1 + i, base + 1 + ((i + 1) % segments));
+  }
   const geo = new BufferGeometry();
-  geo.setAttribute("position", new Float32BufferAttribute([-tip, 0, 0, tip, 0, 0, -w, 1, 0, w, 1, 0], 3));
-  geo.setIndex([0, 2, 1, 1, 2, 3]);
+  geo.setAttribute("position", new Float32BufferAttribute(positions, 3));
+  geo.setIndex(indices);
   return geo;
 }
 
@@ -100,7 +115,7 @@ export class ThrusterLayer {
     this.reduced = reduced;
     this.which.fill(-1);
     for (const one of jets) this.live.push({ at: new Vector3(...one.at), dir: new Vector3(...one.dir).normalize(), fuel: one.fuel, bell: one.bell });
-    const cone = new ConeGeometry(0.45, 1, 8, 1, true);
+    const cone = new ConeGeometry(0.45, 1, 32, 1, true);
     const metal = new MeshStandardMaterial({ color: "#9aa3ab", metalness: 0.65, roughness: 0.4 });
     this.mesh = new InstancedMesh(cone, metal, Math.max(1, this.live.length));
     this.mesh.count = this.live.length;
