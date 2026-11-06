@@ -151,8 +151,8 @@ const paintFrame = (node: Framed, holder: HTMLElement, range: number) => {
   const open = Math.min(1, Math.max(0, Number(node.dataset.open) || 0));
   const side = Math.max(width, height);
   const fullZoom = (0.84 * Math.min(width, height) * ROOM) / side / (saturn ? 2.4 : 1);
-  // Fills the stage height with the lit disc, and on a wide stage leaves the limbs and the rings inside the sides.
-  const opened = 1.9 * (1 - open) + fullZoom * open;
+  // The whole disc and both ring tips sit inside the stage, with room under the south limb. A closer zoom cuts the disc off at the bottom once the craft no longer covers it.
+  const opened = 1.35 * (1 - open) + fullZoom * open;
   const camera = moons ? ORBIT_ZOOM : opened;
   const shrink = moons ? ROOM / Math.max(ROOM, range) : (1 - open);
   const face = node.dataset.face;
