@@ -150,7 +150,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -334,6 +334,7 @@ export class UchusenRocket extends HTMLBase {
     } else if (name === "lights" || name === "thrusters") {
       if (this.viewer) this.lightViewer(this.viewer);
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "off-screen") this.viewer?.setOffScreen(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "edges") this.viewer?.setEdges(after === "open");
     else if (name === "world") this.viewer?.setOrbit(after === "earth");
@@ -542,7 +543,7 @@ export class UchusenRocket extends HTMLBase {
     this.emit("uchusen-flight", this.flightState);
   }
 
-  /** The craft that stand beside it: `beside="on"` is Starship (never beside Starship itself), and a list such as `beside="saturn-v:saturn-v,iss:iss"` is those craft, at most two, each named in the picture. */
+  /** The craft that stand beside it: `beside="on"` is Starship (never beside Starship itself), and a list such as `beside="saturn-v:saturn-v,iss:iss"` is those craft, at most seven, each named in the picture. */
   private besideList(description: Description): Description[] {
     return besideCraft(this.getAttribute("beside"), description.rocket);
   }
@@ -917,6 +918,7 @@ export class UchusenRocket extends HTMLBase {
       this.applyFrame();
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));
+      made.setOffScreen(this.getAttribute("off-screen"));
       made.setFloating(this.hasAttribute("float"));
       made.setEdges(this.getAttribute("edges") === "open");
       made.setNameLabels(this.getAttribute("names") !== "off");

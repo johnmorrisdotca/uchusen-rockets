@@ -1,4 +1,4 @@
-// The wide comparison page: two or three craft chosen from the picker stand on one ground in one 3D view, each at its true size, with the Earth behind them and one set of view controls. What is chosen is kept in the address. A phone shows one craft.
+// The wide comparison page: up to eight craft, chosen from one browser, stand in one 3D view at their true size, with the Earth behind them and one set of view controls. What is chosen is kept in the address. A phone shows one craft on the stage and the rest in the line.
 import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, variantOf, type LookName, type MakerId, type Variant } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
@@ -10,6 +10,8 @@ import { applyTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumb
 import { mountCamera } from "./compare-camera.ts";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
+import { chip, fillLooks } from "./chip.ts";
+import { craftBudget, craftPicture, kindOf, type PickerKind } from "./shipPicker.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -23,17 +25,6 @@ const say = (key: string, values: Record<string, string | number> = {}): string 
   const chooser = (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage;
   return (chooser?.word(key) ?? WORDS.en[key] ?? key).replace(/\{(\w+)\}/g, (all, name: string) => String(values[name] ?? all));
 };
-const chip = (label: string, testid: string, on: () => void, pressed?: boolean): HTMLButtonElement => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "chip";
-  button.textContent = label;
-  button.dataset.testid = testid;
-  if (pressed !== undefined) button.setAttribute("aria-pressed", String(pressed));
-  button.addEventListener("click", on);
-  return button;
-};
-
 type Craft = { rocket: string; variant: string };
 const MOST = BESIDE_MOST + 1;
 /** What a craft added is, in turn: the first of these that is not on screen yet. */
@@ -67,17 +58,25 @@ const known = (rocket: string | null | undefined, variant: string | null | undef
   return found ? { rocket, variant: found.id } : null;
 };
 const first = known(address.get("rocket"), address.get("variant")) ?? { rocket: "starship", variant: "v3" };
-// `with` lists the craft beside the first: absent is Saturn V, `none` is nothing
-const askedWith = new URLSearchParams(location.search).get("with");
+// `with` lists the craft beside the first: absent is Saturn V, `none` is nothing. `craft=0` is an empty stage.
+const asked = new URLSearchParams(location.search);
+const askedWith = asked.get("with");
 const others = (askedWith === null ? "saturn-v:saturn-v" : askedWith).split(",").flatMap((key) => {
   const [rocket, variant] = key.split(":");
   const one = known(rocket, variant);
   return one ? [one] : [];
 });
+const room = () => Math.min(MOST, craftBudget());
 const state = {
-  craft: [first, ...others].slice(0, MOST),
+  craft: asked.get("craft") === "0" ? [] : [first, ...others].slice(0, room()),
   editing: 0,
   maker: ROCKETS[first.rocket].maker as MakerId,
+  kind: kindOf(first.rocket) as PickerKind,
+  query: "",
+  asking: null as number | null,
+  refused: "",
+  chipNames: true,
+  glass: null as number | null,
   look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName,
   background: address.get("background") || "earth",
   moon: address.get("moon") || "",
@@ -133,9 +132,15 @@ function syncEarth() {
 
 // ------------------------------------------------------------- what is chosen
 function keep() {
-  address.set("rocket", state.craft[0].rocket);
-  address.set("variant", state.craft[0].variant);
-  address.set("with", state.craft.slice(1).map((craft) => `${craft.rocket}:${craft.variant}`).join(",") || "none");
+  if (state.craft.length === 0) {
+    address.set("craft", "0");
+    address.set("with", "none");
+  } else {
+    address.set("craft", null);
+    address.set("rocket", state.craft[0].rocket);
+    address.set("variant", state.craft[0].variant);
+    address.set("with", state.craft.slice(1).map((craft) => `${craft.rocket}:${craft.variant}`).join(",") || "none");
+  }
   address.set("look", state.look);
   address.set("background", state.background);
   address.set("moon", state.moon);
@@ -143,36 +148,161 @@ function keep() {
   address.set("labels", state.labels ? "on" : "off");
 }
 
+function magnifierIcon(): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", "6.5");
+  circle.setAttribute("cy", "6.5");
+  circle.setAttribute("r", "4");
+  const handle = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  handle.setAttribute("x1", "9.6");
+  handle.setAttribute("y1", "9.6");
+  handle.setAttribute("x2", "13.5");
+  handle.setAttribute("y2", "13.5");
+  svg.append(circle, handle);
+  return svg;
+}
+
 function renderCraft() {
   const row = byId("cw-craft");
+  const limit = room();
   const chips: HTMLElement[] = [];
-  for (const [index, craft] of shown().entries()) {
+  for (const [index, craft] of state.craft.entries()) {
     const name = variantFor(craft).name;
     const group = document.createElement("span");
     group.className = "cw-craft-chip";
-    group.append(chip(`${index + 1}. ${name}`, `cw-craft-${index}`, () => edit(index), index === state.editing));
-    if (shown().length > 1) {
-      const remove = chip("×", `cw-remove-${index}`, () => remove_(index));
-      remove.classList.add("cw-remove");
-      remove.setAttribute("aria-label", say("cmpRemove", { name }));
-      group.append(remove);
-    }
+    group.dataset.testid = `cw-craft-${index}`;
+    group.tabIndex = 0;
+    const frame = document.createElement("span");
+    frame.className = "cw-pic";
+    frame.append(craftPicture(craft.rocket, craft.variant));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "cw-remove";
+    remove.dataset.testid = `cw-remove-${index}`;
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", say("cmpRemove", { name }));
+    remove.addEventListener("click", () => askRemove(index));
+    const glass = document.createElement("button");
+    glass.type = "button";
+    glass.className = "cw-magnify";
+    glass.dataset.testid = `cw-glass-${index}`;
+    glass.setAttribute("aria-label", say("cmpGlass"));
+    glass.setAttribute("aria-pressed", String(state.glass === index));
+    glass.append(magnifierIcon());
+    glass.addEventListener("click", () => {
+      state.glass = state.glass === index ? null : index;
+      renderGlass();
+      renderCraft();
+    });
+    frame.append(remove, glass);
+    group.append(frame);
+    const label = document.createElement("button");
+    label.type = "button";
+    label.className = "chip";
+    label.textContent = `${index + 1}. ${name}`;
+    label.hidden = !state.chipNames;
+    label.setAttribute("aria-pressed", String(index === state.editing));
+    label.addEventListener("click", () => edit(index));
+    group.append(label);
+    group.addEventListener("keydown", (event) => {
+      if (event.key === "Delete") askRemove(index);
+    });
     chips.push(group);
   }
-  if (!phone.matches && state.craft.length < MOST) chips.push(chip(say("cmpAdd"), "cw-add", add));
   row.replaceChildren(...chips);
+  const scroll = row.parentElement;
+  if (scroll) scroll.classList.toggle("is-overflowing", row.scrollWidth > row.clientWidth + 1);
+  const tools = byId("cw-craft-tools");
+  const count = document.createElement("p");
+  count.dataset.testid = "cw-count";
+  count.textContent = say("cmpCount", { n: state.craft.length, limit });
+  const extras: HTMLElement[] = [count];
+  if (state.craft.length < limit) extras.push(chip(say("cmpAdd"), "cw-add", add));
+  tools.replaceChildren(...extras);
+  const note = byId("cw-budget");
+  note.hidden = !state.refused;
+  note.textContent = state.refused ?? "";
+  const ask = byId("cw-ask");
+  const pending = state.asking === null ? undefined : state.craft[state.asking];
+  ask.hidden = !pending;
+  ask.replaceChildren();
+  if (pending && state.asking !== null) {
+    const name = variantFor(pending).name;
+    const actions = document.createElement("span");
+    actions.className = "cw-ask-actions";
+    actions.append(chip(say("cmpYes"), "cw-remove-yes", confirmRemove), chip(say("cmpNo"), "cw-remove-no", cancelRemove));
+    ask.append(document.createTextNode(say("cmpAsk", { name })), actions);
+    const anchor = row.querySelector(`[data-testid="cw-craft-${state.asking}"] .cw-pic`);
+    if (anchor) {
+      const rect = anchor.getBoundingClientRect();
+      ask.style.left = `${Math.max(8, Math.round(rect.left))}px`;
+      ask.style.top = `${Math.round(rect.bottom + 6)}px`;
+    }
+  }
+  byId("cw-chip-look").replaceChildren(
+    chip(say("cmpNamed"), "cw-named", () => {
+      state.chipNames = true;
+      renderCraft();
+    }, state.chipNames),
+    chip(say("cmpPicture"), "cw-picture", () => {
+      state.chipNames = false;
+      renderCraft();
+    }, !state.chipNames),
+  );
+  renderGlass();
+}
+
+function renderGlass() {
+  const box = byId("cw-glass");
+  const craft = state.glass === null ? undefined : state.craft[state.glass];
+  box.hidden = !craft;
+  box.replaceChildren();
+  if (!craft) return;
+  box.append(craftPicture(craft.rocket, craft.variant));
+  const note = document.createElement("p");
+  const variant = variantFor(craft);
+  const height = isFleetVariant(variant) ? Math.round(fleetSize(variant).length) : variant.facts.height.value;
+  note.textContent = typeof height === "number" ? `${variant.name}, ${height.toLocaleString("en-US")} m` : variant.name;
+  box.append(note);
 }
 
 function renderPickers() {
-  const editing = state.craft[Math.min(state.editing, state.craft.length - 1)];
-  const makers = (Object.keys(MAKERS) as MakerId[]).filter((maker) => Object.values(ROCKETS).some((rocket) => rocket.maker === maker && isListed(rocket.id)));
-  byId("makers").replaceChildren(...makers.map((maker) => chip(say(`maker_${maker}`), `maker-${maker}`, () => pickMaker(maker), maker === state.maker)));
-  byId("rockets").replaceChildren(
-    ...Object.values(ROCKETS)
-      .filter((rocket) => rocket.maker === state.maker && isListed(rocket.id))
-      .map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pickRocket(rocket.id), rocket.id === editing.rocket)),
+  const editing = state.craft[state.editing];
+  const listed = Object.values(ROCKETS).filter((rocket) => isListed(rocket.id));
+  const kinds: PickerKind[] = ["rocket", "station", "fleet"];
+  byId("kinds").replaceChildren(
+    ...kinds.map((kind) => chip(say(kind === "rocket" ? "cmpKindRocket" : kind === "station" ? "cmpKindStation" : "cmpKindFleet"), `kind-${kind}`, () => pickKind(kind), kind === state.kind)),
   );
-  byId("variants").replaceChildren(...ROCKETS[editing.rocket].variants.map((one) => chip(one.name, `variant-${one.id}`, () => pickVariant(one.id), one.id === editing.variant)));
+  const makers = (Object.keys(MAKERS) as MakerId[]).filter((maker) => listed.some((rocket) => rocket.maker === maker && kindOf(rocket.id) === state.kind));
+  byId("makers").replaceChildren(...makers.map((maker) => chip(say(`maker_${maker}`), `maker-${maker}`, () => pickMaker(maker), maker === state.maker)));
+  const query = state.query.trim().toLowerCase();
+  const rockets = listed.filter((rocket) => rocket.maker === state.maker && kindOf(rocket.id) === state.kind && (query === "" || rocket.name.toLowerCase().includes(query)));
+  byId("rockets").replaceChildren(
+    ...rockets.map((rocket) => {
+      const button = chip(rocket.name, `rocket-${rocket.id}`, () => toggleRocket(rocket.id), state.craft.some((craft) => craft.rocket === rocket.id));
+      button.prepend(craftPicture(rocket.id, rocket.defaultVariant));
+      return button;
+    }),
+  );
+  const facts = byId("cw-facts");
+  facts.replaceChildren();
+  if (editing) {
+    const variant = variantFor(editing);
+    const height = isFleetVariant(variant) ? Math.round(fleetSize(variant).length) : variant.facts.height.value;
+    const name = document.createElement("p");
+    name.textContent = variant.name;
+    const size = document.createElement("p");
+    size.textContent = typeof height === "number" ? `${height.toLocaleString("en-US")} m` : say("noSource");
+    const made = document.createElement("p");
+    made.textContent = ROCKETS[editing.rocket].madeBy.value ?? "";
+    facts.append(name, size, made);
+  }
+  byId("variants").replaceChildren(
+    ...(editing ? ROCKETS[editing.rocket].variants.map((one) => chip(one.name, `variant-${one.id}`, () => pickVariant(one.id), one.id === editing.variant)) : []),
+  );
   byId("places").replaceChildren(
     chip(say("cmpFloat"), "place-float", () => pickPlace("float"), state.place === "float"),
     chip(say("cmpGround"), "place-ground", () => pickPlace("ground"), state.place === "ground"),
@@ -181,7 +311,7 @@ function renderPickers() {
     chip(say("cmpLabelsOn"), "labels-on", () => pickLabels(true), state.labels),
     chip(say("cmpLabelsOff"), "labels-off", () => pickLabels(false), !state.labels),
   );
-  byId("looks").replaceChildren(...LOOK_NAMES.map((look) => chip(say(`look_${look}`), `look-${look}`, () => pickLook(look), look === state.look)));
+  fillLooks(byId("looks"), state.look, (look) => pickLook(look as LookName));
   drawSky();
 }
 
@@ -242,7 +372,7 @@ function renderTable() {
     th.textContent = text;
     head.append(th);
   }
-  const rows = shown().map((craft) => {
+  const rows = state.craft.map((craft) => {
     const variant = variantFor(craft);
     const tr = document.createElement("tr");
     tr.dataset.craft = `${craft.rocket}:${craft.variant}`;
@@ -267,6 +397,7 @@ function renderTable() {
 
 /** The view controls tip as far as the first craft allows. */
 function limitTilt() {
+  if (!state.craft[0]) return;
   const max = variantFor(state.craft[0]).view?.tiltMax ?? 45;
   if (bar.getAttribute("tilt-max") !== String(max)) bar.setAttribute("tilt-max", String(max));
   if (Math.abs(bar.state.tilt) > max) bar.set({ tilt: Math.sign(bar.state.tilt) * max });
@@ -275,6 +406,14 @@ function limitTilt() {
 let framed = "";
 function renderStage() {
   const list = shown();
+  const empty = byId("cw-empty");
+  if (list.length === 0) {
+    hero.hidden = true;
+    empty.hidden = false;
+    return;
+  }
+  hero.hidden = false;
+  empty.hidden = true;
   const [one, ...rest] = list;
   limitTilt();
   hero.setAttribute("rocket", one.rocket);
@@ -287,6 +426,7 @@ function renderStage() {
   if (state.labels) hero.removeAttribute("names");
   else hero.setAttribute("names", "off");
   hero.setAttribute("scale-note", say("cmpPlinth"));
+  hero.setAttribute("off-screen", say("cmpOffScreen"));
   // the whole row is in the picture whenever it changes
   const now = list.map((craft) => `${craft.rocket}:${craft.variant}`).join(",");
   if (now !== framed) {
@@ -308,38 +448,80 @@ function renderAll() {
 // ------------------------------------------------------------- the choices
 function edit(index: number) {
   state.editing = index;
-  state.maker = ROCKETS[state.craft[index].rocket].maker;
+  const craft = state.craft[index];
+  if (!craft) return;
+  state.maker = ROCKETS[craft.rocket].maker;
+  state.kind = kindOf(craft.rocket);
   renderAll();
 }
-function remove_(index: number) {
-  if (state.craft.length < 2) return;
+function askRemove(index: number) {
+  state.asking = index;
+  renderCraft();
+}
+function cancelRemove() {
+  state.asking = null;
+  renderCraft();
+}
+function confirmRemove() {
+  const index = state.asking;
+  if (index === null) return;
+  state.asking = null;
   state.craft.splice(index, 1);
-  state.editing = Math.min(state.editing, state.craft.length - 1);
-  state.maker = ROCKETS[state.craft[state.editing].rocket].maker;
+  state.editing = Math.max(0, Math.min(state.editing, state.craft.length - 1));
+  state.glass = null;
+  const left = state.craft[state.editing];
+  if (left) {
+    state.maker = ROCKETS[left.rocket].maker;
+    state.kind = kindOf(left.rocket);
+  }
   renderAll();
 }
 function add() {
-  if (state.craft.length >= MOST) return;
+  if (state.craft.length >= room()) {
+    state.refused = say("cmpBudget", { limit: room() });
+    renderCraft();
+    return;
+  }
+  state.refused = "";
   const taken = new Set(state.craft.map((craft) => `${craft.rocket}:${craft.variant}`));
   const next = NEXT.find((craft) => !taken.has(`${craft.rocket}:${craft.variant}`)) ?? NEXT[0];
   state.craft.push({ ...next });
   state.editing = state.craft.length - 1;
   state.maker = ROCKETS[next.rocket].maker;
+  state.kind = kindOf(next.rocket);
   renderAll();
+}
+function pickKind(kind: PickerKind) {
+  state.kind = kind;
+  const makers = (Object.keys(MAKERS) as MakerId[]).filter((maker) => Object.values(ROCKETS).some((rocket) => rocket.maker === maker && isListed(rocket.id) && kindOf(rocket.id) === kind));
+  if (!makers.includes(state.maker) && makers[0]) state.maker = makers[0];
+  renderPickers();
 }
 function pickMaker(maker: MakerId) {
   state.maker = maker;
-  const theirs = Object.values(ROCKETS).filter((rocket) => rocket.maker === maker && isListed(rocket.id));
-  if (theirs.length === 1 && state.craft[state.editing].rocket !== theirs[0].id) return pickRocket(theirs[0].id);
+  const theirs = Object.values(ROCKETS).filter((rocket) => rocket.maker === maker && isListed(rocket.id) && kindOf(rocket.id) === state.kind);
+  if (theirs.length === 1) return toggleRocket(theirs[0].id);
   renderPickers();
 }
-function pickRocket(id: string) {
-  state.craft[state.editing] = { rocket: id, variant: ROCKETS[id].defaultVariant };
+function toggleRocket(id: string) {
+  const at = state.craft.findIndex((craft) => craft.rocket === id);
+  if (at >= 0) return askRemove(at);
+  if (state.craft.length >= room()) {
+    state.refused = say("cmpBudget", { limit: room() });
+    renderCraft();
+    return;
+  }
+  state.refused = "";
+  state.craft.push({ rocket: id, variant: ROCKETS[id].defaultVariant });
+  state.editing = state.craft.length - 1;
   state.maker = ROCKETS[id].maker;
+  state.kind = kindOf(id);
   renderAll();
 }
 function pickVariant(id: string) {
-  state.craft[state.editing] = { rocket: state.craft[state.editing].rocket, variant: id };
+  const craft = state.craft[state.editing];
+  if (!craft) return;
+  state.craft[state.editing] = { rocket: craft.rocket, variant: id };
   renderAll();
 }
 function pickPlace(place: "ground" | "float") {
@@ -376,5 +558,23 @@ mountCamera({
 });
 phone.addEventListener("change", renderAll);
 document.addEventListener("kazoku-languagechange", () => queueMicrotask(renderAll));
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && state.asking !== null) cancelRemove();
+});
+byId("cw-craft").parentElement?.addEventListener("scroll", () => {
+  if (state.asking === null) return;
+  const anchor = document.querySelector(`[data-testid="cw-craft-${state.asking}"] .cw-pic`);
+  const ask = byId("cw-ask");
+  if (!anchor || ask.hidden) return;
+  const rect = anchor.getBoundingClientRect();
+  ask.style.left = `${Math.max(8, Math.round(rect.left))}px`;
+  ask.style.top = `${Math.round(rect.bottom + 6)}px`;
+});
+const search = byId<HTMLInputElement>("cw-search");
+search.placeholder = say("cmpSearch");
+search.addEventListener("input", () => {
+  state.query = search.value;
+  renderPickers();
+});
 renderAll();
 document.documentElement.dataset.ready = "true";
