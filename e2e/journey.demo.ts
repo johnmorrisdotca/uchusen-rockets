@@ -385,12 +385,14 @@ test("perceived size is the default and the destination grows through the trip; 
   expect(page.url()).not.toContain("size=");
   const span = () => page.getByTestId("dest").getAttribute("data-span").then((value) => Number(value));
   const start = await span();
+  expect(start).toBeLessThan(0.08);
   await page.getByTestId("scrub").fill("400");
   const mid = await span();
   await page.getByTestId("scrub").fill("1000");
   const end = await span();
   expect(mid).toBeGreaterThan(start);
   expect(end).toBeGreaterThan(mid);
+  expect(end).toBeGreaterThan(0.5);
   await page.getByTestId("size-true").click();
   expect(page.url()).toContain("size=true");
   await expect(page.getByTestId("size-true")).toHaveAttribute("aria-pressed", "true");
@@ -403,7 +405,7 @@ test("Painted draws a painted planet and the craft's painted model", async ({ pa
   await expect(planet).toHaveAttribute("body", "mars");
   await expect(planet).toHaveAttribute("look", "painted");
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
-  await expect(page.getByTestId("from").locator("wakusei-body")).toHaveAttribute("look", "painted");
+  await expect(page.getByTestId("from").locator("chikyu-earth-realistic")).toBeVisible();
 });
 
 test("the arrival card closes by the cross, Escape and a click outside, and Summary opens it again", async ({ page }) => {
@@ -427,6 +429,8 @@ test("the arrival card closes by the cross, Escape and a click outside, and Summ
 test("a trip that cannot start says why on the stage and on Play, and can leave from the Earth", async ({ page }) => {
   await page.goto(`${URL}&from=uranus&to=saturn&craft=falcon-heavy`);
   await expect(page.getByTestId("blocked")).toBeVisible();
+  await expect(page.getByTestId("blocked-title")).toHaveText("NO TRIP");
+  await expect(page.getByTestId("phase")).toHaveText("");
   await expect(page.getByTestId("blocked-why")).toContainText("leave from the Earth or the Moon");
   await expect(page.getByTestId("play")).toBeDisabled();
   await expect(page.getByTestId("play")).toHaveAttribute("title", /leave from the Earth or the Moon/);

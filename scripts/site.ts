@@ -30,6 +30,10 @@ cpSync(join(root, "dist", "assets"), join(site, "assets"), { recursive: true });
 const earthPictures = join(root, "node_modules", "@johnmorrisdotca", "chikyu-earth", "dist", "textures");
 mkdirSync(join(site, "textures"));
 for (const file of readdirSync(earthPictures)) if (/-(1024|2048)\.webp$/.test(file)) cpSync(join(earthPictures, file), join(site, "textures", file));
+// The planets' painted maps, from the package, so a journey still is the map and not a shaded ball when the picture host is out of reach.
+const planetPictures = join(root, "node_modules", "@johnmorrisdotca", "wakusei-planets", "dist", "textures");
+mkdirSync(join(site, "bodies"));
+for (const file of readdirSync(planetPictures)) if (file.endsWith(".webp")) cpSync(join(planetPictures, file), join(site, "bodies", file));
 await build({
   entryPoints: { demo: join(root, "demo", "demo.ts"), embed: join(root, "demo", "embed.ts"), journey: join(root, "demo", "journey.ts"), compare: join(root, "demo", "compare.ts"), poster: join(root, "demo", "poster-page.ts"), beam: join(root, "demo", "beam-page.ts"), swarm: join(root, "demo", "swarm-page.ts"), "fleet-db": join(root, "demo", "fleet-db.ts"), "fleet-compare": join(root, "demo", "fleet-compare.ts"), builder: join(root, "demo", "builder.ts"), yard: join(root, "demo", "yard.ts"), "react-check": join(root, "demo", "react-check.ts"), "element-check": join(root, "demo", "element-check.ts") },
   outdir: join(site, "js"),

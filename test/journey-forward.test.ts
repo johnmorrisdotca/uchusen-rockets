@@ -20,23 +20,24 @@ test("the destination is a point at departure and fills the view at arrival", ()
   assert.equal(destinationGrow(3), 1);
 });
 
-test("perceived size is a disc far away and fills the view up close, growing as the distance falls", () => {
+test("perceived size is a small disc far away and fills the view only up close", () => {
   const far = perceivedSpan(1e8, 1e8, 6371);
   const mid = perceivedSpan(1e6, 1e8, 6371);
   const near = perceivedSpan(6371, 1e8, 6371);
-  assert.ok(far > 0.1 && far < 0.2, String(far));
+  assert.ok(far > 0.03 && far < 0.06, String(far));
   assert.ok(mid > far && mid < near, `${mid} between ${far} and ${near}`);
-  assert.ok(near > 0.9, String(near));
+  assert.ok(near > 0.85, String(near));
   const leaving = perceivedSpan(1e6, 1e8, 6371);
   const gone = perceivedSpan(1e8, 1e8, 6371);
   assert.ok(gone < leaving, `${gone} should be under ${leaving}`);
 });
 
-test("the destination's perceived size grows through the whole trip", () => {
+test("a progress-only perceived size starts small and fills the view at the end", () => {
   const steps = [0, 0.1, 0.25, 0.5, 0.75, 1].map((t) => perceivedAlong(t));
-  assert.ok(steps[0]! > 0.1 && steps[0]! < 0.2, String(steps[0]));
+  assert.ok(steps[0]! > 0.03 && steps[0]! < 0.06, String(steps[0]));
+  assert.ok(steps[2]! < 0.12, String(steps[2]));
   for (let i = 1; i < steps.length; i += 1) assert.ok(steps[i]! > steps[i - 1]!, `${steps[i]} after ${steps[i - 1]}`);
-  assert.ok(steps[5]! > 0.9, String(steps[5]));
+  assert.ok(steps[5]! > 0.85, String(steps[5]));
 });
 
 test("a body fills the view on the ground and stays a dot when it is far", () => {
