@@ -204,7 +204,8 @@ export function assemblyOf(step: PlayStep, day: number, spanMetres: number): Par
   const small = spanMetres <= SHOP_LIMIT_M;
   if (now.phase === "bring") return { slot: step.slot, grown: small ? 1 : 0.04 + 0.08 * now.along, carried: small, phase: "bring" };
   if (small) return { slot: step.slot, grown: 1, carried: false, phase: now.phase };
-  const grown = now.phase === "join" ? 0.15 + 0.4 * now.along : now.phase === "outfit" ? 0.55 + 0.4 * now.along : 1;
+  // inspect keeps the last of the fit-out growing, so plants finish around the ring before the step is done
+  const grown = now.phase === "join" ? 0.15 + 0.4 * now.along : now.phase === "outfit" ? 0.55 + 0.4 * now.along : 0.95 + 0.05 * now.along;
   return { slot: step.slot, grown, carried: false, phase: now.phase };
 }
 

@@ -856,10 +856,12 @@ export class RocketViewer {
     for (const part of this.parts) {
       for (const move of part.moves) {
         const motion = this.motionOn ? this.motions.find((one) => one.group === move.name) : undefined;
-        const held = this.progressAt === null ? [] : this.parts.filter((one) => one.holder.visible && one.moves.some((item) => item.name === move.name) && typeof one.holder.userData.arcSpin === "number").map((one) => one.holder.userData.arcSpin as number);
-        const turned = spinUp(held);
-        const angle = turned === null ? (motion ? angleAt(motion, seconds, this.motionSpeed) : 0) : turned;
-        if (motion && shown === undefined) shown = angle;
+        const own = this.progressAt !== null && typeof part.holder.userData.arcSpin === "number" ? part.holder.userData.arcSpin : null;
+        const turned = this.progressAt === null ? null : spinUp(own);
+        // a ring still being built stays at its own angle, so an open arc does not swing with a sibling that has already spun up
+        const angle = turned !== null ? turned : this.progressAt !== null ? 0 : (motion ? angleAt(motion, seconds, this.motionSpeed) : 0);
+        if (typeof own === "number" && own > 0 && (shown === undefined || own > shown)) shown = own;
+        else if (motion && shown === undefined) shown = angle;
         if (Math.abs(angle - move.angle) < 0.005) continue;
         move.angle = angle;
         move.group.quaternion.setFromAxisAngle(move.axis, MathUtils.degToRad(angle));
@@ -1598,7 +1600,9 @@ export class RocketViewer {
       delete this.canvas.dataset.showing;
       delete this.canvas.dataset.weld;
       delete this.canvas.dataset.fitout;
+      delete this.canvas.dataset.ringSpin;
       delete this.canvas.dataset.swarmNear;
+      this.stepMotion(performance.now(), true);
       if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
       this.applyLeave();
@@ -1635,10 +1639,12 @@ export class RocketViewer {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         growPart(part.holder, fit.grown, ring);
         const along = ring ? inspectAlong(step, frame.day) : null;
-        if (ring) part.holder.userData.arcSpin = along === null ? 0 : along * 360;
+        // the plants finish while the ring is still; spin-up is the last part of the inspection
+        const spinning = along !== null && along >= 0.7;
+        if (ring) part.holder.userData.arcSpin = spinning ? ((along - 0.7) / 0.3) * 360 : 0;
         if (ring) {
           fitTanks(part.holder, fit.grown);
-          const stage = along === null ? fitoutOf(fit.grown) : "spin";
+          const stage = spinning ? "spin" : fitoutOf(fit.grown);
           if (stage) fitout.push({ grown: fit.grown, stage, slot: step.slot });
         }
         const openRing = ring && fit.grown < 0.995;
@@ -1714,6 +1720,12 @@ export class RocketViewer {
       .join(" ");
     this.canvas.dataset.built = frame.done.filter((slot) => grounded(slot, frame.done)).join(" ");
     this.canvas.dataset.showing = this.parts.filter((part) => !part.beside && part.holder.visible).map((part) => part.slot).join(" ");
+    this.canvas.dataset.ringSpin = this.parts
+      .filter((part) => typeof part.holder.userData.arcSpin === "number")
+      .map((part) => `${part.slot}:${Number(part.holder.userData.arcSpin).toFixed(1)}`)
+      .join(" ");
+    // motion may be off: the ring still has to take its own angle, or the spin-up stays at 0
+    this.stepMotion(performance.now(), true);
     if (!this.progressFramed) {
       this.progressFramed = true;
       this.setAngle({ az: this.homeAngle.az, el: -4 }, false);

@@ -168,9 +168,9 @@ test("a ring piece is cut where it stands, so a moved mesh is not kept whole", (
   house.name = "hull-white";
   house.position.set(8, 0, 48);
   holder.add(crop, house);
-  assert.equal(spinUp([]), null);
-  assert.equal(spinUp([0, 40]), 0);
-  assert.equal(spinUp([36, 80]), 36);
+  assert.equal(spinUp(null), null);
+  assert.equal(spinUp(0), 0);
+  assert.equal(spinUp(36), 36);
   growPart(holder, 0.1, true);
   assert.ok((spoke.geometry.getIndex()?.count ?? 0) > 0);
   assert.equal(hall.geometry.getIndex()?.count ?? 0, 0);

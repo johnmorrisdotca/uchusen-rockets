@@ -16,12 +16,20 @@ const DECK = new Set(["concrete", "deck"]);
 const PLANTS = new Set(["plant", "leaf", "soil", "flower", "shrub", "lawn", "lawn-dark", "meadow", "bark", "ground", "crop-green", "crop-gold", "water", "water-clear"]);
 const FURNISH = 0.928;
 
-/** Bare frames until the ring is pressurised, then decks, then furnishings, and plants last. A colour that is not the shell waits with the furnishings. */
-function due(name: string, grown: number): boolean {
-  if (SHELL.has(name)) return true;
-  if (PLANTS.has(name)) return grown >= 0.942;
-  if (DECK.has(name)) return grown >= 0.915;
-  return grown >= FURNISH;
+/** How far a late layer has opened, as the same 0.2-to-0.8 arc the shell uses, or null while it is still waiting. Each layer opens around the ring instead of appearing everywhere at once. */
+function sweep(grown: number, from: number, to: number): number | null {
+  if (grown < from) return null;
+  const t = Math.min(1, (grown - from) / (to - from));
+  return RIM_FROM + t * (RIM_DONE - RIM_FROM);
+}
+
+/** The shell follows `grown`. Decks, furnishings and plants each open as their own arc once the shell has closed. */
+function layerGrown(name: string, grown: number, room: boolean): number | null {
+  if (room) return sweep(grown, FURNISH, 0.955);
+  if (SHELL.has(name)) return grown;
+  if (PLANTS.has(name)) return sweep(grown, 0.942, 0.985);
+  if (DECK.has(name)) return sweep(grown, 0.915, 0.94);
+  return sweep(grown, FURNISH, 0.955);
 }
 
 /** The build bar's state while a ring is past its shell and the plants are not yet in. */
@@ -33,12 +41,11 @@ export function fitoutOf(grown: number): "" | "sealed" | "air" | "pressure" {
 }
 
 /**
- * Degrees to hold a bearing at while a build is on. 0 while any ring on it is still being built. Null when none is, and the ship's own spin takes over.
- * @param held Each ring's angle. Empty once every ring on the bearing is finished.
+ * The angle one ring is held at while a build is on. Null when this ring is not being held, and the ship's own spin may take over. 0 while its arc is still being built. The number after that is its own spin-up, once the plants are in, and a sibling still at 0 does not pull it back.
+ * @param held This ring's angle, or null when the build is not holding it.
  */
-export function spinUp(held: readonly number[]): number | null {
-  if (held.length === 0) return null;
-  return Math.min(...held);
+export function spinUp(held: number | null): number | null {
+  return held;
 }
 
 /** The spoke a point stands on, or null when it is out in the tube. The angle is the spoke's, so two ends of one lift match. */
@@ -197,7 +204,6 @@ export function growPart(holder: Group, grown: number, ring: boolean): void {
   }
   holder.scale.setScalar(1);
   const major = majorOf(holder);
-  const bucket = Math.round(grown * 32);
   holder.updateWorldMatrix(true, true);
   intoHolder.copy(holder.matrixWorld).invert();
   let kept = 0;
@@ -206,18 +212,20 @@ export function growPart(holder: Group, grown: number, ring: boolean): void {
     if (!(child instanceof Mesh) || child.name === "fit-tank") return;
     meshToHolder.copy(intoHolder).multiply(child.matrixWorld);
     const room = child.name !== "outline" && roomOf(child, meshToHolder, major);
-    if (child.name !== "outline" && (room ? grown < FURNISH : !due(child.name, grown))) {
+    const layer = child.name === "outline" ? grown : layerGrown(child.name, grown, room);
+    if (layer === null) {
       child.visible = false;
       return;
     }
     if (child.name !== "outline") child.visible = true;
     const source = sourceOf.get(child) ?? child.geometry;
     full += source.getIndex()?.count ?? source.getAttribute("position")?.count ?? 0;
-    if (child.userData.arcBucket !== bucket) {
+    const mark = Math.round(layer * 64);
+    if (child.userData.arcBucket !== mark) {
       sourceOf.set(child, source);
       if (child.geometry !== source) child.geometry.dispose();
-      child.geometry = wedgeOf(source, meshToHolder, major, grown, !room);
-      child.userData.arcBucket = bucket;
+      child.geometry = wedgeOf(source, meshToHolder, major, layer, !room && (child.name === "outline" || SHELL.has(child.name)));
+      child.userData.arcBucket = mark;
     }
     kept += child.geometry.getIndex()?.count ?? 0;
   });
