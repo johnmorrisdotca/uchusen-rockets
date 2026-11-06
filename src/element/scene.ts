@@ -379,6 +379,10 @@ export class RocketViewer {
   /** The fit distance, kept while a zoom pulls the camera out to a planet. The page still reads this as the fit. */
   private orbitFit = 0;
   private moonSpot = new Vector3();
+  /** The Moon mesh, kept once the globe is in, so a frame does not walk the whole ship to find it. */
+  private moonNode: Object3D | null = null;
+  /** One corner, reused. A frame that projects a box used to allocate eight vectors, and the fleet walk draws a frame for every module. */
+  private readonly corner = new Vector3();
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
     this.holder = holder;
@@ -520,6 +524,7 @@ export class RocketViewer {
       });
       world.group.visible = this.orbitOn;
       this.scene.add(world.group);
+      this.moonNode = world.group.getObjectByName("moon") ?? null;
       this.orbitGone = world.dispose;
       this.canvas.dataset.globe = this.orbitOn ? "earth" : "off";
       this.wake();
@@ -960,9 +965,11 @@ export class RocketViewer {
     const seconds = (now - this.motionT0) / 1000;
     let changed = false;
     let shown: number | undefined;
+    const byGroup = new Map<string, (typeof this.motions)[number]>();
+    if (this.motionOn) for (const motion of this.motions) if (!byGroup.has(motion.group)) byGroup.set(motion.group, motion);
     for (const part of this.parts) {
       for (const move of part.moves) {
-        const motion = this.motionOn ? this.motions.find((one) => one.group === move.name) : undefined;
+        const motion = this.motionOn ? byGroup.get(move.name) : undefined;
         const own = this.progressAt !== null && typeof part.holder.userData.arcSpin === "number" ? part.holder.userData.arcSpin : null;
         const turned = this.progressAt === null ? null : spinUp(own);
         // a ring still being built stays at its own angle, so an open arc does not swing with a sibling that has already spun up
@@ -1282,12 +1289,14 @@ export class RocketViewer {
   private flightParts() {
     const built = this.built as Built;
     const places = built.placesOf("together");
+    const at = new Map<string, readonly [number, number, number]>();
+    for (const place of places) if (!at.has(place.slot)) at.set(place.slot, place.at);
     const height = built.boundsOf("together").max[1];
     return {
       height,
       parts: built.parts.map((part) => {
-        const at = places.find((place) => place.slot === part.slot)?.at ?? [0, 0, 0];
-        return { slot: part.slot, baseY: at[1], height: part.record.height, radius: Math.max(part.record.diameter / 2, Math.abs(at[0]) + part.record.diameter / 2) };
+        const base = at.get(part.slot) ?? [0, 0, 0];
+        return { slot: part.slot, baseY: base[1], height: part.record.height, radius: Math.max(part.record.diameter / 2, Math.abs(base[0]) + part.record.diameter / 2) };
       }),
     };
   }
@@ -1299,12 +1308,16 @@ export class RocketViewer {
     const { height, parts } = this.flightParts();
     const frame: FlightFrame = frameAt(clock.flight, clock.position, parts, height);
     const places = this.built.placesOf("together");
+    const placeAt = new Map<string, (typeof places)[number]>();
+    for (const place of places) if (!placeAt.has(place.slot)) placeAt.set(place.slot, place);
+    const heightAt = new Map<string, number>();
+    for (const part of parts) if (!heightAt.has(part.slot)) heightAt.set(part.slot, part.height);
     for (const part of this.parts) {
       const pose = frame.poses[part.slot];
-      const place = places.find((one) => one.slot === part.slot);
+      const place = placeAt.get(part.slot);
       if (!pose || !place) continue;
       const turn = MathUtils.degToRad(pose.pitch);
-      const middle = (parts.find((one) => one.slot === part.slot)?.height ?? 0) / 2;
+      const middle = (heightAt.get(part.slot) ?? 0) / 2;
       for (const move of part.moves) {
         const angle = pose.moves[move.name] ?? 0;
         if (angle === move.angle) continue;
@@ -1989,6 +2002,7 @@ export class RocketViewer {
     this.disposed = true;
     this.orbitGone?.();
     this.orbitGone = null;
+    this.moonNode = null;
     cancelAnimationFrame(this.frame);
     document.removeEventListener("visibilitychange", this.onVisibility);
     this.canvas.removeEventListener("wheel", this.onWheel);
@@ -2317,7 +2331,7 @@ export class RocketViewer {
       for (const x of [box.min[0], box.max[0]]) {
         for (const y of [box.min[1], box.max[1]]) {
           for (const z of [box.min[2], box.max[2]]) {
-            const point = new Vector3(x, y, z).project(this.camera);
+            const point = this.corner.set(x, y, z).project(this.camera);
             const sx = ((point.x + 1) / 2) * this.canvas.clientWidth;
             const sy = ((1 - point.y) / 2) * this.canvas.clientHeight;
             minX = Math.min(minX, sx);
@@ -2334,14 +2348,17 @@ export class RocketViewer {
     return shortest < limit;
   }
 
-  /** The box each visible craft fills, in metres. */
+  /** The box each visible craft fills, in metres. Each part is looked up once: this runs every frame, and a nested scan of a whole ship made one frame longer than the walk can spare. */
   private craftBoxes(): { craft: number; rocket: string; min: Vec3; max: Vec3 }[] {
-    if (!this.built) return [];
-    const parts = [...this.built.parts, ...this.built.beside];
+    const ship = this.built;
+    if (!ship) return [];
+    const bySlot = new Map<string, (typeof ship.parts)[number]>();
+    for (const part of ship.parts) bySlot.set(part.slot, part);
+    for (const part of ship.beside) bySlot.set(part.slot, part);
     const boxes = new Map<number, { craft: number; rocket: string; min: Vec3; max: Vec3 }>();
     for (const view of this.parts) {
       if (!view.holder.visible) continue;
-      const built = parts.find((part) => part.slot === view.slot);
+      const built = bySlot.get(view.slot);
       if (!built) continue;
       const at = view.holder.position;
       const have = boxes.get(view.craft);
@@ -2602,11 +2619,21 @@ export class RocketViewer {
       this.canvas.dataset.moving = this.pose ? "true" : "false";
       const reached = this.camera.position.distanceTo(this.controls.target);
       this.canvas.dataset.distance = (this.options.orbit ? this.orbitFit || reached : reached).toFixed(2);
-      const moon = this.scene.getObjectByName("moon");
-      if (moon && this.orbitOn) {
-        const spot = moon.getWorldPosition(this.moonSpot).project(this.camera);
-        this.canvas.dataset.moon = `${spot.x.toFixed(3)},${spot.y.toFixed(3)}`;
-      } else delete this.canvas.dataset.moon;
+      // The fleet walk never asks for the Earth. Searching the ship for the Moon and projecting every craft is the compare camera's work, and doing it on every module is what pushed that walk into the time limit.
+      if (this.options.orbit) {
+        const moon = this.orbitOn ? this.moonNode : null;
+        if (moon) {
+          const spot = moon.getWorldPosition(this.moonSpot).project(this.camera);
+          this.canvas.dataset.moon = `${spot.x.toFixed(3)},${spot.y.toFixed(3)}`;
+        } else delete this.canvas.dataset.moon;
+        this.canvas.dataset.craftBoxes = this.craftBoxes()
+          .map((box) => {
+            const screen = this.screenBox(box.min, box.max);
+            if (!screen) return `${box.craft}:0,0,0,0,0`;
+            return `${box.craft}:${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX - screen.minX)},${Math.round(screen.maxY - screen.minY)},1`;
+          })
+          .join(" ");
+      }
       if (this.driven) {
         this.canvas.dataset.zoom = this.driven.zoom.toFixed(2);
         this.canvas.dataset.pan = `${Math.round(this.driven.panX)},${Math.round(this.driven.panY)}`;
@@ -2616,13 +2643,6 @@ export class RocketViewer {
         const screen = craft ? this.screenBox(craft.min, craft.max) : null;
         this.canvas.dataset.craft = screen ? `${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX)},${Math.round(screen.maxY)}` : "";
       }
-      this.canvas.dataset.craftBoxes = this.craftBoxes()
-        .map((box) => {
-          const screen = this.screenBox(box.min, box.max);
-          if (!screen) return `${box.craft}:0,0,0,0,0`;
-          return `${box.craft}:${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX - screen.minX)},${Math.round(screen.maxY - screen.minY)},1`;
-        })
-        .join(" ");
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
@@ -2839,7 +2859,7 @@ export class RocketViewer {
     for (const x of [min[0], max[0]]) {
       for (const y of [min[1], max[1]]) {
         for (const z of [min[2], max[2]]) {
-          const point = new Vector3(x, y, z).project(this.camera);
+          const point = this.corner.set(x, y, z).project(this.camera);
           if (point.z > 1) continue;
           any = true;
           const sx = ((point.x + 1) / 2) * width;
