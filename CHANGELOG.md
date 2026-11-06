@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Building in place** (MODULES-461, MODULES-463, MODULES-465, MODULES-467): builder mode's drones work as a busy crew in ranks (a boss, managers, builders and grunts, told apart by size), all the way round the ship. Large sections are built where they stand, a ring grows as an open arc segment by segment from the spokes, and the shop hands out only drone-sized parts, so nothing large appears in one frame. A ring holds still while it is built. Once its shell closes the build bar says Sealed, then Filling with air while the oxygen and nitrogen tanks are brought in, then Pressurised; decks, furnishings and the plants follow, and the ring spins up last.
 - **Lighter lamps** (MODULES-449): a ship's lamps are drawn as a few point clouds (one per job and colour) with one shared glow, in place of a material per lamp, so a fleet of lit ships costs less to draw; the lamps look the same.
 - **The stage keeps its size on load** (MODULES-477): the 3D stage takes its full size before any script or model loads, so the page no longer jumps from a thin strip to full height on reload.
 - **The shipyard** (MODULES-446, MODULES-447): a model of a large multi-bay yard: a big bay with an enclosed frame, an open spine bay and a gantry bay, one ship under way in each, a second spine that can unlatch and fly free, a visitor elevator across the bays with viewing booths and observation lounges, visitor docking ports, a parking field for drones and small craft, and lamps at the joints. Rendered by scripts; not yet on a demo page.
