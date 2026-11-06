@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **A background fills the frame and keeps turning** (MODULES-502): Saturn and every other body behind the craft cover the stage at every camera and zoom, tipped so the rings still cross the sky, and the body's own turn is not pinned by the craft's camera.
+
 - **One ship picker** (MODULES-474, MODULES-482, MODULES-486): the compare page's choices are three columns, kinds and makers, then a searchable picture grid, then the chosen craft's facts. Each craft is a toggle. The line shows a picture and a name, the close mark and the magnifier sit on the picture, and the line stays one row that scrolls. One list at the top right gives each craft's full name and size, and adds "off screen" only when that craft is outside the frame. An x asks in a popover before it removes anything, in the page's own colours, with Remove and Cancel side by side, and nothing chosen leaves an empty stage. A device can show up to eight. A craft drawn under about 12 px gets a gold ring with its name and size. On a phone one craft is on the stage and the rest stay in the line.
 
 ## [0.14.0] - 2026-11-06

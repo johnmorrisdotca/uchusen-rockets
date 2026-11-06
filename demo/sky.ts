@@ -136,12 +136,13 @@ export const aimOrbit = (open: number, holder: HTMLElement, animate: boolean): v
   frame = requestAnimationFrame(step);
 };
 
-/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened a little and tipped so its rings cross the sky as a band; the horizon stays on the middle. A higher orbit eases that picture out until the whole disc is in frame. `viewZoom` below 1 opens the same picture further. */
+/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is tipped so its rings cross the sky as a band; the surface still covers the frame. A higher orbit eases that picture out until the whole disc is in frame. Zooming the craft in may come closer. Zooming it out never opens a gap around the body. */
 const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: number) => {
   const width = holder.clientWidth;
   const height = holder.clientHeight;
   if (width < 2 || height < 2 || typeof node.setView !== "function") return;
   const side = Math.max(width, height);
+  node.style.maxWidth = "none";
   node.style.width = `${side}px`;
   node.style.height = `${side}px`;
   node.style.aspectRatio = "auto";
@@ -149,21 +150,23 @@ const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: 
   const saturn = node.getAttribute("body") === "saturn";
   const moons = node.hasAttribute("moons");
   const open = Math.min(1, Math.max(0, Number(node.dataset.open) || 0));
-  const widen = saturn ? 0.48 + 0.52 * open : 1;
   const fullZoom = (0.84 * Math.min(width, height) * ROOM) / side / (saturn ? 2.4 : 1);
-  const camera = moons ? ORBIT_ZOOM : (ORBIT_ZOOM * widen * (1 - open) + fullZoom * open) * viewZoom;
-  const shrink = moons ? ROOM / Math.max(ROOM, range) : viewZoom * widen * (1 - open);
+  const opened = ORBIT_ZOOM * (1 - open) + fullZoom * open;
+  // The craft's zoom is allowed to come closer. It must not shrink the backdrop below the picture that covers the frame.
+  const camera = moons ? ORBIT_ZOOM : Math.max(opened, opened * viewZoom);
+  const shrink = moons ? ROOM / Math.max(ROOM, range) : (1 - open);
   const face = node.dataset.face;
-  node.setView({
-    yaw: 0,
-    tilt: saturn ? -36 * (1 - open) : face ? -Number(face) : 0,
-    zoom: camera,
-    panX: (-2 * place.panX * shrink) / side,
-    panY: (2 * place.panY * shrink) / side,
-  });
+  const tilt = saturn ? -36 * (1 - open) : face ? -Number(face) : 0;
+  const panX = (-2 * place.panX * shrink) / side;
+  const panY = (2 * place.panY * shrink) / side;
+  const key = `${side}|${camera.toFixed(3)}|${panX.toFixed(3)}|${panY.toFixed(3)}|${tilt}`;
+  // The body's own clock turns it. Setting the camera again on every craft frame would pin that turn.
+  if (node.dataset.framed === key) return;
+  node.dataset.framed = key;
+  node.setView({ yaw: 0, tilt, zoom: camera, panX, panY });
 };
 
-/** The reader's zoom. Below 1 opens the picture further. A moon picture opens its range; a body alone opens the camera, and neither one adds moons. */
+/** The reader's zoom. Above 1 comes closer. Below 1 stays on the picture that covers the frame. A moon picture opens its range. */
 export const frameSky = (node: HTMLElement, holder: HTMLElement, viewZoom = 1) => {
   node.dataset.open = shown.toFixed(4);
   const pull = Number(node.dataset.pull) || 1;
