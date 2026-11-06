@@ -2,6 +2,7 @@
 // spins at its stated rpm, a door leaf that swings up and comes back, an array or a dish that sweeps. It moves only parts that exist: no geometry is made here, and nothing is rebuilt; the viewer turns each tagged group about its pivot. A
 // `Move` turns about its axis, and a slide moves along that same axis. A roller shutter is still drawn as its leaf swinging up about the lintel (a real one winds on a drum). Pure: no three.js and no DOM.
 import type { Move, Piece } from "../pieces.ts";
+import { ARRAY_MOTIONS } from "./kaminari-concepts/arrays.ts";
 import { rpmFor } from "./ship-01/spin.ts";
 
 /**
@@ -150,6 +151,7 @@ export const MOTIONS: readonly Motion[] = [
   { ship: "fleet-ship-03", group: "array-turn", kind: "sweep", from: -50, to: 50, period: 90, note: "The gold solar array turns on its root beam to face the star, as the ISS's solar array rotary joints do (the ISS turns once an orbit, about 92 minutes; the array here sweeps 100 degrees in 45 s)." },
   { ship: "fleet-ship-03", group: "dish-track", kind: "sweep", from: -35, to: 35, period: 60, note: "The command tower's dishes sweep slowly on their mounts, as a Deep Space Network dish tracks a spacecraft across the sky (a degree or so a minute); drawn faster so it can be seen." },
   { ship: "fleet-ship-ariake", group: "dish-track", kind: "sweep", from: -35, to: 35, period: 60, note: "The command tower's dishes sweep slowly on their mounts, as a Deep Space Network dish tracks a spacecraft across the sky." },
+  ...ARRAY_MOTIONS,
 ];
 
 /**

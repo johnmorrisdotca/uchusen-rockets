@@ -132,6 +132,8 @@ export const CONCEPT_SLOT_NAMES: Readonly<Record<string, string>> = {
   reactors: "Reactor cells",
   "coil-stack": "Coil stack and reactor cells",
   radiators: "Radiator fins",
+  "array-blanket": "Blanket array",
+  "array-ring": "Ring array",
   "fin-port": "Port radiator sail",
   "fin-centre": "Centre radiator sail",
   "fin-starboard": "Starboard radiator sail",

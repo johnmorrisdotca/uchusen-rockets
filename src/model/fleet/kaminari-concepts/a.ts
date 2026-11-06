@@ -5,6 +5,7 @@
 import { rng as shipRng } from "../ship-02/adapter.ts";
 import { container } from "../ship-02/cargo.ts";
 import { lampHalo } from "../lights.ts";
+import { BLANKET, blanketPieces, RING, ringPieces } from "./arrays.ts";
 import { annulus, deg, hoop, type Piece, place, revolve, rod, stamp, type Vec3 } from "./adapter.ts";
 import { berthSlot } from "./berth.ts";
 import { bundle, type ConceptSlot, radiatorFin, reactorCells, repeatedDrum, ringFrame, shieldDisc, stackOf, truss } from "./common.ts";
@@ -179,4 +180,6 @@ export const SLOTS_A: readonly ConceptSlot[] = [
   { slot: "carousel-b", name: "Habitat carousel B: six slim drums, counter-rotating", kind: "ring", at: [0, (A.carousel.y[0] + A.carousel.y[1]) / 2 + 2, 0], height: 60, diameter: 268, note: "The second carousel turns the other way, so the two cancel each other's torque. Descends from the same wheel studies.", pieces: () => local(carousel(1), (A.carousel.y[0] + A.carousel.y[1]) / 2 + 2) },
   { slot: "bow", name: "Crew bow: command, common area, solarium, laboratory and dome", kind: "spacecraft", at: [0, A.bow.y, 0], height: bowEnd - A.bow.y + 1, diameter: 20, note: "A stack of the kit's crew modules: the docking node, a crew drum, the common area, the solarium, a laboratory, the survey pod, the navigation deck and the observation dome. Descends from the ISS nodes, Columbus and the Cupola.", pieces: () => local(bow(), A.bow.y) },
   { slot: "shield", name: "Forward dust shield", kind: "fairing", at: [0, bowEnd, 0], height: A.length - bowEnd, diameter: 52, note: "A tiled cone ahead of the crew: at a quarter of the speed of light, dust hits like bullets. Descends from Daedalus' beryllium dust shield.", pieces: () => local(shieldFront(), bowEnd) },
+  { slot: "array-blanket", name: "Blanket array", kind: "arms", at: [0, BLANKET.y, 0], height: 4, diameter: 51, note: "A solar blanket on a mast at the tail. Eight panels stack into 50 m and pay out to 400 m. Descends from the ISS solar array wings.", pieces: () => local(blanketPieces(), BLANKET.y) },
+  { slot: "array-ring", name: "Ring array", kind: "arms", at: [0, RING.y, 0], height: 4, diameter: 164, note: "A ring of solar petals at the bow. Each petal stacks on its hub and pays out, and the open ring is 400 m across. Descends from annular solar arrays.", pieces: () => local(ringPieces(), RING.y) },
 ];

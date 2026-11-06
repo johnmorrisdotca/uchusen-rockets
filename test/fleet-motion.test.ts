@@ -6,6 +6,7 @@ import { parts as miyamoto } from "../src/model/fleet/ship-03/index.ts";
 import { rpmFor } from "../src/model/fleet/ship-01/spin.ts";
 import { meshOf } from "../src/model/pieces.ts";
 import { KYOTORI_PARTS } from "../src/model/fleet/ship-kyotori/variants.ts";
+import { BLANKET, blanketPieces, RING, ringPieces } from "../src/model/fleet/kaminari-concepts/arrays.ts";
 import { SAIL_SLOTS } from "../src/model/fleet/kaminari-concepts/sails.ts";
 
 const near = (a: number, b: number, eps = 0.01) => assert.ok(Math.abs(a - b) < eps, `${a} is not ${b}`);
@@ -63,7 +64,8 @@ test("a sweep stays between its angles", () => {
 test("every motion names a group that a part of its ship really carries, so none moves nothing", () => {
   const groups = (list: { pieces: (o?: { detail?: number }) => Parameters<typeof meshOf>[0] }[]) => new Set(list.flatMap((p) => meshOf(p.pieces({ detail: 0.3 })).moves.map((g) => g.name)));
   const sails = new Set(SAIL_SLOTS.flatMap((slot) => meshOf(slot.pieces()).moves.map((g) => g.name)));
-  const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings"))), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
+  const arrays = new Set([...blanketPieces(), ...ringPieces()].flatMap((piece) => (piece.move ? [piece.move.name] : [])));
+  const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings"))), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()), "fleet-kaminari": arrays };
   for (const m of MOTIONS) assert.ok(have[m.ship]?.has(m.group), `${m.ship}: ${m.group}`);
 });
 
@@ -77,5 +79,9 @@ test("the Motion choice: still unless asked for, ten times on request, never und
   assert.equal(motionSpeed("fast"), 10);
   assert.equal(motionSpeed("on"), 1);
   assert.equal(motionsOf("starship").length, 0);
+  const blanket = motionsOf("fleet-kaminari").filter((m) => m.group.startsWith("blanket"));
+  const ring = motionsOf("fleet-kaminari").filter((m) => m.group.startsWith("ring"));
+  near(Math.max(...blanket.map((m) => m.travel ?? 0)) + BLANKET.len, 400);
+  near(2 * (RING.hub + RING.len * RING.segments), 2 * (RING.hub + Math.max(...ring.map((m) => m.travel ?? 0)) + RING.len));
   assert.equal(motionNote("starship"), "");
 });
