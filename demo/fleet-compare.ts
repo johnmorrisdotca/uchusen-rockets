@@ -69,6 +69,13 @@ const chip = (label: string, testid: string, pressed: boolean, on: () => void): 
   return button;
 };
 
+/** The frame fills the width and stops at the bottom of the window, so its foot, where the ships stand, is on the first screen. */
+const placeFrame = (): void => {
+  const frame = byId("cmp-view");
+  const room = Math.floor(window.innerHeight - frame.getBoundingClientRect().top - 12);
+  if (room >= 200) frame.style.height = `${room}px`;
+};
+
 const fitOf = (): string => {
   const frame = byId("cmp-view");
   return `${Math.max(200, Math.floor(frame.clientWidth) - 16)},${Math.max(200, Math.floor(frame.clientHeight) - 12)}`;
@@ -111,6 +118,7 @@ const draw = (): void => {
   });
   lineup.setAttribute("items", items.join(","));
   lineup.setAttribute("view", view);
+  placeFrame();
   lineup.setAttribute("fit", fitOf());
   // the long ship runs past the top of a first-screen frame; the feet, and the shorter ships, are what the frame opens on. The picture's height is known only after it has been laid out at the frame's width.
   const frame = byId("cmp-view");
@@ -151,6 +159,7 @@ const draw = (): void => {
 
 draw();
 window.addEventListener("resize", () => {
+  placeFrame();
   byId("lineup").setAttribute("fit", fitOf());
   const frame = byId("cmp-view");
   requestAnimationFrame(() => requestAnimationFrame(() => { frame.scrollTop = frame.scrollHeight; }));

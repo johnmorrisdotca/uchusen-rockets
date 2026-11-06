@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **Compare frame** (MODULES-406): the drawing uses the width of the first screen, and the frame opens on the ships' feet so the shorter ships are on that screen.
+- **Compare frame** (MODULES-406): the drawing uses the width of the window, the frame ends at the bottom of that window, and it opens on the ships' feet so the shorter ships are on the first screen.
 
 ## [0.13.0] - 2026-11-05
 

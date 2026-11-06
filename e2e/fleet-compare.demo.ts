@@ -21,8 +21,9 @@ test("the three ships stand at one scale, the view stays in the address, and the
     const box = svg.getBoundingClientRect();
     const view = node.getBoundingClientRect();
     const wide = box.width > view.width * 0.9;
-    const feet = box.height > view.height ? box.bottom <= view.bottom + 4 && box.bottom >= view.bottom - 80 : box.top >= view.top - 4 && box.bottom <= view.bottom + 4;
-    return view.height > 400 && wide && feet;
+    const feet = box.height > view.height - 2 ? box.bottom <= view.bottom + 4 && box.bottom >= view.bottom - 80 : box.top >= view.top - 4 && box.bottom <= view.bottom + 4;
+    const onFirstScreen = view.top < window.innerHeight - 80;
+    return view.height > 300 && wide && feet && (!onFirstScreen || view.bottom <= window.innerHeight + 2);
   })).toBe(true);
   const before = await lineup.locator("svg").innerHTML();
   await page.getByTestId("cmp-view-side").click();
