@@ -35,7 +35,8 @@ import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
 import { WORDS } from "./words.js";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import { destinationGrow, forwardStar } from "../src/journey/forward.ts";
+import { bodySpan, forwardStar } from "../src/journey/forward.ts";
+import { positionKm } from "../src/journey/trip.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
@@ -127,6 +128,25 @@ const stopName = (id: string): string => {
   const stop = SOURCE.stops.find((one) => one.id === id);
   return stop ? (japanese() ? stop.name.ja : stop.name.en) : id;
 };
+function fromDistanceKm(state: State): number {
+  const radius = SOURCE.stops.find((one) => one.id === trip.from)?.radiusKm ?? 6371;
+  const id = state.phase.id;
+  if (id === "preheat" || id === "ignition") return radius;
+  if (id === "ascent") {
+    const park = trip.ballistic?.parkKm ?? radius;
+    return radius + (park - radius) * state.fraction;
+  }
+  const body = positionKm(SOURCE, trip.from, state.dateMs, trip.frame);
+  const [x, y, z] = state.positionKm;
+  return Math.max(radius, Math.hypot(x - body[0], y - body[1], z - body[2]));
+}
+function placeBody(which: "from" | "dest", id: string, distanceKm: number): void {
+  const node = byId(`body-${which}`);
+  const stop = SOURCE.stops.find((one) => one.id === id);
+  node.style.setProperty("--span", bodySpan(stop?.radiusKm ?? 1000, distanceKm).toFixed(4));
+  if (stop) node.style.setProperty("--ink", stop.colour);
+  setText(byId(`body-${which}-name`), stopName(id));
+}
 const craftNow = (): Craft => craftOf(choice.craft) ?? CRAFTS[0]!;
 const craftName = (craft: Craft): string => ROCKETS[craft.rocket]?.name ?? craft.name;
 const dateWords = (ms: number, time = false): string =>
@@ -820,9 +840,8 @@ function draw(force = false): void {
   const streak = moving ? Math.min(70, Math.log10(1 + state.speedMs / 50) * 14) : 0;
   const forward = choice.view === "cockpit";
   const beta = Math.min(0.99, Math.max(0, state.speedMs / C_MS));
-  const dest = byId("dest");
-  dest.style.setProperty("--grow", destinationGrow(total > 0 ? playhead / total : 0).toFixed(4));
-  setText(byId("dest-name"), stopName(trip.to));
+  placeBody("from", trip.from, fromDistanceKm(state));
+  placeBody("dest", trip.to, state.toDestinationKm);
   if (choice.view !== "map") drawSky(forward || reduced() ? 0 : streak, forward, beta);
   else if (force) drawSky(0, false, 0);
 }

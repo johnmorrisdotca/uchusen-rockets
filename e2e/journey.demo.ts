@@ -32,9 +32,16 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await expect(page.getByTestId("when-stamp")).toBeVisible();
   await expect(page.getByTestId("when-date")).toContainText("UTC");
   await expect(page.getByTestId("when-day")).toContainText("Day");
+  await expect(page.getByTestId("from")).toContainText("Earth");
+  await expect(page.getByTestId("dest")).toContainText("Mars");
+  const width = (id: string) => page.getByTestId(id).evaluate((el) => el.getBoundingClientRect().width);
+  const fromStart = await width("from");
+  const destStart = await width("dest");
+  expect(fromStart).toBeGreaterThan(destStart * 4);
   const atStart = await page.getByTestId("when-date").innerText();
-  await page.getByTestId("scrub").fill("800");
+  await page.getByTestId("scrub").fill("1000");
   await expect(page.getByTestId("when-date")).not.toHaveText(atStart);
+  expect(await width("dest")).toBeGreaterThan(destStart * 2);
   expect(await page.locator("details, [aria-expanded]").count()).toBe(0);
   expect(found).toEqual([]);
 });
@@ -259,6 +266,8 @@ test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the p
   expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(8);
   await page.getByTestId("view-front").click();
   await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "front");
+  await expect(page.getByTestId("dest")).toBeVisible();
+  await expect(page.getByTestId("from")).toBeHidden();
   await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
   expect(page.url()).toContain("view=front");
   await page.getByTestId("view-rear").click();
@@ -268,6 +277,7 @@ test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the p
   await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "cockpit");
   await expect(page.getByTestId("dest")).toBeVisible();
   await expect(page.getByTestId("dest")).toContainText("Mars");
+  await expect(page.getByTestId("from")).toBeHidden();
   await expect(page.getByTestId("craft")).toBeHidden();
   expect(found).toEqual([]);
 });
