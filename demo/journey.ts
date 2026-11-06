@@ -575,7 +575,7 @@ function buildPanel(): void {
   for (const [key, row] of rows("now", keys.map(([k, w]) => [k, say(w)]))) nowRows.set(key, row);
   const tripRows: [string, string, string, boolean?][] = [
     ["leaves", say("jDeparts"), dateWords(trip.departMs, true)],
-    ["arrives", say("jArrives"), dateWords(trip.departMs - trip.liftoffBeforeS * 1000 + trip.frameS * 1000, true)],
+    ["arrives", say("jArrives"), dateWords(arrivalMs(), true)],
     ["straight", say("jStraight"), `${kilometres(trip.straightKm)} · ${astronomicalUnits(trip.straightKm)} · ${lightTime(trip.straightKm)}`],
     ["path", say("jPath"), kilometres(trip.pathKm)],
     ["time", say("jDuration"), trip.drive === "continuous" ? `${duration(trip.shipS)} / ${duration(trip.frameS)}` : duration(trip.frameS)],
@@ -616,6 +616,10 @@ function buildPanel(): void {
       return wrap;
     }),
   );
+}
+
+function arrivalMs(): number {
+  return trip.departMs - trip.liftoffBeforeS * 1000 + trip.frameS * 1000;
 }
 
 function gammaWords(gamma: number): string {
@@ -712,29 +716,33 @@ const VOYAGER_KMS = 17.11;
 function showSummary(): void {
   const end = stateAt(trip, SOURCE, total);
   setText(byId("summary-route"), `${stopName(trip.from)} → ${stopName(trip.to)} · ${craftName(craftNow())}`);
-  const facts: [string, string][] = [
-    [say(`jLevel_${trip.verdict.level}`), trip.verdict.line],
-    [say("jStraight"), `${kilometres(trip.straightKm)} (${astronomicalUnits(trip.straightKm)})`],
-    [say("jPath"), kilometres(trip.pathKm)],
-    [say("jShip"), duration(trip.shipS)],
-    [say("jEarthT"), duration(trip.frameS)],
-    ...(trip.drive === "continuous" ? [[say("jClocks"), duration(trip.shipS) === duration(trip.frameS) ? `${say("jTwin")} ${say("jTwinSmall")}` : say("jTwin")] as [string, string]] : []),
-    [say("jTopSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
-    [say("jGamma"), gammaWords(trip.peakGamma)],
-    [say("jPeakG"), gWords(trip.peakG)],
-    [say("jDvAll"), speedWords(trip.dv.total)],
-    [say("jFuel"), fuelWords()],
-    [say("jMassRatio"), ratioWords()],
-    [say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],
-    [say("jSignalEnd"), duration(end.signalS)],
-    [say("jCompare"), `${say("jLightTakes", { t: duration(trip.pathKm / 299_792.458) })} ${say("jVoyager", { t: duration(trip.pathKm / VOYAGER_KMS) })}`],
+  const facts: { key: string; label: string; value: string; wide?: boolean }[] = [
+    { key: "leaves", label: say("jDeparts"), value: dateWords(trip.departMs, true) },
+    { key: "arrives", label: say("jArrives"), value: dateWords(arrivalMs(), true) },
+    { key: "verdict", label: say(`jLevel_${trip.verdict.level}`), value: trip.verdict.line, wide: true },
+    { key: "straight", label: say("jStraight"), value: `${kilometres(trip.straightKm)} (${astronomicalUnits(trip.straightKm)})` },
+    { key: "path", label: say("jPath"), value: kilometres(trip.pathKm) },
+    { key: "ship", label: say("jShip"), value: duration(trip.shipS) },
+    { key: "frame", label: say("jEarthT"), value: duration(trip.frameS) },
+    ...(trip.drive === "continuous" ? [{ key: "clocks", label: say("jClocks"), value: duration(trip.shipS) === duration(trip.frameS) ? `${say("jTwin")} ${say("jTwinSmall")}` : say("jTwin"), wide: true }] : []),
+    { key: "peak", label: say("jTopSpeed"), value: `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}` },
+    { key: "gamma", label: say("jGamma"), value: gammaWords(trip.peakGamma) },
+    { key: "peakg", label: say("jPeakG"), value: gWords(trip.peakG) },
+    { key: "dv", label: say("jDvAll"), value: speedWords(trip.dv.total) },
+    { key: "fuel", label: say("jFuel"), value: fuelWords() },
+    { key: "ratio", label: say("jMassRatio"), value: ratioWords() },
+    { key: "payload", label: say("jPayloadTo", { to: stopName(trip.to) }), value: payloadWords() },
+    { key: "signal", label: say("jSignalEnd"), value: duration(end.signalS) },
+    { key: "compare", label: say("jCompare"), value: `${say("jLightTakes", { t: duration(trip.pathKm / 299_792.458) })} ${say("jVoyager", { t: duration(trip.pathKm / VOYAGER_KMS) })}`, wide: true },
   ];
   byId("summary-facts").replaceChildren(
-    ...facts.map(([label, value]) => {
+    ...facts.map(({ key, label, value, wide }) => {
       const wrap = document.createElement("div");
+      if (wide) wrap.className = "wide";
       const dt = document.createElement("dt");
       dt.textContent = label;
       const dd = document.createElement("dd");
+      dd.dataset.testid = `summary-${key}`;
       dd.textContent = value;
       wrap.append(dt, dd);
       return wrap;
