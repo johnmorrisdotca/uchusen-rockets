@@ -7,8 +7,9 @@ import { orionDocked, ORION_DOCKED_LENGTH } from "../sls.ts";
 import { shipPieces, STARSHIP_DRAWS } from "../starship.ts";
 import { place } from "./detail.ts";
 import { aimCraft } from "./dockedAim.ts";
-import { dockedNow } from "./dockedState.ts";
+import { dockedNow, setVisitors } from "./dockedState.ts";
 import { DOCK, PORTS as HANABUSA } from "./ship-01/docking.ts";
+import { choicePorts } from "./kaminari-concepts/berth.ts";
 import { PORTS as KAMINARI } from "./ship-02/docking.ts";
 import { PORTS as MIYAMOTO } from "./ship-03/docking.ts";
 import { PORTS as KYOTORI } from "./ship-kyotori/docking.ts";
@@ -33,7 +34,12 @@ const FACES: Readonly<Record<string, readonly DockFace[]>> = {
   "fleet-ship-03": MIYAMOTO,
   "fleet-02": KAMINARI,
   "fleet-02-original": KAMINARI,
+  "fleet-kaminari": choicePorts("a"),
+  "fleet-emiake": choicePorts("b"),
+  "fleet-romaryu": choicePorts("c"),
 };
+
+setVisitors((rocket) => dockedCraft(rocket));
 
 /** The ports of a ship that a person can put a craft on, in the order the ship records them. */
 export function dockMenu(rocket: string): { id: string; name: string; craft: { id: CraftId; label: string }[] }[] {

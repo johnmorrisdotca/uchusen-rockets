@@ -61,6 +61,14 @@ test("a Dragon hangs off the first design's starboard dock arm", () => {
   assert.equal(dockMenu("fleet-02-original").length, 4);
 });
 
+test("Kaminari's Dragon port holds the nose up, and the three concept ships offer the same four berths", () => {
+  const reach = dockedReach("fleet-kaminari", "dragon@dragon");
+  assert.ok(reach);
+  assert.ok(Math.abs((reach.min[0] + reach.max[0]) / 2 - -36) < 2, reach.min[0]);
+  assert.ok(reach.max[1] > reach.min[1] + 6);
+  for (const rocket of ["fleet-kaminari", "fleet-emiake", "fleet-romaryu"]) assert.equal(dockMenu(rocket).length, 4);
+});
+
 test("the menu is the ports that name a craft, and a build does not keep a craft it was not asked for", () => {
   assert.ok(dockMenu("fleet-ship-01").some((port) => port.id === "crew-s" && port.craft.some((craft) => craft.id === "dragon")));
   assert.equal(dockMenu("starship").length, 0);
