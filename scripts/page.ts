@@ -19,8 +19,31 @@ const TITLES = {
   "fleet-db.html": ["Uchusen Rockets 宇宙船: fleet record", "The SPX ships, then one ship's sections, chosen in one row and kept in the address."],
   "fleet-compare.html": ["Uchusen Rockets 宇宙船: three ships at one scale", "The explorer, the command ship and the heavy transport stand side by side at one scale, from their own models, and the view stays in the address."],
   "yard.html": ["Uchusen Rockets 宇宙船: yard", "Three bays side by side. The name is a placeholder. Choose a bay, the lounge, the visitor port or the free spine, and play that bay's ship being built."],
+  "embed-page.html": ["Uchusen Rockets 宇宙船: embed", "Choose a rocket and copy the code that puts exactly that on a page of your own. The same choices open the bare frame."],
 } as const;
-const LINKS = [{ href: "docs/index.html", say: "pageDocs" }, { href: "embed.html", say: "pageEmbed" }, { href: "journey.html", say: "pageJourney" }, { href: "fleet-db.html", say: "pageFleet" }, { href: "yard.html", say: "pageYard" }];
+const PAGES = [
+  ["index.html", "pageRockets"],
+  ["compare.html", "pageCompare"],
+  ["journey.html", "pageJourney"],
+  ["fleet-db.html", "pageFleet"],
+  ["yard.html", "pageYard"],
+  ["builder.html", "pageBuilder"],
+  ["docs/index.html", "pageDocs"],
+  ["embed-page.html", "pageEmbed"],
+] as const;
+
+/** The English a page shows before the language script runs. The script replaces it. */
+function said(key: string): string {
+  const table = WORDS.en as Record<string, string>;
+  return table[key] ?? (key === "help" ? "Help" : "");
+}
+
+/** One row of links to every demo page, the open one marked, with Help beside them. */
+export function pageBar(file: string): string {
+  const links = PAGES.map(([href, say]) => `<a href="${href}" data-say="${say}"${href === file ? ` aria-current="page"` : ""}>${said(say)}</a>`).join("");
+  const help = `<button type="button" class="fam-button" data-help-switch aria-pressed="false" data-say="help" data-say-title="helpTip">${said("help")}</button>`;
+  return `<nav class="page-links" data-testid="page-links" aria-label="Pages">${links}${help}</nav>`;
+}
 
 /** The page's text with the family's blocks put in where its comments say. */
 export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
@@ -28,7 +51,7 @@ export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
   const [title, description] = TITLES[file];
   return html
     .replace("<!--family:head-->", familyHead({ id, title, description }))
-    .replace("<!--family:header-->", familyHeader({ id, links: LINKS }))
+    .replace("<!--family:header-->", `${familyHeader({ id })}\n      ${pageBar(file)}`)
     .replace("<!--family:unreviewed-->", familyUnreviewed({ id }))
     .replace("<!--family:footer-->", familyFooter({ id }))
     .replace(

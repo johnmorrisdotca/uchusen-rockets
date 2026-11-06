@@ -17,6 +17,14 @@ if (credit !== "" && node) {
   node.hidden = false;
   node.textContent = credit;
 }
+if (window.self === window.top) {
+  const open = document.getElementById("open-in");
+  const link = document.getElementById("open-in-link");
+  if (open && link instanceof HTMLAnchorElement) {
+    open.hidden = false;
+    link.href = `embed-page.html${location.search}`;
+  }
+}
 if (params.get("flight") === "1") {
   const bar = document.createElement("uchusen-flight");
   bar.setAttribute("for", "rocket");

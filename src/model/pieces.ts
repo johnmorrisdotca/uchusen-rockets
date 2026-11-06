@@ -171,6 +171,26 @@ function buffersOf(mesh: PartMesh, material: MaterialName): Buffers {
   return b;
 }
 
+/** Sine and cosine of a full circle cut into `n` steps, kept because a ship is thousands of lathes and they share a handful of step counts. */
+const CIRCLE = new Map<number, { sin: Float64Array; cos: Float64Array; u: Float64Array }>();
+function circleOf(n: number): { sin: Float64Array; cos: Float64Array; u: Float64Array } {
+  let row = CIRCLE.get(n);
+  if (!row) {
+    const sin = new Float64Array(n + 1);
+    const cos = new Float64Array(n + 1);
+    const u = new Float64Array(n + 1);
+    for (let j = 0; j <= n; j++) {
+      const a = (2 * Math.PI * j) / n;
+      sin[j] = Math.sin(a);
+      cos[j] = Math.cos(a);
+      u[j] = j / n;
+    }
+    row = { sin, cos, u };
+    CIRCLE.set(n, row);
+  }
+  return row;
+}
+
 /** A lathe's triangles. Each segment has its own vertices where the profile turns sharply and shares them where it runs smoothly. */
 function latheFaces(mesh: PartMesh, piece: Lathe): void {
   const out = buffersOf(mesh, piece.material);
@@ -188,6 +208,7 @@ function latheFaces(mesh: PartMesh, piece: Lathe): void {
   const spans = profile.map(([, y]) => (arc ? arc(y)[1] - arc(y)[0] : 2 * Math.PI));
   const span = Math.max(...spans);
   const n = Math.max(2, Math.ceil((segs * span) / (2 * Math.PI)));
+  const ring = arc || (piece.flutes && piece.flute) ? null : circleOf(n);
   for (let s = 0; s + 1 < profile.length; s++) {
     const nHere = normalOf(s);
     const smoothWith = (other: number): [number, number] => {
@@ -205,6 +226,15 @@ function latheFaces(mesh: PartMesh, piece: Lathe): void {
       const [r, y] = profile[station];
       const [a0, a1] = arc ? arc(y) : [0, 2 * Math.PI];
       for (let j = 0; j <= n; j++) {
+        if (ring) {
+          const sa = ring.sin[j];
+          const ca = ring.cos[j];
+          out.positions.push(cx + r * sa + (piece.lean?.[0] ?? 0) * y, y, cz + r * ca + (piece.lean?.[1] ?? 0) * y);
+          out.normals.push(normal[0] * sa, normal[1], normal[0] * ca);
+          // u: round the hull; v: height over a hundred metres, so one picture repeats the same on every part
+          out.uvs.push(ring.u[j], y / 100);
+          continue;
+        }
         const a = a0 + ((a1 - a0) * j) / n;
         const sa = Math.sin(a);
         const ca = Math.cos(a);
@@ -223,7 +253,6 @@ function latheFaces(mesh: PartMesh, piece: Lathe): void {
           out.positions.push(cx + r * sa + (piece.lean?.[0] ?? 0) * y, y, cz + r * ca + (piece.lean?.[1] ?? 0) * y);
           out.normals.push(normal[0] * sa, normal[1], normal[0] * ca);
         }
-        // u: round the hull; v: height over a hundred metres, so one picture repeats the same on every part
         // an arc that starts on the far side of the windward line is shifted a half turn, so it stays between 0 and 1
         out.uvs.push(a / (2 * Math.PI) + (a0 < 0 ? 0.5 : 0), y / 100);
       }
@@ -379,6 +408,72 @@ function reliefLines(mesh: PartMesh, piece: Plate, half: number): void {
 }
 
 function plateFaces(mesh: PartMesh, piece: Plate): void {
+  if (piece.outline.length === 4 && !piece.facets && !piece.quilt && !piece.inset && !piece.sheet) {
+    quadBox(mesh, piece);
+    return;
+  }
+  plateBody(mesh, piece);
+}
+
+/** A four-corner plate with thickness: the same triangles as the general plate, written without a point array per corner. */
+function quadBox(mesh: PartMesh, piece: Plate): void {
+  const { frame, outline, thickness } = piece;
+  const half = thickness / 2;
+  const [a0, b0] = outline[0];
+  const [a1, b1] = outline[1];
+  const [a2, b2] = outline[2];
+  const [a3, b3] = outline[3];
+  const area = a0 * b1 - a1 * b0 + a1 * b2 - a2 * b1 + a2 * b3 - a3 * b2 + a3 * b0 - a0 * b3;
+  const ccw = area > 0;
+  const u = frame.u;
+  const v = frame.v;
+  const w = frame.w;
+  const hand = u[1] * v[2] - u[2] * v[1];
+  const hand2 = u[2] * v[0] - u[0] * v[2];
+  const hand3 = u[0] * v[1] - u[1] * v[0];
+  const right = hand * w[0] + hand2 * w[1] + hand3 * w[2] > 0;
+  const top = buffersOf(mesh, piece.top ?? piece.material);
+  const topBase = top.positions.length / 3;
+  const put = (out: Buffers, a: number, b: number, c: number, nx: number, ny: number, nz: number) => {
+    const o = frame.o;
+    out.positions.push(o[0] + u[0] * a + v[0] * b + w[0] * c, o[1] + u[1] * a + v[1] * b + w[1] * c, o[2] + u[2] * a + v[2] * b + w[2] * c);
+    out.normals.push(nx, ny, nz);
+    out.uvs.push(0, 0);
+  };
+  const fan = (out: Buffers, base: number, c: number, nx: number, ny: number, nz: number, reverse: boolean) => {
+    put(out, a0, b0, c, nx, ny, nz);
+    put(out, a1, b1, c, nx, ny, nz);
+    put(out, a2, b2, c, nx, ny, nz);
+    put(out, a3, b3, c, nx, ny, nz);
+    if (reverse) out.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
+    else out.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  };
+  fan(top, topBase, half, w[0], w[1], w[2], ccw !== right);
+  const bottom = buffersOf(mesh, piece.material);
+  fan(bottom, bottom.positions.length / 3, -half, -w[0], -w[1], -w[2], ccw === right);
+  const sides = buffersOf(mesh, piece.material);
+  const corners: readonly (readonly [number, number])[] = [[a0, b0], [a1, b1], [a2, b2], [a3, b3]];
+  const sign = ccw ? 1 : -1;
+  for (let i = 0; i < 4; i++) {
+    const [a, b] = corners[i];
+    const [na, nb] = corners[(i + 1) % 4];
+    const nu = (nb - b) * sign;
+    const nv = -(na - a) * sign;
+    const l = Math.hypot(nu, nv) || 1;
+    const nx = (u[0] * nu + v[0] * nv) / l;
+    const ny = (u[1] * nu + v[1] * nv) / l;
+    const nz = (u[2] * nu + v[2] * nv) / l;
+    const base = sides.positions.length / 3;
+    put(sides, a, b, -half, nx, ny, nz);
+    put(sides, na, nb, -half, nx, ny, nz);
+    put(sides, na, nb, half, nx, ny, nz);
+    put(sides, a, b, half, nx, ny, nz);
+    if (right) sides.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    else sides.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
+  }
+}
+
+function plateBody(mesh: PartMesh, piece: Plate): void {
   const { frame, outline, thickness } = piece;
   const half = thickness / 2;
   const n = outline.length;

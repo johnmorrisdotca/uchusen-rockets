@@ -462,7 +462,10 @@ export class RocketViewer {
       },
       true,
     );
-    this.canvas.addEventListener("pointermove", (event) => this.pullCraft(event));
+    this.canvas.addEventListener("pointermove", (event) => {
+      this.pullCraft(event);
+      if (!this.grab) this.nameUnder(event);
+    });
     this.canvas.addEventListener("pointerup", (event) => {
       this.releaseCraft(event);
       this.pickSlot(event);
@@ -489,6 +492,16 @@ export class RocketViewer {
     const next = text?.trim() ? text : "shown on the ground for scale";
     if (next === this.scaleNote) return;
     this.scaleNote = next;
+    this.wake();
+  }
+
+  private offScreen = "";
+
+  /** The words added to a floating name when that craft is outside the frame. Empty adds nothing. */
+  setOffScreen(text: string | null): void {
+    const next = text?.trim() ?? "";
+    if (next === this.offScreen) return;
+    this.offScreen = next;
     this.wake();
   }
 
@@ -558,7 +571,10 @@ export class RocketViewer {
     const generation = ++this.generation;
     const bytes = built.glb().bytes;
     const gltf = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, "");
-    if (this.disposed || generation !== this.generation) return;
+    if (this.disposed || generation !== this.generation) {
+      this.dropParsed(gltf.scene);
+      return;
+    }
     const old = this.built;
     const craftChanged = Boolean(old && (old.report.variant?.rocket !== built.report.variant?.rocket || old.report.variant?.id !== built.report.variant?.id));
     if (this.scaleMode && craftChanged) this.makeGhost();
@@ -1280,10 +1296,13 @@ export class RocketViewer {
       return { min, max };
     }
     const box = this.litBounds();
-    if (this.progressAt === null) return box;
-    const longest = Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]);
+    // craft standing beside one another need the ground under their feet in the picture, or the short ones are cut off at the bottom of a wide stage
+    const ground = this.built.beside.length > 0 ? Math.max(4, (box.max[1] - box.min[1]) * 0.16) : 0;
+    const held = ground === 0 ? box : { min: [box.min[0], box.min[1] - ground, box.min[2]] as Vec3, max: box.max };
+    if (this.progressAt === null) return held;
+    const longest = Math.max(held.max[0] - held.min[0], held.max[1] - held.min[1], held.max[2] - held.min[2]);
     const pad = Math.max(6, longest * 0.06);
-    return { min: [box.min[0] - pad, box.min[1] - pad * 0.25, box.min[2] - pad] as Vec3, max: [box.max[0] + pad, box.max[1] + pad * 0.2, box.max[2] + pad] as Vec3 };
+    return { min: [held.min[0] - pad, held.min[1] - pad * 0.25, held.min[2] - pad] as Vec3, max: [held.max[0] + pad, held.max[1] + pad * 0.2, held.max[2] + pad] as Vec3 };
   }
 
   private flightParts() {
@@ -1378,7 +1397,10 @@ export class RocketViewer {
     new GLTFLoader()
       .loadAsync(`${this.options.assets}models/${part.modelFile}`)
       .then((gltf) => {
-        if (this.disposed || generation !== this.generation) return;
+        if (this.disposed || generation !== this.generation) {
+          this.dropParsed(gltf.scene);
+          return;
+        }
         part.model = gltf.scene;
         // the same sheen as this package's own steel, whichever author's hull it is
         gltf.scene.traverse((node) => {
@@ -2076,6 +2098,21 @@ export class RocketViewer {
     return out;
   }
 
+  /** A model that lost the race to a newer one. It never joins the scene, so the ordinary cleanup never sees it. */
+  private dropParsed(root: Object3D): void {
+    root.traverse((node) => {
+      const mesh = node as Mesh;
+      mesh.geometry?.dispose();
+      const material = mesh.material;
+      if (!material) return;
+      for (const one of Array.isArray(material) ? material : [material]) {
+        const textured = one as Material & Partial<Record<(typeof MODEL_PICTURES)[number], { dispose(): void } | null>>;
+        for (const slot of MODEL_PICTURES) textured[slot]?.dispose();
+        one.dispose();
+      }
+    });
+  }
+
   private disposeParts(): void {
     this.thrusters?.dispose();
     this.thrusters = null;
@@ -2180,9 +2217,11 @@ export class RocketViewer {
 
   /** What stands beside the craft is named: a caption under its own foot, kept inside the picture. A picture built with names names every craft, the rocket too; otherwise only the one beside it is. A craft that flies in space adds the plinth's words on a second line. */
   private placeBeside(): void {
+    this.canvas.dataset.partNames = this.floating ? "hover" : "";
     if (!this.nameLabels) {
       for (const el of this.besideEls.values()) el.remove();
       this.besideEls.clear();
+      this.markSmall();
       return;
     }
     const names = this.built?.names ?? [];
@@ -2206,11 +2245,17 @@ export class RocketViewer {
         this.hostOfMarks().appendChild(el);
         this.besideEls.set(craft, el);
       }
+      const box = this.craftBoxes().find((one) => one.craft === craft);
+      const screen = box ? this.screenBox(box.min, box.max) : null;
+      const footIn = Boolean(foot && foot.visible && foot.x >= 0 && foot.y >= 0 && foot.x <= width && foot.y <= height);
+      const boxIn = Boolean(screen && screen.maxX >= 0 && screen.maxY >= 0 && screen.minX <= width && screen.minY <= height);
+      const outside = this.floating && !footIn && !boxIn;
+      const line = outside && this.offScreen ? `${text} · ${this.offScreen}` : text;
       const note = !this.floating && foot?.flies && names.length ? this.scaleNote : "";
-      const caption = note ? `${text}\n${note}` : text;
+      const caption = note ? `${line}\n${note}` : line;
       if (el.dataset.caption !== caption) {
         el.dataset.caption = caption;
-        el.replaceChildren(document.createTextNode(text));
+        el.replaceChildren(document.createTextNode(line));
         if (note) {
           el.append(document.createElement("br"));
           const mark = document.createElement("span");
@@ -2221,13 +2266,13 @@ export class RocketViewer {
         }
       }
       el.style.maxWidth = `${Math.max(40, width - 8)}px`;
-      if (!foot || !foot.visible || this.clockNow) {
+      if (this.clockNow || (!this.floating && (!foot || !foot.visible))) {
         el.style.display = "none";
         continue;
       }
       el.style.display = "block";
       el.style.transform = "translate(0px,0px)";
-      spots.push({ el, footX: foot.x, footY: foot.y });
+      spots.push({ el, footX: foot?.x ?? 0, footY: foot?.y ?? 0 });
     }
     if (this.floating) {
       let y = 8;
@@ -2236,6 +2281,7 @@ export class RocketViewer {
         spot.el.style.transform = `translate(${Math.round(width - w - 8)}px,${y}px)`;
         y += (spot.el.offsetHeight || 16) + 4;
       }
+      this.markSmall();
       return;
     }
     const placed = placeNameLabels(
@@ -2248,6 +2294,58 @@ export class RocketViewer {
       if (!at) return;
       spot.el.style.transform = `translate(${Math.round(at.x)}px,${Math.round(at.y)}px)`;
     });
+    this.markSmall();
+  }
+
+  /** A craft drawn smaller than about 12 px gets a ring at its centre, with its name and size, so a metre-long drone is not lost beside a stack. */
+  private markSmall(): void {
+    const host = this.markHost;
+    if (host) for (const old of host.querySelectorAll("[data-craft-mark]")) old.remove();
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    if (width < 1 || height < 1 || !this.built) return;
+    const names = this.built.names ?? [];
+    const labels = names.length ? names.map((text, index) => ({ craft: index - 1, text })) : [];
+    for (const box of this.craftBoxes()) {
+      const screen = this.screenBox(box.min, box.max);
+      if (!screen) continue;
+      const span = Math.max(screen.maxX - screen.minX, screen.maxY - screen.minY);
+      if (span >= 12) continue;
+      const ring = document.createElement("div");
+      ring.dataset.craftMark = String(box.craft);
+      const cx = (screen.minX + screen.maxX) / 2;
+      const cy = (screen.minY + screen.maxY) / 2;
+      ring.style.cssText = `position:absolute;z-index:3;left:${Math.round(cx)}px;top:${Math.round(cy)}px;width:28px;height:28px;margin:-14px 0 0 -14px;border:3px solid #f2c14e;border-radius:50%;box-shadow:0 0 0 2px rgba(11,17,27,0.85);pointer-events:none`;
+      const caption = document.createElement("span");
+      caption.textContent = labels.find((one) => one.craft === box.craft)?.text ?? box.rocket;
+      caption.style.cssText = `position:absolute;top:-2px;white-space:nowrap;color:#e6edf6;background:rgba(11,17,27,0.72);padding:1px 5px;${cx > width * 0.6 ? "right:20px" : "left:20px"}`;
+      ring.append(caption);
+      this.hostOfMarks().appendChild(ring);
+    }
+  }
+
+  /** The part under the pointer, named beside it, on a floating picture. */
+  private nameUnder(event: PointerEvent): void {
+    if (this.canvas.dataset.partNames !== "hover" || !this.built) return;
+    const host = this.markHost;
+    const slot = this.slotUnder(event);
+    let tip = host?.querySelector("[data-part-tip]") as HTMLElement | null;
+    if (!slot) {
+      tip?.remove();
+      return;
+    }
+    const named = [...this.built.parts, ...this.built.beside].find((part) => part.slot === slot);
+    const text = named?.record.name ?? slot;
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.dataset.partTip = "";
+      tip.style.cssText = "position:absolute;z-index:2;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.8);pointer-events:none;white-space:nowrap";
+      this.hostOfMarks().appendChild(tip);
+    }
+    tip.textContent = text;
+    const rect = this.holder.getBoundingClientRect();
+    tip.style.left = `${Math.round(event.clientX - rect.left + 12)}px`;
+    tip.style.top = `${Math.round(event.clientY - rect.top + 12)}px`;
   }
 
   /** The middle of a craft's foot, in CSS pixels, and whether that craft flies in space. */
@@ -2612,7 +2710,6 @@ export class RocketViewer {
       this.needsDraw = false;
       this.frames++;
       this.canvas.dataset.frames = String(this.frames);
-      this.options.onDraw?.();
       const angle = this.currentAngle();
       this.canvas.dataset.azimuth = angle.az.toFixed(2);
       this.canvas.dataset.elevation = angle.el.toFixed(2);
@@ -2643,6 +2740,7 @@ export class RocketViewer {
         const screen = craft ? this.screenBox(craft.min, craft.max) : null;
         this.canvas.dataset.craft = screen ? `${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX)},${Math.round(screen.maxY)}` : "";
       }
+      this.options.onDraw?.();
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next

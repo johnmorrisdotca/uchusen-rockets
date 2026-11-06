@@ -438,3 +438,21 @@ showShip();
 size();
 draw();
 stage.dataset.ready = "yes";
+
+type Chooser = { word(key: string): string | undefined };
+const say = (key: string): string => (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage?.word(key) ?? key;
+function buildWords(): void {
+  bar.words = {
+    play: say("buildPlay"),
+    pause: say("buildPause"),
+    start: say("buildStart"),
+    repeat: say("buildRepeat"),
+    range: say("buildRange"),
+    day: say("buildDay"),
+    done: say("buildDone"),
+    rate: say("buildRate"),
+    flight: say("buildFlight"),
+  };
+}
+document.addEventListener("kazoku-languagechange", () => queueMicrotask(buildWords));
+buildWords();

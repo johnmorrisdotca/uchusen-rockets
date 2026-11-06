@@ -130,6 +130,8 @@ body.embed:has(uchusen-flight) { overflow: auto; height: auto; min-height: 100vh
 body.embed:has(uchusen-flight) uchusen-rocket { flex: none; width: min(100%, calc((100vh - 21rem) * 0.75)); }
 body.embed uchusen-flight { flex: none; width: 100%; box-sizing: border-box; padding: 0.4rem 0.75rem 0; }
 body.embed .embed-credit { flex: none; width: 100%; box-sizing: border-box; margin: 0; padding: 0.45rem 0.75rem 0.55rem; color: var(--muted); font-size: 0.78rem; line-height: 1.35; max-height: 6.2rem; overflow: auto; }
+body.embed .embed-open { flex: none; margin: 0.55rem 0.75rem; font-size: 0.9rem; }
+body.embed .embed-open a { color: var(--ink, #e4ebf5); }
 uchusen-flight { --uchusen-accent: var(--accent); }
 .more-tabs { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 .more-tabs .chip[aria-selected="true"] { background: #1c3556; border-color: var(--accent); color: #fff; }
@@ -186,3 +188,11 @@ uchusen-flight { --uchusen-accent: var(--accent); }
 /* a ship with its panel under the picture gives the picture less of the window, so both fit */
 .stage-box uchusen-rocket[data-panel] { max-width: min(620px, calc((100vh - 28rem) * 0.75)); }
 a.chip { display: inline-flex; align-items: center; text-decoration: none; }
+
+/* One row of page links under the family's header. Help in this row is the only Help switch. */
+.page-links { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; margin: 0 0 14px; overflow-x: auto; }
+.page-links a, .page-links button { text-decoration: none; color: inherit; border: 1px solid transparent; border-radius: 999px; padding: 0 12px; min-height: 44px; display: inline-flex; align-items: center; font-size: 0.82rem; font-weight: 600; white-space: nowrap; background: transparent; }
+.page-links a:hover, .page-links a:focus { border-color: transparent; }
+.page-links a[aria-current="page"] { background: var(--ink, #e4ebf5); color: var(--page, #070c17); border-color: var(--ink, #e4ebf5); }
+body.demo main > header [data-help-switch] { display: none; }
+@media (min-width: 1440px) { .page-links { overflow: visible; } }

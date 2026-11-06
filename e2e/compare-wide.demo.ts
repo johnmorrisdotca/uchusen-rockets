@@ -45,28 +45,50 @@ test("a third craft is added, the choices are kept in the address, and a reload 
   await page.goto(URL);
   await page.locator('[data-testid="cw-add"]').click();
   await expect(craftChips(page)).toHaveCount(3);
-  await expect(page.locator('[data-testid="cw-add"]')).toHaveCount(0);
+  await expect(page.locator('[data-testid="cw-add"]')).toBeVisible();
+  await expect(page.locator('[data-testid="cw-count"]')).toContainText("3 of up to");
   await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(3);
-  // the new craft is the one the rows now choose: take its maker's other rocket
+  // the added craft is a fleet ship, so the browser is on that kind: come back to the real rockets, then SLS joins the row
+  await page.locator('[data-testid="kind-rocket"]').click();
   await page.locator('[data-testid="maker-nasa"]').click();
   await page.locator('[data-testid="rocket-sls"]').click();
   await expect.poll(() => param(page, "with")).toContain("sls:");
-  expect(param(page, "with")?.split(",").length).toBe(2);
+  expect(param(page, "with")?.split(",").length).toBe(3);
   const kept = page.url();
   await page.goto(kept);
+  await expect(craftChips(page)).toHaveCount(4);
+  await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(4);
+  // remove asks first, and Cancel keeps the craft
+  await page.locator('[data-testid="cw-remove-1"]').click();
+  await expect(page.locator('[data-testid="cw-ask"]')).toBeVisible();
+  const yesBox = await page.locator('[data-testid="cw-remove-yes"]').boundingBox();
+  const noBox = await page.locator('[data-testid="cw-remove-no"]').boundingBox();
+  expect(Math.abs((yesBox?.y ?? 0) - (noBox?.y ?? 0))).toBeLessThan(4);
+  expect(yesBox?.height ?? 99).toBeLessThan(40);
+  const readable = await page.locator('[data-testid="cw-ask"]').evaluate((node) => {
+    const style = getComputedStyle(node);
+    const parse = (value: string): number[] => (value.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+    const lum = (channel: number): number => (channel / 255) ** 2.2;
+    const light = (rgb: number[]): number => 0.2126 * lum(rgb[0] ?? 0) + 0.7152 * lum(rgb[1] ?? 0) + 0.0722 * lum(rgb[2] ?? 0);
+    return Math.abs(light(parse(style.color)) - light(parse(style.backgroundColor))) > 0.2;
+  });
+  expect(readable).toBe(true);
+  await page.locator('[data-testid="cw-remove-no"]').click();
+  await expect(craftChips(page)).toHaveCount(4);
+  await page.locator('[data-testid="cw-remove-1"]').click();
+  await page.locator('[data-testid="cw-remove-yes"]').click();
   await expect(craftChips(page)).toHaveCount(3);
-  await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(3);
-  // remove the middle one
   await page.locator('[data-testid="cw-remove-1"]').click();
-  await expect(craftChips(page)).toHaveCount(2);
-  await expect.poll(() => param(page, "with")?.split(",").length).toBe(1);
+  await page.locator('[data-testid="cw-remove-yes"]').click();
   await page.locator('[data-testid="cw-remove-1"]').click();
+  await page.locator('[data-testid="cw-remove-yes"]').click();
   await expect(craftChips(page)).toHaveCount(1);
   await expect.poll(() => param(page, "with")).toBe("none");
-  await expect(page.locator('[data-testid="cw-remove-0"]')).toHaveCount(0);
-  await expect(hero(page)).toHaveAttribute("data-beside", "off");
-  await page.reload();
-  await expect(craftChips(page)).toHaveCount(1);
+  await page.locator('[data-testid="cw-remove-0"]').click();
+  await page.locator('[data-testid="cw-remove-yes"]').click();
+  await expect(craftChips(page)).toHaveCount(0);
+  await expect(page.locator('[data-testid="cw-empty"]')).toBeVisible();
+  await expect(hero(page)).toBeHidden();
 });
 
 test("a hostile address leaves one craft and no error", async ({ page }) => {
@@ -99,14 +121,14 @@ test("the view controls tip as far as the first craft allows, and Fit holds all 
   expect(problems).toEqual([]);
 });
 
-test("on a phone one craft is shown, with no way to add another, and the page does not scroll sideways", async ({ page }, info) => {
+test("on a phone one craft is on the stage, the others stay in the line, and the page does not scroll sideways", async ({ page }, info) => {
   test.skip(!info.project.name.endsWith("phone"), "A phone's width");
   await page.goto(`${URL}?with=saturn-v:saturn-v,iss:iss`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
-  await expect(craftChips(page)).toHaveCount(1);
-  await expect(page.locator('[data-testid="cw-add"]')).toHaveCount(0);
+  await expect(craftChips(page)).toHaveCount(3);
+  await expect(page.locator('[data-testid="cw-add"]')).toBeVisible();
   await expect(hero(page)).toHaveAttribute("data-beside", "off");
-  await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(1);
+  await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(3);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
   // the address keeps what was asked for, so a wider screen shows it
   expect(param(page, "with")).toContain("iss:iss");
@@ -168,4 +190,94 @@ test("any craft on the main page can be taken to the wide one", async ({ page },
   await link.click();
   await expect(page).toHaveURL(/compare\.html/);
   await expect(page.locator('[data-testid="cw-craft-0"]')).toContainText("Saturn V");
+});
+
+test("six craft stay on the page at a desk's width", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-desk", "A desk's width");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(URL);
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="rocket-sls"]').click();
+  await expect(craftChips(page)).toHaveCount(6);
+  await expect(page.locator('[data-testid="cw-count"]')).toContainText("6 of up to");
+  await expect(page.locator('[data-testid="cw-craft-0"] .craft-pic svg')).toHaveCount(1);
+  const frame = await page.locator('[data-testid="cw-craft"]').evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+  });
+  const boxes = await craftChips(page).evaluateAll((nodes) => nodes.map((node) => {
+    const box = node.getBoundingClientRect();
+    return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+  }));
+  for (const box of boxes) {
+    expect(box.left).toBeGreaterThanOrEqual(frame.left - 1);
+    expect(box.right).toBeLessThanOrEqual(frame.right + 1);
+    expect(box.bottom).toBeLessThanOrEqual(frame.bottom + 1);
+  }
+  await expect(page.locator(".cw-craft-list")).toHaveCount(0);
+  await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelectorAll("[data-beside-label]").length ?? 0), { timeout: 30_000 }).toBe(6);
+  const off = await hero(page).evaluate((node) => [...(node.shadowRoot?.querySelectorAll("[data-beside-label]") ?? [])].some((el) => (el.textContent ?? "").includes("off screen")));
+  expect(off).toBe(false);
+  const stage = await page.locator(".cw-stage").boundingBox();
+  expect(stage?.y ?? 999).toBeLessThan(360);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+});
+
+test("on a phone the craft line is one row that scrolls", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-phone", "A phone's width");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(URL);
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="rocket-sls"]').click();
+  await expect(craftChips(page)).toHaveCount(6);
+  const row = page.locator('[data-testid="cw-craft"]');
+  const scrolling = await row.evaluate((node) => {
+    const parent = node.parentElement;
+    const mask = parent ? getComputedStyle(parent).maskImage : "none";
+    const view = node.getBoundingClientRect();
+    const seen = [...node.children].filter((child) => {
+      const box = child.getBoundingClientRect();
+      return Math.min(box.right, view.right) - Math.max(box.left, view.left) >= 40;
+    }).length;
+    return { over: node.scrollWidth > node.clientWidth + 1, mask, wrap: getComputedStyle(node).flexWrap, seen };
+  });
+  expect(scrolling.wrap).toBe("nowrap");
+  expect(scrolling.over).toBe(true);
+  expect(scrolling.mask).not.toBe("none");
+  expect(scrolling.seen).toBeGreaterThanOrEqual(2);
+});
+
+test("past the device's budget, adding says why", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-desk", "The budget message");
+  await page.addInitScript(() => Object.defineProperty(navigator, "deviceMemory", { configurable: true, get: () => 0.25 }));
+  await page.goto(URL);
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await expect(craftChips(page)).toHaveCount(4);
+  await expect(page.locator('[data-testid="cw-add"]')).toHaveCount(0);
+  await page.locator('[data-testid="kind-rocket"]').click();
+  await page.locator('[data-testid="maker-nasa"]').click();
+  await page.locator('[data-testid="rocket-sls"]').click();
+  await expect(page.locator('[data-testid="cw-budget"]')).toContainText("4");
+  await expect(craftChips(page)).toHaveCount(4);
+});
+
+test("a craft under about 12 px is marked with its name and size, and its chip opens a magnifier", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "WebGL is drawn in Chromium here, at a desk's width");
+  await page.goto(`${URL}?rocket=starship&variant=v3&with=fleet-drone:repair-drone`);
+  await reach3d(page);
+  await page.locator('[data-testid="cam-all"]').click();
+  const mark = hero(page).locator("[data-craft-mark]");
+  await expect(mark).toBeVisible({ timeout: 30_000 });
+  await expect(mark).toContainText("1 m");
+  await expect(hero(page).locator("[data-beside-label]")).toHaveCount(2);
+  await expect(hero(page).locator("[data-beside-label]").filter({ hasText: "off screen" })).toHaveCount(0);
+  await page.locator('[data-testid="cw-craft-1"]').hover();
+  await page.locator('[data-testid="cw-glass-1"]').click();
+  await expect(page.locator('[data-testid="cw-glass"]')).toBeVisible();
+  await expect(page.locator('[data-testid="cw-glass"]')).toContainText("1 m");
 });

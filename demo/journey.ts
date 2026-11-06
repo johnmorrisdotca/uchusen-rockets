@@ -1,4 +1,4 @@
-// The journey page: choose a start, an end and a craft, then fly the trip. The line views draw with one 2D canvas and the package's own line drawing. The painted side view is the package's element, loaded the first time it is asked for and dropped on leaving, so it is the page's one WebGL context.
+// The journey page: choose a start, an end and a craft, then fly the trip. The line views draw with one 2D canvas and the package's own line drawing. The painted side view is the package's element, loaded the first time it is asked for and dropped on leaving. Painted Earth is the same Chikyu globe as the compare page. The other planets are wakusei stills, so they give the context back.
 // It asks for a frame only while the trip plays and the page can be seen, at most 30 a second, and never when nothing moves.
 import { ROCKETS, SOURCES } from "../src/index.ts";
 import {
@@ -33,9 +33,13 @@ import { transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
+import type { WakuseiBody } from "@johnmorrisdotca/wakusei-planets/element";
+import { paintEarthDisc, type EarthShow } from "./earth.ts";
+import { loadBody } from "./sky.ts";
 import { WORDS } from "./words.js";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import { bodySpan, forwardStar } from "../src/journey/forward.ts";
+import { bodySpan, forwardStar, perceivedSpan } from "../src/journey/forward.ts";
+import { chip } from "./chip.ts";
 import { positionKm } from "../src/journey/trip.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
@@ -88,6 +92,7 @@ const choice = {
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
   view: isView(askedView) ? askedView : "side",
   look: query.get("look") === "painted" ? "painted" : "line",
+  size: query.get("size") === "true" ? "true" : "perceived",
   hold: query.get("hold") === "1",
   base: todayUtc(),
 };
@@ -111,6 +116,7 @@ function writeAddress(): void {
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
   if (choice.look === "painted") next.set("look", "painted");
+  if (choice.size === "true") next.set("size", "true");
   if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
   const text = `${location.pathname}?${next.toString()}`;
@@ -126,6 +132,8 @@ interface Option {
 let options: Option[] = [];
 let trip!: Trip;
 let total = 1;
+let spanNear = { from: 1, dest: 1 };
+let spanFar = { from: 2, dest: 2 };
 const stopName = (id: string): string => {
   const stop = SOURCE.stops.find((one) => one.id === id);
   return stop ? (japanese() ? stop.name.ja : stop.name.en) : id;
@@ -142,11 +150,95 @@ function fromDistanceKm(state: State): number {
   const [x, y, z] = state.positionKm;
   return Math.max(radius, Math.hypot(x - body[0], y - body[1], z - body[2]));
 }
+const PLAY_ICON = "M4 2.2 13 8 4 13.8z";
+const PAUSE_ICON = "M3 2h3.2v12H3zM9.8 2H13v12H9.8z";
+let planetLoad: Promise<void> | null = null;
+
+function loadPlanets(): Promise<void> {
+  planetLoad ??= Promise.all([import("@johnmorrisdotca/wakusei-planets/element"), import("@johnmorrisdotca/wakusei-planets/saturn")]).then(() => undefined);
+  return planetLoad;
+}
+
+let sharpQueue: Promise<void> = Promise.resolve();
+
+/** Draws the planet live until its painted map is in, then keeps that picture and gives the context back. A still taken before the map arrives is the soft shaded ball. */
+function sharpen(body: WakuseiBody): void {
+  sharpQueue = sharpQueue
+    .then(async () => {
+      if (!body.isConnected) return;
+      const painted = body.getAttribute("look") === "painted";
+      if (!(await body.goLive())) return;
+      for (let i = 0; i < 40 && body.isConnected; i += 1) {
+        const width = body.stats.textureWidth;
+        if (!painted || width >= 1024 || (width >= 512 && i >= 12)) break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (body.isConnected) body.rest();
+    })
+    .catch(() => undefined);
+}
+
+const earthDiscs = new Map<string, EarthShow>();
+const PLANET_PX = "640";
+
+function mountPlanet(node: HTMLElement, id: string): void {
+  if (id === "earth") {
+    delete node.dataset.planet;
+    node.querySelector("wakusei-body")?.remove();
+    if (node.querySelector("chikyu-earth-realistic")) return;
+    earthDiscs.get(node.id)?.stop();
+    earthDiscs.set(node.id, paintEarthDisc(node));
+    return;
+  }
+  if (node.dataset.planet === id) return;
+  node.dataset.planet = id;
+  earthDiscs.get(node.id)?.stop();
+  earthDiscs.delete(node.id);
+  node.querySelector("chikyu-earth-realistic")?.remove();
+  node.querySelector("wakusei-body")?.remove();
+  void Promise.all([loadPlanets(), loadBody(id)]).then(() => {
+    if (node.dataset.planet !== id || !node.isConnected) return;
+    const body = document.createElement("wakusei-body");
+    body.setAttribute("live", "off");
+    body.setAttribute("labels", "off");
+    body.setAttribute("fit", "tight");
+    body.setAttribute("size", PLANET_PX);
+    const maps = new URL("bodies/", document.baseURI).href;
+    body.setAttribute("texture-base", maps);
+    body.setAttribute("texture-far-base", maps);
+    body.setAttribute("body", id);
+    body.setAttribute("look", id === "venus" ? "realistic" : "painted");
+    body.setAttribute("lang", japanese() ? "ja" : "en");
+    node.prepend(body);
+    sharpen(body as WakuseiBody);
+  });
+}
+
+function clearPlanet(node: HTMLElement): void {
+  delete node.dataset.planet;
+  earthDiscs.get(node.id)?.stop();
+  earthDiscs.delete(node.id);
+  node.querySelector("wakusei-body")?.remove();
+  node.querySelector("chikyu-earth-realistic")?.remove();
+}
+
+function spanOf(which: "from" | "dest", id: string, distanceKm: number): number {
+  const radius = SOURCE.stops.find((one) => one.id === id)?.radiusKm ?? 1000;
+  if (choice.size === "true") return bodySpan(radius, distanceKm);
+  return perceivedSpan(distanceKm, spanFar[which], spanNear[which]);
+}
+
 function placeBody(which: "from" | "dest", id: string, distanceKm: number): void {
   const node = byId(`body-${which}`);
   const stop = SOURCE.stops.find((one) => one.id === id);
-  node.style.setProperty("--span", bodySpan(stop?.radiusKm ?? 1000, distanceKm).toFixed(4));
+  const span = spanOf(which, id, distanceKm);
+  const wide = stage.clientWidth || 1;
+  node.style.setProperty("--span", span.toFixed(4));
+  node.style.setProperty("--fit", ((span * wide) / Number(PLANET_PX)).toFixed(4));
+  node.dataset.span = span.toFixed(4);
   if (stop) node.style.setProperty("--ink", stop.colour);
+  if (choice.look === "painted") mountPlanet(node, id);
+  else clearPlanet(node);
   setText(byId(`body-${which}-name`), stopName(id));
 }
 const craftNow = (): Craft => craftOf(choice.craft) ?? CRAFTS[0]!;
@@ -183,21 +275,22 @@ function plan(): void {
   const date = options[choice.when]?.ms ?? choice.base;
   trip = planTrip(SOURCE, flown, choice.from, choice.to, date, flown.drive === "continuous" && choice.pull === "1" ? 1 : undefined, choice.via === "jupiter" ? "jupiter" : undefined);
   total = Math.max(1, playSeconds(trip));
+  if (trip.verdict.playable && trip.phases.length > 0) {
+    const opened = stateAt(trip, SOURCE, 0);
+    const closed = stateAt(trip, SOURCE, total);
+    const fromOpen = fromDistanceKm(opened);
+    const fromShut = fromDistanceKm(closed);
+    const destOpen = Math.max(1, opened.toDestinationKm);
+    const destShut = Math.max(1, closed.toDestinationKm);
+    spanNear = { from: Math.min(fromOpen, fromShut), dest: Math.min(destOpen, destShut) };
+    spanFar = { from: Math.max(fromOpen, fromShut, spanNear.from * 1.01), dest: Math.max(destOpen, destShut, spanNear.dest * 1.01) };
+  } else {
+    spanNear = { from: 1, dest: 1 };
+    spanFar = { from: 2, dest: 2 };
+  }
 }
 
 // ---- the pickers ----
-function chip(label: string, testid: string, pressed: boolean, on: () => void, disabled = false): HTMLButtonElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "chip";
-  button.textContent = label;
-  button.dataset.testid = testid;
-  button.setAttribute("aria-pressed", String(pressed));
-  if (disabled) button.disabled = true;
-  button.addEventListener("click", on);
-  return button;
-}
-
 function drawPickers(): void {
   byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
   byId("to").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.from).map((stop) => chip(stopName(stop.id), `to-${stop.id}`, stop.id === choice.to, () => change({ to: stop.id }))));
@@ -228,6 +321,10 @@ function drawPickers(): void {
   holdButton.setAttribute("aria-pressed", String(choice.hold));
   const painted = choice.look === "painted";
   byId("looks").replaceChildren(chip(say(painted ? "look_line" : "look_painted"), "look-painted", painted, () => setLook(painted ? "line" : "painted")));
+  byId("sizes").replaceChildren(
+    chip(say("jSizePerceived"), "size-perceived", choice.size !== "true", () => setSize("perceived")),
+    chip(say("jSizeTrue"), "size-true", choice.size === "true", () => setSize("true")),
+  );
 }
 
 function change(next: Partial<{ from: string; to: string; craft: string; when: number; pull: "ship" | "1"; via: "direct" | "jupiter" }>): void {
@@ -264,13 +361,26 @@ function setView(view: JourneyView): void {
   draw(true);
 }
 
+function setSize(size: "perceived" | "true"): void {
+  choice.size = size;
+  writeAddress();
+  drawPickers();
+  draw(true);
+}
+
+function rocketView(): "side" | "front" | "back" {
+  if (choice.view === "front") return "front";
+  if (choice.view === "rear") return "back";
+  return "side";
+}
+
 function syncPainted(turn: string, lit: boolean, phase: string): void {
   const host = byId("painted");
   const bar = byId("painted-bar");
   const credit = byId("painted-credit");
   const note = byId("painted-note");
-  const on = choice.look === "painted" && choice.view === "side";
-  stage.dataset.look = on ? "painted" : "line";
+  const on = choice.look === "painted" && choice.view !== "map" && choice.view !== "cockpit";
+  stage.dataset.look = choice.look;
   if (!on) {
     if (!host.hidden || host.childElementCount > 0) hidePainted(host, bar, credit);
     note.hidden = true;
@@ -279,7 +389,7 @@ function syncPainted(turn: string, lit: boolean, phase: string): void {
   }
   const craft = craftNow();
   const shown = stageOf(craft, phase, onPad());
-  showPainted(host, bar, credit, { rocket: shown.rocket, variant: shown.variant, view: onPad() ? viewOf(craft) : "side", engines: lit ? "on" : "off" }, turn, craft.drive === "continuous" ? 90 : 45);
+  showPainted(host, bar, credit, { rocket: shown.rocket, variant: shown.variant, view: onPad() && choice.view === "side" ? viewOf(craft) : rocketView(), engines: lit ? "on" : "off" }, turn, craft.drive === "continuous" ? 90 : 45);
   const whole = shown.slots != null;
   note.hidden = !whole;
   note.textContent = whole ? say("jPaintWhole") : "";
@@ -287,8 +397,10 @@ function syncPainted(turn: string, lit: boolean, phase: string): void {
 
 function setLook(look: "line" | "painted"): void {
   choice.look = look;
+  stage.dataset.look = look;
   for (const button of byId("looks").querySelectorAll("button")) button.setAttribute("aria-pressed", String(choice.look === "painted"));
   writeAddress();
+  layout();
   draw(true);
 }
 
@@ -396,8 +508,18 @@ function setCraft(lit: boolean, phase = "ascent"): void {
 
 function layout(): void {
   const box = stage.getBoundingClientRect();
-  const length = Math.max(120, Math.min(box.width * 0.86, box.height * 1.45));
+  const paintedSide = stage.dataset.look === "painted" && stage.dataset.view === "side";
+  const topBand = 96;
+  const bottomBand = 168;
+  const sideBand = 12;
+  const roomW = Math.max(120, box.width - sideBand * 2);
+  const roomH = Math.max(96, box.height - topBand - bottomBand);
+  const turn = (parseFloat(craftBox.style.getPropertyValue("--turn")) || 90) * Math.PI / 180;
+  const across = Math.abs(Math.sin(turn)) + 0.75 * Math.abs(Math.cos(turn));
+  const down = Math.abs(Math.cos(turn)) + 0.75 * Math.abs(Math.sin(turn));
+  const length = paintedSide ? Math.min(roomW / across, roomH / down) : Math.max(120, Math.min(box.width * 0.86, box.height * 1.45));
   stage.style.setProperty("--len", `${Math.round(length)}px`);
+  if (paintedSide) stage.style.setProperty("--craft-y", `${Math.round(topBand + (box.height - topBand - bottomBand) / 2)}px`);
   const ratio = Math.min(2, devicePixelRatio || 1);
   const w = Math.round(box.width * ratio);
   const h = Math.round(box.height * ratio);
@@ -839,9 +961,11 @@ function showSummary(): void {
     }),
   );
   byId("summary").hidden = false;
+  byId("summary-open").hidden = true;
 }
 function hideSummary(): void {
   byId("summary").hidden = true;
+  byId("summary-open").hidden = !(trip.verdict.playable && playhead >= total);
 }
 
 // ---- drawing a frame ----
@@ -907,6 +1031,7 @@ function draw(force = false): void {
   if (lit !== litNow || stageOf(craftNow(), id, onPad()).name !== stageNow || facing !== faceNow) setCraft(lit, id);
   const turn = `${(90 - 180 * state.turned).toFixed(1)}deg`;
   craftBox.style.setProperty("--turn", turn);
+  if (choice.look === "painted" && choice.view === "side") layout();
   syncPainted(turn, lit, id);
   drawRoute(state);
   if (choice.view === "map") drawMap(state);
@@ -962,9 +1087,12 @@ function frame(ts: number): void {
 
 function syncPlay(): void {
   const button = byId("play");
+  const word = playing ? say("jPause") : playhead >= total ? say("jAgain") : say("jPlay");
   button.setAttribute("aria-pressed", String(playing));
-  button.textContent = playing ? say("jPause") : playhead >= total ? say("jAgain") : say("jPlay");
+  setText(byId("play-label"), word);
+  byId("play-icon").setAttribute("d", playing ? PAUSE_ICON : PLAY_ICON);
   button.toggleAttribute("disabled", !trip.verdict.playable);
+  button.title = trip.verdict.playable ? word : trip.verdict.line;
 }
 
 function play(): void {
@@ -995,8 +1123,16 @@ function start(): void {
   drawVerdict();
   drawCredit();
   stage.dataset.view = choice.view;
+  stage.dataset.look = choice.look;
   hideSummary();
   const ok = trip.verdict.playable && trip.phases.length > 0;
+  const blocked = byId("blocked");
+  blocked.hidden = ok;
+  if (!ok) {
+    setText(byId("blocked-title"), say("jPhase_none"));
+    setText(byId("blocked-why"), trip.verdict.line);
+    byId("leave-earth").hidden = choice.from === "earth";
+  }
   byId("controls").toggleAttribute("data-off", !ok);
   byId<HTMLInputElement>("scrub").disabled = !ok;
   byId("restart").toggleAttribute("disabled", !ok);
@@ -1013,7 +1149,7 @@ function start(): void {
     byId("now").replaceChildren();
     byId("trip").replaceChildren();
     for (const id of ["accel", "timer", "preheat", "ignition"]) byId(id).hidden = true;
-    setText(byId("phase"), say("jPhase_none"));
+    setText(byId("phase"), "");
     setText(byId("speed-label"), "");
     setText(byId("speed-value"), "");
     setText(byId("speed-sub"), "");
@@ -1026,6 +1162,18 @@ function start(): void {
 }
 
 byId("play").addEventListener("click", () => (playing ? pause() : play()));
+byId("summary-close").addEventListener("click", () => hideSummary());
+byId("summary-open").addEventListener("click", () => showSummary());
+byId("leave-earth").addEventListener("click", () => change({ from: "earth" }));
+stage.addEventListener("click", (event) => {
+  const card = byId("summary");
+  const target = event.target as Element;
+  if (card.hidden || card.contains(target) || target.closest("#summary-open")) return;
+  hideSummary();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") hideSummary();
+});
 byId("restart").addEventListener("click", () => {
   pause();
   playhead = 0;

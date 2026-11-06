@@ -22,6 +22,7 @@ import { aimOrbit, applyTurn, companionsFor, frameSky, orbitCatalogue, paceFromS
 import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
+import { chip, fillLooks } from "./chip.ts";
 import { hasThrusters } from "../src/thrusters.ts";
 import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
 import { separationOf } from "../src/separation.ts";
@@ -190,13 +191,6 @@ function sizeObject() {
 new ResizeObserver(sizeObject).observe(hero);
 
 /** A chip. `say` is the key of its words where the family's chooser should keep them up to date. */
-function chip(label: string, testid: string, on: () => void, key?: string): HTMLButtonElement {
-  const button = el("button", { type: "button", className: "chip", textContent: key ? say(key) : label });
-  button.dataset.testid = testid;
-  if (key) button.dataset.say = key;
-  button.addEventListener("click", on);
-  return button;
-}
 const press = (group: HTMLElement, chosen: string) => {
   for (const button of group.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === chosen));
 };
@@ -660,8 +654,8 @@ function pickMaker(maker: MakerId) {
 
 byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker), `maker_${maker}`)));
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
-byId("looks").append(...LOOK_NAMES.map((look) => chip(WORDS.en[`look_${look}`], `look-${look}`, () => pick({ look }), `look_${look}`)));
 byId("forms").append(chip(WORDS.en.cmpStack, "form-stack", () => pick({ form: "stack" }), "cmpStack"), chip(WORDS.en.cmpSpace, "form-space", () => pick({ form: "space" }), "cmpSpace"));
+fillLooks(byId("looks"), state.look, (look) => pick({ look: look as LookName }));
 byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.replaceAll("-", "_")}`], `view-${view}`, () => pick({ view }), `view_${view.replaceAll("-", "_")}`)));
 const skyButton = (id: string, testid: string, on: () => void): HTMLButtonElement => {
   const button = el("button", { type: "button", className: id === "none" ? "thumb thumb-none" : "thumb" });

@@ -4,6 +4,7 @@ import type { UchusenRocket } from "../src/element.ts";
 import { VIEWS } from "../src/framing.ts";
 import { frameSky } from "./sky.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
+import { chip } from "./chip.ts";
 
 type Detail = { yaw?: number; tilt?: number; roll?: number; zoom?: number; panX?: number; panY?: number; reason?: string };
 type Mode = "free" | "all" | "follow" | "selected" | "planet";
@@ -41,17 +42,6 @@ export function mountCamera(opts: {
   const note = byId("cw-edges-note");
   const arrows = byId("cw-arrows");
   const distance = byId("cw-distance");
-
-  const chip = (label: string, testid: string, pressed: boolean, on: () => void): HTMLButtonElement => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "chip";
-    button.textContent = label;
-    button.dataset.testid = testid;
-    button.setAttribute("aria-pressed", String(pressed));
-    button.addEventListener("click", on);
-    return button;
-  };
 
   function readBoxes(): Box[] {
     const raw = hero.shadowRoot?.querySelector("canvas")?.dataset.craftBoxes ?? "";
@@ -190,21 +180,10 @@ export function mountCamera(opts: {
     if (!canvas) return;
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
-    const list = document.createElement("ul");
-    list.className = "cw-craft-list";
-    // The picture already names a craft that is on screen. This list is only for one the picture is not naming.
-    const pictureNames = hero.getAttribute("names") !== "off";
     names.forEach((name, index) => {
       const box = pageBox(index);
-      const off = !box || !box.on || box.x + box.w < 0 || box.y + box.h < 0 || box.x > width || box.y > height;
-      if (pictureNames && !off) return;
-      const showEdge = edges === "open" && off && !!box;
-      if (!showEdge) {
-        const item = document.createElement("li");
-        item.textContent = off ? `${name} · ${say("cmpOffScreen")}` : name;
-        list.append(item);
-      }
-      if (showEdge && box) {
+      const off = Boolean(box && box.on && (box.x + box.w < 0 || box.y + box.h < 0 || box.x > width || box.y > height));
+      if (edges === "open" && off && box) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "cw-edge";
@@ -233,7 +212,6 @@ export function mountCamera(opts: {
         arrows.append(mark);
       }
     });
-    if (list.childElementCount) arrows.append(list);
     const metres = Number(canvas.dataset.distance ?? "0");
     const zoom = Math.max(0.000001, bar.state.zoom || 1);
     const far = metres / zoom;
