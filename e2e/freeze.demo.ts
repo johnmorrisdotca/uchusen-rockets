@@ -339,8 +339,12 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);
   await press(page, "look-painted");
-  const fleet = Object.values(ROCKETS).filter((rocket) => !real(rocket));
-  expect(fleet.length).toBeGreaterThan(5);
+  const whole = Object.values(ROCKETS).filter((rocket) => !real(rocket));
+  expect(whole.length).toBeGreaterThan(5);
+  // CI splits the walk into parts (FLEET_PART="2/3") so each job ends well inside its hour; every ship is still walked by one of them
+  const [part, parts] = (process.env.FLEET_PART ?? "1/1").split("/").map(Number);
+  const fleet = whole.filter((_, i) => i % parts === part - 1);
+  expect(fleet.length).toBeGreaterThan(0);
   // The element says `uchusen-change` when the rocket and variant on screen are in. `data-variant` and `data-state` are set before that and `data-state` stays "3d" through a change, so they do not tell a reading that the
   // choice is drawn: a slow runner read 4 buffers where 1395 are made once the last variant's first frame is in.
   await hero(page).evaluate((node) =>
