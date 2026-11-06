@@ -44,7 +44,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
 import { angleAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
-import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
+import { type Angle, directionOf, FOV_DEG, frameFor, PICTURE_H, rolledUp, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
@@ -1303,6 +1303,9 @@ export class RocketViewer {
       this.limits(framing.distance);
     }
     this.controls.update();
+    const up = rolledUp(direction, this.driven?.roll ?? 0);
+    this.camera.up.set(up[0], up[1], up[2]);
+    this.camera.lookAt(framing.target[0], framing.target[1], framing.target[2]);
   }
 
   /** Zoom is the camera's, and the pan moves the picture by pixels, so the view stays sharp at any zoom. */

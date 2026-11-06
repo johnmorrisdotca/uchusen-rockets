@@ -235,7 +235,7 @@ export class UchusenRocket extends HTMLBase {
     this.viewer?.setMarks(focus && slot && this.frameLabel ? [{ id: "module", text: this.frameLabel, at: focus.target, slot }] : null);
   }
 
-  /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
+  /** Lets a page choose the turn, tip, roll, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
   drive(choice: Partial<ViewChoice> | null): void {
     const before = this.driven;
     if (choice === null) {
@@ -246,6 +246,7 @@ export class UchusenRocket extends HTMLBase {
       this.driven = {
         yaw: number(choice.yaw, this.driven?.yaw ?? 0, -3600, 3600),
         tilt: number(choice.tilt, this.driven?.tilt ?? 0, -90, 90),
+        roll: number(choice.roll, this.driven?.roll ?? 0, -180, 180),
         zoom: number(choice.zoom, this.driven?.zoom ?? 1, 0.25, 8),
         panX: number(choice.panX, this.driven?.panX ?? 0, -5000, 5000),
         panY: number(choice.panY, this.driven?.panY ?? 0, -5000, 5000),
@@ -636,6 +637,7 @@ export class UchusenRocket extends HTMLBase {
     const unit = Math.min(this.drawing.clientWidth / w, this.drawing.clientHeight / h) || 1;
     const view = zoom === 1 && panX === 0 && panY === 0 ? [x, y, w, h] : [x + w / 2 - w / (2 * zoom) - panX / (unit * zoom), y + h / 2 - h / (2 * zoom) - panY / (unit * zoom), w / zoom, h / zoom];
     node.setAttribute("viewBox", view.map((n) => +n.toFixed(3)).join(" "));
+    if (node instanceof SVGElement) node.style.transform = (this.driven?.roll ?? 0) === 0 ? "" : `rotate(${this.driven?.roll}deg)`;
     this.drawing.dataset.zoom = zoom.toFixed(2);
     this.drawing.dataset.pan = `${Math.round(panX)},${Math.round(panY)}`;
   }

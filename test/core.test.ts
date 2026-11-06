@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cleanLook, cleanShow, cleanView, CROSSFADE_MS, DEFAULT_LOOK, DEFAULT_VIEW, directionOf, DRAWING_HOLD_MS, frameFor, MAX_PIXELS, MAX_SIDE, pixelRatioFor, placesFor, REDUCED_FADE_MS, revealDelay, showsOf, tiltMode, tiltTurn, turnedBy, VIEWS } from "../src/index.ts";
+import { cleanLook, cleanShow, cleanView, CROSSFADE_MS, DEFAULT_LOOK, DEFAULT_VIEW, directionOf, DRAWING_HOLD_MS, frameFor, MAX_PIXELS, MAX_SIDE, pixelRatioFor, placesFor, REDUCED_FADE_MS, revealDelay, rolledUp, showsOf, tiltMode, tiltTurn, turnedBy, VIEWS } from "../src/index.ts";
 
 test("a hostile look, view or show falls back to the default", () => {
   assert.equal(cleanLook("<b>"), DEFAULT_LOOK);
@@ -73,4 +73,7 @@ test("the view controls turn and tip from the chosen view: a drag right carries 
   assert.equal(turnedBy({ az: 32, el: 9 }, 0, 20).el, -11);
   assert.equal(turnedBy({ az: 0, el: 80 }, 0, -90).el, 87);
   assert.equal(turnedBy({ az: 0, el: -70 }, 0, 90).el, -87);
+  assert.deepEqual(rolledUp([0, 0, 1], 0), [0, 1, 0]);
+  const side = rolledUp([0, 0, 1], 90);
+  assert.ok(Math.abs(side[0] + 1) < 1e-9 && Math.abs(side[1]) < 1e-9 && Math.abs(side[2]) < 1e-9);
 });

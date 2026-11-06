@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Three axes** (MODULES-468): the camera follows the view controls' roll, so Angle, Tilt and Roll all move the rocket. The family's view controls are 0.17.0, which offers the three axes and a tumble.
+
 ## [0.13.0] - 2026-11-05
 
 Three new SPX ships (Kaminari as the Quiver, Emiake, Romaryū), Hanabusa, the repair drone and builder mode on every large ship, planet and moon backgrounds seen from orbit, a floating compare page, the fleet record and the three-ship comparison, the Moon as a journey start and the journey views.
