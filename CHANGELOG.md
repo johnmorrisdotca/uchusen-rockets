@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **A thrown craft drifts** (MODULES-469): letting go of a craft on the compare page sends it at a quarter of the drag, and never so fast that it would cross the view in under a minute.
+
 ## [0.13.0] - 2026-11-05
 
 Three new SPX ships (Kaminari as the Quiver, Emiake, Romaryū), Hanabusa, the repair drone and builder mode on every large ship, planet and moon backgrounds seen from orbit, a floating compare page, the fleet record and the three-ship comparison, the Moon as a journey start and the journey views.
