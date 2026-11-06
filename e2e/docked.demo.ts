@@ -79,6 +79,11 @@ test("Miyamoto's ventral collars and the first design's arms offer a craft", asy
   await expect(page.getByTestId("docked-starship-ventral-starship")).toBeVisible();
   await page.getByTestId("docked-dragon-ventral-dragon").click();
   await expect(hero(page)).toHaveAttribute("docked", "dragon@dragon-ventral");
+  await page.getByTestId("beside-on").click();
+  await page.getByTestId("true-scale").click();
+  await expect(hero(page)).toHaveAttribute("docked", "dragon@dragon-ventral");
+  await expect(hero(page)).toHaveAttribute("beside", "on");
+  await expect(hero(page)).toHaveAttribute("scale", "true");
   await expect.poll(() => param(page, "docked")).toBe("dragon@dragon-ventral");
 
   await page.goto(`${URL}?rocket=fleet-kaminari&variant=fleet-kaminari`);

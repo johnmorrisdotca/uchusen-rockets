@@ -32,6 +32,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { MATERIALS, type MaterialName } from "../src/model/materials.ts";
 import { meshOf } from "../src/model/pieces.ts";
 import { partEntry } from "../src/model/registry.ts";
+import { dockedNow } from "../src/model/fleet/dockedState.ts";
 import { SHIP_02_SLOTS } from "../src/model/fleet/ship-02/index.ts";
 
 export interface Spec {
@@ -62,6 +63,8 @@ export interface Spec {
   marks?: { id: string; at: [number, number, number]; slot?: string }[];
   /** Drawn beside it: Starship Block 3, standing, at this ship-space position. */
   starship?: [number, number, number];
+  /** A `docked` choice, so the dock arms draw the craft named in it. */
+  docked?: string;
   /** Shadow box half-size in metres. */
   shadow: number;
   /** The light's direction from the target. */
@@ -174,10 +177,14 @@ export function shoot(spec: Spec): { dataUrl: string; pxPerMetre: number; triang
   for (const s of SHIP_02_SLOTS) {
     if (!wanted.has(s.slot)) continue;
     const clip = cutOf(s.slot);
-    const key = s.slot + (clip.length ? `/cut${clip[0].constant}` : "");
+    const dockedKey = s.slot === "dock" && spec.docked ? spec.docked : "";
+    const key = s.slot + (clip.length ? `/cut${clip[0].constant}` : "") + (dockedKey ? `/${dockedKey}` : "");
     let g = cache.get(key);
     if (!g) {
+      const held = dockedNow.spec;
+      if (dockedKey) dockedNow.spec = dockedKey;
       const pieces = s.pieces();
+      dockedNow.spec = held;
       const mesh = meshOf(pieces);
       g = groupOf(mesh, clip);
       cache.set(key, g);
