@@ -256,7 +256,7 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
 test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the picture", async ({ page }) => {
   const found = problems(page);
   await page.goto(URL);
-  const names = ["side", "front", "rear", "cockpit", "map"];
+  const names = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"];
   const tops = [];
   for (const name of names) {
     const box = await page.getByTestId(`view-${name}`).boundingBox();
@@ -279,6 +279,25 @@ test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the p
   await expect(page.getByTestId("dest")).toContainText("Mars");
   await expect(page.getByTestId("from")).toBeHidden();
   await expect(page.getByTestId("craft")).toBeHidden();
+  await page.getByTestId("view-chase").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "chase");
+  await expect(page.getByTestId("dest")).toBeVisible();
+  await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
+  await page.getByTestId("view-orbit").click();
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-view", "orbit");
+  await expect(page.getByTestId("dest")).toBeHidden();
+  await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
+  await page.getByTestId("hold").click();
+  await expect(page.getByTestId("hold")).toHaveAttribute("aria-pressed", "true");
+  expect(page.url()).toContain("hold=1");
+  const svg = page.getByTestId("craft").locator("svg");
+  const box = await svg.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box!.x + box!.width / 2 + 90, box!.y + box!.height / 2);
+  await page.mouse.up();
+  await expect(page.getByTestId("craft")).not.toHaveAttribute("data-yaw", "0");
   expect(found).toEqual([]);
 });
 

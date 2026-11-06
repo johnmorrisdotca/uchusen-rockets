@@ -60,9 +60,9 @@ const setText = (node: Element, text: string): void => {
   if (node.textContent !== text) node.textContent = text;
 };
 const reduced = (): boolean => matchMedia("(prefers-reduced-motion: reduce)").matches;
-const VIEWS = ["side", "front", "rear", "cockpit", "map"] as const;
+const VIEWS = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"] as const;
 type JourneyView = (typeof VIEWS)[number];
-const VIEW_WORD: Record<JourneyView, string> = { side: "jSide", front: "jFront", rear: "jRear", cockpit: "jCockpit", map: "jMap" };
+const VIEW_WORD: Record<JourneyView, string> = { side: "jSide", front: "jFront", rear: "jRear", cockpit: "jCockpit", chase: "jChase", orbit: "jOrbit", map: "jMap" };
 const isView = (value: string | null): value is JourneyView => VIEWS.some((view) => view === value);
 const C_MS = 299_792_458;
 const DAY = 86_400_000;
@@ -88,6 +88,7 @@ const choice = {
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
   view: isView(askedView) ? askedView : "side",
   look: query.get("look") === "painted" ? "painted" : "line",
+  hold: query.get("hold") === "1",
   base: todayUtc(),
 };
 if (choice.to === choice.from) choice.to = choice.from === "earth" ? "mars" : "earth";
@@ -110,6 +111,7 @@ function writeAddress(): void {
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
   if (choice.look === "painted") next.set("look", "painted");
+  if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
   const text = `${location.pathname}?${next.toString()}`;
   history.replaceState(null, "", text);
@@ -222,6 +224,8 @@ function drawPickers(): void {
   );
   byId("when").replaceChildren(...options.map((option, index) => chip(option.label, `when-${index}`, index === choice.when, () => change({ when: index }))));
   byId("views").replaceChildren(...VIEWS.map((view) => chip(say(VIEW_WORD[view]), `view-${view}`, choice.view === view, () => setView(view))));
+  const holdButton = byId("hold");
+  holdButton.setAttribute("aria-pressed", String(choice.hold));
   const painted = choice.look === "painted";
   byId("looks").replaceChildren(chip(say(painted ? "look_line" : "look_painted"), "look-painted", painted, () => setLook(painted ? "line" : "painted")));
 }
@@ -298,6 +302,72 @@ function setSpeed(value: PlaySpeed): void {
 const stage = byId("stage");
 const sky = byId<HTMLCanvasElement>("sky");
 const craftBox = byId("craft");
+const pose = { yaw: 0, pitch: 0, roll: 0, nx: 0, ny: 0 };
+let poseEase = 0;
+function applyPose(): void {
+  craftBox.style.setProperty("--yaw", `${pose.yaw.toFixed(2)}deg`);
+  craftBox.style.setProperty("--pitch", `${pose.pitch.toFixed(2)}deg`);
+  craftBox.style.setProperty("--roll", `${pose.roll.toFixed(2)}deg`);
+  craftBox.style.setProperty("--nx", `${pose.nx.toFixed(1)}px`);
+  craftBox.style.setProperty("--ny", `${pose.ny.toFixed(1)}px`);
+  craftBox.dataset.yaw = String(Math.round(pose.yaw));
+}
+function easePose(): void {
+  if (choice.view === "orbit" || choice.hold || reduced()) return;
+  const from = { ...pose };
+  const began = performance.now();
+  const token = ++poseEase;
+  const step = (now: number): void => {
+    if (token !== poseEase) return;
+    const t = Math.min(1, (now - began) / 320);
+    const left = 1 - t;
+    pose.yaw = from.yaw * left;
+    pose.pitch = from.pitch * left;
+    pose.roll = from.roll * left;
+    pose.nx = from.nx * left;
+    pose.ny = from.ny * left;
+    applyPose();
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+let drag: { x: number; y: number; nudge: boolean } | null = null;
+craftBox.addEventListener("pointerdown", (event) => {
+  if (choice.view === "map" || choice.view === "cockpit") return;
+  if ((event.target as Element).closest("button")) return;
+  drag = { x: event.clientX, y: event.clientY, nudge: event.altKey };
+  poseEase += 1;
+  craftBox.setPointerCapture(event.pointerId);
+});
+craftBox.addEventListener("pointermove", (event) => {
+  if (!drag) return;
+  const dx = event.clientX - drag.x;
+  const dy = event.clientY - drag.y;
+  drag.x = event.clientX;
+  drag.y = event.clientY;
+  if (drag.nudge) {
+    pose.nx += dx;
+    pose.ny += dy;
+  } else if (event.shiftKey) pose.roll += dx * 0.45;
+  else {
+    pose.yaw += dx * 0.45;
+    pose.pitch = Math.max(-80, Math.min(80, pose.pitch + dy * 0.35));
+  }
+  applyPose();
+});
+const endDrag = (): void => {
+  if (!drag) return;
+  drag = null;
+  easePose();
+};
+craftBox.addEventListener("pointerup", endDrag);
+craftBox.addEventListener("pointercancel", endDrag);
+byId("hold").addEventListener("click", () => {
+  choice.hold = !choice.hold;
+  byId("hold").setAttribute("aria-pressed", String(choice.hold));
+  writeAddress();
+  if (!choice.hold) easePose();
+});
 const mapSvg = byId<SVGSVGElement>("map");
 const routeSvg = byId<SVGSVGElement>("route");
 let litNow = false;
