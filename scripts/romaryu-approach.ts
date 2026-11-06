@@ -60,18 +60,23 @@ for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
 }
 port.push(cub("hull-white", [-0.2, 0.85], [y - 0.9, y - 0.35], [z - 0.7, z + 0.55]));
 port.push(rod("hull-grey-dark", [-0.28, y - 1.15, z], [-0.28, y - 0.25, z], 0.1, 6));
-
-const railZ = z + 4.2;
-for (const sx of [-1, 1]) {
-  const x = sx * 3.2;
-  port.push(rod("hull-grey", [sx * 1.8, y - 1.4, z - 2.2], [x, y - 1, railZ], 0.2, 6));
-  port.push(rod("hull-grey", [sx * 1.8, y + 1.2, z - 2.2], [x, y - 1, railZ], 0.16, 6));
-  port.push(rod("hull-grey", [x, y - 58, railZ], [x, y - 1, railZ], 0.14, 6));
+const tube = 1;
+const z1 = z - 1.6;
+port.push(cub("hull-white", [-tube, tube], [y - tube - 0.16, y - tube], [face, z1]));
+port.push(cub("hull-white", [-tube, tube], [y + tube, y + tube + 0.16], [face, z1]));
+port.push(cub("hull-white", [-tube - 0.16, -tube], [y - tube, y + tube], [face, z1]));
+port.push(cub("hull-white", [tube, tube + 0.16], [y - tube, y + tube], [face, z1]));
+for (let i = 0; i < 6; i++) {
+  const a = (i / 6) * Math.PI * 2 + 0.4;
+  const rim: V3 = [Math.cos(a) * 2.15, y, z + Math.sin(a) * 2.15];
+  const tip: V3 = [Math.cos(a) * 2.7, y, z + Math.sin(a) * 2.7];
+  port.push(rod("hull-grey", rim, tip, 0.06, 5));
+  port.push(...lamps([{ at: tip, colour: i % 2 === 0 ? "starboard" : "amber", size: 0.18 }]));
 }
-for (let step = 0; step <= 7; step++) {
-  const yy = y - 6 - step * 7;
-  port.push(rod("hull-grey-dark", [-3.2, yy, railZ], [3.2, yy, railZ], 0.1, 6));
-  for (const sx of [-1, 1]) port.push(...lamps([{ at: [sx * 3.2, yy, railZ], colour: step % 2 === 0 ? "starboard" : "amber", size: 0.28 }]));
+for (let zz = face + 8; zz < z1; zz += 10) {
+  const tip: V3 = [tube + 0.95, y, zz];
+  port.push(rod("hull-grey", [tube + 0.16, y, zz], tip, 0.07, 5));
+  port.push(...lamps([{ at: tip, colour: "amber", size: 0.16 }]));
 }
 
 parts.push({ name: "approach", mesh: meshOf([...dragon, ...port]), at: [0, 0, 0] });
