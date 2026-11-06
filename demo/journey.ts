@@ -408,8 +408,10 @@ function syncPainted(turn: string, lit: boolean, phase: string): void {
 
 function setLook(look: "line" | "painted"): void {
   choice.look = look;
+  stage.dataset.look = look;
   for (const button of byId("looks").querySelectorAll("button")) button.setAttribute("aria-pressed", String(choice.look === "painted"));
   writeAddress();
+  layout();
   draw(true);
 }
 
@@ -517,8 +519,18 @@ function setCraft(lit: boolean, phase = "ascent"): void {
 
 function layout(): void {
   const box = stage.getBoundingClientRect();
-  const length = Math.max(120, Math.min(box.width * 0.86, box.height * 1.45));
+  const paintedSide = stage.dataset.look === "painted" && stage.dataset.view === "side";
+  const topBand = 96;
+  const bottomBand = 168;
+  const sideBand = 12;
+  const roomW = Math.max(120, box.width - sideBand * 2);
+  const roomH = Math.max(96, box.height - topBand - bottomBand);
+  const turn = (parseFloat(craftBox.style.getPropertyValue("--turn")) || 90) * Math.PI / 180;
+  const across = Math.abs(Math.sin(turn)) + 0.75 * Math.abs(Math.cos(turn));
+  const down = Math.abs(Math.cos(turn)) + 0.75 * Math.abs(Math.sin(turn));
+  const length = paintedSide ? Math.min(roomW / across, roomH / down) : Math.max(120, Math.min(box.width * 0.86, box.height * 1.45));
   stage.style.setProperty("--len", `${Math.round(length)}px`);
+  if (paintedSide) stage.style.setProperty("--craft-y", `${Math.round(topBand + (box.height - topBand - bottomBand) / 2)}px`);
   const ratio = Math.min(2, devicePixelRatio || 1);
   const w = Math.round(box.width * ratio);
   const h = Math.round(box.height * ratio);
@@ -1030,6 +1042,7 @@ function draw(force = false): void {
   if (lit !== litNow || stageOf(craftNow(), id, onPad()).name !== stageNow || facing !== faceNow) setCraft(lit, id);
   const turn = `${(90 - 180 * state.turned).toFixed(1)}deg`;
   craftBox.style.setProperty("--turn", turn);
+  if (choice.look === "painted" && choice.view === "side") layout();
   syncPainted(turn, lit, id);
   drawRoute(state);
   if (choice.view === "map") drawMap(state);
@@ -1121,6 +1134,7 @@ function start(): void {
   drawVerdict();
   drawCredit();
   stage.dataset.view = choice.view;
+  stage.dataset.look = choice.look;
   hideSummary();
   const ok = trip.verdict.playable && trip.phases.length > 0;
   const blocked = byId("blocked");
