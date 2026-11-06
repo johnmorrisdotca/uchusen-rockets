@@ -22,6 +22,11 @@ const SOLAR: ["sun" | HostId, string][] = [
   ["saturn", "cmpBodySaturn"],
   ["uranus", "cmpBodyUranus"],
   ["neptune", "cmpBodyNeptune"],
+  ["ceres", "cmpBodyCeres"],
+  ["pluto", "cmpBodyPluto"],
+  ["haumea", "cmpBodyHaumea"],
+  ["makemake", "cmpBodyMakemake"],
+  ["eris", "cmpBodyEris"],
 ];
 
 const byId = (id: string): HTMLElement => {

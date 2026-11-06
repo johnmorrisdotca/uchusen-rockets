@@ -79,6 +79,8 @@ test("one astronomical unit shows the Sun and Jupiter", async ({ page }, info) =
   await page.getByTestId("mark-cmpMarkAu").click();
   await expect(page.getByTestId("body-jupiter")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("body-sun")).toBeVisible();
+  await expect(page.getByTestId("body-pluto")).toBeVisible();
+  await expect(page.getByTestId("body-ceres")).toBeVisible();
   const text = await page.getByTestId("cw-distance").innerText();
   expect(Number(text.replaceAll(/[^0-9]/g, ""))).toBeGreaterThan(100_000_000);
 });
