@@ -56,7 +56,9 @@ import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
-import { playFrame } from "../buildPlay.ts";
+import { assemblyOf, inspectAlong, playFrame } from "../buildPlay.ts";
+import { clearArc, fitoutOf, growPart, spinUp } from "./buildArc.ts";
+import { fitTanks } from "./fitOut.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
 import { SwarmRig } from "./swarm.ts";
@@ -209,7 +211,7 @@ const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
 /** How brightly a painted model's glow picture shines when the lights are on. */
 const MODEL_GLOW = 1.5;
 /** A drone is drawn this many times life size at most, and a ship's longest side over this many metres: a saucer about a fiftieth of the ship across (Miyamoto, 380 m, gets 7.6). */
-const DRONE_SCALE_MAX = 8;
+const DRONE_SCALE_MAX = 16;
 const DRONE_SHIP_RATIO = 50;
 const MODEL_PICTURES = ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"] as const;
 
@@ -336,6 +338,7 @@ export class RocketViewer {
     this.holder = holder;
     this.options = options;
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
+    this.renderer.localClippingEnabled = true;
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
@@ -867,8 +870,12 @@ export class RocketViewer {
     for (const part of this.parts) {
       for (const move of part.moves) {
         const motion = this.motionOn ? this.motions.find((one) => one.group === move.name) : undefined;
-        const angle = motion ? angleAt(motion, seconds, this.motionSpeed) : 0;
-        if (motion && shown === undefined) shown = angle;
+        const own = this.progressAt !== null && typeof part.holder.userData.arcSpin === "number" ? part.holder.userData.arcSpin : null;
+        const turned = this.progressAt === null ? null : spinUp(own);
+        // a ring still being built stays at its own angle, so an open arc does not swing with a sibling that has already spun up
+        const angle = turned !== null ? turned : this.progressAt !== null ? 0 : (motion ? angleAt(motion, seconds, this.motionSpeed) : 0);
+        if (typeof own === "number" && own > 0 && (shown === undefined || own > shown)) shown = own;
+        else if (motion && shown === undefined) shown = angle;
         if (Math.abs(angle - move.angle) < 0.005) continue;
         move.angle = angle;
         move.group.quaternion.setFromAxisAngle(move.axis, MathUtils.degToRad(angle));
@@ -1291,7 +1298,7 @@ export class RocketViewer {
     // in a flight a stage leaves the one below, so its nozzle shows then too
     const nozzle = nozzleOnly && (this.show !== "together" || this.flightOn);
     for (const { mesh, name } of part.faces) mesh.visible = !nozzleOnly || (nozzle && NOZZLE_MATERIALS.has(name));
-    for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
+    if (this.progressAt === null) for (const lines of [...part.feature, ...part.weld]) lines.visible = !nozzleOnly;
     part.nozzleShown = nozzle;
     this.canvas.dataset.nozzle = this.parts.some((one) => one.nozzleShown) ? "own" : "";
   }
@@ -1611,6 +1618,11 @@ export class RocketViewer {
         const place = places.find((one) => one.slot === part.slot);
         if (!place) continue;
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.scale.setScalar(1);
+        clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
+        fitTanks(part.holder, 0);
+        for (const lines of part.feature) lines.visible = true;
         part.holder.visible = place.shown;
       }
       this.swarm?.hide();
@@ -1619,7 +1631,10 @@ export class RocketViewer {
       delete this.canvas.dataset.built;
       delete this.canvas.dataset.showing;
       delete this.canvas.dataset.weld;
+      delete this.canvas.dataset.fitout;
+      delete this.canvas.dataset.ringSpin;
       delete this.canvas.dataset.swarmNear;
+      this.stepMotion(performance.now(), true);
       if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
       this.applyLeave();
@@ -1631,20 +1646,52 @@ export class RocketViewer {
     if (shown.length === 0) return;
     const dock: [number, number, number] = [Math.max(...shown.map((place) => place.at[0])) + 40, shown.reduce((sum, place) => sum + place.at[1], 0) / shown.length, 0];
     const slotAt = new Map(shown.map((place) => [place.slot, place.at] as const));
+    const fitout: { grown: number; stage: string; slot: string }[] = [];
     for (const part of this.parts) {
       if (part.beside) continue;
       const place = places.find((one) => one.slot === part.slot);
       const step = steps.find((one) => one.slot === part.slot);
       if (!place || !step) continue;
       const seated = grounded(step.slot, frame.done);
+      const box = built.parts.find((one) => one.slot === step.slot)?.bounds;
+      const span = box ? Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]) : 80;
+      const fit = assemblyOf(step, frame.day, span);
+      const ring = step.slot.includes("ring") || step.slot.includes("wheel");
       if (frame.done.includes(step.slot) && seated) {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        part.holder.scale.setScalar(1);
+        clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
+        fitTanks(part.holder, 0);
+        for (const lines of part.feature) lines.visible = true;
+        for (const outline of part.outlines) outline.visible = this.look !== "painted";
         part.holder.visible = place.shown;
-      } else if (frame.going.includes(step.slot) && seated) {
-        const flown = carries([{ drone: 0, slot: step.slot }], at, steps, (slot) => slotAt.get(slot), dock)[0];
-        if (flown) part.holder.position.set(flown.part[0], flown.part[1], flown.part[2]);
-        part.holder.visible = true;
-      } else part.holder.visible = false;
+      } else if (frame.going.includes(step.slot) && seated && fit.grown > 0.02) {
+        // a section grows where it belongs; a ring opens as an arc, with no wireframe of the part still to come
+        part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+        growPart(part.holder, fit.grown, ring);
+        const along = ring ? inspectAlong(step, frame.day) : null;
+        // the plants finish while the ring is still; spin-up is the last part of the inspection
+        const spinning = along !== null && along >= 0.7;
+        if (ring) part.holder.userData.arcSpin = spinning ? ((along - 0.7) / 0.3) * 360 : 0;
+        if (ring) {
+          fitTanks(part.holder, fit.grown);
+          const stage = spinning ? "spin" : fitoutOf(fit.grown);
+          if (stage) fitout.push({ grown: fit.grown, stage, slot: step.slot });
+        }
+        const openRing = ring && fit.grown < 0.995;
+        for (const lines of [...part.feature, ...part.weld]) lines.visible = !openRing;
+        for (const outline of part.outlines) outline.visible = !openRing && this.look !== "painted";
+        part.holder.visible = place.shown;
+      } else {
+        part.holder.scale.setScalar(1);
+        clearArc(part.holder);
+        delete part.holder.userData.arcSpin;
+        fitTanks(part.holder, 0);
+        for (const lines of part.feature) lines.visible = true;
+        for (const outline of part.outlines) outline.visible = this.look !== "painted";
+        part.holder.visible = false;
+      }
     }
     const open = frame.going.filter((slot) => grounded(slot, frame.done));
     const workSteps = steps.filter((step) => !frame.going.includes(step.slot) || open.includes(step.slot));
@@ -1662,11 +1709,21 @@ export class RocketViewer {
     this.swarm.show(
       poses.map((pose) => {
         const box = pose.duty === "work" ? boxOf.get(pose.slot) : undefined;
+        const ringSlot = pose.slot.includes("ring") || pose.slot.includes("wheel");
+        let where = pose.where;
+        if (ringSlot && box && pose.duty === "work") {
+          const dx = pose.where[0] - pose.part[0];
+          const dz = pose.where[2] - pose.part[2];
+          const dist = Math.hypot(dx, dz) || 1;
+          const rim = Math.max(Math.hypot(box.min[0], box.min[2]), Math.hypot(box.max[0], box.max[2])) + 18;
+          if (dist < rim) where = [pose.part[0] + (dx / dist) * rim, pose.where[1], pose.part[2] + (dz / dist) * rim];
+        }
         return {
-          where: pose.where,
+          where,
           part: pose.part,
           weld: pose.duty === "work",
           duty: pose.duty,
+          rank: pose.rank,
           skin: box
             ? {
                 min: [pose.part[0] + box.min[0], pose.part[1] + box.min[1], pose.part[2] + box.min[2]] as [number, number, number],
@@ -1685,8 +1742,22 @@ export class RocketViewer {
     else delete this.canvas.dataset.weld;
     this.canvas.dataset.swarm = String(count);
     this.canvas.dataset.going = frame.going.join(" ");
+    if (fitout.length > 0) {
+      const lead = fitout.reduce((best, one) => (one.grown > best.grown ? one : best));
+      this.canvas.dataset.fitout = [lead.stage, ...fitout.map((one) => `${one.slot}:${one.stage}`)].join(" ");
+    } else delete this.canvas.dataset.fitout;
+    this.canvas.dataset.arc = this.parts
+      .filter((part) => part.holder.visible && (part.slot.includes("ring") || part.slot.includes("wheel")))
+      .map((part) => `${part.slot}:${String(part.holder.userData.arcStat ?? "whole")}`)
+      .join(" ");
     this.canvas.dataset.built = frame.done.filter((slot) => grounded(slot, frame.done)).join(" ");
     this.canvas.dataset.showing = this.parts.filter((part) => !part.beside && part.holder.visible).map((part) => part.slot).join(" ");
+    this.canvas.dataset.ringSpin = this.parts
+      .filter((part) => typeof part.holder.userData.arcSpin === "number")
+      .map((part) => `${part.slot}:${Number(part.holder.userData.arcSpin).toFixed(1)}`)
+      .join(" ");
+    // motion may be off: the ring still has to take its own angle, or the spin-up stays at 0
+    this.stepMotion(performance.now(), true);
     if (!this.progressFramed) {
       this.progressFramed = true;
       this.setAngle({ az: this.homeAngle.az, el: -4 }, false);
