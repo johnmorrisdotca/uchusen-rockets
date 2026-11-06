@@ -99,6 +99,10 @@ export function angleAt(motion: Motion, seconds: number, speed: MotionSpeed = 1)
 /**
  * How far a slide has paid out, in metres. Anything that is not a slide stays at 0.
  *
+ * @param motion What the group does.
+ * @param seconds How long since the show began.
+ * @param speed 1 for real speed, 10 for ten times.
+ * @returns The distance in metres, from its stowed end to its open end, or 0 when it is not a slide.
  * @example
  * ```ts
  * import { slideAt, type Motion } from "@johnmorrisdotca/uchusen-rockets";
