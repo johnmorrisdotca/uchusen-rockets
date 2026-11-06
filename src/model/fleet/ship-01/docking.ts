@@ -2,8 +2,9 @@
 // and the walkway), and the pieces are drawn from that data. The hub node keeps four L-class ports for short visits and the inflatable modules; the docking crown at the bow has three arms with long-stay ports of two collar classes (S and M); and
 // a berth along the keel takes the upper stage of a Starship. Every long-stay berth has a hard-dock collar or a clamp, service umbilicals (power, coolant, water, air, data) and a pressurised walkway to the keel's lift, so a parked ship can be
 // shut down and its crew can live aboard. The bow dust shield stands ahead of the crown, so what is parked sits in its shadow. The berths are shown empty: the visiting craft are drawn only in the sheets, from the package's own models. Pure: no three.js and no DOM.
+import { berthArm, dockingPort } from "../dockJoints.ts";
 import { lightPool } from "../lights.ts";
-import { box, collar, cub, discZ, hoop, ibeam, KIT, pipeRun, place, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose } from "./adapter.ts";
+import { box, cub, discZ, hoop, ibeam, KIT, pipeRun, place, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose } from "./adapter.ts";
 import { SPINE_Y } from "./hull.ts";
 import { SPIN } from "./spin.ts";
 
@@ -154,7 +155,7 @@ export function dockingPieces(): Piece[] {
     const at = (r: number, yy: number): [number, number, number] => [d[0] * r, yy, d[1] * r];
     for (const dy of [-3.2, 3.2]) out.push(...ibeam("hull-grey", at(7.5, y + dy), at(DOCK.reach, y + dy), 1.0, 0.7, [0, 0, 1]));
     out.push(...roundStrut("hull-grey", at(7.8, y - 3.2), at(DOCK.reach - 1.2, y + 0.4), 0.22), ...roundStrut("hull-grey", at(7.8, y + 3.2), at(DOCK.reach - 1.2, y + 0.4), 0.22));
-    out.push(...place(collar(port.collar as "S" | "M", 0, -1), { at: [x, y, z] }));
+    out.push(...place(dockingPort(port.collar as "S" | "M", 2, -1), { at: [x, y, z] }));
     const w = port.collar === "S" ? 4.2 : 7.4;
     out.push({ kind: "lathe", material: "hull-white", at: [x, z], segs: 32, only: "mesh", body: true, profile: [[w / 2, y], [w / 2, y + 2.2]] } as Lathe, { kind: "lathe", material: "hull-grey-dark", at: [x, z], segs: 32, only: "mesh", profile: [[w / 2 + 0.1, y + 2.2], [w / 2 + 0.1, y + 2.4]] } as Lathe);
     out.push(...place(dockingHardware(port.collar === "S" ? 1 : 2), { at: [x, y, z], yaw: (Math.atan2(-d[1], d[0]) * 180) / Math.PI }));
@@ -199,6 +200,7 @@ export function dockingPieces(): Piece[] {
     for (let j = 0; j < 5; j++) out.push(rod("hull-grey-dark", [(3 + j * 4.2) * Math.sin(a), at(3 + j * 4.2, base + 3.2) + 0.02, (3 + j * 4.2) * Math.cos(a)], [(3 + (j + 1) * 4.2) * Math.sin(a), at(3 + (j + 1) * 4.2, base + 3.2) + 0.02, (3 + (j + 1) * 4.2) * Math.cos(a)], 0.05, 5, { only: "mesh" }));
   }
   for (const { from, to } of shieldStays()) out.push(...ibeam("hull-grey-dark", from, to, 1.2, 0.7, [0, 1, 0]), cub("hull-grey", [to[0] - 0.9, to[0] + 0.9], [to[1] + 0.8, to[1] + 0.9], [to[2] - 0.9, to[2] + 0.9]));
+  out.push(...place(berthArm(), { at: [DOCK.reach, y, 0], yaw: 180 }));
   return out;
 }
 

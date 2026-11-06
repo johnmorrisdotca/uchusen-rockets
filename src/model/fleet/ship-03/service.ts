@@ -1,6 +1,7 @@
 // What the hangar boxes and the service berths hold: the package's own Starship ship, on cradles, with the racks and the ports. Super Heavy is not carried in space. The bodies are not redrawn. Pure: no three.js and no DOM.
 import { STARSHIP_DRAWS, shipPieces } from "../../starship.ts";
-import { cub, discZ, ibeam, type Piece, place, rod, roundStrut } from "./adapter.ts";
+import { aimedPort, berthArm, deepTruss, transferCoupling } from "../dockJoints.ts";
+import { cub, ibeam, type Piece, place, rod, roundStrut } from "./adapter.ts";
 import { type BayId, bayBox } from "./dims.ts";
 
 const DRAW = STARSHIP_DRAWS.v3;
@@ -89,7 +90,8 @@ function stackAt(x: number, y0: number, z: number): Piece[] {
   const out = [...body(x, y0, z)];
   const mid = y0 + BODY.ship / 2;
   out.push(rod("hull-orange", [x + 16, mid - 14, z], [x + 16, mid + 14, z], 4, 24), rod("hull-white", [x - 16, mid - 14, z], [x - 16, mid + 14, z], 4, 24));
-  out.push(...roundStrut("copper", [x + 12, mid, z], [x + 4.6, mid, z], 0.35), ...roundStrut("hull-white", [x - 12, mid, z], [x - 4.6, mid, z], 0.35));
+  out.push(...place(transferCoupling(), { at: [x, y0, z] }));
+  out.push(...deepTruss([x + 16, mid, z], [x + 6, mid, z], 3), ...deepTruss([x - 16, mid, z], [x - 6, mid, z], 3));
   return out;
 }
 
@@ -108,9 +110,11 @@ export function miyamotoPorts(): Piece[] {
   const y = 240;
   const z = -28;
   const out: Piece[] = [];
-  out.push(discZ("hull-grey", -8, y, z - 0.6, z, 6, 24), discZ("hull-orange", -8, y, z - 0.9, z - 0.6, 5, 24));
-  out.push(discZ("hull-grey", 8, y, z - 0.6, z, 3, 20), discZ("hull-orange", 8, y, z - 0.9, z - 0.6, 2.4, 20));
-  for (const x of [-8, 8]) out.push(...roundStrut("hull-grey-dark", [x, y, -10], [x, y, z], 0.6));
+  out.push(...aimedPort("L", 2, [-8, y, z], [0, 0, -1]));
+  out.push(...aimedPort("M", 2, [8, y, z], [0, 0, -1]));
+  out.push(...deepTruss([-8, y, -10], [-8, y, z + 2], 3));
+  out.push(...deepTruss([8, y, -10], [8, y, z + 2], 3));
+  out.push(...place(berthArm(), { at: [0, y, -8], yaw: 90 }));
   return out;
 }
 

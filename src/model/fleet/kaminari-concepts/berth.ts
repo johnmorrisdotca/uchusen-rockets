@@ -2,8 +2,9 @@
 import { DRAGON_DRAWS, capsule, trunk } from "../../falcon.ts";
 import type { Piece, Vec3 } from "../../pieces.ts";
 import { STARSHIP_DRAWS, shipPieces } from "../../starship.ts";
+import { berthArm, berthCradle, deepTruss, dockingPort, transferCoupling } from "../dockJoints.ts";
 import { dockedNow, visitorsOf } from "../dockedState.ts";
-import { hoop, place, revolve, rod } from "./adapter.ts";
+import { place, revolve } from "./adapter.ts";
 import type { ConceptSlot } from "./common.ts";
 
 const ROCKET = { a: "fleet-kaminari", b: "fleet-emiake", c: "fleet-romaryu" } as const;
@@ -43,23 +44,15 @@ const depot = (at: readonly [number, number, number], material: "hull-orange" | 
   return revolve(material, [[0.4, y], [6, y + 3], [6, y + 25], [0.4, y + 28]], 24, [x, z], { body: true, outline: true });
 };
 
-const collar = (x: number, z: number, y: number, r: number): Piece[] => place([hoop("hull-grey", r, y, 0.28, 28, 8)], { at: [x, 0, z] });
-
-/** A clamp saddle: two arms from the hull, a bar under the craft and a pin. */
+/** A cradle on a deep truss. The truss runs from the hull to the craft's flank; the pads and the craft's latches do the holding. */
 function saddle(hullX: number, craft: readonly [number, number, number], yUp: number): Piece[] {
   const [x, y0, z] = craft;
   const y = y0 + yUp;
-  const dir = Math.sign(x - hullX) || 1;
+  const dir = (Math.sign(x - hullX) || 1) as 1 | -1;
   const flank = x - dir * 4.7;
-  return [
-    rod("hull-grey", [hullX, y, z - 3], [flank, y, z - 3], 0.42, 8),
-    rod("hull-grey", [hullX, y, z + 3], [flank, y, z + 3], 0.42, 8),
-    rod("engine-metal", [flank, y, z - 5.2], [flank, y, z + 5.2], 0.38, 8),
-    rod("hull-grey-dark", [flank, y - 4, z], [flank, y + 4, z], 0.5, 8),
-  ];
+  const face: Vec3 = [flank, y, z];
+  return [...deepTruss([hullX, y, z], face, 4), ...berthCradle(face, dir)];
 }
-
-const end = (from: Vec3, to: Vec3, material: "hull-orange" | "hull-white" | "pipe-steel"): Piece => rod(material, from, to, 0.32, 8);
 
 /** The craft the berth draws when nobody has chosen: a ship, two tankers and a Dragon, in the berth's own frame. */
 function parked(plan: BerthPlan): Piece[] {
@@ -74,18 +67,15 @@ export function berthPieces(plan: BerthPlan, craft: Piece[] = parked(plan)): Pie
   const out: Piece[] = [...craft];
   out.push(depot(plan.methane, "hull-orange"), depot(plan.oxygen, "hull-white"));
   out.push(...saddle(plan.hullX, plan.stack, 10), ...saddle(plan.hullX, plan.stack, 26), ...saddle(plan.hullX, plan.stack, 42));
-  for (const at of plan.tankers) out.push(...saddle(plan.hullX, at, 18));
-  const methaneHead: Vec3 = [plan.methane[0], plan.methane[1] + 28, plan.methane[2]];
-  const oxygenHead: Vec3 = [plan.oxygen[0], plan.oxygen[1] + 28, plan.oxygen[2]];
-  const tankerFlank = (at: readonly [number, number, number], yUp: number): Vec3 => {
-    const dir = Math.sign(at[0] - plan.hullX) || 1;
-    return [at[0] - dir * 4.6, at[1] + yUp, at[2]];
-  };
-  out.push(end(methaneHead, tankerFlank(plan.tankers[0], 20), "hull-orange"), end(oxygenHead, tankerFlank(plan.tankers[1], 20), "hull-white"));
-  out.push(...collar(plan.dragon[0], plan.dragon[2], plan.dragon[1] + DRAGON_M, 2.4));
-  const dragonFlank: Vec3 = [plan.dragon[0] + Math.sign(plan.hullX - plan.dragon[0] || 1) * 2.1, plan.dragon[1] + 3, plan.dragon[2]];
-  out.push(rod("hull-grey", [plan.hullX, plan.dragon[1] + 3, 0], dragonFlank, 0.36, 8));
-  out.push(...collar(plan.stack[0], plan.stack[2], plan.stack[1] + 2, 4.6));
+  for (const at of plan.tankers) {
+    out.push(...saddle(plan.hullX, at, 18));
+    out.push(...place(transferCoupling(), { at: [at[0], at[1], at[2]] }));
+  }
+  const nose: Vec3 = [plan.dragon[0], plan.dragon[1] + DRAGON_M, plan.dragon[2]];
+  out.push(...place(dockingPort("M", 2, -1), { at: nose }));
+  out.push(...deepTruss([plan.hullX, nose[1] + 2, 0], [nose[0], nose[1] + 2, nose[2]], 3));
+  const reach = Math.sign(plan.stack[0] - plan.hullX) || 1;
+  out.push(...place(berthArm(), { at: [plan.hullX, plan.stack[1] + 18, plan.stack[2]], yaw: reach > 0 ? 0 : 180 }));
   return out;
 }
 
