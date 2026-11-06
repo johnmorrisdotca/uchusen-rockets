@@ -618,6 +618,10 @@ function buildPanel(): void {
   );
 }
 
+function gammaWords(gamma: number): string {
+  return gamma.toFixed(gamma < 1.0001 ? 9 : 6).replace(/(\d{3})(?=\d)/g, "$1\u202f").replace(/^(\d)\u202f/, "$1");
+}
+
 function ratioWords(): string {
   if (trip.massRatio === null) return `${say("jNA")}: ${trip.fuel.note}`;
   const text = trip.massRatio >= 100 ? trip.massRatio.toFixed(0) : trip.massRatio.toFixed(3);
@@ -648,7 +652,7 @@ function drawPanel(state: State): void {
   set("since", t < 0 ? `T−${duration(-t)}` : `T+${duration(t)}`);
   set("speed", speedWords(state.speedMs));
   set("light", percentOfLight(state.speedMs));
-  set("gamma", state.gamma.toFixed(state.gamma < 1.0001 ? 9 : 6).replace(/(\d{3})(?=\d)/g, "$1\u202f").replace(/^(\d)\u202f/, "$1"));
+  set("gamma", gammaWords(state.gamma));
   set("accel", state.accelG === 0 ? "0 g" : `${state.accelG < 0 ? "−" : "+"}${gWords(state.accelG)}`);
   set("flown", `${kilometres(state.doneKm)} · ${astronomicalUnits(state.doneKm)}`);
   set("togo", `${kilometres(state.toDestinationKm)} · ${lightTime(state.toDestinationKm)}`);
@@ -716,9 +720,11 @@ function showSummary(): void {
     [say("jEarthT"), duration(trip.frameS)],
     ...(trip.drive === "continuous" ? [[say("jClocks"), duration(trip.shipS) === duration(trip.frameS) ? `${say("jTwin")} ${say("jTwinSmall")}` : say("jTwin")] as [string, string]] : []),
     [say("jTopSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
+    [say("jGamma"), gammaWords(trip.peakGamma)],
     [say("jPeakG"), gWords(trip.peakG)],
     [say("jDvAll"), speedWords(trip.dv.total)],
     [say("jFuel"), fuelWords()],
+    [say("jMassRatio"), ratioWords()],
     [say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],
     [say("jSignalEnd"), duration(end.signalS)],
     [say("jCompare"), `${say("jLightTakes", { t: duration(trip.pathKm / 299_792.458) })} ${say("jVoyager", { t: duration(trip.pathKm / VOYAGER_KMS) })}`],
