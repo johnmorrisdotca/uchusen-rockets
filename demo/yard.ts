@@ -1,18 +1,22 @@
 // The yard on a page: one mesh for the bays and one for the spine that can leave, drawn only when the view changes.
 import { AmbientLight, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute, Group, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector3, WebGLRenderer, SRGBColorSpace } from "three";
+import { discRadius } from "@johnmorrisdotca/chikyu-earth/realistic";
+import type { ChikyuEarthRealistic } from "@johnmorrisdotca/chikyu-earth/realistic/element";
+import "@johnmorrisdotca/chikyu-earth/realistic/element";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
-import { buildOf } from "../src/buildPlay.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
-import { setAssetBase, type UchusenRocket } from "../src/element.ts";
+import { setAssetBase } from "../src/element.ts";
 import type { ViewChoice } from "../src/framing.ts";
 import { DRAGON_DRAWS, capsule, trunk } from "../src/model/falcon.ts";
-import { cub, place } from "../src/model/fleet/kaminari-concepts/adapter.ts";
+import { place } from "../src/model/fleet/kaminari-concepts/adapter.ts";
 import { docked } from "../src/model/fleet/kaminari-concepts/c.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../src/model/materials.ts";
-import { meshOf, type PartMesh, type Piece } from "../src/model/pieces.ts";
+import { meshOf, type PartMesh } from "../src/model/pieces.ts";
 import { BAYS, yardFixed, yardLoose } from "../src/model/fleet/shipyard-concepts/multibay.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
+import { placementIn, START_TIME } from "./earth-model.ts";
+import { mountBays, type BayId } from "./yardShips.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 defineUchusenBuild();
@@ -29,24 +33,16 @@ const SHIPS: Partial<Record<ShotId, { rocket: string; variant: string }>> = {
 
 const stage = document.querySelector<HTMLElement>("[data-testid=yard-stage]")!;
 const canvas = document.querySelector<HTMLCanvasElement>("#yard-view")!;
-const host = document.querySelector<HTMLElement>("#bay-ship")!;
+const earthHolder = document.querySelector<HTMLElement>("#yard-earth")!;
 const buildRow = document.querySelector<HTMLElement>("#yard-build")!;
 const bar = document.querySelector<UchusenBuild>("#build-bar")!;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/** A hull block the wide shot can read. The build player draws the real ship. */
-function hull(at: readonly [number, number, number], length: number, beam: number, height: number): Piece[] {
-  const [x, y, z] = at;
-  const b = beam / 2;
-  const h = height / 2;
-  return [cub("hull-white", [x - b, x + b], [y, y + length * 0.86], [z - h * 0.3, z + h]), cub("hull-grey", [x - b * 0.72, x + b * 0.72], [y + length * 0.8, y + length], [z, z + h * 1.15])];
-}
 
 const dragon = DRAGON_DRAWS["dragon-2"];
 const dragonNose = dragon.trunk + dragon.capsule - dragon.nest;
 const visitor = place([...trunk(dragon), ...place(capsule(dragon), { at: [0, dragon.trunk - dragon.nest, 0] })], { at: [-980, 150 - dragonNose - 4, -22] });
 const miyamoto = docked("miyamoto", 1, "coarse");
-const fixedMesh = meshOf([...yardFixed(), ...place(miyamoto, { at: [...BAYS.spine.shipAt] }), ...hull(BAYS.hall.shipAt, 1100, 140, 80), ...hull(BAYS.dock.shipAt, 611, 110, 70), ...visitor]);
+const fixedMesh = meshOf([...yardFixed(), ...visitor]);
 const looseMesh = meshOf([...yardLoose(), ...place(miyamoto, { at: [...BAYS.loose.shipAt] })]);
 const scene = new Scene();
 const camera = new PerspectiveCamera(38, 1, 1, 16_000);
@@ -86,10 +82,10 @@ addMesh(looseMesh, loose);
 root.add(loose);
 
 const shots: Record<ShotId, Eye> = {
-  whole: { at: [400, 700, 40], eye: [480, -2500, 1200], fov: 48 },
-  hall: { at: [0, 700, 20], eye: [160, -40, 320], fov: 34 },
-  spine: { at: [760, 500, 0], eye: [980, 20, 300], fov: 34 },
-  dock: { at: [1520, 600, 20], eye: [1760, 40, 320], fov: 34 },
+  whole: { at: [760, 1000, 40], eye: [900, -1800, 1100], fov: 46 },
+  hall: { at: [0, 1070, 20], eye: [2600, 1070, 520], fov: 32 },
+  spine: { at: [760, 370, 20], eye: [1700, 370, 280], fov: 32 },
+  dock: { at: [1520, 490, 30], eye: [2500, 490, 340], fov: 32 },
   lounge: { at: [...BAYS.lounge.at], eye: [...BAYS.lounge.eye], fov: 64 },
   visitor: { at: [-980, 140, -22], eye: [-1016, 108, 12], fov: 28 },
   latch: { at: [...BAYS.latch.at], eye: [...BAYS.latch.eye], fov: 42 },
@@ -108,13 +104,34 @@ const forward = new Vector3();
 const right = new Vector3();
 const up = new Vector3();
 
+const painted = document.createElement("chikyu-earth-realistic") as ChikyuEarthRealistic;
+painted.setAttribute("center", "18,8");
+painted.setAttribute("texture-base", new URL("textures/", document.baseURI).href);
+painted.setAttribute("max-texture", "2048");
+painted.setAttribute("max-ratio", "1");
+painted.setAttribute("role", "presentation");
+earthHolder.append(painted);
+
+function frameEarth(): void {
+  const night = sky === "night";
+  const w = earthHolder.clientWidth || 1;
+  const h = earthHolder.clientHeight || 1;
+  const place = placementIn(w, h);
+  painted.time = night ? START_TIME + 12 * 60 * 60 * 1000 : START_TIME;
+  painted.lights = night;
+  painted.clouds = !night;
+  painted.setView({ yaw: 0, tilt: 0, zoom: place.radius / discRadius(w, h, 1), panX: place.panX, panY: place.panY }, true);
+}
+
 function applySky(): void {
   const night = sky === "night";
-  sun.intensity = night ? 0.08 : 1.15;
-  scene.background = new Color(night ? "#05070d" : "#9eb0c4");
+  sun.intensity = night ? 0.05 : 1.35;
+  sun.position.set(night ? -40 : 400, night ? -30 : -900, night ? 8 : 700);
+  scene.background = null;
+  frameEarth();
   for (const lamp of glow) {
     lamp.material.emissive = new Color(night ? lamp.color : "#000000");
-    lamp.material.emissiveIntensity = night ? lamp.amount * 0.35 : 0;
+    lamp.material.emissiveIntensity = night ? lamp.amount * 0.55 : 0;
   }
   stage.dataset.sky = sky;
 }
@@ -151,9 +168,9 @@ function aim(): void {
   camera.updateProjectionMatrix();
 }
 
-const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "low-power" });
+const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: "low-power" });
 renderer.outputColorSpace = SRGBColorSpace;
-renderer.setClearColor("#9eb0c4");
+renderer.setClearColor(0x000000, 0);
 
 function size(): void {
   const w = canvas.clientWidth || 1;
@@ -168,6 +185,7 @@ function size(): void {
   }
   renderer.setPixelRatio(1);
   renderer.setSize(Math.max(1, rw), Math.max(1, rh), false);
+  frameEarth();
 }
 
 function draw(): void {
@@ -196,30 +214,29 @@ function slide(): void {
   requestAnimationFrame(slide);
 }
 
+const bays = mountBays(root, addMesh, poke);
+const along: Partial<Record<ShotId, number>> = { hall: bays.rest("hall"), spine: bays.rest("spine"), dock: bays.rest("dock") };
+
+function bayNow(): BayId | null {
+  return ship === "hall" || ship === "spine" || ship === "dock" ? ship : null;
+}
+
 function showShip(): void {
-  host.replaceChildren();
-  if (!building) {
-    host.hidden = true;
-    buildRow.hidden = true;
-    stage.dataset.build = "off";
-    return;
+  const bay = bayNow();
+  buildRow.hidden = !building;
+  stage.dataset.build = building ? "on" : "off";
+  stage.dataset.ship = bay ? bays.variant(bay) : "";
+  if (building && bay) {
+    bar.steps = bays.steps(bay);
+    bar.at = along[bay] ?? bays.rest(bay);
+    bar.onMove = (at) => {
+      if (bayNow() === bay) along[bay] = at;
+      bays.paint(bayNow(), along[bayNow() ?? "hall"] ?? 0, reduce);
+      poke();
+    };
+    bar.onRepeat = () => undefined;
   }
-  const chosen = SHIPS[ship] ?? SHIPS.hall!;
-  const rocket = document.createElement("uchusen-rocket") as UchusenRocket;
-  rocket.setAttribute("rocket", chosen.rocket);
-  rocket.setAttribute("variant", chosen.variant);
-  rocket.setAttribute("look", "line");
-  rocket.setAttribute("build", "on");
-  rocket.setAttribute("lights", "off");
-  rocket.setAttribute("spin", "off");
-  host.append(rocket);
-  host.hidden = false;
-  buildRow.hidden = false;
-  stage.dataset.build = "on";
-  const steps = buildOf(chosen.variant) ?? [];
-  bar.steps = steps;
-  bar.onMove = (at) => rocket.setAttribute("progress", at.toFixed(4));
-  bar.onRepeat = () => undefined;
+  bays.paint(building ? bay : null, bay ? (along[bay] ?? 0) : 0, reduce);
 }
 
 function pressShot(id: ShotId): void {
@@ -279,6 +296,7 @@ new ResizeObserver(() => {
 }).observe(stage);
 
 applySky();
+showShip();
 size();
 draw();
 stage.dataset.ready = "yes";

@@ -23,7 +23,7 @@ test("the yard page jumps to a bay, lights the night, slides the free spine and 
   await page.getByTestId("yard-hall").click();
   await page.getByTestId("yard-build").click();
   await expect(stage).toHaveAttribute("data-build", "on");
-  await expect(page.getByTestId("bay-ship").locator("uchusen-rocket")).toHaveAttribute("rocket", "fleet-kaminari");
+  await expect(stage).toHaveAttribute("data-ship", "fleet-kaminari");
   await expect(page.getByTestId("build-bar")).toBeVisible();
   const fit = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(fit).toBeLessThanOrEqual(1);
