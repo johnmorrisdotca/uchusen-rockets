@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Compare frame** (MODULES-406): the drawing uses the width of the first screen, and the frame opens on the ships' feet so the shorter ships are on that screen.
+
 ## [0.13.0] - 2026-11-05
 
 Three new SPX ships (Kaminari as the Quiver, Emiake, Romaryū), Hanabusa, the repair drone and builder mode on every large ship, planet and moon backgrounds seen from orbit, a floating compare page, the fleet record and the three-ship comparison, the Moon as a journey start and the journey views.
