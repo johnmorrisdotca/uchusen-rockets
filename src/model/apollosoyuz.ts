@@ -28,7 +28,7 @@ const wing = (side: number): Piece => {
   const frame = { o: [side * SOYUZ_R, 5.9, 0] as Vec3, u: [side, 0, 0] as Vec3, v: [0, 1, 0] as Vec3, w: [0, 0, 1] as Vec3 };
   return { kind: "plate", material: "solar", frame, outline: [[0.1, -0.5], [2.75, -0.5], [2.75, 0.5], [0.1, 0.5]], thickness: 0.04 };
 };
-const soyuz = (): Piece[] => [
+export const soyuzPieces = (): Piece[] => [
   { kind: "lathe", material: "white", segs: 28, body: true, outline: true, profile: [[0.3, 0.1], [0.75, 0.25], [1.05, 0.8], [1.05, 1.4], [0.72, 2.1]] },
   { kind: "lathe", material: "white", segs: 28, body: true, outline: true, profile: [[0.72, 2.1], [SOYUZ_R * 0.88, 3], [SOYUZ_R * 0.9, 4.6]], rings: [3] },
   tube("engine-pale", SOYUZ_R * 0.95, 4.6, 6.6, { rings: [4.62] }),
@@ -47,7 +47,7 @@ export const APOLLO_SOYUZ_BUILDS: readonly StackBuild[] = [
     parts: [
       { slot: "csm", kind: "spacecraft", name: "Apollo command and service module", height: CSM, diameter: CSM_R * 2, sourcedDiameter: AS_CSM_WIDE, painted: { file: "apollo-soyuz-csm.glb", credit: "nasa-apollo-soyuz" }, pieces: csm },
       { slot: "docking-module", kind: "spacecraft", name: "Docking module", height: DOCK, diameter: 1.41, place: { x: 0, z: 0, y: DOCK_AT }, sourcedDiameter: blank("No source read here gives its size."), painted: { file: "apollo-soyuz-docking-module.glb", credit: "nasa-apollo-soyuz" }, pieces: dock },
-      { slot: "soyuz", kind: "spacecraft", name: "Soyuz 7K-TM", height: SOYUZ, diameter: SOYUZ_R * 2, place: { x: 0, z: 0, y: SOYUZ_AT }, sourcedDiameter: AS_SOYUZ_WIDE, painted: { file: "apollo-soyuz-soyuz.glb", credit: "nasa-apollo-soyuz" }, pieces: soyuz },
+      { slot: "soyuz", kind: "spacecraft", name: "Soyuz 7K-TM", height: SOYUZ, diameter: SOYUZ_R * 2, place: { x: 0, z: 0, y: SOYUZ_AT }, sourcedDiameter: AS_SOYUZ_WIDE, painted: { file: "apollo-soyuz-soyuz.glb", credit: "nasa-apollo-soyuz" }, pieces: soyuzPieces },
     ],
   },
 ];

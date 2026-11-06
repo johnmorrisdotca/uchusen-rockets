@@ -1,5 +1,6 @@
 // The dock and works: a dorsal hangar (a box cage with open doors and a gantry crane), a ventral manufacturing hall with roof vents and crane rails, port and starboard dock arms with standard collars, a drydock
 // frame for craft up to 90 m, tool arms and fuel-transfer booms. Inside (separate): a parked craft in its cradle, machine tools, robot arms, a stores racks aisle.
+import { dockedCraft } from "../docked.ts";
 import { PLATE, closeDetail, beam, box, collar, cyl, facesOf, hatch, hazard, lights, mast, onFace, pipe, plating, polar, revolve, ring, rng, span, stencil, vent, type MaterialName, type Piece } from "./adapter.ts";
 import { SPINE } from "./dims.ts";
 
@@ -56,6 +57,7 @@ export function dockPieces(): Piece[] {
   void onFace;
   void polar;
   void revolve;
+  out.push(...dockedCraft("fleet-02"));
   return out;
 }
 

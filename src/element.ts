@@ -149,7 +149,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "docked"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -561,14 +561,20 @@ export class UchusenRocket extends HTMLBase {
     viewer.setMotion(motionsOf(this.descriptionNow().rocket), motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")), motionSpeed(this.getAttribute("motion")));
   }
 
+  /** `docked="dragon@crew-s"` mates those craft. Absent: the ship keeps the visitors it already draws. */
+  private dockedOption(): { docked?: string } {
+    return this.hasAttribute("docked") ? { docked: this.getAttribute("docked") ?? "" } : {};
+  }
+
   private update(): void {
     const description = this.descriptionNow();
     const size = this.sizeNow(description);
-    const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}|${size}`;
+    const docked = this.dockedOption();
+    const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}|${size}|${docked.docked ?? "-"}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description), ...this.besideOptions(description), scale: size });
+        this.builtNow = build(description, { detail: this.detailFor(description), ...this.besideOptions(description), scale: size, ...docked });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -715,7 +721,7 @@ export class UchusenRocket extends HTMLBase {
     if (this.detailFor(description) === "full") return;
     this.fine = true;
     try {
-      this.builtNow = build(description, { detail: "full", ...this.besideOptions(description), scale: this.sizeNow(description) });
+      this.builtNow = build(description, { detail: "full", ...this.besideOptions(description), scale: this.sizeNow(description), ...this.dockedOption() });
     } catch {
       return;
     }

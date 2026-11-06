@@ -58,6 +58,12 @@ function upperStage(): Piece[] {
 
 const service = (): Piece[] => [tube("steel", ORION_R, 0, SERVICE, { rings: [0.02, SERVICE - 0.02] }), floor(ORION_R, 0)];
 
+/** Orion as it docks: the service module and the crew module, no abort tower. The nose is the top of the crew module. */
+export function orionDocked(): Piece[] {
+  return [...service(), ...crew().map((piece) => (piece.kind === "lathe" ? { ...piece, profile: piece.profile.map(([r, y]) => [r, y + SERVICE] as [number, number]) } : piece))];
+}
+export const ORION_DOCKED_LENGTH = SERVICE + CREW;
+
 const crew = (): Piece[] => [
   { kind: "lathe", material: "steel", segs: 40, body: true, outline: true, profile: [[ORION_R, 0.25], [ORION_R * 0.98, 0.45], [ORION_R * 0.42, CREW * 0.92], [0.5, CREW], [0.001, CREW]] },
   { kind: "lathe", material: "soot", segs: 30, under: true, profile: [[0, 0], [ORION_R * 0.86, 0.08], [ORION_R, 0.25]] },

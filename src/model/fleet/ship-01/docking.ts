@@ -28,6 +28,10 @@ export interface DockPort {
   walkway: boolean;
   /** The size of the biggest craft it takes: radius and length along `dir`, metres. */
   craft: { radius: number; length: number };
+  /** Package craft a person may put here. Absent: nothing drawn is allowed. */
+  models?: readonly ("dragon" | "soyuz" | "orion" | "starship")[];
+  /** Where that craft's own origin sits, when it lies alongside instead of meeting the collar nose-first. */
+  seat?: readonly [number, number, number];
 }
 
 const SERVICES = ["power", "coolant", "water", "air", "data"] as const;
@@ -69,10 +73,10 @@ export function shieldStays(): { from: [number, number, number]; to: [number, nu
 /** Every port and berth of the ship. */
 export const PORTS: readonly DockPort[] = [
   ...KIT["node-four"].ports.map((p, i): DockPort => ({ id: `hub-${i + 1}`, name: `Hub node port ${i + 1}`, kind: "port", collar: "L", at: [p.at[0], SPINE_Y.node + p.at[1], p.at[2]], dir: [0, 1, 0], mount: "node", allows: ["inflatable habitat module, stowed", "SPX ATC small craft", "a small visiting craft for a short call"], longStay: false, services: [], walkway: false, craft: { radius: 2.2, length: 9 } })),
-  { id: "crew-s", name: "Crew port, S-class", kind: "port", collar: "S", at: [DOCK.reach, DOCK.face, 0], dir: [0, 1, 0], mount: "solarium", allows: ["Dragon", "Starliner", "Orion with its adapter"], longStay: true, services: SERVICES, walkway: true, craft: { radius: 2.6, length: 8.3 } },
-  { id: "visitor-s", name: "Visitor port, S-class", kind: "port", collar: "S", at: [0, DOCK.face, -DOCK.reach], dir: [0, 1, 0], mount: "solarium", allows: ["Soyuz", "Progress"], longStay: true, services: SERVICES, walkway: true, craft: { radius: 4.2, length: 7.5 } },
+  { id: "crew-s", name: "Crew port, S-class", kind: "port", collar: "S", at: [DOCK.reach, DOCK.face, 0], dir: [0, 1, 0], mount: "solarium", allows: ["Dragon", "Starliner", "Orion with its adapter"], longStay: true, services: SERVICES, walkway: true, craft: { radius: 2.6, length: 8.3 }, models: ["dragon", "orion"] },
+  { id: "visitor-s", name: "Visitor port, S-class", kind: "port", collar: "S", at: [0, DOCK.face, -DOCK.reach], dir: [0, 1, 0], mount: "solarium", allows: ["Soyuz", "Progress"], longStay: true, services: SERVICES, walkway: true, craft: { radius: 4.2, length: 7.5 }, models: ["soyuz"] },
   { id: "berth-m", name: "Small-craft berth, M-class, with a cradle", kind: "berth", collar: "M", at: [-DOCK.reach, DOCK.face, 0], dir: [0, 1, 0], mount: "solarium", allows: ["SPX ATC small craft", "HTV-X"], longStay: true, services: SERVICES, walkway: true, craft: { radius: 3.8, length: 12 } },
-  { id: "starship", name: "Starship upper-stage berth", kind: "berth", collar: "M", at: [0, DOCK.berth.y0 + DOCK.berth.length * 0.45, DOCK.berth.z - DOCK.berth.radius - 1.2], dir: [0, 1, 0], mount: "common-area, lab, survey-pod and solarium", allows: ["Starship upper stage (52 m by 9 m)"], longStay: true, services: SERVICES, walkway: true, craft: { radius: DOCK.berth.radius + 1, length: DOCK.berth.length } },
+  { id: "starship", name: "Starship upper-stage berth", kind: "berth", collar: "M", at: [0, DOCK.berth.y0 + DOCK.berth.length * 0.45, DOCK.berth.z - DOCK.berth.radius - 1.2], dir: [0, 1, 0], mount: "common-area, lab, survey-pod and solarium", allows: ["Starship upper stage (52 m by 9 m)"], longStay: true, services: SERVICES, walkway: true, craft: { radius: DOCK.berth.radius + 1, length: DOCK.berth.length }, models: ["starship"], seat: [0, DOCK.berth.y0, DOCK.berth.z] },
 ];
 
 /** What turns, as boxes in (radius, height) from the keel's axis: the booms' sweep, each ring with its skirt and hub, and the industrial wheel. */
