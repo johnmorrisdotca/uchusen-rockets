@@ -16,7 +16,8 @@
             <svg class="jr-map" id="map" data-testid="map" role="img" aria-label="The route" data-say-label="jMapLabel" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet"></svg>
             <div class="jr-craft" id="craft" data-testid="craft" role="img" aria-label="The craft" data-say-label="jCraftLabel"></div>
             <div class="jr-painted" id="painted" data-testid="painted" hidden></div>
-            <div class="jr-dest" id="dest" data-testid="dest"><span id="dest-name"></span></div>
+            <div class="jr-body jr-from" id="body-from" data-testid="from"><span id="body-from-name"></span></div>
+            <div class="jr-body jr-dest" id="body-dest" data-testid="dest"><span id="body-dest-name"></span></div>
             <div class="jr-hud" aria-hidden="false">
               <div class="jr-when" id="when-stamp" data-testid="when-stamp">
                 <span class="jr-when-date" id="when-date" data-testid="when-date"></span>
@@ -65,6 +66,7 @@
           <div class="jr-controls" id="controls">
             <button type="button" class="chip jr-play" id="play" data-testid="play" aria-pressed="false" data-say="jPlay">Play</button>
             <button type="button" class="chip" id="restart" data-testid="restart" data-say="jRestart">Start again</button>
+            <button type="button" class="chip" id="hold" data-testid="hold" aria-pressed="false" data-say="jHold">Hold</button>
             <label class="jr-scrub" for="scrub"><span class="jr-visually" data-say="jScrub">Where in the trip</span><input type="range" id="scrub" data-testid="scrub" min="0" max="1000" step="1" value="0" /></label>
             <kazoku-speed-buttons id="speeds" data-testid="speeds" steps="0.5 1 2 4" value="1" no-label></kazoku-speed-buttons>
             <div class="chips" id="looks" role="group" aria-label="Look" data-say-label="look"></div>

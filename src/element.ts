@@ -150,7 +150,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -263,7 +263,7 @@ export class UchusenRocket extends HTMLBase {
         yaw: number(choice.yaw, this.driven?.yaw ?? 0, -3600, 3600),
         tilt: number(choice.tilt, this.driven?.tilt ?? 0, -90, 90),
         roll: number(choice.roll, this.driven?.roll ?? 0, -180, 180),
-        zoom: number(choice.zoom, this.driven?.zoom ?? 1, 0.25, 8),
+        zoom: number(choice.zoom, this.driven?.zoom ?? 1, 0.000001, 8),
         panX: number(choice.panX, this.driven?.panX ?? 0, -5000, 5000),
         panY: number(choice.panY, this.driven?.panY ?? 0, -5000, 5000),
       };
@@ -334,6 +334,8 @@ export class UchusenRocket extends HTMLBase {
       if (this.viewer) this.lightViewer(this.viewer);
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
+    else if (name === "edges") this.viewer?.setEdges(after === "open");
+    else if (name === "world") this.viewer?.setOrbit(after === "earth");
     else if (name === "names") this.viewer?.setNameLabels(after !== "off");
     else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
     else if (name === "leave") this.viewer?.setLeave(...this.leaveNow());
@@ -889,13 +891,16 @@ export class UchusenRocket extends HTMLBase {
         },
         onFlight: () => this.noteFlight(!this.clock?.playing),
         onDraw: () => this.dispatchEvent(new CustomEvent("uchusen-draw")),
+        orbit: this.hasAttribute("world"),
       });
       this.viewer = made;
+      made.setOrbit(this.getAttribute("world") === "earth");
       window.cancelAnimationFrame(this.flightFrame);
       this.flightFrame = 0;
       if (this.clock) made.setFlight(this.clock);
       if (this.driven) made.drive(this.driven);
       made.setFloating(this.hasAttribute("float"));
+      made.setEdges(this.getAttribute("edges") === "open");
       made.setNameLabels(this.getAttribute("names") !== "off");
       made.setVisible(true);
       const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
@@ -912,6 +917,7 @@ export class UchusenRocket extends HTMLBase {
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));
       made.setFloating(this.hasAttribute("float"));
+      made.setEdges(this.getAttribute("edges") === "open");
       made.setNameLabels(this.getAttribute("names") !== "off");
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
