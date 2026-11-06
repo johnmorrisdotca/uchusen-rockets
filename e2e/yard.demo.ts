@@ -7,6 +7,7 @@ test("the yard page jumps to a bay, lights the night, slides the free spine and 
   await page.goto(URL);
   const stage = page.getByTestId("yard-stage");
   await expect(stage).toHaveAttribute("data-ready", "yes", { timeout: 60_000 });
+  await expect(page.locator("#yard-earth chikyu-earth-realistic")).toBeAttached();
   await expect(stage).toHaveAttribute("data-shot", "whole");
   await page.getByTestId("yard-lounge").click();
   await expect(stage).toHaveAttribute("data-shot", "lounge");
