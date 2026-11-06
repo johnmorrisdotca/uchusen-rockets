@@ -22,7 +22,7 @@ import { aimOrbit, applyTurn, companionsFor, frameSky, orbitCatalogue, paceFromS
 import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
-import { chip, fillLooks } from "./chip.ts";
+import { chip, fillLooks, PAGE_LOOK } from "./chip.ts";
 import { hasThrusters } from "../src/thrusters.ts";
 import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
 import { separationOf } from "../src/separation.ts";
@@ -79,7 +79,7 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   else earth?.dispatchEvent(new Event("orbit"));
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look", spin: "slow" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: PAGE_LOOK, view: "three-quarter", panel: "look", spin: "slow" } });
 setTurnPace(paceNamed(address.get("spin")));
 const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
 turnButtons.value = paceStep(paceNamed(address.get("spin")));
@@ -161,7 +161,7 @@ const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
 const askedBeside = address.get("beside") ?? "off";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0, docked: address.get("docked") ?? dockPlan(firstRocket) };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : PAGE_LOOK) as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0, docked: address.get("docked") ?? dockPlan(firstRocket) };
 
 /** The craft standing beside the one on screen, or nothing when the choice is off or is the craft itself. */
 function besideNow(): { id: string; rocket: string; variant: string } | null {

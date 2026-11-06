@@ -39,7 +39,7 @@ import { loadBody } from "./sky.ts";
 import { WORDS } from "./words.js";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { bodySpan, forwardStar, perceivedSpan } from "../src/journey/forward.ts";
-import { chip } from "./chip.ts";
+import { chip, PAGE_LOOK } from "./chip.ts";
 import { positionKm } from "../src/journey/trip.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
@@ -91,7 +91,7 @@ const choice = {
   via: query.get("via") === "jupiter" ? "jupiter" : "direct",
   when: Math.max(0, Math.min(3, Number(query.get("w") ?? 0) || 0)),
   view: isView(askedView) ? askedView : "side",
-  look: query.get("look") === "painted" ? "painted" : "line",
+  look: query.get("look") === "line" ? "line" : PAGE_LOOK,
   size: query.get("size") === "true" ? "true" : "perceived",
   hold: query.get("hold") === "1",
   base: todayUtc(),
@@ -115,7 +115,7 @@ function writeAddress(): void {
   if (choice.when > 0) next.set("w", String(choice.when));
   if (query.get("date")) next.set("date", query.get("date") as string);
   if (choice.view !== "side") next.set("view", choice.view);
-  if (choice.look === "painted") next.set("look", "painted");
+  if (choice.look === "line") next.set("look", "line");
   if (choice.size === "true") next.set("size", "true");
   if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
