@@ -6,7 +6,7 @@ import process from "node:process";
 import { toGlb } from "../src/build/glb.ts";
 import { coarsen, detail } from "../src/model/detail.ts";
 import { DRAGON_DRAWS, capsule, trunk } from "../src/model/falcon.ts";
-import { hoop, lamps, place, rod } from "../src/model/fleet/kaminari-concepts/adapter.ts";
+import { cub, hoop, lamps, place, rod } from "../src/model/fleet/kaminari-concepts/adapter.ts";
 import { docked } from "../src/model/fleet/kaminari-concepts/c.ts";
 import { CONCEPT_SLOTS } from "../src/model/fleet/kaminari-concepts/index.ts";
 import { meshOf, type Piece } from "../src/model/pieces.ts";
@@ -35,21 +35,46 @@ parts.push(
 
 const drawn = DRAGON_DRAWS["dragon-2"];
 const nose = drawn.trunk + drawn.capsule - drawn.nest;
-// The concept C Dragon port: berth at [0, 600, 0], the docked nose at the collar. The flying Dragon stops short of it.
+// The concept C Dragon port, outside the 18 m truss. The collar sits on a tunnel from that face, and the Dragon stops a few metres short, nose toward the hatch.
 const collarAt: V3 = [0, 522 + nose, 76];
 const dragonAt: V3 = [0, collarAt[1] - nose - 5, collarAt[2]];
 const dragon = place([...trunk(drawn), ...place(capsule(drawn), { at: [0, drawn.trunk - drawn.nest, 0] })], { at: dragonAt });
-const collar = place([hoop("hull-grey", 2.4, collarAt[1], 0.28, 28, 8)], { at: [collarAt[0], 0, collarAt[2]] });
 
-const lights: Piece[] = [];
-for (let step = 0; step <= 12; step++) {
-  const at: V3 = [5, collarAt[1] - 3 - step * 7, collarAt[2]];
-  const tip: V3 = [at[0] + 1.2, at[1], at[2]];
-  lights.push(rod("hull-grey", at, tip, 0.05, 6));
-  lights.push(...lamps([{ at: tip, colour: step % 2 === 0 ? "starboard" : "amber", size: 0.32 }]));
+const y = collarAt[1];
+const z = collarAt[2];
+const face = 18;
+const half = 1.35;
+const port: Piece[] = [];
+for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+  port.push(rod("hull-grey", [sx * half, y + sy * half, face], [sx * half, y + sy * half, z - 2.4], 0.28, 8));
+}
+for (let zz = face; zz <= z - 2.4; zz += 6) {
+  port.push(rod("hull-grey-dark", [-half, y - half, zz], [half, y - half, zz], 0.16, 6));
+  port.push(rod("hull-grey-dark", [half, y - half, zz], [half, y + half, zz], 0.16, 6));
+  port.push(rod("hull-grey-dark", [half, y + half, zz], [-half, y + half, zz], 0.16, 6));
+  port.push(rod("hull-grey-dark", [-half, y + half, zz], [-half, y - half, zz], 0.16, 6));
+}
+port.push(...place([hoop("hull-white", 2.4, y, 0.34, 32, 8)], { at: [0, 0, z] }));
+for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+  port.push(rod("hull-grey", [sx * half, y + sy * half, z - 2.4], [sx * 1.9, y + sy * 0.2, z], 0.24, 6));
+}
+port.push(cub("hull-white", [-0.2, 0.85], [y - 0.9, y - 0.35], [z - 0.7, z + 0.55]));
+port.push(rod("hull-grey-dark", [-0.28, y - 1.15, z], [-0.28, y - 0.25, z], 0.1, 6));
+
+const railZ = z + 4.2;
+for (const sx of [-1, 1]) {
+  const x = sx * 3.2;
+  port.push(rod("hull-grey", [sx * 1.8, y - 1.4, z - 2.2], [x, y - 1, railZ], 0.2, 6));
+  port.push(rod("hull-grey", [sx * 1.8, y + 1.2, z - 2.2], [x, y - 1, railZ], 0.16, 6));
+  port.push(rod("hull-grey", [x, y - 58, railZ], [x, y - 1, railZ], 0.14, 6));
+}
+for (let step = 0; step <= 7; step++) {
+  const yy = y - 6 - step * 7;
+  port.push(rod("hull-grey-dark", [-3.2, yy, railZ], [3.2, yy, railZ], 0.1, 6));
+  for (const sx of [-1, 1]) port.push(...lamps([{ at: [sx * 3.2, yy, railZ], colour: step % 2 === 0 ? "starboard" : "amber", size: 0.28 }]));
 }
 
-parts.push({ name: "approach", mesh: meshOf([...dragon, ...collar, ...lights]), at: [0, 0, 0] });
+parts.push({ name: "approach", mesh: meshOf([...dragon, ...port]), at: [0, 0, 0] });
 const glb = join(out, "berth.glb");
 writeFileSync(glb, toGlb(parts).bytes);
 
@@ -69,10 +94,10 @@ const jobs = [{
     sun: 0.05,
   }, {
     name: "dragon",
-    eye: [26, dragonAt[1] + nose * 0.5, 96],
-    target: [0, collarAt[1] - 1, 76],
+    eye: [18, collarAt[1] - 5, collarAt[2] + 12],
+    target: [0, collarAt[1] - 5, collarAt[2] - 10],
     up: [0, 1, 0],
-    fov: 32,
+    fov: 48,
     size: [1440, 900],
     look: "painted",
     sunDir: [0.4, 0.6, 0.5],
