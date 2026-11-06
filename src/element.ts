@@ -149,7 +149,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked", "edges"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -334,6 +334,7 @@ export class UchusenRocket extends HTMLBase {
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "edges") this.viewer?.setEdges(after === "open");
+    else if (name === "world") this.viewer?.setOrbit(after === "earth");
     else if (name === "names") this.viewer?.setNameLabels(after !== "off");
     else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
     else if (name === "leave") this.viewer?.setLeave(...this.leaveNow());
@@ -888,8 +889,10 @@ export class UchusenRocket extends HTMLBase {
         },
         onFlight: () => this.noteFlight(!this.clock?.playing),
         onDraw: () => this.dispatchEvent(new CustomEvent("uchusen-draw")),
+        orbit: this.hasAttribute("world"),
       });
       this.viewer = made;
+      made.setOrbit(this.getAttribute("world") === "earth");
       window.cancelAnimationFrame(this.flightFrame);
       this.flightFrame = 0;
       if (this.clock) made.setFlight(this.clock);

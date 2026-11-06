@@ -1,6 +1,7 @@
 // The compare page's camera. Free is the view as it was. The other choices keep craft in frame, follow one, or keep the planet with them. Follow selected only reads `data-selected` on the stage, which MODULES-476 will set. The camera orbits when Turn is Camera: the craft stay where they are and the Earth moves. Edges Wrap is only the free camera.
 import { BODIES, heliocentric, moonGeocentric, type HostId } from "@johnmorrisdotca/wakusei-planets";
 import type { UchusenRocket } from "../src/element.ts";
+import { VIEWS } from "../src/framing.ts";
 import { frameSky } from "./sky.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 
@@ -254,6 +255,21 @@ export function mountCamera(opts: {
   }
 
   function paintMoon(width: number, height: number, far: number): void {
+    if (hero.getAttribute("world") === "earth") {
+      if (far < 100_000_000) return;
+      const raw = hero.shadowRoot?.querySelector("canvas")?.dataset.moon ?? "";
+      const [nx, ny] = raw.split(",").map(Number);
+      if (!raw || Math.abs(nx) > 1 || Math.abs(ny) > 1) return;
+      const mark = document.createElement("span");
+      mark.className = "cw-mark cw-moon";
+      mark.dataset.testid = "moon-mark";
+      mark.textContent = say("background_moon");
+      mark.style.left = `${((nx + 1) / 2) * width}px`;
+      mark.style.top = `${((1 - ny) / 2) * height}px`;
+      mark.style.transform = "translate(-50%, -140%)";
+      arrows.append(mark);
+      return;
+    }
     if (far < 20_000_000) return;
     const [x, y] = moonGeocentric(when);
     const range = Math.hypot(x, y, 0) * 1000;
@@ -376,7 +392,14 @@ export function mountCamera(opts: {
       const fit = Number(canvas?.dataset.distance ?? "400");
       const live = key === "cmpBodyJupiter" ? "jupiter" : key === "cmpBodyNeptune" ? "neptune" : null;
       const there = live ? Math.hypot(...fromEarth(live, when)) : metres;
-      bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(there, 1))) });
+      const zoom = Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(there, 1)));
+      if (key !== "cmpMarkMoon") {
+        bar.set({ zoom });
+        return;
+      }
+      const [x, y] = moonGeocentric(when);
+      const az = (Math.atan2(x, y) * 180) / Math.PI + 180 + 14;
+      bar.set({ zoom, yaw: VIEWS["three-quarter"].az - az, tilt: 0 });
     })),
   );
   back.addEventListener("click", () => {

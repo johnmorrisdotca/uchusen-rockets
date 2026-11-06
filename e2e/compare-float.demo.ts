@@ -123,7 +123,8 @@ test("picking Mars replaces the Earth", async ({ page }) => {
   await expect(page.locator('[data-testid="earth"]')).toBeHidden();
   await expect.poll(() => page.locator('[data-testid="sky"]').getAttribute("data-draws"), { timeout: 30_000 }).toBe("mars");
   await page.locator('[data-testid="background-earth"]').click();
-  await expect(page.locator('[data-testid="earth"]')).toBeVisible();
+  await expect(page.locator('[data-testid="earth"]')).toBeHidden();
+  await expect(hero(page)).toHaveAttribute("world", "earth");
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("background")).toBeNull();
 });
 

@@ -4,7 +4,6 @@ import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
-import type { EarthForm, EarthShow } from "./earth.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant } from "./sizes.ts";
 import { applyTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
@@ -92,9 +91,6 @@ const variantFor = (craft: Craft) => variantOf(craft.rocket, craft.variant) as V
 
 // ------------------------------------------------------------- the Earth behind: nothing of it is loaded until it is chosen
 const earthHolder = byId("earth-back");
-let earthShown: EarthShow | null = null;
-let earthForm: EarthForm | null = null;
-let earthAsked = 0;
 let realisticBarred = false;
 hero.addEventListener("uchusen-fallback", () => {
   realisticBarred = true;
@@ -131,21 +127,8 @@ function syncSky() {
 function syncEarth() {
   byId("earth-credit").hidden = state.background !== "earth";
   syncSky();
-  const form: EarthForm | null = state.background !== "earth" ? null : state.look === "line" ? "line" : state.look === "thick" || realisticBarred ? "thick" : "realistic";
-  if (form === earthForm) return;
-  earthForm = form;
-  const asked = ++earthAsked;
-  earthShown?.stop();
-  earthShown = null;
-  earthHolder.hidden = form === null;
-  if (form)
-    void import("./earth.ts").then(({ showEarth }) => {
-      if (asked === earthAsked)
-        earthShown = showEarth(earthHolder, form, () => {
-          realisticBarred = true;
-          syncEarth();
-        });
-    });
+  earthHolder.hidden = true;
+  hero.setAttribute("world", state.background === "earth" ? "earth" : "off");
 }
 
 // ------------------------------------------------------------- what is chosen
