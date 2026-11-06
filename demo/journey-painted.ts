@@ -26,7 +26,7 @@ export function hidePainted(host: HTMLElement, barHost: HTMLElement, credit: HTM
 }
 
 /**
- * Shows the craft as a painted model, with the family's view controls. Safe to call on every frame: the model is loaded once.
+ * Shows the craft as a painted model, with the family's view controls. It is the same `uchusen-rocket` element the Rockets page draws, with `look="painted"`. Safe to call on every frame: the model is loaded once.
  * @param host Where the rocket sits, over the stage.
  * @param barHost Where the view controls sit, under the stage.
  * @param credit Where the model's credit is written.

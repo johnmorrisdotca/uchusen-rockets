@@ -20,7 +20,23 @@ const TITLES = {
   "fleet-compare.html": ["Uchusen Rockets 宇宙船: three ships at one scale", "The explorer, the command ship and the heavy transport stand side by side at one scale, from their own models, and the view stays in the address."],
   "yard.html": ["Uchusen Rockets 宇宙船: yard", "Three bays side by side. The name is a placeholder. Choose a bay, the lounge, the visitor port or the free spine, and play that bay's ship being built."],
 } as const;
-const LINKS = [{ href: "docs/index.html", say: "pageDocs" }, { href: "embed.html", say: "pageEmbed" }, { href: "journey.html", say: "pageJourney" }, { href: "fleet-db.html", say: "pageFleet" }, { href: "yard.html", say: "pageYard" }];
+const PAGES = [
+  ["index.html", "pageRockets"],
+  ["compare.html", "pageCompare"],
+  ["journey.html", "pageJourney"],
+  ["fleet-db.html", "pageFleet"],
+  ["yard.html", "pageYard"],
+  ["builder.html", "pageBuilder"],
+  ["docs/index.html", "pageDocs"],
+  ["embed.html", "pageEmbed"],
+] as const;
+
+/** One row of links to every demo page, the open one marked, with Help beside them. */
+function pageBar(file: string): string {
+  const links = PAGES.map(([href, say]) => `<a href="${href}" data-say="${say}"${href === file ? ` aria-current="page"` : ""}></a>`).join("");
+  const help = `<button type="button" class="fam-button" data-help-switch aria-pressed="false" data-say="help" data-say-title="helpTip"></button>`;
+  return `<nav class="page-links" data-testid="page-links" aria-label="Pages">${links}${help}</nav>`;
+}
 
 /** The page's text with the family's blocks put in where its comments say. */
 export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
@@ -28,7 +44,7 @@ export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
   const [title, description] = TITLES[file];
   return html
     .replace("<!--family:head-->", familyHead({ id, title, description }))
-    .replace("<!--family:header-->", familyHeader({ id, links: LINKS }))
+    .replace("<!--family:header-->", `${familyHeader({ id })}\n      ${pageBar(file)}`)
     .replace("<!--family:unreviewed-->", familyUnreviewed({ id }))
     .replace("<!--family:footer-->", familyFooter({ id }))
     .replace(

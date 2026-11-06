@@ -384,7 +384,7 @@ const followMoon = (node: HTMLElement, holder: HTMLElement, mine: number, moonId
   return () => window.clearTimeout(timer);
 };
 
-const loadBody = (id: string) => {
+export const loadBody = (id: string) => {
   switch (id) {
     case "sun": return import("@johnmorrisdotca/wakusei-planets/sun");
     case "mercury": return import("@johnmorrisdotca/wakusei-planets/mercury");

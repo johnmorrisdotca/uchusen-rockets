@@ -3,9 +3,13 @@
 ## [Unreleased]
 
 - **A background fills the frame and keeps turning** (MODULES-502): Saturn and every other body behind the craft cover the stage at every camera and zoom, tipped so the rings still cross the sky, and the body's own turn is not pinned by the craft's camera.
-
 - **One ship picker** (MODULES-474, MODULES-482, MODULES-486): the compare page's choices are three columns, kinds and makers, then a searchable picture grid, then the chosen craft's facts. Each craft is a toggle. The line shows a picture and a name, the close mark and the magnifier sit on the picture, and the line stays one row that scrolls. One list at the top right gives each craft's full name and size, and adds "off screen" only when that craft is outside the frame. An x asks in a popover before it removes anything, in the page's own colours, with Remove and Cancel side by side, and nothing chosen leaves an empty stage. A device can show up to eight. A craft drawn under about 12 px gets a gold ring with its name and size. On a phone one craft is on the stage and the rest stay in the line.
-
+- **The journey, fixed** (MODULES-497): the planets are painted (the Chikyu Earth and the wakusei bodies), the destination starts small and fills the frame only on arrival, the body left behind sits behind the craft, the date, phase and speed sit on dark panels that read over any planet, the craft stays whole and clear of them, and a trip that cannot start says why with a Leave from the Earth button.
+- **Changing ship eases to its size** (MODULES-504): picking a ship of another size keeps the old scale at the switch and then eases to Fit, so going from Kyotori (447 m) to Kaminari (1,815 m) zooms out to show the much larger ship, and the reverse zooms in; reduced motion jumps.
+- **Shorter fleet jets** (MODULES-479): a quad's glow reaches about four nozzle lengths, with a bright core at the bell and a faint edge that fades into black.
+- **The yard is painted** (MODULES-499): truss chords are white painted members with darker metal joints and braces, the walkway is blanket, and the frames catch a sky reflection with panel breaks and bolt rows, from ISS truss and Canadarm2 photographs.
+- **The yard's build moves** (MODULES-501): while the build player plays on the yard page the drones fly and weld in real time at every speed, and 'Watch a flight' fits the flight under way into about 30 seconds.
+- **The Figma-style mouse** (kazoku-ui 0.18.0): the wheel moves the view and Shift and the wheel moves it sideways; Ctrl, Command or Alt with the wheel, or a pinch, zooms; Space and a drag, or the middle button, moves it; Shift and a drag, or a two-finger twist, rolls.
 ## [0.14.0] - 2026-11-06
 
 Building in place with a working crew, the shipyard and its own page, the compare page's camera, orbit and deep zoom out to the Moon, the journey's date, planets in view, new views and arrival card, ship lights, three-axis turning, docked craft and module swaps, and Kyotori turning without jumps.

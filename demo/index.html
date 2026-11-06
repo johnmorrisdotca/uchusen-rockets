@@ -48,6 +48,7 @@
             <button type="button" class="chip" role="tab" data-testid="panel-motion" data-say="motionTitle" hidden>Motion</button>
             <button type="button" class="chip" role="tab" data-testid="panel-build" data-say="buildTitle" hidden>The build</button>
             <button type="button" class="chip" role="tab" data-testid="panel-lights" data-say="panelLights" hidden>Lights</button>
+            <button type="button" class="chip" role="tab" data-testid="panel-thrusters" data-say="panelThrusters" hidden>Thrusters</button>
             <button type="button" class="chip" role="tab" data-testid="panel-docked" data-say="dockedTitle" hidden>Docked craft</button>
           </div>
           <div class="panel-group" data-panel="look">
@@ -125,6 +126,11 @@
               <h2 id="lights-title" data-say="lights">Lights</h2>
               <div class="chips" id="lights" role="group" aria-labelledby="lights-title"></div>
               <p class="note" id="lights-note" data-testid="lights-note" hidden></p>
+            </div>
+            <div class="field" id="thrusters-field" data-testid="thrusters-field" hidden>
+              <h2 id="thrusters-title" data-say="thrusters">Thrusters</h2>
+              <div class="chips" id="thrusters" role="group" aria-labelledby="thrusters-title"></div>
+              <p class="note" id="thrusters-note" data-testid="thrusters-note" hidden></p>
             </div>
           </div>
           <div class="panel-group" data-panel="docked" hidden>
