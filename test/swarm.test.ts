@@ -117,17 +117,24 @@ test("the ranks are one boss, a manager for a handful, and builders and grunts a
   assert.ok(Math.abs(builders - grunts) <= 1);
 });
 
-test("a half-built ring is the front half of the circle", () => {
+test("a half-built ring is the front half of the circle, and the glass between the spokes is not drawn early", () => {
   const [left, right] = sectorNormals(Math.PI / 2);
   const ahead = new Vector3(0, 0, 1);
   const behind = new Vector3(0, 0, -1);
   assert.ok(left.dot(ahead) > 0 && right.dot(ahead) > 0);
   assert.ok(left.dot(behind) < 0 && right.dot(behind) < 0);
+  const front = [45 * Math.sin(Math.PI / 6), 45 * Math.cos(Math.PI / 6)];
+  const back = [45 * Math.sin((5 * Math.PI) / 6), 45 * Math.cos((5 * Math.PI) / 6)];
   assert.equal(ringPiece(0, 16, 50, 0.1), true);
-  assert.equal(ringPiece(0, 45, 50, 0.1), false);
-  assert.equal(ringPiece(0, 45, 50, 0.5), true);
-  assert.equal(ringPiece(0, -45, 50, 0.5), false);
+  assert.equal(ringPiece(front[0], front[1], 50, 0.1), false);
+  assert.equal(ringPiece(front[0], front[1], 50, 0.5), true);
+  assert.equal(ringPiece(back[0], back[1], 50, 0.5), false);
   assert.equal(ringPiece(18, 0, 50, 0.1), true);
+  // the living ring's glass sits inside 0.72 of the rim, on a spoke's line as well as between them, and it waits for the arc
+  assert.equal(ringPiece(0, 52, 76, 0.1), false);
+  assert.equal(ringPiece(0, 52, 76, 0.5), true);
+  assert.equal(ringPiece(52 * Math.sin((5 * Math.PI) / 6), 52 * Math.cos((5 * Math.PI) / 6), 76, 0.5), false);
+  assert.equal(ringPiece(52 * Math.sin(Math.PI / 6), 52 * Math.cos(Math.PI / 6), 76, 0.1), false);
 });
 
 test("a ring piece is cut where it stands, so a moved mesh is not kept whole", () => {
@@ -135,12 +142,21 @@ test("a ring piece is cut where it stands, so a moved mesh is not kept whole", (
   const ahead = new Mesh(new BoxGeometry(1, 1, 1));
   ahead.position.set(0, 0, 40);
   const behind = new Mesh(new BoxGeometry(1, 1, 1));
-  behind.position.set(0, 0, -40);
+  behind.position.set(45 * Math.sin((5 * Math.PI) / 6), 0, 45 * Math.cos((5 * Math.PI) / 6));
   const collar = new Mesh(new BoxGeometry(1, 1, 1));
   collar.position.set(16, 0, 0);
   const across = new Mesh(new BoxGeometry(2, 2, 80));
-  holder.add(ahead, behind, collar, across);
+  across.position.set(28, 0, 0);
+  const spoke = new Mesh(new BoxGeometry(1, 1, 40));
+  spoke.position.set(0, 0, 30);
+  const hall = new Mesh(new BoxGeometry(8, 8, 4));
+  hall.position.set(0, 0, 60);
+  holder.add(ahead, behind, collar, across, spoke, hall);
+  growPart(holder, 0.1, true);
+  assert.ok((spoke.geometry.getIndex()?.count ?? 0) > 0);
+  assert.equal(hall.geometry.getIndex()?.count ?? 0, 0);
   growPart(holder, 0.5, true);
+  assert.ok((hall.geometry.getIndex()?.count ?? 0) > 0);
   assert.ok((ahead.geometry.getIndex()?.count ?? 0) > 0);
   assert.equal(behind.geometry.getIndex()?.count ?? 0, 0);
   assert.ok((collar.geometry.getIndex()?.count ?? 0) > 0);

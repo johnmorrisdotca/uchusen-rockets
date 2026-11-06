@@ -1,13 +1,40 @@
-// A ring under construction is an open arc, not a smaller copy of the finished ring. The hub and the spokes stay whole. The rim is left out until the spokes are there, and then it grows both ways until the last of it closes the circle.
+// A ring under construction is an open arc, not a smaller copy of the finished ring. The hub and the six spokes stay whole. The tube, its glass and its frames are the rim: nothing of them is drawn past the last built segment, and the rim grows both ways until the last of it closes the circle.
 import { BufferGeometry, Group, Matrix4, Mesh, Vector3 } from "three";
 
 /** A piece this close to the axis is the collar and is not cut. Hanabusa's hub is 15.5 m. */
 const HUB_M = 22;
-/** Inside this fraction of the ring's radius the piece is a spoke, and it stays once the collar is in. */
-const SPOKE_END = 0.72;
+/** Six spokes, the first toward +Z. A glazed lift is 3.6 m across, so a point within this of a spoke's centre line is the spoke. The spoke ends before the tube: the innermost ring (the garden) starts at 0.58 of its radius. */
+const SPOKE_EVERY = Math.PI / 3;
+const SPOKE_HALF_M = 2.4;
+const SPOKE_END = 0.56;
 /** The rim starts after the spokes, and it has closed by this fraction of the step. */
 const RIM_FROM = 0.2;
 const RIM_DONE = 0.8;
+
+/** The spoke a point stands on, or null when it is out in the tube. The angle is the spoke's, so two ends of one lift match. */
+function spokeOf(x: number, z: number): number | null {
+  const radius = Math.hypot(x, z);
+  const angle = Math.atan2(x, z);
+  const half = Math.atan2(SPOKE_HALF_M, Math.max(radius, 1));
+  const nearest = Math.round(angle / SPOKE_EVERY) * SPOKE_EVERY;
+  const delta = Math.abs(angle - nearest);
+  return Math.min(delta, 2 * Math.PI - delta) <= half ? nearest : null;
+}
+
+/** A lift runs from the hub out to the tube, so its triangles reach inward. A slice of the hall on the same line does not, and is left for the arc. */
+function spokeTriangle(corners: readonly [number, number][], major: number): boolean {
+  const spoke = spokeOf(corners[0][0], corners[0][1]);
+  if (spoke === null) return false;
+  let reaches = false;
+  for (const [x, z] of corners) {
+    const one = spokeOf(x, z);
+    if (one === null) return false;
+    const delta = Math.abs(one - spoke);
+    if (Math.min(delta, 2 * Math.PI - delta) > 1e-4) return false;
+    if (Math.hypot(x, z) < major * SPOKE_END) reaches = true;
+  }
+  return reaches;
+}
 
 const sourceOf = new WeakMap<Mesh, BufferGeometry>();
 const scratch = new Vector3();
@@ -20,15 +47,16 @@ export function sectorNormals(half: number): [Vector3, Vector3] {
 }
 
 /**
- * Whether a point in the ring's own space is drawn at `grown`. The hub and the spokes are drawn from the start. The rim is an arc that opens both ways about the forward axis.
+ * Whether a point in the ring's own space is drawn at `grown`. The hub is drawn from the start. The tube, its glass and its frames are an arc that opens both ways about the forward axis, so the unbuilt half is empty. A spoke is kept by the triangle cut, because one triangle of a lift runs from the hub to the tube.
  * @param x Metres to the side of the keel.
  * @param z Metres forward of the keel.
  * @param major The ring's outer radius, in metres.
  * @param grown How much of the ring stands, from 0 to 1.
  */
 export function ringPiece(x: number, z: number, major: number, grown: number): boolean {
+  if (grown <= 0.02) return false;
   const radius = Math.hypot(x, z);
-  if (radius < HUB_M || radius < major * SPOKE_END) return grown > 0.02;
+  if (radius < HUB_M) return true;
   if (grown < RIM_FROM) return false;
   const half = Math.PI * Math.min(1, (grown - RIM_FROM) / (RIM_DONE - RIM_FROM));
   return Math.abs(Math.atan2(x, z)) <= half + 1e-6;
@@ -42,16 +70,18 @@ function wedgeOf(source: BufferGeometry, toHolder: Matrix4, major: number, grown
   const raw = index?.array;
   const count = raw ? raw.length : position.count;
   const keep: number[] = [];
-  const inside = (index: number): boolean => {
+  const at = (index: number): [number, number] => {
     scratch.fromBufferAttribute(position, index).applyMatrix4(toHolder);
-    return ringPiece(scratch.x, scratch.z, major, grown);
+    return [scratch.x, scratch.z];
   };
   for (let i = 0; i + 2 < count; i += 3) {
     const a = raw ? raw[i] ?? 0 : i;
     const b = raw ? raw[i + 1] ?? 0 : i + 1;
     const c = raw ? raw[i + 2] ?? 0 : i + 2;
-    // every corner, not the middle: a triangle that reaches the unbuilt arc is left out, so that arc is not drawn as a ghost
-    if (inside(a) && inside(b) && inside(c)) keep.push(a, b, c);
+    const corners: [number, number][] = [at(a), at(b), at(c)];
+    const drawn = corners.every(([x, z]) => ringPiece(x, z, major, grown));
+    // a triangle that reaches the unbuilt arc is left out; a lift that reaches the hub stays, and a hall slice on that line does not
+    if (drawn || spokeTriangle(corners, major)) keep.push(a, b, c);
   }
   made.setIndex(keep);
   return made;
