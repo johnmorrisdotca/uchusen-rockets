@@ -37,9 +37,7 @@ test("true scale shows the previous craft, then fits and returns to Fit", async 
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.has("scale")).toBe(false);
 });
 
-test("ghost buffers are released after repeated craft changes", async ({ page, browserName }) => {
-  // In WebKit on a hosted runner the third change never finishes its ghost within 30 s (two of three cycles count), and the cause is not known: the buffers are counted in Chromium, which is where WebGL is drawn for these tests.
-  test.skip(browserName !== "chromium", "WebKit: the ghost's third cycle does not finish on a hosted runner, to be looked at where WebKit draws");
+test("ghost buffers are released after repeated craft changes", async ({ page }) => {
   await page.addInitScript(() => {
     const live = new Set<WebGLBuffer>();
     for (const proto of [WebGLRenderingContext.prototype, WebGL2RenderingContext.prototype]) {

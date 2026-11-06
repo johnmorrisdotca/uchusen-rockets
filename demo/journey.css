@@ -76,7 +76,7 @@ body.journey { --bad: #a1262b; }
 .jr-route .chev { fill: none; stroke: #e6f2ff; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
 
 .jr-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 0.7rem; align-items: center; }
-.jr-controls .chips { margin-left: auto; }
+.jr-controls .chips, .jr-controls kazoku-speed-buttons { margin-left: auto; }
 .jr-play { min-width: 6.5rem; font-weight: 600; }
 .jr-scrub { flex: 1 1 10rem; display: block; min-width: 8rem; }
 .jr-visually { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -140,7 +140,7 @@ body.journey { --bad: #a1262b; }
   .jr-facts { grid-template-columns: minmax(0, 1fr); }
   .jr-cols { grid-template-columns: minmax(0, 1fr); }
   .jr-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .jr-controls .chips { margin-left: 0; }
+  .jr-controls .chips, .jr-controls kazoku-speed-buttons { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .jr-ring-fill { transition: none; }

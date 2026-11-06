@@ -77,6 +77,46 @@ test("a drag throws the craft and it keeps moving", async ({ page, browserName }
   expect(Math.abs(later - angle)).toBeLessThan(1);
 });
 
+test("a fast throw stays under the cap and is still moving ten seconds later", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "WebGL is drawn in Chromium here");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(URL);
+  await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await expect.poll(() => canvasOf(page)).toEqual({ float: "on", plinth: "off" });
+  const canvas = hero(page).locator("canvas");
+  await expect.poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).dataset.craft ?? "")).not.toBe("");
+  const dragged = await canvas.evaluate((node) => {
+    const canvas = node as HTMLCanvasElement;
+    const spot = canvas.dataset.craft ?? "";
+    const [minX = 0, minY = 0, maxX = 0, maxY = 0] = spot.split(",").map(Number);
+    const width = node.clientWidth;
+    const rect = node.getBoundingClientRect();
+    const x = Math.max(8, (minX + maxX) / 2);
+    const y = Math.max(8, (minY + maxY) / 2);
+    const fire = (type: string, px: number, py: number) =>
+      node.dispatchEvent(new PointerEvent(type, { bubbles: true, composed: true, clientX: rect.left + px, clientY: rect.top + py, pointerId: 1, pointerType: "mouse", isPrimary: true, button: 0, buttons: type === "pointerup" ? 0 : 1 }));
+    fire("pointerdown", x, y);
+    fire("pointermove", Math.min(width - 8, x + 240), y);
+    fire("pointerup", Math.min(width - 8, x + 240), y);
+    return canvas.dataset.hit ?? "";
+  });
+  expect(dragged).not.toBe("miss");
+  await expect.poll(() => canvas.evaluate((node) => Number((node as HTMLCanvasElement).dataset.drift ?? "0"))).toBeGreaterThan(0);
+  const speed = await canvas.evaluate((node) => {
+    const el = node as HTMLCanvasElement;
+    return { drift: Number(el.dataset.drift ?? "0"), cap: Number(el.dataset.driftCap ?? "0"), x: Number(el.dataset.driftX ?? "0") };
+  });
+  expect(speed.drift).toBeLessThanOrEqual(speed.cap + 0.01);
+  expect(speed.x).toBeGreaterThan(0);
+  await page.waitForTimeout(10_000);
+  const later = await canvas.evaluate((node) => {
+    const el = node as HTMLCanvasElement;
+    return { drift: Number(el.dataset.drift ?? "0"), x: Number(el.dataset.driftX ?? "0") };
+  });
+  expect(later.drift).toBeGreaterThan(0);
+  expect(later.x).toBeGreaterThan(0);
+});
+
 test("picking Mars replaces the Earth", async ({ page }) => {
   await page.goto(`${URL}?background=mars&with=none`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");

@@ -4,6 +4,7 @@
 // centrifuge, Daedalus' coil-held fusion chamber and the Saturn V's ring of engines on a thrust structure. Pure: no three.js and no DOM.
 import { rng as shipRng } from "../ship-02/adapter.ts";
 import { container } from "../ship-02/cargo.ts";
+import { lampHalo } from "../lights.ts";
 import { annulus, deg, hoop, type Piece, place, revolve, rod, stamp, type Vec3 } from "./adapter.ts";
 import { berthSlot } from "./berth.ts";
 import { bundle, type ConceptSlot, radiatorFin, reactorCells, repeatedDrum, ringFrame, shieldDisc, stackOf, truss } from "./common.ts";
@@ -82,7 +83,8 @@ function shadowShield(): Piece[] {
 }
 
 function spine(): Piece[] {
-  return truss(A.truss.half, A.truss.bay, A.truss.y[0], A.truss.y[1]);
+  const [y0, y1] = A.truss.y;
+  return [...truss(A.truss.half, A.truss.bay, y0, y1), ...lampHalo("port", [-4, y0 + 220, 0]), ...lampHalo("starboard", [4, (y0 + y1) / 2, 0]), ...lampHalo("beacon", [0, y1 - 80, 0]), ...lampHalo("nav-white", [0, y0 + 40, 0])];
 }
 
 function fins(): Piece[] {
@@ -169,7 +171,7 @@ export const SLOTS_A: readonly ConceptSlot[] = [
   { slot: "drive-bay", name: "Engine bay and thrust plate", kind: "service-module", at: [0, A.deck[0], 0], height: A.roof[1] - A.deck[0], diameter: 2 * 36, note: "The mounting deck, the open girder bay with its feed rings, and the thrust plate that carries the thrust into the truss. Descends from the Saturn V's thrust structure.", pieces: () => local(driveBay(), A.deck[0]) },
   { slot: "reactors", name: "Fusion coil stack and reactor cells", kind: "service-module", at: [0, A.coil.y[0], 0], height: A.reactors.y + 3 * 15.5 - A.coil.y[0], diameter: 48, note: "A stack of twelve superconducting coil rings on a ceramic bore and twelve reactor cells round it. Descends from Princeton's direct fusion drive and the Daedalus reaction chamber.", pieces: () => local(reactors(), A.coil.y[0]) },
   { slot: "shadow-shield", name: "Shadow shield", kind: "fairing", at: [0, A.shield.y[0], 0], height: A.shield.y[1] - A.shield.y[0], diameter: 2 * A.shield.rBack, note: "A tiled cone that throws a shadow of the radiation of the reactors over the length of the ship behind it. Descends from the NERVA and Kilopower shadow shields.", pieces: () => local(shadowShield(), A.shield.y[0]) },
-  { slot: "radiators", name: "Radiator fins (four)", kind: "arms", at: [0, A.fins.y[0], 0], height: A.fins.y[1] - A.fins.y[0], diameter: 132, note: "Four flat radiator fins on boom trusses, 300 m long and 78 m deep, set on the diagonals clear of the exhaust. Descends from the ISS thermal radiator wings and the Mars transfer vehicle studies' radiators.", pieces: () => local(fins(), A.fins.y[0]) },
+  { slot: "radiators", name: "Radiator fins (four)", kind: "arms", at: [0, A.fins.y[0], 0], height: A.fins.y[1] - A.fins.y[0], diameter: 132, note: "Four flat radiator fins on boom trusses, 300 m long and 78 m deep, set on the diagonals clear of the exhaust. Descends from the ISS thermal radiator wings and the Mars transfer vehicle studies' radiators.", pieces: () => local([...fins(), ...lampHalo("port", [-16, 300, 0], 3), ...lampHalo("starboard", [16, 400, 0], 3), ...lampHalo("beacon", [0, 250, 16], 3), ...lampHalo("nav-white", [0, 450, 0], 3)], A.fins.y[0]) },
   berthSlot("a"),
   ...Array.from({ length: A.quiver.count }, (_, i): ConceptSlot => ({ slot: `quiver-${i + 1}`, name: `Tank quiver ${i + 1}: eight slim tanks`, kind: "tank", at: [0, A.quiver.y + i * A.quiver.pitch, 0], height: A.quiver.tank.length + 4, diameter: 2 * (A.quiver.tank.ringR + A.quiver.tank.tankR) + 2, note: "Eight slim propellant tanks 18 m across and 80 m long round the truss, held at both ends by ring frames. Descends from the Space Shuttle's external tank and Soyuz's bundle of tanks.", pieces: () => local(quiver(i), A.quiver.y + i * A.quiver.pitch) })),
   ...Array.from({ length: A.cargo.rings }, (_, i): ConceptSlot => ({ slot: `cargo-${i + 1}`, name: `Cargo ring ${i + 1}: eight containers`, kind: "mount", at: [0, A.cargo.y + i * A.cargo.pitch, 0], height: A.cargo.pitch, diameter: 94, note: "Eight 22 by 22 by 40 m containers on a ring frame with twist-locks. Descends from container-ship cell guides and the ISS external logistics carriers.", pieces: () => local(cargoRing(i), A.cargo.y + i * A.cargo.pitch) })),

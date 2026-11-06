@@ -80,6 +80,8 @@
             <div class="field">
               <h2 id="background-title" data-say="background">Background</h2>
               <div class="chips" id="backgrounds" role="group" aria-labelledby="background-title"></div>
+              <p class="moon-heading"><span data-say="turnPace">Turn</span> <span data-say="turnPaceNote">0 is still, 1 is slow, 10 is faster, and 100 is real time.</span></p>
+              <kazoku-speed-buttons id="turn-pace" data-testid="turn-pace" steps="0 1 10 100" value="1" unit="" no-label></kazoku-speed-buttons>
               <p class="moon-heading" id="moon-heading" data-testid="moon-heading" hidden></p>
               <div class="chips moon-row" id="moons" data-testid="moons" role="group" hidden></div>
               <p class="moon-heading" id="orbit-heading" data-say="orbitTitle" data-testid="orbit-heading" hidden>Distance</p>
@@ -109,7 +111,11 @@
             </div>
           </div>
           <div class="panel-group" data-panel="lights" hidden>
-            <div class="field" id="lights-field" data-testid="lights-field" hidden></div>
+            <div class="field" id="lights-field" data-testid="lights-field" hidden>
+              <h2 id="lights-title" data-say="lights">Lights</h2>
+              <div class="chips" id="lights" role="group" aria-labelledby="lights-title"></div>
+              <p class="note" id="lights-note" data-testid="lights-note" hidden></p>
+            </div>
           </div>
           <div class="field flight-field" id="flight-field">
             <h2 id="flight-title" data-say="flight">Flight</h2>

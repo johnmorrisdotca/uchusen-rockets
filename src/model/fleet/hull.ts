@@ -5,6 +5,7 @@ import type { MaterialName } from "../materials.ts";
 import type { Lathe, Piece, Vec3 } from "../pieces.ts";
 import { type CollarClass, COLLARS, collar } from "./collars.ts";
 import { annulus, beam, box, cableTray, conduitRun, floodlight, foilBand, greebles, hatch, hazardBand, hullPanels, ladder, lamps, type Livery, LIVERY, type LiveryName, navLight, patch, pipeRing, post, rng, ringOf, sagOf, stencil, vent } from "./detail.ts";
+import { beaconLamp, sternLamp } from "./lights.ts";
 import { HULL_STACKS, type HullStack, type HullStackName, layerShells, stackDepth } from "./layers.ts";
 import type { ModuleOptions } from "./types.ts";
 
@@ -142,8 +143,9 @@ export function drum(ctx: Ctx, spec: DrumSpec): Piece[] {
   const lampRing = (y: number, colour: "amber" | "red") => ringOf(4, R + proud * 0.6, y, 45).map((p) => ({ at: p.at, colour, size: 0.14 }));
   if (!open) {
     out.push(...lamps([...lampRing(y1 - 0.5, "amber"), ...lampRing(y0 + 0.5, "red")]));
-    // red to port, green to starboard, a white strobe on top, and floodlights over the joint, all lit with the engines
+    // red to port, green to starboard, a white strobe and a slow red beacon on top, a white stern light, and floodlights over the joint
     out.push(...navLight("port", R + proud * 0.8, deg(270), y1 - 1.0), ...navLight("starboard", R + proud * 0.8, deg(90), y1 - 1.0), ...navLight("strobe", R + proud * 0.8, 0, y1 - 1.0));
+    out.push(...beaconLamp([0, y1 - 0.35, R + proud * 0.8], 0.12), ...sternLamp([0, y0 + 0.35, -(R + proud * 0.8)], 0.12));
     for (const a of [deg(150), deg(210)]) out.push(...floodlight(R + proud * 0.8, a, y1 - 1.3, 0.3));
   }
   return out;

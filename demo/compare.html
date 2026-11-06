@@ -53,6 +53,8 @@
           <div class="field">
             <h3 id="background-title" data-say="background">Background</h3>
             <div class="chips" id="backgrounds" role="group" aria-labelledby="background-title"></div>
+            <p class="moon-heading"><span data-say="turnPace">Turn</span> <span data-say="turnPaceNote">0 is still, 1 is slow, 10 is faster, and 100 is real time.</span></p>
+            <kazoku-speed-buttons id="turn-pace" data-testid="turn-pace" steps="0 1 10 100" value="1" unit="" no-label></kazoku-speed-buttons>
             <h3 id="moon-heading" hidden></h3>
             <div class="chips moon-row" id="moons" data-testid="moons" role="group" hidden></div>
           </div>
