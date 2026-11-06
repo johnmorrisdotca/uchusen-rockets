@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!--family:head-->
+    <link rel="stylesheet" href="family.css" />
+    <link rel="stylesheet" href="demo.css" />
+    <link rel="stylesheet" href="yard.css" />
+  </head>
+  <body class="demo yard">
+    <main>
+      <!--family:header-->
+      <section class="yard-page" aria-labelledby="yard-title">
+        <h1 id="yard-title" data-say="yardTitle">Yard</h1>
+        <p data-say="yardIntro">Three bays side by side. The name is a placeholder until it is named. Choose a bay, the lounge, the visitor port or the free spine.</p>
+        <div class="chips" id="yard-shots" data-testid="yard-shots" role="group" aria-labelledby="yard-title">
+          <button type="button" class="chip" data-testid="yard-whole" data-shot="whole" data-say="yardWhole" aria-pressed="true">Whole yard</button>
+          <button type="button" class="chip" data-testid="yard-hall" data-shot="hall" data-say="yardHall">Hall</button>
+          <button type="button" class="chip" data-testid="yard-spine" data-shot="spine" data-say="yardSpine">Spine</button>
+          <button type="button" class="chip" data-testid="yard-dock" data-shot="dock" data-say="yardDock">Dock</button>
+          <button type="button" class="chip" data-testid="yard-lounge" data-shot="lounge" data-say="yardLounge">Lounge</button>
+          <button type="button" class="chip" data-testid="yard-visitor" data-shot="visitor" data-say="yardVisitor">Visitor port</button>
+          <button type="button" class="chip" data-testid="yard-latch" data-shot="latch" data-say="yardLatch">Latch</button>
+          <button type="button" class="chip" data-testid="yard-loose" data-shot="loose" data-say="yardLoose" aria-pressed="false">Free spine</button>
+        </div>
+        <div class="chips" id="yard-modes" data-testid="yard-modes" role="group" aria-labelledby="yard-title">
+          <button type="button" class="chip" data-testid="yard-day" data-sky="day" data-say="yardDay" aria-pressed="true">Day</button>
+          <button type="button" class="chip" data-testid="yard-night" data-sky="night" data-say="yardNight" aria-pressed="false">Night</button>
+          <button type="button" class="chip" data-testid="yard-build" data-say="yardBuild" aria-pressed="false">Builder</button>
+        </div>
+        <kazoku-view-controls id="view-bar" data-testid="view-bar" for="yard-view" theme="dark" controls="advanced" zoom-min="0.25"></kazoku-view-controls>
+        <div class="yard-stage" id="yard-stage" data-testid="yard-stage" data-shot="whole" data-sky="day" data-loose="home" data-build="off">
+          <canvas id="yard-view" data-testid="yard-view"></canvas>
+          <div id="bay-ship" data-testid="bay-ship" hidden></div>
+        </div>
+        <div class="yard-build" id="yard-build" hidden>
+          <p data-say="yardBuildNote">The chosen bay's ship, built with the player.</p>
+          <uchusen-build id="build-bar" data-testid="build-bar" aria-labelledby="yard-title">
+            <kazoku-speed-buttons slot="speed" steps="1 60 600 3600 10000 86400" value="1" no-label></kazoku-speed-buttons>
+          </uchusen-build>
+        </div>
+      </section>
+      <!--family:footer-->
+    </main>
+    <!--family:scripts js/yard.js-->
+  </body>
+</html>

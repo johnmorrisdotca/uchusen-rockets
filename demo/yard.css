@@ -1,0 +1,16 @@
+/* The yard stage stays inside a 1440 by 900 window: the canvas takes the width it is given and never wider than the page. */
+.yard-stage {
+  position: relative;
+  width: 100%;
+  height: min(62vh, 640px);
+  min-height: 220px;
+  background: #9eb0c4;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.yard-stage canvas { width: 100%; height: 100%; display: block; }
+.yard-stage[data-sky="night"] { background: #05070d; }
+#bay-ship { position: absolute; right: 0; bottom: 0; width: min(42%, 420px); height: 46%; }
+#bay-ship uchusen-rocket { display: block; width: 100%; height: 100%; }
+.yard-build { margin-top: 0.8rem; }
+.yard-build > p { margin: 0 0 0.4rem; }
