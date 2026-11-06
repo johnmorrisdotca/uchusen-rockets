@@ -57,7 +57,8 @@ cpSync(at("examples"), join(usage, "examples"), { recursive: true });
 const examples = (name: string) => join(usage, "examples", name);
 
 // 2. A page that is a folder of built files, served to the browser without a port.
-const TYPES: Record<string, string> = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".webp": "image/webp", ".png": "image/png", ".glb": "model/gltf-binary", ".jpg": "image/jpeg" };
+// Text is UTF-8 and says so: a page without a charset reads a script as Windows-1252, and a bundle that keeps a Japanese property name unquoted (webpack's minifier does) then fails to parse.
+const TYPES: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".svg": "image/svg+xml", ".webp": "image/webp", ".png": "image/png", ".glb": "model/gltf-binary", ".jpg": "image/jpeg" };
 const typeOf = (file: string) => TYPES[extname(file)] ?? "application/octet-stream";
 const serve = async (page: Page, origin: string, folder: string, prefix = ""): Promise<void> => {
   await page.route(`${origin}${prefix}/**`, (route) => {
@@ -196,7 +197,7 @@ await step("webpack", async () => {
   });
   if (stats.hasErrors()) throw new Error(stats.toString({ colors: false, errors: true }));
   const out = join(usage, "out", "webpack");
-  writeFileSync(join(out, "index.html"), `<!doctype html><html><body><script src="main.js"></script></body></html>`);
+  writeFileSync(join(out, "index.html"), `<!doctype html><html><head><meta charset="utf-8"></head><body><script src="main.js"></script></body></html>`);
   await opened(browser, async (page) => {
     await serve(page, "https://app.test", out);
     await page.goto("https://app.test/");

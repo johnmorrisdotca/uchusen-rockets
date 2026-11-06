@@ -1,4 +1,4 @@
-// The wide comparison page: two or three craft in one 3D view, each at its true size on one ground, with the Earth behind, one set of view controls, the choices in rows and in the address. A phone shows one craft.
+// The wide comparison page: two or three craft in one 3D view, each at its true size, floating, with the Earth behind, one set of view controls, the choices in rows and in the address. A phone shows one craft.
 import { expect, type Page, test } from "@playwright/test";
 import { build } from "../src/build/index.ts";
 
@@ -18,7 +18,7 @@ const watch = (page: Page) => {
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 
 test("the page opens with two craft on one ground, its stage is wide, and the table names both", async ({ page, browserName }, info) => {
-  test.skip(info.project.name === "chromium-phone", "A desk's layout");
+  test.skip(info.project.name.endsWith("phone"), "A desk's layout: a phone's width shows one craft");
   const problems = watch(page);
   await page.goto(URL);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
@@ -40,7 +40,7 @@ test("the page opens with two craft on one ground, its stage is wide, and the ta
 });
 
 test("a third craft is added, the choices are kept in the address, and a reload brings them back", async ({ page }, info) => {
-  test.skip(info.project.name === "chromium-phone", "A desk's layout");
+  test.skip(info.project.name.endsWith("phone"), "A desk's layout: a phone's width shows one craft");
   await page.goto(URL);
   await page.locator('[data-testid="cw-add"]').click();
   await expect(craftChips(page)).toHaveCount(3);
@@ -99,7 +99,7 @@ test("the view controls tip as far as the first craft allows, and Fit holds all 
 });
 
 test("on a phone one craft is shown, with no way to add another, and the page does not scroll sideways", async ({ page }, info) => {
-  test.skip(info.project.name !== "chromium-phone", "A phone's width");
+  test.skip(!info.project.name.endsWith("phone"), "A phone's width");
   await page.goto(`${URL}?with=saturn-v:saturn-v,iss:iss`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(craftChips(page)).toHaveCount(1);
@@ -134,7 +134,7 @@ const inside = (box: { left: number; top: number; right: number; bottom: number 
 const apart = (a: { left: number; top: number; right: number; bottom: number }, b: { left: number; top: number; right: number; bottom: number }) =>
   a.right <= b.left + 1 || b.right <= a.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1;
 
-test("each craft is named at its own foot, inside the picture, and a craft in space stands on a marked plinth", async ({ page, browserName }, info) => {
+test("each craft is named at the top right, inside the picture, and nothing stands on a plinth", async ({ page, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "WebGL is drawn in Chromium here, at a desk's width");
   await page.goto(URL);
   await page.locator('[data-testid="cw-add"]').click();
@@ -144,42 +144,9 @@ test("each craft is named at its own foot, inside the picture, and a craft in sp
   const shot = (await captions(page)) as Shot;
   for (const box of shot.names) expect(inside(box, shot.frame)).toBe(true);
   for (let i = 0; i < shot.names.length; i++) for (let j = i + 1; j < shot.names.length; j++) expect(apart(shot.names[i], shot.names[j])).toBe(true);
-  const centres = shot.names.map((name) => name.cx).sort((a, b) => a - b);
-  expect(centres[2] - centres[0]).toBeGreaterThan(80);
-  expect(shot.notes.map((note) => note.text)).toEqual(["shown on the ground for scale"]);
-  for (const note of shot.notes) expect(inside(note, shot.frame)).toBe(true);
-  expect(shot.plinth).toBe("on");
-  const built = build({ rocket: "starship", variant: "v3" }, { beside: [{ rocket: "saturn-v", variant: "saturn-v" }, { rocket: "fleet-ship-03", variant: "miyamoto" }], named: true });
-  const places = built.placesOf("together");
-  const parts = [...built.parts, ...built.beside];
-  const boxes = new Map<number, { minX: number; maxX: number; minY: number; minZ: number; maxZ: number }>();
-  for (const place of places) {
-    if (!place.shown) continue;
-    const part = parts.find((one) => one.slot === place.slot);
-    if (!part) continue;
-    const craft = part.craft ?? -1;
-    const have = boxes.get(craft);
-    boxes.set(craft, {
-      minX: Math.min(have?.minX ?? Infinity, place.at[0] + part.bounds.min[0]),
-      maxX: Math.max(have?.maxX ?? -Infinity, place.at[0] + part.bounds.max[0]),
-      minY: Math.min(have?.minY ?? Infinity, place.at[1] + part.bounds.min[1]),
-      minZ: Math.min(have?.minZ ?? Infinity, place.at[2] + part.bounds.min[2]),
-      maxZ: Math.max(have?.maxZ ?? -Infinity, place.at[2] + part.bounds.max[2]),
-    });
-  }
-  const feet = [-1, 0, 1].map((craft) => {
-    const box = boxes.get(craft);
-    if (!box) throw new Error(`no foot for ${craft}`);
-    return [(box.minX + box.maxX) / 2, box.minY, (box.minZ + box.maxZ) / 2];
-  });
-  const points = await hero(page).evaluate((node, pts) => pts.map((point) => (node as HTMLElement & { screenPoint(p: number[]): { x: number } | null }).screenPoint(point)), feet);
-  shot.names.forEach((name, index) => {
-    const own = Math.abs(name.cx - shot.frame.left - (points[index]?.x ?? 0));
-    points.forEach((point, other) => {
-      if (other === index || !point) return;
-      expect(own).toBeLessThanOrEqual(Math.abs(name.cx - shot.frame.left - point.x) + 2);
-    });
-  });
+  for (const box of shot.names) expect(shot.frame.right - box.right).toBeLessThan(24);
+  expect(shot.notes).toEqual([]);
+  expect(shot.plinth).toBe("off");
 });
 
 test("on a phone the one craft's name stays inside the picture", async ({ page, browserName }, info) => {

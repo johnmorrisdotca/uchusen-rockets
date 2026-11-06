@@ -7,6 +7,7 @@ import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-contro
 import type { EarthForm, EarthShow } from "./earth.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant } from "./sizes.ts";
+import { companionsFor, frameSky, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
 import { WORDS } from "./words.js";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -42,12 +43,20 @@ const NEXT: readonly Craft[] = [
   { rocket: "iss", variant: "iss" },
   { rocket: "space-shuttle", variant: "stack" },
 ];
-const BACKGROUNDS = ["none", "earth"] as const;
-
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
-bar.addEventListener("kazoku-viewchange", (event) => hero.drive((event as CustomEvent).detail));
-const address = createAddressState({ defaults: { rocket: "starship", variant: "v3", with: "saturn-v:saturn-v", look: "line", background: "earth" } });
+// A plain drag turns the picture. Move, a second finger, Shift and the other mouse buttons still pan. A drag that starts on a craft throws that craft.
+bar.set({ drag: "turn" });
+bar.addEventListener("kazoku-viewchange", (event) => {
+  const detail = (event as CustomEvent).detail as { zoom?: number };
+  hero.drive(detail);
+  const zoom = Math.max(0.25, detail.zoom ?? 1);
+  const sky = byId("sky-back");
+  sky.dataset.viewZoom = String(zoom);
+  const node = sky.querySelector("wakusei-body:not([data-moon])");
+  if (node instanceof HTMLElement) frameSky(node, sky, zoom);
+});
+const address = createAddressState({ defaults: { rocket: "starship", variant: "v3", with: "saturn-v:saturn-v", look: "line", background: "earth", moon: "", place: "float", labels: "on" } });
 
 const known = (rocket: string | null | undefined, variant: string | null | undefined): Craft | null => {
   if (!rocket || !Object.hasOwn(ROCKETS, rocket)) return null;
@@ -67,7 +76,10 @@ const state = {
   editing: 0,
   maker: ROCKETS[first.rocket].maker as MakerId,
   look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName,
-  background: (address.get("background") === "none" ? "none" : "earth") as (typeof BACKGROUNDS)[number],
+  background: address.get("background") || "earth",
+  moon: address.get("moon") || "",
+  place: (address.get("place") === "ground" ? "ground" : "float") as "ground" | "float",
+  labels: address.get("labels") !== "off",
 };
 // one craft on a phone
 const phone = matchMedia("(max-width: 820px)");
@@ -84,8 +96,37 @@ hero.addEventListener("uchusen-fallback", () => {
   realisticBarred = true;
   syncEarth();
 });
+let skyBodies: SkyList | null = null;
+let skyKey = "";
+function syncSky() {
+  const sky = byId("sky-back");
+  const moons = byId("sky-moons");
+  const credit = byId("sky-credit");
+  if (state.background === "none" || state.background === "earth") {
+    sky.hidden = true;
+    moons.hidden = true;
+    credit.hidden = true;
+    skyKey = "";
+    return;
+  }
+  const lang = (window as unknown as { uchusenLanguage?: { lang: string } }).uchusenLanguage?.lang === "ja" ? "ja" : "en";
+  const form = state.look === "painted" && !realisticBarred ? "painted" : "line";
+  const companions = skyBodies ? companionsFor(state.background, state.moon, (id) => skyBodies?.moonsOf(id) ?? []) : state.moon && state.moon !== "all" ? [state.moon] : [];
+  const key = `${state.background}|${companions.join(",")}|${form}|${lang}`;
+  if (key === skyKey) return;
+  skyKey = key;
+  placeSky(sky, moons, state.background, companions, form, lang, state.moon);
+  credit.hidden = false;
+  credit.textContent = "";
+  void skyCredit(state.background, state.moon, form).then((text) => {
+    if (skyKey !== key) return;
+    credit.textContent = text.trim();
+    credit.hidden = credit.textContent === "";
+  });
+}
 function syncEarth() {
   byId("earth-credit").hidden = state.background !== "earth";
+  syncSky();
   const form: EarthForm | null = state.background !== "earth" ? null : state.look === "line" ? "line" : state.look === "thick" || realisticBarred ? "thick" : "realistic";
   if (form === earthForm) return;
   earthForm = form;
@@ -110,6 +151,9 @@ function keep() {
   address.set("with", state.craft.slice(1).map((craft) => `${craft.rocket}:${craft.variant}`).join(",") || "none");
   address.set("look", state.look);
   address.set("background", state.background);
+  address.set("moon", state.moon);
+  address.set("place", state.place);
+  address.set("labels", state.labels ? "on" : "off");
 }
 
 function renderCraft() {
@@ -142,9 +186,66 @@ function renderPickers() {
       .map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pickRocket(rocket.id), rocket.id === editing.rocket)),
   );
   byId("variants").replaceChildren(...ROCKETS[editing.rocket].variants.map((one) => chip(one.name, `variant-${one.id}`, () => pickVariant(one.id), one.id === editing.variant)));
+  byId("places").replaceChildren(
+    chip(say("cmpFloat"), "place-float", () => pickPlace("float"), state.place === "float"),
+    chip(say("cmpGround"), "place-ground", () => pickPlace("ground"), state.place === "ground"),
+  );
+  byId("label-toggle").replaceChildren(
+    chip(say("cmpLabelsOn"), "labels-on", () => pickLabels(true), state.labels),
+    chip(say("cmpLabelsOff"), "labels-off", () => pickLabels(false), !state.labels),
+  );
   byId("looks").replaceChildren(...LOOK_NAMES.map((look) => chip(say(`look_${look}`), `look-${look}`, () => pickLook(look), look === state.look)));
-  byId("backgrounds").replaceChildren(...BACKGROUNDS.map((background) => chip(say(`background_${background}`), `background-${background}`, () => pickBackground(background), background === state.background)));
+  drawSky();
 }
+
+function skyName(id: string): string {
+  if (id === "none" || id === "earth" || id === "moon") return say(`background_${id}`);
+  if (id === "all") return say("moonsAll");
+  const lang = (window as unknown as { uchusenLanguage?: { lang: string } }).uchusenLanguage?.lang === "ja" ? "ja" : "en";
+  return skyBodies?.name(id, lang) ?? id;
+}
+function skyButton(id: string, testid: string, on: () => void): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = id === "none" ? "thumb thumb-none" : "thumb";
+  button.dataset.testid = testid;
+  button.dataset.sky = id;
+  button.setAttribute("aria-label", skyName(id));
+  const dot = document.createElement("span");
+  dot.className = "thumb-dot";
+  const name = document.createElement("span");
+  name.className = "thumb-name";
+  name.textContent = skyName(id);
+  button.append(dot, name);
+  button.addEventListener("click", on);
+  if ((id !== "all" && id === state.background) || (id === "all" && state.moon === "all") || (id !== "all" && id === state.moon)) button.setAttribute("aria-pressed", "true");
+  return button;
+}
+function drawSky() {
+  const order = skyBodies?.order ?? ["none", "earth"];
+  const lang = (window as unknown as { uchusenLanguage?: { lang: string } }).uchusenLanguage?.lang === "ja" ? "ja" : "en";
+  byId("backgrounds").replaceChildren(...order.map((id) => skyButton(id, `background-${id}`, () => pickBackground(id))));
+  const moons = skyBodies && state.background !== "none" && state.background !== "sun" ? skyBodies.moonsOf(state.background) : [];
+  const row = byId("moons");
+  const heading = byId("moon-heading");
+  heading.hidden = moons.length === 0;
+  row.hidden = moons.length === 0;
+  const planet = skyBodies?.name(state.background, lang) ?? "";
+  heading.textContent = moons.length === 0 ? "" : say("moonsOf", { name: planet });
+  row.replaceChildren(skyButton("all", "moon-all", () => pickMoon(state.moon === "all" ? "" : "all")), ...moons.map((id) => skyButton(id, `moon-${id}`, () => pickMoon(state.moon === id ? "" : id))));
+  void paintThumbs(byId("backgrounds"), lang);
+  void paintThumbs(row, lang);
+}
+void skyList().then((got) => {
+  skyBodies = got;
+  if (!got.known(state.background)) {
+    state.background = "earth";
+    state.moon = "";
+  } else if (state.moon && state.moon !== "all" && !got.moonsOf(state.background).includes(state.moon)) state.moon = "";
+  skyKey = "";
+  drawSky();
+  syncEarth();
+});
 
 function renderTable() {
   const head = document.createElement("tr");
@@ -194,6 +295,10 @@ function renderStage() {
   hero.setAttribute("show", "together");
   hero.setAttribute("look", state.look);
   hero.setAttribute("beside", rest.length ? rest.map((craft) => `${craft.rocket}:${craft.variant}`).join(",") : "off");
+  if (state.place === "float") hero.setAttribute("float", "");
+  else hero.removeAttribute("float");
+  if (state.labels) hero.removeAttribute("names");
+  else hero.setAttribute("names", "off");
   hero.setAttribute("scale-note", say("cmpPlinth"));
   // the whole row is in the picture whenever it changes
   const now = list.map((craft) => `${craft.rocket}:${craft.variant}`).join(",");
@@ -250,12 +355,27 @@ function pickVariant(id: string) {
   state.craft[state.editing] = { rocket: state.craft[state.editing].rocket, variant: id };
   renderAll();
 }
+function pickPlace(place: "ground" | "float") {
+  state.place = place;
+  renderAll();
+}
+function pickLabels(on: boolean) {
+  state.labels = on;
+  renderAll();
+}
 function pickLook(look: LookName) {
   state.look = look;
   renderAll();
 }
-function pickBackground(background: (typeof BACKGROUNDS)[number]) {
+function pickBackground(background: string) {
   state.background = background;
+  state.moon = "";
+  skyKey = "";
+  renderAll();
+}
+function pickMoon(moon: string) {
+  state.moon = moon;
+  skyKey = "";
   renderAll();
 }
 

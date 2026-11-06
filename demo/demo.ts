@@ -1,12 +1,13 @@
 // The demo page: a rocket large with its controls, a comparison to scale, the part builder, the parts alone and every source. Everything comes from the package's own entries.
 import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNote, paintedCredit, rocketToParams, type RocketOptions, type Figure, figureWords, LOOK_NAMES, type LookName, MODEL_CREDITS, PART_ENTRIES, PLANNED_ROCKETS, ROCKETS, SLOT_NAMES, SOURCES, type SourceId, type Variant, VIEW_NAMES, type ViewName, showsOf, variantOf, creditLine, type CreditId, buildOf, playFrom } from "../src/index.ts";
-import { BESIDE_ROCKET, besideBounds, besideLayout, canBeside } from "../src/beside.ts";
+import { besideBounds, besideLayout, craftName } from "../src/beside.ts";
 import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
 import { motionNote, motionsOf } from "../src/model/fleet/motion.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
+import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
@@ -54,9 +55,14 @@ const knownWord = (prefix: string, text: string) => (`${prefix}_${wordsKey(text)
 
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
+// A plain drag turns the craft at every zoom. The package pans a zoomed view unless Turn is chosen, and Move is its start; Turn is this page's start. Move, a second finger, Shift and the other mouse buttons still pan.
+bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
+/** A size change calls `fit()` to hold the new ship. That is not the Fit button, so it must not turn true scale off or replace a concept's percent. */
+let fittingForSize = false;
 bar.addEventListener("kazoku-viewchange", (event) => {
-  const detail = (event as CustomEvent).detail as { zoom?: number };
+  const detail = (event as CustomEvent).detail as { zoom?: number; reason?: string };
+  if (detail.reason === "fit" && !fittingForSize) setScale(false);
   hero.drive(detail);
   const zoom = Math.max(0.25, detail.zoom ?? 1);
   const sky = byId("sky-back");
@@ -68,11 +74,80 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   else earth?.dispatchEvent(new Event("orbit"));
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look" } });
+/** What can stand beside the craft on screen. `on` is Starship with Super Heavy, the one the address has always used. The others are the same real craft the fleet band lies down. */
+const BESIDE_CHOICES: readonly { id: string; rocket: string; variant: string; testid: string; key?: string }[] = [
+  { id: "on", rocket: "starship", variant: "v3", testid: "beside-on", key: "beside" },
+  { id: "saturn-v:saturn-v", rocket: "saturn-v", variant: "saturn-v", testid: "beside-saturn-v" },
+  { id: "sls:block-1", rocket: "sls", variant: "block-1", testid: "beside-sls" },
+  { id: "iss:iss", rocket: "iss", variant: "iss", testid: "beside-iss" },
+];
+const scaleButton = document.createElement("button");
+scaleButton.type = "button";
+scaleButton.className = "chip";
+scaleButton.dataset.testid = "true-scale";
+scaleButton.dataset.say = "trueScale";
+scaleButton.textContent = say("trueScale");
+byId("turn").append(scaleButton);
+function setScale(on: boolean): void {
+  // A Kaminari concept's size is `scale` too, so turning the true-scale view off (every Fit does) gives the size back and does not write "false" over it.
+  const size = canScale(address.get("rocket") ?? "starship", address.get("variant") ?? "v3") ? String(scalePercent(address.get("kscale"))) : "false";
+  hero.setAttribute("scale", on ? "true" : size);
+  scaleButton.setAttribute("aria-pressed", String(on));
+  address.set("scale", on ? "true" : null);
+}
+scaleButton.addEventListener("click", () => setScale(hero.getAttribute("scale") !== "true"));
+setScale(address.get("scale") === "true");
+const PANELS = ["look", "background", "motion", "build", "lights"] as const;
+type PanelName = (typeof PANELS)[number];
+
+/** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. */
+function panelOffered(name: PanelName): boolean {
+  if (name === "motion") return !byId("motion-field").hidden;
+  if (name === "build") return !byId("build-field").hidden;
+  if (name === "lights") {
+    const field = byId("lights-field");
+    return !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
+  }
+  return true;
+}
+
+/** One group at a time. The choice is `panel` in the address, and Look is left off it. */
+function showPanels(): void {
+  const asked = address.get("panel") ?? "look";
+  const current: PanelName = (PANELS as readonly string[]).includes(asked) && panelOffered(asked as PanelName) ? (asked as PanelName) : "look";
+  for (const name of PANELS) {
+    const tab = document.querySelector(`[data-testid="panel-${name}"]`);
+    const group = document.querySelector(`[data-panel="${name}"]`);
+    const offered = panelOffered(name);
+    if (tab instanceof HTMLButtonElement) {
+      tab.hidden = !offered;
+      tab.setAttribute("aria-selected", String(name === current));
+    }
+    if (group instanceof HTMLElement) group.hidden = name !== current;
+  }
+  if (asked !== current) address.set("panel", current === "look" ? null : current);
+}
+
+for (const name of PANELS) {
+  document.querySelector(`[data-testid="panel-${name}"]`)?.addEventListener("click", () => {
+    if (!panelOffered(name)) return;
+    address.set("panel", name === "look" ? null : name);
+    showPanels();
+  });
+}
+new MutationObserver(() => showPanels()).observe(byId("lights-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: address.get("beside") === "on", kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0 };
+const askedBeside = address.get("beside") ?? "off";
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0 };
+
+/** The craft standing beside the one on screen, or nothing when the choice is off or is the craft itself. */
+function besideNow(): { id: string; rocket: string; variant: string } | null {
+  const choice = BESIDE_CHOICES.find((one) => one.id === state.beside);
+  return choice && choice.rocket !== state.rocket ? choice : null;
+}
 if (state.background === "earth") state.orbitKm = nearestOrbit(state.orbitKm || EARTH_ORBIT[0].km, EARTH_ORBIT);
 
 /** A rocket is thin: the controls hold a pan so that a quarter of it stays in view. Its size on the screen: the picture is as wide as the box and a third taller, and the framing leaves 8% round the rocket. */
@@ -83,8 +158,9 @@ function sizeObject() {
   const height = state.show === "together" ? variant?.facts.height.value : state.show === "apart" ? null : variant?.facts.parts[state.show]?.value;
   const diameter = variant?.facts.diameter.value;
   if (!box.width || typeof height !== "number" || typeof diameter !== "number") return bar.removeAttribute("object-size");
-  // with Starship beside it the picture holds both
-  const beside = state.beside && canBeside(state.rocket) ? variantOf(BESIDE_ROCKET.rocket, BESIDE_ROCKET.variant ?? "")?.facts : null;
+  // with a real craft beside it the picture holds both
+  const chosenBeside = besideNow();
+  const beside = chosenBeside ? variantOf(chosenBeside.rocket, chosenBeside.variant)?.facts : null;
   const craft: Parameters<typeof besideBounds>[0] = { min: [(-diameter * size) / 2, 0, (-diameter * size) / 2], max: [(diameter * size) / 2, height * size, (diameter * size) / 2] };
   const both = beside && typeof beside.height.value === "number" && typeof beside.diameter.value === "number" ? besideBounds(craft, besideLayout(craft, { min: [-beside.diameter.value / 2, 0, 0], max: [beside.diameter.value / 2, beside.height.value, 0] }).bounds) : craft;
   const width = both.max[0] - both.min[0];
@@ -329,17 +405,31 @@ function renderMain() {
   hero.setAttribute("show", state.show);
   hero.setAttribute("look", state.look);
   hero.setAttribute("view", state.view);
-  // Starship beside Starship would say nothing: the control is not offered for it
-  const besideHere = canBeside(state.rocket);
-  byId("beside-field").hidden = !besideHere;
-  hero.setAttribute("beside", besideHere && state.beside ? "on" : "off");
-  byId("beside-note").hidden = !(besideHere && state.beside);
-  press(byId("beside"), state.beside ? "beside-on" : "");
+  // a craft is not offered beside itself: Starship's own chip stays "Beside it", and the other three are Saturn V, SLS and the ISS
+  const chosen = besideNow();
+  for (const choice of BESIDE_CHOICES) {
+    const button = byId("beside").querySelector(`[data-testid="${choice.testid}"]`);
+    if (button) (button as HTMLElement).hidden = choice.rocket === state.rocket;
+  }
+  byId("beside-field").hidden = BESIDE_CHOICES.every((choice) => choice.rocket === state.rocket);
+  hero.setAttribute("beside", chosen ? chosen.id : "off");
+  const note = byId("beside-note");
+  note.hidden = !chosen;
+  if (chosen?.id === "on") {
+    note.dataset.say = "besideNote";
+    note.textContent = say("besideNote");
+  } else if (chosen) {
+    delete note.dataset.say;
+    const tall = variantOf(chosen.rocket, chosen.variant)?.facts.height.value;
+    note.textContent = craftName({ rocket: chosen.rocket, variant: chosen.variant }, typeof tall === "number" ? tall : 0);
+  }
+  press(byId("beside"), chosen ? (BESIDE_CHOICES.find((choice) => choice.id === chosen.id)?.testid ?? "") : "");
   showMotion();
-  // the Kaminari concepts take a size, 60 to 100 per cent
+  // the Kaminari concepts take a size, 60 to 100 per cent. scale="true" is the true-scale view, kept in the address apart from that size; a redraw must not clear it.
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
-  if (sizeHere) hero.setAttribute("scale", String(state.kscale));
+  if (address.get("scale") === "true") hero.setAttribute("scale", "true");
+  else if (sizeHere) hero.setAttribute("scale", String(state.kscale));
   else hero.removeAttribute("scale");
   byId<HTMLInputElement>("kscale").value = String(state.kscale);
   byId("kscale-out").textContent = `${state.kscale}%`;
@@ -358,6 +448,11 @@ function renderMain() {
     else hero.removeAttribute("progress");
   };
   buildBar.onMove = showProgress;
+  buildBar.onRepeat = (on) => address.set("repeat", on ? "on" : null);
+  if (buildBar.dataset.repeatReady !== "yes") {
+    buildBar.dataset.repeatReady = "yes";
+    buildBar.repeat = new URLSearchParams(location.search).get("repeat") === "on";
+  }
   if (buildBar.dataset.forVariant !== state.variant) {
     const previous = buildBar.dataset.forVariant ?? "";
     buildBar.dataset.forVariant = state.variant;
@@ -396,6 +491,7 @@ function renderMain() {
   drawEmbed();
   syncEarth();
   sizeObject();
+  showPanels();
 }
 
 /** The maker's row, and in the rocket's row only that maker's rockets. */
@@ -411,7 +507,11 @@ function drawMakers() {
 }
 
 function pick(change: Partial<typeof state>) {
-  if (change.view !== undefined && change.view !== state.view) bar.set({ yaw: 0, tilt: 0 });
+  // A new craft, variant or view is a new picture: zoom and pan go back to Fit. The angle stays, except a new view, which is itself the angle. A page opened at a zoom (a shared link) is left as it was until one of these changes.
+  const craft = (change.rocket !== undefined && change.rocket !== state.rocket) || (change.variant !== undefined && change.variant !== state.variant);
+  const viewChanged = change.view !== undefined && change.view !== state.view;
+  if (viewChanged) bar.set({ yaw: 0, tilt: 0, zoom: 1, panX: 0, panY: 0 });
+  else if (craft) bar.set({ zoom: 1, panX: 0, panY: 0 });
   const orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
@@ -419,9 +519,9 @@ function pick(change: Partial<typeof state>) {
   if (change.background !== undefined) address.set("background", state.background);
   if (change.background !== undefined || change.moon !== undefined) address.set("moon", state.moon ? state.moon : null);
   if (change.beside !== undefined) {
-    address.set("beside", change.beside ? "on" : "off");
+    address.set("beside", state.beside ?? "off");
     // both craft are to be in the picture
-    bar.fit();
+    if (hero.getAttribute("scale") !== "true") bar.fit();
   }
   if (change.kscale !== undefined) address.set("kscale", String(state.kscale));
   if (orbitChanged) orbitAnimate = true;
@@ -433,8 +533,12 @@ function pick(change: Partial<typeof state>) {
     } else if (state.background === "earth" || orbitCache.has(state.background)) settleOrbit(true);
     orbitAnimate = false;
   }
-  // the ship is a new size: Fit holds it, and Starship beside it, again
-  if (change.kscale !== undefined) bar.fit();
+  // the ship is a new size: Fit holds it, and Starship beside it, again. This fit is the camera, not the Fit button.
+  if (change.kscale !== undefined) {
+    fittingForSize = true;
+    bar.fit();
+    fittingForSize = false;
+  }
   address.set("rocket", state.rocket);
   address.set("variant", state.variant);
   address.set("show", state.show);
@@ -498,7 +602,9 @@ void skyList().then((got) => {
   syncEarth();
 });
 
-byId("beside").append(chip("Beside it", "beside-on", () => pick({ beside: !state.beside }), "beside"));
+byId("beside").append(
+  ...BESIDE_CHOICES.map((choice) => chip(variantOf(choice.rocket, choice.variant)?.name ?? choice.rocket, choice.testid, () => pick({ beside: state.beside === choice.id ? null : choice.id }), choice.key)),
+);
 // the size slider: the number follows the thumb at once, and the ship is rebuilt at the size when it is let go
 byId<HTMLInputElement>("kscale").addEventListener("input", (event) => (byId("kscale-out").textContent = `${scalePercent((event.target as HTMLInputElement).value)}%`));
 byId<HTMLInputElement>("kscale").addEventListener("change", (event) => pick({ kscale: scalePercent((event.target as HTMLInputElement).value) }));
@@ -568,6 +674,7 @@ function showMotion() {
   press(motionBox, motionChoice === "off" ? "motion-off" : "motion-on");
   press(speedBox, motionChoice === "fast" ? "motion-fast" : "motion-real");
   address.set("motion", motionChoice === "on" ? null : motionChoice);
+  showPanels();
 }
 function chooseMotion(choice: string) {
   motionChoice = choice;
@@ -866,6 +973,8 @@ function setWords() {
   byId<UchusenBuild>("build-bar").words = {
     play: say("buildPlay"),
     pause: say("buildPause"),
+    start: say("buildStart"),
+    repeat: say("buildRepeat"),
     range: say("buildRange"),
     day: say("buildDay"),
     done: say("buildDone"),

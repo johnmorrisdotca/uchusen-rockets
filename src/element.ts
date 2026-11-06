@@ -19,7 +19,7 @@ import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
 import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
-import type { RocketViewer } from "./element/scene.ts";
+import type { RocketViewer, ViewerFocus } from "./element/scene.ts";
 import { Panel } from "./element/panel.ts";
 import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
@@ -148,13 +148,16 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
   private holder: HTMLElement | null = null;
   private drawing: HTMLElement | null = null;
   private viewer: RocketViewer | null = null;
+  /** The inset the page asked for, put back after a rocket loads, and the words that mark its point. */
+  private framed: ViewerFocus | null = null;
+  private frameLabel = "";
   private watch: IntersectionObserver | null = null;
   private releaseTimer = 0;
   private revealTimer = 0;
@@ -213,6 +216,23 @@ export class UchusenRocket extends HTMLBase {
    */
   screenPoint(point: readonly [number, number, number]): { x: number; y: number; visible: boolean } | null {
     return this.viewer?.screenPoint([point[0], point[1], point[2]]) ?? null;
+  }
+
+  /** Isolate the named slots, look at a point and, when `label` is given, mark that point. `null` shows the whole ship again. */
+  focusAt(focus: ViewerFocus | null, label = ""): void {
+    this.framed = focus;
+    this.frameLabel = label;
+    if (focus) this.endFlight();
+    this.applyFrame();
+  }
+
+  private applyFrame(): void {
+    const focus = this.framed;
+    if (focus) this.dataset.focus = focus.slots.join(" ");
+    else delete this.dataset.focus;
+    this.viewer?.focusOn(focus);
+    const slot = focus?.slots[0];
+    this.viewer?.setMarks(focus && slot && this.frameLabel ? [{ id: "module", text: this.frameLabel, at: focus.target, slot }] : null);
   }
 
   /** Lets a page choose the turn, tip, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
@@ -284,11 +304,18 @@ export class UchusenRocket extends HTMLBase {
 
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
-    if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
+    if (name === "scale") {
+      this.viewer?.setScaleMode(after === "true");
+      // `scale="true"` is the true-scale view. A number is a Kaminari size, which rebuilds the craft.
+      if (after !== "true" && after !== "false") this.queue();
+    }
+    else if (name === "spin" || name === "way") this.viewer?.setSpin(this.spin());
     else if (name === "motion") {
       if (this.viewer) this.lightViewer(this.viewer);
       this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "float") this.viewer?.setFloating(after !== null);
+    else if (name === "names") this.viewer?.setNameLabels(after !== "off");
     else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
     else if (name === "labels" || name === "inspector") this.syncPanel();
     else {
@@ -510,6 +537,7 @@ export class UchusenRocket extends HTMLBase {
   /** Hands the 3D view what the attributes say about the engines, and its reader's motion setting. */
   private lightViewer(viewer: RocketViewer): void {
     viewer.setReduced(media("(prefers-reduced-motion: reduce)"));
+    viewer.setScaleMode(this.getAttribute("scale") === "true");
     viewer.setEngines(this.engineLights() ? "full" : null);
     viewer.setMotion(motionsOf(this.descriptionNow().rocket), motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")), motionSpeed(this.getAttribute("motion")));
   }
@@ -646,6 +674,7 @@ export class UchusenRocket extends HTMLBase {
         if (now.show !== show) viewer.setShow(now.show);
         viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
         this.lightViewer(viewer);
+        this.applyFrame();
       }
       this.emit("uchusen-change", { report: this.builtNow.report });
     }
@@ -686,7 +715,7 @@ export class UchusenRocket extends HTMLBase {
       this.panel = null;
       this.panelFor = null;
       delete this.dataset.panel;
-      this.viewer?.setMarks(null);
+      if (!this.framed) this.viewer?.setMarks(null);
       return;
     }
     if (this.panelFor !== inspector || !this.panel || !this.panel.el.isConnected) {
@@ -827,6 +856,8 @@ export class UchusenRocket extends HTMLBase {
       this.flightFrame = 0;
       if (this.clock) made.setFlight(this.clock);
       if (this.driven) made.drive(this.driven);
+      made.setFloating(this.hasAttribute("float"));
+      made.setNameLabels(this.getAttribute("names") !== "off");
       made.setVisible(true);
       const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
       this.lastView = viewName;
@@ -837,8 +868,11 @@ export class UchusenRocket extends HTMLBase {
       if (now.show !== show) made.setShow(now.show);
       made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
       this.lightViewer(made);
+      this.applyFrame();
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));
+      made.setFloating(this.hasAttribute("float"));
+      made.setNameLabels(this.getAttribute("names") !== "off");
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
         if (generation === this.generation && this.viewer === made) {
@@ -905,7 +939,7 @@ svg { display: block; }
 `;
 
 /**
- * Rockets side by side on one baseline at one scale: `<uchusen-lineup items="starship:v1,starship:v3,person,building" unit="4" ruler labels>`.
+ * Rockets side by side on one baseline at one scale: `<uchusen-lineup items="starship:v1,starship:v3,person,building" unit="4" ruler labels>`. `pose="stand"` draws a fleet ship upright in that row, and `view` turns it; without it a fleet ship still lies in its own band.
  *
  * @example
  * ```ts no-run
@@ -919,7 +953,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose", "wide"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -946,6 +980,7 @@ export class UchusenLineup extends HTMLBase {
       ruler: this.hasAttribute("ruler"),
       labels: this.hasAttribute("labels"),
       filter: ((value) => (value === "rockets" || value === "fleet" ? value : "all"))(this.getAttribute("filter")),
+      ...(this.getAttribute("pose") === "stand" ? { pose: "stand" as const } : {}),
       ...((room) => (room.length === 2 && room.every((v) => Number.isFinite(v) && v > 0) ? { fit: { width: room[0], height: room[1] } } : {}))((this.getAttribute("fit") ?? "").split(",").map(Number)),
     });
     this.dataset.unit = String(Math.round(drawnUnit * 100) / 100);
@@ -953,6 +988,13 @@ export class UchusenLineup extends HTMLBase {
     template.innerHTML = svg;
     const node = template.content.firstElementChild;
     if (!node) return;
+    // wide: the picture uses the width of its frame and grows taller than the frame, which scrolls. Left out, the picture keeps the pixel size it was drawn at.
+    if (this.hasAttribute("wide") && node instanceof SVGElement) {
+      node.setAttribute("width", "100%");
+      node.removeAttribute("height");
+      node.style.width = "100%";
+      node.style.height = "auto";
+    }
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);
     this.dataset.count = String(shown.length);

@@ -24,9 +24,10 @@ test("Miyamoto starts on the drive, finishes every slot, and a rocket has no bui
 
 test("the long ships are offered, and the address keeps the place", () => {
   for (const variant of ["ariake", "hanabusa", "fleet-kaminari", "fleet-emiake", "fleet-emiake-deployed", "fleet-romaryu"]) assert.ok(buildOf(variant), variant);
-  assert.equal(PLAY_RATES[0], 60);
+  assert.equal(PLAY_RATES[0], 1);
   assert.equal(PLAY_RATES[PLAY_RATES.length - 1], 100_000);
-  assert.ok(BUILD_DAYS / PLAY_RATES[0] < 30);
+  assert.ok(PLAY_RATES.includes(86_400));
+  assert.ok(BUILD_DAYS / (100_000 / 86_400) < 3_600);
   assert.deepEqual(playFrom(new URLSearchParams("build=on&at=0.25")), { on: true, at: 0.25 });
   assert.deepEqual(playFrom(new URLSearchParams("at=no")), { on: false, at: 0 });
   const frames = stills(buildOf("miyamoto") ?? [], 4);
