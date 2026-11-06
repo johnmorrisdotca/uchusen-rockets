@@ -22,16 +22,18 @@ export interface DockPort {
   internal?: boolean;
   /** The biggest craft it takes: radius and length along `dir`, metres. */
   craft: { radius: number; length: number };
+  /** Package craft a person may put here. Absent: nothing drawn is allowed. */
+  models?: readonly ("dragon" | "soyuz" | "orion" | "starship")[];
 }
 
 const deg = (a: number): number => (a * Math.PI) / 180;
 
 export const PORTS: readonly DockPort[] = [
-  ...STATION.kinds.map((kind, k): DockPort => ({ id: `quarter-${kind}`, name: `${kind[0].toUpperCase()}${kind.slice(1)} quarter dock`, collar: "H", at: [STUB.radius * Math.sin(deg(90 * k)), STUB_FACE, STUB.radius * Math.cos(deg(90 * k))], dir: [0, 1, 0], mount: `${kind} quarter's despun docking ring`, turns: false, despun: true, allows: ["Miyamoto class", "Ariake class", "Hanabusa's small craft", "crew vehicles", "Starship upper stage", "ships A, B, C, D in the quadrant arrangement"], walkway: true, craft: { radius: 22, length: 400 } })),
+  ...STATION.kinds.map((kind, k): DockPort => ({ id: `quarter-${kind}`, name: `${kind[0].toUpperCase()}${kind.slice(1)} quarter dock`, collar: "H", at: [STUB.radius * Math.sin(deg(90 * k)), STUB_FACE, STUB.radius * Math.cos(deg(90 * k))], dir: [0, 1, 0], mount: `${kind} quarter's despun docking ring`, turns: false, despun: true, allows: ["Miyamoto class", "Ariake class", "Hanabusa's small craft", "crew vehicles", "Starship upper stage", "ships A, B, C, D in the quadrant arrangement"], walkway: true, craft: { radius: 22, length: 400 }, models: ["dragon", "starship"] })),
   ...BAYS.map(([sx, sz], i): DockPort => ({ id: `housing-${"abcd"[i]}`, name: `Stern housing, bay ${"ABCD"[i]}`, collar: "L", at: [sx * SHAFT_X, 335, sz * SHAFT_X], dir: [0, 1, 0], mount: "the station's housing at its stern (still)", turns: false, despun: false, allows: ["a ship of the class (A, B, C or D)"], walkway: true, craft: { radius: 9, length: 340 } })),
-  ...[45, 135, 225, 315].map((a, i): DockPort => ({ id: `hub-${i}`, name: `Hub small-craft port ${i + 1}`, collar: "S", at: [0.62 * STATION.hubR * Math.sin(deg(a)), STATION.y + STATION.hubHalf + 3.9, 0.62 * STATION.hubR * Math.cos(deg(a))], dir: [0, -1, 0], mount: "the hub's forward shoulder (still)", turns: false, despun: false, allows: ["crew vehicles", "small craft"], walkway: true, craft: { radius: 3.5, length: 30 } })),
-  { id: "ship-a-crew", name: "Ship A crew-vehicle arm", collar: "S", at: [SHAFT_X + 16, 240, -SHAFT_X], dir: [0, -1, 0], mount: "ship A's truss (still)", turns: false, despun: false, allows: ["crew vehicles"], walkway: false, craft: { radius: 3.5, length: 30 } },
-  { id: "ship-b-crew", name: "Ship B crew-vehicle arm", collar: "S", at: [-SHAFT_X - 16, 212, -SHAFT_X], dir: [0, -1, 0], mount: "ship B's truss (still)", turns: false, despun: false, allows: ["crew vehicles"], walkway: false, craft: { radius: 3.5, length: 30 } },
+  ...[45, 135, 225, 315].map((a, i): DockPort => ({ id: `hub-${i}`, name: `Hub small-craft port ${i + 1}`, collar: "S", at: [0.62 * STATION.hubR * Math.sin(deg(a)), STATION.y + STATION.hubHalf + 3.9, 0.62 * STATION.hubR * Math.cos(deg(a))], dir: [0, -1, 0], mount: "the hub's forward shoulder (still)", turns: false, despun: false, allows: ["crew vehicles", "small craft"], walkway: true, craft: { radius: 3.5, length: 30 }, models: ["dragon"] })),
+  { id: "ship-a-crew", name: "Ship A crew-vehicle arm", collar: "S", at: [SHAFT_X + 16, 240, -SHAFT_X], dir: [0, -1, 0], mount: "ship A's truss (still)", turns: false, despun: false, allows: ["crew vehicles"], walkway: false, craft: { radius: 3.5, length: 30 }, models: ["dragon"] },
+  { id: "ship-b-crew", name: "Ship B crew-vehicle arm", collar: "S", at: [-SHAFT_X - 16, 212, -SHAFT_X], dir: [0, -1, 0], mount: "ship B's truss (still)", turns: false, despun: false, allows: ["crew vehicles"], walkway: false, craft: { radius: 3.5, length: 30 }, models: ["dragon"] },
   { id: "ship-a-bay", name: "Ship A payload bay dock", collar: "M", at: [SHAFT_X, 262.4, -SHAFT_X], dir: [0, 1, 0], mount: "ship A's bay bulkhead (still)", turns: false, despun: false, allows: ["small craft", "probes"], walkway: false, internal: true, craft: { radius: 5, length: 36 } },
 ];
 

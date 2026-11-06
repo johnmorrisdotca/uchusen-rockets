@@ -1,6 +1,7 @@
 // Miyamoto's parts: each module of the ship as a row of the table below, with where it stands, its joints and how to build its pieces at a level of detail. Every builder works in ship metres (X across the beam, Y from the
 // tail, Z dorsal); `local` moves a part's pieces so its origin is the middle of its base on the spine, as every part of the package has it. The registry and the data read this table and nothing else. Pure: no three.js and no DOM.
 import type { PartKind } from "../../../parts.ts";
+import { dockedCraft } from "../docked.ts";
 import { isCoarse, type Piece, place } from "./adapter.ts";
 import { type ArrayState, solarArray } from "./solar.ts";
 import { bowLivery, citadelLivery, driveLivery, habitatLivery, hangarLivery } from "./ariake.ts";
@@ -130,7 +131,7 @@ export const STACK = (cut: boolean): MiyamotoPart[] => [
   stack("drive", "Main drive and thrust frame", "engine", STATION.drive, 90, 46, "Two flush fusion-triggered nozzles with throat rings, field coils and feed manifolds, a blast bulkhead and four plasma verniers.", driveFrame, cut, true),
   stack("engineering", "Engineering and isolators", "module", STATION.engineering, 28, 26, "Reactor chambers, a locked-out service corridor, two isolated auxiliary power units, the emergency battery room and the breakers.", engineering, cut),
   stack("fuel-aft", "Aft fuel section", "tank", STATION.fuelAft, 62, 44, "The spine and the aft pair of propellant barrels, with a header tank slung under it.", (c, d) => fuelSection("aft", c, d), cut),
-  stack("fuel-fore", "Fore fuel section", "tank", STATION.fuelFore, 62, 66, "The spine and the fore pair of barrels, the keyed dorsal collar's base and the ventral keel with its dock.", (c, d) => fuelSection("fore", c, d), cut),
+  stack("fuel-fore", "Fore fuel section", "tank", STATION.fuelFore, 62, 66, "The spine and the fore pair of barrels, the keyed dorsal collar's base and the ventral keel with its dock.", (c, d) => [...fuelSection("fore", c, d), ...place(dockedCraft("fleet-ship-03"), { at: [0, STATION.fuelFore[0], 0] })], cut),
   stack("habitat", "Habitation and medical", "module", STATION.habitat, 26, 28, "Four decks across the beam: triage and quarantine, crew bunks, mess and hydroponics, water and air recycling.", habitat, cut),
   stack("command", "Armoured command citadel", "module", STATION.command, 42, 32, "An operations ring round a communications core, a navigation desk, a medical link and two escape passages, behind armour.", command, cut),
   stack("bow", "Bow defence and navigation", "module", STATION.bow, 38, 38, "A rounded nose: three staggered round shield layers under a domed front, all in gold solar cells, with ranging apertures, optical heads and two debris-intercept mounts.", (c, d) => noseRounded(c, d), cut, false, true),
