@@ -41,3 +41,32 @@ export function bodySpan(radiusKm: number, distanceKm: number): number {
   const angle = 2 * Math.atan(radius / Math.max(distance, 1));
   return Math.min(BODY_CAP, Math.max(BODY_FLOOR, angle / VIEW_RADIANS));
 }
+
+const PERCEIVED_FLOOR = 0.04;
+const PERCEIVED_CAP = 0.9;
+
+/**
+ * How much of the view a body fills when size is perceived. The log of distance runs between the trip's own ends: a few percent of the frame at the far end, and nearly the whole view only at the near end. Closing the distance grows it; opening the distance shrinks it.
+ * @param distanceKm How far the craft is from the body's centre, km.
+ * @param farKm The farthest this body gets on the trip, km. That end is the small disc.
+ * @param nearKm The nearest this body gets on the trip, km. That end fills the view.
+ * @returns The share of the view.
+ */
+export function perceivedSpan(distanceKm: number, farKm: number, nearKm: number): number {
+  const near = Math.max(1, nearKm);
+  const far = Math.max(near * 1.001, farKm);
+  const distance = Math.min(far, Math.max(near, distanceKm));
+  const grown = Math.log(far / distance) / Math.log(far / near);
+  return PERCEIVED_FLOOR + (PERCEIVED_CAP - PERCEIVED_FLOOR) * grown;
+}
+
+/**
+ * How much of the view the destination fills as the trip plays, when a page has only the progress and not the two distances. It stays a small disc until late and fills the view at arrival.
+ * @param progress How much of the trip is behind, 0 to 1.
+ * @returns The share of the view.
+ */
+export function perceivedAlong(progress: number): number {
+  const t = Math.min(1, Math.max(0, progress));
+  const eased = t * t * t;
+  return PERCEIVED_FLOOR + (PERCEIVED_CAP - PERCEIVED_FLOOR) * eased;
+}
