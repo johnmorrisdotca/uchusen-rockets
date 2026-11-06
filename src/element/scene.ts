@@ -1464,7 +1464,7 @@ export class RocketViewer {
     this.clip(distance / 40, distance * 8);
     this.camera.updateProjectionMatrix();
     this.controls.minDistance = this.options.orbit ? 0.05 : distance * 0.12;
-    this.controls.maxDistance = this.options.orbit ? 2e9 : distance * 1.8;
+    this.controls.maxDistance = this.options.orbit ? 5e13 : distance * 1.8;
     this.updateHexSize(distance);
     this.syncSizes();
   }
@@ -1618,6 +1618,8 @@ export class RocketViewer {
     const up = rolledUp(direction, this.driven?.roll ?? 0);
     this.camera.up.set(up[0], up[1], up[2]);
     this.camera.lookAt(framing.target[0], framing.target[1], framing.target[2]);
+    const paths = this.scene.getObjectByName("planet-orbits");
+    if (paths) paths.visible = reach > 30_000_000;
   }
 
   /** A wider lens once the Earth would spill past the frame, so one Earth-diameter back shows the whole disc. */
@@ -1857,7 +1859,7 @@ export class RocketViewer {
   private clip(nearFrom: number, far: number): void {
     if (this.options.orbit) {
       this.camera.near = 0.05;
-      this.camera.far = 2e9;
+      this.camera.far = 5e13;
       return;
     }
     this.camera.near = Math.max(0.2, nearFrom);
