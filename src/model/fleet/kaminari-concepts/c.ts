@@ -92,10 +92,17 @@ function barrels(): Piece[] {
 
 const DOCKED_VARIANT = { miyamoto: "miyamoto-array", ariake: "ariake" } as const;
 
-/** One of the package's own ships, in its own frame: Miyamoto with the gold array out, or Ariake with her four boxes and dawn-gold bands. */
+const dockedOnce = new Map<string, Piece[]>();
+
+/** One of the package's own ships, in its own frame: Miyamoto with the gold array out, or Ariake with her four boxes and dawn-gold bands. A second copy of the same ship is that build again. */
 export function docked(which: keyof typeof DOCKED_VARIANT, detail: number, level?: "coarse" | "fine"): Piece[] {
+  const key = `${which}:${detail}:${level ?? ""}`;
+  const kept = dockedOnce.get(key);
+  if (kept) return kept;
   const slots = new Set(Object.values(MIYAMOTO_VARIANT_SLOTS[DOCKED_VARIANT[which]]));
-  return miyamotoParts().filter((p) => slots.has(p.id)).flatMap((p) => place(p.pieces({ detail, ...(level ? { level } : {}) }), { at: [p.place?.x ?? 0, p.y0, p.place?.z ?? 0] }));
+  const pieces = miyamotoParts().filter((p) => slots.has(p.id)).flatMap((p) => place(p.pieces({ detail, ...(level ? { level } : {}) }), { at: [p.place?.x ?? 0, p.y0, p.place?.z ?? 0] }));
+  dockedOnce.set(key, pieces);
+  return pieces;
 }
 
 /** Miyamoto with the gold array out, the craft the reference pictures stand beside the carrier. */
