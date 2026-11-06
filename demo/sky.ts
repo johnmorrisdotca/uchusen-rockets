@@ -104,43 +104,45 @@ export const aimOrbit = (open: number, holder: HTMLElement, animate: boolean): v
   frame = requestAnimationFrame(step);
 };
 
-/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened a little and tipped so its rings cross the sky as a band; the horizon stays on the middle. A higher orbit eases that picture out until the whole disc is in frame. `viewZoom` below 1 opens the same picture further. */
-const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: number) => {
+/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened enough that the whole disc and both ring tips sit inside the stage, and tipped so the rings cross the sky. A higher orbit eases that picture out. The craft's own zoom is not applied: coming closer turns the planet into a band cut off by the canvas. */
+const paintFrame = (node: Framed, holder: HTMLElement, range: number) => {
   const width = holder.clientWidth;
   const height = holder.clientHeight;
   if (width < 2 || height < 2 || typeof node.setView !== "function") return;
   const side = Math.max(width, height);
-  node.style.width = `${side}px`;
-  node.style.height = `${side}px`;
+  node.style.maxWidth = "none";
+  node.style.width = "100%";
+  node.style.height = "100%";
   node.style.aspectRatio = "auto";
   const place = placementIn(width, height);
   const saturn = node.getAttribute("body") === "saturn";
   const moons = node.hasAttribute("moons");
   const open = Math.min(1, Math.max(0, Number(node.dataset.open) || 0));
-  const widen = saturn ? 0.48 + 0.52 * open : 1;
   const fullZoom = (0.84 * Math.min(width, height) * ROOM) / side / (saturn ? 2.4 : 1);
-  const camera = moons ? ORBIT_ZOOM : (ORBIT_ZOOM * widen * (1 - open) + fullZoom * open) * viewZoom;
-  const shrink = moons ? ROOM / Math.max(ROOM, range) : viewZoom * widen * (1 - open);
+  // Saturn's rings are wider than the disc. The close horizon zoom cuts them on a straight edge, so Saturn stays at the distance where the tips fit.
+  const horizon = saturn ? fullZoom : ORBIT_ZOOM;
+  const camera = moons ? ORBIT_ZOOM : horizon * (1 - open) + fullZoom * open;
+  const shrink = moons ? ROOM / Math.max(ROOM, range) : saturn ? 0 : 1 - open;
   const face = node.dataset.face;
-  node.setView({
-    yaw: 0,
-    tilt: saturn ? -36 * (1 - open) : face ? -Number(face) : 0,
-    zoom: camera,
-    panX: (-2 * place.panX * shrink) / side,
-    panY: (2 * place.panY * shrink) / side,
-  });
+  const tilt = saturn ? -28 * (1 - open) : face ? -Number(face) : 0;
+  const panX = (-2 * place.panX * shrink) / side;
+  const panY = (2 * place.panY * shrink) / side;
+  const key = `${side}|${camera.toFixed(3)}|${panX.toFixed(3)}|${panY.toFixed(3)}|${tilt.toFixed(2)}`;
+  // Setting the camera again on every craft frame pins the body's own turn.
+  if (node.dataset.framed === key) return;
+  node.dataset.framed = key;
+  node.setView({ yaw: 0, tilt, zoom: camera, panX, panY });
 };
 
-/** The reader's zoom. Below 1 opens the picture further. A moon picture opens its range; a body alone opens the camera, and neither one adds moons. */
+/** The reader's zoom opens a moon picture. It does not crop the planet: the craft's zoom used to turn the background into a band. */
 export const frameSky = (node: HTMLElement, holder: HTMLElement, viewZoom = 1) => {
   node.dataset.open = shown.toFixed(4);
-  const pull = Number(node.dataset.pull) || 1;
   const zoom = Math.max(0.25, viewZoom);
   node.dataset.viewZoom = String(zoom);
   const base = Number(node.dataset.baseRange);
   const range = node.hasAttribute("moons") ? (base > 0 ? base / zoom : Number(node.getAttribute("range")) || ROOM) : ROOM;
   if (node.hasAttribute("moons") && base > 0) node.setAttribute("range", range.toFixed(2));
-  paintFrame(node as Framed, holder, range, zoom * pull);
+  paintFrame(node as Framed, holder, range);
 };
 
 const watchFrame = (node: HTMLElement, holder: HTMLElement) => {
