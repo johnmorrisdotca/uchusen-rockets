@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Ship lights** (MODULES-449): the SPX ships carry real lights: red and green running lights, white strobes, lit windows and a lit registry plate, drawn as soft points of light. A Lights choice in the panel's Lights tab picks Off, Running only or All; daylight is the default.
 - **Three axes** (MODULES-468): the camera follows the view controls' roll, so Angle, Tilt and Roll all move the rocket. The family's view controls are 0.17.0, which offers the three axes and a tumble. The journey's playback speeds are the family's speed buttons.
 - **True-scale ghost** (MODULES-460): the fading outline also clears on a two-second timer, so a frame loop that does not come back still ends the cycle. The WebKit skip on that test is gone.
 - **Hanabusa's bible** (MODULES-402): the opening crew figure matches the record, 1,200, and the page states the endurance and the limits the journey already uses.
