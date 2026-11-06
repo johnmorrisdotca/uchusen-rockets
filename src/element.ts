@@ -274,6 +274,28 @@ export class UchusenRocket extends HTMLBase {
     this.place();
   }
 
+  private pivotWanted: { at: readonly [number, number, number] | null; label: string } | null = null;
+  private pathsWanted: boolean | null = null;
+  private whenWanted: number | null = null;
+
+  /** Moves the camera's pivot onto a body in the scene, or back to the craft when `at` is null. */
+  setPivot(at: readonly [number, number, number] | null, label = "craft"): void {
+    this.pivotWanted = { at, label };
+    this.viewer?.setPivot(at, label);
+  }
+
+  /** Shows or hides the faint orbit lines and the two belts. */
+  setPaths(on: boolean): void {
+    this.pathsWanted = on;
+    this.viewer?.setPaths(on);
+  }
+
+  /** Puts the Moon and the major moons where they are at `ms`. */
+  setWhen(ms: number): void {
+    this.whenWanted = ms;
+    this.viewer?.setWhen(ms);
+  }
+
   /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. It is drawn at most about 20 times a second and never while out of sight: it is made again when it comes back. */
   private place(): void {
     if (this.stateNow === "3d" && this.viewer) return;
@@ -893,6 +915,9 @@ export class UchusenRocket extends HTMLBase {
       });
       this.viewer = made;
       made.setOrbit(this.getAttribute("world") === "earth");
+      if (this.pivotWanted) made.setPivot(this.pivotWanted.at, this.pivotWanted.label);
+      if (this.pathsWanted !== null) made.setPaths(this.pathsWanted);
+      if (this.whenWanted !== null) made.setWhen(this.whenWanted);
       window.cancelAnimationFrame(this.flightFrame);
       this.flightFrame = 0;
       if (this.clock) made.setFlight(this.clock);

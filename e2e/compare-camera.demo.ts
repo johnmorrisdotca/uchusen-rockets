@@ -85,3 +85,20 @@ test("one astronomical unit shows the Sun and Jupiter", async ({ page }, info) =
   const text = await page.getByTestId("cw-distance").innerText();
   expect(Number(text.replaceAll(/[^0-9]/g, ""))).toBeGreaterThan(100_000_000);
 });
+
+test("a body marker moves the pivot, the paths can hide, and the days play", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-desk", "WebGL is drawn on the desk");
+  await page.goto(URL);
+  await expect(page.locator("#hero")).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await page.getByTestId("mark-cmpMarkAu").click();
+  await expect(page.getByTestId("body-jupiter")).toBeVisible({ timeout: 15_000 });
+  await page.getByTestId("body-jupiter").click();
+  const canvasOf = (key: string) => page.locator("#hero").evaluate((node, name) => node.shadowRoot?.querySelector("canvas")?.dataset[name] ?? "", key);
+  await expect.poll(() => canvasOf("pivot")).toBe("jupiter");
+  await page.getByTestId("cmp-paths").click();
+  await expect.poll(() => canvasOf("paths")).toBe("off");
+  const before = await page.getByTestId("body-mercury").getAttribute("data-angle");
+  await page.getByTestId("cmp-play").click();
+  await expect.poll(() => page.getByTestId("body-mercury").getAttribute("data-angle"), { timeout: 8_000 }).not.toBe(before);
+  await page.getByTestId("cmp-play").click();
+});

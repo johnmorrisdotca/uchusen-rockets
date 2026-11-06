@@ -365,6 +365,12 @@ export class RocketViewer {
   /** The fit distance, kept while a zoom pulls the camera out to a planet. The page still reads this as the fit. */
   private orbitFit = 0;
   private moonSpot = new Vector3();
+  /** The camera looks at the craft until a marker moves this, in scene metres. */
+  private pivot: [number, number, number] = [0, 0, 0];
+  /** The faint paths and belts. The page turns them on and off. */
+  private pathsOn = true;
+  private skyWhen = Date.now();
+  private moveSky: ((ms: number) => void) | null = null;
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
     this.holder = holder;
@@ -377,6 +383,10 @@ export class RocketViewer {
     this.renderer.toneMappingExposure = 1;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.canvas = this.renderer.domElement;
+    if (this.orbitOn) {
+      this.canvas.dataset.paths = "on";
+      this.canvas.dataset.pivot = "craft";
+    }
     this.canvas.className = "canvas";
     this.canvas.setAttribute("part", "canvas");
     this.canvas.tabIndex = 0;
@@ -494,20 +504,54 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Moves the camera's pivot onto a body, or back to the craft when `at` is null. */
+  setPivot(at: readonly [number, number, number] | null, label = "craft"): void {
+    this.pivot = at ? [at[0], at[1], at[2]] : [0, 0, 0];
+    this.canvas.dataset.pivot = label;
+    if (this.driven) this.syncDriven();
+    else this.wake();
+  }
+
+  /** Shows or hides the faint paths and the two belts. */
+  setPaths(on: boolean): void {
+    this.pathsOn = on;
+    this.canvas.dataset.paths = on ? "on" : "off";
+    this.showSketch();
+    this.wake();
+  }
+
+  /** Puts the Moon, the major moons and the belts at `ms`. */
+  setWhen(ms: number): void {
+    if (!Number.isFinite(ms)) return;
+    this.skyWhen = ms;
+    this.moveSky?.(ms);
+    this.wake();
+  }
+
+  private showSketch(): void {
+    const sketch = this.scene.getObjectByName("solar-sketch");
+    if (!sketch) return;
+    const away = Math.hypot(this.pivot[0], this.pivot[1], this.pivot[2]);
+    const reach = this.orbitFit / Math.max(this.driven?.zoom ?? 1, 1e-8);
+    sketch.visible = this.pathsOn && (reach > 30_000_000 || away > 30_000_000);
+  }
+
   /** Brings the globe in once. A page that never asks never loads it. */
   private mountOrbit(): void {
     if (this.orbitGone || this.scene.getObjectByName("orbit-world")) return;
     this.orbitGone = () => {};
-    void import("./orbitWorld.ts").then(({ orbitWorld }) => {
+    void import("./orbitWorld.ts").then(({ moveOrbit, orbitWorld }) => {
       if (this.disposed) return;
       const world = orbitWorld(() => {
         this.canvas.dataset.earth = "painted";
         this.wake();
-      });
+      }, this.skyWhen);
       world.group.visible = this.orbitOn;
       this.scene.add(world.group);
       this.orbitGone = world.dispose;
+      this.moveSky = (ms: number) => moveOrbit(world.group, ms);
       this.canvas.dataset.globe = this.orbitOn ? "earth" : "off";
+      this.showSketch();
       this.wake();
     });
   }
@@ -1608,8 +1652,9 @@ export class RocketViewer {
     const zoom = this.options.orbit ? Math.min(8, Math.max(this.driven?.zoom ?? 1, 1e-8)) : 1;
     const reach = framing.distance / zoom;
     this.orbitFit = framing.distance;
-    this.camera.position.set(framing.target[0] + direction[0] * reach, framing.target[1] + direction[1] * reach, framing.target[2] + direction[2] * reach);
-    this.controls.target.set(...framing.target);
+    const aim = [framing.target[0] + this.pivot[0], framing.target[1] + this.pivot[1], framing.target[2] + this.pivot[2]] as const;
+    this.camera.position.set(aim[0] + direction[0] * reach, aim[1] + direction[1] * reach, aim[2] + direction[2] * reach);
+    this.controls.target.set(aim[0], aim[1], aim[2]);
     if (Math.abs(framing.distance - this.lastDistance) > 1e-6) {
       this.lastDistance = framing.distance;
       this.limits(framing.distance);
@@ -1617,13 +1662,13 @@ export class RocketViewer {
     this.controls.update();
     const up = rolledUp(direction, this.driven?.roll ?? 0);
     this.camera.up.set(up[0], up[1], up[2]);
-    this.camera.lookAt(framing.target[0], framing.target[1], framing.target[2]);
-    const paths = this.scene.getObjectByName("planet-orbits");
-    if (paths) paths.visible = reach > 30_000_000;
+    this.camera.lookAt(aim[0], aim[1], aim[2]);
+    this.showSketch();
   }
 
-  /** A wider lens once the Earth would spill past the frame, so one Earth-diameter back shows the whole disc. */
+  /** A wider lens once the Earth would spill past the frame, so one Earth-diameter back shows the whole disc. A pivot on another body keeps the lens, so that body stays large. */
   private globeFrame(reach: number): number {
+    if (Math.hypot(this.pivot[0], this.pivot[1], this.pivot[2]) > 100_000) return 1;
     if (reach < 8_000_000) return 1;
     const drop = 6_778_137;
     const radius = 6_378_137;

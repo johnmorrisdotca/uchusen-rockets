@@ -1,7 +1,7 @@
 // The compare page's camera. Free is the view as it was. The other choices keep craft in frame, follow one, or keep the planet with them. Follow selected only reads `data-selected` on the stage, which MODULES-476 will set. The camera orbits when Turn is Camera: the craft stay where they are and the Earth moves. Edges Wrap is only the free camera.
 import { BODIES, heliocentric, moonGeocentric, type HostId } from "@johnmorrisdotca/wakusei-planets";
 import type { UchusenRocket } from "../src/element.ts";
-import { VIEWS } from "../src/framing.ts";
+import { bodyScene, moonScene } from "../src/element/solarPlace.ts";
 import { frameSky } from "./sky.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 
@@ -54,6 +54,10 @@ export function mountCamera(opts: {
   let moving = false;
   let applying = false;
   let when = Date.now();
+  let playing = false;
+  let paths = true;
+  let playFrame = 0;
+  let steppedAt = 0;
 
   const back = byId("cw-camera-back");
   const note = byId("cw-edges-note");
@@ -256,17 +260,21 @@ export function mountCamera(opts: {
 
   function paintMoon(width: number, height: number, far: number): void {
     if (hero.getAttribute("world") === "earth") {
+      const pivot = hero.shadowRoot?.querySelector("canvas")?.dataset.pivot ?? "craft";
+      if (pivot !== "craft" && pivot !== "moon") return;
       if (far < 100_000_000) return;
       const raw = hero.shadowRoot?.querySelector("canvas")?.dataset.moon ?? "";
       const [nx, ny] = raw.split(",").map(Number);
       if (!raw || Math.abs(nx) > 1 || Math.abs(ny) > 1) return;
-      const mark = document.createElement("span");
+      const mark = document.createElement("button");
+      mark.type = "button";
       mark.className = "cw-mark cw-moon";
       mark.dataset.testid = "moon-mark";
       mark.textContent = say("background_moon");
       mark.style.left = `${((nx + 1) / 2) * width}px`;
       mark.style.top = `${((1 - ny) / 2) * height}px`;
       mark.style.transform = "translate(-50%, -140%)";
+      mark.addEventListener("click", () => goTo("moon"));
       arrows.append(mark);
       return;
     }
@@ -288,6 +296,16 @@ export function mountCamera(opts: {
     if (far < MOON_M * 0.5) mark.dataset.place = "far";
   }
 
+  function goTo(id: "sun" | HostId | "moon"): void {
+    const canvas = hero.shadowRoot?.querySelector("canvas");
+    const fit = Number(canvas?.dataset.distance ?? "400");
+    const at = id === "moon" ? moonScene(when) : bodyScene(id, when);
+    const km = BODIES[id].radiusKm;
+    const reach = Math.max(km * 1000 * (id === "moon" ? 14 : 36), 50_000);
+    hero.setPivot(at, id);
+    bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(reach, 1))), tilt: 0 });
+  }
+
   function fromEarth(id: "sun" | HostId, ms: number): [number, number, number] {
     const earth = heliocentric("earth", ms);
     const there = id === "sun" ? [0, 0, 0] : heliocentric(id, ms);
@@ -298,28 +316,39 @@ export function mountCamera(opts: {
     if (far < 20_000_000) return;
     const ms = when;
     const yaw = ((turn === "camera" ? bar.state.yaw : 0) * Math.PI) / 180;
+    let stacked = 0;
     for (const [id, key] of SOLAR) {
       const [x, y] = fromEarth(id, ms);
       const range = Math.hypot(x, y, 0);
       const angle = Math.atan2(x, y) - yaw;
       const span = (range / Math.max(far, 1)) * width;
       const px = width / 2 + Math.sin(angle) * span;
-      const py = height / 2;
+      const left = Math.min(width - 16, Math.max(16, px));
+      const off = Math.abs(px - left) > 1;
+      const top = off ? 16 + stacked * 22 : height / 2;
+      if (off) stacked += 1;
       const mark = document.createElement("button");
       mark.type = "button";
       mark.className = "cw-mark";
       mark.dataset.testid = `body-${id}`;
       mark.dataset.angle = angle.toFixed(5);
-      mark.textContent = say(key);
-      mark.style.left = `${Math.min(width - 8, Math.max(8, px))}px`;
-      mark.style.top = `${py}px`;
+      mark.setAttribute("aria-label", say(key));
+      mark.style.left = `${left}px`;
+      mark.style.top = `${top}px`;
+      mark.style.width = "14px";
+      mark.style.height = "14px";
+      mark.style.padding = "0";
       mark.style.borderColor = id === "sun" ? "#e6d38a" : BODIES[id].colour;
-      mark.addEventListener("click", () => {
-        const canvas = hero.shadowRoot?.querySelector("canvas");
-        const fit = Number(canvas?.dataset.distance ?? "400");
-        bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(range, 1))) });
-      });
-      arrows.append(mark);
+      mark.addEventListener("click", () => goTo(id));
+      const name = document.createElement("span");
+      name.className = "cw-mark";
+      name.textContent = say(key);
+      name.style.pointerEvents = "none";
+      name.style.left = `${left + 16}px`;
+      name.style.top = `${top}px`;
+      name.style.border = "0";
+      name.style.background = "transparent";
+      arrows.append(mark, name);
     }
   }
 
@@ -391,15 +420,16 @@ export function mountCamera(opts: {
       const canvas = hero.shadowRoot?.querySelector("canvas");
       const fit = Number(canvas?.dataset.distance ?? "400");
       const live = key === "cmpBodyJupiter" ? "jupiter" : key === "cmpBodyNeptune" ? "neptune" : null;
-      const there = live ? Math.hypot(...fromEarth(live, when)) : metres;
-      const zoom = Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(there, 1)));
-      if (key !== "cmpMarkMoon") {
-        bar.set({ zoom });
+      if (key === "cmpMarkMoon") {
+        goTo("moon");
         return;
       }
-      const [x, y] = moonGeocentric(when);
-      const az = (Math.atan2(x, y) * 180) / Math.PI + 180 + 14;
-      bar.set({ zoom, yaw: VIEWS["three-quarter"].az - az, tilt: 0 });
+      if (live) {
+        goTo(live);
+        return;
+      }
+      hero.setPivot(null);
+      bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(metres, 1))) });
     })),
   );
   back.addEventListener("click", () => {
@@ -412,11 +442,39 @@ export function mountCamera(opts: {
   day.className = "chip";
   day.dataset.testid = "cmp-day";
   day.textContent = say("cmpDay");
-  day.addEventListener("click", () => {
+  const stepDay = (): void => {
     when += 86_400_000;
+    hero.setWhen(when);
     paintOverlay();
+  };
+  day.addEventListener("click", stepDay);
+  const pathsButton = chip(say("cmpPaths"), "cmp-paths", true, () => {
+    paths = !paths;
+    pathsButton.setAttribute("aria-pressed", String(paths));
+    hero.setPaths(paths);
+  });
+  const playButton = chip(say("cmpPlay"), "cmp-play", false, () => {
+    playing = !playing;
+    playButton.textContent = say(playing ? "cmpPause" : "cmpPlay");
+    playButton.setAttribute("aria-pressed", String(playing));
+    if (!playing) {
+      window.cancelAnimationFrame(playFrame);
+      return;
+    }
+    steppedAt = 0;
+    const loop = (now: number): void => {
+      if (!playing) return;
+      if (!document.hidden && now - steppedAt >= 1000) {
+        steppedAt = now;
+        stepDay();
+      }
+      playFrame = window.requestAnimationFrame(loop);
+    };
+    playFrame = window.requestAnimationFrame(loop);
   });
   distance.insertAdjacentElement("afterend", day);
+  day.insertAdjacentElement("afterend", pathsButton);
+  pathsButton.insertAdjacentElement("afterend", playButton);
   paintModes();
   hero.setAttribute("edges", edges);
   paintOverlay();
