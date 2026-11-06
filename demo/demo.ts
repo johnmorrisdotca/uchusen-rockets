@@ -17,7 +17,7 @@ import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import type { EarthForm, EarthShow } from "./earth.ts";
-import { aimOrbit, companionsFor, frameSky, orbitCatalogue, paintThumbs, placeSky, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { aimOrbit, applyTurn, companionsFor, frameSky, orbitCatalogue, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
 import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
@@ -74,7 +74,18 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   else earth?.dispatchEvent(new Event("orbit"));
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look", spin: "slow" } });
+setTurnPace(paceNamed(address.get("spin")));
+const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
+turnButtons.value = paceStep(paceNamed(address.get("spin")));
+turnButtons.addEventListener("kazoku-speedchange", (event) => {
+  const detail = (event as CustomEvent<{ value: number; reason: string }>).detail;
+  if (detail?.reason !== "user") return;
+  const pace = paceFromStep(detail.value);
+  setTurnPace(pace);
+  address.set("spin", pace === "slow" ? null : pace);
+  applyTurn(document);
+});
 /** What can stand beside the craft on screen. `on` is Starship with Super Heavy, the one the address has always used. The others are the same real craft the fleet band lies down. */
 const BESIDE_CHOICES: readonly { id: string; rocket: string; variant: string; testid: string; key?: string }[] = [
   { id: "on", rocket: "starship", variant: "v3", testid: "beside-on", key: "beside" },
