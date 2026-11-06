@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { angleAt, MOTIONS, motionNote, motionsOf, motionSpeed, motionWanted } from "../src/index.ts";
+import { angleAt, MOTIONS, motionNote, motionsOf, motionSpeed, motionWanted, slideAt, type Motion } from "../src/index.ts";
 import { parts as hanabusa } from "../src/model/fleet/ship-01/index.ts";
 import { parts as miyamoto } from "../src/model/fleet/ship-03/index.ts";
 import { rpmFor } from "../src/model/fleet/ship-01/spin.ts";
@@ -34,6 +34,19 @@ test("a door leaf is shut, opens to its angle, holds, and comes back, and the fi
   for (let t = 0; t < 100; t += 0.37) {
     const a = angleAt(first, t);
     assert.ok(a >= -1e-9 && a <= first.to! + 1e-9);
+  }
+});
+
+test("a slide pays out along its travel and comes back, and it does not turn", () => {
+  const mast: Motion = { ship: "fleet-kyotori", group: "mast-test", kind: "slide", from: 0, travel: 40, period: 16, note: "A mast telescopes out and back." };
+  near(slideAt(mast, 0), 0);
+  near(slideAt(mast, 8), 40);
+  near(slideAt(mast, 16 * 0.99), 0);
+  near(angleAt(mast, 8), 0);
+  near(slideAt({ ...mast, kind: "sweep", from: 0, to: 40 }, 8), 0);
+  for (let t = 0; t < 64; t += 0.4) {
+    const d = slideAt(mast, t);
+    assert.ok(d >= -1e-9 && d <= 40 + 1e-9);
   }
 });
 

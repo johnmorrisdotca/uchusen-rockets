@@ -1,11 +1,11 @@
 // How the fleet's moving parts move: one table, one helper, shared by every ship. A part that moves is tagged with a `Move` (a name, a pivot and an axis) where its ship builds it, and this file says what each name does over time: a ring that
 // spins at its stated rpm, a door leaf that swings up and comes back, an array or a dish that sweeps. It moves only parts that exist: no geometry is made here, and nothing is rebuilt; the viewer turns each tagged group about its pivot. A
-// `Move` only turns, so a roller shutter is drawn as its leaf swinging up about the lintel (a real one winds on a drum), and an array unfolding or a door sliding needs translation later. Pure: no three.js and no DOM.
+// `Move` turns about its axis, and a slide moves along that same axis. A roller shutter is still drawn as its leaf swinging up about the lintel (a real one winds on a drum). Pure: no three.js and no DOM.
 import type { Move, Piece } from "../pieces.ts";
 import { rpmFor } from "./ship-01/spin.ts";
 
 /**
- * What a moving group does: `spin` turns without end at `rate` degrees a second; `swing` goes from rest to `to` and back, with holds; `sweep` goes from `from` to `to` and back like a pendulum.
+ * What a moving group does: `spin` turns without end at `rate` degrees a second; `swing` goes from rest to `to` and back, with holds; `sweep` goes from `from` to `to` and back like a pendulum; `slide` moves along its axis from `from` to `travel` metres and back, on the same holds as a swing.
  *
  * @example
  * ```ts
@@ -15,7 +15,7 @@ import { rpmFor } from "./ship-01/spin.ts";
  * console.log(kind);
  * ```
  */
-export type MotionKind = "spin" | "swing" | "sweep";
+export type MotionKind = "spin" | "swing" | "sweep" | "slide";
 
 /**
  * One moving group of a ship: which ship and which tagged group, what it does and how fast, and its note.
@@ -36,9 +36,11 @@ export interface Motion {
   kind: MotionKind;
   /** Spin: degrees a second at real speed (negative turns the other way). */
   rate?: number;
-  /** Swing and sweep: the angles in degrees. A swing starts and ends at `from` (default 0). */
+  /** Swing and sweep: the angles in degrees. A slide: metres at the stowed end. Both start at `from` (default 0). */
   from?: number;
   to?: number;
+  /** Slide: how far it pays out, in metres, at the open end. */
+  travel?: number;
   /** Swing and sweep: seconds for a whole cycle at real speed. */
   period?: number;
   /** Where in the cycle it starts, 0 to 1, so the five leaves of a door open one after another. */
@@ -86,11 +88,33 @@ const swingShape = (u: number): number => (u < 0.2 ? 0 : u < 0.45 ? smooth((u - 
 export function angleAt(motion: Motion, seconds: number, speed: MotionSpeed = 1): number {
   const t = seconds * speed;
   if (motion.kind === "spin") return (((motion.rate ?? 0) * t) % 360 + 360) % 360;
+  if (motion.kind === "slide") return 0;
   const period = motion.period ?? 20;
   const u = (((t / period + (motion.phase ?? 0)) % 1) + 1) % 1;
   const from = motion.from ?? 0;
   const to = motion.to ?? 0;
   return motion.kind === "swing" ? from + (to - from) * swingShape(u) : from + (to - from) * (0.5 - 0.5 * Math.cos(2 * Math.PI * u));
+}
+
+/**
+ * How far a slide has paid out, in metres. Anything that is not a slide stays at 0.
+ *
+ * @example
+ * ```ts
+ * import { slideAt, type Motion } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const mast: Motion = { ship: "fleet-kyotori", group: "mast", kind: "slide", travel: 12, period: 16, note: "The mast telescopes." };
+ * console.log(slideAt(mast, 8));
+ * ```
+ */
+export function slideAt(motion: Motion, seconds: number, speed: MotionSpeed = 1): number {
+  if (motion.kind !== "slide") return 0;
+  const period = motion.period ?? 16;
+  const t = seconds * speed;
+  const u = (((t / period + (motion.phase ?? 0)) % 1) + 1) % 1;
+  const from = motion.from ?? 0;
+  const travel = motion.travel ?? 0;
+  return from + (travel - from) * swingShape(u);
 }
 
 const DEG_PER_RPM = 6;
