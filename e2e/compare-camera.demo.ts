@@ -57,14 +57,12 @@ test("turning the camera keeps the craft near the middle and moves the Earth", a
     return { dx: x + w / 2 - rect.width / 2, dy: y + h / 2 - rect.height / 2 };
   });
   await expect.poll(place, { timeout: 30_000 }).not.toBeNull();
+  await expect.poll(() => page.locator("#hero").evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.earth ?? ""), { timeout: 30_000 }).toBe("painted");
   const before = await place();
   await page.locator("#view-bar").evaluate((node) => {
     (node as unknown as { set(value: { yaw: number }): void }).set({ yaw: 120 });
   });
-  await expect.poll(async () => {
-    const earth = await page.locator("#earth-back").evaluate((node) => getComputedStyle(node).translate);
-    return earth;
-  }).not.toBe("none");
+  await expect(page.locator("#earth-back")).toBeHidden();
   const after = await place();
   expect(before).not.toBeNull();
   expect(after).not.toBeNull();

@@ -505,7 +505,7 @@ export const WORDS = {
     cmpCamBack: "「{mode}」に戻る",
     cmpEdges: "画面の端",
     cmpWrap: "反対側に出る",
-    cmpOpenSpace: "外へ出る",
+    cmpOpenSpace: "画面の外へ出る",
     cmpWrapNote: "反対側に出るのは、自由視点のときだけです。",
     cmpTurnMode: "回す対象",
     cmpTurnCraft: "機体",

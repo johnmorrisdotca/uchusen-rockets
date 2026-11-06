@@ -105,6 +105,8 @@ export interface ViewerOptions {
   onFlight?: () => void;
   /** Tells the page the view was drawn, so labels that follow a part can move with it. */
   onDraw?: () => void;
+  /** The Earth and Moon are in the scene, at their true sizes, so a metre and a planet can share one picture. */
+  orbit?: boolean;
 }
 
 const IDLE_STOP_MS = 90_000;
@@ -122,10 +124,15 @@ const autoRotateOf = (spin: Spin): number => (spin.seconds <= 0 ? 0 : (60 / spin
 const LINE_VERTEX = /* glsl */ `
 varying vec3 vNormal;
 varying vec2 vUv;
+bool isPerspectiveMatrix(mat4 m) {
+  return m[2][3] == -1.0;
+}
+#include <logdepthbuf_pars_vertex>
 void main() {
   vNormal = normalize(normalMatrix * normal);
   vUv = uv;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  #include <logdepthbuf_vertex>
 }`;
 
 const LINE_FRAGMENT = /* glsl */ `
@@ -136,6 +143,7 @@ uniform float hexMetres;
 uniform float hexOn;
 varying vec3 vNormal;
 varying vec2 vUv;
+#include <logdepthbuf_pars_fragment>
 float hexLine(vec2 p) {
   vec2 s = vec2(1.0, 1.7320508);
   vec2 a = mod(p, s) - s * 0.5;
@@ -145,6 +153,7 @@ float hexLine(vec2 p) {
   return max(dot(q, s * 0.5), q.x);
 }
 void main() {
+  #include <logdepthbuf_fragment>
   vec3 n = normalize(vNormal);
   float facing = pow(abs(n.z), 1.4);
   vec3 c = mix(edge, middle, facing);
@@ -162,17 +171,24 @@ void main() {
 const OUTLINE_VERTEX = /* glsl */ `
 uniform float width;
 uniform vec2 size;
+bool isPerspectiveMatrix(mat4 m) {
+  return m[2][3] == -1.0;
+}
+#include <logdepthbuf_pars_vertex>
 void main() {
   vec4 clip = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   vec3 n = normalize(normalMatrix * normal);
   vec2 away = normalize(n.xy + vec2(1e-5));
   clip.xy += away * width * 2.0 / size * clip.w;
   gl_Position = clip;
+  #include <logdepthbuf_vertex>
 }`;
 
 const OUTLINE_FRAGMENT = /* glsl */ `
 uniform vec3 color;
+#include <logdepthbuf_pars_fragment>
 void main() {
+  #include <logdepthbuf_fragment>
   gl_FragColor = vec4(color, 1.0);
   #include <colorspace_fragment>
 }`;
@@ -333,11 +349,18 @@ export class RocketViewer {
   private focusNow: ViewerFocus | null = null;
   private nearSaid = false;
   private nearAt = 0;
+  /** The compare page asked for the Earth in the scene. The depth stays logarithmic either way. */
+  private orbitOn = false;
+  private orbitGone: (() => void) | null = null;
+  /** The fit distance, kept while a zoom pulls the camera out to a planet. The page still reads this as the fit. */
+  private orbitFit = 0;
+  private moonSpot = new Vector3();
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
     this.holder = holder;
     this.options = options;
-    this.renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
+    this.orbitOn = options.orbit === true;
+    this.renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power", logarithmicDepthBuffer: this.orbitOn });
     this.renderer.localClippingEnabled = true;
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
@@ -447,6 +470,36 @@ export class RocketViewer {
   setEdges(open: boolean): void {
     this.edgesOpen = open;
     this.canvas.dataset.edges = open ? "open" : "wrap";
+  }
+
+  /** Shows or hides the Earth and the Moon. The stars stay, because they are the only backdrop. */
+  setOrbit(on: boolean): void {
+    this.orbitOn = on;
+    this.scene.background = on ? new Color("#000108") : null;
+    const world = this.scene.getObjectByName("orbit-world");
+    if (world) world.visible = on;
+    else if (on || this.options.orbit) this.mountOrbit();
+    this.canvas.dataset.globe = on ? "earth" : "off";
+    if (!on) delete this.canvas.dataset.earth;
+    this.wake();
+  }
+
+  /** Brings the globe in once. A page that never asks never loads it. */
+  private mountOrbit(): void {
+    if (this.orbitGone || this.scene.getObjectByName("orbit-world")) return;
+    this.orbitGone = () => {};
+    void import("./orbitWorld.ts").then(({ orbitWorld }) => {
+      if (this.disposed) return;
+      const world = orbitWorld(() => {
+        this.canvas.dataset.earth = "painted";
+        this.wake();
+      });
+      world.group.visible = this.orbitOn;
+      this.scene.add(world.group);
+      this.orbitGone = world.dispose;
+      this.canvas.dataset.globe = this.orbitOn ? "earth" : "off";
+      this.wake();
+    });
   }
 
   /** Floating leaves the plinth out and stacks the names at the top right. */
@@ -1396,11 +1449,10 @@ export class RocketViewer {
   private limits(distance: number): void {
     if (!this.focusing) this.nearAt = Math.max(this.nearAt, distance * 0.3);
     this.fitGlow();
-    this.camera.near = Math.max(0.2, distance / 40);
-    this.camera.far = distance * 8;
+    this.clip(distance / 40, distance * 8);
     this.camera.updateProjectionMatrix();
-    this.controls.minDistance = distance * 0.12;
-    this.controls.maxDistance = distance * 1.8;
+    this.controls.minDistance = this.options.orbit ? 0.05 : distance * 0.12;
+    this.controls.maxDistance = this.options.orbit ? 2e9 : distance * 1.8;
     this.updateHexSize(distance);
     this.syncSizes();
   }
@@ -1541,7 +1593,10 @@ export class RocketViewer {
     const focus = this.focusing ? this.focusNow : null;
     const framing = focus ? { target: focus.target, distance: focus.distance } : this.framingFor(this.homeAngle);
     const direction = this.drivenDirection(angle);
-    this.camera.position.set(framing.target[0] + direction[0] * framing.distance, framing.target[1] + direction[1] * framing.distance, framing.target[2] + direction[2] * framing.distance);
+    const zoom = this.options.orbit ? Math.min(8, Math.max(this.driven?.zoom ?? 1, 1e-8)) : 1;
+    const reach = framing.distance / zoom;
+    this.orbitFit = framing.distance;
+    this.camera.position.set(framing.target[0] + direction[0] * reach, framing.target[1] + direction[1] * reach, framing.target[2] + direction[2] * reach);
     this.controls.target.set(...framing.target);
     if (Math.abs(framing.distance - this.lastDistance) > 1e-6) {
       this.lastDistance = framing.distance;
@@ -1553,12 +1608,25 @@ export class RocketViewer {
     this.camera.lookAt(framing.target[0], framing.target[1], framing.target[2]);
   }
 
+  /** A wider lens once the Earth would spill past the frame, so one Earth-diameter back shows the whole disc. */
+  private globeFrame(reach: number): number {
+    if (reach < 8_000_000) return 1;
+    const drop = 6_778_137;
+    const radius = 6_378_137;
+    const dist = Math.hypot(reach, drop);
+    const edge = Math.asin(Math.min(1, radius / dist)) + Math.atan(drop / reach);
+    const half = (12 * Math.PI) / 180;
+    if (edge < half * 0.85) return 1;
+    return Math.min(1, Math.tan(half) / Math.tan(Math.min(edge * 1.12, (75 * Math.PI) / 180)));
+  }
+
   /** Zoom is the camera's, and the pan moves the picture by pixels, so the view stays sharp at any zoom. */
   private lens(): void {
     const { zoom = 1, panX = 0, panY = 0 } = this.driven ?? {};
     const w = Math.max(1, this.holder.clientWidth);
     const h = Math.max(1, this.holder.clientHeight);
-    this.camera.zoom = zoom;
+    const claimed = this.orbitFit / Math.max(zoom, 1e-8);
+    this.camera.zoom = this.options.orbit ? this.globeFrame(claimed) : zoom;
     if (panX !== 0 || panY !== 0) this.camera.setViewOffset(w, h, -panX, -panY, w, h);
     else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
@@ -1773,8 +1841,21 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** A planet and a craft share the picture only while the orbit world is on: the near plane stays close enough for a metre, and the far plane reaches the stars. */
+  private clip(nearFrom: number, far: number): void {
+    if (this.options.orbit) {
+      this.camera.near = 0.05;
+      this.camera.far = 2e9;
+      return;
+    }
+    this.camera.near = Math.max(0.2, nearFrom);
+    this.camera.far = far;
+  }
+
   dispose(): void {
     this.disposed = true;
+    this.orbitGone?.();
+    this.orbitGone = null;
     cancelAnimationFrame(this.frame);
     document.removeEventListener("visibilitychange", this.onVisibility);
     this.canvas.removeEventListener("wheel", this.onWheel);
@@ -2089,8 +2170,7 @@ export class RocketViewer {
     this.startPose({ target: focus.target, position: [focus.target[0] + dir.x, focus.target[1] + dir.y, focus.target[2] + dir.z], distance: focus.distance } as ReturnType<RocketViewer["framingFor"]>, MOVE_MS, false);
     this.controls.minDistance = focus.distance * 0.04;
     this.controls.maxDistance = Math.max(focus.distance * 3, this.camera.position.distanceTo(this.controls.target));
-    this.camera.near = Math.max(0.2, focus.distance / 80);
-    this.camera.far = Math.max(focus.distance * 10, this.camera.position.distanceTo(this.controls.target) * 4);
+    this.clip(focus.distance / 80, Math.max(focus.distance * 10, this.camera.position.distanceTo(this.controls.target) * 4));
     this.camera.updateProjectionMatrix();
     this.relight();
     this.wake();
@@ -2229,7 +2309,13 @@ export class RocketViewer {
       this.canvas.dataset.azimuth = angle.az.toFixed(2);
       this.canvas.dataset.elevation = angle.el.toFixed(2);
       this.canvas.dataset.moving = this.pose ? "true" : "false";
-      this.canvas.dataset.distance = this.camera.position.distanceTo(this.controls.target).toFixed(2);
+      const reached = this.camera.position.distanceTo(this.controls.target);
+      this.canvas.dataset.distance = (this.options.orbit ? this.orbitFit || reached : reached).toFixed(2);
+      const moon = this.scene.getObjectByName("moon");
+      if (moon && this.orbitOn) {
+        const spot = moon.getWorldPosition(this.moonSpot).project(this.camera);
+        this.canvas.dataset.moon = `${spot.x.toFixed(3)},${spot.y.toFixed(3)}`;
+      } else delete this.canvas.dataset.moon;
       if (this.driven) {
         this.canvas.dataset.zoom = this.driven.zoom.toFixed(2);
         this.canvas.dataset.pan = `${Math.round(this.driven.panX)},${Math.round(this.driven.panY)}`;
