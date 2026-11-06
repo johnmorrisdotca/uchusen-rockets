@@ -4,8 +4,14 @@ import type { Move, Piece, Plate } from "../../pieces.ts";
 import { lampHalo } from "../lights.ts";
 import { cub, disc, place } from "./adapter.ts";
 
-/** Blanket: twelve panels of 52 m, stacked into 52 m and paid out to 624 m, 120 m wide. One wing each side of the hull, about 1.3 km from tip to tip. */
+/** Blanket: twelve panels of 52 m, stacked into 52 m and paid out to 624 m, 120 m wide. One wing each side, about 1.3 km from tip to tip. Three pairs along the hull, so the open ship reads as arrays first. */
 export const BLANKET = { y: 90, root: 20, len: 52, panels: 12, half: 60 } as const;
+/** Where the three pairs sit, tail to bow: aft of the shield, then two in the radiator bay, clear of the tanks. */
+export const BLANKET_STATIONS = [
+  { id: "a", y: 90 },
+  { id: "b", y: 280 },
+  { id: "c", y: 430 },
+] as const;
 /** Ring: twelve petals, six segments of 70 m, a 28 m hub, so the open ring is 900 m across. The wedges are built at the hub and slide out. */
 export const RING = { y: 1660, hub: 28, len: 70, petals: 12, segments: 6, half: 4 } as const;
 
@@ -61,19 +67,24 @@ function blanketPanel(sign: number, y: number, len: number, half: number, stack:
   return [face, ...mast(x0, x1, y, half, stack), ...lamps];
 }
 
-/** Both wings, in ship coordinates. Panel 0 stays; each later panel slides out by its own length. */
-export function blanketPieces(): Piece[] {
-  const { y, len, panels, half } = BLANKET;
+/** One pair, in ship coordinates. Panel 0 stays; each later panel slides out by its own length. */
+export function blanketPair(id: string, y: number): Piece[] {
+  const { len, panels, half } = BLANKET;
   const out: Piece[] = [];
   for (const sign of [1, -1]) {
     out.push(...canister(sign, y, half));
     for (let k = 0; k < panels; k++) {
       const pieces = blanketPanel(sign, y, len, half, k * 0.42, k === panels - 1);
       const side = sign > 0 ? "s" : "p";
-      out.push(...(k === 0 ? pieces : tag(pieces, { name: `blanket-${side}-${k}`, pivot: [sign * BLANKET.root, y, 0], axis: [sign, 0, 0] })));
+      out.push(...(k === 0 ? pieces : tag(pieces, { name: `blanket-${id}-${side}-${k}`, pivot: [sign * BLANKET.root, y, 0], axis: [sign, 0, 0] })));
     }
   }
   return out;
+}
+
+/** All three pairs. */
+export function blanketPieces(): Piece[] {
+  return BLANKET_STATIONS.flatMap((station) => blanketPair(station.id, station.y));
 }
 
 /** One gold cell tile lying in the ship's horizontal plane, so a three-quarter view sees the cells. */
@@ -128,6 +139,6 @@ const note = "A solar panel pays out along its mast and comes back. Folded, the 
 
 /** The slides for the two arrays. Panel 0 and segment 0 stay put, so they are not here. */
 export const ARRAY_MOTIONS: readonly Motion[] = [
-  ...[1, -1].flatMap((sign) => Array.from({ length: BLANKET.panels - 1 }, (_, i): Motion => ({ ship: "fleet-kaminari", group: `blanket-${sign > 0 ? "s" : "p"}-${i + 1}`, kind: "slide", travel: (i + 1) * BLANKET.len, period: 48, note }))),
+  ...BLANKET_STATIONS.flatMap((station) => [1, -1].flatMap((sign) => Array.from({ length: BLANKET.panels - 1 }, (_, i): Motion => ({ ship: "fleet-kaminari", group: `blanket-${station.id}-${sign > 0 ? "s" : "p"}-${i + 1}`, kind: "slide", travel: (i + 1) * BLANKET.len, period: 48, note })))),
   ...Array.from({ length: RING.petals }, (_, p) => Array.from({ length: RING.segments - 1 }, (_, i): Motion => ({ ship: "fleet-kaminari", group: `ring-${p}-${i + 1}`, kind: "slide", travel: (i + 1) * RING.len, period: 48, note }))).flat(),
 ];

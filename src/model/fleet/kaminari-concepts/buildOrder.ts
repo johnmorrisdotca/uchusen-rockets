@@ -22,6 +22,8 @@ export function kaminariBuild(): BuildStep[] {
   return buildSpan(KAMINARI_BUILD_DAYS, ["spine", "thrusters", "drive-bay", "reactors", "shadow-shield", ...numbered(all, "quiver-"), ...numbered(all, "cargo-"), "carousel-a", "carousel-b", "bow", "shield"], [
     { slot: "radiators", after: "spine" },
     { slot: "array-blanket", after: "spine" },
+    { slot: "array-blanket-b", after: "spine" },
+    { slot: "array-blanket-c", after: "spine" },
     { slot: "array-ring", after: "spine" },
     { slot: "visiting", after: "spine" },
   ], same);
