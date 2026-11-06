@@ -20,8 +20,6 @@ export interface YardConcept {
   close: readonly { name: string; eye: readonly [number, number, number]; at: readonly [number, number, number] }[];
 }
 
-type V3 = [number, number, number];
-
 const racks = (x: number, z: number): Piece[] => RACK.flatMap((id, i) => place(stackOf([id], 0, 0.2, id).pieces, { at: [x, 280 + i * 200, z] }));
 
 /** A rack of stalls off the arrival line. Each stall is tens of metres, with an amber charge light and a parked drone. */
@@ -77,7 +75,7 @@ const spine = (): Piece[] => {
 
 /** A ring at the near end and a ribbed lattice bay, with no solid roof. */
 const hall = (): Piece[] => {
-  const corners: V3[] = [[-SPAN, -SPAN], [SPAN, -SPAN], [SPAN, SPAN], [-SPAN, SPAN]];
+  const corners: (readonly [number, number])[] = [[-SPAN, -SPAN], [SPAN, -SPAN], [SPAN, SPAN], [-SPAN, SPAN]];
   const out: Piece[] = [];
   for (const [x, z] of corners) out.push(...boxTruss(x, z, 0, YARD_LENGTH));
   out.push(hoop("hull-white", 200, 220, 16, 48, 10));
