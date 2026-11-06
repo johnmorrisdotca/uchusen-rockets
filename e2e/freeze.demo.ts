@@ -151,7 +151,7 @@ const pressAndDraw = async (page: Page, id: string) => {
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 const settle = (page: Page, ms: number) => page.waitForTimeout(ms);
 /**
- * A reading once the GPU objects have stopped moving: two readings a second apart agree. The pictures the renderer is still giving back after their short linger are not kept ones, and a slow runner reads them
+ * A reading once the GPU objects have stopped moving: two readings a second apart agree, arrays included. The pictures the renderer is still giving back after their short linger are not kept ones, and a slow runner reads them
  * mid-way (24 textures where the first round read 21); a leak never settles lower than it began, and is still caught by the comparison.
  */
 const levelUsage = async (page: Page) => {
@@ -159,7 +159,7 @@ const levelUsage = async (page: Page) => {
   for (let tries = 0; tries < 15; tries++) {
     await page.waitForTimeout(1000);
     const now = await usage(page);
-    if (now.textures === before.textures && now.buffers === before.buffers && now.programs === before.programs && now.framebuffers === before.framebuffers) return now;
+    if (now.textures === before.textures && now.buffers === before.buffers && now.arrays === before.arrays && now.programs === before.programs && now.framebuffers === before.framebuffers) return now;
     before = now;
   }
   return before;
@@ -369,7 +369,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
     }
   };
   await walk(1);
-  const first = await usage(page);
+  const first = await levelUsage(page);
   console.log(`fleet walk 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}`);
   // the opened ones and the apart view too: the shapes that are only built when chosen
   await walk(2);
@@ -378,7 +378,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   await settle(page, 600);
   await press(page, "show-together");
   await walk(1);
-  const last = await usage(page);
+  const last = await levelUsage(page);
   console.log(`fleet walk 2: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(first.buffers);
@@ -417,7 +417,8 @@ test("a scene with many objects draws few things a frame, and its graphics memor
     const before = await usage(page);
     const drewBefore = await drawn(page);
     await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ yaw: 31 }));
-    await settle(page, 700);
+    // software drawing on a runner can take longer than a fixed wait to finish one frame of a city
+    await expect.poll(async () => (await drawn(page)) - drewBefore, { timeout: 90_000 }).toBeGreaterThan(0);
     const after = await usage(page);
     const frames = (await drawn(page)) - drewBefore;
     const perFrame = frames > 0 ? Math.round((after.draws - before.draws) / frames) : 0;
@@ -428,9 +429,9 @@ test("a scene with many objects draws few things a frame, and its graphics memor
   }
   console.log(figures.join("\n"));
   for (const scene of scenes) await go(scene);
-  const first = await usage(page);
+  const first = await levelUsage(page);
   for (let round = 0; round < 3; round++) for (const scene of scenes) await go(scene);
-  const last = await usage(page);
+  const last = await levelUsage(page);
   console.log(`after three more rounds: buffers ${first.buffers} to ${last.buffers}, arrays ${first.arrays} to ${last.arrays}, textures ${first.textures} to ${last.textures}`);
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(first.buffers);
