@@ -441,6 +441,14 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Open space lets a craft leave the frame. Wrap, the older float, brings it back on the other side. */
+  private edgesOpen = false;
+
+  setEdges(open: boolean): void {
+    this.edgesOpen = open;
+    this.canvas.dataset.edges = open ? "open" : "wrap";
+  }
+
   /** Floating leaves the plinth out and stacks the names at the top right. */
   setFloating(on: boolean): void {
     const changed = this.floating !== on;
@@ -2231,6 +2239,13 @@ export class RocketViewer {
         const screen = craft ? this.screenBox(craft.min, craft.max) : null;
         this.canvas.dataset.craft = screen ? `${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX)},${Math.round(screen.maxY)}` : "";
       }
+      this.canvas.dataset.craftBoxes = this.craftBoxes()
+        .map((box) => {
+          const screen = this.screenBox(box.min, box.max);
+          if (!screen) return `${box.craft}:0,0,0,0,0`;
+          return `${box.craft}:${Math.round(screen.minX)},${Math.round(screen.minY)},${Math.round(screen.maxX - screen.minX)},${Math.round(screen.maxY - screen.minY)},1`;
+        })
+        .join(" ");
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
@@ -2505,6 +2520,7 @@ export class RocketViewer {
   }
 
   private wrapDrift(): void {
+    if (this.edgesOpen) return;
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
     if (width < 1 || height < 1) return;

@@ -7,7 +7,8 @@ import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-contro
 import type { EarthForm, EarthShow } from "./earth.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant } from "./sizes.ts";
-import { applyTurn, companionsFor, frameSky, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { applyTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { mountCamera } from "./compare-camera.ts";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
 
@@ -48,15 +49,6 @@ const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // A plain drag turns the picture. Move, a second finger, Shift and the other mouse buttons still pan. A drag that starts on a craft throws that craft.
 bar.set({ drag: "turn" });
-bar.addEventListener("kazoku-viewchange", (event) => {
-  const detail = (event as CustomEvent).detail as { zoom?: number };
-  hero.drive(detail);
-  const zoom = Math.max(0.25, detail.zoom ?? 1);
-  const sky = byId("sky-back");
-  sky.dataset.viewZoom = String(zoom);
-  const node = sky.querySelector("wakusei-body:not([data-moon])");
-  if (node instanceof HTMLElement) frameSky(node, sky, zoom);
-});
 const address = createAddressState({ defaults: { rocket: "starship", variant: "v3", with: "saturn-v:saturn-v", look: "line", background: "earth", moon: "", place: "float", labels: "on", spin: "slow" } });
 setTurnPace(paceNamed(address.get("spin")));
 const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
@@ -391,6 +383,14 @@ function pickMoon(moon: string) {
   renderAll();
 }
 
+mountCamera({
+  hero,
+  bar,
+  address,
+  say,
+  names: () => shown().map((craft) => variantFor(craft).name),
+  editing: () => state.editing,
+});
 phone.addEventListener("change", renderAll);
 document.addEventListener("kazoku-languagechange", () => queueMicrotask(renderAll));
 renderAll();
