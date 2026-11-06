@@ -202,8 +202,20 @@ test("six craft stay on the page at a desk's width", async ({ page }, info) => {
   await page.locator('[data-testid="rocket-sls"]').click();
   await expect(craftChips(page)).toHaveCount(6);
   await expect(page.locator('[data-testid="cw-count"]')).toContainText("6 of up to");
-  const line = await page.locator('[data-testid="cw-craft"]').boundingBox();
-  expect(line?.height ?? 999).toBeLessThan(80);
+  await expect(page.locator('[data-testid="cw-craft-0"] .craft-pic svg')).toHaveCount(1);
+  const frame = await page.locator('[data-testid="cw-craft"]').evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+  });
+  const boxes = await craftChips(page).evaluateAll((nodes) => nodes.map((node) => {
+    const box = node.getBoundingClientRect();
+    return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+  }));
+  for (const box of boxes) {
+    expect(box.left).toBeGreaterThanOrEqual(frame.left - 1);
+    expect(box.right).toBeLessThanOrEqual(frame.right + 1);
+    expect(box.bottom).toBeLessThanOrEqual(frame.bottom + 1);
+  }
   await expect(page.locator(".cw-craft-list")).toHaveCount(0);
   await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelectorAll("[data-beside-label]").length ?? 0), { timeout: 30_000 }).toBe(6);
   const off = await hero(page).evaluate((node) => [...(node.shadowRoot?.querySelectorAll("[data-beside-label]") ?? [])].some((el) => (el.textContent ?? "").includes("off screen")));
@@ -211,6 +223,26 @@ test("six craft stay on the page at a desk's width", async ({ page }, info) => {
   const stage = await page.locator(".cw-stage").boundingBox();
   expect(stage?.y ?? 999).toBeLessThan(360);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+});
+
+test("on a phone the craft line is one row that scrolls", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-phone", "A phone's width");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(URL);
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="cw-add"]').click();
+  await page.locator('[data-testid="rocket-sls"]').click();
+  await expect(craftChips(page)).toHaveCount(6);
+  const row = page.locator('[data-testid="cw-craft"]');
+  const scrolling = await row.evaluate((node) => {
+    const parent = node.parentElement;
+    const mask = parent ? getComputedStyle(parent).maskImage : "none";
+    return { over: node.scrollWidth > node.clientWidth + 1, mask, wrap: getComputedStyle(node).flexWrap };
+  });
+  expect(scrolling.wrap).toBe("nowrap");
+  expect(scrolling.over).toBe(true);
+  expect(scrolling.mask).not.toBe("none");
 });
 
 test("past the device's budget, adding says why", async ({ page }, info) => {
