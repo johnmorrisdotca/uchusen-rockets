@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Lighter lamps** (MODULES-449): a ship's lamps are drawn as a few point clouds (one per job and colour) with one shared glow, in place of a material per lamp, so a fleet of lit ships costs less to draw; the lamps look the same.
 - **The stage keeps its size on load** (MODULES-477): the 3D stage takes its full size before any script or model loads, so the page no longer jumps from a thin strip to full height on reload.
 - **The shipyard** (MODULES-446, MODULES-447): a model of a large multi-bay yard: a big bay with an enclosed frame, an open spine bay and a gantry bay, one ship under way in each, a second spine that can unlatch and fly free, a visitor elevator across the bays with viewing booths and observation lounges, visitor docking ports, a parking field for drones and small craft, and lamps at the joints. Rendered by scripts; not yet on a demo page.
 - **Click a part to swap it** (MODULES-416): a short click on a fleet ship's part opens the row of modules that fit that mount (Miyamoto's pod: relay, relief, survey). A drag still turns the view or throws a craft.
