@@ -154,4 +154,9 @@ const draw = (): void => {
   } else hero.focusAt(null);
 };
 
+document.querySelector("kazoku-view-controls")?.addEventListener("kazoku-viewchange", (event) => {
+  const rocket = document.getElementById("hero") as UchusenRocket | null;
+  rocket?.drive((event as CustomEvent).detail);
+});
+
 draw();
