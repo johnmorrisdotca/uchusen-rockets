@@ -138,20 +138,52 @@ function showLine(holder: HTMLElement, style: "line" | "thick"): EarthShow {
   };
 }
 
+/** The same painted Earth the compare page draws: Chikyu's realistic globe, Blue Marble at 2048. */
+function realisticEarth(): ChikyuEarthRealistic {
+  const made = document.createElement("chikyu-earth-realistic") as ChikyuEarthRealistic;
+  made.setAttribute("center", `${CENTRE.lon},${CENTRE.lat}`);
+  made.setAttribute("time", new Date(START_TIME).toISOString());
+  made.setAttribute("texture-base", new URL("textures/", document.baseURI).href);
+  made.setAttribute("max-texture", "2048");
+  // a picture behind a rocket needs no more than a canvas pixel to a CSS pixel, however dense the screen
+  made.setAttribute("max-ratio", "1");
+  made.setAttribute("role", "presentation");
+  return made;
+}
+
+/**
+ * A still painted Earth that fills its box, for a disc on another page. The element is the one `showEarth` uses.
+ * @param holder The box the globe fills.
+ * @returns A stop that takes the globe off the page.
+ */
+export function paintEarthDisc(holder: HTMLElement): EarthShow {
+  let stopped = false;
+  let earth: ChikyuEarthRealistic | null = null;
+  void Promise.all([import("@johnmorrisdotca/chikyu-earth/realistic"), import("@johnmorrisdotca/chikyu-earth/realistic/element")]).then(([{ discRadius }]) => {
+    if (stopped || !holder.isConnected) return;
+    const made = realisticEarth();
+    made.style.cssText = "display:block;width:100%;height:100%";
+    holder.prepend(made);
+    earth = made;
+    const w = holder.clientWidth || 1024;
+    const h = holder.clientHeight || 1024;
+    made.setView({ yaw: 0, tilt: 0, zoom: (Math.min(w, h) * 0.48) / discRadius(w, h, 1), panX: 0, panY: 0 }, true);
+  });
+  return {
+    stop() {
+      stopped = true;
+      earth?.remove();
+    },
+  };
+}
+
 function showRealistic(holder: HTMLElement, unavailable: () => void): EarthShow {
   let stopTurn: (() => void) | null = null;
   let stopped = false;
   let earth: ChikyuEarthRealistic | null = null;
   void Promise.all([import("@johnmorrisdotca/chikyu-earth/realistic"), import("@johnmorrisdotca/chikyu-earth/realistic/element")]).then(([{ discRadius }]) => {
     if (stopped) return;
-    const made = document.createElement("chikyu-earth-realistic") as ChikyuEarthRealistic;
-    made.setAttribute("center", `${CENTRE.lon},${CENTRE.lat}`);
-    made.setAttribute("time", new Date(START_TIME).toISOString());
-    made.setAttribute("texture-base", new URL("textures/", document.baseURI).href);
-    made.setAttribute("max-texture", "2048");
-    // a soft picture behind the rocket needs no more than a canvas pixel to a CSS pixel, however dense the screen
-    made.setAttribute("max-ratio", "1");
-    made.setAttribute("role", "presentation");
+    const made = realisticEarth();
     made.addEventListener("chikyu-unavailable", unavailable);
     holder.append(made);
     earth = made;

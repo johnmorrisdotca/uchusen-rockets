@@ -1,4 +1,4 @@
-// The journey page: choose a start, an end and a craft, then fly the trip. The line views draw with one 2D canvas and the package's own line drawing. The painted side view is the package's element, loaded the first time it is asked for and dropped on leaving, so it is the page's one WebGL context.
+// The journey page: choose a start, an end and a craft, then fly the trip. The line views draw with one 2D canvas and the package's own line drawing. The painted side view is the package's element, loaded the first time it is asked for and dropped on leaving. Painted Earth is the same Chikyu globe as the compare page. The other planets are wakusei stills, so they give the context back.
 // It asks for a frame only while the trip plays and the page can be seen, at most 30 a second, and never when nothing moves.
 import { ROCKETS, SOURCES } from "../src/index.ts";
 import {
@@ -33,9 +33,12 @@ import { transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
+import type { WakuseiBody } from "@johnmorrisdotca/wakusei-planets/element";
+import { paintEarthDisc, type EarthShow } from "./earth.ts";
+import { loadBody } from "./sky.ts";
 import { WORDS } from "./words.js";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import { bodySpan, forwardStar, perceivedAlong, perceivedSpan } from "../src/journey/forward.ts";
+import { bodySpan, forwardStar, perceivedSpan } from "../src/journey/forward.ts";
 import { positionKm } from "../src/journey/trip.ts";
 
 const byId = <T extends Element = HTMLElement>(id: string): T => {
@@ -128,7 +131,8 @@ interface Option {
 let options: Option[] = [];
 let trip!: Trip;
 let total = 1;
-let reachKm = 1;
+let spanNear = { from: 1, dest: 1 };
+let spanFar = { from: 2, dest: 2 };
 const stopName = (id: string): string => {
   const stop = SOURCE.stops.find((one) => one.id === id);
   return stop ? (japanese() ? stop.name.ja : stop.name.en) : id;
@@ -149,43 +153,87 @@ const PLAY_ICON = "M4 2.2 13 8 4 13.8z";
 const PAUSE_ICON = "M3 2h3.2v12H3zM9.8 2H13v12H9.8z";
 let planetLoad: Promise<void> | null = null;
 
-function loadPlanets(): void {
+function loadPlanets(): Promise<void> {
   planetLoad ??= Promise.all([import("@johnmorrisdotca/wakusei-planets/element"), import("@johnmorrisdotca/wakusei-planets/saturn")]).then(() => undefined);
+  return planetLoad;
 }
 
+let sharpQueue: Promise<void> = Promise.resolve();
+
+/** Draws the planet live until its painted map is in, then keeps that picture and gives the context back. A still taken before the map arrives is the soft shaded ball. */
+function sharpen(body: WakuseiBody): void {
+  sharpQueue = sharpQueue
+    .then(async () => {
+      if (!body.isConnected) return;
+      const painted = body.getAttribute("look") === "painted";
+      if (!(await body.goLive())) return;
+      for (let i = 0; i < 40 && body.isConnected; i += 1) {
+        const width = body.stats.textureWidth;
+        if (!painted || width >= 1024 || (width >= 512 && i >= 12)) break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (body.isConnected) body.rest();
+    })
+    .catch(() => undefined);
+}
+
+const earthDiscs = new Map<string, EarthShow>();
+const PLANET_PX = "640";
+
 function mountPlanet(node: HTMLElement, id: string): void {
-  loadPlanets();
-  let body = node.querySelector("wakusei-body");
-  if (!body) {
-    body = document.createElement("wakusei-body");
+  if (id === "earth") {
+    delete node.dataset.planet;
+    node.querySelector("wakusei-body")?.remove();
+    if (node.querySelector("chikyu-earth-realistic")) return;
+    earthDiscs.get(node.id)?.stop();
+    earthDiscs.set(node.id, paintEarthDisc(node));
+    return;
+  }
+  if (node.dataset.planet === id) return;
+  node.dataset.planet = id;
+  earthDiscs.get(node.id)?.stop();
+  earthDiscs.delete(node.id);
+  node.querySelector("chikyu-earth-realistic")?.remove();
+  node.querySelector("wakusei-body")?.remove();
+  void Promise.all([loadPlanets(), loadBody(id)]).then(() => {
+    if (node.dataset.planet !== id || !node.isConnected) return;
+    const body = document.createElement("wakusei-body");
     body.setAttribute("live", "off");
     body.setAttribute("labels", "off");
     body.setAttribute("fit", "tight");
+    body.setAttribute("size", PLANET_PX);
+    const maps = new URL("bodies/", document.baseURI).href;
+    body.setAttribute("texture-base", maps);
+    body.setAttribute("texture-far-base", maps);
+    body.setAttribute("body", id);
+    body.setAttribute("look", id === "venus" ? "realistic" : "painted");
+    body.setAttribute("lang", japanese() ? "ja" : "en");
     node.prepend(body);
-  }
-  const look = id === "venus" ? "realistic" : "painted";
-  if (body.getAttribute("body") !== id) body.setAttribute("body", id);
-  if (body.getAttribute("look") !== look) body.setAttribute("look", look);
-  body.setAttribute("lang", japanese() ? "ja" : "en");
+    sharpen(body as WakuseiBody);
+  });
 }
 
 function clearPlanet(node: HTMLElement): void {
+  delete node.dataset.planet;
+  earthDiscs.get(node.id)?.stop();
+  earthDiscs.delete(node.id);
   node.querySelector("wakusei-body")?.remove();
+  node.querySelector("chikyu-earth-realistic")?.remove();
 }
 
 function spanOf(which: "from" | "dest", id: string, distanceKm: number): number {
   const radius = SOURCE.stops.find((one) => one.id === id)?.radiusKm ?? 1000;
   if (choice.size === "true") return bodySpan(radius, distanceKm);
-  const seen = perceivedSpan(distanceKm, Math.max(reachKm, distanceKm, radius * 2), radius);
-  if (which !== "dest") return seen;
-  return Math.max(seen, perceivedAlong(total > 0 ? playhead / total : 0));
+  return perceivedSpan(distanceKm, spanFar[which], spanNear[which]);
 }
 
 function placeBody(which: "from" | "dest", id: string, distanceKm: number): void {
   const node = byId(`body-${which}`);
   const stop = SOURCE.stops.find((one) => one.id === id);
   const span = spanOf(which, id, distanceKm);
+  const wide = stage.clientWidth || 1;
   node.style.setProperty("--span", span.toFixed(4));
+  node.style.setProperty("--fit", ((span * wide) / Number(PLANET_PX)).toFixed(4));
   node.dataset.span = span.toFixed(4);
   if (stop) node.style.setProperty("--ink", stop.colour);
   if (choice.look === "painted") mountPlanet(node, id);
@@ -226,7 +274,19 @@ function plan(): void {
   const date = options[choice.when]?.ms ?? choice.base;
   trip = planTrip(SOURCE, flown, choice.from, choice.to, date, flown.drive === "continuous" && choice.pull === "1" ? 1 : undefined, choice.via === "jupiter" ? "jupiter" : undefined);
   total = Math.max(1, playSeconds(trip));
-  reachKm = trip.verdict.playable && trip.phases.length > 0 ? Math.max(1, stateAt(trip, SOURCE, 0).toDestinationKm) : 1;
+  if (trip.verdict.playable && trip.phases.length > 0) {
+    const opened = stateAt(trip, SOURCE, 0);
+    const closed = stateAt(trip, SOURCE, total);
+    const fromOpen = fromDistanceKm(opened);
+    const fromShut = fromDistanceKm(closed);
+    const destOpen = Math.max(1, opened.toDestinationKm);
+    const destShut = Math.max(1, closed.toDestinationKm);
+    spanNear = { from: Math.min(fromOpen, fromShut), dest: Math.min(destOpen, destShut) };
+    spanFar = { from: Math.max(fromOpen, fromShut, spanNear.from * 1.01), dest: Math.max(destOpen, destShut, spanNear.dest * 1.01) };
+  } else {
+    spanNear = { from: 1, dest: 1 };
+    spanFar = { from: 2, dest: 2 };
+  }
 }
 
 // ---- the pickers ----
@@ -1086,7 +1146,7 @@ function start(): void {
     byId("now").replaceChildren();
     byId("trip").replaceChildren();
     for (const id of ["accel", "timer", "preheat", "ignition"]) byId(id).hidden = true;
-    setText(byId("phase"), say("jPhase_none"));
+    setText(byId("phase"), "");
     setText(byId("speed-label"), "");
     setText(byId("speed-value"), "");
     setText(byId("speed-sub"), "");

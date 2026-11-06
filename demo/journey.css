@@ -25,6 +25,7 @@ body.journey { --bad: #a1262b; }
 .jr-painted { position: absolute; inset: 0; z-index: 1; }
 .jr-painted[hidden] { display: none; }
 .jr-painted uchusen-rocket { display: block; position: absolute; left: 50%; top: 50%; height: var(--len, 300px); width: calc(var(--len, 300px) * 0.75); transform: translate(-50%, -50%) rotate(var(--turn, 90deg)); }
+.jr-stage[data-view="side"] .jr-painted uchusen-rocket { left: 36%; top: 58%; }
 .jr-credit { margin: 0.35rem 0 0; color: var(--muted, #93a6c0); font-size: 0.82rem; }
 .jr-painted-bar { background: #1c1d22; border-radius: 12px; padding: 0.35rem 0.6rem; }
 .jr-painted-bar[hidden] { display: none; }
@@ -35,9 +36,12 @@ body.journey { --bad: #a1262b; }
 .jr-stage[data-view="rear"] .jr-craft svg,
 .jr-stage[data-view="orbit"] .jr-craft svg { transform: translate(calc(-50% + var(--nx, 0px)), calc(-50% + var(--ny, 0px))) rotateX(var(--pitch, 0deg)) rotateY(var(--yaw, 0deg)) rotate(var(--roll, 0deg)); width: min(92%, 40rem); height: auto; }
 .jr-stage[data-view="chase"] .jr-craft svg { top: 74%; height: calc(var(--len, 300px) * 0.46); }
+.jr-stage[data-view="side"] .jr-craft svg { left: 36%; top: 58%; }
 .jr-body { display: none; position: absolute; top: 52%; z-index: 1; place-items: center; width: calc(var(--span, 0.02) * 100%); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid #d7e6ff; background: radial-gradient(circle at 40% 40%, #f4f8ff, var(--ink, #8fb4d8) 70%, #1c334c); color: #f4f8ff; text-align: center; font-size: 0.85rem; font-weight: 600; }
 .jr-from { left: 18%; }
 .jr-dest { left: 82%; }
+.jr-stage[data-view="side"] .jr-from { left: 16%; top: 74%; z-index: 0; }
+.jr-stage[data-view="side"] .jr-dest { left: 82%; top: 28%; }
 .jr-stage[data-view="side"] .jr-from,
 .jr-stage[data-view="side"] .jr-dest,
 .jr-stage[data-view="front"] .jr-dest,
@@ -108,12 +112,15 @@ body.journey { --bad: #a1262b; }
 .jr-x { position: absolute; top: 0.2rem; right: 0.2rem; width: 44px; height: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font-size: 1.3rem; line-height: 1; }
 .jr-summary-open { position: absolute; z-index: 5; top: 0.55rem; right: 0.55rem; }
 .jr-summary-open[hidden] { display: none; }
-.jr-blocked { position: absolute; z-index: 3; left: 50%; top: 46%; transform: translate(-50%, -50%); width: min(28rem, 88%); text-align: center; }
+.jr-blocked { position: absolute; z-index: 3; left: 50%; bottom: 0.55rem; transform: translateX(-50%); width: min(26rem, 86%); text-align: center; padding: 0.55rem 0.8rem 0.65rem; border: 1px solid var(--line); border-radius: 12px; background: #050a14; }
 .jr-blocked[hidden] { display: none; }
 .jr-blocked p { margin: 0.4rem 0 0; color: var(--ink); }
 .jr-blocked .chip { margin-top: 0.7rem; }
-.jr-stage[data-look="painted"] .jr-body { background: none; border: none; }
-.jr-stage[data-look="painted"] .jr-body wakusei-body { display: block; width: 100%; height: 100%; }
+.jr-stage[data-look="painted"] .jr-body { width: 640px; height: 640px; background: none; border: none; transform: translate(-50%, -50%) scale(var(--fit, 0.04)); }
+.jr-stage:has(#blocked:not([hidden])) .jr-painted uchusen-rocket,
+.jr-stage:has(#blocked:not([hidden])) .jr-craft svg { top: 34%; }
+.jr-stage[data-look="painted"] .jr-body wakusei-body,
+.jr-stage[data-look="painted"] .jr-body chikyu-earth-realistic { display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
 .jr-controls .jr-play, .jr-controls #restart { display: inline-flex; align-items: center; gap: 0.35rem; }
 .jr-ico { width: 0.9rem; height: 0.9rem; fill: currentColor; flex: none; }
 .jr-stage:has(.jr-summary:not([hidden])) .jr-views { visibility: hidden; }
