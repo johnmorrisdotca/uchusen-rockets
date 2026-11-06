@@ -807,6 +807,11 @@ function draw(force = false): void {
   drawRoute(state);
   if (choice.view === "map") drawMap(state);
   drawPanel(state);
+  setText(byId("when-date"), dateWords(state.dateMs, true));
+  const tripDays = Math.max(1, Math.ceil(trip.frameS / 86_400));
+  const sinceDepart = state.dateMs - trip.departMs;
+  const tripDay = sinceDepart < 0 ? 0 : Math.min(tripDays, Math.floor(sinceDepart / DAY) + 1);
+  setText(byId("when-day"), say("jDayOf", { day: tripDay, days: tripDays }));
   const scrub = byId<HTMLInputElement>("scrub");
   scrub.value = String(Math.round((playhead / total) * 1000));
   scrub.setAttribute("aria-valuetext", `${say(`jPhase_${id}`)}, ${duration(Math.abs(state.missionS))}`);
