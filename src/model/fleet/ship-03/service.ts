@@ -1,5 +1,5 @@
-// What the hangar boxes and the service berths hold: the package's own Starship ship and Super Heavy, on cradles, with the racks and the ports. The bodies are not redrawn. Pure: no three.js and no DOM.
-import { STARSHIP_DRAWS, boosterPieces, shipPieces } from "../../starship.ts";
+// What the hangar boxes and the service berths hold: the package's own Starship ship, on cradles, with the racks and the ports. Super Heavy is not carried in space. The bodies are not redrawn. Pure: no three.js and no DOM.
+import { STARSHIP_DRAWS, shipPieces } from "../../starship.ts";
 import { cub, discZ, ibeam, type Piece, place, rod, roundStrut } from "./adapter.ts";
 import { type BayId, bayBox } from "./dims.ts";
 
@@ -9,9 +9,7 @@ export const FIN_HALF = 9.15;
 const GAP = 2;
 const WALL = 1.4;
 let shipTemplate: Piece[] | undefined;
-let boosterTemplate: Piece[] | undefined;
 const shipBody = (): Piece[] => (shipTemplate ??= shipPieces(DRAW));
-const boosterBody = (): Piece[] => (boosterTemplate ??= boosterPieces(DRAW));
 
 export const BODY = { ship: DRAW.shipHeight, booster: DRAW.boosterHeight, stack: DRAW.boosterHeight + DRAW.shipHeight, radius: DRAW.radius } as const;
 
@@ -34,9 +32,9 @@ const cradle = (x: number, y0: number, len: number, floor: number): Piece[] => {
   return out;
 };
 
-/** A body of the package's own model, bells or skirt at `y0`, axis at (`x`, `z`). */
-function body(which: "ship" | "booster", x: number, y0: number, z: number): Piece[] {
-  return place(which === "ship" ? shipBody() : boosterBody(), { at: [x, y0, z] });
+/** The ship, bells at `y0`, axis at (`x`, `z`). A berth in space does not carry Super Heavy. */
+function body(x: number, y0: number, z: number): Piece[] {
+  return place(shipBody(), { at: [x, y0, z] });
 }
 
 /** Two bodies side by side in one box: the booster with its engine bay open to the aft, the ship with panels off onto the rack, and the platforms and racks around them. */
@@ -45,7 +43,7 @@ export function starshipBay(bay: BayId): Piece[] {
   const a = cradleAxes(bay);
   const z = a.floor + 1.2 + 5.42;
   const out: Piece[] = [...cradle(a.spine, a.y0, BODY.booster, a.floor), ...cradle(a.outer, a.y0, BODY.ship, a.floor)];
-  out.push(...body("booster", a.spine, a.y0, z), ...body("ship", a.outer, a.y0, z));
+  out.push(...body(a.spine, a.y0, z), ...body(a.outer, a.y0, z));
   // work platforms: one along the booster's open engine bay, one along the ship's flank where the panels come off
   out.push(cub("hull-yellow", [a.spine - 7, a.spine - 5.4], [a.y0, a.y0 + 16], [a.floor + 1.2, a.floor + 1.5]));
   out.push(cub("hull-yellow", [a.outer + 5.4, a.outer + 7], [a.y0 + 8, a.y0 + 28], [a.floor + 1.2, a.floor + 1.5]));
@@ -83,13 +81,13 @@ export function exteriorLoad(): Piece[] {
   const a = cradleAxes("starboard-aft");
   const z = a.floor + 1.2 + 5.42;
   const x0 = h.x[1] + 10;
-  return [...body("booster", x0, a.y0, z), ...body("ship", x0 + FIN_HALF * 2 + GAP, a.y0, z)];
+  return [...body(x0, a.y0, z), ...body(x0 + FIN_HALF * 2 + GAP, a.y0, z)];
 }
 
-/** A full stack, booster aft and ship forward, and the two depot tanks beside its mid point. */
+/** The ship, and the two depot tanks beside its mid point. Super Heavy is not berthed. */
 function stackAt(x: number, y0: number, z: number): Piece[] {
-  const out = [...body("booster", x, y0, z), ...body("ship", x, y0 + BODY.booster, z)];
-  const mid = y0 + BODY.stack / 2;
+  const out = [...body(x, y0, z)];
+  const mid = y0 + BODY.ship / 2;
   out.push(rod("hull-orange", [x + 16, mid - 14, z], [x + 16, mid + 14, z], 4, 24), rod("hull-white", [x - 16, mid - 14, z], [x - 16, mid + 14, z], 4, 24));
   out.push(...roundStrut("copper", [x + 12, mid, z], [x + 4.6, mid, z], 0.35), ...roundStrut("hull-white", [x - 12, mid, z], [x - 4.6, mid, z], 0.35));
   return out;

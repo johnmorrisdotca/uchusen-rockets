@@ -1,7 +1,7 @@
-// Visiting SpaceX craft, berthed outside the hull the way a station berths a ship: a full Starship stack in clamp saddles, two Starship tankers at separate methane and oxygen couplings, and a Dragon at a port. The craft are the package's own parts at their own size. Nothing here is drawn inside a hull. Pure: no three.js and no DOM.
+// Visiting craft, berthed outside the hull the way a station berths a ship: a Starship ship in clamp saddles, two Starship tankers at separate methane and oxygen couplings, and a Dragon at a port. The craft are the package's own parts at their own size. Nothing here is drawn inside a hull. Pure: no three.js and no DOM.
 import { DRAGON_DRAWS, capsule, trunk } from "../../falcon.ts";
 import type { Piece, Vec3 } from "../../pieces.ts";
-import { STARSHIP_DRAWS, boosterPieces, shipPieces } from "../../starship.ts";
+import { STARSHIP_DRAWS, shipPieces } from "../../starship.ts";
 import { dockedNow, visitorsOf } from "../dockedState.ts";
 import { hoop, place, revolve, rod } from "./adapter.ts";
 import type { ConceptSlot } from "./common.ts";
@@ -10,15 +10,15 @@ const ROCKET = { a: "fleet-kaminari", b: "fleet-emiake", c: "fleet-romaryu" } as
 
 const DRAW = STARSHIP_DRAWS.v3;
 const DRAGON = DRAGON_DRAWS["dragon-2"];
-/** Super Heavy 72.3 m and the ship 52.1 m, the package's Block 3. */
-export const STACK_M = DRAW.boosterHeight + DRAW.shipHeight;
+/** The ship alone, 52.1 m, the package's Block 3. Super Heavy stays on Earth. */
+export const STACK_M = DRAW.shipHeight;
 const DRAGON_M = DRAGON.trunk + DRAGON.capsule - DRAGON.nest;
 
 let stackCache: Piece[] | null = null;
 let tankerCache: Piece[] | null = null;
 let dragonCache: Piece[] | null = null;
 
-const stackTemplate = (): Piece[] => (stackCache ??= [...boosterPieces(DRAW), ...place(shipPieces(DRAW), { at: [0, DRAW.boosterHeight, 0] })]);
+const stackTemplate = (): Piece[] => (stackCache ??= shipPieces(DRAW));
 const tankerTemplate = (): Piece[] => (tankerCache ??= shipPieces(DRAW));
 const dragonTemplate = (): Piece[] => (dragonCache ??= [...trunk(DRAGON), ...place(capsule(DRAGON), { at: [0, DRAGON.trunk - DRAGON.nest, 0] })]);
 
@@ -61,7 +61,7 @@ function saddle(hullX: number, craft: readonly [number, number, number], yUp: nu
 
 const end = (from: Vec3, to: Vec3, material: "hull-orange" | "hull-white" | "pipe-steel"): Piece => rod(material, from, to, 0.32, 8);
 
-/** The craft the berth draws when nobody has chosen: a stack, two tankers and a Dragon, in the berth's own frame. */
+/** The craft the berth draws when nobody has chosen: a ship, two tankers and a Dragon, in the berth's own frame. */
 function parked(plan: BerthPlan): Piece[] {
   const out: Piece[] = [...place(stackTemplate(), { at: atOf(plan.stack) })];
   for (const at of plan.tankers) out.push(...place(tankerTemplate(), { at: atOf(at) }));
@@ -73,7 +73,7 @@ function parked(plan: BerthPlan): Piece[] {
 export function berthPieces(plan: BerthPlan, craft: Piece[] = parked(plan)): Piece[] {
   const out: Piece[] = [...craft];
   out.push(depot(plan.methane, "hull-orange"), depot(plan.oxygen, "hull-white"));
-  out.push(...saddle(plan.hullX, plan.stack, 28), ...saddle(plan.hullX, plan.stack, 78), ...saddle(plan.hullX, plan.stack, 110));
+  out.push(...saddle(plan.hullX, plan.stack, 10), ...saddle(plan.hullX, plan.stack, 26), ...saddle(plan.hullX, plan.stack, 42));
   for (const at of plan.tankers) out.push(...saddle(plan.hullX, at, 18));
   const methaneHead: Vec3 = [plan.methane[0], plan.methane[1] + 28, plan.methane[2]];
   const oxygenHead: Vec3 = [plan.oxygen[0], plan.oxygen[1] + 28, plan.oxygen[2]];
@@ -85,7 +85,7 @@ export function berthPieces(plan: BerthPlan, craft: Piece[] = parked(plan)): Pie
   out.push(...collar(plan.dragon[0], plan.dragon[2], plan.dragon[1] + DRAGON_M, 2.4));
   const dragonFlank: Vec3 = [plan.dragon[0] + Math.sign(plan.hullX - plan.dragon[0] || 1) * 2.1, plan.dragon[1] + 3, plan.dragon[2]];
   out.push(rod("hull-grey", [plan.hullX, plan.dragon[1] + 3, 0], dragonFlank, 0.36, 8));
-  out.push(...collar(plan.stack[0], plan.stack[2], plan.stack[1] + DRAW.boosterHeight, 6.4));
+  out.push(...collar(plan.stack[0], plan.stack[2], plan.stack[1] + 2, 4.6));
   return out;
 }
 
@@ -100,7 +100,7 @@ const PLANS: Record<"a" | "b" | "c", BerthPlan> = {
     oxygen: [58, 214, -7],
     height: 262,
     diameter: 108,
-    note: "Open berths on the starboard truss, ahead of the tank quivers, and a Dragon port on the port side. A Starship stack (the package's Super Heavy and ship, 124.4 m) sits in clamp saddles. Two Starship tankers take separate methane and oxygen depot tanks, which are not the ship's propellant. Nothing is inside the truss. Descends from the ISS visiting vehicles and the common berthing mechanism.",
+    note: "Open berths on the starboard truss, ahead of the tank quivers, and a Dragon port on the port side. A Starship ship (the package's Block 3, 52.1 m) sits in clamp saddles. Two Starship tankers take separate methane and oxygen depot tanks, which are not the ship's propellant. Nothing is inside the truss. Descends from the ISS visiting vehicles and the common berthing mechanism.",
   },
   b: {
     at: [0, 170, 0],
@@ -112,7 +112,7 @@ const PLANS: Record<"a" | "b" | "c", BerthPlan> = {
     oxygen: [110, 226, -8],
     height: 272,
     diameter: 219,
-    note: "An exterior berth along the starboard side of the open keel, clear of the hull, and a Dragon port on the port side. The stack is in clamp saddles. Two Starship tankers take separate methane and oxygen couplings. The depot tanks are not the ship's own propellant. Nothing is stored inside the frame. Descends from the ISS visiting vehicles and the common berthing mechanism.",
+    note: "An exterior berth along the starboard side of the open keel, clear of the hull, and a Dragon port on the port side. The ship is in clamp saddles. Two Starship tankers take separate methane and oxygen couplings. The depot tanks are not the ship's own propellant. Nothing is stored inside the frame. Descends from the ISS visiting vehicles and the common berthing mechanism.",
   },
   c: {
     at: [0, 600, 0],
@@ -124,7 +124,7 @@ const PLANS: Record<"a" | "b" | "c", BerthPlan> = {
     oxygen: [-100, 82, -10],
     height: 128,
     diameter: 200,
-    note: "Exterior berths beside the docked craft, on the open sides of the shaft. The Starship stack is to starboard and the two tankers to port, each tanker at its own depot tank. A Dragon sits at a port forward of the first pair. The Miyamotos stay. Nothing is inside the shaft. Descends from the ISS visiting vehicles and the common berthing mechanism.",
+    note: "Exterior berths beside the docked craft, on the open sides of the shaft. The Starship ship is to starboard and the two tankers to port, each tanker at its own depot tank. A Dragon sits at a port forward of the first pair. The Miyamotos stay. Nothing is inside the shaft. Descends from the ISS visiting vehicles and the common berthing mechanism.",
   },
 };
 
@@ -145,7 +145,7 @@ const world = (plan: BerthPlan, local: readonly [number, number, number]): reado
 const faceOut = (plan: BerthPlan, local: readonly [number, number, number]): readonly [number, number, number] => [Math.sign(local[0] - plan.hullX) || 1, 0, 0];
 
 const portsOf = (plan: BerthPlan): readonly ShipPort[] => [
-  { name: "Starship stack berth", collar: "L", at: world(plan, [plan.stack[0], plan.stack[1] + STACK_M / 2, plan.stack[2]]), direction: faceOut(plan, plan.stack), craft: ["starship"], accepts: "stack" },
+  { name: "Starship berth", collar: "L", at: world(plan, [plan.stack[0], plan.stack[1] + STACK_M / 2, plan.stack[2]]), direction: faceOut(plan, plan.stack), craft: ["starship"], accepts: "stack" },
   { name: "Methane tanker berth", collar: "L", at: world(plan, [plan.tankers[0][0], plan.tankers[0][1] + DRAW.shipHeight / 2, plan.tankers[0][2]]), direction: faceOut(plan, plan.tankers[0]), craft: ["starship"], accepts: "tanker" },
   { name: "Oxygen tanker berth", collar: "L", at: world(plan, [plan.tankers[1][0], plan.tankers[1][1] + DRAW.shipHeight / 2, plan.tankers[1][2]]), direction: faceOut(plan, plan.tankers[1]), craft: ["starship"], accepts: "tanker" },
   { name: "Dragon port", collar: "M", at: world(plan, [plan.dragon[0], plan.dragon[1] + DRAGON_M, plan.dragon[2]]), direction: [0, -1, 0], craft: ["dragon"], accepts: "crew" },
@@ -159,7 +159,7 @@ export function choicePorts(key: "a" | "b" | "c"): { id: string; name: string; a
   const plan = PLANS[key];
   const saddle = (id: string, name: string, at: readonly [number, number, number]) => ({ id, name, at: [0, 0, 0] as const, dir: [0, 1, 0] as const, models: ["starship"] as const, seat: at });
   return [
-    saddle("stack", "Starship stack berth", plan.stack),
+    saddle("stack", "Starship berth", plan.stack),
     saddle("methane", "Methane tanker berth", plan.tankers[0]),
     saddle("oxygen", "Oxygen tanker berth", plan.tankers[1]),
     { id: "dragon", name: "Dragon port", at: [plan.dragon[0], plan.dragon[1] + DRAGON_M, plan.dragon[2]], dir: [0, 1, 0], models: ["dragon"] },
@@ -171,7 +171,7 @@ export function berthSlot(key: "a" | "b" | "c"): ConceptSlot {
   const plan = PLANS[key];
   return {
     slot: "visiting",
-    name: "Visiting craft: Starship stack, tankers and a Dragon",
+    name: "Visiting craft: a Starship, tankers and a Dragon",
     kind: "module",
     at: plan.at,
     height: plan.height,
