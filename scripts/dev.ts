@@ -27,7 +27,9 @@ createServer(async (request, response) => {
     response.writeHead(302, { location: base }).end();
     return;
   }
-  const rel = normalize(path.slice(base.length) || "index.html").replace(/^([/\\])+/, "");
+  // a folder address (docs/) serves its index.html, as GitHub Pages does
+  const asked = path.slice(base.length);
+  const rel = normalize(asked === "" || asked.endsWith("/") ? `${asked}index.html` : asked).replace(/^([/\\])+/, "");
   const file = join(root, rel);
   if (!file.startsWith(root)) {
     response.writeHead(403).end("no");
