@@ -165,7 +165,7 @@ test("the page makes no WebGL context and asks for no frame while nothing moves"
   const after = await page.evaluate(() => (window as unknown as { __raf: number }).__raf);
   expect(after - before).toBe(0);
   await page.getByTestId("view-map").click();
-  await page.getByTestId("speed-4").click();
+  await page.locator("#speeds").getByRole("button", { name: "4×" }).click();
   await page.getByTestId("play").click();
   await expect(page.getByTestId("phase")).not.toHaveText("READY");
   await page.getByTestId("play").click();

@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **Three axes** (MODULES-468): the camera follows the view controls' roll, so Angle, Tilt and Roll all move the rocket. The family's view controls are 0.17.0, which offers the three axes and a tumble.
+- **Three axes** (MODULES-468): the camera follows the view controls' roll, so Angle, Tilt and Roll all move the rocket. The family's view controls are 0.17.0, which offers the three axes and a tumble. The journey's playback speeds are the family's speed buttons.
 
 ## [0.13.0] - 2026-11-05
 
