@@ -76,7 +76,9 @@ const NIGHT_SHIPS = new Set(["fleet-ship-01", "fleet-kyotori", "fleet-drone", "f
 
 /** Pipes, blankets and lamp housings. Below this shorter screen side they alias, so a small fleet ship draws its hull without them. */
 const FITTING = new Set(["pipe-steel", "coolant", "copper", "foil", "kapton", "blanket", "blanket-worn", "coil", "coil-lit", "lamp-amber", "lamp-red", "lamp-blue", "strobe", "beacon", "nav-red", "nav-green", "nav-white", "flood", "light-pool"]);
-const FITTING_PX = 240;
+/** Drop the fittings below this shorter side, and bring them back only above the higher one, so a slow zoom does not flicker on the line. */
+const FITTING_OFF = 220;
+const FITTING_ON = 260;
 
 /** A label on a part: its text, where it points in the ship's own metres, the part it follows and where that part stands at rest (so the label moves with it). `number` draws a numbered disc. */
 export interface ViewerMark {
@@ -279,6 +281,8 @@ export class RocketViewer {
   private lampPending: { carrier: Group; name: string; centers: Vector3[] }[] = [];
   /** Whether the fleet ship's fittings are hidden because it is small on screen. `null` means the next draw decides. */
   private lodSmall: boolean | null = null;
+  /** 1 is every fitting drawn, 0 is the small-ship hull. It moves over a fifth of a second so the switch does not pop. */
+  private lodFade = 1;
   /** The smooth flood sheets. Cached with their material, so a new rocket reuses them. */
   private poolSheets: MeshBasicMaterial[] = [];
   private lampTexture: CanvasTexture | null = null;
@@ -1983,24 +1987,60 @@ export class RocketViewer {
     };
   }
 
-  /** A fleet ship that is small on screen drops its fittings and its shadow, which are the draws that shimmer there. A full-size ship keeps both. */
-  private applyFittingLod(): void {
+  /** A fleet ship that is small on screen drops its fittings and its shadow, which are the draws that shimmer there. A full-size ship keeps both. The first decision is instant; a later one fades. */
+  private applyFittingLod(dtMs: number): void {
     if (this.progressAt !== null) return;
     const small = this.fleetIsSmall();
-    if (small === this.lodSmall) return;
-    this.lodSmall = small;
-    this.renderer.shadowMap.enabled = this.shadows && !small;
+    const target = small ? 0 : 1;
+    if (this.lodSmall === null) {
+      this.lodSmall = small;
+      this.lodFade = target;
+      this.renderer.shadowMap.enabled = this.shadows && !small;
+      this.paintFittings(target);
+    } else if (small !== this.lodSmall) this.lodSmall = small;
+    if (this.lodFade !== target) {
+      const step = dtMs / 200;
+      this.lodFade = target === 1 ? Math.min(1, this.lodFade + step) : Math.max(0, this.lodFade - step);
+      this.paintFittings(this.lodFade);
+      if (this.lodFade === target) this.renderer.shadowMap.enabled = this.shadows && !small;
+      else this.needsDraw = true;
+    }
+    this.canvas.dataset.lod = this.lodFade === 0 ? "small" : this.lodFade === 1 ? "full" : "fade";
+  }
+
+  /** Draws the fittings at `level`, from gone to solid. The material's own opacity comes back at either end. */
+  private paintFittings(level: number): void {
     const fleet = new Set([...(this.built?.parts ?? []), ...(this.built?.beside ?? [])].filter((part) => part.record.rocket.startsWith("fleet-")).map((part) => part.slot));
     for (const part of this.parts) {
       if (!fleet.has(part.slot) || !part.code.visible) continue;
       for (const face of part.faces) {
-        if (FITTING.has(face.name)) face.mesh.visible = !small;
+        if (!FITTING.has(face.name)) continue;
+        const material = face.mesh.material;
+        if (Array.isArray(material) || !("opacity" in material)) {
+          face.mesh.visible = level > 0;
+          continue;
+        }
+        const own = material as MeshStandardMaterial;
+        if (own.userData.fitOpacity === undefined) {
+          own.userData.fitOpacity = own.opacity;
+          own.userData.fitTransparent = own.transparent;
+        }
+        if (level <= 0 || level >= 1) {
+          own.opacity = own.userData.fitOpacity as number;
+          own.transparent = own.userData.fitTransparent as boolean;
+          own.depthWrite = !own.transparent;
+          face.mesh.visible = level >= 1;
+        } else {
+          own.transparent = true;
+          own.depthWrite = false;
+          own.opacity = (own.userData.fitOpacity as number) * level;
+          face.mesh.visible = true;
+        }
       }
     }
-    this.canvas.dataset.lod = small ? "small" : "full";
   }
 
-  /** True when a fleet craft's shorter side on screen is under {@link FITTING_PX}. A picture with no fleet craft stays full. */
+  /** True when a fleet craft's shorter side is under the off line, and it stays small until it passes the on line. A picture with no fleet craft stays full. */
   private fleetIsSmall(): boolean {
     const boxes = this.craftBoxes().filter((box) => box.rocket.startsWith("fleet-"));
     if (boxes.length === 0) return false;
@@ -2026,7 +2066,8 @@ export class RocketViewer {
       }
       shortest = Math.min(shortest, maxX - minX, maxY - minY);
     }
-    const limit = this.lodSmall ? FITTING_PX + 80 : FITTING_PX;
+    this.canvas.dataset.lodSpan = String(Math.round(shortest));
+    const limit = this.lodSmall ? FITTING_ON : FITTING_OFF;
     return shortest < limit;
   }
 
@@ -2255,7 +2296,7 @@ export class RocketViewer {
         this.canvas.dataset.swarmNear = String(this.swarm.lod([this.camera.position.x, this.camera.position.y, this.camera.position.z]));
         this.canvas.dataset.swarmLod = (performance.now() - began).toFixed(3);
       }
-      this.applyFittingLod();
+      this.applyFittingLod(dt * 1000);
       const drawn = performance.now();
       this.renderer.render(this.scene, this.camera);
       const info = this.renderer.info.render;
