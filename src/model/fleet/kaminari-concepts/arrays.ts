@@ -11,15 +11,29 @@ export const RING = { y: 1660, hub: 22, len: 60, petals: 8, segments: 3, half: 2
 
 const tag = (pieces: readonly Piece[], move: Move): Piece[] => pieces.map((piece) => ({ ...piece, move }));
 
-/** A cell blanket facing +Z: a white frame, gold cells, and a crease where the next panel folds. */
+/** Grid lines across a flat face, in the face's own plane: the dark gaps between cells. */
+function grid(spanU: number, spanV: number, nu: number, nv: number): [readonly [number, number], readonly [number, number]][] {
+  const lines: [readonly [number, number], readonly [number, number]][] = [];
+  for (let i = 1; i < nu; i++) {
+    const u = -spanU / 2 + (spanU * i) / nu;
+    lines.push([[u, -spanV / 2], [u, spanV / 2]]);
+  }
+  for (let j = 1; j < nv; j++) {
+    const v = -spanV / 2 + (spanV * j) / nv;
+    lines.push([[-spanU / 2, v], [spanU / 2, v]]);
+  }
+  return lines;
+}
+
+/** A flat cell blanket facing +Z: one sheet, a white frame, gold cells, and the gaps drawn as lines. The sheen is the gold's own. */
 function blanketFace(x0: number, x1: number, y0: number, y1: number, z: number): Plate {
-  return cub("hull-white", [x0, x1], [y0, y1], [z, z + 0.18], {
+  return cub("hull-white", [x0, x1], [y0, y1], [z, z + 0.12], {
     only: undefined,
     plain: false,
     sheet: true,
     top: "gold",
-    inset: { margin: 0.55, depth: 0.06 },
-    quilt: { nu: 8, nv: 4, bulge: 0.32 },
+    inset: { margin: 0.4, depth: 0.03 },
+    ribs: grid(x1 - x0, y1 - y0, 8, 4),
   });
 }
 
@@ -71,12 +85,12 @@ function ringTile(x0: number, x1: number, halfW: number, y: number): Plate {
     top: "gold",
     frame: { o: [(x0 + x1) / 2, y, 0], u: [1, 0, 0], v: [0, 0, 1], w: [0, 1, 0] },
     outline: [[-sx / 2, -sz / 2], [sx / 2, -sz / 2], [sx / 2, sz / 2], [-sx / 2, sz / 2]],
-    thickness: 0.2,
+    thickness: 0.16,
     sheet: true,
     plain: false,
     only: undefined,
-    inset: { margin: 0.35, depth: 0.04 },
-    quilt: { nu: 3, nv: 2, bulge: 0.16 },
+    inset: { margin: 0.3, depth: 0.03 },
+    ribs: grid(sx, sz, 4, 2),
   };
 }
 

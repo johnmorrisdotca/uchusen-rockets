@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **Kaminari's blanket and ring** (MODULES-489): the blanket is two gold cell sheets on a lattice mast, and the ring is trapezoid panels on spokes that pay out into one annulus.
+- **Kaminari's blanket and ring** (MODULES-489): the blanket is two flat gold cell sheets on a lattice mast, and the ring is trapezoid panels on spokes that pay out into one annulus. The cells are one sheet each, with the gaps drawn as lines, so the glint is one sheen across the sheet.
 - **Changing ship eases to its size** (MODULES-504): picking a ship of another size keeps the old scale at the switch and then eases to Fit, so going from Kyotori (447 m) to Kaminari (1,815 m) zooms out to show the much larger ship, and the reverse zooms in; reduced motion jumps.
 - **The yard is painted** (MODULES-499): truss chords are white painted members with darker metal joints and braces, the walkway is blanket, and the frames catch a sky reflection with panel breaks and bolt rows, from ISS truss and Canadarm2 photographs.
 - **The yard's build moves** (MODULES-501): while the build player plays on the yard page the drones fly and weld in real time at every speed, and 'Watch a flight' fits the flight under way into about 30 seconds.
