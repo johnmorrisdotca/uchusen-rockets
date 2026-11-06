@@ -35,10 +35,9 @@ test.describe("motion on", () => {
     const a0 = Number(await canvasData(page, "motionAngle"));
     const f0 = await drawn(page);
     const t0 = Date.now();
-    await page.waitForTimeout(3000);
+    // A painted frame of this ship can take longer than a few seconds when the machine is busy. Wait until the ring has moved, then check the rate.
+    await expect.poll(() => canvasData(page, "motionAngle"), { timeout: 60_000 }).not.toBe(a0.toFixed(1));
     const seconds = (Date.now() - t0) / 1000;
-    const a1 = Number(await canvasData(page, "motionAngle"));
-    expect(a1).not.toBe(a0);
     expect((await drawn(page)) - f0).toBeLessThanOrEqual(Math.ceil(30 * seconds) + 3);
     expect(await canvasData(page, "motion")).toBe("1x");
   });

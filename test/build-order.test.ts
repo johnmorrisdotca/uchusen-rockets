@@ -53,14 +53,16 @@ function holds(name: string, steps: readonly BuildStep[], slots: readonly string
   });
 }
 
-holds("Hanabusa: five years, 2456 to 2461, and the rings wait for the first habitat drum", hanabusaBuild(), Object.keys(HANABUSA_VARIANT_SLOTS.hanabusa ?? {}), HANABUSA_BUILD_DAYS, "drive");
+holds("Hanabusa: five years, 2456 to 2461, and each ring waits until the spine has reached it", hanabusaBuild(), Object.keys(HANABUSA_VARIANT_SLOTS.hanabusa ?? {}), HANABUSA_BUILD_DAYS, "drive");
 holds("Kaminari: nine years, 2511 to 2520, the longest build", kaminariBuild(), SLOTS_A.map((one) => one.slot), KAMINARI_BUILD_DAYS, "spine");
 holds("Emiake: the planned five years of a ship of about 1.8 km", emiakeBuild(), SLOTS_B.map((one) => one.slot), LONG_SHIP_BUILD_DAYS, "keel");
 holds("Romaryū: the same planned five years, and each craft waits for its cradle", romaryuBuild(), SLOTS_C.map((one) => one.slot), LONG_SHIP_BUILD_DAYS, "shaft");
 
 test("what stands out from the hull waits until its mount is finished", () => {
   const hanabusa = hanabusaBuild();
-  assert.equal(hanabusa.find((step) => step.slot === "ring-garden")?.start, endOf(hanabusa, "drum-habitat-1"));
+  assert.equal(hanabusa.find((step) => step.slot === "ring-garden")?.start, endOf(hanabusa, "tank-8"));
+  assert.equal(hanabusa.find((step) => step.slot === "ring-research")?.start, endOf(hanabusa, "tank-7"));
+  assert.equal(hanabusa.find((step) => step.slot === "ring-living")?.start, endOf(hanabusa, "tank-8"));
   const kaminari = kaminariBuild();
   assert.equal(kaminari.find((step) => step.slot === "radiators")?.start, endOf(kaminari, "spine"));
   const emiake = emiakeBuild();

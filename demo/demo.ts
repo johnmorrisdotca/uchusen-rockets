@@ -538,6 +538,8 @@ function renderMain() {
     address.set("at", at > 0 ? at.toFixed(4) : null);
     if (built) hero.setAttribute("progress", at.toFixed(4));
     else hero.removeAttribute("progress");
+    const fit = (hero.shadowRoot?.querySelector("canvas")?.dataset.fitout ?? "").split(" ")[0] ?? "";
+    buildBar.stage = fit === "sealed" ? say("buildSealed") : fit === "air" ? say("buildAir") : fit === "pressure" ? say("buildPressure") : fit === "spin" ? say("buildSpin") : "";
   };
   buildBar.onMove = showProgress;
   buildBar.onRepeat = (on) => address.set("repeat", on ? "on" : null);
