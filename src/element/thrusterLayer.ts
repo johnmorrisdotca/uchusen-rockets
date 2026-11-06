@@ -4,8 +4,8 @@ import { KEEP_GAP, PUFF_LIFE, turnPair, type Jet, type ThrusterMode } from "../t
 
 const POOL = 64;
 const DRIFT = 0.4;
-/** How many nozzle lengths the cone reaches, and the soft edge of it. */
-const NOZZLE_LENGTHS = 8;
+/** How many nozzle lengths the glow reaches. A vacuum jet is a short faint cone, not a long petal. */
+const NOZZLE_LENGTHS = 4;
 const SPREAD = (20 * Math.PI) / 180;
 const CORE = (7 * Math.PI) / 180;
 
@@ -36,15 +36,16 @@ void main() {
 
 const PLUME_FRAG = /* glsl */ `
 uniform float spread;
+uniform float gain;
 varying vec3 vTint;
 varying vec3 vLocal;
 void main() {
   float along = clamp(vLocal.y, 0.0, 1.0);
   float radius = max(spread * max(along, 0.08), 0.02);
   float radial = length(vLocal.xz) / radius;
-  float body = exp(-radial * radial * 2.8) * exp(-along * 1.7);
-  if (body < 0.012) discard;
-  body *= 0.28;
+  float body = exp(-radial * radial * 6.0) * exp(-along * 2.4);
+  if (body < 0.002) discard;
+  body *= gain;
   gl_FragColor = vec4(vTint * body, body);
 }
 `;
@@ -73,9 +74,9 @@ function plumeGeometry(radians: number): BufferGeometry {
   return geo;
 }
 
-function plumeMaterial(radians: number): ShaderMaterial {
+function plumeMaterial(radians: number, gain: number): ShaderMaterial {
   return new ShaderMaterial({
-    uniforms: { spread: { value: Math.tan(radians) } },
+    uniforms: { spread: { value: Math.tan(radians) }, gain: { value: gain } },
     vertexShader: PLUME_VERT,
     fragmentShader: PLUME_FRAG,
     transparent: true,
@@ -131,8 +132,8 @@ export class ThrusterLayer {
     }
     this.mesh.instanceMatrix.needsUpdate = true;
     this.group.add(this.mesh);
-    this.outer = this.pool(plumeGeometry(SPREAD), plumeMaterial(SPREAD));
-    this.core = this.pool(plumeGeometry(CORE), plumeMaterial(CORE));
+    this.outer = this.pool(plumeGeometry(SPREAD), plumeMaterial(SPREAD, 0.045));
+    this.core = this.pool(plumeGeometry(CORE), plumeMaterial(CORE, 2.2));
     for (let i = 0; i < 6; i++) {
       const lamp = new PointLight("#ffffff", 0, 8, 2);
       lamp.visible = false;

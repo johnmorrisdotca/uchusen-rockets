@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Shorter fleet jets** (MODULES-479): a quad's glow reaches about four nozzle lengths, with a bright core at the bell and a faint edge that fades into black.
 - **The yard is painted** (MODULES-499): truss chords are white painted members with darker metal joints and braces, the walkway is blanket, and the frames catch a sky reflection with panel breaks and bolt rows, from ISS truss and Canadarm2 photographs.
 - **The yard's build moves** (MODULES-501): while the build player plays on the yard page the drones fly and weld in real time at every speed, and 'Watch a flight' fits the flight under way into about 30 seconds.
 - **The Figma-style mouse** (kazoku-ui 0.18.0): the wheel moves the view and Shift and the wheel moves it sideways; Ctrl, Command or Alt with the wheel, or a pinch, zooms; Space and a drag, or the middle button, moves it; Shift and a drag, or a two-finger twist, rolls.
