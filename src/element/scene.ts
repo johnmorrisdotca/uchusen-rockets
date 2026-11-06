@@ -358,7 +358,16 @@ export class RocketViewer {
   private nameLabels = true;
   /** Where a thrown craft has got to, and how fast it is still going, in world metres. */
   private toss = new Map<number, { offset: Vector3; velocity: Vector3 }>();
-  private grab: { craft: number; x: number; y: number; t: number; sx: number; sy: number; t0: number; burst: boolean } | null = null;
+  /** The craft a click chose, or none. While one is chosen the view stays still and the gestures move that craft. */
+  private picked: number | null = null;
+  /** Yaw, tilt and roll in degrees, about the craft's own axes. Yaw is the long axis. */
+  private aim = new Map<number, { yaw: number; tilt: number; roll: number }>();
+  private craftSpin: "off" | "long" | "upright" = "off";
+  private pointers = new Map<number, { x: number; y: number }>();
+  private twistBase: number | null = null;
+  private twistMid: { x: number; y: number } | null = null;
+  private ring: HTMLElement | null = null;
+  private grab: { craft: number; x: number; y: number; t: number; sx: number; sy: number; t0: number; burst: boolean; edit: boolean } | null = null;
   private press: { x: number; y: number } | null = null;
   private readonly slotRay = new Raycaster();
   private swarm: SwarmRig | null = null;
@@ -406,6 +415,17 @@ export class RocketViewer {
       if (!this.disposed) this.options.onLost();
     });
     holder.appendChild(this.canvas);
+    const ring = document.createElement("div");
+    ring.dataset.testid = "craft-outline";
+    ring.hidden = true;
+    ring.style.position = "absolute";
+    ring.style.pointerEvents = "none";
+    ring.style.border = "2px solid #e2b657";
+    ring.style.borderRadius = "6px";
+    ring.style.boxShadow = "0 0 0 1px #1a1408";
+    ring.style.zIndex = "3";
+    holder.appendChild(ring);
+    this.ring = ring;
 
     const pmrem = new PMREMGenerator(this.renderer);
     const skyTexture = new CanvasTexture(paintSky());
@@ -463,6 +483,10 @@ export class RocketViewer {
       true,
     );
     this.canvas.addEventListener("pointermove", (event) => {
+      if (this.picked !== null) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
       this.pullCraft(event);
       if (!this.grab) this.nameUnder(event);
     });
@@ -470,6 +494,8 @@ export class RocketViewer {
       this.releaseCraft(event);
       this.pickSlot(event);
     });
+    // A drag that turns the picture captures the pointer, so the release is not delivered to the canvas. The click is still a click.
+    window.addEventListener("pointerup", this.onPickUp);
     this.canvas.addEventListener("pointercancel", (event) => this.releaseCraft(event));
     this.canvas.addEventListener("dblclick", () => {
       if (!this.driven) this.setAngle(this.homeAngle, true);
@@ -554,6 +580,69 @@ export class RocketViewer {
     if (!changed) return;
     if (this.built) this.fitPlinths();
     this.placeBeside();
+    this.wake();
+  }
+
+  /** The craft under a page point, or null when the point misses every craft. -1 is the rocket itself. */
+  craftAt(clientX: number, clientY: number): number | null {
+    return this.craftAtPoint(clientX, clientY);
+  }
+
+  /** The craft a click chose, or null. */
+  selectedCraft(): number | null {
+    return this.picked;
+  }
+
+  /** Chooses a craft, or clears the choice. The gold box marks the one chosen. */
+  selectCraft(craft: number | null): void {
+    if (craft !== null && !this.craftBoxes().some((box) => box.craft === craft)) return;
+    if (craft === this.picked) return;
+    this.picked = craft;
+    if (craft === null) delete this.canvas.dataset.selected;
+    else {
+      this.canvas.dataset.selected = String(craft);
+      this.aimOf(craft);
+    }
+    this.canvas.dataset.craftSpin = this.craftSpin;
+    this.placeRing();
+    this.writeCraft();
+    this.canvas.dispatchEvent(new CustomEvent("uchusen-select", { detail: { craft }, bubbles: true, composed: true }));
+    this.wake();
+  }
+
+  /** Puts a craft back where the address left it, and chooses it. Metres and degrees. */
+  restoreCraft(craft: number, pose: { x: number; y: number; z: number; yaw: number; tilt: number; roll: number }, spin: "off" | "long" | "upright"): void {
+    this.tossOf(craft).offset.set(pose.x, pose.y, pose.z);
+    const aim = this.aimOf(craft);
+    aim.yaw = pose.yaw;
+    aim.tilt = pose.tilt;
+    aim.roll = pose.roll;
+    this.craftSpin = spin;
+    this.canvas.dataset.craftSpin = spin;
+    this.picked = null;
+    this.applyDrift();
+    this.selectCraft(craft);
+  }
+
+  /** Moves the chosen craft by a page distance, in pixels. */
+  nudgeCraft(dx: number, dy: number): void {
+    if (this.picked === null) return;
+    this.shiftCraft(this.picked, dx, dy);
+    this.tossOf(this.picked).velocity.set(0, 0, 0);
+    this.applyDrift();
+    this.wake();
+  }
+
+  /** Turns the chosen craft by degrees: yaw about its length, tilt, then roll. */
+  turnCraft(yaw: number, tilt: number, roll: number): void {
+    if (this.picked === null) return;
+    this.addAim(this.picked, yaw, tilt, roll);
+  }
+
+  /** Off, spinning about the long axis, or turning while staying upright. Reduced motion keeps the choice and does not turn. */
+  setCraftSpin(mode: "off" | "long" | "upright"): void {
+    this.craftSpin = mode;
+    this.canvas.dataset.craftSpin = mode;
     this.wake();
   }
 
@@ -2027,6 +2116,7 @@ export class RocketViewer {
     this.moonNode = null;
     cancelAnimationFrame(this.frame);
     document.removeEventListener("visibilitychange", this.onVisibility);
+    window.removeEventListener("pointerup", this.onPickUp);
     this.canvas.removeEventListener("wheel", this.onWheel);
     this.resize.disconnect();
     this.controls.dispose();
@@ -2744,9 +2834,17 @@ export class RocketViewer {
       if (this.glow) this.glow.visible = this.look !== "painted" && this.camera.position.y > 0 && !this.clockNow;
     }
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
+    if (this.picked !== null && this.craftSpin !== "off" && !this.options.reducedMotion) {
+      const aim = this.aimOf(this.picked);
+      if (this.craftSpin === "long") aim.roll += dt * 8;
+      else aim.yaw += dt * 8;
+      this.applyDrift();
+      this.needsDraw = true;
+    }
     const drifting = this.drifting();
+    const spinning = this.picked !== null && this.craftSpin !== "off" && !this.options.reducedMotion;
     const jetting = this.thrusterChoice === "station-keeping" && !this.options.reducedMotion && awake || (this.thrusters?.puffCount() ?? 0) > 0;
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || pulsing || drifting || jetting || this.ghost || this.paintFades.length > 0)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || pulsing || drifting || spinning || jetting || this.ghost || this.paintFades.length > 0)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 
@@ -2776,7 +2874,73 @@ export class RocketViewer {
     this.camera.position.copy(this.controls.target).add(new Vector3().setFromSpherical(s));
   }
 
+  /** Keys for the chosen craft. Arrows move it, Alt and the arrows turn it, and Alt+Shift rolls it. Ten times as far with Shift. */
+  private editKey(event: KeyboardEvent): boolean {
+    if (event.key === "Tab") {
+      const crafts = this.craftBoxes().map((box) => box.craft).sort((a, b) => a - b);
+      if (crafts.length === 0) return false;
+      const at = this.picked === null ? -1 : crafts.indexOf(this.picked);
+      const pick = at < 0
+        ? (event.shiftKey ? crafts[crafts.length - 1] : crafts[0])
+        : crafts[(event.shiftKey ? at - 1 + crafts.length : at + 1) % crafts.length];
+      if (pick !== this.picked) this.selectCraft(pick);
+      event.preventDefault();
+      event.stopPropagation();
+      return true;
+    }
+    if (this.picked === null) return false;
+    const big = event.shiftKey && !event.altKey ? 10 : 1;
+    const take = () => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    if (event.key === "Escape") {
+      this.selectCraft(null);
+      take();
+      return true;
+    }
+    if (event.key === "Home") {
+      this.toss.delete(this.picked);
+      const aim = this.aimOf(this.picked);
+      aim.yaw = 0;
+      aim.tilt = 0;
+      aim.roll = 0;
+      this.applyDrift();
+      take();
+      return true;
+    }
+    if (event.altKey && event.shiftKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+      this.addAim(this.picked, 0, 0, event.key === "ArrowLeft" ? -5 : 5);
+      take();
+      return true;
+    }
+    if (event.altKey && event.key === "ArrowLeft") return this.turnKey(event, -5, 0, 0);
+    if (event.altKey && event.key === "ArrowRight") return this.turnKey(event, 5, 0, 0);
+    if (event.altKey && event.key === "ArrowUp") return this.turnKey(event, 0, -5, 0);
+    if (event.altKey && event.key === "ArrowDown") return this.turnKey(event, 0, 5, 0);
+    if (event.key === "ArrowLeft") return this.moveKey(event, -8 * big, 0);
+    if (event.key === "ArrowRight") return this.moveKey(event, 8 * big, 0);
+    if (event.key === "ArrowUp") return this.moveKey(event, 0, -8 * big);
+    if (event.key === "ArrowDown") return this.moveKey(event, 0, 8 * big);
+    return false;
+  }
+
+  private moveKey(event: KeyboardEvent, dx: number, dy: number): boolean {
+    this.nudgeCraft(dx, dy);
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  }
+
+  private turnKey(event: KeyboardEvent, yaw: number, tilt: number, roll: number): boolean {
+    this.addAim(this.picked ?? 0, yaw, tilt, roll);
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  }
+
   private key(event: KeyboardEvent): void {
+    if (this.editKey(event)) return;
     if (this.driven) return;
     const step = MathUtils.degToRad(15);
     const moves: Record<string, () => void> = {
@@ -2799,9 +2963,14 @@ export class RocketViewer {
   }
 
   /** The wheel over the view zooms it, as does a pinch (Ctrl or Command and the wheel). A wheel that starts with the zoom already at its end, or a sideways swipe, leaves the page to scroll. */
-  /** A drag that starts on a craft throws that craft. Empty space still turns the picture. */
+  /** A drag that starts on a craft throws that craft, until one is chosen: then the same drag moves only that craft and the view stays still. */
   private grabCraft(event: PointerEvent): void {
-    if (!this.floating || event.button !== 0 || !event.isPrimary) return;
+    if (event.button !== 0) return;
+    if (this.picked !== null) {
+      this.holdPicked(event);
+      return;
+    }
+    if (!this.floating || !event.isPrimary) return;
     const craft = this.craftUnder(event);
     if (craft === null) {
       this.canvas.dataset.hit = "miss";
@@ -2812,25 +2981,59 @@ export class RocketViewer {
     const toss = this.tossOf(craft);
     toss.velocity.set(0, 0, 0);
     const now = performance.now();
-    this.grab = { craft, x: event.clientX, y: event.clientY, t: now, sx: event.clientX, sy: event.clientY, t0: now, burst: false };
+    this.grab = { craft, x: event.clientX, y: event.clientY, t: now, sx: event.clientX, sy: event.clientY, t0: now, burst: false, edit: false };
     this.canvas.dataset.hit = String(craft);
+    this.listenPull();
+    this.canvas.dataset.drift = "0";
+    this.touched();
+  }
+
+  /** While a craft is chosen, every press stays on that craft: the view does not take it. */
+  private holdPicked(event: PointerEvent): void {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    this.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    this.listenPull();
+    if (this.pointers.size >= 2) {
+      this.grab = null;
+      this.twistBase = this.twistNow();
+      this.twistMid = this.midNow();
+      return;
+    }
+    const craft = this.craftAtPoint(event.clientX, event.clientY);
+    this.canvas.dataset.hit = craft === null ? "miss" : String(craft);
+    const chosen = this.picked;
+    if (chosen === null || craft !== chosen) return;
+    this.tossOf(chosen).velocity.set(0, 0, 0);
+    const now = performance.now();
+    this.grab = { craft: chosen, x: event.clientX, y: event.clientY, t: now, sx: event.clientX, sy: event.clientY, t0: now, burst: false, edit: true };
+    this.canvas.dataset.drift = "0";
+    this.touched();
+  }
+
+  private listenPull(): void {
     window.addEventListener("pointermove", this.onPull);
     window.addEventListener("pointerup", this.onRelease);
     window.addEventListener("pointercancel", this.onRelease);
-    this.canvas.dataset.drift = "0";
-    this.touched();
   }
 
   private onPull = (event: PointerEvent): void => this.pullCraft(event);
 
   private onRelease = (event: PointerEvent): void => {
-    window.removeEventListener("pointermove", this.onPull);
-    window.removeEventListener("pointerup", this.onRelease);
-    window.removeEventListener("pointercancel", this.onRelease);
     this.releaseCraft(event);
   };
 
+  private onPickUp = (event: PointerEvent): void => {
+    if (this.press) this.pickSlot(event);
+  };
+
   private pullCraft(event: PointerEvent): void {
+    if (this.pointers.has(event.pointerId)) this.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (this.picked !== null && this.pointers.size >= 2) {
+      this.gestureTwo();
+      event.preventDefault();
+      return;
+    }
     const grab = this.grab;
     if (!grab || !event.isPrimary) return;
     const dx = event.clientX - grab.x;
@@ -2838,23 +3041,41 @@ export class RocketViewer {
     grab.x = event.clientX;
     grab.y = event.clientY;
     grab.t = performance.now();
-    if (!grab.burst && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
-      grab.burst = true;
-      const { right, up } = this.cameraAxes();
-      this.thrusters?.burst(right.multiplyScalar(dx).addScaledVector(up, -dy));
+    if (grab.edit && event.shiftKey) this.addAim(grab.craft, 0, -dy * 0.35, 0);
+    else if (grab.edit && event.altKey) this.addAim(grab.craft, dx * 0.35, 0, 0);
+    else if (grab.edit && (event.ctrlKey || event.metaKey)) this.addAim(grab.craft, 0, 0, dx * 0.35);
+    else {
+      if (!grab.burst && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+        grab.burst = true;
+        const { right, up } = this.cameraAxes();
+        this.thrusters?.burst(right.multiplyScalar(dx).addScaledVector(up, -dy));
+      }
+      this.shiftCraft(grab.craft, dx, dy);
+      this.wrapDrift();
+      this.applyDrift();
     }
-    this.shiftCraft(grab.craft, dx, dy);
-    this.wrapDrift();
-    this.applyDrift();
     this.canvas.dataset.moves = String(Number(this.canvas.dataset.moves ?? "0") + 1);
     this.canvas.dataset.thrown = this.tossOf(grab.craft).offset.length().toFixed(2);
     this.wake();
   }
 
   private releaseCraft(event: PointerEvent): void {
+    this.pointers.delete(event.pointerId);
+    if (this.pointers.size > 0) {
+      this.twistBase = this.twistNow();
+      this.twistMid = this.midNow();
+      return;
+    }
+    window.removeEventListener("pointermove", this.onPull);
+    window.removeEventListener("pointerup", this.onRelease);
+    window.removeEventListener("pointercancel", this.onRelease);
+    this.twistBase = null;
+    this.twistMid = null;
     const grab = this.grab;
     if (!grab) return;
     this.grab = null;
+    if (grab.edit) return;
+    if (Math.hypot(event.clientX - grab.sx, event.clientY - grab.sy) < 8) return;
     if (this.options.reducedMotion) return;
     const elapsed = Math.max(0.05, (performance.now() - grab.t0) / 1000);
     const step = this.metresPerPixel(grab.craft);
@@ -2889,6 +3110,9 @@ export class RocketViewer {
 
   private stopToss(): void {
     this.grab = null;
+    this.pointers.clear();
+    this.twistBase = null;
+    this.twistMid = null;
     window.removeEventListener("pointermove", this.onPull);
     window.removeEventListener("pointerup", this.onRelease);
     window.removeEventListener("pointercancel", this.onRelease);
@@ -2907,9 +3131,21 @@ export class RocketViewer {
     this.press = null;
     if (!press || event.button !== 0 || Math.hypot(event.clientX - press.x, event.clientY - press.y) > 8) return;
     const slot = this.slotUnder(event);
-    if (!slot) return;
-    this.canvas.dataset.slot = slot;
-    this.canvas.dispatchEvent(new CustomEvent("uchusen-slot", { detail: slot, bubbles: true }));
+    if (slot) {
+      this.canvas.dataset.slot = slot;
+      this.canvas.dispatchEvent(new CustomEvent("uchusen-slot", { detail: slot, bubbles: true }));
+    }
+    this.chooseCraft(event);
+  }
+
+  /** A short click chooses the craft under it. A short click on empty ground clears the choice. */
+  private chooseCraft(event: PointerEvent): void {
+    const craft = this.craftAtPoint(event.clientX, event.clientY);
+    if (craft === null) {
+      if (this.picked !== null) this.selectCraft(null);
+      return;
+    }
+    if (craft !== this.picked) this.selectCraft(craft);
   }
 
   /** The named part under the pointer, walking from the hit face up to the part's holder. */
@@ -2931,10 +3167,14 @@ export class RocketViewer {
 
   /** The craft whose picture the pointer is on. A line drawing has no face to hit, so the craft's box on screen is the target. The smallest box wins where they overlap. */
   private craftUnder(event: PointerEvent): number | null {
+    return this.craftAtPoint(event.clientX, event.clientY);
+  }
+
+  private craftAtPoint(clientX: number, clientY: number): number | null {
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) return null;
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     let best: { craft: number; area: number } | null = null;
     for (const box of this.craftBoxes()) {
       const screen = this.screenBox(box.min, box.max);
@@ -2996,6 +3236,93 @@ export class RocketViewer {
     this.tossOf(craft).offset.addScaledVector(right, dx * step).addScaledVector(up, -dy * step);
   }
 
+  private aimOf(craft: number): { yaw: number; tilt: number; roll: number } {
+    let aim = this.aim.get(craft);
+    if (!aim) {
+      aim = { yaw: 0, tilt: 0, roll: 0 };
+      this.aim.set(craft, aim);
+    }
+    return aim;
+  }
+
+  private addAim(craft: number, yaw: number, tilt: number, roll: number): void {
+    const aim = this.aimOf(craft);
+    aim.yaw += yaw;
+    aim.tilt += tilt;
+    aim.roll += roll;
+    this.applyDrift();
+    this.wake();
+  }
+
+  private writeCraft(): void {
+    const craft = this.picked;
+    if (craft === null) {
+      delete this.canvas.dataset.pose;
+      delete this.canvas.dataset.shift;
+      delete this.canvas.dataset.yaw;
+      delete this.canvas.dataset.tilt;
+      delete this.canvas.dataset.roll;
+      return;
+    }
+    const aim = this.aimOf(craft);
+    const off = this.toss.get(craft)?.offset;
+    this.canvas.dataset.pose = [off?.x ?? 0, off?.y ?? 0, off?.z ?? 0, aim.yaw, aim.tilt, aim.roll].map((n) => n.toFixed(2)).join(",");
+    this.canvas.dataset.shift = (off?.length() ?? 0).toFixed(2);
+    this.canvas.dataset.yaw = aim.yaw.toFixed(2);
+    this.canvas.dataset.tilt = aim.tilt.toFixed(2);
+    this.canvas.dataset.roll = aim.roll.toFixed(2);
+  }
+
+  private placeRing(): void {
+    const ring = this.ring;
+    if (!ring) return;
+    if (this.picked === null) {
+      ring.hidden = true;
+      return;
+    }
+    const box = this.craftBoxes().find((one) => one.craft === this.picked);
+    const screen = box ? this.screenBox(box.min, box.max) : null;
+    if (!screen) {
+      ring.hidden = true;
+      return;
+    }
+    ring.hidden = false;
+    ring.style.left = `${screen.minX}px`;
+    ring.style.top = `${screen.minY}px`;
+    ring.style.width = `${Math.max(8, screen.maxX - screen.minX)}px`;
+    ring.style.height = `${Math.max(8, screen.maxY - screen.minY)}px`;
+  }
+
+  private twistNow(): number | null {
+    const pts = [...this.pointers.values()];
+    if (pts.length < 2) return null;
+    return Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x);
+  }
+
+  private midNow(): { x: number; y: number } | null {
+    const pts = [...this.pointers.values()];
+    if (pts.length < 2) return null;
+    return { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+  }
+
+  /** Two fingers: a twist rolls, a sideways slide turns, and an up or down slide tilts. */
+  private gestureTwo(): void {
+    if (this.picked === null) return;
+    const ang = this.twistNow();
+    const mid = this.midNow();
+    if (ang === null || mid === null || this.twistBase === null || this.twistMid === null) return;
+    let d = ang - this.twistBase;
+    if (d > Math.PI) d -= Math.PI * 2;
+    if (d < -Math.PI) d += Math.PI * 2;
+    const dx = mid.x - this.twistMid.x;
+    const dy = mid.y - this.twistMid.y;
+    this.twistBase = ang;
+    this.twistMid = mid;
+    if (Math.abs(d) > 0.02) this.addAim(this.picked, 0, 0, (d * 180) / Math.PI);
+    else if (Math.abs(dx) >= Math.abs(dy)) this.addAim(this.picked, dx * 0.35, 0, 0);
+    else this.addAim(this.picked, 0, -dy * 0.35, 0);
+  }
+
   private drifting(): boolean {
     if (!this.floating || this.options.reducedMotion || this.clockNow || this.pose) return false;
     for (const toss of this.toss.values()) if (toss.velocity.lengthSq() > 1e-6) return true;
@@ -3051,16 +3378,28 @@ export class RocketViewer {
 
   private applyDrift(): void {
     const places = this.built?.placesOf(this.show) ?? [];
+    const crafts = new Set<number>([...this.toss.keys(), ...this.aim.keys()]);
     for (const part of this.parts) {
-      const toss = this.toss.get(part.craft);
-      if (!toss) continue;
+      if (!crafts.has(part.craft)) continue;
       const place = places.find((one) => one.slot === part.slot);
       if (!place) continue;
-      part.holder.position.set(place.at[0] + toss.offset.x, place.at[1] + toss.offset.y, place.at[2] + toss.offset.z);
+      const off = this.toss.get(part.craft)?.offset;
+      part.holder.position.set(place.at[0] + (off?.x ?? 0), place.at[1] + (off?.y ?? 0), place.at[2] + (off?.z ?? 0));
+      const aim = this.aim.get(part.craft);
+      part.holder.rotation.order = "YXZ";
+      if (aim) part.holder.rotation.set((aim.tilt * Math.PI) / 180, (aim.yaw * Math.PI) / 180, (aim.roll * Math.PI) / 180);
+      else part.holder.rotation.set(0, 0, 0);
     }
+    this.writeCraft();
+    this.placeRing();
   }
 
   private onWheel = (event: WheelEvent): void => {
+    if (this.picked !== null) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
     if (this.driven) return;
     const pinch = event.ctrlKey || event.metaKey;
     if (!pinch && (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY))) return;

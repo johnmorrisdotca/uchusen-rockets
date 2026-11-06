@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Choose a craft** (MODULES-476): a click chooses a craft and opens its properties in the shared card (name, length, variant, look, spin, place and angle). A drag or the arrow keys move and turn only that craft, Shift and a drag tilts it, and a twist rolls it. A click on empty ground, or Escape, clears the choice. Rockets and Compare use the same card.
 - **Craft line fixes** (MODULES-474): on a phone the count and Add a craft get their own line so the craft line has the full width; the page bar marks only the open page; Fit frames a row of craft whole, with the ground under their feet.
 - **The craft line on a phone** (MODULES-474): the count and Add a craft sit on their own line, so the scrolling line is the width of the phone and two chips show. Only the open page is marked in the page bar. A row of craft is framed with the ground under their feet, so none is cut off at the bottom of the stage.
 

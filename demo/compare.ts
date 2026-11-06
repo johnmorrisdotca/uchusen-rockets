@@ -8,6 +8,7 @@ import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant } from "./sizes.ts";
 import { applyTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
 import { mountCamera } from "./compare-camera.ts";
+import { mountCraftSelect } from "./craftSelect.ts";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
 import { chip, fillLooks } from "./chip.ts";
@@ -555,6 +556,34 @@ mountCamera({
   say,
   names: () => shown().map((craft) => variantFor(craft).name),
   editing: () => state.editing,
+});
+mountCraftSelect({
+  hero,
+  bar,
+  address,
+  say,
+  facts(craft) {
+    const one = shown()[craft + 1];
+    if (!one) return null;
+    const found = variantFor(one);
+    const height = isFleetVariant(found) ? Math.round(fleetSize(found).length) : found.facts.height.value;
+    return {
+      name: found.name,
+      length: typeof height === "number" ? `${height} m` : "",
+      variant: found.id,
+      look: state.look,
+      variants: ROCKETS[one.rocket].variants.map((item) => ({ id: item.id, name: item.name })),
+      looks: LOOK_NAMES.map((id) => ({ id, name: say(`look_${id}`) })),
+    };
+  },
+  apply(craft, patch) {
+    const one = shown()[craft + 1];
+    const index = one ? state.craft.indexOf(one) : -1;
+    if (!one || index < 0) return;
+    if (patch.variant) state.craft[index] = { rocket: one.rocket, variant: patch.variant };
+    if (patch.look) state.look = patch.look as LookName;
+    renderAll();
+  },
 });
 phone.addEventListener("change", renderAll);
 document.addEventListener("kazoku-languagechange", () => queueMicrotask(renderAll));

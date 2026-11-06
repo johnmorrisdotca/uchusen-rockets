@@ -23,6 +23,7 @@ import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
 import { chip, fillLooks } from "./chip.ts";
+import { mountCraftSelect } from "./craftSelect.ts";
 import { hasThrusters } from "../src/thrusters.ts";
 import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
 import { separationOf } from "../src/separation.ts";
@@ -80,6 +81,49 @@ bar.addEventListener("kazoku-viewchange", (event) => {
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
 const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look", spin: "slow" } });
+const shownCraft = (): { rocket: string; variant: string }[] => {
+  const rocket = hero.getAttribute("rocket") ?? "starship";
+  const variant = hero.getAttribute("variant") ?? "v3";
+  const beside = hero.getAttribute("beside");
+  const rest = !beside || beside === "off" ? [] : beside.split(",").flatMap((part) => {
+    const [id, which] = part.split(":");
+    return id && which ? [{ rocket: id, variant: which }] : [];
+  });
+  return [{ rocket, variant }, ...rest];
+};
+mountCraftSelect({
+  hero,
+  bar,
+  address,
+  say,
+  facts(craft) {
+    const one = shownCraft()[craft + 1];
+    const found = one ? variantOf(one.rocket, one.variant) : null;
+    if (!one || !found) return null;
+    const height = isFleetVariant(found) ? Math.round(fleetSize(found).length) : found.facts.height.value;
+    return {
+      name: found.name,
+      length: typeof height === "number" ? `${height} m` : "",
+      variant: found.id,
+      look: hero.getAttribute("look") ?? "line",
+      variants: ROCKETS[one.rocket].variants.map((item) => ({ id: item.id, name: item.name })),
+      looks: LOOK_NAMES.map((id) => ({ id, name: say(`look_${id}`) })),
+    };
+  },
+  apply(craft, patch) {
+    if (patch.look) hero.setAttribute("look", patch.look);
+    if (!patch.variant) return;
+    const list = shownCraft();
+    const one = list[craft + 1];
+    if (!one) return;
+    if (craft === -1) hero.setAttribute("variant", patch.variant);
+    else {
+      one.variant = patch.variant;
+      const beside = list.slice(1).map((item) => `${item.rocket}:${item.variant}`).join(",");
+      hero.setAttribute("beside", beside || "off");
+    }
+  },
+});
 setTurnPace(paceNamed(address.get("spin")));
 const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
 turnButtons.value = paceStep(paceNamed(address.get("spin")));

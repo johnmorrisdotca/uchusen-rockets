@@ -276,6 +276,41 @@ export class UchusenRocket extends HTMLBase {
     this.place();
   }
 
+  /** The craft under a page point, or null. -1 is the rocket itself. */
+  craftAt(clientX: number, clientY: number): number | null {
+    return this.viewer?.craftAt(clientX, clientY) ?? null;
+  }
+
+  /** The craft a click chose, or null. */
+  selectedCraft(): number | null {
+    return this.viewer?.selectedCraft() ?? null;
+  }
+
+  /** Chooses a craft, or clears the choice. */
+  selectCraft(craft: number | null): void {
+    this.viewer?.selectCraft(craft);
+  }
+
+  /** Puts a craft back where the address left it, and chooses it. */
+  restoreCraft(craft: number, pose: { x: number; y: number; z: number; yaw: number; tilt: number; roll: number }, spin: "off" | "long" | "upright"): void {
+    this.viewer?.restoreCraft(craft, pose, spin);
+  }
+
+  /** Moves the chosen craft by a page distance, in pixels. */
+  nudgeCraft(dx: number, dy: number): void {
+    this.viewer?.nudgeCraft(dx, dy);
+  }
+
+  /** Turns the chosen craft by degrees. */
+  turnCraft(yaw: number, tilt: number, roll: number): void {
+    this.viewer?.turnCraft(yaw, tilt, roll);
+  }
+
+  /** Off, long axis, or upright. */
+  setCraftSpin(mode: "off" | "long" | "upright"): void {
+    this.viewer?.setCraftSpin(mode);
+  }
+
   /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. It is drawn at most about 20 times a second and never while out of sight: it is made again when it comes back. */
   private place(): void {
     if (this.stateNow === "3d" && this.viewer) return;
