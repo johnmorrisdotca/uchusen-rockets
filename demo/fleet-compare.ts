@@ -131,13 +131,17 @@ const draw = (): void => {
   };
   const variant = (id: string) => variantOf(id, ROCKETS[id].defaultVariant);
   byId("cmp-rows").replaceChildren(
-    sizeRow(say("length"), "length", (id) => { const one = variant(id); return one ? metres(fleetSize(one).length) : ""; }),
+    sizeRow(say("length"), "length", (id) => {
+      const fromRecord = recorded(id, ["Length"]);
+      const one = variant(id);
+      return fromRecord || (one ? metres(fleetSize(one).length) : "");
+    }),
     sizeRow(say("beam"), "beam", (id) => { const one = variant(id); return one ? metres(fleetSize(one).beam) : ""; }),
     sizeRow(say("heightStowed"), "height", (id) => { const one = variant(id); return one ? metres(fleetSize(one).height) : ""; }),
     ...RECORD.map((names) => {
       const label = names.find((name) => ships.some((id) => specOf(id).some((row) => row[0] === name))) ?? names[0];
       const key = names[0].toLowerCase().replaceAll(" ", "-");
-      return sizeRow(label, key, (id) => recorded(id, names));
+      return sizeRow(label, key, (id) => recorded(id, names) || say("recordNotGiven"));
     }),
   );
 };

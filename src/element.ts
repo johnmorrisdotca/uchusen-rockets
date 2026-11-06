@@ -953,7 +953,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose", "wide"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -988,6 +988,13 @@ export class UchusenLineup extends HTMLBase {
     template.innerHTML = svg;
     const node = template.content.firstElementChild;
     if (!node) return;
+    // wide: the picture uses the width of its frame and grows taller than the frame, which scrolls. Left out, the picture keeps the pixel size it was drawn at.
+    if (this.hasAttribute("wide") && node instanceof SVGElement) {
+      node.setAttribute("width", "100%");
+      node.removeAttribute("height");
+      node.style.width = "100%";
+      node.style.height = "auto";
+    }
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);
     this.dataset.count = String(shown.length);
