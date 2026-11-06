@@ -10,16 +10,17 @@ const SPOKE_END = 0.56;
 /** The rim starts after the spokes, and it has closed by this fraction of the step. Fit-out (air, decks, furnishings, plants) comes after the shell has closed. */
 const RIM_FROM = 0.2;
 const RIM_DONE = 0.8;
-const PLANTS = new Set(["plant", "leaf", "soil", "flower", "shrub", "lawn", "lawn-dark", "crop-green", "crop-gold", "water"]);
-const FURNISH = new Set(["wood", "fabric"]);
-const DECK = new Set(["concrete"]);
+/** The shell: frames, skin, glass and the solar skirt. Everything else waits. */
+const SHELL = new Set(["hull-white", "hull-grey", "hull-grey-dark", "glass-clear", "glass", "solar", "steel", "window"]);
+const DECK = new Set(["concrete", "deck"]);
+const PLANTS = new Set(["plant", "leaf", "soil", "flower", "shrub", "lawn", "lawn-dark", "meadow", "bark", "ground", "crop-green", "crop-gold", "water", "water-clear"]);
 
-/** Plants and soil are last, furnishings before them, decks after the ring is pressurised. Everything else is structure and rises with the shell. */
+/** Bare frames until the ring is pressurised, then decks, then furnishings, and plants last. A colour that is not the shell waits with the furnishings. */
 function due(name: string, grown: number): boolean {
+  if (SHELL.has(name)) return true;
   if (PLANTS.has(name)) return grown >= 0.98;
-  if (FURNISH.has(name)) return grown >= 0.96;
   if (DECK.has(name)) return grown >= 0.93;
-  return true;
+  return grown >= 0.96;
 }
 
 /** The build bar's state while a ring is past its shell and not yet furnished. */

@@ -140,18 +140,27 @@ test("a half-built ring is the front half of the circle, and the glass between t
 test("a ring piece is cut where it stands, so a moved mesh is not kept whole", () => {
   const holder = new Group();
   const ahead = new Mesh(new BoxGeometry(1, 1, 1));
+  ahead.name = "hull-grey";
   ahead.position.set(0, 0, 40);
   const behind = new Mesh(new BoxGeometry(1, 1, 1));
+  behind.name = "hull-grey";
   behind.position.set(45 * Math.sin((5 * Math.PI) / 6), 0, 45 * Math.cos((5 * Math.PI) / 6));
   const collar = new Mesh(new BoxGeometry(1, 1, 1));
+  collar.name = "hull-grey";
   collar.position.set(16, 0, 0);
   const across = new Mesh(new BoxGeometry(2, 2, 80));
+  across.name = "hull-grey";
   across.position.set(28, 0, 0);
   const spoke = new Mesh(new BoxGeometry(1, 1, 40));
+  spoke.name = "hull-grey";
   spoke.position.set(0, 0, 30);
   const hall = new Mesh(new BoxGeometry(8, 8, 4));
+  hall.name = "hull-grey";
   hall.position.set(0, 0, 60);
-  holder.add(ahead, behind, collar, across, spoke, hall);
+  const room = new Mesh(new BoxGeometry(1, 1, 1));
+  room.name = "hull-orange";
+  room.position.set(0, 0, 40);
+  holder.add(ahead, behind, collar, across, spoke, hall, room);
   const crop = new Mesh(new BoxGeometry(1, 1, 1));
   crop.name = "plant";
   crop.position.set(0, 0, 40);
@@ -163,11 +172,15 @@ test("a ring piece is cut where it stands, so a moved mesh is not kept whole", (
   growPart(holder, 0.5, true);
   assert.ok((hall.geometry.getIndex()?.count ?? 0) > 0);
   assert.equal(crop.visible, false);
+  assert.equal(room.visible, false);
   assert.ok((ahead.geometry.getIndex()?.count ?? 0) > 0);
   assert.equal(behind.geometry.getIndex()?.count ?? 0, 0);
   assert.ok((collar.geometry.getIndex()?.count ?? 0) > 0);
   // a triangle that reaches the unbuilt half is left out, so the box is not kept whole
   assert.ok((across.geometry.getIndex()?.count ?? 0) < 36);
+  growPart(holder, 0.97, true);
+  assert.equal(room.visible, true);
+  assert.equal(crop.visible, false);
   growPart(holder, 0.99, true);
   assert.equal(crop.visible, true);
   growPart(holder, 1, true);
