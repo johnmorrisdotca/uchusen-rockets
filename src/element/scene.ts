@@ -29,6 +29,7 @@ import {
   PlaneGeometry,
   PCFSoftShadowMap,
   PMREMGenerator,
+  Raycaster,
   RepeatWrapping,
   Scene,
   ShaderMaterial,
@@ -316,9 +317,15 @@ export class RocketViewer {
   /** Where a thrown craft has got to, and how fast it is still going, in world metres. */
   private toss = new Map<number, { offset: Vector3; velocity: Vector3 }>();
   private grab: { craft: number; x: number; y: number; t: number; sx: number; sy: number; t0: number } | null = null;
+  private press: { x: number; y: number } | null = null;
+  private readonly slotRay = new Raycaster();
   private swarm: SwarmRig | null = null;
   private progressAt: number | null = null;
   private progressFramed = false;
+  /** A module that has left its mount, and how far along that separation is, from 0 to 1. */
+  private leaveSlot: string | null = null;
+  private leaveAt = 0;
+  private leaveFramed = false;
   private progressSteps: readonly { slot: string; start: number; days: number }[] | null = null;
   private focusing = false;
   private focusNow: ViewerFocus | null = null;
@@ -396,12 +403,16 @@ export class RocketViewer {
       "pointerdown",
       (event) => {
         this.canvas.focus({ preventScroll: true });
+        this.press = { x: event.clientX, y: event.clientY };
         this.grabCraft(event);
       },
       true,
     );
     this.canvas.addEventListener("pointermove", (event) => this.pullCraft(event));
-    this.canvas.addEventListener("pointerup", (event) => this.releaseCraft(event));
+    this.canvas.addEventListener("pointerup", (event) => {
+      this.releaseCraft(event);
+      this.pickSlot(event);
+    });
     this.canvas.addEventListener("pointercancel", (event) => this.releaseCraft(event));
     this.canvas.addEventListener("dblclick", () => {
       if (!this.driven) this.setAngle(this.homeAngle, true);
@@ -1547,6 +1558,43 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Slides `slot` clear of the ship, up to 180 m, and looks at it. `null` puts it back. A build in progress keeps the parts where the build put them. */
+  setLeave(slot: string | null, at: number): void {
+    this.leaveSlot = slot;
+    this.leaveAt = slot ? Math.min(1, Math.max(0, at)) : 0;
+    if (this.built && this.parts.length) this.applyLeave();
+    this.wake();
+  }
+
+  private applyLeave(): void {
+    if (this.progressAt !== null || this.clockNow) return;
+    const built = this.built;
+    if (!built) return;
+    const slot = this.leaveSlot;
+    const places = built.placesOf(this.show);
+    const part = slot ? this.parts.find((one) => one.slot === slot && !one.beside) : undefined;
+    const place = part ? places.find((one) => one.slot === part.slot) : undefined;
+    if (!part || !place || this.leaveAt <= 0) {
+      if (part && place) part.holder.position.set(place.at[0], place.at[1], place.at[2]);
+      delete this.canvas.dataset.leave;
+      delete this.canvas.dataset.leaveAt;
+      if (this.leaveFramed) {
+        this.leaveFramed = false;
+        this.setAngle(this.homeAngle, false);
+      }
+      return;
+    }
+    const away = this.leaveAt * 180;
+    part.holder.position.set(place.at[0] + away, place.at[1], place.at[2]);
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    this.controls.target.set(place.at[0] + away, place.at[1], place.at[2]);
+    if (offset.lengthSq() > 0) this.camera.position.copy(this.controls.target).add(offset);
+    this.controls.update();
+    this.canvas.dataset.leave = slot ?? "";
+    this.canvas.dataset.leaveAt = this.leaveAt.toFixed(2);
+    this.leaveFramed = true;
+  }
+
   /** Shows the build at `at`, or the finished ship when `at` is null. Slots not yet begun are hidden. A slot being built is on its way from the stack, with the drones around it. */
   setProgress(at: number | null, steps: readonly { slot: string; start: number; days: number }[] | null): void {
     this.progressAt = at;
@@ -1577,6 +1625,7 @@ export class RocketViewer {
       delete this.canvas.dataset.swarmNear;
       if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
+      this.applyLeave();
       this.wake();
       return;
     }
@@ -2260,6 +2309,34 @@ export class RocketViewer {
       const place = places.find((one) => one.slot === part.slot);
       if (place) part.holder.position.set(place.at[0], place.at[1], place.at[2]);
     }
+  }
+
+  /** A short click on a part names that part's slot. A drag still throws a craft or turns the view. */
+  private pickSlot(event: PointerEvent): void {
+    const press = this.press;
+    this.press = null;
+    if (!press || event.button !== 0 || Math.hypot(event.clientX - press.x, event.clientY - press.y) > 8) return;
+    const slot = this.slotUnder(event);
+    if (!slot) return;
+    this.canvas.dataset.slot = slot;
+    this.canvas.dispatchEvent(new CustomEvent("uchusen-slot", { detail: slot, bubbles: true }));
+  }
+
+  /** The named part under the pointer, walking from the hit face up to the part's holder. */
+  private slotUnder(event: PointerEvent): string | null {
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return null;
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.slotRay.setFromCamera(new Vector2(x, y), this.camera);
+    for (const hit of this.slotRay.intersectObject(this.root, true)) {
+      let node: Object3D | null = hit.object;
+      while (node) {
+        if (this.parts.some((part) => part.slot === node?.name)) return node.name;
+        node = node.parent;
+      }
+    }
+    return null;
   }
 
   /** The craft whose picture the pointer is on. A line drawing has no face to hit, so the craft's box on screen is the target. The smallest box wins where they overlap. */
