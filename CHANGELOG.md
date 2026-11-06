@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Docked craft** (MODULES-438): a ship with docking ports has a Docked craft tab in the panel, where each port takes a craft or None, and the choice stays in the address.
 - **Ship lights** (MODULES-449): the SPX ships carry real lights: red and green running lights, white strobes, lit windows and a lit registry plate, drawn as soft points of light. A Lights choice in the panel's Lights tab picks Off, Running only or All; daylight is the default.
 - **Three axes** (MODULES-468): the camera follows the view controls' roll, so Angle, Tilt and Roll all move the rocket. The family's view controls are 0.17.0, which offers the three axes and a tumble. The journey's playback speeds are the family's speed buttons.
 - **True-scale ghost** (MODULES-460): the fading outline also clears on a two-second timer, so a frame loop that does not come back still ends the cycle. The WebKit skip on that test is gone.
