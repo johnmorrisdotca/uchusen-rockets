@@ -76,6 +76,8 @@ export class UchusenBuild extends HTMLBase {
   onMove: ((at: number) => void) | null = null;
   /** Called when Repeat is pressed. The page keeps it in the address. */
   onRepeat: ((on: boolean) => void) | null = null;
+  /** A short state after the day line, such as the ring being sealed. Empty shows nothing. */
+  private stageText = "";
   private order: readonly PlayStep[] | null = null;
   private place = 0;
   /** Story seconds in one real second. 1 is real time. 86400 is one story day a real second. */
@@ -269,7 +271,15 @@ export class UchusenBuild extends HTMLBase {
         parts.stills.append(button);
       }
     }
-    parts.now.textContent = `${dayText}, ${this.fill("done", { done: frame.done.length, total: order.length })}`;
+    const doneText = `${dayText}, ${this.fill("done", { done: frame.done.length, total: order.length })}`;
+    parts.now.textContent = this.stageText ? `${doneText}, ${this.stageText}` : doneText;
+  }
+
+  /** The ring's state, already in the reader's language. Set by the page from the view. */
+  set stage(text: string) {
+    if (text === this.stageText) return;
+    this.stageText = text;
+    if (this.parts) this.draw();
   }
 
   /** Whole days at a day a second or faster. Slower rates show the time within the day, so 1× is seen to move. */

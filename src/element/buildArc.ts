@@ -7,9 +7,28 @@ const HUB_M = 22;
 const SPOKE_EVERY = Math.PI / 3;
 const SPOKE_HALF_M = 2.4;
 const SPOKE_END = 0.56;
-/** The rim starts after the spokes, and it has closed by this fraction of the step. */
+/** The rim starts after the spokes, and it has closed by this fraction of the step. Fit-out (air, decks, furnishings, plants) comes after the shell has closed. */
 const RIM_FROM = 0.2;
 const RIM_DONE = 0.8;
+const PLANTS = new Set(["plant", "leaf", "soil", "flower", "shrub", "lawn", "lawn-dark", "crop-green", "crop-gold", "water"]);
+const FURNISH = new Set(["wood", "fabric"]);
+const DECK = new Set(["concrete"]);
+
+/** Plants and soil are last, furnishings before them, decks after the ring is pressurised. Everything else is structure and rises with the shell. */
+function due(name: string, grown: number): boolean {
+  if (PLANTS.has(name)) return grown >= 0.98;
+  if (FURNISH.has(name)) return grown >= 0.96;
+  if (DECK.has(name)) return grown >= 0.93;
+  return true;
+}
+
+/** The build bar's state while a ring is past its shell and not yet furnished. */
+export function fitoutOf(grown: number): "" | "sealed" | "air" | "pressure" {
+  if (grown >= 0.9 && grown < 0.93) return "pressure";
+  if (grown >= 0.84 && grown < 0.9) return "air";
+  if (grown >= 0.8 && grown < 0.84) return "sealed";
+  return "";
+}
 
 /** The spoke a point stands on, or null when it is out in the tube. The angle is the spoke's, so two ends of one lift match. */
 function spokeOf(x: number, z: number): number | null {
@@ -94,7 +113,7 @@ function majorOf(holder: Group): number {
   intoHolder.copy(holder.matrixWorld).invert();
   let major = 1;
   holder.traverse((child) => {
-    if (!(child instanceof Mesh)) return;
+    if (!(child instanceof Mesh) || child.name === "fit-tank") return;
     const position = (sourceOf.get(child) ?? child.geometry).getAttribute("position");
     if (!position) return;
     meshToHolder.copy(intoHolder).multiply(child.matrixWorld);
@@ -132,6 +151,7 @@ export function growPart(holder: Group, grown: number, ring: boolean): void {
   if (!ring || grown >= 0.995) {
     holder.scale.setScalar(ring ? 1 : Math.max(0.05, grown));
     clearArc(holder);
+    if (ring) holder.traverse((child) => { if (child instanceof Mesh && child.name !== "outline") child.visible = true; });
     return;
   }
   holder.scale.setScalar(1);
@@ -142,7 +162,12 @@ export function growPart(holder: Group, grown: number, ring: boolean): void {
   let kept = 0;
   let full = 0;
   holder.traverse((child) => {
-    if (!(child instanceof Mesh)) return;
+    if (!(child instanceof Mesh) || child.name === "fit-tank") return;
+    if (child.name !== "outline" && !due(child.name, grown)) {
+      child.visible = false;
+      return;
+    }
+    if (child.name !== "outline") child.visible = true;
     const source = sourceOf.get(child) ?? child.geometry;
     full += source.getIndex()?.count ?? source.getAttribute("position")?.count ?? 0;
     if (child.userData.arcBucket !== bucket) {

@@ -50,7 +50,8 @@ import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { assemblyOf, playFrame } from "../buildPlay.ts";
-import { clearArc, growPart } from "./buildArc.ts";
+import { clearArc, fitoutOf, growPart } from "./buildArc.ts";
+import { fitTanks } from "./fitOut.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
 import { SwarmRig } from "./swarm.ts";
@@ -1345,6 +1346,7 @@ export class RocketViewer {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        fitTanks(part.holder, 0);
         for (const lines of part.feature) lines.visible = true;
         part.holder.visible = place.shown;
       }
@@ -1354,6 +1356,7 @@ export class RocketViewer {
       delete this.canvas.dataset.built;
       delete this.canvas.dataset.showing;
       delete this.canvas.dataset.weld;
+      delete this.canvas.dataset.fitout;
       delete this.canvas.dataset.swarmNear;
       if (this.progressFramed) this.setAngle(this.homeAngle, false);
       this.progressFramed = false;
@@ -1365,6 +1368,7 @@ export class RocketViewer {
     if (shown.length === 0) return;
     const dock: [number, number, number] = [Math.max(...shown.map((place) => place.at[0])) + 40, shown.reduce((sum, place) => sum + place.at[1], 0) / shown.length, 0];
     const slotAt = new Map(shown.map((place) => [place.slot, place.at] as const));
+    const fitout: { grown: number; stage: string; slot: string }[] = [];
     for (const part of this.parts) {
       if (part.beside) continue;
       const place = places.find((one) => one.slot === part.slot);
@@ -1379,6 +1383,7 @@ export class RocketViewer {
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        fitTanks(part.holder, 0);
         for (const lines of part.feature) lines.visible = true;
         for (const outline of part.outlines) outline.visible = this.look !== "painted";
         part.holder.visible = place.shown;
@@ -1386,6 +1391,11 @@ export class RocketViewer {
         // a section grows where it belongs; a ring opens as an arc, with no wireframe of the part still to come
         part.holder.position.set(place.at[0], place.at[1], place.at[2]);
         growPart(part.holder, fit.grown, ring);
+        if (ring) {
+          fitTanks(part.holder, fit.grown);
+          const stage = fitoutOf(fit.grown);
+          if (stage) fitout.push({ grown: fit.grown, stage, slot: step.slot });
+        }
         const openRing = ring && fit.grown < 0.995;
         for (const lines of [...part.feature, ...part.weld]) lines.visible = !openRing;
         for (const outline of part.outlines) outline.visible = !openRing && this.look !== "painted";
@@ -1393,6 +1403,7 @@ export class RocketViewer {
       } else {
         part.holder.scale.setScalar(1);
         clearArc(part.holder);
+        fitTanks(part.holder, 0);
         for (const lines of part.feature) lines.visible = true;
         for (const outline of part.outlines) outline.visible = this.look !== "painted";
         part.holder.visible = false;
@@ -1438,6 +1449,10 @@ export class RocketViewer {
     else delete this.canvas.dataset.weld;
     this.canvas.dataset.swarm = String(count);
     this.canvas.dataset.going = frame.going.join(" ");
+    if (fitout.length > 0) {
+      const lead = fitout.reduce((best, one) => (one.grown > best.grown ? one : best));
+      this.canvas.dataset.fitout = [lead.stage, ...fitout.map((one) => `${one.slot}:${one.stage}`)].join(" ");
+    } else delete this.canvas.dataset.fitout;
     this.canvas.dataset.arc = this.parts
       .filter((part) => part.holder.visible && (part.slot.includes("ring") || part.slot.includes("wheel")))
       .map((part) => `${part.slot}:${String(part.holder.userData.arcStat ?? "whole")}`)
