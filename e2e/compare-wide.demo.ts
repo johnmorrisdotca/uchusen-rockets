@@ -238,11 +238,17 @@ test("on a phone the craft line is one row that scrolls", async ({ page }, info)
   const scrolling = await row.evaluate((node) => {
     const parent = node.parentElement;
     const mask = parent ? getComputedStyle(parent).maskImage : "none";
-    return { over: node.scrollWidth > node.clientWidth + 1, mask, wrap: getComputedStyle(node).flexWrap };
+    const view = node.getBoundingClientRect();
+    const seen = [...node.children].filter((child) => {
+      const box = child.getBoundingClientRect();
+      return Math.min(box.right, view.right) - Math.max(box.left, view.left) >= 40;
+    }).length;
+    return { over: node.scrollWidth > node.clientWidth + 1, mask, wrap: getComputedStyle(node).flexWrap, seen };
   });
   expect(scrolling.wrap).toBe("nowrap");
   expect(scrolling.over).toBe(true);
   expect(scrolling.mask).not.toBe("none");
+  expect(scrolling.seen).toBeGreaterThanOrEqual(2);
 });
 
 test("past the device's budget, adding says why", async ({ page }, info) => {

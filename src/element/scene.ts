@@ -1293,10 +1293,13 @@ export class RocketViewer {
       return { min, max };
     }
     const box = this.litBounds();
-    if (this.progressAt === null) return box;
-    const longest = Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]);
+    // craft standing beside one another need the ground under their feet in the picture, or the short ones are cut off at the bottom of a wide stage
+    const ground = this.built.beside.length > 0 ? Math.max(4, (box.max[1] - box.min[1]) * 0.16) : 0;
+    const held = ground === 0 ? box : { min: [box.min[0], box.min[1] - ground, box.min[2]] as Vec3, max: box.max };
+    if (this.progressAt === null) return held;
+    const longest = Math.max(held.max[0] - held.min[0], held.max[1] - held.min[1], held.max[2] - held.min[2]);
     const pad = Math.max(6, longest * 0.06);
-    return { min: [box.min[0] - pad, box.min[1] - pad * 0.25, box.min[2] - pad] as Vec3, max: [box.max[0] + pad, box.max[1] + pad * 0.2, box.max[2] + pad] as Vec3 };
+    return { min: [held.min[0] - pad, held.min[1] - pad * 0.25, held.min[2] - pad] as Vec3, max: [held.max[0] + pad, held.max[1] + pad * 0.2, held.max[2] + pad] as Vec3 };
   }
 
   private flightParts() {
