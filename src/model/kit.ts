@@ -91,6 +91,7 @@ export function moved(pieces: readonly Piece[], x: number, z: number, turn = 0):
     return [a + x, b, d + z];
   };
   return pieces.map((piece): Piece => {
+    if (piece.kind === "instances") return { ...piece, poses: piece.poses.map((pose) => ({ at: at(pose.at), yaw: (pose.yaw ?? 0) + turn })) };
     if (piece.kind === "plate") return { ...piece, frame: { o: at(piece.frame.o), u: spin(piece.frame.u), v: spin(piece.frame.v), w: spin(piece.frame.w) } };
     if (piece.kind === "lines") return { ...piece, paths: piece.paths.map((path) => path.map(at)) };
     const [a0, d0] = piece.at ?? [0, 0];

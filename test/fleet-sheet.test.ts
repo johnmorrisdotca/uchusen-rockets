@@ -165,6 +165,7 @@ test("system insets: reactor core, navigation and sensors, life support and dock
   const { INSETS, PART_ENTRIES, ROCKETS } = await import("../src/index.ts");
   const { build } = await import("../src/build/index.ts");
   const { meshOf, boundsOf } = await import("../src/model/pieces.ts");
+  const { expandInstances } = await import("../src/model/instances.ts");
   assert.deepEqual(Object.keys(INSETS).sort(), ["docking-port", "life-support", "nav-sensors", "reactor-core"]);
   for (const inset of Object.values(INSETS)) {
     assert.ok(inset.parts.length === 5 || inset.parts.length === 6, inset.id);
@@ -176,7 +177,7 @@ test("system insets: reactor core, navigation and sensors, life support and dock
       assert.ok(entry.record.strapOn, "placed, not stacked");
       const { min, max } = boundsOf(meshOf(one.pieces()));
       assert.ok(max[1] - min[1] > 0.2 && Math.max(max[0] - min[0], max[2] - min[2]) <= Math.max(one.size[0], one.size[2]) + 1.5, `${inset.id} ${one.n}: ${max[0] - min[0]} x ${max[1] - min[1]}`);
-      assert.ok(one.pieces().length >= 4, `${inset.id} ${one.n} has detail`);
+      assert.ok(expandInstances(one.pieces()).length >= 4, `${inset.id} ${one.n} has detail`);
     }
     const built = build({ rocket: "fleet-insets", variant: inset.id });
     assert.equal(built.parts.length, inset.parts.length);

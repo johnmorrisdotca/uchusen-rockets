@@ -22,6 +22,7 @@ import {
   Matrix4,
   type Material,
   Mesh,
+  InstancedMesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
   Points,
@@ -631,7 +632,10 @@ export class RocketViewer {
       this.takeMeshes(source, code, view);
       for (const node of source.children.slice(1)) {
         const axis = node.userData.axis as number[] | undefined;
-        if (!axis) continue;
+        if (!axis) {
+          this.takeMeshes(node, code, view);
+          continue;
+        }
         const group = new Group();
         group.name = node.name;
         group.position.copy(node.position);
@@ -770,6 +774,18 @@ export class RocketViewer {
           continue;
         }
         if (name === "light-pool") stampPoolUv(node.geometry);
+        if (node instanceof InstancedMesh) {
+          const mesh = new InstancedMesh(node.geometry, undefined, node.count);
+          mesh.instanceMatrix.copy(node.instanceMatrix);
+          mesh.instanceMatrix.needsUpdate = true;
+          mesh.name = name;
+          mesh.frustumCulled = false;
+          mesh.castShadow = this.shadows && !(name in MATERIALS && "opacity" in MATERIALS[name as MaterialName]);
+          mesh.receiveShadow = this.shadows;
+          carrier.add(mesh);
+          view.faces.push({ mesh, name, hasUv: Boolean(node.geometry.getAttribute("uv")) });
+          continue;
+        }
         const mesh = new Mesh(node.geometry);
         mesh.name = name;
         if (name === "light-pool") mesh.renderOrder = 3;
@@ -2101,6 +2117,8 @@ export class RocketViewer {
   /** A model that lost the race to a newer one. It never joins the scene, so the ordinary cleanup never sees it. */
   private dropParsed(root: Object3D): void {
     root.traverse((node) => {
+      // An instanced stamp keeps its pose buffer on the mesh. Geometry disposal does not free it.
+      if (node instanceof InstancedMesh) node.dispose();
       const mesh = node as Mesh;
       mesh.geometry?.dispose();
       const material = mesh.material;
@@ -2122,6 +2140,7 @@ export class RocketViewer {
     this.freePlumes();
     for (const part of this.parts) {
       part.holder.traverse((node) => {
+        if (node instanceof InstancedMesh) node.dispose();
         (node as Mesh).geometry?.dispose();
         if (node instanceof LineSegments2) (node.material as Material).dispose();
       });

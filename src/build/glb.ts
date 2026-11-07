@@ -3,6 +3,7 @@
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import type { Buffers, LineBuffers, PartMesh } from "../model/pieces.ts";
 
+const FLOAT = 5126;
 const SHORT = 5122;
 const USHORT = 5123;
 const UINT = 5125;
@@ -87,11 +88,12 @@ export function toGlb(parts: readonly GlbPart[]): Glb {
   };
 
   let triangles = 0;
+  let gpuInstancing = false;
   const meshes: Record<string, unknown>[] = [];
   const nodes: Record<string, unknown>[] = [];
   const roots: number[] = [];
-  /** One mesh of a part or of one of its moving groups: its primitives and the packing's middle and half-size, returned as the nodes that hold it. */
-  const packMesh = (mesh: PartMesh, name: string): number => {
+  /** One mesh of a part, a moving group, or a stamp template. `atOrigin` packs about zero so instance translations are the poses divided by the same half-size. */
+  const packMesh = (mesh: PartMesh, name: string, atOrigin = false): { node: number; half: number } => {
     const faces = [...mesh.faces] as [MaterialName, Buffers][];
     // the packing's middle and half-size, over all of the part's points
     const lo = [Infinity, Infinity, Infinity];
@@ -106,8 +108,8 @@ export function toGlb(parts: readonly GlbPart[]): Glb {
     for (const [, b] of faces) sweep(b.positions);
     sweep(mesh.feature.positions);
     sweep(mesh.weld.positions);
-    const q = [0, 1, 2].map((c) => (lo[c] + hi[c]) / 2);
-    const half = Math.max(1e-3, ...[0, 1, 2].map((c) => (hi[c] - lo[c]) / 2));
+    const q = atOrigin ? [0, 0, 0] : [0, 1, 2].map((c) => (Number.isFinite(lo[c]) ? (lo[c] + hi[c]) / 2 : 0));
+    const half = Math.max(1e-3, ...[0, 1, 2].map((c) => (atOrigin ? Math.max(Math.abs(lo[c]) || 0, Math.abs(hi[c]) || 0) : Number.isFinite(lo[c]) ? (hi[c] - lo[c]) / 2 : 0)));
     const packPositions = (positions: readonly number[]) => {
       const count = positions.length / 3;
       const out = new Int16Array(count * 4);
@@ -147,17 +149,50 @@ export function toGlb(parts: readonly GlbPart[]): Glb {
       primitives.push({ attributes: { POSITION: packPositions(lines.positions) }, indices: indexAccessor(lines.indices, lines.positions.length / 3), material: useMaterial(name), mode: LINES });
     }
     meshes.push({ name, primitives });
-    nodes.push({ name: `${name}-mesh`, mesh: meshes.length - 1, translation: q.map(round6), scale: [round6(half), round6(half), round6(half)] });
-    return nodes.length - 1;
+    const node: Record<string, unknown> = { name: `${name}-mesh`, mesh: meshes.length - 1, translation: q.map(round6), scale: [round6(half), round6(half), round6(half)] };
+    nodes.push(node);
+    return { node: nodes.length - 1, half };
+  };
+
+  const instanceAccessors = (poses: PartMesh["stamps"][number]["poses"], half: number): { TRANSLATION: number; ROTATION: number } => {
+    gpuInstancing = true;
+    const translation = new Float32Array(poses.length * 3);
+    const rotation = new Float32Array(poses.length * 4);
+    const tMin = [Infinity, Infinity, Infinity];
+    const tMax = [-Infinity, -Infinity, -Infinity];
+    for (let i = 0; i < poses.length; i++) {
+      for (let c = 0; c < 3; c++) {
+        const v = poses[i].at[c] / half;
+        translation[i * 3 + c] = v;
+        if (v < tMin[c]) tMin[c] = v;
+        if (v > tMax[c]) tMax[c] = v;
+      }
+      const rad = (poses[i].yaw * Math.PI) / 180;
+      rotation[i * 4 + 1] = Math.sin(rad / 2);
+      rotation[i * 4 + 3] = Math.cos(rad / 2);
+    }
+    return {
+      TRANSLATION: accessor({ bufferView: put(new Uint8Array(translation.buffer), ARRAY_BUFFER), componentType: FLOAT, count: poses.length, type: "VEC3", min: tMin.map(round6), max: tMax.map(round6) }),
+      ROTATION: accessor({ bufferView: put(new Uint8Array(rotation.buffer), ARRAY_BUFFER), componentType: FLOAT, count: poses.length, type: "VEC4" }),
+    };
   };
 
   for (const part of parts) {
-    // a holder that the viewer moves, and the packed mesh under it; each moving group is a node of its own beside it, at its pivot, with the axis it turns about
+    // a holder that the viewer moves, and the packed mesh under it; each moving group is a node of its own beside it, at its pivot, with the axis it turns about.
+    // a stamp is another child: one packed template, and a pose per copy
     const mesh = part.mesh;
-    const children = [packMesh(mesh, part.name)];
+    const children = [packMesh(mesh, part.name).node];
+    mesh.stamps.forEach((stamp, index) => {
+      if (stamp.poses.length === 0 || stamp.mesh.faces.size === 0) return;
+      const packed = packMesh(stamp.mesh, `${part.name}~stamp~${index}`, true);
+      const meshNode = nodes[packed.node];
+      meshNode.extensions = { EXT_mesh_gpu_instancing: { attributes: instanceAccessors(stamp.poses, packed.half) } };
+      nodes.push({ name: `${part.name}~stamp~${index}`, children: [packed.node] });
+      children.push(nodes.length - 1);
+    });
     for (const group of mesh.moves) {
       const inside = packMesh(group.mesh, `${part.name}~${group.id}`);
-      nodes.push({ name: `${part.name}~${group.id}`, children: [inside], translation: group.pivot.map(round6), extras: { axis: group.axis.map(round6), group: group.name } });
+      nodes.push({ name: `${part.name}~${group.id}`, children: [inside.node], translation: group.pivot.map(round6), extras: { axis: group.axis.map(round6), group: group.name } });
       children.push(nodes.length - 1);
     }
     nodes.push({ name: part.name, children, translation: part.at.map(round6) });
@@ -166,7 +201,7 @@ export function toGlb(parts: readonly GlbPart[]): Glb {
 
   const json = {
     asset: { version: "2.0", generator: "uchusen-rockets" },
-    extensionsUsed: ["KHR_mesh_quantization"],
+    extensionsUsed: gpuInstancing ? ["KHR_mesh_quantization", "EXT_mesh_gpu_instancing"] : ["KHR_mesh_quantization"],
     extensionsRequired: ["KHR_mesh_quantization"],
     scene: 0,
     scenes: [{ name: "rocket", nodes: roots }],

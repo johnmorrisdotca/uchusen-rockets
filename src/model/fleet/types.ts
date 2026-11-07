@@ -36,6 +36,23 @@ export interface Port {
 }
 
 /**
+ * A named mount on a module. `accepts` is the modules that may stand there.
+ *
+ * @example
+ * ```ts
+ * import { hardpointsOf, KIT, type Hardpoint } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const point: Hardpoint = hardpointsOf(KIT["node-four"])[0];
+ * console.log(point.id, point.accepts.length);
+ * ```
+ */
+export interface Hardpoint {
+  id: string;
+  name: string;
+  accepts: readonly string[];
+}
+
+/**
  * What a module draws with: how much small detail, whether to open the hull, a different colour scheme, a seed for the weathering.
  *
  * @example
@@ -103,6 +120,8 @@ export interface KitModule {
   inside: boolean;
   /** A slot name shared by modules that swap for one another: the same collars, the same size. */
   slot?: string;
+  /** Named mounts. Left out: one hardpoint per port, accepting every module whose bottom collar matches. */
+  hardpoints?: readonly Hardpoint[];
   livery: LiveryName;
   /** The pieces, in metres. */
   pieces: (options?: ModuleOptions) => Piece[];

@@ -121,6 +121,7 @@ export function lifted(pieces: readonly Piece[], dy: number): Piece[] {
   return pieces.map((p): Piece => {
     if (p.kind === "plate") return { ...p, frame: { ...p.frame, o: [p.frame.o[0], p.frame.o[1] + dy, p.frame.o[2]] } };
     if (p.kind === "lathe") return { ...p, profile: p.profile.map(([r, y]) => [r, y + dy] as const) };
+    if (p.kind === "instances") return { ...p, poses: p.poses.map((pose) => ({ at: [pose.at[0], pose.at[1] + dy, pose.at[2]] as Vec3, yaw: pose.yaw })) };
     return { ...p, paths: p.paths.map((path) => path.map((q): Vec3 => [q[0], q[1] + dy, q[2]])) };
   });
 }

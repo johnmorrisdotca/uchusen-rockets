@@ -103,7 +103,7 @@ import { assemble, KIT, shipParts, shipPieces, SAMPLE_SHIPS, COLLARS } from "@jo
 
 ### Modules of a ship's own size
 
-The kit's modules are made by builders with the numbers as parameters, and `BUILDERS` gives a ship the same builders: `BUILDERS.container(id, name, length, cold, mass)`, `BUILDERS.tank(id, name, radius, length, top, bottom, mass, propellant, note)`, `BUILDERS.habitatRing(id, name, majorRadius, mass)`, `BUILDERS.truss(id, name, length, collar, mass)`, `BUILDERS.radiatorArray(...)`, `BUILDERS.engineCluster(...)`, and so on. A ship that needs a 40 m container, an 80 m tank or a 165 m ring asks for one and gets a `KitModule` with the standard collars, the detail, the sections' table entry to fill and the cutaway. Plating and detail scale with the hull's radius and length, and `detail` keeps a large module inside its build budget; GPU instancing of the stamped detail, hardpoints and variants on a module, and per-deck parts are the next steps and are ticketed.
+The kit's modules are made by builders with the numbers as parameters, and `BUILDERS` gives a ship the same builders: `BUILDERS.container(id, name, length, cold, mass)`, `BUILDERS.tank(id, name, radius, length, top, bottom, mass, propellant, note)`, `BUILDERS.habitatRing(id, name, majorRadius, mass)`, `BUILDERS.truss(id, name, length, collar, mass)`, `BUILDERS.radiatorArray(...)`, `BUILDERS.engineCluster(...)`, and so on. A ship that needs a 40 m container, an 80 m tank or a 165 m ring asks for one and gets a `KitModule` with the standard collars, the detail, the sections' table entry to fill and the cutaway. Plating and detail scale with the hull's radius and length, and `detail` keeps a large module inside its build budget. Repeated detail is one mesh drawn many times. A port is a hardpoint, a shared slot is a set of variants, and each deck is its own part record.
 
 ### How a ship joins the package
 
@@ -179,7 +179,7 @@ The kit starts from real engineering and says so: every module names its real an
 | `iBeam`, `channel`, `strut` | Beam sections for braces: an I-beam, a channel, a round strut with a collar, a ball joint and a cap at each end (the lunar module's struts are the benchmark) |
 | `place`, `stamp`, `ringOf` | Move pieces to a pose; put one template at many poses; poses round a circle |
 
-**Repeated detail is stamped.** `stamp(template, poses)` writes a template once and merges every copy into the part's mesh, so detail costs vertices and no draw calls: a part is one draw call for each material. (The viewer merges per material; GPU instancing of the stamps would also cut the vertices, and is ticketed.)
+**Repeated detail is instanced.** `stamp(template, poses)` writes a template once and a pose per copy. The mesh and the `.glb` keep that template once (`EXT_mesh_gpu_instancing`) and the viewer draws an `InstancedMesh`. Line drawings still expand the copies, so a drawing and a painted view show the same places. A single copy, or a template that moves, is placed as its own pieces.
 
 ## The fleet palette
 
@@ -200,7 +200,7 @@ Ships are built in the visitor's browser, so every module has two levels (`piece
 - **coarse**: the hull, the collars and the big shapes (nozzle bells, thrust plates, containers' boxes): about 8% of the pieces. A whole ship's coarse level is about 600 pieces and builds in about 5 to 20 ms here; it is the first picture.
 - **fine**: all the detail. The detail pass is only the pieces that are not coarse: `shipLevels(list, options, order)` gives the coarse pieces of the whole ship and a generator of fine batches, one for each module, in the order asked for (nearest the camera first). A viewer draws the coarse level, then adds a batch a frame, so the picture never waits for the detail. The two together are exactly `shipPieces` at the fine level (a test holds it).
 - **detail by `detail`**: 0.25 to 1 scales how many small things a module has, so a ship far away asks for 0.25 and one close up for 1.
-- **repeated detail is stamped**: `stamp(template, poses)` writes a template once and puts every copy in the batch of its module; GPU instancing of the stamps (one draw of many copies) is the next step and is ticketed.
+- **repeated detail is instanced**: `stamp(template, poses)` writes a template once and a pose per copy, and the viewer draws them as one instanced mesh. `hardpointsOf` names what may stand on a port. `swapsFor` names the modules that share a slot. `deckParts` gives each deck its own part record.
 
 **Build time is measured.** `timeBuild(list, level, options)` builds a ship at a level and returns the milliseconds, the pieces and the triangles. The budget is `BUILD_BUDGET_MS`: the first picture within 1 000 ms and full detail within 3 000 ms on a normal laptop. `test/fleet-kit.test.ts` builds the kit's sample ships and the registered hauler (pieces, mesh and the bytes of its file) and fails when a build goes over, so a module that grows slow fails `pnpm check`. Here the whole hauler (217 000 triangles) builds in about 50 ms, so the budget has room for the browser's own parse and upload.
 

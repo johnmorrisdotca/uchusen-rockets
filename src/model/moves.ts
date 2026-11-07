@@ -50,7 +50,7 @@ export function moved(pieces: readonly Piece[], angles: Readonly<Record<string, 
   return pieces.map((piece) => {
     const move = piece.move;
     const degrees = move ? (angles[move.name] ?? 0) : 0;
-    if (!move || degrees === 0 || piece.kind === "lathe") return piece;
+    if (!move || degrees === 0 || piece.kind === "lathe" || piece.kind === "instances") return piece;
     if (piece.kind === "plate") return { ...piece, move: undefined, frame: turnedFrame(piece.frame, move, degrees) };
     return { ...piece, move: undefined, paths: piece.paths.map((path) => path.map((p) => turnedPoint(p, move.pivot, move.axis, degrees))) };
   });

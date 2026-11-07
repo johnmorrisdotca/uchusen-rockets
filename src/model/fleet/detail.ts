@@ -2,8 +2,9 @@
 // greebles, all plain pieces in metres (the same `Piece` every other part is made of), all deterministic: a seeded random number, never a clock. Pure: no three.js and no DOM.
 //
 // A cylinder's surface is addressed by azimuth (radians round the Y axis from +Z towards +X), height and radius. A shape lying on it is a `Plate` in the tangent frame `patch(r, az, y)`: u along the circle,
-// v up, w outwards. Repeated shapes go through `stamp`, which places one template many times; every stamp is merged into the part's mesh, so detail costs vertices and no draw calls.
+// v up, w outwards. Repeated shapes go through `stamp`, which keeps one template and a pose per copy; the mesh draws those copies on the GPU.
 import { deg } from "../../framing.ts";
+import { applyPose } from "../instances.ts";
 import type { MaterialName } from "../materials.ts";
 import { type Frame, type Lathe, type Lines, type Piece, type Plate, pointOf, type Vec3 } from "../pieces.ts";
 import { lightPool } from "./lights.ts";
@@ -134,36 +135,14 @@ export interface Pose {
 
 /** Pieces moved to a pose: turned about Y, then moved. A lathe keeps its axis (vertical): its offset, arc and lean turn with it. Everything the kit draws goes through this, and so does a ship's assembly. */
 export function place(pieces: readonly Piece[], pose: Pose): Piece[] {
-  const t = deg(pose.yaw ?? 0);
-  const c = Math.cos(t);
-  const s = Math.sin(t);
-  const turn = (p: Vec3): Vec3 => [p[0] * c + p[2] * s, p[1], -p[0] * s + p[2] * c];
-  const at = (p: Vec3): Vec3 => add(turn(p), pose.at);
-  return pieces.map((piece): Piece => {
-    const move = piece.move ? { ...piece.move, pivot: at(piece.move.pivot), axis: turn(piece.move.axis) } : undefined;
-    const common = move ? { move } : {};
-    if (piece.kind === "plate") return { ...piece, ...common, frame: { o: at(piece.frame.o), u: turn(piece.frame.u), v: turn(piece.frame.v), w: turn(piece.frame.w) } };
-    if (piece.kind === "lines") return { ...piece, ...common, paths: piece.paths.map((path) => path.map(at)) };
-    const [ox, oz] = piece.at ?? [0, 0];
-    const o = at([ox, 0, oz]);
-    const dy = pose.at[1];
-    const lean = piece.lean ? ([piece.lean[0] * c + piece.lean[1] * s, -piece.lean[0] * s + piece.lean[1] * c] as const) : undefined;
-    const arc = piece.arc;
-    return {
-      ...piece,
-      ...common,
-      at: [o[0], o[2]],
-      profile: piece.profile.map(([r, y]) => [r, y + dy] as const),
-      ...(piece.rings ? { rings: piece.rings.map((y) => y + dy) } : {}),
-      ...(piece.welds ? { welds: piece.welds.map((y) => y + dy) } : {}),
-      ...(lean ? { lean } : {}),
-      ...(arc ? { arc: (y: number) => [arc(y - dy)[0] + t, arc(y - dy)[1] + t] as const } : {}),
-    };
-  });
+  return applyPose(pieces, pose);
 }
 
-/** One template put at many poses. The way to repeat bolts, windows, tiles, nozzles, containers: the template is written once and every copy is merged into the part's mesh. */
-export const stamp = (template: readonly Piece[], poses: readonly Pose[]): Piece[] => poses.flatMap((pose) => place(template, pose));
+/** One template put at many poses. Two or more copies with no moving part share one mesh. A single copy, or a template that already moves, is placed as its own pieces. */
+export const stamp = (template: readonly Piece[], poses: readonly Pose[]): Piece[] => {
+  if (poses.length < 2 || template.some((piece) => piece.kind === "instances" || piece.move)) return poses.flatMap((pose) => place(template, pose));
+  return [{ kind: "instances", template, poses }];
+};
 
 /** `count` poses evenly round a circle of radius `r` at height `y`, the first at `start` degrees, each turned to face outwards. */
 export function ringOf(count: number, r: number, y: number, start = 0): Pose[] {

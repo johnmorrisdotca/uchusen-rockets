@@ -12,6 +12,7 @@ import { APART } from "../src/model/fleet/ship-kyotori/index.ts";
 import { CLASS_FACTS, CLASS_TABLE, classTableMarkdown, LETTERS, RIM, specification } from "../src/model/fleet/ship-kyotori/specs.ts";
 import { KYOTORI_PARTS, KYOTORI_VARIANT_SLOTS } from "../src/model/fleet/ship-kyotori/variants.ts";
 import { COLLARS } from "../src/model/fleet/collars.ts";
+import { expandInstances } from "../src/model/instances.ts";
 import { boundsOf, meshOf } from "../src/model/pieces.ts";
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);
@@ -121,7 +122,7 @@ for (const variant of ["kyotori", "kyotori-cutaway", "kyotori-four"] as const) t
 });
 
 test("no bell in the drives: the drive is coil rings, and its pieces use no bell material", () => {
-  const drive = KYOTORI_PARTS.find((p) => p.id === "a-drive")!.pieces();
+  const drive = expandInstances(KYOTORI_PARTS.find((p) => p.id === "a-drive")!.pieces());
   assert.ok(!drive.some((piece) => piece.kind !== "lines" && (piece.material === "bell" || piece.material === "bell-inside")));
   assert.ok(drive.filter((piece) => piece.kind === "lathe" && piece.material.startsWith("coil")).length >= 12);
 });
@@ -148,7 +149,7 @@ test("the four ships are one class: the table is the one source, and the bible, 
     assert.ok(row("Hull", L).includes(facts.hull === "long" ? "long hull" : "short hull"), `${L}: hull`);
     roleParts.add(slots.role);
     // the role part has pieces of its kind: booms, a clean room, a mirror, a medical pod
-    const pieces = KYOTORI_PARTS.find((p) => p.id === slots.role)!.pieces();
+    const pieces = expandInstances(KYOTORI_PARTS.find((p) => p.id === slots.role)!.pieces());
     const materials = (m: string) => pieces.filter((p) => p.kind !== "lines" && (p as { material: string }).material === m).length;
     if (facts.feature === "sensor-booms") assert.ok(materials("window") >= 8 && row("Its own compartments", L).includes("sensor booms"), "survey booms");
     if (facts.feature === "clean-room") assert.ok(materials("lamp-blue") >= 1 && row("Its own compartments", L).includes("clean room"), "clean room");

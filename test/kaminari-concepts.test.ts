@@ -7,6 +7,7 @@ import { coarsen, detail } from "../src/model/detail.ts";
 import { BERTHS, CONCEPT_SLOTS, EMIAKE_DEPLOYED, ROCKET_OF, SPECS, type ConceptKey } from "../src/model/fleet/kaminari-concepts/index.ts";
 import { EXHAUST_C, LIGHT_MS } from "../src/model/fleet/kaminari-concepts/specs.ts";
 import { C } from "../src/model/fleet/kaminari-concepts/c.ts";
+import { expandInstances } from "../src/model/instances.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 import { toGlb } from "../src/build/glb.ts";
 
@@ -263,9 +264,9 @@ test("each ship records the ports a craft can use", () => {
 test("every module is real: it has pieces, builds the same twice, stays inside its own bounds, and uses the fleet's materials only", () => {
   for (const key of KEYS) {
     for (const slot of CONCEPT_SLOTS[key]) {
-      const a = slot.pieces();
+      const a = expandInstances(slot.pieces());
       assert.ok(a.length >= 8, `${key} ${slot.slot}: ${a.length} pieces`);
-      assert.equal(a.length, slot.pieces().length, `${key} ${slot.slot}: the same twice`);
+      assert.equal(a.length, expandInstances(slot.pieces()).length, `${key} ${slot.slot}: the same twice`);
       const box = boundsOf(meshOf(a));
       assert.ok(Number.isFinite(box.min[0] + box.max[2]), `${key} ${slot.slot}: a finite mesh`);
       for (const piece of a) if (piece.kind !== "lines") assert.ok(piece.material in MATERIALS, `${key} ${slot.slot}: ${piece.material}`);

@@ -16,6 +16,10 @@ const sizeOf = (piece: Piece): number => {
     const vs = piece.outline.map(([, b]) => b);
     return Math.max(Math.max(...us) - Math.min(...us), Math.max(...vs) - Math.min(...vs), piece.thickness);
   }
+  if (piece.kind === "instances") {
+    const sizes = piece.template.map(sizeOf);
+    return sizes.length ? Math.max(...sizes) : 0;
+  }
   if (piece.kind === "lathe") {
     const rs = piece.profile.map(([r]) => r);
     const ys = piece.profile.map(([, y]) => y);

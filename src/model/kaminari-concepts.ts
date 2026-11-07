@@ -2,6 +2,7 @@
 // tables in `fleet/kaminari-concepts/`. Pure: no three.js and no DOM.
 import { blank } from "../data/types.ts";
 import { coarsen, detail } from "./detail.ts";
+import { expandInstances } from "./instances.ts";
 import type { Piece } from "./pieces.ts";
 import { CONCEPT_KEYS, CONCEPT_SLOTS, EMIAKE_DEPLOYED, ROCKET_OF, SAIL_DEPLOYED_SLOTS, SPECS } from "./fleet/kaminari-concepts/index.ts";
 import type { ConceptSlot } from "./fleet/kaminari-concepts/common.ts";
@@ -22,7 +23,7 @@ const sizeOf = (piece: Piece): number => {
 const forDrawing = (pieces: readonly Piece[]): Piece[] => {
   const big = (piece: Piece): boolean => (piece.kind === "lathe" ? Boolean(piece.body || piece.outline) && sizeOf(piece) >= 24 : piece.kind === "plate" && sizeOf(piece) >= 90);
   const out: Piece[] = [];
-  for (const piece of pieces) {
+  for (const piece of expandInstances(pieces)) {
     if (piece.only !== undefined && piece.only !== "drawing") out.push(piece);
     else if (piece.only === "drawing") out.push({ ...piece, only: "mesh" });
     else if (!big(piece)) out.push({ ...piece, only: "mesh" });

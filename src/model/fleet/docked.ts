@@ -2,6 +2,7 @@
 import { AS_SOYUZ_LONG } from "../../data/apollosoyuz.ts";
 import { soyuzPieces } from "../apollosoyuz.ts";
 import { capsule, DRAGON_DRAWS, trunk } from "../falcon.ts";
+import { expandInstances } from "../instances.ts";
 import { boundsOfPieces, type Piece, type Vec3 } from "../pieces.ts";
 import { orionDocked, ORION_DOCKED_LENGTH } from "../sls.ts";
 import { shipPieces, STARSHIP_DRAWS } from "../starship.ts";
@@ -76,7 +77,7 @@ const made = (id: CraftId): Made => {
 /** Turn a craft end for end, so a nose that was at `nose` sits at local Y 0. */
 function noseDown(pieces: readonly Piece[], nose: number): Piece[] {
   const y = (v: number) => nose - v;
-  return pieces.map((piece): Piece => {
+  return expandInstances(pieces).map((piece): Piece => {
     if (piece.kind === "lathe") return { ...piece, profile: piece.profile.map(([r, h]) => [r, y(h)] as [number, number]).reverse() };
     if (piece.kind === "plate") {
       const o = piece.frame.o;

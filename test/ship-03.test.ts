@@ -9,10 +9,12 @@ import { LEVELS, parts } from "../src/model/fleet/ship-03/index.ts";
 import { readFileSync } from "node:fs";
 import { ARRAY_POWER, asBuilt, CLASS_FACTS, CLASS_TABLE, classTableMarkdown, fuelLimitedLy, ANCESTORS, DRIVE, ENGINES, HISTORY, IDENTITY, ROUTES, OPERATOR, SECTIONS, SHIPS, TITLE_BLOCK, titleBlockOf, deckSummary, idealMidpoint, journey, labelDensity, labels, longestBurnLy, specification, STATUS } from "../src/model/fleet/ship-03/specs.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
+import { expandInstances } from "../src/model/instances.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);
-const materialsOf = (pieces: readonly Piece[]) => new Set(pieces.filter((piece) => piece.kind !== "lines").map((piece) => (piece as { material: string }).material));
+const copies = (pieces: readonly Piece[]) => expandInstances(pieces);
+const materialsOf = (pieces: readonly Piece[]) => new Set(copies(pieces).filter((piece) => piece.kind !== "lines").map((piece) => piece.material));
 
 test("the approved profile: 0.040 g at 0.63 c exhaust, and every number of the bible's table", () => {
   const trip = journey(ROUTES.benchmark);
@@ -88,17 +90,17 @@ test("no module has a bare surface: hundreds of pieces and many kinds of detail,
   const all = parts();
   let total = 0;
   for (const part of all) {
-    const pieces = part.pieces();
+    const pieces = copies(part.pieces());
     total += pieces.length;
     if (part.id.startsWith("radiators") || part.id === "collar-none") continue;
     assert.ok(pieces.length >= 250, `${part.id}: ${pieces.length} pieces`);
     assert.ok(materialsOf(pieces).size >= 9, `${part.id}: ${materialsOf(pieces).size} materials`);
   }
-  const stowed = all.filter((part) => Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto).includes(part.id)).reduce((sum, part) => sum + part.pieces().length, 0);
+  const stowed = all.filter((part) => Object.values(MIYAMOTO_VARIANT_SLOTS.miyamoto).includes(part.id)).reduce((sum, part) => sum + copies(part.pieces()).length, 0);
   assert.ok(stowed >= 15_000, `${stowed} pieces in the stowed ship`);
   assert.ok(total > stowed);
   // the kinds of detail: copper and coils, hatches and lamps, glass, plants, hazard marks, coolant, the foam of the armour and the water of the barrels
-  const everything = all.flatMap((part) => part.pieces());
+  const everything = all.flatMap((part) => copies(part.pieces()));
   for (const material of ["copper", "coil", "hazard", "lamp-amber", "lamp-blue", "lamp-red", "glass", "plant", "coolant", "foam", "fuel", "radiator", "radiator-hot", "hull-orange", "hull-yellow", "hull-white", "panel-dark", "bell", "core", "deck"]) assert.ok(everything.some((piece) => piece.kind !== "lines" && (piece as { material: string }).material === material), material);
   for (const piece of everything) if (piece.kind !== "lines") assert.ok((piece as { material: string }).material in MATERIALS, (piece as { material: string }).material);
 });

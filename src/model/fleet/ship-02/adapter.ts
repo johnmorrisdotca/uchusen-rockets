@@ -111,6 +111,7 @@ export const revolve = (material: MaterialName, at: readonly [number, number], p
 export function shifted(pieces: readonly Piece[], dx: number, dy: number, dz: number): Piece[] {
   const at = (p: Vec3): Vec3 => [p[0] + dx, p[1] + dy, p[2] + dz];
   return pieces.map((piece): Piece => {
+    if (piece.kind === "instances") return { ...piece, poses: piece.poses.map((pose) => ({ at: at(pose.at), yaw: pose.yaw })) };
     if (piece.kind === "plate") return { ...piece, frame: { ...piece.frame, o: at(piece.frame.o) } };
     if (piece.kind === "lines") return { ...piece, paths: piece.paths.map((path) => path.map(at)) };
     const [a, b] = piece.at ?? [0, 0];
@@ -128,6 +129,7 @@ export function turned(pieces: readonly Piece[], turn: number, dx = 0, dz = 0): 
     return [q[0] + dx, q[1], q[2] + dz];
   };
   return pieces.map((piece): Piece => {
+    if (piece.kind === "instances") return { ...piece, poses: piece.poses.map((pose) => ({ at: at(pose.at), yaw: (pose.yaw ?? 0) + (turn * 180) / Math.PI })) };
     if (piece.kind === "plate") return { ...piece, frame: { o: at(piece.frame.o), u: spin(piece.frame.u), v: spin(piece.frame.v), w: spin(piece.frame.w) } };
     if (piece.kind === "lines") return { ...piece, paths: piece.paths.map((path) => path.map(at)) };
     const [a, b] = piece.at ?? [0, 0];
@@ -140,6 +142,7 @@ export function turned(pieces: readonly Piece[], turn: number, dx = 0, dz = 0): 
 export function mirroredX(pieces: readonly Piece[]): Piece[] {
   const flip = (p: Vec3): Vec3 => [-p[0], p[1], p[2]];
   return pieces.map((piece): Piece => {
+    if (piece.kind === "instances") return { ...piece, poses: piece.poses.map((pose) => ({ at: flip(pose.at), yaw: -(pose.yaw ?? 0) })) };
     if (piece.kind === "plate") return { ...piece, frame: { o: flip(piece.frame.o), u: flip(piece.frame.u), v: flip(piece.frame.v), w: flip(piece.frame.w) }, outline: piece.outline };
     if (piece.kind === "lines") return { ...piece, paths: piece.paths.map((path) => path.map(flip)) };
     const [a, b] = piece.at ?? [0, 0];

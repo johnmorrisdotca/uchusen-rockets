@@ -4,14 +4,15 @@
 import type { Figure } from "../../data/types.ts";
 import { blank } from "../../data/types.ts";
 import type { PartKind, PartRecord } from "../../parts.ts";
-import type { Piece, Vec3 } from "../pieces.ts";
+import { expandInstances } from "../instances.ts";
+import { boundsOfPieces, type PartMesh, type Piece, meshOf, type Vec3 } from "../pieces.ts";
 import { COLLARS, mates } from "./collars.ts";
 import { beam, place, rod } from "./detail.ts";
 import { isCoarse } from "./levels.ts";
-import { type PartMesh, meshOf } from "../pieces.ts";
 import { INSETS } from "./insets.ts";
 import { KIT } from "./modules.ts";
-import type { KitModule, ModuleOptions, ShipList, ShipPlace } from "./types.ts";
+import { SECTIONS } from "./sections.ts";
+import type { Hardpoint, KitModule, ModuleOptions, ShipList, ShipPlace } from "./types.ts";
 
 export { COLLARS, COLLAR_CLASSES, collar, mates } from "./collars.ts";
 export type { CollarClass, CollarSpec } from "./collars.ts";
@@ -24,7 +25,7 @@ export { BUILDERS, KIT } from "./modules.ts";
 export { BUILD_BUDGET_MS, isCoarse } from "./levels.ts";
 export { INSETS } from "./insets.ts";
 export type { Inset, InsetPart } from "./insets.ts";
-export type { KitModule, ModuleKind, ModuleOptions, Port, ShipList, ShipPlace } from "./types.ts";
+export type { Hardpoint, KitModule, ModuleKind, ModuleOptions, Port, ShipList, ShipPlace } from "./types.ts";
 
 /**
  * One module placed on a ship: where its origin stands and how it is turned.
@@ -335,6 +336,67 @@ export function swapsFor(id: string): KitModule[] {
   const own = KIT[id];
   if (!own?.slot) return [];
   return Object.values(KIT).filter((one) => one.id !== id && one.slot === own.slot && one.top === own.top && one.bottom === own.bottom && one.length === own.length);
+}
+
+/**
+ * The mounts on a module. A port is a hardpoint: any other module whose bottom collar is that port's class may stand on it. A module may name its own list instead.
+ *
+ * @param module A kit module.
+ * @returns One hardpoint per port, or the module's own list.
+ * @example
+ * ```ts
+ * import { hardpointsOf, KIT } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(hardpointsOf(KIT["node-four"]).map((point) => point.id));
+ * ```
+ */
+export function hardpointsOf(module: KitModule): readonly Hardpoint[] {
+  if (module.hardpoints) return module.hardpoints;
+  return module.ports.map((port) => ({
+    id: port.id,
+    name: `${port.collar} port ${port.id}`,
+    accepts: Object.values(KIT).filter((one) => one.id !== module.id && one.bottom === port.collar).map((one) => one.id),
+  }));
+}
+
+/**
+ * One part record for each deck of a ship. A deck is a named section, and the record carries that name, the band of the module it occupies, and the pieces whose middle sits in that band. These records are not part of the together view.
+ *
+ * @param ship The ship's id.
+ * @param list The ship's list of places.
+ * @param rocket The rocket the records belong to. Left out: the ship's id.
+ * @param variant The variant the records are true for. Left out: the ship's id.
+ * @returns The deck parts, in the order the places stand.
+ * @example
+ * ```ts
+ * import { deckParts, SAMPLE_SHIPS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(deckParts("scout", SAMPLE_SHIPS.scout).length);
+ * ```
+ */
+export function deckParts(ship: string, list: ShipList, rocket = ship, variant = ship): KitEntry[] {
+  const { placed } = assemble(list);
+  const out: KitEntry[] = [];
+  for (const p of placed) {
+    for (const section of SECTIONS[p.module.id] ?? []) {
+      if (!section.deck) continue;
+      const y0 = p.module.length * section.from;
+      const y1 = p.module.length * section.to;
+      const id = `${ship}-${p.index + 1}-${section.id}`;
+      const base = recordOf(p.module, id, rocket);
+      const record: PartRecord = { ...base, name: section.name, height: Math.max(0.01, y1 - y0), trueTo: [variant], strapOn: { x: p.at[0], z: p.at[2], y: p.at[1] + y0 }, drawnFrom: `${section.name}. ${section.does}` };
+      out.push({
+        record,
+        pieces: () => expandInstances(p.module.pieces()).filter((piece) => {
+          const box = boundsOfPieces([piece]);
+          if (!Number.isFinite(box.min[1])) return false;
+          const mid = (box.min[1] + box.max[1]) / 2;
+          return mid >= y0 && mid < y1;
+        }),
+      });
+    }
+  }
+  return out;
 }
 
 /** The registry's entries for the system insets: one part for each numbered sub-part, placed in its inset's assembly. */

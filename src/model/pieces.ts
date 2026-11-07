@@ -1,6 +1,7 @@
 // The shapes a part is made of, in metres, and what they become: triangles for a mesh and lines for the line looks. A part is plain data, so one description gives one mesh and one drawing that can never
 // disagree. Pure: no three.js. Angles are radians round the Y axis from +Z (the windward side) towards +X.
 import type { Vec3 } from "../framing.ts";
+import { expandInstances } from "./instances.ts";
 import type { MaterialName } from "./materials.ts";
 
 export type { Vec3 };
@@ -87,7 +88,16 @@ export interface Lines {
   move?: Move;
 }
 
-export type Piece = Lathe | Plate | Lines;
+/** One template stood at many poses. The mesh draws it once per pose on the GPU instead of copying the triangles. */
+export interface Instances {
+  kind: "instances";
+  template: readonly Piece[];
+  poses: readonly { at: Vec3; yaw?: number }[];
+  only?: "mesh" | "drawing";
+  move?: Move;
+}
+
+export type Piece = Lathe | Plate | Lines | Instances;
 
 /** A frame standing on the axis: u points outwards at `az` radians, v is up, w is along the circle. */
 export function radial(az: number, y = 0, atRadius = 0): Frame {
@@ -152,12 +162,20 @@ export interface MoveMesh {
   mesh: PartMesh;
 }
 
+/** A template drawn once per pose. The faces are the template; the poses are where the copies stand. */
+export interface StampMesh {
+  mesh: PartMesh;
+  poses: readonly { at: Vec3; yaw: number }[];
+}
+
 export interface PartMesh {
   faces: Map<MaterialName, Buffers>;
   feature: LineBuffers;
   weld: LineBuffers;
   /** What a flight can turn, apart from the rest. Empty for a part with no moving group. */
   moves: MoveMesh[];
+  /** Repeated detail: one mesh, many poses. Empty when nothing is stamped. */
+  stamps: StampMesh[];
 }
 
 const newBuffers = (): Buffers => ({ positions: [], normals: [], uvs: [], indices: [], hasUv: false });
@@ -573,25 +591,39 @@ export function moveGroups(pieces: readonly Piece[]): { name: string; id: string
   return groups.map((group) => ({ name: group.name, id: group.id, pivot: group.pivot, axis: group.axis, pieces: group.pieces }));
 }
 
+function addLines(mesh: PartMesh, piece: Exclude<Piece, Instances>): void {
+  if (piece.kind === "lathe") {
+    for (const y of piece.rings ?? []) addPath(mesh.feature, ringPath(piece, y));
+    for (const y of piece.welds ?? []) addPath(mesh.weld, ringPath(piece, y));
+  } else if (piece.kind === "plate") {
+    if (!piece.plain) {
+      const half = piece.thickness / 2 + 0.006;
+      for (const c of [half, -half]) addPath(mesh.feature, [...piece.outline, piece.outline[0]].map(([a, b]) => pointOf(piece.frame, a, b, c)));
+      for (const [p, q] of piece.ribs ?? []) for (const c of [half, -half]) addPath(mesh.weld, [pointOf(piece.frame, p[0], p[1], c), pointOf(piece.frame, q[0], q[1], c)]);
+      if (piece.quilt || piece.inset) reliefLines(mesh, piece, half);
+    }
+  } else for (const path of piece.paths) addPath(piece.weight === "feature" ? mesh.feature : mesh.weld, path);
+}
+
 function meshOfFixed(pieces: readonly Piece[]): PartMesh {
-  const mesh: PartMesh = { faces: new Map(), feature: { positions: [], indices: [] }, weld: { positions: [], indices: [] }, moves: [] };
+  const mesh: PartMesh = { faces: new Map(), feature: { positions: [], indices: [] }, weld: { positions: [], indices: [] }, moves: [], stamps: [] };
   for (const piece of pieces) {
     if (piece.only === "drawing") continue;
-    if (piece.kind === "lathe") {
+    if (piece.kind === "instances") {
+      const template = meshOfFixed(piece.template);
+      template.feature = { positions: [], indices: [] };
+      template.weld = { positions: [], indices: [] };
+      template.moves = [];
+      template.stamps = [];
+      if (template.faces.size > 0) mesh.stamps.push({ mesh: template, poses: piece.poses.map((pose) => ({ at: pose.at, yaw: pose.yaw ?? 0 })) });
+      for (const copy of expandInstances([piece])) if (copy.only !== "drawing") addLines(mesh, copy);
+    } else if (piece.kind === "lathe") {
       latheFaces(mesh, piece);
-      for (const y of piece.rings ?? []) addPath(mesh.feature, ringPath(piece, y));
-      for (const y of piece.welds ?? []) addPath(mesh.weld, ringPath(piece, y));
+      addLines(mesh, piece);
     } else if (piece.kind === "plate") {
       plateFaces(mesh, piece);
-      if (!piece.plain) {
-        const half = piece.thickness / 2 + 0.006;
-        for (const c of [half, -half]) addPath(mesh.feature, [...piece.outline, piece.outline[0]].map(([a, b]) => pointOf(piece.frame, a, b, c)));
-        for (const [p, q] of piece.ribs ?? []) for (const c of [half, -half]) addPath(mesh.weld, [pointOf(piece.frame, p[0], p[1], c), pointOf(piece.frame, q[0], q[1], c)]);
-        if (piece.quilt || piece.inset) reliefLines(mesh, piece, half);
-      }
-    } else {
-      for (const path of piece.paths) addPath(piece.weight === "feature" ? mesh.feature : mesh.weld, path);
-    }
+      addLines(mesh, piece);
+    } else addLines(mesh, piece);
   }
   return mesh;
 }
@@ -616,7 +648,7 @@ export function boundsOfPieces(pieces: readonly Piece[]): Bounds {
     if (z < min[2]) min[2] = z;
     if (z > max[2]) max[2] = z;
   };
-  for (const piece of pieces) {
+  for (const piece of expandInstances(pieces)) {
     if (piece.only === "drawing") continue;
     if (piece.kind === "plate") {
       const half = piece.thickness / 2;
@@ -647,7 +679,27 @@ export function boundsOf(mesh: PartMesh): Bounds {
           if (value > max[c]) max[c] = value;
         }
   };
+  const corner = (x: number, y: number, z: number) => {
+    if (x < min[0]) min[0] = x;
+    if (x > max[0]) max[0] = x;
+    if (y < min[1]) min[1] = y;
+    if (y > max[1]) max[1] = y;
+    if (z < min[2]) min[2] = z;
+    if (z > max[2]) max[2] = z;
+  };
   sweep(mesh, [0, 0, 0]);
   for (const group of mesh.moves) sweep(group.mesh, group.pivot);
+  for (const stamp of mesh.stamps) {
+    const box = boundsOf(stamp.mesh);
+    if (!Number.isFinite(box.min[0])) continue;
+    for (const pose of stamp.poses) {
+      const t = (pose.yaw * Math.PI) / 180;
+      const c = Math.cos(t);
+      const s = Math.sin(t);
+      for (const x of [box.min[0], box.max[0]])
+        for (const y of [box.min[1], box.max[1]])
+          for (const z of [box.min[2], box.max[2]]) corner(x * c + z * s + pose.at[0], y + pose.at[1], -x * s + z * c + pose.at[2]);
+    }
+  }
   return { min, max };
 }

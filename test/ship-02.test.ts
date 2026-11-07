@@ -223,14 +223,20 @@ test("Download 3D model: the full-detail .glb is made on demand, opens, and its 
   const doc = await new NodeIO().registerExtensions([KHRMeshQuantization]).readBinary(glb.bytes);
   const nodes = doc.getRoot().listNodes();
   assert.equal(built.parts.length, SHIP_02_SLOTS.length);
-  assert.equal(nodes.filter((n) => n.getMesh()).length, built.parts.length, "one mesh to a part");
+  const meshNodes = nodes.filter((n) => n.getMesh());
+  const stamps = meshNodes.filter((n) => (n.getName() ?? "").includes("~stamp"));
+  assert.equal(meshNodes.length - stamps.length, built.parts.length, "one mesh to a part, plus the stamp groups");
   const names = new Set(nodes.map((n) => n.getName()));
   for (const slot of SHIP_02_SLOTS) assert.ok(names.has(slot.slot), `${slot.slot} is a node`);
   let triangles = 0;
   for (const mesh of doc.getRoot().listMeshes()) for (const primitive of mesh.listPrimitives()) if (primitive.getMode() === 4) triangles += primitive.getIndices()!.getCount() / 3;
   assert.equal(triangles, glb.triangles, "the file holds exactly the triangles the writer counted");
   let expected = 0;
-  for (const slot of SHIP_02_SLOTS) for (const b of meshOf(slot.pieces()).faces.values()) expected += b.indices.length / 3;
+  for (const slot of SHIP_02_SLOTS) {
+    const mesh = meshOf(slot.pieces());
+    for (const b of mesh.faces.values()) expected += b.indices.length / 3;
+    for (const stamp of mesh.stamps) for (const b of stamp.mesh.faces.values()) expected += b.indices.length / 3;
+  }
   assert.equal(glb.triangles, expected, "and those are the parts' own triangles");
   const part = (await import("../src/build/index.ts")).buildPart("fleet-02-fleet-02-propellant-lines").glb();
   assert.ok(part.bytes.byteLength > 1000 && part.triangles > 0);

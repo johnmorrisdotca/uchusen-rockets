@@ -3,6 +3,7 @@
 import { axesOf, type Angle, directionOf, frameFor, PICTURE_H, PICTURE_W, FOV_DEG, deg, type Vec3 } from "../framing.ts";
 import { LOOKS, type FillName, type LookName } from "../looks.ts";
 import { MATERIALS } from "../model/materials.ts";
+import { expandInstances } from "../model/instances.ts";
 import type { Bounds, Lathe, Lines, Piece, Plate } from "../model/pieces.ts";
 import { pointOf, radiusAt } from "../model/pieces.ts";
 
@@ -250,7 +251,7 @@ export function drawPart(pieces: readonly Piece[], at: Vec3, cam: Camera, look: 
   const style = { line: line ?? base.line, outline: base.outline * weight, feature: base.feature * weight, weld: base.weld * weight };
   const paint = fillOf ?? ((material: keyof typeof MATERIALS) => `url(#${fillId(material)})`);
   const items: Item[] = [];
-  for (const piece of pieces) {
+  for (const piece of expandInstances(pieces)) {
     // the mesh is the coloured model; a drawing asks for it by passing its own fills, and then the line stand-in is left out
     if (piece.only === "mesh" && !fillOf) continue;
     if (piece.only === "drawing" && fillOf) continue;

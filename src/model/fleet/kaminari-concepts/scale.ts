@@ -67,6 +67,7 @@ export function scalePieces(pieces: readonly Piece[], k: number): Piece[] {
         ...(piece.facets ? { facets: piece.facets.map((t) => [v(t[0], k), v(t[1], k), v(t[2], k)] as const) } : {}),
       };
     }
+    if (piece.kind === "instances") return { ...piece, ...common, template: scalePieces(piece.template, k), poses: piece.poses.map((pose) => ({ at: v(pose.at, k), yaw: pose.yaw })) };
     if (piece.kind === "lines") return { ...piece, ...common, paths: piece.paths.map((path) => path.map((p) => v(p, k))) };
     const arc = piece.arc;
     return {

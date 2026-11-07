@@ -17,6 +17,7 @@ import { type Piece } from "../pieces.ts";
  * ```
  */
 export function isCoarse(piece: Piece): boolean {
+  if (piece.kind === "instances") return piece.template.some((one) => isCoarse(one));
   if (piece.kind === "lathe") return Boolean(piece.body || piece.outline);
   if (piece.kind === "plate") {
     // a solid, not a beam, a sheet or a panel of the plating: thick, wide and deep all at once

@@ -11,7 +11,10 @@ import { rings, ship4 } from "../src/model/fleet/ship-01/rings.ts";
 import { gAt, rpmFor, SPIN, SPIN4 } from "../src/model/fleet/ship-01/spin.ts";
 import { SPINE_Y } from "../src/model/fleet/ship-01/hull.ts";
 import { clearance, craftBox, DOCK, dockingPieces, gapTo, PORTS, shieldPlateAt, shieldStays } from "../src/model/fleet/ship-01/docking.ts";
+import { expandInstances } from "../src/model/instances.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
+
+const copies = (pieces: readonly Piece[]) => expandInstances(pieces);
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);
 
@@ -107,20 +110,20 @@ test("each part is built where it says, in metres, and stands on its origin", ()
 
 test("no module has a bare surface: hundreds of pieces and many kinds of detail, and the whole ship tens of thousands", () => {
   const all = parts();
-  const materialsOf = (pieces: readonly Piece[]) => new Set(pieces.filter((piece) => piece.kind !== "lines").map((piece) => (piece as { material: string }).material));
+  const materialsOf = (pieces: readonly Piece[]) => new Set(copies(pieces).filter((piece) => piece.kind !== "lines").map((piece) => piece.material));
   let total = 0;
   for (const part of all) {
-    const pieces = part.pieces();
+    const pieces = copies(part.pieces());
     total += pieces.length;
     if (["hubs", "wheel-industrial", "ring-living-section", "adapter", "drive", "docks"].includes(part.id)) continue;
     assert.ok(pieces.length >= 400, `${part.id}: ${pieces.length} pieces`);
     assert.ok(materialsOf(pieces).size >= 6, `${part.id}: ${materialsOf(pieces).size} materials`);
   }
   const ids = Object.values(HANABUSA_VARIANT_SLOTS.hanabusa);
-  const whole = all.filter((part) => ids.includes(part.id)).reduce((sum, part) => sum + part.pieces().length, 0);
+  const whole = all.filter((part) => ids.includes(part.id)).reduce((sum, part) => sum + copies(part.pieces()).length, 0);
   assert.ok(whole >= 40_000, `${whole} pieces in the ship`);
   assert.ok(total > whole);
-  const everything = all.flatMap((part) => part.pieces());
+  const everything = all.flatMap((part) => copies(part.pieces()));
   for (const material of ["glass-clear", "grow-lamp", "solar", "window", "plant", "water", "leaf", "coil-lit", "copper", "hull-white", "hull-orange", "flood", "lamp-amber", "lamp-blue"]) assert.ok(everything.some((piece) => piece.kind !== "lines" && piece.material === material), `no ${material}`);
   for (const piece of everything) if (piece.kind !== "lines") assert.ok(piece.material in MATERIALS, piece.material);
 });
@@ -205,7 +208,7 @@ test("every module names the real hardware it descends from, and there is no bel
   for (const part of parts()) assert.ok(part.note.includes("Descends from"), `${part.id}: ${part.note}`);
   for (const key of ["drive", "reactor", "tanks", "drums", "booms", "rings", "halls", "node", "dome", "lift"]) assert.ok(ANCESTORS[key], key);
   // no chemical-rocket bell: the drive is nineteen thrusters of coil rings, and its pieces have no bell material
-  const drive = parts().find((part) => part.id === "drive")!.pieces();
+  const drive = copies(parts().find((part) => part.id === "drive")!.pieces());
   assert.ok(!drive.some((piece) => piece.kind !== "lines" && (piece.material === "bell" || piece.material === "bell-inside")));
   assert.ok(drive.filter((piece) => piece.kind === "lathe" && piece.material === "coil-lit").length >= 19 * 5);
 });

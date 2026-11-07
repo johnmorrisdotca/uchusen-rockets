@@ -28,6 +28,7 @@ function foldAbout(pieces: readonly Piece[], px: number, pz: number, theta: numb
   return pieces.map((piece): Piece => {
     const move = piece.move ? { ...piece.move, pivot: turn(piece.move.pivot, px, pz, c, s), axis: turnDir(piece.move.axis, c, s) } : undefined;
     const common = move ? { move } : {};
+    if (piece.kind === "instances") return { ...piece, ...common, poses: piece.poses.map((pose) => ({ at: turn(pose.at, px, pz, c, s), yaw: (pose.yaw ?? 0) + (theta * 180) / Math.PI })) };
     if (piece.kind === "plate") return { ...piece, ...common, frame: { o: turn(piece.frame.o, px, pz, c, s), u: turnDir(piece.frame.u, c, s), v: turnDir(piece.frame.v, c, s), w: turnDir(piece.frame.w, c, s) } };
     if (piece.kind === "lines") return { ...piece, ...common, paths: piece.paths.map((path) => path.map((p) => turn(p, px, pz, c, s))) };
     const [ox, oz] = piece.at ?? [0, 0];
