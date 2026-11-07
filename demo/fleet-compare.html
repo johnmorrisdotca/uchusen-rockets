@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="fleet-compare.css" />
   </head>
   <body class="demo fleet-cmp">
+    <script>location.replace("compare.html?layout=lineup");</script>
     <main>
       <!--family:header-->
       <section class="cmp" aria-labelledby="cmp-title">
@@ -14,7 +15,7 @@
         <div class="chips" id="cmp-picks" data-testid="cmp-picks" role="group" aria-labelledby="cmp-title"></div>
         <div class="chips" id="cmp-views" data-testid="cmp-views" role="group" aria-labelledby="cmp-title"></div>
         <div class="cmp-view" id="cmp-view" data-testid="cmp-view">
-          <uchusen-lineup id="lineup" data-testid="cmp-lineup" pose="stand" filter="fleet" ruler labels look="line" wide></uchusen-lineup>
+          <uchusen-lineup id="lineup" data-testid="cmp-lineup" pose="stand" filter="fleet" ruler labels look="painted" wide></uchusen-lineup>
         </div>
         <p data-testid="cmp-length-source" data-say="lengthSource">Length is the figure in the ship's record.</p>
         <table class="cmp-facts" data-testid="cmp-facts">

@@ -9,7 +9,8 @@ import { applyTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumb
 import { mountCamera } from "./compare-camera.ts";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
-import { chip, fillLooks } from "./chip.ts";
+import { chip, fillLooks, PAGE_LOOK } from "./chip.ts";
+import { bindStage } from "./viewBinder.ts";
 import { craftBudget, craftPicture, kindOf, type PickerKind } from "./shipPicker.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -34,11 +35,31 @@ const NEXT: readonly Craft[] = [
   { rocket: "iss", variant: "iss", form: "stack" },
   { rocket: "space-shuttle", variant: "stack", form: "stack" },
 ];
+const lineupStage = document.getElementById("cmp-view");
+const lineupPicture = document.getElementById("lineup");
+if (lineupStage && lineupPicture) {
+  bindStage(lineupStage, (detail) => {
+    const zoom = detail.zoom ?? 1;
+    const svg = lineupPicture.shadowRoot?.querySelector("svg");
+    if (svg instanceof SVGElement) svg.style.transform = Math.abs(zoom - 1) < 0.001 ? "" : `scale(${zoom})`;
+  }, { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8" });
+}
+if (new URLSearchParams(location.search).get("layout") === "lineup") {
+  document.body.classList.add("fleet-cmp");
+  const wide = document.getElementById("wide");
+  const fold = document.getElementById("lineup-fold");
+  if (wide) wide.hidden = true;
+  if (fold) fold.hidden = false;
+  // The wide stage stays in the page, hidden. It still wears the view mark.
+  const parked = document.getElementById("hero");
+  if (parked instanceof HTMLElement) bindStage(parked, () => {});
+  await import("./fleet-compare.ts");
+} else {
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
 // A plain drag turns the picture. Move, a second finger, Shift and the other mouse buttons still pan. A drag that starts on a craft throws that craft.
 bar.set({ drag: "turn" });
-const address = createAddressState({ defaults: { rocket: "starship", variant: "v3", with: "saturn-v:saturn-v", look: "line", background: "earth", moon: "", place: "float", labels: "on", spin: "slow" } });
+const address = createAddressState({ defaults: { rocket: "starship", variant: "v3", with: "saturn-v:saturn-v", look: PAGE_LOOK, background: "earth", moon: "", place: "float", labels: "on", spin: "slow" } });
 setTurnPace(paceNamed(address.get("spin")));
 const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
 turnButtons.value = paceStep(paceNamed(address.get("spin")));
@@ -77,7 +98,7 @@ const state = {
   refused: "",
   chipNames: true,
   glass: null as number | null,
-  look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName,
+  look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : PAGE_LOOK) as LookName,
   background: address.get("background") || "earth",
   moon: address.get("moon") || "",
   place: (address.get("place") === "ground" ? "ground" : "float") as "ground" | "float",
@@ -600,3 +621,4 @@ search.addEventListener("input", () => {
 });
 renderAll();
 document.documentElement.dataset.ready = "true";
+}

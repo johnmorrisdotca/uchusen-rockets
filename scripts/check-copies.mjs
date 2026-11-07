@@ -6,8 +6,8 @@ import { tmpdir } from "node:os";
 import { relative, join } from "node:path";
 import process from "node:process";
 
-const CLONES = 24;
-const LINES = 426;
+const CLONES = 23;
+const LINES = 417;
 
 const dir = mkdtempSync(join(tmpdir(), "jscpd-"));
 let code = 0;

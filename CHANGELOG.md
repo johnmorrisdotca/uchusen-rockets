@@ -9,6 +9,8 @@
 - **Kyotori's bay doors swing shut** (MODULES-450): the two payload-bay doors, drawn open, swing shut on their hinges and back.
 - **Hangar doors ride their tracks** (MODULES-450): Miyamoto and Ariake's door leaves slide 16 m up and back, one after the next. A slide moves a tagged part along its axis and does not turn it.
 - **The fleet walk waits for a settled frame**: the memory count waits until the objects stop moving, and a turn waits until a frame has been drawn.
+- **The fleet line-up is a layout of the compare page** (MODULES-505): Compare to scale opens the upright line-up on compare.html (one baseline, true scale, the metre bar). fleet-compare.html opens that layout.
+- **Painted is the look a page opens on** (MODULES-498): every demo page with a rocket starts on the painted look. A line drawing is a choice. The package's own default, when a page names no look, stays the line drawing, because that is the drawing the unsuffixed files are.
 - **Craft line fixes** (MODULES-474): on a phone the count and Add a craft get their own line so the craft line has the full width; the page bar marks only the open page; Fit frames a row of craft whole, with the ground under their feet.
 - **The craft line on a phone** (MODULES-474): the count and Add a craft sit on their own line, so the scrolling line is the width of the phone and two chips show. Only the open page is marked in the page bar. A row of craft is framed with the ground under their feet, so none is cut off at the bottom of the stage.
 

@@ -56,7 +56,12 @@ test("ctrl and the wheel zooms every stage in the page list, and the page does n
       await expect.poll(() => zoomOf(stage), { message: `${href} zoom in` }).toBeGreaterThan(before);
       const drawn = stage.locator("#jr-picture, uchusen-lineup");
       if (await drawn.count()) {
-        const scale = await drawn.first().evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).a);
+        const scale = await drawn.first().evaluate((node) => {
+          const own = new DOMMatrix(getComputedStyle(node).transform).a;
+          const svg = node.shadowRoot?.querySelector("svg");
+          const inner = svg instanceof SVGElement ? new DOMMatrix(getComputedStyle(svg).transform).a : 1;
+          return Math.max(own, inner);
+        });
         expect(scale, `${href} picture`).toBeGreaterThan(1);
       }
       const zoomed = await zoomOf(stage);

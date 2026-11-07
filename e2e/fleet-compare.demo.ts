@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-const URL = "/uchusen-rockets/fleet-compare.html";
+const URL = "/uchusen-rockets/compare.html?layout=lineup";
+
+test("the old fleet page opens the line-up on the compare page", async ({ page }) => {
+  await page.goto("/uchusen-rockets/fleet-compare.html");
+  await expect(page).toHaveURL(/layout=lineup/);
+  await expect(page.getByTestId("cmp-lineup")).toHaveAttribute("pose", "stand");
+});
 
 test("the three ships stand at one scale, the view stays in the address, and the transport is the long one", async ({ page }) => {
   await page.goto(URL);
@@ -14,9 +20,13 @@ test("the three ships stand at one scale, the view stays in the address, and the
   expect(transport).toBe(1818);
   expect(transport).toBeGreaterThan(command * 2);
   await expect(page.getByTestId("cmp-length-source")).toHaveText("Length is the figure in the ship's record.");
+  await expect(page.getByTestId("look-painted")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("nav a[aria-current='page']")).toHaveText("Compare");
   const frame = await page.getByTestId("cmp-view").boundingBox();
   const drawn = await lineup.locator("svg").boundingBox();
-  expect(frame && drawn && frame.height > 600 && drawn.width > frame.width * 0.9).toBe(true);
+  expect(drawn && frame, `drawn ${drawn?.width}x${drawn?.height} in ${frame?.width}x${frame?.height}`).toBeTruthy();
+  expect(drawn!.width).toBeLessThanOrEqual(frame!.width + 2);
+  expect(drawn!.height).toBeLessThanOrEqual(frame!.height + 2);
   const before = await lineup.locator("svg").innerHTML();
   await page.getByTestId("cmp-view-side").click();
   await expect(page).toHaveURL(/view=side/);
@@ -42,4 +52,19 @@ test("the three ships stand at one scale, the view stays in the address, and the
   await expect(page.getByTestId("cmp-length-fleet-emiake")).not.toHaveText("");
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(wide).toBe(false);
+});
+
+test("ctrl and the wheel zooms the line-up and the page does not scroll", async ({ page }) => {
+  await page.goto(URL);
+  const frame = page.getByTestId("cmp-view");
+  await frame.scrollIntoViewIfNeeded();
+  const before = await page.evaluate(() => window.scrollY);
+  const box = await frame.boundingBox();
+  if (!box) throw new Error("no frame");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, -200);
+  await page.keyboard.up("Control");
+  await expect.poll(() => page.getByTestId("cmp-lineup").locator("svg").evaluate((node) => (node as SVGElement).style.transform)).toContain("scale");
+  expect(await page.evaluate(() => window.scrollY)).toBe(before);
 });

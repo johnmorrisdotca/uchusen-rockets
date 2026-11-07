@@ -3,16 +3,15 @@
 import type { ChikyuEarthRealistic } from "@johnmorrisdotca/chikyu-earth/realistic/element";
 import { CENTRE, placementIn, type Placement, START_TIME, stepSeconds, turnAt } from "./earth-model.ts";
 
-/** Low orbit uses the picture as it is. A higher orbit pulls the pan back to the middle and shrinks the disc until the whole Earth is in frame. The reader's zoom multiplies that. */
+/** The orbit picture fills the frame. A closer camera grows it. A higher orbit or a pulled-back camera does not shrink it, so the edge stays outside the frame. */
 const orbitBlend = (holder: HTMLElement, box: Placement & { width: number; height: number }) => {
-  const open = Math.min(1, Math.max(0, Number(holder.dataset.orbitOpen) || 0));
   const asked = Number(holder.dataset.viewZoom);
   const view = asked > 0 ? asked : 1;
-  const full = Math.min(box.width, box.height) * 0.42;
+  const fill = Math.max(view, 1);
   return {
-    radius: (box.radius * (1 - open) + full * open) * view,
-    panX: box.panX * (1 - open),
-    panY: box.panY * (1 - open),
+    radius: box.radius * fill,
+    panX: box.panX * fill,
+    panY: box.panY * fill,
   };
 };
 

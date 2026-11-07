@@ -31,8 +31,12 @@ export type BindOptions = {
  */
 export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => void, options: BindOptions = {}): HTMLElement {
   if (stage.id === "") throw new Error("a stage needs an id");
-  stage.dataset.viewStage = "";
   const root = stage.ownerDocument;
+  if (stage.dataset.viewStage !== undefined) {
+    const ready = root.querySelector(`kazoku-view-controls[for="${stage.id}"]`);
+    if (ready instanceof HTMLElement) return ready;
+  }
+  stage.dataset.viewStage = "";
   const found = root.querySelector(`kazoku-view-controls[for="${stage.id}"]`);
   const bar = found instanceof HTMLElement ? found : root.createElement("kazoku-view-controls");
   if (!(found instanceof HTMLElement)) {
@@ -77,9 +81,12 @@ export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => vo
     const detail = (event as CustomEvent<ViewDetail>).detail;
     if (detail) onView(detail);
   });
-  // An inner stage keeps the wheel, so an outer stage does not zoom as well. The bar still calls preventDefault.
+  // A stage with no view stage around it keeps the wheel. One drawn inside another lets the event
+  // go on, so the outer stage zooms too. The bar still calls preventDefault, so the page does not.
   stage.addEventListener("wheel", (event) => {
-    if (event.ctrlKey || event.metaKey || event.altKey) event.stopPropagation();
+    if (!(event.ctrlKey || event.metaKey || event.altKey)) return;
+    if (stage.parentElement?.closest("[data-view-stage]")) return;
+    event.stopPropagation();
   });
   return bar;
 }

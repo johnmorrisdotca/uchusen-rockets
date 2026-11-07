@@ -345,6 +345,8 @@ export class RocketViewer {
   private pendingReason = "";
   /** A painted model fading in over the coarse picture. The coarse picture stays until the fade ends. */
   private paintFades: { part: PartView; mats: { material: MeshStandardMaterial | MeshBasicMaterial; transparent: boolean }[]; start: number }[] = [];
+  /** The painted picture has already faded in once. A later model must not start that fade again. */
+  private paintedShown = false;
   private tilt = { azimuth: 0, polar: 0, applied: { azimuth: 0, polar: 0 } };
   private driven: ViewChoice | null = null;
   private drivenDirty = false;
@@ -688,7 +690,9 @@ export class RocketViewer {
       } else this.scaleZoom = null;
       // a hitch while the next craft is built must not skip the ease. True scale keeps real time, so its far zoom does not linger.
       this.startPose(framing, SIZE_EASE_MS, false, true, !this.scaleMode);
-      this.fadeCraft();
+      // The painted picture waits until the model is the thing on the canvas, then fades in once. Fading the coarse picture in first, and again when the model arrives, is the dip.
+      if (look === "painted") this.paintedShown = false;
+      else this.fadeCraft();
     } else if (!this.pose) this.frameTo(angle ?? this.currentAngle(), false);
     if (this.clockNow) {
       this.flightKey = "";
@@ -1415,6 +1419,10 @@ export class RocketViewer {
     const state = states.some((s) => s === "loading" || s === "none") ? "loading" : states.every((s) => s === "ready") ? "model" : states.includes("ready") ? "mixed" : "code";
     this.canvas.dataset.painted = state;
     this.options.onPainted(state);
+    if (state !== "loading" && !this.paintedShown && !this.options.reducedMotion) {
+      this.paintedShown = true;
+      this.fadeCraft();
+    }
   }
 
   /** The licensed model of a part, fetched the first time the painted look asks for it. Until it is in, and if it fails, this package's own paint shows. */
@@ -1453,8 +1461,8 @@ export class RocketViewer {
         });
         part.holder.add(gltf.scene);
         part.modelState = "ready";
-        if (this.options.reducedMotion) this.useModel(part, this.look === "painted");
-        else this.beginPaintFade(part);
+        // The model is fully there before the canvas fades in, so the fade shows the painted rocket and not a brighter stand-in that then dips.
+        this.useModel(part, this.look === "painted");
         void this.prepare(true).then(() => this.reportPainted());
         this.wake();
       })
@@ -1464,19 +1472,18 @@ export class RocketViewer {
       });
   }
 
-  /** The new craft fades in at the scale the camera still has. Reduced motion leaves it as it is. */
+  /** The new craft fades in at the scale the camera still has. Reduced motion leaves it as it is. The opacity stays: clearing it hands the canvas back to the stylesheet, which still says 0, and that restart is a second fade. */
   private fadeCraft(): void {
     const canvas = this.canvas;
     canvas.style.transition = "opacity 0.4s ease";
     canvas.style.opacity = "0";
     requestAnimationFrame(() => {
-      canvas.style.opacity = "1";
+      if (!this.disposed) canvas.style.opacity = "1";
     });
     window.setTimeout(() => {
       if (this.disposed) return;
       canvas.style.transition = "";
-      canvas.style.opacity = "";
-    }, 500);
+    }, 450);
   }
 
   /** The painted model fades in over the coarse picture. The coarse picture hides when the fade ends. */

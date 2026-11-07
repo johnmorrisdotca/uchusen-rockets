@@ -71,6 +71,7 @@ const CSS = `
 .drawing, .canvas { transition: opacity var(--uchusen-fade, 1500ms) ease-in-out, filter var(--uchusen-fade, 1500ms) ease-in-out; }
 .stage, .canvas { position: absolute; inset: 0; touch-action: none; }
 .panel button, .tilt { touch-action: manipulation; }
+:host([look="painted"]) .picture:not([data-state="3d"]) .drawing { opacity: 0; }
 :host([data-driven]) .picture { overflow: hidden; }
 .canvas { display: block; width: 100%; height: 100%; opacity: 0; filter: blur(3px); cursor: grab; border-radius: inherit; touch-action: none; }
 .canvas:active { cursor: grabbing; }
@@ -952,11 +953,19 @@ export class UchusenRocket extends HTMLBase {
       made.setNameLabels(this.getAttribute("names") !== "off");
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
-        if (generation === this.generation && this.viewer === made) {
+        if (generation !== this.generation || this.viewer !== made) return;
+        const canvas = this.holder?.querySelector("canvas");
+        // The canvas is already at full from its one fade. Dropping the inline opacity while a transition is set would start that fade again.
+        if (canvas instanceof HTMLCanvasElement && canvas.style.opacity !== "") {
+          canvas.style.transition = "none";
           this.setState("3d");
-          this.emit("uchusen-ready", { frames: made.frames });
-          this.startTilt();
-        }
+          canvas.style.opacity = "";
+          requestAnimationFrame(() => {
+            canvas.style.transition = "";
+          });
+        } else this.setState("3d");
+        this.emit("uchusen-ready", { frames: made.frames });
+        this.startTilt();
       }, wait);
     } catch (error) {
       if (generation === this.generation) {
@@ -1030,7 +1039,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose", "wide"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose", "wide", "contain"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -1071,6 +1080,12 @@ export class UchusenLineup extends HTMLBase {
       node.removeAttribute("height");
       node.style.width = "100%";
       node.style.height = "auto";
+    }
+    // contain: the drawing scales to the frame, so a phone shows every ship instead of the left-hand part
+    if (this.hasAttribute("contain") && node instanceof SVGElement) {
+      node.setAttribute("width", "100%");
+      node.setAttribute("height", "100%");
+      node.setAttribute("preserveAspectRatio", "xMidYMid meet");
     }
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);
