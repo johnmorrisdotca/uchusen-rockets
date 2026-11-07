@@ -1,6 +1,7 @@
 // The journey page: choose a start, an end and a craft, then fly the trip. The line views draw with one 2D canvas and the package's own line drawing. The painted side view is the package's element, loaded the first time it is asked for and dropped on leaving. Painted Earth is the same Chikyu globe as the compare page. The other planets are wakusei stills, so they give the context back.
 // It asks for a frame only while the trip plays and the page can be seen, at most 30 a second, and never when nothing moves.
 import { ROCKETS, SOURCES } from "../src/index.ts";
+import { mountShipPicker, type ShipPickerElement } from "./pickerView.ts";
 import {
   astronomicalUnits,
   bestDate,
@@ -29,7 +30,7 @@ import {
 } from "../src/journey/index.ts";
 import { assistApplies, assistWindows, swingPoint } from "../src/journey/assist.ts";
 import { conicPoint } from "../src/journey/lunar.ts";
-import { transferPoint } from "../src/journey/physics.ts";
+import { cmbAhead, transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
@@ -243,6 +244,13 @@ function placeBody(which: "from" | "dest", id: string, distanceKm: number): void
   setText(byId(`body-${which}-name`), stopName(id));
 }
 const craftNow = (): Craft => craftOf(choice.craft) ?? CRAFTS[0]!;
+let shipPicker: ShipPickerElement | undefined;
+/** The catalogue craft the journey is flying. Kaminari's journey id is not its rocket id. */
+function journeyPickerChoice(): { rocket: string; variant: string } {
+  const craft = craftNow();
+  if (craft.id === "kaminari") return { rocket: "fleet-kaminari", variant: "fleet-kaminari" };
+  return { rocket: craft.rocket, variant: craft.variant };
+}
 const craftName = (craft: Craft): string => ROCKETS[craft.rocket]?.name ?? craft.name;
 const dateWords = (ms: number, time = false): string =>
   new Intl.DateTimeFormat(japanese() ? "ja" : "en-GB", { year: "numeric", month: "short", day: "numeric", ...(time ? { hour: "2-digit", minute: "2-digit", hour12: false } : {}), timeZone: "UTC" }).format(ms) + (time ? " UTC" : "");
@@ -296,6 +304,7 @@ function drawPickers(): void {
   byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
   byId("to").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.from).map((stop) => chip(stopName(stop.id), `to-${stop.id}`, stop.id === choice.to, () => change({ to: stop.id }))));
   byId("crafts").replaceChildren(...CRAFTS.map((craft) => chip(craftName(craft), `craft-${craft.id}`, craft.id === choice.craft, () => change({ craft: craft.id }))));
+  shipPicker?.sync(journeyPickerChoice());
   const continuous = craftNow().drive === "continuous";
   byId("pull-field").hidden = !continuous;
   const swingChoice = assistApplies(choice.from, choice.to, craftNow().drive);
@@ -728,6 +737,7 @@ function buildRoute(): void {
   if (trip.continuous) {
     bracket(0.01, 0.485, say("jPhase_accelerate"));
     bracket(0.515, 0.99, say("jPhase_decelerate"));
+    add(svgEl("text", { x: x(0.5), y: y - 40, "text-anchor": "middle", "data-testid": "route-flip" }, say("jPhase_flip")));
   } else if (trip.ballistic) {
     bracket(0.04, 0.96, say("jPhase_coast"));
   }
@@ -747,7 +757,9 @@ function buildRoute(): void {
 
 function drawRoute(state: State): void {
   const x = ROUTE_X0 + (ROUTE_X1 - ROUTE_X0) * state.progress;
-  routeMarker?.setAttribute("transform", `translate(${x.toFixed(1)} 70)`);
+  const spin = (state.turned * 180).toFixed(1);
+  routeMarker?.setAttribute("transform", `translate(${x.toFixed(1)} 70) rotate(${spin})`);
+  routeMarker?.setAttribute("data-turned", spin);
   routeDone?.setAttribute("x2", x.toFixed(1));
 }
 
@@ -771,6 +783,12 @@ function rows(listId: string, spec: [string, string][]): Map<string, Row> {
     }),
   );
   return map2;
+}
+
+function cmbWords(speedMs: number): string {
+  const sky = cmbAhead(speedMs);
+  if (!sky.fast) return say("jCmbRest");
+  return say("jCmbAhead", { temp: sky.kelvin.toFixed(2) });
 }
 
 function buildPanel(): void {
@@ -809,6 +827,8 @@ function buildPanel(): void {
     ["peakg", say("jPeakG"), gWords(trip.peakG), trip.estimated.includes("departure burn length") || trip.estimated.includes("braking acceleration")],
     ...(trip.escape ? ([[ "escsurf", say("jEscapeSurface"), speedWords(trip.escape.surfaceKmS * 1000) ], [ "escpark", say("jEscapePark"), speedWords(trip.escape.parkingKmS * 1000) ]] as [string, string, string][]) : []),
     ["peak", say("jPeakSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
+    ["radiation", say("jRadiation"), say("jRadiationNone")],
+    ["cmb", say("jCmb"), cmbWords(trip.peakSpeed)],
     ["fuel", say("jFuel"), fuelWords()],
     ["ratio", say("jMassRatio"), ratioWords()],
     ["payload", say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],
@@ -1240,6 +1260,14 @@ document.addEventListener("kazoku-languagechange", () =>
     if (!byId("summary").hidden) showSummary();
   }),
 );
+
+const journeyHost = document.querySelector<HTMLElement>(".jr-main");
+if (journeyHost) {
+  shipPicker = mountShipPicker(journeyHost, journeyPickerChoice(), (next) => {
+    const id = next.rocket === "fleet-kaminari" || next.rocket === "fleet-02" ? "kaminari" : CRAFTS.find((craft) => craft.rocket === next.rocket)?.id;
+    if (id) change({ craft: id });
+  });
+}
 
 start();
 const seek = Number(query.get("t"));

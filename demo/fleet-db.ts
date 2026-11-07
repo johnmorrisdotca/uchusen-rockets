@@ -8,6 +8,7 @@ import { isListed } from "./listed.ts";
 import { fleetSize } from "./sizes.ts";
 import { WORDS } from "./words.js";
 import { chip } from "./chip.ts";
+import { mountShipPicker, type ShipPickerElement } from "./pickerView.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -32,6 +33,7 @@ const metres = (n: number) => `${n >= 100 ? Math.round(n) : Number(n.toFixed(1))
 const slotLabel = (slot: string) => (slot === "together" ? say("show_together") : (`slot_${slot}` in WORDS.en ? say(`slot_${slot}`) : (SLOT_NAMES[slot] ?? slot)));
 
 const address = createAddressState({ defaults: { ship: "fleet-ship-01", show: "together", module: "", cut: "" } });
+let shipPicker: ShipPickerElement | undefined;
 
 const cutawayId = (ship: string) => {
   const variants = ROCKETS[ship].variants;
@@ -99,6 +101,7 @@ const draw = (): void => {
   const hero = byId("hero") as UchusenRocket;
   hero.setAttribute("rocket", ship);
   hero.setAttribute("variant", variant?.id ?? rocket.defaultVariant);
+  shipPicker?.sync({ rocket: ship, variant: variant?.id ?? rocket.defaultVariant });
   hero.setAttribute("show", show);
   hero.setAttribute("look", "painted");
   if (variant) {
@@ -153,5 +156,18 @@ byId("db-cutaway").addEventListener("click", () => {
   address.set("cut", now.cut ? "" : "on");
   draw();
 });
+
+const fleetStage = document.querySelector<HTMLElement>(".stage-box");
+if (fleetStage) {
+  const first = chosen();
+  shipPicker = mountShipPicker(fleetStage, { rocket: first.ship, variant: first.variant?.id ?? first.rocket.defaultVariant }, (choice) => {
+    if (!isListed(choice.rocket) || ROCKETS[choice.rocket]?.maker !== "fleet") return;
+    address.set("ship", choice.rocket);
+    address.set("show", "together");
+    address.set("module", "");
+    address.set("cut", "");
+    draw();
+  });
+}
 
 draw();

@@ -8,6 +8,7 @@ import { isListed } from "./listed.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import { fillChoices, fillEngines, fillLooks, fillParts, fillViews, PAGE_LOOK } from "./chip.ts";
 import { bindStage } from "./viewBinder.ts";
+import { mountShipPicker, type ShipPickerElement } from "./pickerView.ts";
 
 /** Fills the builder's rows. `address` keeps the choice in the query, which the Embed page does and the builder does not. */
 export function mountCodePage(options: { address: boolean }): void {
@@ -19,6 +20,7 @@ export function mountCodePage(options: { address: boolean }): void {
   const first = Object.values(ROCKETS)[0];
   const state = { maker: (first?.maker ?? "spacex") as MakerId, rocket: "starship", variant: "v3", show: "together", look: PAGE_LOOK, view: "three-quarter", engines: "off" };
   const panel = byId<EmbedPanelElement>("embed-panel");
+  let shipPicker: ShipPickerElement | undefined;
   const here = new URL(".", location.href).href;
 
   function fill(id: string, choices: readonly { id: string; label: string }[], chosen: string, prefix: string, on: (id: string) => void): void {
@@ -95,6 +97,7 @@ export function mountCodePage(options: { address: boolean }): void {
     panel.openHref = `embed.html?${rocketToParams(chosen).toString()}`;
     panel.update();
     writeAddress(chosen);
+    shipPicker?.sync({ rocket: state.rocket, variant: state.variant });
   }
 
   panel.kinds = KINDS;
@@ -116,14 +119,18 @@ export function mountCodePage(options: { address: boolean }): void {
     return credit === "" ? "" : `Keep this credit with a painted rocket, however you use it. ${credit}`;
   };
 
-  function pick(rocket: string): void {
+  function pick(rocket: string, variant?: string): void {
     const entry = ROCKETS[rocket];
     if (!entry) return;
     state.rocket = rocket;
-    state.variant = entry.defaultVariant;
+    state.maker = entry.maker as MakerId;
+    state.variant = variant && entry.variants.some((one) => one.id === variant) ? variant : entry.defaultVariant;
     state.show = "together";
     draw();
   }
+
+  const codeStage = document.querySelector<HTMLElement>(".stage-box");
+  if (codeStage) shipPicker = mountShipPicker(codeStage, { rocket: state.rocket, variant: state.variant }, (choice) => pick(choice.rocket, choice.variant));
 
   readAddress();
   draw();
