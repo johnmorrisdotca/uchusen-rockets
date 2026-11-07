@@ -50,6 +50,9 @@ if (new URLSearchParams(location.search).get("layout") === "lineup") {
   const fold = document.getElementById("lineup-fold");
   if (wide) wide.hidden = true;
   if (fold) fold.hidden = false;
+  // The wide stage stays in the page, hidden. It still wears the view mark.
+  const parked = document.getElementById("hero");
+  if (parked instanceof HTMLElement) bindStage(parked, () => {});
   await import("./fleet-compare.ts");
 } else {
 const hero = byId<UchusenRocket>("hero");
