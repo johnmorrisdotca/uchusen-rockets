@@ -55,6 +55,22 @@ test("a slide pays out along its travel and comes back, and it does not turn", (
   }
 });
 
+test("a keel lift car rides toward the tail and comes back, and the docking node has one", () => {
+  const car = motionsOf("fleet-ship-01").find((m) => m.group === "keel-lift-node")!;
+  assert.equal(car.kind, "slide");
+  near(slideAt(car, 0), 0);
+  near(slideAt(car, car.period! * 0.5), -15);
+  near(angleAt(car, car.period! * 0.5), 0);
+  assert.equal(motionsOf("fleet-ship-01").filter((m) => m.group.startsWith("keel-lift-")).length, 5);
+});
+
+test("an airlock hatch opens outward on its top hinge", () => {
+  const hatch = motionsOf("fleet-kyotori").find((m) => m.group === "airlock-hatch-0")!;
+  near(angleAt(hatch, 0), 0);
+  near(angleAt(hatch, hatch.period! * 0.5), -70);
+  assert.equal(motionsOf("fleet-kyotori").filter((m) => m.group.startsWith("airlock-hatch-")).length, 4);
+});
+
 test("Kyotori's bay doors are drawn open and swing shut", () => {
   const door = motionsOf("fleet-kyotori").find((m) => m.group === "bay-door-0")!;
   near(angleAt(door, 0), 0);
@@ -76,7 +92,7 @@ test("a sweep stays between its angles", () => {
 test("every motion names a group that a part of its ship really carries, so none moves nothing", () => {
   const groups = (list: { pieces: (o?: { detail?: number }) => Parameters<typeof meshOf>[0] }[]) => new Set(list.flatMap((p) => meshOf(p.pieces({ detail: 0.3 })).moves.map((g) => g.name)));
   const sails = new Set(SAIL_SLOTS.flatMap((slot) => meshOf(slot.pieces()).moves.map((g) => g.name)));
-  const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings") || p.id.includes("-bay"))), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
+  const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings") || p.id.includes("-bay") || p.id === "s-core")), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
   for (const m of MOTIONS) assert.ok(have[m.ship]?.has(m.group), `${m.ship}: ${m.group}`);
 });
 
