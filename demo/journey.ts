@@ -414,7 +414,7 @@ function setSpeed(value: PlaySpeed): void {
 // ---- the stage ----
 const stage = byId("stage");
 const picture = byId("jr-picture");
-// Ctrl or Command and the wheel zoom the drawing. The painted model has its own bar, and that one keeps the wheel.
+// Ctrl or Command and the wheel zoom the drawing. The painted model has its own bar and zooms with the same wheel.
 bindStage(stage, (detail) => placeZoom(picture, detail), { overlay: true, flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "4", testid: "view-bar" });
 const sky = byId<HTMLCanvasElement>("sky");
 const craftBox = byId("craft");

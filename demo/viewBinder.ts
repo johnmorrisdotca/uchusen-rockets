@@ -63,9 +63,12 @@ export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => vo
     const detail = (event as CustomEvent<ViewDetail>).detail;
     if (detail) onView(detail);
   });
-  // An inner stage keeps the wheel, so an outer stage does not zoom as well. The bar still calls preventDefault.
+  // A stage with no view stage around it keeps the wheel. One drawn inside another lets the event
+  // go on, so the outer stage zooms too. The bar still calls preventDefault, so the page does not.
   stage.addEventListener("wheel", (event) => {
-    if (event.ctrlKey || event.metaKey || event.altKey) event.stopPropagation();
+    if (!(event.ctrlKey || event.metaKey || event.altKey)) return;
+    if (stage.parentElement?.closest("[data-view-stage]")) return;
+    event.stopPropagation();
   });
   return bar;
 }

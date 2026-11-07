@@ -46,19 +46,7 @@ test("ctrl and the wheel zooms every stage in the page list, and the page does n
       const stage = stages.nth(index);
       if (!(await stage.isVisible())) continue;
       await stage.scrollIntoViewIfNeeded();
-      // An inner stage keeps the wheel. Aim at this stage, not at the one drawn on top of it.
-      const point = await stage.evaluate((node) => {
-        const box = node.getBoundingClientRect();
-        const spots = [[box.width / 2, box.height / 2], [24, 24], [box.width - 24, 24], [24, box.height - 24], [box.width - 24, box.height - 24]];
-        for (const [x, y] of spots) {
-          if (x < 8 || y < 8 || x > box.width - 8 || y > box.height - 8) continue;
-          const hit = document.elementFromPoint(box.left + x, box.top + y);
-          if (hit instanceof Element && hit.closest("[data-view-stage]") === node) return { x: Math.round(x), y: Math.round(y) };
-        }
-        return null;
-      });
-      if (point === null) continue;
-      await stage.hover({ position: point });
+      await stage.hover();
       const before = await zoomOf(stage);
       const top = await stage.evaluate((node) => node.scrollTop);
       const scroll = await place(page);
