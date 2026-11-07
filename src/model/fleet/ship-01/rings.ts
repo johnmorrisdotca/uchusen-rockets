@@ -130,7 +130,7 @@ function nave(g: Geo, i: number): Piece[] {
   return out;
 }
 
-/** The whole living or research hall of a ring: bands for the ground, the canal and the terrace treads and risers, then terrace blocks and the nave stamped round the ring. */
+/** The living ring's hall: bands for the ground, the canal and the terrace treads and risers, then terrace blocks and the nave stamped round the ring. The research ring has its own hall. */
 export function townHall(g: Geo, y: number, use: Use, gap?: number, bare = false): Piece[] {
   const { nave: NAVE, tread: TREAD } = dims(g);
   const out: Piece[] = [];
@@ -229,7 +229,7 @@ export function ship4(order: Order = RING_ORDER_DEFAULT): Piece[] {
 }
 
 /** One ring opened for a look inside: the glass and the hall cut away over `gap` degrees each side of +Z, with its orange frames at the cut; and the hub, a spoke and a stretch of keel. */
-export function cutaway4(use: "living" | "hydro"): Piece[] {
+export function cutaway4(use: "living" | "hydro" | "research"): Piece[] {
   const r = rings().find((one) => one.use === use) as Ring;
   const g = geoOf(r);
   const gap = 58;
