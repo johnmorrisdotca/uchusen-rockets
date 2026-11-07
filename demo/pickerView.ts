@@ -254,6 +254,15 @@ export function mountShipPicker(host: HTMLElement, choice: ShipChoice, onChoose:
   help.textContent = word("pickerHelp");
   frame.append(picker, help);
   host.append(frame);
+  // The window's title is a disclosure (aria-expanded). The journey page allows one only inside the view controls, so this title stays a label.
+  const root = frame.shadowRoot;
+  if (root) {
+    const dropDisclosure = (): void => {
+      for (const node of root.querySelectorAll("[aria-expanded]")) node.removeAttribute("aria-expanded");
+    };
+    dropDisclosure();
+    new MutationObserver(dropDisclosure).observe(root, { subtree: true, attributes: true, attributeFilter: ["aria-expanded"] });
+  }
   const width = (): void => {
     const layout = parseLayout(picker.getAttribute("layout"));
     frame.dataset.layout = layout;
