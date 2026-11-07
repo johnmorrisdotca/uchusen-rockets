@@ -1,32 +1,16 @@
-// The nearest drones, drawn from the posed model. One group is built per pose and cloned, so six drones share the geometry. Distant drones are three baked poses. Pure of the page: three.js meshes only.
-import { BufferAttribute, BufferGeometry, Group, Mesh, MeshStandardMaterial } from "three";
+// The nearest drones, drawn from the posed model. One group is built per pose and cloned, so six drones share the geometry. Pure of the page: three.js meshes only.
+import { Group, Mesh } from "three";
 import { dronePieces } from "../model/fleet/drone/index.ts";
 import { DRONE_POSE, type PoseName } from "../model/fleet/drone/poses.ts";
-import { MATERIALS } from "../model/materials.ts";
 import { meshOf } from "../model/pieces.ts";
+import { poseMeshes } from "./poseMesh.ts";
 
 const cache = new Map<PoseName, Group>();
 
 function build(name: PoseName): Group {
-  const mesh = meshOf(dronePieces(true, false, DRONE_POSE[name]));
   const group = new Group();
   group.name = `drone-pose-${name}`;
-  for (const [material, buffers] of mesh.faces) {
-    const spec = MATERIALS[material];
-    if (!spec || buffers.positions.length === 0) continue;
-    const geometry = new BufferGeometry();
-    geometry.setAttribute("position", new BufferAttribute(new Float32Array(buffers.positions), 3));
-    if (buffers.normals.length === buffers.positions.length) geometry.setAttribute("normal", new BufferAttribute(new Float32Array(buffers.normals), 3));
-    geometry.setIndex(buffers.indices);
-    const opacity = "opacity" in spec ? spec.opacity : undefined;
-    const made = new MeshStandardMaterial({
-      color: spec.color,
-      metalness: spec.metal,
-      roughness: spec.rough,
-      ...(opacity !== undefined && opacity < 1 ? { transparent: true, opacity } : {}),
-    });
-    group.add(new Mesh(geometry, made));
-  }
+  for (const { geometry, material } of poseMeshes(meshOf(dronePieces(true, false, DRONE_POSE[name])))) group.add(new Mesh(geometry, material));
   return group;
 }
 
