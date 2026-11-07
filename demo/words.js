@@ -119,7 +119,6 @@ export const WORDS = {
     cmpMarkMoon: "the Moon",
     cmpMarkAu: "1 AU",
     cmpMarkKuiper: "Kuiper belt",
-    // Written by Mac Studio on 2026-11-06; nobody has read the Japanese for the asteroid belt mark.
     cmpMarkAsteroids: "Asteroid belt",
     cmpBodySun: "Sun",
     cmpBodyMercury: "Mercury",
