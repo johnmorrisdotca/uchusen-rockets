@@ -136,43 +136,48 @@ export const aimOrbit = (open: number, holder: HTMLElement, animate: boolean): v
   frame = requestAnimationFrame(step);
 };
 
-/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened a little and tipped so its rings cross the sky as a band; the horizon stays on the middle. A higher orbit eases that picture out until the whole disc is in frame. `viewZoom` below 1 opens the same picture further. */
-const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: number) => {
+/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened enough that the whole disc and both ring tips sit inside the stage, and tipped so the rings cross the sky. A higher orbit eases that picture out. The craft's own zoom is not applied: coming closer turns the planet into a band cut off by the canvas. */
+const paintFrame = (node: Framed, holder: HTMLElement, range: number) => {
   const width = holder.clientWidth;
   const height = holder.clientHeight;
   if (width < 2 || height < 2 || typeof node.setView !== "function") return;
   const side = Math.max(width, height);
-  node.style.width = `${side}px`;
-  node.style.height = `${side}px`;
+  node.style.maxWidth = "none";
+  node.style.width = "100%";
+  node.style.height = "100%";
   node.style.aspectRatio = "auto";
   const place = placementIn(width, height);
   const saturn = node.getAttribute("body") === "saturn";
+  const star = node.getAttribute("body") === "sun";
   const moons = node.hasAttribute("moons");
   const open = Math.min(1, Math.max(0, Number(node.dataset.open) || 0));
-  const widen = saturn ? 0.48 + 0.52 * open : 1;
   const fullZoom = (0.84 * Math.min(width, height) * ROOM) / side / (saturn ? 2.4 : 1);
-  const camera = moons ? ORBIT_ZOOM : (ORBIT_ZOOM * widen * (1 - open) + fullZoom * open) * viewZoom;
-  const shrink = moons ? ROOM / Math.max(ROOM, range) : viewZoom * widen * (1 - open);
+  // Saturn's rings are wider than the disc. The close horizon zoom cuts them on a straight edge, so Saturn stays at the distance where the tips fit.
+  // The Sun is the whole disc, even from low orbit: a horizon crop hides the spots and the darker edge. Farther steps draw it smaller.
+  const horizon = saturn ? fullZoom : star ? fullZoom * 0.72 : ORBIT_ZOOM;
+  const far = star ? fullZoom * 0.4 : fullZoom;
+  const camera = moons ? ORBIT_ZOOM : horizon * (1 - open) + far * open;
+  const shrink = moons ? ROOM / Math.max(ROOM, range) : saturn ? 0 : 1 - open;
   const face = node.dataset.face;
-  node.setView({
-    yaw: 0,
-    tilt: saturn ? -36 * (1 - open) : face ? -Number(face) : 0,
-    zoom: camera,
-    panX: (-2 * place.panX * shrink) / side,
-    panY: (2 * place.panY * shrink) / side,
-  });
+  const tilt = saturn ? -28 * (1 - open) : face ? -Number(face) : 0;
+  const panX = (-2 * place.panX * shrink) / side;
+  const panY = (2 * place.panY * shrink) / side;
+  const key = `${side}|${camera.toFixed(3)}|${panX.toFixed(3)}|${panY.toFixed(3)}|${tilt.toFixed(2)}`;
+  // Setting the camera again on every craft frame pins the body's own turn.
+  if (node.dataset.framed === key) return;
+  node.dataset.framed = key;
+  node.setView({ yaw: 0, tilt, zoom: camera, panX, panY });
 };
 
-/** The reader's zoom. Below 1 opens the picture further. A moon picture opens its range; a body alone opens the camera, and neither one adds moons. */
+/** The reader's zoom opens a moon picture. It does not crop the planet: the craft's zoom used to turn the background into a band. */
 export const frameSky = (node: HTMLElement, holder: HTMLElement, viewZoom = 1) => {
   node.dataset.open = shown.toFixed(4);
-  const pull = Number(node.dataset.pull) || 1;
   const zoom = Math.max(0.25, viewZoom);
   node.dataset.viewZoom = String(zoom);
   const base = Number(node.dataset.baseRange);
   const range = node.hasAttribute("moons") ? (base > 0 ? base / zoom : Number(node.getAttribute("range")) || ROOM) : ROOM;
   if (node.hasAttribute("moons") && base > 0) node.setAttribute("range", range.toFixed(2));
-  paintFrame(node as Framed, holder, range, zoom * pull);
+  paintFrame(node as Framed, holder, range);
 };
 
 const watchFrame = (node: HTMLElement, holder: HTMLElement) => {
@@ -247,10 +252,14 @@ const draw = async (mine: number, planet: HTMLElement, moons: HTMLElement, body:
   await loadBody(moonId);
   if (mine !== ticket) return;
   const node = globe(moonId, form, lang);
+  // The Earth picture keeps its lit face toward us. A dated Moon shows today's phase, which can be the dark side of the same Sun. The portrait lights it from the same side as that Earth.
+  node.removeAttribute("time");
+  node.removeAttribute("rate");
+  node.setAttribute("phase", "38");
   const host = BODIES.earth;
   const moon = BODIES[moonId as keyof typeof BODIES];
   const placed = system("earth", Date.now()).moons.find((item) => item.id === moonId);
-  if (host && moon && placed) putMoon(node, moons, placed, host, moon, Date.now());
+  if (host && moon && placed) putMoon(node, moons, placed, host, moon);
   moons.append(node);
   if (mine !== ticket) return clear(moons);
   moons.dataset.draws = moonId;
@@ -294,13 +303,14 @@ const placeMoons = (mine: number, planetNode: HTMLElement, holder: HTMLElement, 
     const facts = BODIES as Record<string, { radiusKm?: number }>;
     const biggest = Math.max(...placed.map((item) => facts[item.id]?.radiusKm ?? 1), 1);
     const ordered = [...placed].sort((a, b) => Math.atan2(a.x, a.z) - Math.atan2(b.x, b.z));
+    const far = placed.reduce((best, item) => (item.distance > best.distance ? item : best), placed[0]) as PlacedMoon;
     for (const [index, moon] of ordered.entries()) {
       await loadBody(moon.id);
       if (mine !== ticket || !planetNode.isConnected) return;
       holder.append(moonBody(moon, form, lang, index, ordered.length, (facts[moon.id]?.radiusKm ?? biggest) / biggest));
     }
-    const far = placed.reduce((best, item) => (item.distance > best.distance ? item : best), placed[0]) as PlacedMoon;
     holder.dataset.where = `${far.x.toFixed(2)},${far.y.toFixed(2)}`;
+    holder.dataset.reach = far.distance.toFixed(4);
     const start = performance.now();
     const step = (now: number) => {
       if (mine !== ticket || !planetNode.isConnected) return;
@@ -319,10 +329,11 @@ const placeMoons = (mine: number, planetNode: HTMLElement, holder: HTMLElement, 
   });
 };
 
-/** A moon in the sky above the horizon: its true bearing across the frame, at least 16 px, lit by the package for this instant. */
+/** A moon in the open sky beside the craft, large enough to read. A still, so the planet keeps the one picture. */
 const moonBody = (moon: PlacedMoon, form: SkyForm, lang: Lang, index: number, count: number, scale: number) => {
   const node = globe(moon.id, form, lang);
-  const px = Math.max(16, Math.round(56 * scale));
+  node.setAttribute("live", "off");
+  const px = Math.max(36, Math.round(64 * scale));
   const left = count === 1 ? 22 : 12 + (76 * index) / (count - 1);
   const top = 14 + (index % 2) * 8;
   node.dataset.moon = moon.id;
@@ -342,7 +353,7 @@ type MoonAt = { id: string; x: number; y: number; distance: number };
 type Disc = { radiusKm: number };
 
 /** The Moon beside the Earth, on the bearing the package gives, at its real size against the Earth's disc. */
-const putMoon = (node: HTMLElement, holder: HTMLElement, moon: MoonAt, host: Disc, body: Disc, when: number) => {
+const putMoon = (node: HTMLElement, holder: HTMLElement, moon: MoonAt, host: Disc, body: Disc) => {
   const width = trueWidth(host, body, 1);
   const discR = (PLANET_WIDTH * DISC_FILL) / 2;
   const orbit = discR + width / 2 + 0.03;
@@ -351,7 +362,6 @@ const putMoon = (node: HTMLElement, holder: HTMLElement, moon: MoonAt, host: Dis
   const left = Math.min(98 - span, Math.max(2, 50 + Math.cos(angle) * orbit * 100 - span / 2));
   const top = Math.min(98 - span, Math.max(2, 50 + Math.sin(angle) * orbit * 100 - span / 2));
   Object.assign(node.style, { position: "absolute", left: `${left.toFixed(2)}%`, top: `${top.toFixed(2)}%`, width: `${(width * 100).toFixed(2)}%` });
-  node.setAttribute("time", new Date(when).toISOString());
   holder.dataset.where = `${moon.x.toFixed(2)},${moon.y.toFixed(2)}`;
 };
 
@@ -370,7 +380,7 @@ const followMoon = (node: HTMLElement, holder: HTMLElement, mine: number, moonId
     const when = motion.matches || document.hidden ? t0 : t0 + elapsed * Number(spinRate(body?.rotationHours ?? 24)) * 1000;
     const placed = system("earth", when).moons.find((item) => item.id === moonId);
     if (!host || !body || !placed || mine !== ticket) return;
-    putMoon(node, holder, placed, host, body, when);
+    putMoon(node, holder, placed, host, body);
   };
   const loop = () => {
     void step();

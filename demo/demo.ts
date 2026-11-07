@@ -342,6 +342,7 @@ type OrbitFacts = { steps: OrbitStep[]; moons: { id: string; km: number }[] };
 const orbitCache = new Map<string, OrbitFacts>();
 const orbitPending = new Set<string>();
 let orbitAnimate = false;
+let moonOpensOrbit = state.moon !== "" && parseOrbitKm(address.get("orbit")) === null;
 const factsNow = (): OrbitFacts => (state.background === "earth" ? { steps: EARTH_ORBIT.map((step) => ({ ...step })), moons: [{ id: "moon", km: 384400 }] } : (orbitCache.get(state.background) ?? { steps: [], moons: [] }));
 const visibleMoonIds = (): string[] => {
   const facts = factsNow();
@@ -376,6 +377,12 @@ function drawOrbitButtons() {
 function settleOrbit(animate: boolean) {
   const facts = factsNow();
   if (facts.steps.length === 0) return;
+  if (moonOpensOrbit) {
+    moonOpensOrbit = false;
+    const chosen = state.moon === "all" ? facts.moons : facts.moons.filter((moon) => moon.id === state.moon);
+    const far = chosen.reduce((best, moon) => (moon.km > best ? moon.km : best), 0);
+    if (far > state.orbitKm) state.orbitKm = far;
+  }
   state.orbitKm = nearestOrbit(state.orbitKm || facts.steps[0].km, facts.steps);
   address.set("orbit", orbitQuery(state.orbitKm, facts.steps));
   drawOrbitButtons();
@@ -605,11 +612,21 @@ function pick(change: Partial<typeof state>) {
   const viewChanged = change.view !== undefined && change.view !== state.view;
   if (viewChanged) bar.set({ yaw: 0, tilt: 0, zoom: 1, panX: 0, panY: 0 });
   else if (craft) bar.set({ zoom: 1, panX: 0, panY: 0 });
-  const orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
+  let orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
+  if (change.moon && change.orbitKm === undefined) {
+    const moons = factsNow().moons;
+    const chosen = change.moon === "all" ? moons : moons.filter((moon) => moon.id === change.moon);
+    const far = chosen.reduce((best, moon) => (moon.km > best ? moon.km : best), 0);
+    if (far > 0) {
+      change = { ...change, orbitKm: far };
+      orbitChanged = true;
+    }
+  }
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
   if (change.rocket !== undefined && change.docked === undefined) state.docked = dockPlan(state.rocket);
   if (change.background !== undefined && change.moon === undefined) state.moon = "";
+  if (change.background !== undefined && change.orbitKm === undefined) state.orbitKm = 0;
   if (change.background !== undefined) address.set("background", state.background);
   if (change.background !== undefined || change.moon !== undefined) address.set("moon", state.moon ? state.moon : null);
   if (change.beside !== undefined) {
