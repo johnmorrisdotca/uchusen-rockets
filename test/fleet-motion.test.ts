@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { angleAt, MOTIONS, motionNote, motionsOf, motionSpeed, motionWanted } from "../src/index.ts";
+import { angleAt, MOTIONS, motionNote, motionsOf, motionSpeed, motionWanted, slideAt, type Motion } from "../src/index.ts";
 import { parts as hanabusa } from "../src/model/fleet/ship-01/index.ts";
 import { parts as miyamoto } from "../src/model/fleet/ship-03/index.ts";
 import { rpmFor } from "../src/model/fleet/ship-01/spin.ts";
@@ -24,17 +24,59 @@ test("Hanabusa's rings turn at the rpm that gives the living ring 1 g, and the p
   assert.match(motionNote("fleet-ship-01"), /3\.43 rpm, one turn every 17\.5 s/);
 });
 
-test("a door leaf is shut, opens to its angle, holds, and comes back, and the five leaves go one after the next", () => {
+test("a door leaf is shut, rides up its tracks, and comes back, and the five leaves go one after the next", () => {
   const leaf = (k: number) => motionsOf("fleet-ship-03").find((m) => m.group === `door-leaf-${k}`)!;
   const first = leaf(0);
-  near(angleAt(first, 0), 0);
-  near(angleAt(first, first.period! * 0.5), first.to!);
-  near(angleAt(first, first.period! * 0.99), 0);
-  assert.ok(angleAt(leaf(4), 0.3 * first.period!) !== angleAt(first, 0.3 * first.period!));
+  assert.equal(first.kind, "slide");
+  const axis = miyamoto().flatMap((part) => meshOf(part.pieces({ detail: 0.3 })).moves).find((group) => group.name === "door-leaf-0")?.axis;
+  assert.ok(axis);
+  near(Math.hypot(axis[0], axis[1], axis[2]), first.travel!, 0.05);
+  near(slideAt(first, 0), 0);
+  near(slideAt(first, first.period! * 0.5), first.travel!);
+  near(slideAt(first, first.period! * 0.99), 0);
+  near(angleAt(first, first.period! * 0.5), 0);
+  assert.ok(slideAt(leaf(4), 0.3 * first.period!) !== slideAt(first, 0.3 * first.period!));
   for (let t = 0; t < 100; t += 0.37) {
-    const a = angleAt(first, t);
-    assert.ok(a >= -1e-9 && a <= first.to! + 1e-9);
+    const d = slideAt(first, t);
+    assert.ok(d >= -1e-9 && d <= first.travel! + 1e-9);
   }
+});
+
+test("a slide pays out along its travel and comes back, and it does not turn", () => {
+  const mast: Motion = { ship: "fleet-kyotori", group: "mast-test", kind: "slide", from: 0, travel: 40, period: 16, note: "A mast telescopes out and back." };
+  near(slideAt(mast, 0), 0);
+  near(slideAt(mast, 8), 40);
+  near(slideAt(mast, 16 * 0.99), 0);
+  near(angleAt(mast, 8), 0);
+  near(slideAt({ ...mast, kind: "sweep", from: 0, to: 40 }, 8), 0);
+  for (let t = 0; t < 64; t += 0.4) {
+    const d = slideAt(mast, t);
+    assert.ok(d >= -1e-9 && d <= 40 + 1e-9);
+  }
+});
+
+test("a keel lift car rides toward the tail and comes back, and the docking node has one", () => {
+  const car = motionsOf("fleet-ship-01").find((m) => m.group === "keel-lift-node")!;
+  assert.equal(car.kind, "slide");
+  near(slideAt(car, 0), 0);
+  near(slideAt(car, car.period! * 0.5), -15);
+  near(angleAt(car, car.period! * 0.5), 0);
+  assert.equal(motionsOf("fleet-ship-01").filter((m) => m.group.startsWith("keel-lift-")).length, 5);
+});
+
+test("an airlock hatch opens outward on its top hinge", () => {
+  const hatch = motionsOf("fleet-kyotori").find((m) => m.group === "airlock-hatch-0")!;
+  near(angleAt(hatch, 0), 0);
+  near(angleAt(hatch, hatch.period! * 0.5), -70);
+  assert.equal(motionsOf("fleet-kyotori").filter((m) => m.group.startsWith("airlock-hatch-")).length, 4);
+});
+
+test("Kyotori's bay doors are drawn open and swing shut", () => {
+  const door = motionsOf("fleet-kyotori").find((m) => m.group === "bay-door-0")!;
+  near(angleAt(door, 0), 0);
+  near(angleAt(door, door.period! * 0.5), -100);
+  const other = motionsOf("fleet-kyotori").find((m) => m.group === "bay-door-1")!;
+  near(angleAt(other, other.period! * 0.5), 100);
 });
 
 test("a sweep stays between its angles", () => {
@@ -50,7 +92,7 @@ test("a sweep stays between its angles", () => {
 test("every motion names a group that a part of its ship really carries, so none moves nothing", () => {
   const groups = (list: { pieces: (o?: { detail?: number }) => Parameters<typeof meshOf>[0] }[]) => new Set(list.flatMap((p) => meshOf(p.pieces({ detail: 0.3 })).moves.map((g) => g.name)));
   const sails = new Set(SAIL_SLOTS.flatMap((slot) => meshOf(slot.pieces()).moves.map((g) => g.name)));
-  const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings"))), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
+  const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings") || p.id.includes("-bay") || p.id === "s-core")), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
   for (const m of MOTIONS) assert.ok(have[m.ship]?.has(m.group), `${m.ship}: ${m.group}`);
 });
 

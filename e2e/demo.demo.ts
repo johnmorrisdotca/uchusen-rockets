@@ -59,13 +59,11 @@ test("the page loads clean, every address under the site's own path, and nothing
   const addresses: string[] = [];
   page.on("request", (request) => addresses.push(request.url()));
   await page.goto(URL);
-  await expect(hero(page)).toHaveAttribute("data-look", "line");
+  await expect(hero(page)).toHaveAttribute("data-look", "painted");
   if (is3d(browserName)) await reach3d(page);
   else await page.waitForTimeout(800);
   expect(problems).toEqual([]);
   for (const address of addresses) expect(new globalThis.URL(address).pathname.startsWith(URL)).toBe(true);
-  // the line look needs no model
-  expect(addresses.filter((address) => address.includes("/assets/models/"))).toEqual([]);
 });
 
 test("every control is on the main view and does what it says", async ({ page }) => {
@@ -234,13 +232,13 @@ test("the rocket, variant, parts, look and view are kept in the address and come
   await press(page, "show-together");
   await press(page, "look-painted");
   await press(page, "view-front");
-  await expect.poll(() => [params().get("show"), params().get("look"), params().get("view")]).toEqual([null, "painted", "front"]);
-  // a choice at its start leaves the address plain
+  await expect.poll(() => [params().get("show"), params().get("look"), params().get("view")]).toEqual([null, null, "front"]);
+  // a choice at its start leaves the address plain: Painted is the start, so the line drawing is the one written down
   await press(page, "look-line");
   await press(page, "view-three-quarter");
-  await expect.poll(() => [params().get("look"), params().get("view")]).toEqual([null, null]);
+  await expect.poll(() => [params().get("look"), params().get("view")]).toEqual(["line", null]);
   await page.goto(`${URL}?show=__proto__&look=%22%3E%3Cscript%3E&view=constructor`);
-  await expect(hero(page)).toHaveAttribute("data-look", "line");
+  await expect(hero(page)).toHaveAttribute("data-look", "painted");
   await expect(hero(page)).toHaveAttribute("data-view-angle", "three-quarter");
   await expect(hero(page)).toHaveAttribute("data-show", "together");
   expect(problems).toEqual([]);
@@ -333,7 +331,7 @@ test("together to apart is an animated move, and a cut under reduced motion", as
   await still.close();
 });
 
-test("the painted model loads only when asked for, only for its variant, and the credit shows beside it", async ({ page, browserName }) => {
+test("the page opens on the painted model for the variant on screen, and the credit shows beside it", async ({ page, browserName }) => {
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   const models: string[] = [];
   page.on("request", (request) => {
@@ -341,23 +339,25 @@ test("the painted model loads only when asked for, only for its variant, and the
   });
   await page.goto(URL);
   await stopTurn(page);
-  await reach3d(page);
   const credit = page.locator('[data-testid="credit"]');
-  await expect(credit).toBeHidden();
-  await press(page, "look-thick");
-  await page.waitForTimeout(400);
-  expect(models).toEqual([]);
-  await press(page, "look-painted");
   await expect(credit).toBeVisible();
   await expect(credit).toContainText("Clarence365");
   await expect(credit.locator('a[href="https://creativecommons.org/licenses/by/4.0/"]')).toBeVisible();
   await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 90_000 });
   expect(models.sort()).toEqual(["starship-v3-booster.glb", "starship-v3-ship.glb"]);
+  // a line drawing adds no further model
+  await press(page, "look-thick");
+  await page.waitForTimeout(400);
+  await press(page, "look-line");
+  await expect(credit).toBeHidden();
+  expect(models.sort()).toEqual(["starship-v3-booster.glb", "starship-v3-ship.glb"]);
+  await press(page, "look-painted");
+  const back = models.length;
   // Block 2 has no model: its paint is this package's own, and it says so
   await press(page, "variant-v2");
   await expect(hero(page)).toHaveAttribute("data-painted", "code", { timeout: 60_000 });
   await expect(credit).toContainText("own code");
-  expect(models.length).toBe(2);
+  expect(models.length).toBe(back);
   await press(page, "variant-2019");
   await expect(credit).toContainText("MartianDays");
   await expect(hero(page)).toHaveAttribute("data-painted", "model", { timeout: 60_000 });
@@ -408,7 +408,7 @@ test("leaving the painted look clears data-painted, even while a model is still 
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   // a model that never comes in leaves the painted look at "loading"
   await page.route("**/assets/models/**", () => {});
-  await page.goto(URL);
+  await page.goto(`${URL}?look=line`);
   await reach3d(page);
   await press(page, "look-painted");
   await expect(hero(page)).toHaveAttribute("data-painted", "loading", { timeout: 60_000 });
@@ -470,7 +470,7 @@ test("the page itself is in Japanese when asked, and the language picker switche
 test("a painted model that cannot be fetched leaves this package's own paint, and no failure", async ({ page, browserName }) => {
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   await page.route("**/assets/models/**", (route) => route.abort());
-  await page.goto(URL);
+  await page.goto(`${URL}?look=line`);
   await reach3d(page);
   await press(page, "look-painted");
   await expect(hero(page)).toHaveAttribute("data-painted", "code", { timeout: 60_000 });
@@ -673,7 +673,7 @@ test("NASA's models load only when chosen, and are credited to NASA as public do
   page.on("request", (request) => {
     if (request.url().includes("/assets/models/")) models.push(request.url());
   });
-  await page.goto(URL);
+  await page.goto(`${URL}?look=line`);
   await stopTurn(page);
   await reach3d(page);
   const nasaFile = /(lunar-module|apollo-soyuz|gemini|mercury|jupiter-c|iss|hubble|space-shuttle-stack)-/;
@@ -789,9 +789,6 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   await expect(code).toContainText("uchusen-rocket");
   await expect(code).toContainText('rocket="starship"');
   await expect(code).toContainText("importmap");
-  await expect(code).not.toContainText("Clarence365");
-  await expect(page.locator('#embed-panel [part="credits"]')).toBeHidden();
-  await press(page, "look-painted");
   await near();
   await expect(code).toContainText("Clarence365");
   await expect(code).toContainText("creativecommons.org/licenses/by/4.0");
@@ -850,9 +847,9 @@ test("Save SVG and Save PNG give files of what is on the screen", async ({ page,
     return download;
   };
   const svg = await save("embed-svg");
-  expect(svg.suggestedFilename()).toBe("uchusen-starship-v3-line.svg");
+  expect(svg.suggestedFilename()).toBe("uchusen-starship-v3-painted.svg");
   const png = await save("embed-png");
-  expect(png.suggestedFilename()).toBe("uchusen-starship-v3-line.png");
+  expect(png.suggestedFilename()).toBe("uchusen-starship-v3-painted.png");
   const path = await png.path();
   const { readFileSync } = await import("node:fs");
   const bytes = readFileSync(path);
@@ -1234,6 +1231,8 @@ test("the Earth behind the rocket: off by default, kept in the address, behind t
   await expect(credit).toBeHidden();
   await stopTurn(page);
   if (is3d(browserName)) await reach3d(page);
+  // the line drawing of the Earth, named: Painted is what the page opens on
+  await press(page, "look-line");
 
   await press(page, "panel-background");
   await press(page, "background-earth");
@@ -1296,7 +1295,7 @@ test("every variant's painted look names whose models it is, and the sources lis
   await stopTurn(page);
   await reach3d(page);
   const credit = page.locator('[data-testid="credit"]');
-  // in the line look: the words are there whichever look is on, and no model is asked for on the way
+  // the page opens painted, so each variant names the models on screen
   for (const rocket of Object.values(ROCKETS))
     for (const variant of rocket.variants) {
       await press(page, `rocket-${rocket.id}`);

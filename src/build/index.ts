@@ -1,6 +1,7 @@
 // The builder: one description into one mesh and one drawing. Works in Node and in a browser, with no dependency: the geometry here is this package's own.
 import { propellantOf, type FlameKind } from "../data/propellants.ts";
 import { check, type Description, type FitReport } from "../fit.ts";
+import { spaceSlots } from "../inspace.ts";
 import { BESIDE_ROCKET, besideBounds, besideLabel, besideLayout, canBeside, craftName } from "../beside.ts";
 import { scaleFactor, scalePieces, scaleReport } from "../concepts.ts";
 import { type Angle, cleanView, DEFAULT_VIEW, PICTURE_H, PICTURE_W, VIEWS, type Vec3, type ViewName } from "../framing.ts";
@@ -176,8 +177,11 @@ function flameKindOf(part: PartRecord): FlameKind {
   return "neutral";
 }
 
-function assembled(report: FitReport, others: readonly Built[] = [], naming?: { own: Description; others: readonly string[] }, k = 1): Built {
-  const own: BuiltPart[] = report.parts.map(({ slot, part }) => {
+function assembled(report: FitReport, others: readonly Built[] = [], naming?: { own: Description; others: readonly string[] }, k = 1, only: readonly string[] | null = null): Built {
+  const listed = only ? report.parts.filter(({ slot }) => only.includes(slot)) : report.parts;
+  // a lone orbiter is strapped to a tank that is no longer there, so it comes back to the axis
+  const drawing = only && listed.length > 0 && listed.every(({ part }) => part.strapOn) ? listed.map(({ slot, part }) => ({ slot, part: { ...part, strapOn: undefined } })) : listed;
+  const own: BuiltPart[] = drawing.map(({ slot, part }) => {
     const one = made(part.id, k);
     return { slot, record: part, pieces: one.pieces, get mesh() { return one.mesh; }, bounds: one.bounds, flame: flameKindOf(part) };
   });
@@ -187,7 +191,7 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
   const beside: BuiltPart[] = others.flatMap((other, index) => other.parts.map((part) => ({ slot: `${prefixOf(index)}${part.slot}`, record: part.record, pieces: part.pieces, get mesh() { return part.mesh; }, bounds: part.bounds, flame: part.flame, craft: index })));
   // what is drawn: the rocket's parts, then the ones beside it
   const parts: BuiltPart[] = [...own, ...beside];
-  const ownPlaces = (show?: string) => placesFor(report.parts, cleanShow(show, slots), (part) => widthOf(part.id, k));
+  const ownPlaces = (show?: string) => placesFor(drawing, cleanShow(show, slots), (part) => widthOf(part.id, k));
   const boundsOfPlaces = (places: { slot: string; at: Vec3; shown: boolean }[]): Bounds => {
     const min: Vec3 = [Infinity, Infinity, Infinity];
     const max: Vec3 = [-Infinity, -Infinity, -Infinity];
@@ -333,7 +337,9 @@ export function build(description: Description, options: { detail?: DetailLevel;
     const others = asked.map((one) => build(one, { detail: "full" }));
     const naming = options.named ? { own: description, others: asked.map((one, index) => (options.beside === true ? besideLabel() : craftName(one, others[index].boundsOf("together").max[1]))) } : undefined;
     const k = scaleFactor(description.rocket, description.variant ?? report.variant?.id ?? "", options.scale ?? 100);
-    const built = assembled(scaleReport(report, k), others, naming, k);
+    const scaled = scaleReport(report, k);
+    const only = description.form === "space" ? spaceSlots(description.rocket, scaled.variant?.slots ?? []) : null;
+    const built = assembled(scaled, others, naming, k, only);
     // a part's pieces are made when it is assembled, at this level: the lazy parts of a heavy part keep the level they were made at
     return built;
   } finally {

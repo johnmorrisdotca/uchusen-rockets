@@ -2,6 +2,8 @@
 .fleet-db .db { display: grid; gap: 12px; }
 .fleet-db .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .fleet-db .stage-box uchusen-rocket { display: block; width: min(100%, calc((100vh - 26rem) * 0.75)); height: auto; margin: 0 auto; }
+.fleet-db .db-cut { display: flex; margin: 0.35rem 0 0.15rem; }
+.fleet-db .db-cut .chip:disabled { opacity: 0.45; }
 .fleet-db .db-facts { border-collapse: collapse; width: 100%; max-width: 100%; }
 .fleet-db .db-facts th,
 .fleet-db .db-facts td { text-align: left; padding: 4px 12px 4px 0; vertical-align: top; }

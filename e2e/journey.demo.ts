@@ -26,6 +26,10 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
   await expect(page.getByTestId("route").locator("text").first()).toBeVisible();
   await expect(page.getByTestId("trip-straight")).toContainText("km");
+  await expect(page.getByTestId("trip-radiation")).toContainText("No source");
+  await expect(page.getByTestId("trip-cmb")).toContainText("2.72548 K");
+  await expect(page.getByTestId("trip-cmb")).toContainText("Fixsen 2009");
+  await expect(page.getByTestId("trip-cmb")).toContainText("matches");
   await expect(page.getByTestId("trip-time")).toContainText("d");
   await expect(page.getByTestId("trip-dvout")).toContainText("km/s");
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
@@ -42,7 +46,21 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await page.getByTestId("scrub").fill("1000");
   await expect(page.getByTestId("when-date")).not.toHaveText(atStart);
   expect(await width("dest")).toBeGreaterThan(destStart * 2);
-  expect(await page.locator("details, [aria-expanded]").count()).toBe(0);
+  // the shared view bar has its own More control once the painted model is up; the journey's rows stay buttons
+  const disclosures = await page.locator("details, [aria-expanded]").evaluateAll((nodes) =>
+    nodes
+      .filter((node) => {
+        let current: Element | null = node;
+        while (current) {
+          if (current.tagName === "KAZOKU-VIEW-CONTROLS") return false;
+          const root = current.getRootNode();
+          current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+        }
+        return true;
+      })
+      .map((node) => `${node.tagName} ${node.getAttribute("aria-label") ?? node.getAttribute("data-testid") ?? ""}`.trim()),
+  );
+  expect(disclosures).toEqual([]);
   expect(found).toEqual([]);
 });
 
@@ -183,7 +201,7 @@ test("the page makes no WebGL context and asks for no frame while nothing moves"
       return raf(callback);
     };
   });
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   await expect(page.getByTestId("phase")).toHaveText("READY");
   const before = await page.evaluate(() => (window as unknown as { __raf: number }).__raf);
   await page.waitForTimeout(900);
@@ -266,7 +284,7 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
 
 test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the picture", async ({ page }) => {
   const found = problems(page);
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   const names = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"];
   const tops = [];
   for (const name of names) {
@@ -322,7 +340,7 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
       return (real as (...args: unknown[]) => unknown).call(this, kind, ...rest) as never;
     } as typeof real;
   });
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(0);
   await page.getByTestId("look-painted").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
@@ -342,7 +360,7 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(left);
   await page.getByTestId("view-side").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
-  expect(page.url()).toContain("look=painted");
+  expect(page.url()).not.toContain("look=");
 });
 
 test("the painted craft stays whole and every HUD block has the same backing", async ({ page }) => {
@@ -457,7 +475,7 @@ test("the arrival card closes by the cross, Escape and a click outside, and Summ
   await page.keyboard.press("Escape");
   await expect(card).toBeHidden();
   await page.getByTestId("summary-open").click();
-  await page.getByTestId("sky").click({ position: { x: 8, y: 8 } });
+  await page.getByTestId("stage").click({ position: { x: 8, y: 8 } });
   await expect(card).toBeHidden();
 });
 
@@ -488,4 +506,27 @@ test("the page bar links every page on one row and marks this page", async ({ pa
   const tops = await bar.locator("a, button").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
   expect(new Set(tops).size, tops.join(",")).toBe(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test("a fast trip shows a hotter microwave sky ahead", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari&to=neptune&pull=1`);
+  await expect(page.getByTestId("craft-kaminari")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("trip-radiation")).toContainText("No source");
+  await expect(page.getByTestId("trip-cmb")).toContainText("straight ahead");
+  const text = await page.getByTestId("trip-cmb").innerText();
+  const kelvin = Number(text.match(/([\d.]+) K straight/)?.[1]);
+  expect(kelvin).toBeGreaterThan(2.73);
+});
+
+test("the ship turns round for the braking burn, and the timeline names the flip", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari&to=mars`);
+  await expect(page.getByTestId("route-flip")).toHaveText("TURNING ROUND");
+  await page.locator("#scrub").evaluate((node) => {
+    const input = node as HTMLInputElement;
+    input.value = "800";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.getByTestId("phase")).toHaveText("DECELERATE");
+  await expect.poll(() => page.locator("#craft").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--turn"))).toBe("-90.0deg");
+  await expect.poll(() => page.locator("#route g").last().getAttribute("data-turned")).toBe("180.0");
 });
