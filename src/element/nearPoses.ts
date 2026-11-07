@@ -30,14 +30,44 @@ function build(name: PoseName): Group {
   return group;
 }
 
-/** A clone of the posed drone. The geometry stays shared. */
-export function posedDrone(name: PoseName): Group {
+/** A clone of the posed drone. `own` copies the geometry, so a blend can write this clone without moving the shared one. */
+export function posedDrone(name: PoseName, own = false): Group {
   let source = cache.get(name);
   if (!source) {
     source = build(name);
     cache.set(name, source);
   }
-  return source.clone(true);
+  const clone = source.clone(true);
+  if (!own) return clone;
+  clone.traverse((node) => {
+    if (node instanceof Mesh) node.geometry = node.geometry.clone();
+  });
+  return clone;
+}
+
+/** Writes a blend of two poses into `group`. `t` is 0 at `from` and 1 at `to`. The group must be an owned clone of one pose. */
+export function blendPoses(group: Group, from: PoseName, to: PoseName, t: number): boolean {
+  const a = cache.get(from) ?? build(from);
+  const b = cache.get(to) ?? build(to);
+  cache.set(from, a);
+  cache.set(to, b);
+  const u = Math.min(1, Math.max(0, t));
+  const meshes = group.children.filter((node): node is Mesh => node instanceof Mesh);
+  const fromMeshes = a.children.filter((node): node is Mesh => node instanceof Mesh);
+  const toMeshes = b.children.filter((node): node is Mesh => node instanceof Mesh);
+  if (meshes.length !== fromMeshes.length || meshes.length !== toMeshes.length) return false;
+  for (let i = 0; i < meshes.length; i += 1) {
+    const dest = meshes[i].geometry.getAttribute("position");
+    const left = fromMeshes[i].geometry.getAttribute("position");
+    const right = toMeshes[i].geometry.getAttribute("position");
+    if (dest.count !== left.count || dest.count !== right.count) return false;
+    const out = dest.array as Float32Array;
+    const x = left.array as Float32Array;
+    const y = right.array as Float32Array;
+    for (let k = 0; k < out.length; k += 1) out[k] = x[k] + (y[k] - x[k]) * u;
+    dest.needsUpdate = true;
+  }
+  return true;
 }
 
 /** Drops the shared poses. The caller's clones still hold the geometry until they dispose it. */

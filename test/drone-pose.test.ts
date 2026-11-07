@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Mesh } from "three";
-import { posedDrone } from "../src/element/nearPoses.ts";
+import { blendPoses, posedDrone } from "../src/element/nearPoses.ts";
 import { ARMS, joints } from "../src/model/fleet/drone/layout.ts";
 import { legPieces } from "../src/model/fleet/drone/legs.ts";
 import { DRONE_POSE, blendPose, fingerSpan, poseFor, poseOf, storedPose } from "../src/model/fleet/drone/poses.ts";
@@ -57,6 +57,40 @@ test("a distant drone snaps to a folded, reaching or planted pose", () => {
   assert.equal(storedPose("weld"), "place");
   assert.equal(storedPose("inspect"), "place");
   assert.equal(storedPose(poseFor("builder", "berth")), "park");
+});
+
+const counts = (name: "fly" | "park" | "weld"): number[] => {
+  const out: number[] = [];
+  posedDrone(name).traverse((node) => {
+    if (node instanceof Mesh) out.push(node.geometry.getAttribute("position").count);
+  });
+  return out;
+};
+
+const flat = (group: ReturnType<typeof posedDrone>): Float32Array => {
+  const parts: number[] = [];
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) return;
+    const position = node.geometry.getAttribute("position");
+    for (let i = 0; i < position.count; i += 1) parts.push(position.getX(i), position.getY(i), position.getZ(i));
+  });
+  return Float32Array.from(parts);
+};
+
+test("a blend sits halfway between the planted pose and the flying one", () => {
+  assert.deepEqual(counts("fly"), counts("park"));
+  assert.deepEqual(counts("fly"), counts("weld"));
+  const group = posedDrone("fly", true);
+  assert.equal(blendPoses(group, "fly", "park", 0), true);
+  const flown = flat(group);
+  assert.equal(blendPoses(group, "fly", "park", 1), true);
+  const planted = flat(group);
+  let at = -1;
+  for (let i = 0; i < flown.length; i += 1) if (Math.abs(flown[i] - planted[i]) > 0.02) at = i;
+  assert.ok(at >= 0);
+  assert.equal(blendPoses(group, "fly", "park", 0.5), true);
+  const mid = flat(group);
+  assert.ok(Math.abs(mid[at] - ((flown[at] ?? 0) + (planted[at] ?? 0)) / 2) < 1e-4);
 });
 
 test("a planted drone reaches lower than a flying one", () => {

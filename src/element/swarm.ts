@@ -4,7 +4,7 @@ import { DRONE_FILES } from "../model/drone.ts";
 import { DRONE } from "../model/fleet/drone/index.ts";
 import { poseFor, type PoseName } from "../model/fleet/drone/poses.ts";
 import { DRONE_SIZE } from "../model/fleet/drone/size.ts";
-import { clearPosedDrones, posedDrone } from "./nearPoses.ts";
+import { blendPoses, clearPosedDrones, posedDrone } from "./nearPoses.ts";
 
 const CAP = 100;
 const RINGS = 2;
@@ -234,6 +234,9 @@ export class SwarmRig {
   private nearSig = "";
   private readonly poseName: PoseName[] = [];
   private readonly limbs: Group[] = [];
+  private readonly limbFrom: (PoseName | undefined)[] = [];
+  private readonly limbTo: (PoseName | undefined)[] = [];
+  private readonly limbStart: number[] = [];
 
   private readonly load: DroneLoader | undefined;
   private readonly wake: () => void;
@@ -531,26 +534,43 @@ export class SwarmRig {
     return fine.length;
   }
 
-  /** The nearest drones wear the posed model, on the same matrix as the rigid one. */
+  /** The nearest drones wear the posed model, on the same matrix as the rigid one. A change of pose eases over 0.3 to 0.8 seconds, and reduced motion cuts. */
   private placeLimbs(near: readonly number[]): void {
+    const now = performance.now();
     for (let slot = 0; slot < NEAR_MAX; slot += 1) {
       const i = near[slot];
       const name = i === undefined ? undefined : this.poseName[i];
-      const have = this.limbs[slot];
       if (i === undefined || !name) {
-        if (have) have.visible = false;
+        if (this.limbs[slot]) this.limbs[slot].visible = false;
+        this.limbTo[slot] = undefined;
         continue;
       }
-      const wanted = `drone-pose-${name}`;
-      let group = have;
-      if (!group || group.name !== wanted) {
-        group?.removeFromParent();
-        group = posedDrone(name);
-        group.matrixAutoUpdate = false;
-        this.group.add(group);
-        this.limbs[slot] = group;
+      if (this.limbTo[slot] !== name) {
+        const previous = this.limbTo[slot];
+        this.limbFrom[slot] = previous ?? name;
+        this.limbTo[slot] = name;
+        this.limbStart[slot] = now;
+        if (!this.limbs[slot] || !previous || this.reduced) {
+          this.limbs[slot]?.removeFromParent();
+          const group = posedDrone(name, true);
+          group.matrixAutoUpdate = false;
+          this.group.add(group);
+          this.limbs[slot] = group;
+          this.limbFrom[slot] = name;
+        }
       }
+      const origin = this.limbFrom[slot];
+      const goal = this.limbTo[slot];
+      const group = this.limbs[slot];
+      if (group && origin && goal && origin !== goal) {
+        const span = 300 + slot * 100;
+        const t = Math.min(1, (now - (this.limbStart[slot] ?? now)) / span);
+        blendPoses(group, origin, goal, t);
+        if (t >= 1) this.limbFrom[slot] = goal;
+      }
+      if (!group) continue;
       group.visible = true;
+      group.matrixAutoUpdate = false;
       group.matrix.fromArray(this.bodies, i * 16);
       group.matrixWorldNeedsUpdate = true;
     }
@@ -591,6 +611,8 @@ export class SwarmRig {
     this.count = 0;
     this.nearSig = "?";
     this.poseName.length = 0;
+    this.limbFrom.length = 0;
+    this.limbTo.length = 0;
     for (const limb of this.limbs) limb.visible = false;
     this.generation += 1;
     if (this.near) this.freeLevel(this.near);
