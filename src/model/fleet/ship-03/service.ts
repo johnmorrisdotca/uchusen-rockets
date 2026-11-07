@@ -97,6 +97,10 @@ function aboutTail(pieces: readonly Piece[]): Piece[] {
       return { ...piece, ...common, frame: { o: flip(f.o), u: flip(f.u), v: flip(f.v), w: flip(f.w) } };
     }
     if (piece.kind === "lines") return { ...piece, ...common, paths: piece.paths.map((path) => path.map(flip)) };
+    if (piece.kind === "instances") {
+      // 180 degrees about X sends y and z the other way and reverses a yaw.
+      return { ...piece, ...common, template: aboutTail(piece.template), poses: piece.poses.map((pose) => ({ ...pose, at: flip(pose.at), yaw: -(pose.yaw ?? 0) })) };
+    }
     const [ox, oz] = piece.at ?? [0, 0];
     const arc = piece.arc;
     return {
