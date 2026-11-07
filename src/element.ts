@@ -268,7 +268,7 @@ export class UchusenRocket extends HTMLBase {
         yaw: number(choice.yaw, this.driven?.yaw ?? 0, -3600, 3600),
         tilt: number(choice.tilt, this.driven?.tilt ?? 0, -90, 90),
         roll: number(choice.roll, this.driven?.roll ?? 0, -180, 180),
-        zoom: number(choice.zoom, this.driven?.zoom ?? 1, 0.000001, 8),
+        zoom: number(choice.zoom, this.driven?.zoom ?? 1, 1e-12, 8),
         panX: number(choice.panX, this.driven?.panX ?? 0, -5000, 5000),
         panY: number(choice.panY, this.driven?.panY ?? 0, -5000, 5000),
       };
@@ -286,6 +286,28 @@ export class UchusenRocket extends HTMLBase {
     const rate = Math.max(0.25, Math.min(4, Number(speed) || 1));
     this.inspectNow = { count: n, playing, speed: rate };
     this.viewer?.setInspect(n, playing, rate);
+  }
+
+  private pivotWanted: { at: readonly [number, number, number] | null; label: string } | null = null;
+  private pathsWanted: boolean | null = null;
+  private whenWanted: number | null = null;
+
+  /** Moves the camera's pivot onto a body in the scene, or back to the craft when `at` is null. */
+  setPivot(at: readonly [number, number, number] | null, label = "craft"): void {
+    this.pivotWanted = { at, label };
+    this.viewer?.setPivot(at, label);
+  }
+
+  /** Shows or hides the faint orbit lines and the two belts. */
+  setPaths(on: boolean): void {
+    this.pathsWanted = on;
+    this.viewer?.setPaths(on);
+  }
+
+  /** Puts the Moon and the major moons where they are at `ms`. */
+  setWhen(ms: number): void {
+    this.whenWanted = ms;
+    this.viewer?.setWhen(ms);
   }
 
   /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. It is drawn at most about 20 times a second and never while out of sight: it is made again when it comes back. */
@@ -925,6 +947,9 @@ export class UchusenRocket extends HTMLBase {
       });
       this.viewer = made;
       made.setOrbit(this.getAttribute("world") === "earth");
+      if (this.pivotWanted) made.setPivot(this.pivotWanted.at, this.pivotWanted.label);
+      if (this.pathsWanted !== null) made.setPaths(this.pathsWanted);
+      if (this.whenWanted !== null) made.setWhen(this.whenWanted);
       window.cancelAnimationFrame(this.flightFrame);
       this.flightFrame = 0;
       if (this.clock) made.setFlight(this.clock);
