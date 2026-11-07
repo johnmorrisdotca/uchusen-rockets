@@ -737,6 +737,7 @@ function buildRoute(): void {
   if (trip.continuous) {
     bracket(0.01, 0.485, say("jPhase_accelerate"));
     bracket(0.515, 0.99, say("jPhase_decelerate"));
+    add(svgEl("text", { x: x(0.5), y: y - 40, "text-anchor": "middle", "data-testid": "route-flip" }, say("jPhase_flip")));
   } else if (trip.ballistic) {
     bracket(0.04, 0.96, say("jPhase_coast"));
   }
@@ -756,7 +757,9 @@ function buildRoute(): void {
 
 function drawRoute(state: State): void {
   const x = ROUTE_X0 + (ROUTE_X1 - ROUTE_X0) * state.progress;
-  routeMarker?.setAttribute("transform", `translate(${x.toFixed(1)} 70)`);
+  const spin = (state.turned * 180).toFixed(1);
+  routeMarker?.setAttribute("transform", `translate(${x.toFixed(1)} 70) rotate(${spin})`);
+  routeMarker?.setAttribute("data-turned", spin);
   routeDone?.setAttribute("x2", x.toFixed(1));
 }
 

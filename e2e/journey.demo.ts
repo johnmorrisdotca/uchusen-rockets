@@ -517,3 +517,16 @@ test("a fast trip shows a hotter microwave sky ahead", async ({ page }) => {
   const kelvin = Number(text.match(/([\d.]+) K straight/)?.[1]);
   expect(kelvin).toBeGreaterThan(2.73);
 });
+
+test("the ship turns round for the braking burn, and the timeline names the flip", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari&to=mars`);
+  await expect(page.getByTestId("route-flip")).toHaveText("TURNING ROUND");
+  await page.locator("#scrub").evaluate((node) => {
+    const input = node as HTMLInputElement;
+    input.value = "800";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.getByTestId("phase")).toHaveText("DECELERATE");
+  await expect.poll(() => page.locator("#craft").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--turn"))).toBe("-90.0deg");
+  await expect.poll(() => page.locator("#route g").last().getAttribute("data-turned")).toBe("180.0");
+});
