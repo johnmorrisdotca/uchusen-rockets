@@ -29,7 +29,7 @@ import {
 } from "../src/journey/index.ts";
 import { assistApplies, assistWindows, swingPoint } from "../src/journey/assist.ts";
 import { conicPoint } from "../src/journey/lunar.ts";
-import { transferPoint } from "../src/journey/physics.ts";
+import { cmbAhead, transferPoint } from "../src/journey/physics.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
@@ -773,6 +773,12 @@ function rows(listId: string, spec: [string, string][]): Map<string, Row> {
   return map2;
 }
 
+function cmbWords(speedMs: number): string {
+  const sky = cmbAhead(speedMs);
+  if (!sky.fast) return say("jCmbRest");
+  return say("jCmbAhead", { temp: sky.kelvin.toFixed(2) });
+}
+
 function buildPanel(): void {
   const keys: [string, string][] = [
     ["date", "jDate"],
@@ -810,7 +816,7 @@ function buildPanel(): void {
     ...(trip.escape ? ([[ "escsurf", say("jEscapeSurface"), speedWords(trip.escape.surfaceKmS * 1000) ], [ "escpark", say("jEscapePark"), speedWords(trip.escape.parkingKmS * 1000) ]] as [string, string, string][]) : []),
     ["peak", say("jPeakSpeed"), `${speedWords(trip.peakSpeed)} · ${percentOfLight(trip.peakSpeed)}`],
     ["radiation", say("jRadiation"), say("jRadiationNone")],
-    ["cmb", say("jCmb"), say("jCmbValue")],
+    ["cmb", say("jCmb"), cmbWords(trip.peakSpeed)],
     ["fuel", say("jFuel"), fuelWords()],
     ["ratio", say("jMassRatio"), ratioWords()],
     ["payload", say("jPayloadTo", { to: stopName(trip.to) }), payloadWords()],

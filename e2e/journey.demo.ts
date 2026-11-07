@@ -29,6 +29,7 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await expect(page.getByTestId("trip-radiation")).toContainText("No source");
   await expect(page.getByTestId("trip-cmb")).toContainText("2.72548 K");
   await expect(page.getByTestId("trip-cmb")).toContainText("Fixsen 2009");
+  await expect(page.getByTestId("trip-cmb")).toContainText("matches");
   await expect(page.getByTestId("trip-time")).toContainText("d");
   await expect(page.getByTestId("trip-dvout")).toContainText("km/s");
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
@@ -505,4 +506,14 @@ test("the page bar links every page on one row and marks this page", async ({ pa
   const tops = await bar.locator("a, button").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
   expect(new Set(tops).size, tops.join(",")).toBe(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test("a fast trip shows a hotter microwave sky ahead", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari&to=neptune&pull=1`);
+  await expect(page.getByTestId("craft-kaminari")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("trip-radiation")).toContainText("No source");
+  await expect(page.getByTestId("trip-cmb")).toContainText("straight ahead");
+  const text = await page.getByTestId("trip-cmb").innerText();
+  const kelvin = Number(text.match(/([\d.]+) K straight/)?.[1]);
+  expect(kelvin).toBeGreaterThan(2.73);
 });
