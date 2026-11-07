@@ -328,7 +328,7 @@ export class RocketViewer {
   /** Why the view controls last moved, so Fit eases and a hand stops the ease. */
   private pendingReason = "";
   /** A painted model fading in over the coarse picture. The coarse picture stays until the fade ends. */
-  private paintFades: { part: PartView; mats: { material: MeshStandardMaterial | MeshBasicMaterial; transparent: boolean }[]; start: number }[] = [];
+  private paintFades: { part: PartView; mats: { material: MeshStandardMaterial | MeshBasicMaterial; transparent: boolean; depthWrite: boolean }[]; start: number }[] = [];
   private tilt = { azimuth: 0, polar: 0, applied: { azimuth: 0, polar: 0 } };
   private driven: ViewChoice | null = null;
   private drivenDirty = false;
@@ -1429,18 +1429,43 @@ export class RocketViewer {
       });
   }
 
+  /** The canvas is still held by the one fade-in. The stylesheet hides it until the picture is 3d, so clearing that hold early fades it out and back in. */
+  fadeHeld(): boolean {
+    return this.canvas.style.opacity !== "";
+  }
+
+  /** Freeze the canvas before the picture becomes 3d, so the long stylesheet fade does not start. */
+  pinFade(): void {
+    this.canvas.style.transition = "none";
+  }
+
+  /** Give the canvas back to the stylesheet once that stylesheet is showing it. */
+  settleFade(): void {
+    const canvas = this.canvas;
+    const picture = canvas.parentElement?.parentElement;
+    if (picture?.dataset.state !== "3d") {
+      if (canvas.style.opacity !== "") canvas.style.transition = "";
+      return;
+    }
+    canvas.style.transition = "none";
+    canvas.style.opacity = "";
+    requestAnimationFrame(() => {
+      if (!this.disposed) canvas.style.transition = "";
+    });
+  }
+
   /** The new craft fades in at the scale the camera still has. Reduced motion leaves it as it is. */
   private fadeCraft(): void {
     const canvas = this.canvas;
     canvas.style.transition = "opacity 0.4s ease";
     canvas.style.opacity = "0";
     requestAnimationFrame(() => {
+      if (this.disposed) return;
       canvas.style.opacity = "1";
     });
     window.setTimeout(() => {
       if (this.disposed) return;
-      canvas.style.transition = "";
-      canvas.style.opacity = "";
+      this.settleFade();
     }, 500);
   }
 
@@ -1449,14 +1474,15 @@ export class RocketViewer {
     if (!part.model) return;
     part.model.visible = true;
     part.code.visible = true;
-    const mats: { material: MeshStandardMaterial | MeshBasicMaterial; transparent: boolean }[] = [];
+    const mats: { material: MeshStandardMaterial | MeshBasicMaterial; transparent: boolean; depthWrite: boolean }[] = [];
     part.model.traverse((node) => {
       if (!(node instanceof Mesh)) return;
       const list = Array.isArray(node.material) ? node.material : [node.material];
       for (const material of list) {
         if (!(material instanceof MeshStandardMaterial) && !(material instanceof MeshBasicMaterial)) continue;
-        mats.push({ material, transparent: material.transparent });
+        mats.push({ material, transparent: material.transparent, depthWrite: material.depthWrite });
         material.transparent = true;
+        material.depthWrite = false;
         material.opacity = 0;
       }
     });
@@ -1481,6 +1507,7 @@ export class RocketViewer {
         for (const row of fade.mats) {
           row.material.opacity = 1;
           row.material.transparent = row.transparent;
+          row.material.depthWrite = row.depthWrite;
         }
         this.showCode(fade.part, this.look === "painted");
       }

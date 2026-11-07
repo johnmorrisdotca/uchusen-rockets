@@ -925,7 +925,11 @@ export class UchusenRocket extends HTMLBase {
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
         if (generation === this.generation && this.viewer === made) {
-          this.setState("3d");
+          if (made.fadeHeld()) {
+            made.pinFade();
+            this.setState("3d");
+            made.settleFade();
+          } else this.setState("3d");
           this.emit("uchusen-ready", { frames: made.frames });
           this.startTilt();
         }
