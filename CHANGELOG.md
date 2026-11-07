@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Mission pods rise off the collar** (MODULES-450): Miyamoto and Ariake's pod lifts 12 m off the dorsal collar and settles back. The isolator stays.
 - **Keel lift cars ride the tube** (MODULES-450): Hanabusa's cars, one at each wheel and one at the docking node, ride 15 m toward the tail and back.
 - **Airlock hatches swing open** (MODULES-450): Kyotori's four hatches open outward on their top hinges and shut again.
 - **Kyotori's bay doors swing shut** (MODULES-450): the two payload-bay doors, drawn open, swing shut on their hinges and back.

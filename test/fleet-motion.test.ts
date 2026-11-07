@@ -55,6 +55,15 @@ test("a slide pays out along its travel and comes back, and it does not turn", (
   }
 });
 
+test("a mission pod rises off the collar and settles back", () => {
+  const pod = motionsOf("fleet-ship-03").find((m) => m.group === "pod-swap")!;
+  assert.equal(pod.kind, "slide");
+  near(slideAt(pod, 0), 0);
+  near(slideAt(pod, pod.period! * 0.5), 12);
+  near(angleAt(pod, pod.period! * 0.5), 0);
+  assert.ok(motionsOf("fleet-ship-ariake").some((m) => m.group === "pod-swap"));
+});
+
 test("a keel lift car rides toward the tail and comes back, and the docking node has one", () => {
   const car = motionsOf("fleet-ship-01").find((m) => m.group === "keel-lift-node")!;
   assert.equal(car.kind, "slide");
