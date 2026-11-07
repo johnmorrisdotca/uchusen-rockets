@@ -1,5 +1,5 @@
 // The research ring's hall: an open atrium and terraces of laboratories. It is not a second copy of the living town, so it has no canal and no houses. The ring's own frame, up toward the hub. Pure: no three.js and no DOM.
-import { box, place, rod, type Lathe, type MaterialName, type Piece } from "./adapter.ts";
+import { box, place, type Lathe, type MaterialName, type Piece } from "./adapter.ts";
 import { dims, ground, STEP } from "./rings.ts";
 import type { Geo } from "./wheelparts.ts";
 
@@ -18,7 +18,7 @@ function laboratory(y0: number, y1: number, floor: number): Piece[] {
     blk("hull-grey", 0, 4.6, lo + 0.35, hi - 0.35, floor - 0.72, floor - 0.08),
     blk("hull-white", 0, 4.8, lo + 0.25, hi - 0.25, floor - 0.86, floor - 0.72),
     blk("window", 0, 4.4, back - 0.04, back + 0.04, floor - 2.4, floor - 0.9),
-    rod("lamp-blue", [-2.1, (lo + hi) / 2, floor - 2.15], [2.1, (lo + hi) / 2, floor - 2.15], 0.06, 8, { only: "mesh" }),
+    blk("lamp-blue", 0, 3.8, (lo + hi) / 2 - 0.55, (lo + hi) / 2 + 0.55, floor - 1.75, floor - 1.35),
   ];
 }
 

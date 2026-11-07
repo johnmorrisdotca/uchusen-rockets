@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **The research ring is laboratories** (MODULES-433): benches and blue lamps step up both walls round an open atrium. It is no longer a second copy of the living town, so it has no canal and no houses.
+- **The research ring is laboratories** (MODULES-433): benches with a blue lamp bar over each one step up both walls round an open atrium. It is no longer a second copy of the living town, so it has no canal and no houses.
 - **Sky wash inside the glass** (MODULES-433): the living ring and the garden ring carry a pale shell just inside the glass, so the hall is lit by sky.
 - **The travelling clock** (MODULES-400): one sentence under the two clocks says the clock on board runs slower. When the rounded times match, it adds that the difference is smaller than the times above.
 - **Mass ratio on this trip** (MODULES-400): a ship that burns all the way says whether the tanks hold it. A chemical rocket aimed past the solar system says it cannot, and names the 8,750 m/s parking-orbit burn. No fuel load is invented.
