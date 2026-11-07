@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **The fleet walk counts the frame already on screen**, so twelve frames fit in ninety seconds.
+- **Background planets fill the frame** (MODULES-502) when the camera pulls back. A pinch on a stage zooms the view and leaves the page still (MODULES-513).
+- **On a desk the line-up names wrap** (MODULES-505), so every name is whole. Planets and moons come from wakusei-planets 0.17.1 (MODULES-455). Visiting craft sit on cradles and ports (MODULES-494).
 - **Fleet record polish** (MODULES-409): one section chip is pressed at a time, and the cutaway is a switch above the view controls. The painted look stays on.
 - **Drones inspect a finished ship** (MODULES-516): the ship sits still and from one drone to a hundred fly around it, pause with a light on the hull, then move on. Play, pause and speed are on the page, and the choices stay in the address.
 - **A named bay builds the ship you choose** (MODULES-515): the yard's own bays, the ship in the address, and the build starts at the beginning. Building anywhere else is not this page.

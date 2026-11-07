@@ -1,6 +1,11 @@
-/* Three SPX ships standing side by side at one scale. The frame is as tall as the chart, and the view bar sits on it. Chips wrap on a phone. */
+/* Three SPX ships standing side by side at one scale. The frame is as tall as the chart, and the view bar sits on it. On a desk the craft names wrap so each one is whole; on a phone the line scrolls. */
 .fleet-cmp .cmp { display: grid; gap: 12px; }
 .fleet-cmp .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fleet-cmp .craft-line { flex-wrap: nowrap; overflow-x: auto; }
+@media (min-width: 821px) {
+  .fleet-cmp .craft-line { flex-wrap: wrap; overflow: visible; }
+}
+.fleet-cmp .craft-line .chip { flex: 0 0 auto; }
 .fleet-cmp .cmp-view { position: relative; overflow: hidden; height: auto; min-height: 0; background: #0d1729; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 0.5rem; }
 .fleet-cmp .cmp-view uchusen-lineup { display: block; width: 100%; height: auto; margin: 0; background: transparent; border: 0; border-radius: 0; transform-origin: center top; }
 .fleet-cmp kazoku-view-controls[for="cmp-view"] { border-radius: 0 0 0.5rem 0.5rem; }
