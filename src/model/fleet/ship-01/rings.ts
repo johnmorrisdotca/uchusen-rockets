@@ -4,6 +4,7 @@
 import { box, hoop, horn, place, rod, seams, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
 import { booms, hull } from "./hull.ts";
 import { SPIN, SPIN4 } from "./spin.ts";
+import { researchHall } from "./researchHall.ts";
 import { industrialWheel, liftTube, reach, rIn, roundSection, solar, type Geo, type Use } from "./wheelparts.ts";
 
 const TAU = 2 * Math.PI;
@@ -58,7 +59,7 @@ export function glass(g: Geo, y: number, gap?: number): Piece[] {
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------------
-// the town hall of the living and research rings
+// the town hall of the living ring. The research ring has its own hall.
 
 /** Where the named places of the living ring stand, for labels: an azimuth, the side of the street, and the terrace step (1 lowest). */
 export const TOWN4 = [
@@ -213,7 +214,8 @@ export function hydroHall(g: Geo, y: number, gap?: number, bare = false): Piece[
 /** The outside of a ring: glass, the hall inside, the solar skirt, six glazed lifts. */
 export function ringPieces(r: Ring, gap?: number): Piece[] {
   const g = geoOf(r);
-  const out: Piece[] = [...glass(g, r.y, gap), ...(r.use === "hydro" ? hydroHall(g, r.y, gap) : townHall(g, r.y, r.use, gap)), ...(gap ? [] : solar(g, r.y))];
+  const hall = r.use === "hydro" ? hydroHall(g, r.y, gap) : r.use === "research" ? researchHall(g, r.y, gap) : townHall(g, r.y, r.use, gap);
+  const out: Piece[] = [...glass(g, r.y, gap), ...hall, ...(gap ? [] : solar(g, r.y))];
   if (!gap) for (let k = 0; k < 6; k++) {
     const a = deg(60 * k);
     out.push(...liftTube([SPIN.hubR * Math.sin(a), r.y, SPIN.hubR * Math.cos(a)], [(rIn(g) + 1) * Math.sin(a), r.y, (rIn(g) + 1) * Math.cos(a)], "glass-clear", 3.4, [0.3, 0.7], a));
