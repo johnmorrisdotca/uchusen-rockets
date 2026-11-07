@@ -106,13 +106,22 @@ export function stub(a: number): Piece[] {
 /** The three states of a solar wing: folded in two canisters on the mast, swung out with half the blanket let out ("flared"), and the mast extended so the blanket unfolds to double its length ("full"), as the ISS's wings do. */
 export type WingState = "stowed" | "flared" | "full";
 
+/** The outer lattice of one mast, 22 m long, with its base at `yBase`. */
+function outerMast(x: number, z: number, yBase: number, up: Vec3): Piece[] {
+  const top = yBase + 22;
+  const drawn: Piece[] = [...ibeam("steel", [x, yBase, z], [x, top, z], 0.9, 0.7, up), hoop("hull-yellow", 0.7, yBase, 0.12, 12, 6, { at: [x, z] })];
+  for (let q = 0; q < 6; q++) drawn.push(rod("hull-grey", [x - 0.4, yBase + 1 + q * 3.5, z - 0.4], [x + 0.4, yBase + 4 + q * 3.5, z + 0.4], 0.04, 5, { only: "mesh" }));
+  return drawn;
+}
+
 /**
  * The solar wings, four on diagonal masts at the hub's forward shoulder, in the ISS manner: a rotary joint at the root, a mast that is an extending lattice (an inner and an outer section, with the outer sliding out of the inner by 22 m when the wing
  * goes from flared to full), and two blankets of cells either side of it. Stowed, each mast carries two canisters of folded blanket with their hinge brackets; flared, the blankets stand out 22 m long in two panels; full, 44 m in four panels with
- * battens. The blankets are one group, `wing-turn`, about the mast, for the viewer's motion; the mast's extension needs a translation and is a follow-up of MODULES-450.
+ * battens. The blankets are one group, `wing-turn`, about the mast. On the flared wings the outer lattice is its own group, `mast-extend`, and slides 22 m out to the full length.
  */
 export function wings(state: WingState): Piece[] {
   const out: Piece[] = [];
+  const extending: Piece[] = [];
   const y0 = STATION.y + 8;
   const L = state === "full" ? 44 : 22;
   for (let k = 0; k < 4; k++) {
@@ -121,15 +130,13 @@ export function wings(state: WingState): Piece[] {
     const z = 26 * Math.cos(deg(a));
     const up: Vec3 = [Math.cos(deg(a)), 0, -Math.sin(deg(a))];
     out.push(lathe("hull-grey-dark", [[3.2, y0 - 1.5], [3.2, y0 + 0.5]], [x, z]), hoop("hull-grey", 3.2, y0 - 0.5, 0.35, 32, 6, { at: [x, z] }), box("hull-grey-dark", [x, y0 - 1.5, z], 4.4, 4.4, 1.3, a, { only: "mesh", plain: true }));
-    // the mast: an extending lattice of two sections, the outer one telescoped out by 22 m only when full
+    // the mast: an inner lattice, and an outer one that is already out on the full wings and telescoped inside on the flared wings
     const mastTop = y0 + (state === "stowed" ? 18 : 22) + (state === "full" ? 22 : 0);
     out.push(...ibeam("hull-grey", [x, y0 + 0.5, z], [x, y0 + 22, z], 1.2, 0.9, up));
     for (const [dx, dz] of [[0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5]] as const) out.push(rod("hull-grey", [x + dx, y0 + 0.5, z + dz], [x + dx, y0 + 22, z + dz], 0.09, 6, { only: "mesh" }));
     for (let q = 0; q < 6; q++) out.push(rod("hull-grey-dark", [x - 0.55, y0 + 2 + q * 3.4, z - 0.55], [x + 0.55, y0 + 5 + q * 3.4, z + 0.55], 0.05, 5, { only: "mesh" }));
-    if (state === "full") {
-      out.push(...ibeam("steel", [x, y0 + 22, z], [x, mastTop, z], 0.9, 0.7, up), hoop("hull-yellow", 0.7, y0 + 22, 0.12, 12, 6, { at: [x, z] }));
-      for (let q = 0; q < 6; q++) out.push(rod("hull-grey", [x - 0.4, y0 + 23 + q * 3.5, z - 0.4], [x + 0.4, y0 + 26 + q * 3.5, z + 0.4], 0.04, 5, { only: "mesh" }));
-    }
+    if (state === "full") out.push(...outerMast(x, z, y0 + 22, up));
+    else if (state === "flared") extending.push(...outerMast(x, z, y0, up));
     // the arm from the hub out to the mast
     out.push(...ibeam("hull-grey", [10 * Math.sin(deg(a)), y0 - 1, 10 * Math.cos(deg(a))], [x, y0 - 1, z], 1.0, 0.8, [0, 1, 0]));
     const t: Vec3 = [Math.cos(deg(a)), 0, -Math.sin(deg(a))];
@@ -152,8 +159,11 @@ export function wings(state: WingState): Piece[] {
       }
     }
     out.push(...moving(turning, { name: "wing-turn", pivot: [x, y0, z], axis: [0, 1, 0] }));
-    out.push(...lamps([{ at: [x, mastTop + 0.3, z], colour: "red", size: 0.25 }]));
+    const tip = [x, (state === "flared" ? y0 + 22 : mastTop) + 0.3, z] as Vec3;
+    if (state === "flared") extending.push(...lamps([{ at: tip, colour: "red", size: 0.25 }]));
+    else out.push(...lamps([{ at: tip, colour: "red", size: 0.25 }]));
   }
+  if (extending.length) out.push(...moving(extending, { name: "mast-extend", pivot: [0, y0, 0], axis: [0, 22, 0] }));
   return out;
 }
 

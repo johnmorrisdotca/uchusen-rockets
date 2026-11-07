@@ -18,7 +18,7 @@ The view draws the moving parts at most thirty times a second, only while it is 
 
 | Ship | Part | What it does | Real ancestor and rate |
 |---|---|---|---|
-| Hanabusa (`fleet-ship-01`) | The three glazed rings (`spin`) | Turn together at 3.43 rpm, one turn every 17.5 s, real speed | The Stanford torus and von Braun's wheel; the rate is the one that gives the living ring 1.00 g at its 76 m radius. The keel does not turn |
+| Hanabusa (`fleet-ship-01`) | The three glazed rings and the two propellant booms (`spin`) | Turn together at 3.43 rpm, one turn every 17.5 s, real speed | The Stanford torus and von Braun's wheel; the rate is the one that gives the living ring 1.00 g at its 76 m radius. The booms and the ring hubs share that bearing. The keel does not turn |
 | Hanabusa | The industrial wheel (`spin-wheel`) | Turns at 2.83 rpm (1.00 g at its 112 m rim) | The same |
 | Hanabusa | The keel lift cars (`keel-lift-0` to `-3`, `keel-lift-node`) | Slide 15 m toward the tail and back, 24 s a cycle | A glazed lift along the keel, one car at each wheel and one at the docking node. Drawn faster than a real lift |
 | Miyamoto and Ariake (`fleet-ship-03`, `fleet-ship-ariake`) | Hangar door leaves (`door-leaf-0` to `-4`) | Slide 16 m up their tracks and back, one after the next, 24 s a cycle | The doors of the Vehicle Assembly Building lift in stages; a hangar roller shutter rides its tracks. Drawn faster than a real door |
@@ -28,12 +28,13 @@ The view draws the moving parts at most thirty times a second, only while it is 
 | Miyamoto and Ariake | The four dishes on the command tower (`dish-track`) | Tilt back and forth 70 degrees, 60 s a cycle | A Deep Space Network dish tracks a spacecraft across the sky at about the Earth's rate, a degree every four minutes. Drawn faster |
 | Emiake (`fleet-emiake`) | The two outer radiator sails (`sail-swing-port`, `sail-swing-starboard`) | Swing down and out 115 degrees on their hinge along the ship's axis and back, 40 s a cycle | The ISS radiator wings deploying. The sails' own file gained one tag and nothing else. Drawn faster |
 
-| Kyotori (`fleet-kyotori`) | The four solar wings (`wing-turn`), in all three wing states | Sweep 90 degrees on their masts to face the star, 90 s a cycle | The ISS arrays on their rotary joints. The mast extending from flared to full needs a translation: a follow-up |
+| Kyotori (`fleet-kyotori`) | The four solar wings (`wing-turn`), in all three wing states | Sweep 90 degrees on their masts to face the star, 90 s a cycle | The ISS arrays on their rotary joints |
+| Kyotori | The outer mast section (`mast-extend`), on the flared wings | Slides 22 m out of the inner lattice and back, 40 s a cycle | An ISS array mast telescoping from flared to full. The full wings stay the extended drawing. Drawn faster |
 | Kyotori | The two payload-bay doors (`bay-door-0`, `bay-door-1`) | Swing shut from the drawn-open pose and back, 48 s a cycle | The Space Shuttle's payload bay doors, on vertical hinges along the sill. A full open or close took several minutes. Drawn faster |
 
 | Kyotori | The four airlock hatches (`airlock-hatch-0` to `-3`) | Swing open on the top hinge and shut, 16 s a cycle | A station hatch opens outward. Drawn faster than a real hatch |
 
-Not yet: Ayanagi's sails (no such ship is in the model). Hanabusa's propellant booms and hubs stay still as drawn; the booms turn with the rings in the ship's notes, and a real turn needs the hub drums and the booms in one tagged group.
+Not yet: Ayanagi's sails (no such ship is in the model). The axial lift stays on the keel; its cars still ride the tube.
 
 ## Limits, honestly
 

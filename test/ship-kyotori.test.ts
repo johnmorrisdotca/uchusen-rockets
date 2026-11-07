@@ -62,8 +62,11 @@ test("the docking plan: no overlap, every direction a unit vector, every collar 
 test("the solar wings have three states, each carrying a Move for the viewer, and the full wing's blanket is twice the flared one's", () => {
   const len = (state: string) => {
     const mesh = meshOf(KYOTORI_PARTS.find((p) => p.id === `s-wings-${state}`)!.pieces());
-    assert.equal(mesh.moves.length, 4, state);
-    assert.ok(mesh.moves.every((m) => m.name === "wing-turn"), state);
+    const turns = mesh.moves.filter((m) => m.name === "wing-turn");
+    assert.equal(turns.length, 4, state);
+    const mast = mesh.moves.filter((m) => m.name === "mast-extend");
+    assert.equal(mast.length, state === "flared" ? 1 : 0, state);
+    assert.equal(mesh.moves.length, turns.length + mast.length, state);
     const b = boundsOf(mesh);
     return b.max[1] - b.min[1];
   };
