@@ -29,6 +29,27 @@ test("the yard page jumps to a bay, lights the night, slides the free spine and 
   expect(fit).toBeLessThanOrEqual(1);
 });
 
+test("an address picks the ship and the bay, and the build starts there", async ({ page }) => {
+  await page.goto(`${URL}?bay=hall&ship=miyamoto`);
+  const stage = page.getByTestId("yard-stage");
+  await expect(stage).toHaveAttribute("data-ready", "yes", { timeout: 60_000 });
+  await expect(stage).toHaveAttribute("data-shot", "hall");
+  await expect(stage).toHaveAttribute("data-ship", "miyamoto");
+  await expect(stage).toHaveAttribute("data-build", "on");
+  await expect(page.getByTestId("yard-ship")).toHaveValue("miyamoto");
+  await expect(page.getByTestId("yard-hall")).toHaveAttribute("aria-pressed", "true");
+  const address = new globalThis.URL(page.url());
+  expect(address.searchParams.get("bay")).toBe("hall");
+  expect(address.searchParams.get("ship")).toBe("miyamoto");
+  await expect(page.getByTestId("build-now")).toContainText("Miyamoto");
+  await expect(page.getByTestId("build-now")).toContainText("Hall");
+  await expect(page.getByTestId("build-now")).toContainText("0 of ");
+  await page.getByTestId("yard-ship").selectOption("hanabusa");
+  await expect(page.getByTestId("yard-hall")).toHaveAttribute("aria-pressed", "true");
+  expect(new globalThis.URL(page.url()).searchParams.get("ship")).toBe("hanabusa");
+  await expect(page.getByTestId("build-now")).toContainText("Hanabusa");
+});
+
 test.describe("the build keeps moving while it plays", () => {
   test.use({ reducedMotion: "no-preference" });
 
@@ -72,5 +93,19 @@ test.describe("the build keeps moving while it plays", () => {
     expect(Number(await stage.getAttribute("data-frames"))).toBe(held);
     const still = await page.getByTestId("yard-drone").boundingBox();
     if (heldAt && still) expect(Math.hypot(still.x - heldAt.x, still.y - heldAt.y)).toBeLessThan(2);
+  });
+
+  test("play builds the chosen ship from the start, and a drone is on the picture", async ({ page }) => {
+    await page.goto(`${URL}?bay=hall&ship=miyamoto`);
+    const stage = page.getByTestId("yard-stage");
+    await expect(stage).toHaveAttribute("data-ready", "yes", { timeout: 60_000 });
+    await expect(stage).toHaveAttribute("data-build", "on");
+    const built = async () => Number(((await page.getByTestId("build-now").textContent()) ?? "").match(/(\d+) of /)?.[1] ?? "0");
+    expect(await built()).toBe(0);
+    await page.getByTestId("build-play").click();
+    await expect(stage).toHaveAttribute("data-playing", "yes");
+    await expect(page.getByTestId("yard-drone")).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId("yard-watch").click();
+    await expect.poll(built, { timeout: 45_000 }).toBeGreaterThan(0);
   });
 });

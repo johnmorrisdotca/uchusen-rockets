@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **A named bay builds the ship you choose** (MODULES-515): the yard's own bays, the ship in the address, and the build starts at the beginning. Building anywhere else is not this page.
+
 - **Yard drones move on the picture** (MODULES-514): while a bay is building, a drone flies around the part it is working, the light leaves that drone's lens, and a pause holds the drone and the light together. The test reads the drone on the screen.
 
 - **The fleet walk waits for a settled frame**: the memory count waits until the objects stop moving, and a turn waits until a frame has been drawn.

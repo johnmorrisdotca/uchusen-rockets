@@ -24,6 +24,9 @@
         <div class="yard-side">
         <h1 id="yard-title" data-say="yardTitle">Yard</h1>
         <p data-say="yardIntro">Three bays side by side. The name is a placeholder until it is named. Choose a bay, the lounge, the visitor port or the free spine.</p>
+        <label class="chips" for="yard-ship"><span data-say="yardShip">Ship</span>
+          <select id="yard-ship" data-testid="yard-ship"></select>
+        </label>
         <div class="chips" id="yard-shots" data-testid="yard-shots" role="group" aria-labelledby="yard-title">
           <button type="button" class="chip" data-testid="yard-whole" data-shot="whole" data-say="yardWhole" aria-pressed="true">Whole yard</button>
           <button type="button" class="chip" data-testid="yard-hall" data-shot="hall" data-say="yardHall">Hall</button>

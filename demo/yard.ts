@@ -17,8 +17,8 @@ import { meshOf, type PartMesh } from "../src/model/pieces.ts";
 import { BAYS, yardFixed, yardLoose } from "../src/model/fleet/shipyard-concepts/multibay.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
 import { placementIn, START_TIME } from "./earth-model.ts";
+import { bayWord, buildBarWords, mountYardChoice } from "./yardChoose.ts";
 import { mountBays, type BayId } from "./yardShips.ts";
-
 setAssetBase(new URL("assets/", document.baseURI).href);
 defineUchusenBuild();
 
@@ -380,6 +380,7 @@ function showShip(): void {
   stage.dataset.build = building ? "on" : "off";
   stage.dataset.ship = bay ? bays.variant(bay) : "";
   if (building && bay) {
+    bar.lead = `${bays.name(bay)}, ${bayWord(bay)}`;
     bar.steps = bays.steps(bay);
     bar.at = along[bay] ?? bays.rest(bay);
     bar.onMove = (at) => {
@@ -469,25 +470,19 @@ new ResizeObserver(() => {
 }).observe(stage);
 
 applySky();
+mountYardChoice((id, rocket, variant) => {
+  if (!bays.place(id, rocket, variant)) return;
+  along[id] = 0;
+  building = true;
+  const framed = bays.frame(id);
+  if (framed) shots[id] = { at: framed.at, eye: [framed.at[0] + framed.span, framed.at[1], framed.at[2] + framed.span * 0.3], fov: 32 };
+  document.querySelector("[data-testid=yard-build]")!.setAttribute("aria-pressed", "true");
+  pressShot(id);
+});
 showShip();
 size();
 draw();
 stage.dataset.ready = "yes";
 
-type Chooser = { word(key: string): string | undefined };
-const say = (key: string): string => (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage?.word(key) ?? key;
-function buildWords(): void {
-  bar.words = {
-    play: say("buildPlay"),
-    pause: say("buildPause"),
-    start: say("buildStart"),
-    repeat: say("buildRepeat"),
-    range: say("buildRange"),
-    day: say("buildDay"),
-    done: say("buildDone"),
-    rate: say("buildRate"),
-    flight: say("buildFlight"),
-  };
-}
-document.addEventListener("kazoku-languagechange", () => queueMicrotask(buildWords));
-buildWords();
+document.addEventListener("kazoku-languagechange", () => queueMicrotask(() => buildBarWords(bar)));
+buildBarWords(bar);

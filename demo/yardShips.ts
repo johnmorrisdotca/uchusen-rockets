@@ -1,13 +1,21 @@
 // The three bay ships, from the same build the viewer plays, standing in the yard at true size.
-import { Group, Vector3, type Object3D } from "three";
+import { Group, Mesh, Vector3, type Object3D } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { build } from "../src/build/index.ts";
 import { buildOf, playFrame, type PlayStep } from "../src/buildPlay.ts";
+import { ROCKETS } from "../src/index.ts";
 import { SwarmRig, type SwarmPose } from "../src/element/swarm.ts";
 import type { PartMesh } from "../src/model/pieces.ts";
 import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../src/swarm.ts";
 
 export type BayId = "hall" | "spine" | "dock";
+
+/** The ships the yard can build, and the bay each one stands in until a choice says otherwise. */
+export const BUILDABLE: { rocket: string; variant: string; bay: BayId }[] = [
+  { rocket: "fleet-kaminari", variant: "fleet-kaminari", bay: "hall" },
+  { rocket: "fleet-ship-03", variant: "miyamoto", bay: "spine" },
+  { rocket: "fleet-ship-01", variant: "hanabusa", bay: "dock" },
+];
 
 const SPECS: { id: BayId; rocket: string; variant: string; at: readonly [number, number, number]; rest: number }[] = [
   { id: "hall", rocket: "fleet-kaminari", variant: "fleet-kaminari", at: [0, 160, 0], rest: 0.45 },
@@ -18,6 +26,7 @@ const SPECS: { id: BayId; rocket: string; variant: string; at: readonly [number,
 interface Bay {
   id: BayId;
   variant: string;
+  label: string;
   rest: number;
   steps: readonly PlayStep[];
   slots: Map<string, Group>;
@@ -36,6 +45,9 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
   steps: (id: BayId) => readonly PlayStep[];
   rest: (id: BayId) => number;
   variant: (id: BayId) => string;
+  name: (id: BayId) => string;
+  frame: (id: BayId) => { at: [number, number, number]; span: number } | null;
+  place: (id: BayId, rocket: string, variant: string) => boolean;
 } {
   const bays = SPECS.map((spec): Bay => {
     const made = build({ rocket: spec.rocket, variant: spec.variant }, { detail: "coarse" });
@@ -63,6 +75,7 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
     return {
       id: spec.id,
       variant: spec.variant,
+      label: ROCKETS[spec.rocket]?.name ?? spec.variant,
       rest: spec.rest,
       steps: buildOf(spec.variant) ?? [],
       slots,
@@ -98,7 +111,7 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
       }
       const shown = [...bay.places.entries()].filter(([slot]) => bay.slots.get(slot)?.visible);
       const dock: [number, number, number] = shown.length === 0 ? [40, 0, 0] : [Math.max(...shown.map(([, place]) => place[0])) + 40, shown.reduce((sum, [, place]) => sum + place[1], 0) / shown.length, 0];
-      const count = swarmCount(bay.variant) ?? 0;
+      const count = swarmCount(bay.variant) ?? (bay.steps.length > 0 ? 6 : 0);
       const working = active === bay.id;
       const open = frame.going.filter((slot) => grounded(slot, frame.done));
       const jobs = working && open.length > 0 ? swarmJobs(bay.steps.filter((step) => !frame.going.includes(step.slot) || open.includes(step.slot)), count, here) : [];
@@ -154,5 +167,62 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
     steps: (id) => bays.find((bay) => bay.id === id)?.steps ?? [],
     rest: (id) => bays.find((bay) => bay.id === id)?.rest ?? 0,
     variant: (id) => bays.find((bay) => bay.id === id)?.variant ?? "",
+    name: (id) => bays.find((bay) => bay.id === id)?.label ?? "",
+    frame: (id) => {
+      const bay = bays.find((one) => one.id === id);
+      if (!bay) return null;
+      const mid = (bay.length[0] + bay.length[1]) / 2;
+      const span = Math.max(80, bay.length[1] - bay.length[0]);
+      return { at: [bay.group.position.x, bay.group.position.y + mid, bay.group.position.z], span };
+    },
+    place: (id: BayId, rocket: string, variant: string): boolean => {
+      const bay = bays.find((one) => one.id === id);
+      if (!bay) return false;
+      let made;
+      try {
+        made = build({ rocket, variant }, { detail: "coarse" });
+      } catch {
+        return false;
+      }
+      if (made.parts.length === 0) return false;
+      const known = buildOf(variant);
+      const risen = [...made.parts].sort((a, b) => (made.placesOf("together").find((place) => place.slot === a.slot)?.at[1] ?? 0) - (made.placesOf("together").find((place) => place.slot === b.slot)?.at[1] ?? 0));
+      const steps = known?.length ? known : risen.map((part, index) => ({ slot: part.slot, start: index * 2, days: 2 }));
+      for (const slot of bay.slots.values()) {
+        slot.traverse((node) => {
+          if (!(node instanceof Mesh)) return;
+          node.geometry.dispose();
+          const material = node.material;
+          if (Array.isArray(material)) for (const one of material) one.dispose();
+          else material.dispose();
+        });
+        slot.removeFromParent();
+      }
+      bay.slots.clear();
+      bay.places.clear();
+      bay.boxes.clear();
+      for (const place of made.placesOf("together")) bay.places.set(place.slot, [...place.at]);
+      let longest = 1;
+      const ys: number[] = [];
+      for (const part of made.parts) {
+        const at = bay.places.get(part.slot) ?? [0, 0, 0];
+        const slot = new Group();
+        slot.position.set(at[0], at[1], at[2]);
+        addMesh(part.mesh, slot);
+        bay.group.add(slot);
+        bay.slots.set(part.slot, slot);
+        bay.boxes.set(part.slot, { min: [...part.bounds.min], max: [...part.bounds.max] });
+        ys.push(at[1]);
+        const span = Math.max(part.bounds.max[0] - part.bounds.min[0], part.bounds.max[1] - part.bounds.min[1], part.bounds.max[2] - part.bounds.min[2]);
+        longest = Math.max(longest, span);
+      }
+      bay.variant = variant;
+      bay.label = ROCKETS[rocket]?.name ?? variant;
+      bay.steps = steps;
+      bay.rest = 0;
+      bay.scale = Math.min(16, Math.max(1, longest / 50));
+      bay.length = [Math.min(...ys), Math.max(...ys)];
+      return true;
+    },
   };
 }

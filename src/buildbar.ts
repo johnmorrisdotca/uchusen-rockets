@@ -105,6 +105,8 @@ export class UchusenBuild extends HTMLBase {
   onPlay: ((playing: boolean) => void) | null = null;
   /** A short state after the day line, such as the ring being sealed. Empty shows nothing. */
   private stageText = "";
+  /** The ship and the bay, shown before the day. Empty shows nothing. */
+  private leadText = "";
   private order: readonly PlayStep[] | null = null;
   private place = 0;
   /** Story seconds in one real second. 1 is real time. 86400 is one story day a real second. */
@@ -329,7 +331,15 @@ export class UchusenBuild extends HTMLBase {
     }
     const doneText = this.fill("done", { done: frame.done.length, total: order.length });
     const line = flightText ? `${flightText}. ${dayText}, ${doneText}` : `${dayText}, ${doneText}`;
-    parts.now.textContent = this.stageText ? `${line}, ${this.stageText}` : line;
+    const body = this.stageText ? `${line}, ${this.stageText}` : line;
+    parts.now.textContent = this.leadText ? `${this.leadText}. ${body}` : body;
+  }
+
+  /** The ship and the bay, already in the reader's language. Empty leaves the day line as it was. */
+  set lead(text: string) {
+    if (text === this.leadText) return;
+    this.leadText = text;
+    if (this.parts) this.draw();
   }
 
   /** The ring's state, already in the reader's language. Set by the page from the view. */
