@@ -90,13 +90,14 @@ test("a tap or a pinch on a stage does not zoom the page, and the line-up bar si
         return bar !== null && (node.contains(bar) || node.nextElementSibling === bar);
       });
       if (!beside) continue;
-      const place = await stage.boundingBox();
-      const barPlace = await bar.boundingBox();
-      expect(place && barPlace, href).toBeTruthy();
-      if (!place || !barPlace) continue;
-      const gap = barPlace.y - (place.y + place.height);
-      const over = barPlace.y >= place.y - 1 && barPlace.y + barPlace.height <= place.y + place.height + 2;
-      expect(over || (gap >= -2 && gap < 12), `${href} bar`).toBe(true);
+      const seated = await stage.evaluate((node) => {
+        const bar = node.ownerDocument.querySelector(`kazoku-view-controls[for="${node.id}"]`);
+        const line = node.querySelector("uchusen-lineup");
+        if (!(bar instanceof HTMLElement) || !(line instanceof HTMLElement)) return "missing";
+        if (bar.parentElement !== node) return "outside";
+        return bar.offsetTop - (line.offsetTop + line.offsetHeight);
+      });
+      expect(typeof seated === "number" && seated >= -2 && seated < 12, `${href} bar ${seated}`).toBe(true);
       const colours = await page.evaluate(() => {
         const frame = document.getElementById("cmp-view");
         const strip = document.querySelector("kazoku-view-controls[for='cmp-view']")?.shadowRoot?.querySelector(".bar");
