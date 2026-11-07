@@ -178,9 +178,9 @@ export function parts(): MiyamotoPart[] {
   out.push(stack("fuel-aft-inboard", "Aft fuel section, barrels inboard", "tank", STATION.fuelAft, 62, 44, "The aft barrels moved 4 m inboard, as far as their radius clears the spine. Descends from the Space Shuttle's external tank.", (c, d) => fuelSection("aft", c, d, 20), false));
   out.push(stack("fuel-fore-inboard", "Fore fuel section, barrels inboard", "tank", STATION.fuelFore, 62, 66, "The fore barrels moved 4 m inboard, as far as their radius clears the spine. Descends from the Space Shuttle's external tank.", (c, d) => fuelSection("fore", c, d, 20), false));
   const service = (id: string, name: string, y0: number, height: number, diameter: number, note: string, build: () => Piece[]): MiyamotoPart => ({ id, name, kind: "module", y0, place: { x: 0, z: 0 }, height, diameter, note, pieces: (o) => local(build(), 0, y0, 0, o?.level) });
-  out.push(service("exterior-load", "Loaded saddles", 110, 76, 40, "A Super Heavy and a Starship ship on the starboard aft box's exterior saddles, the package's own models. Descends from the Shuttle on its carrier aircraft.", exteriorLoad));
-  out.push(service("stack-berth-keel", "Ventral stack berth", 214, 140, 50, "A full Starship stack under the spine on a 140 m run, with the methane and oxygen depot beside it. Descends from the ISS visiting vehicles.", keelBerth));
-  out.push(service("stack-berth-port", "Port stack berth", 108, 146, 50, "A full Starship stack to port on the 146 m run the moved boxes leave, with the methane and oxygen depot beside it. Descends from the ISS visiting vehicles.", portBerth));
+  out.push(service("exterior-load", "Loaded saddles", 110, 52, 40, "Two Starship ships on the starboard aft box's exterior saddles, the package's own models. Descends from the Shuttle on its carrier aircraft.", exteriorLoad));
+  out.push(service("stack-berth-keel", "Ventral ship berth", 214, 52, 50, "A Starship ship under the spine on a 140 m run, with the methane and oxygen depot beside it. Descends from the ISS visiting vehicles.", keelBerth));
+  out.push(service("stack-berth-port", "Port ship berth", 108, 52, 50, "A Starship ship to port on the 146 m run the moved boxes leave, with the methane and oxygen depot beside it. Descends from the ISS visiting vehicles.", portBerth));
   return out;
 }
 

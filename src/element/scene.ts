@@ -84,6 +84,11 @@ const FITTING = new Set(["pipe-steel", "blanket", "blanket-worn", "lamp-amber", 
 const FITTING_OFF = 220;
 const FITTING_ON = 260;
 
+/** The fine model is due when the camera has come in, or when a page with the Earth shows the craft large. That page zooms the picture and leaves the camera where it is, so distance alone never sees a ship that fills the frame. */
+export function fineDue(close: boolean, orbit: boolean, spanPx: number): boolean {
+  return close || (orbit && Number.isFinite(spanPx) && spanPx >= FITTING_ON);
+}
+
 /** A label on a part: its text, where it points in the ship's own metres, the part it follows and where that part stands at rest (so the label moves with it). `number` draws a numbered disc. */
 export interface ViewerMark {
   id: string;
@@ -2710,7 +2715,10 @@ export class RocketViewer {
       this.placeMarks();
       this.placeBeside();
       this.updateScaleBar();
-      if (this.options.onNear && !this.nearSaid && !this.focusing && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {
+      const reached = this.camera.position.distanceTo(this.controls.target);
+      const close = this.nearAt > 0 && reached < this.nearAt;
+      const span = Number(this.canvas.dataset.lodSpan ?? "");
+      if (this.options.onNear && !this.nearSaid && !this.focusing && fineDue(close, this.options.orbit === true, span)) {
         this.nearSaid = true;
         this.options.onNear();
       }
@@ -2721,7 +2729,6 @@ export class RocketViewer {
       this.canvas.dataset.azimuth = angle.az.toFixed(2);
       this.canvas.dataset.elevation = angle.el.toFixed(2);
       this.canvas.dataset.moving = this.pose ? "true" : "false";
-      const reached = this.camera.position.distanceTo(this.controls.target);
       this.canvas.dataset.distance = (this.options.orbit ? this.orbitFit || reached : reached).toFixed(2);
       // The fleet walk never asks for the Earth. Searching the ship for the Moon and projecting every craft is the compare camera's work, and doing it on every module is what pushed that walk into the time limit.
       if (this.options.orbit) {

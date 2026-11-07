@@ -1,5 +1,5 @@
 // The wide comparison page: up to eight craft, chosen from one browser, stand in one 3D view at their true size, with the Earth behind them and one set of view controls. What is chosen is kept in the address. A phone shows one craft on the stage and the rest in the line.
-import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, variantOf, type LookName, type MakerId, type Variant } from "../src/index.ts";
+import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, spaceLength, variantOf, type LookName, type MakerId, type Variant } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
@@ -24,15 +24,15 @@ const say = (key: string, values: Record<string, string | number> = {}): string 
   const chooser = (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage;
   return (chooser?.word(key) ?? WORDS.en[key] ?? key).replace(/\{(\w+)\}/g, (all, name: string) => String(values[name] ?? all));
 };
-type Craft = { rocket: string; variant: string };
+type Craft = { rocket: string; variant: string; form: "stack" | "space" };
 const MOST = BESIDE_MOST + 1;
 /** What a craft added is, in turn: the first of these that is not on screen yet. */
 const NEXT: readonly Craft[] = [
-  { rocket: "saturn-v", variant: "saturn-v" },
-  { rocket: "starship", variant: "v3" },
-  { rocket: "fleet-ship-03", variant: "miyamoto" },
-  { rocket: "iss", variant: "iss" },
-  { rocket: "space-shuttle", variant: "stack" },
+  { rocket: "saturn-v", variant: "saturn-v", form: "stack" },
+  { rocket: "starship", variant: "v3", form: "stack" },
+  { rocket: "fleet-ship-03", variant: "miyamoto", form: "stack" },
+  { rocket: "iss", variant: "iss", form: "stack" },
+  { rocket: "space-shuttle", variant: "stack", form: "stack" },
 ];
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
@@ -51,7 +51,7 @@ turnButtons.addEventListener("kazoku-speedchange", (event) => {
   applyTurn(document);
 });
 
-const known = (rocket: string | null | undefined, variant: string | null | undefined): Craft | null => {
+const known = (rocket: string | null | undefined, variant: string | null | undefined): Omit<Craft, "form"> | null => {
   if (!rocket || !Object.hasOwn(ROCKETS, rocket)) return null;
   const found = variantOf(rocket, variant || undefined);
   return found ? { rocket, variant: found.id } : null;
@@ -65,9 +65,10 @@ const others = (askedWith === null ? "saturn-v:saturn-v" : askedWith).split(",")
   const one = known(rocket, variant);
   return one ? [one] : [];
 });
+const askedForm = (address.get("form") ?? "").split(",");
 const room = () => Math.min(MOST, craftBudget());
 const state = {
-  craft: asked.get("craft") === "0" ? [] : [first, ...others].slice(0, room()),
+  craft: asked.get("craft") === "0" ? [] : [first, ...others].slice(0, room()).map((craft, index) => ({ ...craft, form: askedForm[index] === "space" ? "space" as const : "stack" as const })),
   editing: 0,
   maker: ROCKETS[first.rocket].maker as MakerId,
   kind: kindOf(first.rocket) as PickerKind,
@@ -86,6 +87,14 @@ const state = {
 const phone = matchMedia("(max-width: 820px)");
 const shown = (): Craft[] => (phone.matches ? state.craft.slice(0, 1) : state.craft);
 const variantFor = (craft: Craft) => variantOf(craft.rocket, craft.variant) as Variant;
+
+/** The length the table prints: the whole rocket, or, in space, the parts still flying. */
+function drawnMetres(craft: Craft, variant: Variant): number | string | null {
+  if (isFleetVariant(variant)) return Math.round(fleetSize(variant).length);
+  const whole = variant.facts.height.value;
+  if (craft.form !== "space") return whole ?? null;
+  return spaceLength(craft.rocket, variant.slots, variant.facts.parts) ?? whole ?? null;
+}
 
 // ------------------------------------------------------------- the Earth behind: nothing of it is loaded until it is chosen
 const earthHolder = byId("earth-back");
@@ -144,6 +153,8 @@ function keep() {
   address.set("background", state.background);
   address.set("moon", state.moon);
   address.set("place", state.place);
+  const forms = state.craft.map((craft) => craft.form);
+  address.set("form", forms.some((form) => form === "space") ? forms.join(",") : null);
   address.set("labels", state.labels ? "on" : "off");
 }
 
@@ -263,7 +274,7 @@ function renderGlass() {
   box.append(craftPicture(craft.rocket, craft.variant));
   const note = document.createElement("p");
   const variant = variantFor(craft);
-  const height = isFleetVariant(variant) ? Math.round(fleetSize(variant).length) : variant.facts.height.value;
+  const height = drawnMetres(craft, variant);
   note.textContent = typeof height === "number" ? `${variant.name}, ${height.toLocaleString("en-US")} m` : variant.name;
   box.append(note);
 }
@@ -290,7 +301,7 @@ function renderPickers() {
   facts.replaceChildren();
   if (editing) {
     const variant = variantFor(editing);
-    const height = isFleetVariant(variant) ? Math.round(fleetSize(variant).length) : variant.facts.height.value;
+    const height = drawnMetres(editing, variant);
     const name = document.createElement("p");
     name.textContent = variant.name;
     const size = document.createElement("p");
@@ -305,6 +316,10 @@ function renderPickers() {
   byId("places").replaceChildren(
     chip(say("cmpFloat"), "place-float", () => pickPlace("float"), state.place === "float"),
     chip(say("cmpGround"), "place-ground", () => pickPlace("ground"), state.place === "ground"),
+  );
+  byId("forms").replaceChildren(
+    chip(say("cmpStack"), "form-stack", () => pickForm("stack"), editing.form !== "space"),
+    chip(say("cmpSpace"), "form-space", () => pickForm("space"), editing.form === "space"),
   );
   byId("label-toggle").replaceChildren(
     chip(say("cmpLabelsOn"), "labels-on", () => pickLabels(true), state.labels),
@@ -378,7 +393,7 @@ function renderTable() {
     const name = document.createElement("th");
     name.scope = "row";
     name.textContent = variant.name;
-    const height = isFleetVariant(variant) ? Math.round(fleetSize(variant).length) : variant.facts.height.value;
+    const height = drawnMetres(craft, variant);
     const length = tr.insertCell();
     length.textContent = typeof height === "number" ? `${height.toLocaleString("en-US")} m` : say("noSource");
     const made = tr.insertCell();
@@ -419,7 +434,9 @@ function renderStage() {
   hero.setAttribute("variant", one.variant);
   hero.setAttribute("show", "together");
   hero.setAttribute("look", state.look);
-  hero.setAttribute("beside", rest.length ? rest.map((craft) => `${craft.rocket}:${craft.variant}`).join(",") : "off");
+  hero.setAttribute("beside", rest.length ? rest.map((craft) => `${craft.rocket}:${craft.variant}${craft.form === "space" ? ":space" : ""}`).join(",") : "off");
+  if (one.form === "space") hero.setAttribute("form", "space");
+  else hero.removeAttribute("form");
   if (state.place === "float") hero.setAttribute("float", "");
   else hero.removeAttribute("float");
   if (state.labels) hero.removeAttribute("names");
@@ -427,7 +444,7 @@ function renderStage() {
   hero.setAttribute("scale-note", say("cmpPlinth"));
   hero.setAttribute("off-screen", say("cmpOffScreen"));
   // the whole row is in the picture whenever it changes
-  const now = list.map((craft) => `${craft.rocket}:${craft.variant}`).join(",");
+  const now = list.map((craft) => `${craft.rocket}:${craft.variant}:${craft.form}`).join(",");
   if (now !== framed) {
     framed = now;
     bar.fit();
@@ -511,7 +528,7 @@ function toggleRocket(id: string) {
     return;
   }
   state.refused = "";
-  state.craft.push({ rocket: id, variant: ROCKETS[id].defaultVariant });
+  state.craft.push({ rocket: id, variant: ROCKETS[id].defaultVariant, form: "stack" });
   state.editing = state.craft.length - 1;
   state.maker = ROCKETS[id].maker;
   state.kind = kindOf(id);
@@ -520,7 +537,13 @@ function toggleRocket(id: string) {
 function pickVariant(id: string) {
   const craft = state.craft[state.editing];
   if (!craft) return;
-  state.craft[state.editing] = { rocket: craft.rocket, variant: id };
+  state.craft[state.editing] = { rocket: craft.rocket, variant: id, form: craft.form };
+  renderAll();
+}
+function pickForm(form: "stack" | "space") {
+  const editing = state.craft[state.editing];
+  if (!editing) return;
+  editing.form = form;
   renderAll();
 }
 function pickPlace(place: "ground" | "float") {
