@@ -540,6 +540,11 @@ export class SwarmRig {
     return this.weldCount > 0 && !this.reduced;
   }
 
+  /** The coarse drone is in the picture. Until then the swarm is only its path. */
+  shown(): boolean {
+    return this.far !== null && this.group.visible && this.count > 0;
+  }
+
   /** Whether the view needs another draw soon: the fine model is on its way. */
   loading(): boolean {
     return this.nearState === "loading";

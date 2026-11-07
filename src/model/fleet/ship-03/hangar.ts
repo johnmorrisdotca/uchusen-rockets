@@ -152,8 +152,10 @@ export function hangar(which: Side | BayId, cut: boolean, detail = 1, seed?: str
           out.push(rod("hull-grey-dark", base, mid3, 0.34, 12), rod("engine-pale", mid3, tip, 0.17, 12), rod("hull-grey", base, [base[0], base[1] + 0.05, base[2]], 0.5, 12), rod("hull-yellow", tip, [tip[0], tip[1], tip[2] + 0.01], 0.3, 12));
         }
         out.push(...hazard(along(door), a0 + lw - 0.4, openLow + 0.3, openHigh - 0.3, 0.5, 0.9), ...lamp(door, a0 + lw / 2, openHigh - 0.9, "amber", 0.2), ...stencil(door, `${51 + k}`, a0 + lw / 2, mid, 1.6));
-        // the leaf swings up about the lintel when the door moves
-        out.splice(from, out.length - from, ...moving(out.slice(from), { name: `door-leaf-${k}`, pivot: pt(door, a0 + lw / 2, openHigh, 0.5), axis: [0, -(door.sign as number), 0] }));
+        // the leaf rides up the tracks, from the sill to the lintel, when the door moves
+        const lintel = pt(door, a0 + lw / 2, openHigh, 0.5);
+        const sill = pt(door, a0 + lw / 2, openLow, 0.5);
+        out.splice(from, out.length - from, ...moving(out.slice(from), { name: `door-leaf-${k}`, pivot: lintel, axis: [lintel[0] - sill[0], lintel[1] - sill[1], lintel[2] - sill[2]] }));
       }
     }
     // the opening seam: where the drawn leaves stop there is a dark gap, a tall hazard-striped leading edge on the first leaf, a column of lamps at each end of it and a limit switch on the track

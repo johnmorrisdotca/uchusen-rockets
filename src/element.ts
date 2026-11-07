@@ -6,6 +6,7 @@ import type { DetailLevel } from "./model/detail.ts";
 import { buildOf } from "./buildPlay.ts";
 import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
 import { lightMode } from "./model/fleet/lights.ts";
+import { thrusterMode } from "./thrusters.ts";
 import { motionsOf, motionSpeed, motionWanted } from "./model/fleet/motion.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
@@ -68,12 +69,14 @@ const CSS = `
 .picture { position: relative; width: 100%; aspect-ratio: var(--uchusen-aspect, 3 / 4); margin: 0; border-radius: inherit; }
 .drawing, .drawing svg { display: block; width: 100%; height: 100%; }
 .drawing, .canvas { transition: opacity var(--uchusen-fade, 1500ms) ease-in-out, filter var(--uchusen-fade, 1500ms) ease-in-out; }
-.stage { position: absolute; inset: 0; }
+.stage, .canvas { position: absolute; inset: 0; touch-action: none; }
+.panel button, .tilt { touch-action: manipulation; }
+:host([look="painted"]) .picture:not([data-state="3d"]) .drawing { opacity: 0; }
 :host([data-driven]) .picture { overflow: hidden; }
-.canvas { display: block; width: 100%; height: 100%; opacity: 0; filter: blur(3px); cursor: grab; border-radius: inherit; }
+.canvas { display: block; width: 100%; height: 100%; opacity: 0; filter: blur(3px); cursor: grab; border-radius: inherit; touch-action: none; }
 .canvas:active { cursor: grabbing; }
 .canvas:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
-.picture[data-state="3d"] .drawing { opacity: 0; filter: blur(2px); }
+.picture[data-state="3d"] .drawing { display: none; visibility: hidden; opacity: 0; filter: none; }
 .picture[data-state="3d"] .canvas { opacity: 1; filter: none; }
 .panel { font: 0.85rem/1.4 system-ui, sans-serif; margin-top: 0.5rem; }
 .panel .bar { display: flex; flex-wrap: nowrap; gap: 0.3rem; overflow-x: auto; padding-bottom: 0.2rem; scrollbar-width: thin; }
@@ -149,13 +152,15 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "form"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
   private holder: HTMLElement | null = null;
   private drawing: HTMLElement | null = null;
   private viewer: RocketViewer | null = null;
+  /** Drones looking over the finished ship, put back after a rocket loads. */
+  private inspectNow: { count: number; playing: boolean; speed: number } | null = null;
   /** The inset the page asked for, put back after a rocket loads, and the words that mark its point. */
   private framed: ViewerFocus | null = null;
   private frameLabel = "";
@@ -251,7 +256,8 @@ export class UchusenRocket extends HTMLBase {
   }
 
   /** Lets a page choose the turn, tip, roll, zoom and pan, as the family's `<kazoku-view-controls>` reports them in `kazoku-viewchange` (`element.drive(event.detail)`): the element's own drag, wheel, keys and spin stand down, and the 3D view and the drawing both follow. `null` takes them back. */
-  drive(choice: Partial<ViewChoice> | null): void {
+  drive(choice: (Partial<ViewChoice> & { reason?: string }) | null): void {
+    const reason = typeof choice?.reason === "string" ? choice.reason : "";
     const before = this.driven;
     if (choice === null) {
       this.driven = null;
@@ -270,8 +276,16 @@ export class UchusenRocket extends HTMLBase {
     }
     const now = this.driven;
     if (before && now && (Object.keys(now) as (keyof ViewChoice)[]).every((key) => before[key] === now[key])) return;
-    this.viewer?.drive(this.driven);
+    this.viewer?.drive(this.driven, reason);
     this.place();
+  }
+
+  /** Drones fly around the finished ship. A count of 0 clears them. The ship is not built and does not move. */
+  setInspect(count: number, playing = true, speed = 1): void {
+    const n = Math.max(0, Math.min(100, Math.round(Number(count)) || 0));
+    const rate = Math.max(0.25, Math.min(4, Number(speed) || 1));
+    this.inspectNow = { count: n, playing, speed: rate };
+    this.viewer?.setInspect(n, playing, rate);
   }
 
   /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. It is drawn at most about 20 times a second and never while out of sight: it is made again when it comes back. */
@@ -329,9 +343,10 @@ export class UchusenRocket extends HTMLBase {
     else if (name === "motion") {
       if (this.viewer) this.lightViewer(this.viewer);
       this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
-    } else if (name === "lights") {
+    } else if (name === "lights" || name === "thrusters") {
       if (this.viewer) this.lightViewer(this.viewer);
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    else if (name === "off-screen") this.viewer?.setOffScreen(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "edges") this.viewer?.setEdges(after === "open");
     else if (name === "world") this.viewer?.setOrbit(after === "earth");
@@ -380,7 +395,8 @@ export class UchusenRocket extends HTMLBase {
       }
     }
     const variant = this.getAttribute("variant");
-    return { rocket: this.getAttribute("rocket") ?? "starship", ...(variant ? { variant } : {}) };
+    const form = this.getAttribute("form") === "space" ? "space" : undefined;
+    return { rocket: this.getAttribute("rocket") ?? "starship", ...(variant ? { variant } : {}), ...(form ? { form } : {}) };
   }
 
   private queue(): void {
@@ -407,11 +423,16 @@ export class UchusenRocket extends HTMLBase {
   }
 
   private setState(state: RocketState, why = ""): void {
+    const was = this.stateNow;
     this.stateNow = state;
     if (this.picture) this.picture.dataset.state = state;
     this.dataset.state = state;
+    // Opacity left the still drawing in the render tree, so its tiles stayed put while the ship turned.
+    if (this.drawing) this.drawing.toggleAttribute("hidden", state === "3d");
     if (why) this.dataset.why = why;
     else delete this.dataset.why;
+    // The still drawing is the first picture. Once the 3D view is in it is removed, and it comes back only if the 3D view is given up.
+    if (state === "3d" || was === "3d") this.redraw();
   }
 
   private emit(name: string, detail: unknown): void {
@@ -540,7 +561,7 @@ export class UchusenRocket extends HTMLBase {
     this.emit("uchusen-flight", this.flightState);
   }
 
-  /** The craft that stand beside it: `beside="on"` is Starship (never beside Starship itself), and a list such as `beside="saturn-v:saturn-v,iss:iss"` is those craft, at most two, each named in the picture. */
+  /** The craft that stand beside it: `beside="on"` is Starship (never beside Starship itself), and a list such as `beside="saturn-v:saturn-v,iss:iss"` is those craft, at most seven, each named in the picture. */
   private besideList(description: Description): Description[] {
     return besideCraft(this.getAttribute("beside"), description.rocket);
   }
@@ -570,6 +591,7 @@ export class UchusenRocket extends HTMLBase {
     viewer.setScaleMode(this.getAttribute("scale") === "true");
     viewer.setEngines(this.engineLights() ? "full" : null);
     viewer.setLights(lightMode(this.getAttribute("lights")));
+    viewer.setThrusters(thrusterMode(this.getAttribute("thrusters")));
     viewer.setMotion(motionsOf(this.descriptionNow().rocket), motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")), motionSpeed(this.getAttribute("motion")));
   }
 
@@ -646,10 +668,16 @@ export class UchusenRocket extends HTMLBase {
   /** The drawing for what the attributes say now. It is made from code, so it needs no file. A zoom or a move only changes which part of it the box shows (its viewBox), so the drawing is as sharp as the box and never grows past it. */
   private redraw(): void {
     if (!this.builtNow || !this.drawing) return;
+    // A transparent drawing still paints on a phone. While the 3D view is showing, the drawing is not in the tree.
+    if (this.stateNow === "3d") {
+      if (this.drawing.childElementCount) this.drawing.replaceChildren();
+      this.drawn = { key: "", box: [0, 0, 1, 1] };
+      return;
+    }
     const { look, show: chosen, angle } = this.settings(this.builtNow);
     const flying = this.clock ? frameAt(this.clock.flight, this.clock.position, this.builtNow.parts.map((part) => ({ slot: part.slot, baseY: 0 })), 1) : null;
     const show = flying ? (flying.separated ? "apart" : "together") : chosen;
-    // when a 3D view is showing, a drawing of the same angle is ready behind it
+    // The still picture is only drawn while the 3D view is not in. A turn must not put it back behind the canvas.
     const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
     const label = this.getAttribute("label") ?? this.builtNow.report.label;
     const lit = flying ? (media("(prefers-reduced-motion: reduce)") ? false : flying.burns) : this.engineLights();
@@ -690,6 +718,9 @@ export class UchusenRocket extends HTMLBase {
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
     this.dataset.variant = this.builtNow.report.variant?.id ?? "";
+    this.dataset.slots = this.builtNow.parts.map((part) => part.slot).join(",");
+    this.dataset.form = this.descriptionNow().form ?? "stack";
+    this.dataset.detail = this.detailFor(this.descriptionNow());
     this.dataset.custom = String(this.builtNow.report.custom);
   }
 
@@ -711,6 +742,7 @@ export class UchusenRocket extends HTMLBase {
         if (now.look !== look) viewer.setLook(now.look);
         if (now.show !== show) viewer.setShow(now.show);
         viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
+        if (this.inspectNow) viewer.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
         viewer.setLeave(...this.leaveNow());
         this.lightViewer(viewer);
         this.applyFrame();
@@ -909,21 +941,31 @@ export class UchusenRocket extends HTMLBase {
       if (now.look !== look) made.setLook(now.look);
       if (now.show !== show) made.setShow(now.show);
       made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
+      if (this.inspectNow) made.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
       made.setLeave(...this.leaveNow());
       this.lightViewer(made);
       this.applyFrame();
       made.setSpin(this.spin());
       made.setScaleNote(this.getAttribute("scale-note"));
+      made.setOffScreen(this.getAttribute("off-screen"));
       made.setFloating(this.hasAttribute("float"));
       made.setEdges(this.getAttribute("edges") === "open");
       made.setNameLabels(this.getAttribute("names") !== "off");
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
-        if (generation === this.generation && this.viewer === made) {
+        if (generation !== this.generation || this.viewer !== made) return;
+        const canvas = this.holder?.querySelector("canvas");
+        // The canvas is already at full from its one fade. Dropping the inline opacity while a transition is set would start that fade again.
+        if (canvas instanceof HTMLCanvasElement && canvas.style.opacity !== "") {
+          canvas.style.transition = "none";
           this.setState("3d");
-          this.emit("uchusen-ready", { frames: made.frames });
-          this.startTilt();
-        }
+          canvas.style.opacity = "";
+          requestAnimationFrame(() => {
+            canvas.style.transition = "";
+          });
+        } else this.setState("3d");
+        this.emit("uchusen-ready", { frames: made.frames });
+        this.startTilt();
       }, wait);
     } catch (error) {
       if (generation === this.generation) {
@@ -997,7 +1039,7 @@ svg { display: block; }
  * ```
  */
 export class UchusenLineup extends HTMLBase {
-  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose", "wide"];
+  static readonly observedAttributes = ["items", "unit", "look", "view", "show", "ruler", "labels", "filter", "fit", "real", "pose", "wide", "contain"];
 
   connectedCallback(): void {
     if (!this.shadowRoot) adopt(this.attachShadow({ mode: "open" }), LINEUP_CSS, lineupSheet);
@@ -1038,6 +1080,12 @@ export class UchusenLineup extends HTMLBase {
       node.removeAttribute("height");
       node.style.width = "100%";
       node.style.height = "auto";
+    }
+    // contain: the drawing scales to the frame, so a phone shows every ship instead of the left-hand part
+    if (this.hasAttribute("contain") && node instanceof SVGElement) {
+      node.setAttribute("width", "100%");
+      node.setAttribute("height", "100%");
+      node.setAttribute("preserveAspectRatio", "xMidYMid meet");
     }
     for (const child of [...root.childNodes]) child.remove();
     root.appendChild(node);

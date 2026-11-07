@@ -18,11 +18,15 @@
           <p data-say="yardBuildNote">The chosen bay's ship, built with the player.</p>
           <uchusen-build id="build-bar" data-testid="build-bar" aria-labelledby="yard-title">
             <kazoku-speed-buttons slot="speed" steps="1 60 600 3600 10000 86400" value="1" no-label></kazoku-speed-buttons>
+            <button type="button" slot="speed" data-testid="yard-watch" data-say="yardWatch" aria-pressed="false">Watch a flight</button>
           </uchusen-build>
         </div>
         <div class="yard-side">
         <h1 id="yard-title" data-say="yardTitle">Yard</h1>
         <p data-say="yardIntro">Three bays side by side. The name is a placeholder until it is named. Choose a bay, the lounge, the visitor port or the free spine.</p>
+        <label class="chips" for="yard-ship"><span data-say="yardShip">Ship</span>
+          <select id="yard-ship" data-testid="yard-ship"></select>
+        </label>
         <div class="chips" id="yard-shots" data-testid="yard-shots" role="group" aria-labelledby="yard-title">
           <button type="button" class="chip" data-testid="yard-whole" data-shot="whole" data-say="yardWhole" aria-pressed="true">Whole yard</button>
           <button type="button" class="chip" data-testid="yard-hall" data-shot="hall" data-say="yardHall">Hall</button>

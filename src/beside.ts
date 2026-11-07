@@ -2,6 +2,7 @@
 import type { Description } from "./fit.ts";
 import type { Vec3 } from "./framing.ts";
 import type { Bounds } from "./model/pieces.ts";
+import { spaceLength } from "./inspace.ts";
 import { ROCKETS, variantOf } from "./rockets.ts";
 
 /**
@@ -54,12 +55,14 @@ export function craftName(description: Readonly<Description>, tall: number): str
   if (!rocket || !variant) return description.rocket;
   const name = variant.name.includes(rocket.name) || rocket.name.includes(variant.name) ? variant.name : `${rocket.name}, ${variant.name}`;
   const sourced = variant.facts.height.value;
-  const metres = typeof sourced === "number" && !description.rocket.startsWith("fleet-") ? sourced : Math.round(tall);
+  const whole = typeof sourced === "number" && !description.rocket.startsWith("fleet-") ? sourced : Math.round(tall);
+  const flying = description.form === "space" ? spaceLength(description.rocket, variant.slots, variant.facts.parts) : null;
+  const metres = flying ?? whole;
   return `${name}, ${metres.toLocaleString("en-US")} m`;
 }
 
 /**
- * The most craft that stand beside the one on screen: two, so three in all.
+ * The most craft that stand beside the one on screen: seven, so eight in all.
  *
  * @example
  * ```ts
@@ -68,10 +71,10 @@ export function craftName(description: Readonly<Description>, tall: number): str
  * console.log(BESIDE_MOST + 1);
  * ```
  */
-export const BESIDE_MOST = 2;
+export const BESIDE_MOST = 7;
 
 /**
- * The craft that stand beside a rocket, from the element's `beside` attribute: `on` is Starship with Super Heavy (never beside Starship itself), and a list such as `saturn-v:saturn-v,iss:iss` is those craft, at most two, each a rocket and a variant (the rocket's default variant when none is given). Anything that is not a craft is left out.
+ * The craft that stand beside a rocket, from the element's `beside` attribute: `on` is Starship with Super Heavy (never beside Starship itself), and a list such as `saturn-v:saturn-v,iss:iss` is those craft, at most seven, each a rocket and a variant (the rocket's default variant when none is given). Anything that is not a craft is left out.
  *
  * @param value The attribute's value.
  * @param rocket The rocket on screen.
@@ -87,10 +90,10 @@ export function besideCraft(value: string | null | undefined, rocket: string): D
   if (value === "on") return canBeside(rocket) ? [{ ...BESIDE_ROCKET }] : [];
   const out: Description[] = [];
   for (const key of (value ?? "").split(",")) {
-    const [id, variantId] = key.trim().split(":");
+    const [id, variantId, form] = key.trim().split(":");
     if (!id || !Object.hasOwn(ROCKETS, id)) continue;
     const variant = variantOf(id, variantId || undefined);
-    if (variant) out.push({ rocket: id, variant: variant.id });
+    if (variant) out.push({ rocket: id, variant: variant.id, ...(form === "space" ? { form: "space" as const } : {}) });
     if (out.length === BESIDE_MOST) break;
   }
   return out;

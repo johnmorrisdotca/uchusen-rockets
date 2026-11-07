@@ -151,7 +151,7 @@ const pressAndDraw = async (page: Page, id: string) => {
 const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 const settle = (page: Page, ms: number) => page.waitForTimeout(ms);
 /**
- * A reading once the GPU objects have stopped moving: two readings a second apart agree. The pictures the renderer is still giving back after their short linger are not kept ones, and a slow runner reads them
+ * A reading once the GPU objects have stopped moving: two readings a second apart agree, arrays included. The pictures the renderer is still giving back after their short linger are not kept ones, and a slow runner reads them
  * mid-way (24 textures where the first round read 21); a leak never settles lower than it began, and is still caught by the comparison.
  */
 const levelUsage = async (page: Page) => {
@@ -159,14 +159,14 @@ const levelUsage = async (page: Page) => {
   for (let tries = 0; tries < 15; tries++) {
     await page.waitForTimeout(1000);
     const now = await usage(page);
-    if (now.textures === before.textures && now.buffers === before.buffers && now.programs === before.programs && now.framebuffers === before.framebuffers) return now;
+    if (now.textures === before.textures && now.buffers === before.buffers && now.arrays === before.arrays && now.programs === before.programs && now.framebuffers === before.framebuffers) return now;
     before = now;
   }
   return before;
 };
-/** Draws and page frames over a stretch long enough for `frames` of the page's own: a slow machine (software WebGL on a runner) has few in a second. */
-const measure = async (page: Page, frames = 12) => {
-  const start = { drawn: await drawn(page), page: (await usage(page)).pageFrames };
+/** Draws and page frames over a stretch long enough for `frames` of the page's own: a slow machine (software WebGL on a runner) has few in a second. `begun` is a count taken in the same turn as the spin was asked for, so the first long frame is one of the twelve. */
+const measure = async (page: Page, frames = 12, begun?: { drawn: number; page: number }) => {
+  const start = begun ?? { drawn: await drawn(page), page: (await usage(page)).pageFrames };
   await expect.poll(async () => (await usage(page)).pageFrames - start.page, { timeout: 90_000 }).toBeGreaterThanOrEqual(frames);
   const end = { drawn: await drawn(page), page: (await usage(page)).pageFrames };
   return { drew: end.drawn - start.drawn, frames: end.page - start.page };
@@ -339,8 +339,12 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);
   await press(page, "look-painted");
-  const fleet = Object.values(ROCKETS).filter((rocket) => !real(rocket));
-  expect(fleet.length).toBeGreaterThan(5);
+  const whole = Object.values(ROCKETS).filter((rocket) => !real(rocket));
+  expect(whole.length).toBeGreaterThan(5);
+  // CI splits the walk into parts (FLEET_PART="2/3") so each job ends well inside its hour; every ship is still walked by one of them
+  const [part, parts] = (process.env.FLEET_PART ?? "1/1").split("/").map(Number);
+  const fleet = whole.filter((_, i) => i % parts === part - 1);
+  expect(fleet.length).toBeGreaterThan(0);
   // The element says `uchusen-change` when the rocket and variant on screen are in. `data-variant` and `data-state` are set before that and `data-state` stays "3d" through a change, so they do not tell a reading that the
   // choice is drawn: a slow runner read 4 buffers where 1395 are made once the last variant's first frame is in.
   await hero(page).evaluate((node) =>
@@ -365,7 +369,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
     }
   };
   await walk(1);
-  const first = await usage(page);
+  const first = await levelUsage(page);
   console.log(`fleet walk 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}`);
   // the opened ones and the apart view too: the shapes that are only built when chosen
   await walk(2);
@@ -374,15 +378,21 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   await settle(page, 600);
   await press(page, "show-together");
   await walk(1);
-  const last = await usage(page);
+  const last = await levelUsage(page);
   console.log(`fleet walk 2: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(first.buffers);
   expect(last.arrays).toBeLessThanOrEqual(first.arrays);
   expect(last.textures).toBeLessThanOrEqual(first.textures);
-  await bar(page).evaluate((node) => (node as HTMLElement & { play(): void }).play());
-  await settle(page, 800);
-  const { drew, frames } = await measure(page);
+  // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.
+  const begun = await page.evaluate(() => {
+    const seen = (window as unknown as { __seen: { frames: number } }).__seen.frames;
+    const canvas = document.querySelector('[data-testid="hero"]')?.shadowRoot?.querySelector("canvas");
+    const drawnNow = Number(canvas?.getAttribute("data-frames") ?? 0);
+    (document.querySelector('[data-testid="view-bar"]') as HTMLElement & { play(): void }).play();
+    return { drawn: drawnNow, page: seen };
+  });
+  const { drew, frames } = await measure(page, 12, begun);
   expect(drew).toBeLessThanOrEqual(frames + 3);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   // a canvas past its budget is never made: the fleet's ships are far bigger than a rocket, the pixels are the same
@@ -413,7 +423,8 @@ test("a scene with many objects draws few things a frame, and its graphics memor
     const before = await usage(page);
     const drewBefore = await drawn(page);
     await bar(page).evaluate((node) => (node as HTMLElement & { set(next: object): void }).set({ yaw: 31 }));
-    await settle(page, 700);
+    // software drawing on a runner can take longer than a fixed wait to finish one frame of a city
+    await expect.poll(async () => (await drawn(page)) - drewBefore, { timeout: 90_000 }).toBeGreaterThan(0);
     const after = await usage(page);
     const frames = (await drawn(page)) - drewBefore;
     const perFrame = frames > 0 ? Math.round((after.draws - before.draws) / frames) : 0;
@@ -424,9 +435,9 @@ test("a scene with many objects draws few things a frame, and its graphics memor
   }
   console.log(figures.join("\n"));
   for (const scene of scenes) await go(scene);
-  const first = await usage(page);
+  const first = await levelUsage(page);
   for (let round = 0; round < 3; round++) for (const scene of scenes) await go(scene);
-  const last = await usage(page);
+  const last = await levelUsage(page);
   console.log(`after three more rounds: buffers ${first.buffers} to ${last.buffers}, arrays ${first.arrays} to ${last.arrays}, textures ${first.textures} to ${last.textures}`);
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(first.buffers);
@@ -1408,17 +1419,24 @@ test("every variant of every rocket lit, with the Earth behind: line and painted
         await settle(page, 120);
       }
   };
+  // The camera eases after a ship is in. A reading during that move, or before the first frame has uploaded the ship, counts only what is already on the card.
+  const atRest = async () => {
+    await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.moving ?? "false"), { timeout: 30_000 }).not.toBe("true");
+    await settle(page, 80);
+  };
   await walk("line");
   expect((await usage(page)).contexts).toBe(1);
   await walk("painted");
   await expect(earth(page).locator("chikyu-earth-realistic")).toHaveAttribute("data-state", "live", { timeout: 90_000 });
   await everyPicture(page);
+  await atRest();
   const first = await usage(page);
   expect(first.contexts).toBe(2);
   await walk("line");
   await walk("painted");
   await expect(earth(page).locator("chikyu-earth-realistic")).toHaveAttribute("data-state", "live", { timeout: 90_000 });
   await everyPicture(page);
+  await atRest();
   const last = await usage(page);
   console.log(`every variant lit with the Earth, first and second walk: buffers ${first.buffers} ${last.buffers}, arrays ${first.arrays} ${last.arrays}, textures ${first.textures} ${last.textures}, programs ${first.programs} ${last.programs}`);
   expect(last.contexts).toBe(2);
@@ -1493,7 +1511,7 @@ test("the Earth on the page and the embed page: what is copied carries the lit r
   test.setTimeout(240_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(`${URL}?background=earth#embed`);
+  await page.goto(`${URL}?background=earth&look=line#embed`);
   await pause(page);
   // the address opens at the section, so the view may be out of sight, and then it rightly stays a picture
   await page.evaluate(() => window.scrollTo(0, 0));

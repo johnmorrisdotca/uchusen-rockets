@@ -23,6 +23,8 @@ export interface Description {
   variant?: string;
   /** Another part in a slot, by its id. */
   parts?: Readonly<Record<string, string>>;
+  /** `space` draws the craft after its lower stages have gone. Left out, the launch stack. */
+  form?: "stack" | "space";
 }
 
 /**

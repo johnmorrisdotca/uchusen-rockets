@@ -26,6 +26,7 @@ test("two planets and a moon stand behind the rocket, and the picture before is 
   const earth = page.locator('[data-testid="earth"]');
   const moonRow = page.locator('[data-testid="moons"]');
   await page.goto(URL);
+  await page.locator('[data-testid="look-line"]').click();
   await page.locator('[data-testid="panel-background"]').click();
   await expect(page.locator('[data-testid="background-none"]')).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator('[data-testid="background-mars"]')).toBeVisible();
@@ -90,7 +91,7 @@ test("two planets and a moon stand behind the rocket, and the picture before is 
   await expect.poll(() => sky.locator("wakusei-body").evaluate((node) => (node as unknown as { stats?: { textureWidth?: number } }).stats?.textureWidth ?? 0), { timeout: 30_000 }).toBeGreaterThan(0);
   await shot(page, "painted-desk");
 
-  await page.goto(`${URL}?background=moon`);
+  await page.goto(`${URL}?background=moon&look=line`);
   await page.locator('[data-testid="panel-background"]').click();
   await expect(sky).toHaveAttribute("data-draws", "moon");
   await expect(moons).toBeHidden();
@@ -241,4 +242,19 @@ test("a globe turns between two dates, its moons move, and the Sun's glow fades 
     await shot(page, "earth-moon-globe");
   }
   expect(problems).toEqual([]);
+});
+
+test("a far camera keeps the background body filling the frame", async ({ page }) => {
+  await page.goto(`${URL}?background=saturn`);
+  const sky = page.locator('[data-testid="sky"]');
+  await expect(sky).toHaveAttribute("data-draws", "saturn");
+  const frameZoom = () => sky.locator("wakusei-body").first().getAttribute("data-frame-zoom").then((value) => Number(value));
+  await page.locator("#view-bar").evaluate((node) => (node as unknown as { set(view: { zoom: number }): void }).set({ zoom: 4 }));
+  await expect.poll(frameZoom).toBeGreaterThan(6);
+  await page.locator("#view-bar").evaluate((node) => (node as unknown as { set(view: { zoom: number }): void }).set({ zoom: 0.25 }));
+  await expect.poll(frameZoom).toBeGreaterThan(3.5);
+  await page.goto(`${URL}?background=mars`);
+  await expect(sky).toHaveAttribute("data-draws", "mars");
+  await page.locator("#view-bar").evaluate((node) => (node as unknown as { set(view: { zoom: number }): void }).set({ zoom: 0.25 }));
+  await expect.poll(frameZoom).toBeGreaterThan(3.5);
 });

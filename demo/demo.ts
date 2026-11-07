@@ -9,7 +9,7 @@ import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/ele
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import { bindStage, placeZoom } from "./viewBinder.ts";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
 import { isListed } from "./listed.ts";
@@ -22,6 +22,8 @@ import { aimOrbit, applyTurn, companionsFor, frameSky, orbitCatalogue, paceFromS
 import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
+import { chip, fillEngines, fillLooks, fillParts, fillViews, PAGE_LOOK, partLabel } from "./chip.ts";
+import { hasThrusters } from "../src/thrusters.ts";
 import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
 import { separationOf } from "../src/separation.ts";
 
@@ -49,7 +51,7 @@ const say = (key: string, values: Record<string, string | number> = {}): string 
 };
 const japanese = () => document.documentElement.lang === "ja";
 const slotWord = (slot: string) => (`slot_${slot}` in WORDS.en ? say(`slot_${slot}`) : (SLOT_NAMES[slot] ?? slot));
-const showWord = (show: string) => (show === "together" || show === "apart" ? say(`show_${show}`) : slotWord(show));
+const showWord = partLabel;
 /** The English name of a slot is what a builder row says; find the slot again to say it in the page's language. */
 const slotOfName = new Map(Object.entries(SLOT_NAMES).map(([slot, name]) => [name, slot]));
 const wordsKey = (text: string) => text.toLowerCase().replaceAll(" ", "_");
@@ -63,8 +65,7 @@ bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 /** A size change calls `fit()` to hold the new ship. That is not the Fit button, so it must not turn true scale off or replace a concept's percent. */
 let fittingForSize = false;
-bar.addEventListener("kazoku-viewchange", (event) => {
-  const detail = (event as CustomEvent).detail as { zoom?: number; reason?: string };
+bindStage(hero, (detail) => {
   if (detail.reason === "fit" && !fittingForSize) setScale(false);
   hero.drive(detail);
   const zoom = Math.max(0.25, detail.zoom ?? 1);
@@ -75,9 +76,10 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   const node = sky.querySelector("wakusei-body:not([data-moon])");
   if (node instanceof HTMLElement) frameSky(node, sky, zoom);
   else earth?.dispatchEvent(new Event("orbit"));
+  drawTurn();
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
-const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look", spin: "slow" } });
+const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: PAGE_LOOK, view: "three-quarter", panel: "look", spin: "slow" } });
 setTurnPace(paceNamed(address.get("spin")));
 const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
 turnButtons.value = paceStep(paceNamed(address.get("spin")));
@@ -112,21 +114,23 @@ function setScale(on: boolean): void {
 }
 scaleButton.addEventListener("click", () => setScale(hero.getAttribute("scale") !== "true"));
 setScale(address.get("scale") === "true");
-const PANELS = ["look", "background", "motion", "build", "lights", "docked"] as const;
+const PANELS = ["look", "background", "motion", "build", "lights", "thrusters", "docked"] as const;
 type PanelName = (typeof PANELS)[number];
 
-/** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. */
+/** A tab is offered when its group has something for this craft. Lights stays hidden until a choice is put in `#lights-field`. Thrusters share that panel when Lights is already there, so the tab row does not grow a line. */
 function panelOffered(name: PanelName): boolean {
   if (name === "motion") return !byId("motion-field").hidden;
   if (name === "build") return !byId("build-field").hidden;
-  if (name === "lights" || name === "docked") {
-    const field = byId(name === "lights" ? "lights-field" : "docked-field");
-    return !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
+  if (name === "lights" || name === "docked" || name === "thrusters") {
+    const field = byId(name === "lights" ? "lights-field" : name === "thrusters" ? "thrusters-field" : "docked-field");
+    const shown = !field.hidden && [...field.children].some((node) => !node.hasAttribute("hidden"));
+    if (name === "thrusters" && shown && !byId("lights-field").hidden) return false;
+    return shown;
   }
   return true;
 }
 
-/** One group at a time. The choice is `panel` in the address, and Look is left off it. */
+/** One group at a time. The choice is `panel` in the address, and Look is left off it. Thrusters live in the lights group. */
 function showPanels(): void {
   const asked = address.get("panel") ?? "look";
   const current: PanelName = (PANELS as readonly string[]).includes(asked) && panelOffered(asked as PanelName) ? (asked as PanelName) : "look";
@@ -138,7 +142,7 @@ function showPanels(): void {
       tab.hidden = !offered;
       tab.setAttribute("aria-selected", String(name === current));
     }
-    if (group instanceof HTMLElement) group.hidden = name !== current;
+    if (group instanceof HTMLElement) group.hidden = name !== current && !(name === "lights" && current === "thrusters");
   }
   if (asked !== current) address.set("panel", current === "look" ? null : current);
 }
@@ -151,12 +155,13 @@ for (const name of PANELS) {
   });
 }
 new MutationObserver(() => showPanels()).observe(byId("lights-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
+new MutationObserver(() => showPanels()).observe(byId("thrusters-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 new MutationObserver(() => showPanels()).observe(byId("docked-field"), { attributes: true, attributeFilter: ["hidden"], childList: true });
 const askedRocket = address.get("rocket") ?? "starship";
 const firstRocket = Object.hasOwn(ROCKETS, askedRocket) ? askedRocket : "starship";
 const askedMaker = new URLSearchParams(location.search).get("maker") ?? "";
 const askedBeside = address.get("beside") ?? "off";
-const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : "line") as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0, docked: address.get("docked") ?? dockPlan(firstRocket) };
+const state = { rocket: firstRocket, variant: address.get("variant") ?? "v3", maker: Object.hasOwn(MAKERS, askedMaker) ? (askedMaker as MakerId) : ROCKETS[firstRocket].maker, show: address.get("show") ?? "together", form: (address.get("form") === "space" ? "space" : "stack") as "stack" | "space", look: ((LOOK_NAMES as readonly string[]).includes(address.get("look") ?? "") ? address.get("look") : PAGE_LOOK) as LookName, view: ((VIEW_NAMES as readonly string[]).includes(address.get("view") ?? "") ? address.get("view") : "three-quarter") as ViewName, background: address.get("background") ?? "none", moon: address.get("moon") ?? "", beside: BESIDE_CHOICES.some((choice) => choice.id === askedBeside) ? askedBeside : null, kscale: scalePercent(address.get("kscale")), orbitKm: parseOrbitKm(address.get("orbit")) ?? 0, docked: address.get("docked") ?? dockPlan(firstRocket) };
 
 /** The craft standing beside the one on screen, or nothing when the choice is off or is the craft itself. */
 function besideNow(): { id: string; rocket: string; variant: string } | null {
@@ -186,13 +191,6 @@ function sizeObject() {
 new ResizeObserver(sizeObject).observe(hero);
 
 /** A chip. `say` is the key of its words where the family's chooser should keep them up to date. */
-function chip(label: string, testid: string, on: () => void, key?: string): HTMLButtonElement {
-  const button = el("button", { type: "button", className: "chip", textContent: key ? say(key) : label });
-  button.dataset.testid = testid;
-  if (key) button.dataset.say = key;
-  button.addEventListener("click", on);
-  return button;
-}
 const press = (group: HTMLElement, chosen: string) => {
   for (const button of group.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === chosen));
 };
@@ -344,6 +342,7 @@ type OrbitFacts = { steps: OrbitStep[]; moons: { id: string; km: number }[] };
 const orbitCache = new Map<string, OrbitFacts>();
 const orbitPending = new Set<string>();
 let orbitAnimate = false;
+let moonOpensOrbit = state.moon !== "" && parseOrbitKm(address.get("orbit")) === null;
 const factsNow = (): OrbitFacts => (state.background === "earth" ? { steps: EARTH_ORBIT.map((step) => ({ ...step })), moons: [{ id: "moon", km: 384400 }] } : (orbitCache.get(state.background) ?? { steps: [], moons: [] }));
 const visibleMoonIds = (): string[] => {
   const facts = factsNow();
@@ -378,6 +377,12 @@ function drawOrbitButtons() {
 function settleOrbit(animate: boolean) {
   const facts = factsNow();
   if (facts.steps.length === 0) return;
+  if (moonOpensOrbit) {
+    moonOpensOrbit = false;
+    const chosen = state.moon === "all" ? facts.moons : facts.moons.filter((moon) => moon.id === state.moon);
+    const far = chosen.reduce((best, moon) => (moon.km > best ? moon.km : best), 0);
+    if (far > state.orbitKm) state.orbitKm = far;
+  }
   state.orbitKm = nearestOrbit(state.orbitKm || facts.steps[0].km, facts.steps);
   address.set("orbit", orbitQuery(state.orbitKm, facts.steps));
   drawOrbitButtons();
@@ -466,6 +471,8 @@ function renderMain() {
   const showBox = byId("shows");
   // a ship of dozens of parts would fill the page with chips: it gets together, apart and one menu for the rest
   const MANY = 16;
+  const listed = shows.length > MANY ? shows.slice(0, 2) : shows;
+  fillParts(showBox, listed, state.show, (show) => pick({ show }));
   if (shows.length > MANY) {
     const rest = shows.slice(2);
     const menu = el("select", { className: "chip", ariaLabel: "Show one part alone" }) as HTMLSelectElement;
@@ -474,11 +481,12 @@ function renderMain() {
     for (const show of rest) menu.append(el("option", { value: show, textContent: showWord(show) }));
     menu.value = rest.includes(state.show) ? state.show : "";
     menu.addEventListener("change", () => (menu.value ? pick({ show: menu.value }) : pick({ show: shows[0] })));
-    showBox.replaceChildren(...shows.slice(0, 2).map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))), menu);
-  } else showBox.replaceChildren(...shows.map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))));
+    showBox.append(menu);
+  }
   press(showBox, `show-${state.show}`);
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
+  press(byId("forms"), `form-${state.form}`);
   press(byId("views"), `view-${state.view}`);
   drawSkyButtons();
   limitTilt(variant.view?.tiltMax ?? 45);
@@ -489,6 +497,8 @@ function renderMain() {
   applyLeave();
   hero.setAttribute("show", state.show);
   hero.setAttribute("look", state.look);
+  if (state.form === "space") hero.setAttribute("form", "space");
+  else hero.removeAttribute("form");
   hero.setAttribute("view", state.view);
   // a craft is not offered beside itself: Starship's own chip stays "Beside it", and the other three are Saturn V, SLS and the ISS
   const chosen = besideNow();
@@ -512,6 +522,7 @@ function renderMain() {
   showMotion();
   showDocked();
   showLights();
+  showThrusters();
   // the Kaminari concepts take a size, 60 to 100 per cent. scale="true" is the true-scale view, kept in the address apart from that size; a redraw must not clear it.
   const sizeHere = canScale(state.rocket, state.variant);
   byId("kscale-field").hidden = !sizeHere;
@@ -581,6 +592,7 @@ function renderMain() {
   syncEarth();
   sizeObject();
   byId("lights-field").hidden = !state.rocket.startsWith("fleet-");
+  byId("thrusters-field").hidden = !hasThrusters(state.rocket);
   showPanels();
 }
 
@@ -598,15 +610,25 @@ function drawMakers() {
 
 function pick(change: Partial<typeof state>) {
   // A new craft, variant or view is a new picture: zoom and pan go back to Fit. The angle stays, except a new view, which is itself the angle. A page opened at a zoom (a shared link) is left as it was until one of these changes.
-  const craft = (change.rocket !== undefined && change.rocket !== state.rocket) || (change.variant !== undefined && change.variant !== state.variant);
+  const craft = (change.rocket !== undefined && change.rocket !== state.rocket) || (change.variant !== undefined && change.variant !== state.variant) || (change.form !== undefined && change.form !== state.form);
   const viewChanged = change.view !== undefined && change.view !== state.view;
   if (viewChanged) bar.set({ yaw: 0, tilt: 0, zoom: 1, panX: 0, panY: 0 });
   else if (craft) bar.set({ zoom: 1, panX: 0, panY: 0 });
-  const orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
+  let orbitChanged = change.orbitKm !== undefined || change.background !== undefined;
+  if (change.moon && change.orbitKm === undefined) {
+    const moons = factsNow().moons;
+    const chosen = change.moon === "all" ? moons : moons.filter((moon) => moon.id === change.moon);
+    const far = chosen.reduce((best, moon) => (moon.km > best ? moon.km : best), 0);
+    if (far > 0) {
+      change = { ...change, orbitKm: far };
+      orbitChanged = true;
+    }
+  }
   Object.assign(state, change);
   if (change.rocket) state.maker = ROCKETS[change.rocket].maker;
   if (change.rocket !== undefined && change.docked === undefined) state.docked = dockPlan(state.rocket);
   if (change.background !== undefined && change.moon === undefined) state.moon = "";
+  if (change.background !== undefined && change.orbitKm === undefined) state.orbitKm = 0;
   if (change.background !== undefined) address.set("background", state.background);
   if (change.background !== undefined || change.moon !== undefined) address.set("moon", state.moon ? state.moon : null);
   if (change.beside !== undefined) {
@@ -634,6 +656,7 @@ function pick(change: Partial<typeof state>) {
   address.set("variant", state.variant);
   address.set("show", state.show);
   address.set("look", state.look);
+  address.set("form", state.form === "space" ? "space" : null);
   address.set("view", state.view);
 }
 
@@ -650,8 +673,9 @@ function pickMaker(maker: MakerId) {
 
 byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker), `maker_${maker}`)));
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
-byId("looks").append(...LOOK_NAMES.map((look) => chip(WORDS.en[`look_${look}`], `look-${look}`, () => pick({ look }), `look_${look}`)));
-byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.replaceAll("-", "_")}`], `view-${view}`, () => pick({ view }), `view_${view.replaceAll("-", "_")}`)));
+byId("forms").append(chip(WORDS.en.cmpStack, "form-stack", () => pick({ form: "stack" }), "cmpStack"), chip(WORDS.en.cmpSpace, "form-space", () => pick({ form: "space" }), "cmpSpace"));
+fillLooks(byId("looks"), state.look, (look) => pick({ look: look as LookName }));
+fillViews(byId("views"), state.view, (view) => pick({ view: view as ViewName }));
 const skyButton = (id: string, testid: string, on: () => void): HTMLButtonElement => {
   const button = el("button", { type: "button", className: id === "none" ? "thumb thumb-none" : "thumb" });
   button.dataset.testid = testid;
@@ -731,7 +755,6 @@ const compareLink = el("a", { className: "chip compare-open", href: "compare.htm
 compareLink.dataset.testid = "compare-open";
 compareLink.dataset.say = "cmpOpen";
 turnBox.append(compareLink);
-bar.addEventListener("kazoku-viewchange", drawTurn);
 // the speed buttons write the speed to the bar's `pace`
 new MutationObserver(() => drawEmbed()).observe(bar, { attributes: true, attributeFilter: ["pace"] });
 
@@ -746,8 +769,7 @@ function lightEngines(on: boolean) {
   note.textContent = say("enginesNote");
   drawEmbed();
 }
-enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false), "engines_off"), chip("Lit", "engines-on", () => lightEngines(true), "engines_on"));
-press(enginesBox, "engines-off");
+fillEngines(enginesBox, "off", (id) => lightEngines(id === "on"));
 
 // ------------------------------------------------------------- the lamps
 const lightsBox = byId("lights");
@@ -767,6 +789,26 @@ function chooseLights(choice: string) {
   drawEmbed();
 }
 lightsBox.append(chip("Off", "lights-off", () => chooseLights("off"), "lights_off"), chip("Running only", "lights-running", () => chooseLights("running"), "lights_running"), chip("All", "lights-all", () => chooseLights("all"), "lights_all"));
+
+// ------------------------------------------------------------- the thrusters
+const thrustersBox = byId("thrusters");
+const THRUSTER_CHOICES = ["off", "show", "station-keeping"] as const;
+/** `off`, `show` or `station-keeping`: the same words as the element's `thrusters` attribute. Left out of the address, it is off. */
+let thrusterChoice = THRUSTER_CHOICES.includes(address.get("thrusters") as (typeof THRUSTER_CHOICES)[number]) ? (address.get("thrusters") as (typeof THRUSTER_CHOICES)[number]) : "off";
+function showThrusters() {
+  hero.setAttribute("thrusters", thrusterChoice);
+  press(thrustersBox, thrusterChoice === "station-keeping" ? "thrusters-keep" : `thrusters-${thrusterChoice}`);
+  const note = byId("thrusters-note");
+  note.hidden = !reducedMotion;
+  note.textContent = say("thrustersNote");
+  address.set("thrusters", thrusterChoice === "off" ? null : thrusterChoice);
+}
+function chooseThrusters(choice: (typeof THRUSTER_CHOICES)[number]) {
+  thrusterChoice = choice;
+  showThrusters();
+  drawEmbed();
+}
+thrustersBox.append(chip("Off", "thrusters-off", () => chooseThrusters("off"), "thrusters_off"), chip("Show", "thrusters-show", () => chooseThrusters("show"), "thrusters_show"), chip("Station-keeping", "thrusters-keep", () => chooseThrusters("station-keeping"), "thrusters_keep"));
 
 // ------------------------------------------------------------- the motion of a fleet ship's moving parts
 const motionBox = byId("motion");
@@ -837,10 +879,11 @@ function embedOptions(): RocketOptions {
   const flying = hero.flightState;
   const engines = hero.getAttribute("engines");
   const lights = hero.getAttribute("lights");
+  const thrusters = hero.getAttribute("thrusters");
   const motion = hero.getAttribute("motion");
   // what turns here by the controls turns there by itself, as fast: left is `cw`, the near side going left
   const turning = bar.state.turning ? { spin: String(Math.round(360 / (TURN_SPEED * (Number(bar.getAttribute("pace")) || 1)))), way: turnWay === "left" ? "cw" : "ccw" } : {};
-  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(lights === "off" || lights === "running" ? { lights } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
+  return { rocket: state.rocket, variant: state.variant, show: state.show, look: state.look, view: state.view, ...turning, ...(engines === "on" ? { engines } : {}), ...(lights === "off" || lights === "running" ? { lights } : {}), ...(thrusters === "show" || thrusters === "station-keeping" ? { thrusters } : {}), ...(motion === "on" || motion === "fast" ? { motion } : {}), ...(flying.active ? { phase: flying.phase } : {}) };
 }
 panel.kinds = KINDS;
 panel.labels = LABELS;
@@ -928,12 +971,8 @@ let compareFilter: CompareFilter = (FILTERS as readonly string[]).includes(asked
 // real craft for scale lie in the fleet band: on unless the address says `real=off`
 let compareReal = new URLSearchParams(location.search).get("real") !== "off";
 const compareFrame = byId("compare-view");
-const compareBar = byId<HTMLElement>("compare-bar") as ViewControlsElement;
 // the family's controls zoom and pan the whole lineup; Fit is the lineup fitted to the frame
-compareBar.addEventListener("kazoku-viewchange", (event) => {
-  const { zoom, panX, panY } = (event as CustomEvent).detail as { zoom: number; panX: number; panY: number };
-  lineup.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-});
+bindStage(compareFrame, (detail) => placeZoom(lineup, detail));
 function renderCompare() {
   for (const button of comparePicks.querySelectorAll("button")) {
     const key = (button.dataset.testid as string).slice(8);
@@ -1139,6 +1178,7 @@ function speak() {
   lightEngines(hero.getAttribute("engines") === "on");
   showMotion();
   showLights();
+  showThrusters();
   drawTurn();
   byId("gallery").replaceChildren(...gallery());
   byId("planned-list").replaceChildren(...planned());

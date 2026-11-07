@@ -1,7 +1,7 @@
 // The four pods and the four-arm cross of ISV Kyotori, round 2. The cross is a hub on a bearing round the stem, four thick habitable arm tubes (three floors, rows of windows) running out to four end pods that each have their own shape (a control
 // centre with a glazed dome, a research lab of three drums and a dish, an observatory with a telescope barrel on a fork, and engineering with a reactor sphere and radiator fins), joined by a slender rim. Not a torus. It can turn or fold
 // forward along the stem. Every repeated part is one template stamped at many poses. Concepts only. Pure: no three.js and no DOM.
-import { antenna, box, collar, cub, hoop, ibeam, place, quad, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
+import { antenna, box, collar, cub, hoop, ibeam, moving, place, quad, rod, roundStrut, stamp, type Lathe, type MaterialName, type Piece, type Pose, type Vec3 } from "./adapter.ts";
 import { sphere } from "../ship-01/wheelparts.ts";
 
 const TAU = 2 * Math.PI;
@@ -157,7 +157,9 @@ export function payloadBay2(y0: number, open = 100): Piece[] {
     const edge = (r: number, y: number): Vec3 => [r * Math.sin(free), y, r * Math.cos(free)];
     door.push(rod("black", edge(R + 0.05, y0), edge(R + 0.05, y0 + L), 0.1, 6, { only: "mesh" }), rod("hull-grey-dark", edge(R + 0.25, y0), edge(R + 0.25, y0 + L), 0.14, 6, { only: "mesh" }));
     for (let i = 0; i < 6; i++) door.push(box("hazard", edge(R + 0.2, y0 + 3 + i * 6.8), 0.5, 0.35, 0.9, 0, { only: "mesh", plain: true }));
-    out.push(...place(place(door, { at: [-H[0], 0, -H[2]] }), { at: H, yaw: s * open }));
+    const doorName = s > 0 ? "bay-door-0" : "bay-door-1";
+    const hinge: Vec3 = [H[0], y0 + L / 2, H[2]];
+    out.push(...place(place(moving(door, { name: doorName, pivot: hinge, axis: [0, 1, 0] }), { at: [-H[0], 0, -H[2]] }), { at: H, yaw: s * open }));
     // the hinge: a pin and knuckles on the barrel's frame
     out.push(rod("hull-grey-dark", [H[0] * 1.02, y0 + 0.5, H[2] * 1.02], [H[0] * 1.02, y0 + L - 0.5, H[2] * 1.02], 0.12, 6, { only: "mesh" }));
     for (let i = 0; i < 6; i++) out.push(rod("hull-grey", [H[0] * 1.03, y0 + 1 + i * 6.6, H[2] * 1.03], [H[0] * 1.03, y0 + 3.6 + i * 6.6, H[2] * 1.03], 0.3, 10, { only: "mesh" }));

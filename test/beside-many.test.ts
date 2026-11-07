@@ -4,14 +4,15 @@ import { test } from "node:test";
 import { BESIDE_MOST, BESIDE_ROCKET, besideCraft, craftName, ROCKETS } from "../src/index.ts";
 import { build } from "../src/build/index.ts";
 
-test("the beside list: on is Starship, a list is at most two craft, and what is not a craft is left out", () => {
+test("the beside list: on is Starship, a list is at most seven craft, and what is not a craft is left out", () => {
   assert.deepEqual(besideCraft("on", "saturn-v"), [BESIDE_ROCKET]);
   assert.deepEqual(besideCraft("on", "starship"), []);
   assert.deepEqual(besideCraft(null, "saturn-v"), []);
   assert.deepEqual(besideCraft("saturn-v:saturn-v,iss:iss", "starship"), [{ rocket: "saturn-v", variant: "saturn-v" }, { rocket: "iss", variant: "iss" }]);
-  // the rocket's default variant when none is named, and no more than two
-  assert.deepEqual(besideCraft("sls,hubble,iss", "starship").map((craft) => craft.rocket), ["sls", "hubble"]);
-  assert.equal(BESIDE_MOST, 2);
+  // the rocket's default variant when none is named, and a third craft is kept
+  assert.deepEqual(besideCraft("sls,hubble,iss", "starship").map((craft) => craft.rocket), ["sls", "hubble", "iss"]);
+  assert.equal(BESIDE_MOST, 7);
+  assert.equal(besideCraft("sls,hubble,iss,saturn-v,falcon-9,electron,soyuz,new-glenn", "starship").length, 7);
   // a list may name the rocket itself: Starship Block 3 beside Block 4
   assert.deepEqual(besideCraft("starship:v4", "starship"), [{ rocket: "starship", variant: "v4" }]);
   // hostile or unknown ids are only dropped

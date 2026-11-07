@@ -5,7 +5,7 @@ import { BAYS, ENVELOPE } from "../src/model/fleet/ship-03/dims.ts";
 import { BODY, SERVICE_PORTS, cradleAxes } from "../src/model/fleet/ship-03/service.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 
-test("each box holds two Super Heavy bodies side by side, and the beam grew to fit them", () => {
+test("each box's cradles keep the clearance the beam grew for", () => {
   assert.equal(ENVELOPE.beam, 138);
   assert.ok(BODY.stack >= 124 && BODY.stack < 125, `stack ${BODY.stack}`);
   for (const bay of Object.keys(BAYS) as (keyof typeof BAYS)[]) {

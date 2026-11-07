@@ -5,23 +5,35 @@
     <link rel="stylesheet" href="family.css" />
     <link rel="stylesheet" href="demo.css" />
     <link rel="stylesheet" href="compare.css" />
+    <link rel="stylesheet" href="fleet-compare.css" />
   </head>
   <body class="demo compare">
     <main>
       <!--family:header-->
       <section class="cw" id="wide" aria-labelledby="cw-title">
         <h2 id="cw-title" data-say="cmpTitle">Compare craft, side by side</h2>
-        <p data-say="cmpIntro">Up to three craft float at their true sizes, with the Earth behind them. Choose a craft in the first row, then its maker, rocket and variant. Ground puts them back on a pad. On a phone one craft is shown.</p>
+        <p><a class="chip" href="compare.html?layout=lineup" data-testid="cw-lineup" data-say="more_compare">Compare to scale</a></p>
+        <p data-say="cmpIntro">Choose craft up to what this device can draw. They float at their true sizes, with the Earth behind them. On a phone one craft is on the stage and the rest stay in the line.</p>
         <div class="field">
           <h3 id="cw-craft-title" data-say="cmpCraft">Craft</h3>
-          <div class="chips" id="cw-craft" data-testid="cw-craft" role="group" aria-labelledby="cw-craft-title"></div>
+          <div class="chips" id="cw-chip-look" data-testid="cw-chip-look"></div>
+          <div class="craft-bar">
+            <div class="craft-scroll">
+              <div class="craft-line" id="cw-craft" data-testid="cw-craft" role="group" aria-labelledby="cw-craft-title"></div>
+            </div>
+            <div class="craft-tools" id="cw-craft-tools"></div>
+          </div>
+          <p id="cw-budget" data-testid="cw-budget" hidden></p>
+          <div id="cw-ask" class="cw-ask" data-testid="cw-ask" hidden></div>
         </div>
         <div class="stage-box cw-stage">
           <div class="view-space">
             <div class="earth-back" id="earth-back" data-testid="earth" aria-hidden="true" hidden></div>
             <div class="earth-back" id="sky-back" data-testid="sky" aria-hidden="true" hidden></div>
             <div class="sky-moons" id="sky-moons" data-testid="sky-moons" aria-hidden="true" hidden></div>
-            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter" captions float inspector="off" edges="open" world="earth"></uchusen-rocket>
+            <p id="cw-empty" data-testid="cw-empty" data-say="cmpEmpty" hidden>Nothing chosen. Choose a craft in the list.</p>
+            <div id="cw-glass" data-testid="cw-glass" hidden></div>
+            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="painted" view="three-quarter" captions float inspector="off" edges="open" world="earth"></uchusen-rocket>
             <div class="cw-arrows" id="cw-arrows" data-testid="cw-arrows"></div>
           </div>
           <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address speed="5" theme="dark" controls="advanced" zoom-min="0.000001" zoom-max="8"></kazoku-view-controls>
@@ -44,16 +56,25 @@
         </div>
         <div class="cw-pickers">
           <div class="field">
+            <h3 id="kind-title" data-say="cmpKinds">Kind</h3>
+            <div class="chips" id="kinds" data-testid="cw-kinds" role="group" aria-labelledby="kind-title"></div>
             <h3 id="maker-title" data-say="maker">Maker</h3>
             <div class="chips" id="makers" role="group" aria-labelledby="maker-title"></div>
           </div>
           <div class="field">
             <h3 id="rocket-title" data-say="rocket">Rocket</h3>
-            <div class="chips" id="rockets" role="group" aria-labelledby="rocket-title"></div>
+            <input id="cw-search" data-testid="cw-search" type="search" />
+            <div class="chips picker-grid" id="rockets" role="group" aria-labelledby="rocket-title"></div>
           </div>
           <div class="field">
+            <h3 id="facts-title" data-say="cmpFacts">Chosen craft</h3>
+            <div id="cw-facts" data-testid="cw-facts"></div>
             <h3 id="variant-title" data-say="variant">Variant</h3>
             <div class="chips" id="variants" role="group" aria-labelledby="variant-title"></div>
+          </div>
+          <div class="field">
+            <h3 id="form-title" data-say="cmpForm">Shown</h3>
+            <div class="chips" id="forms" data-testid="cw-form" role="group" aria-labelledby="form-title"></div>
           </div>
           <div class="field">
             <h3 id="place-title" data-say="cmpPlace">Place</h3>
@@ -79,6 +100,26 @@
         <p class="earth-credit" id="sky-credit" data-testid="sky-credit" hidden></p>
         <p class="earth-credit" id="earth-credit" data-testid="earth-credit" hidden><span data-say="earthCreditA">The Earth: </span><a href="https://github.com/johnmorrisdotca/chikyu-earth" rel="noopener">Chikyu Earth</a><span data-say="earthCreditB">. Outlines from Natural Earth; the Painted look's pictures from NASA Earth Observatory (Blue Marble Next Generation, Reto Stöckli; Earth at Night, Black Marble 2016).</span></p>
         <div class="table-wrap"><table id="cw-table" data-testid="cw-table"></table></div>
+      </section>
+      <section class="cmp" id="lineup-fold" hidden>
+        <h2 id="cmp-title" data-say="more_compare">Compare to scale</h2>
+        <p><a class="chip" href="compare.html" data-testid="cw-side" data-say="cmpTitle">Compare craft, side by side</a></p>
+        <div class="chips" id="cmp-looks" data-testid="cmp-looks" role="group" aria-labelledby="cmp-title"></div>
+        <div class="craft-bar">
+          <div class="craft-scroll">
+            <div class="craft-line" id="cmp-picks" data-testid="cmp-picks" role="group" aria-labelledby="cmp-title"></div>
+          </div>
+        </div>
+        <div class="chips" id="cmp-views" data-testid="cmp-views" role="group" aria-labelledby="cmp-title"></div>
+        <div class="cmp-view" id="cmp-view" data-testid="cmp-view" tabindex="0">
+          <uchusen-lineup id="lineup" data-testid="cmp-lineup" pose="stand" filter="fleet" ruler labels look="painted" contain></uchusen-lineup>
+        </div>
+        <kazoku-view-controls id="cmp-bar" data-testid="cmp-bar" for="cmp-view" theme="dark" controls="advanced" zoom-min="0.25" zoom-max="8"></kazoku-view-controls>
+        <p data-testid="cmp-length-source" data-say="lengthSource">Length is the figure in the ship's record.</p>
+        <table class="cmp-facts" data-testid="cmp-facts">
+          <thead id="cmp-head"></thead>
+          <tbody id="cmp-rows"></tbody>
+        </table>
       </section>
       <!--family:unreviewed-->
       <!--family:footer-->

@@ -45,7 +45,21 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await page.getByTestId("scrub").fill("1000");
   await expect(page.getByTestId("when-date")).not.toHaveText(atStart);
   expect(await width("dest")).toBeGreaterThan(destStart * 2);
-  expect(await page.locator("details, [aria-expanded]").count()).toBe(0);
+  // the shared view bar has its own More control once the painted model is up; the journey's rows stay buttons
+  const disclosures = await page.locator("details, [aria-expanded]").evaluateAll((nodes) =>
+    nodes
+      .filter((node) => {
+        let current: Element | null = node;
+        while (current) {
+          if (current.tagName === "KAZOKU-VIEW-CONTROLS") return false;
+          const root = current.getRootNode();
+          current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+        }
+        return true;
+      })
+      .map((node) => `${node.tagName} ${node.getAttribute("aria-label") ?? node.getAttribute("data-testid") ?? ""}`.trim()),
+  );
+  expect(disclosures).toEqual([]);
   expect(found).toEqual([]);
 });
 
@@ -186,7 +200,7 @@ test("the page makes no WebGL context and asks for no frame while nothing moves"
       return raf(callback);
     };
   });
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   await expect(page.getByTestId("phase")).toHaveText("READY");
   const before = await page.evaluate(() => (window as unknown as { __raf: number }).__raf);
   await page.waitForTimeout(900);
@@ -269,7 +283,7 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
 
 test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the picture", async ({ page }) => {
   const found = problems(page);
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   const names = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"];
   const tops = [];
   for (const name of names) {
@@ -325,10 +339,11 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
       return (real as (...args: unknown[]) => unknown).call(this, kind, ...rest) as never;
     } as typeof real;
   });
-  await page.goto(URL);
+  await page.goto(`${URL}&look=line`);
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(0);
   await page.getByTestId("look-painted").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  await expect(page.getByTestId("painted-rocket")).toHaveAttribute("look", "painted");
   await expect(page.getByTestId("painted-controls")).toBeVisible();
   await expect(page.getByTestId("painted-note")).toBeHidden();
   const bar = await page.getByTestId("painted-bar").evaluate((node) => getComputedStyle(node).backgroundColor);
@@ -336,13 +351,49 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
   await expect.poll(() => page.getByTestId("painted-rocket").getAttribute("data-state")).toBe("3d");
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBeGreaterThan(0);
   await page.getByTestId("view-front").click();
+  await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  await page.getByTestId("view-map").click();
   await expect(page.getByTestId("painted-rocket")).toHaveCount(0);
   const left = await page.evaluate(() => (window as unknown as { __gl: number }).__gl);
   await page.waitForTimeout(400);
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(left);
   await page.getByTestId("view-side").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
-  expect(page.url()).toContain("look=painted");
+  expect(page.url()).not.toContain("look=");
+});
+
+test("the painted craft stays whole and every HUD block has the same backing", async ({ page }) => {
+  await page.goto(`${URL}&from=earth&to=jupiter&craft=falcon-heavy&look=painted`);
+  const rocket = page.getByTestId("painted-rocket");
+  await expect(rocket).toBeVisible();
+  await expect(rocket).toHaveAttribute("look", "painted");
+  const read = () => page.evaluate(() => {
+    const stage = document.querySelector(".jr-stage")!.getBoundingClientRect();
+    const craft = document.getElementById("painted-rocket")!.getBoundingClientRect();
+    const box = (id: string) => document.getElementById(id)!.getBoundingClientRect();
+    const hits = (a: DOMRect, b: DOMRect) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+    const speed = box("speed");
+    const when = box("when-stamp");
+    const phase = box("phase");
+    return {
+      inside: craft.width > 40 && craft.left >= stage.left - 1 && craft.right <= stage.right + 1 && craft.top >= stage.top - 1 && craft.bottom <= stage.bottom + 1,
+      clear: !hits(craft, speed) && !hits(craft, when) && !hits(craft, phase),
+      plate: getComputedStyle(document.getElementById("speed")!).backgroundColor,
+    };
+  });
+  await expect.poll(async () => (await read()).inside).toBe(true);
+  const start = await read();
+  expect(start.clear).toBe(true);
+  expect(start.plate).toBe("rgba(5, 10, 20, 0.82)");
+  await page.getByTestId("scrub").evaluate((node) => {
+    const input = node as HTMLInputElement;
+    input.value = input.max;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.getByTestId("summary-close").click();
+  await expect(page.getByTestId("phase")).toHaveText("ARRIVED");
+  await expect.poll(async () => (await read()).inside).toBe(true);
+  await expect.poll(async () => (await read()).clear).toBe(true);
 });
 
 test("a ship that burns all the way can be asked for 1 g, and a rocket is not offered the choice", async ({ page }) => {
@@ -378,4 +429,80 @@ test("a rocket to Saturn can swing past Jupiter, and the path says it is an assi
   await expect(page.getByTestId("via-field")).toBeHidden();
   await page.goto(`${URL}&from=moon&to=saturn&craft=saturn-v`);
   await expect(page.getByTestId("via-field")).toBeHidden();
+});
+
+test("perceived size is the default and the destination grows through the trip; true size is a choice", async ({ page }) => {
+  await page.goto(URL);
+  await expect(page.getByTestId("size-perceived")).toHaveAttribute("aria-pressed", "true");
+  expect(page.url()).not.toContain("size=");
+  const span = () => page.getByTestId("dest").getAttribute("data-span").then((value) => Number(value));
+  const start = await span();
+  expect(start).toBeLessThan(0.08);
+  await page.getByTestId("scrub").fill("400");
+  const mid = await span();
+  await page.getByTestId("scrub").fill("1000");
+  const end = await span();
+  expect(mid).toBeGreaterThan(start);
+  expect(end).toBeGreaterThan(mid);
+  expect(end).toBeGreaterThan(0.5);
+  await page.getByTestId("size-true").click();
+  expect(page.url()).toContain("size=true");
+  await expect(page.getByTestId("size-true")).toHaveAttribute("aria-pressed", "true");
+});
+
+test("Painted draws a painted planet and the craft's painted model", async ({ page }) => {
+  await page.goto(`${URL}&look=painted`);
+  await expect(page.getByTestId("stage")).toHaveAttribute("data-look", "painted");
+  const planet = page.getByTestId("dest").locator("wakusei-body");
+  await expect(planet).toHaveAttribute("body", "mars");
+  await expect(planet).toHaveAttribute("look", "painted");
+  await expect(page.getByTestId("painted-rocket")).toBeVisible();
+  await expect(page.getByTestId("from").locator("chikyu-earth-realistic")).toBeVisible();
+});
+
+test("the arrival card closes by the cross, Escape and a click outside, and Summary opens it again", async ({ page }) => {
+  await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
+  const card = page.getByTestId("summary");
+  await expect(card).toBeVisible();
+  const stage = await page.getByTestId("stage").boundingBox();
+  const box = await card.boundingBox();
+  expect(stage && box && box.width < stage.width * 0.9).toBe(true);
+  await page.getByTestId("summary-close").click();
+  await expect(card).toBeHidden();
+  await page.getByTestId("summary-open").click();
+  await expect(card).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(card).toBeHidden();
+  await page.getByTestId("summary-open").click();
+  await page.getByTestId("stage").click({ position: { x: 8, y: 8 } });
+  await expect(card).toBeHidden();
+});
+
+test("a trip that cannot start says why on the stage and on Play, and can leave from the Earth", async ({ page }) => {
+  await page.goto(`${URL}&from=uranus&to=saturn&craft=falcon-heavy`);
+  await expect(page.getByTestId("blocked")).toBeVisible();
+  await expect(page.getByTestId("blocked-title")).toHaveText("NO TRIP");
+  await expect(page.getByTestId("phase")).toHaveText("");
+  await expect(page.getByTestId("blocked-why")).toContainText("leave from the Earth or the Moon");
+  await expect(page.getByTestId("play")).toBeDisabled();
+  await expect(page.getByTestId("play")).toHaveAttribute("title", /leave from the Earth or the Moon/);
+  await page.getByTestId("leave-earth").click();
+  await expect(page.getByTestId("from-earth")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("blocked")).toBeHidden();
+  await expect(page.getByTestId("play")).toBeEnabled();
+});
+
+test("the page bar links every page on one row and marks this page", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(URL);
+  const bar = page.getByTestId("page-links");
+  for (const name of ["Rockets", "Compare", "Journey", "Fleet", "Yard", "Builder", "Docs", "Embed"]) {
+    await expect(bar.getByRole("link", { name })).toBeVisible();
+  }
+  await expect(bar.getByRole("button", { name: "Help" })).toBeVisible();
+  await expect(bar.getByRole("link", { name: "Journey" })).toHaveAttribute("aria-current", "page");
+  await expect(bar.getByRole("link", { name: "Compare" })).toHaveAttribute("href", "compare.html");
+  const tops = await bar.locator("a, button").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
+  expect(new Set(tops).size, tops.join(",")).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });

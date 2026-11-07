@@ -28,7 +28,12 @@ export function hub(seed = "hub"): Piece[] {
     const a = 45 + 90 * k;
     const dir: Vec3 = [Math.sin(deg(a)), 0, Math.cos(deg(a))];
     const c: Vec3 = [(R + 2.2) * dir[0], y + 1, (R + 2.2) * dir[2]];
-    out.push(box("hull-white-worn", c, 5.4, 5.4, 6, a + 90, { only: "mesh", plain: true }), rod("hull-grey-dark", [c[0] + dir[0] * 2.7, y + 4, c[2] + dir[2] * 2.7], [c[0] + dir[0] * 3, y + 4, c[2] + dir[2] * 3], 1.5, 20, { only: "mesh" }), rod("hull-grey", [c[0] + dir[0] * 3, y + 4, c[2] + dir[2] * 3], [c[0] + dir[0] * 3.1, y + 4, c[2] + dir[2] * 3.1], 1.0, 16, { only: "mesh" }), box("hazard", [c[0] + dir[0] * 2.72, y + 0.1, c[2] + dir[2] * 2.72], 5.2, 0.05, 0.3, a + 90, { only: "mesh", plain: true }), ...lamps([{ at: [c[0] + dir[0] * 2.8, y + 7, c[2] + dir[2] * 2.8], colour: "amber", size: 0.2 }]));
+    const face: Vec3 = [c[0] + dir[0] * 2.85, y + 4, c[2] + dir[2] * 2.85];
+    const hatch = [
+      rod("hull-grey-dark", [c[0] + dir[0] * 2.7, y + 4, c[2] + dir[2] * 2.7], [c[0] + dir[0] * 3, y + 4, c[2] + dir[2] * 3], 1.5, 20, { only: "mesh" }),
+      rod("hull-grey", [c[0] + dir[0] * 3, y + 4, c[2] + dir[2] * 3], [c[0] + dir[0] * 3.1, y + 4, c[2] + dir[2] * 3.1], 1.0, 16, { only: "mesh" }),
+    ];
+    out.push(box("hull-white-worn", c, 5.4, 5.4, 6, a + 90, { only: "mesh", plain: true }), box("hazard", [c[0] + dir[0] * 2.72, y + 0.1, c[2] + dir[2] * 2.72], 5.2, 0.05, 0.3, a + 90, { only: "mesh", plain: true }), ...lamps([{ at: [c[0] + dir[0] * 2.8, y + 7, c[2] + dir[2] * 2.8], colour: "amber", size: 0.2 }]), ...moving(hatch, { name: `airlock-hatch-${k}`, pivot: [face[0], face[1] + 1.5, face[2]], axis: [dir[2], 0, -dir[0]] }));
     // a small-craft port on the forward shoulder above it
     out.push(...place(collar("S", 0, 1), { at: [(R * 0.62) * dir[0], y + H + 3.9, (R * 0.62) * dir[2]] }), ...lamps(Array.from({ length: 4 }, (_, i) => ({ at: [(R * 0.62) * dir[0] + 2 * Math.cos((Math.PI / 2) * i), y + H + 4.2, (R * 0.62) * dir[2] + 2 * Math.sin((Math.PI / 2) * i)] as Vec3, colour: "blue" as const, size: 0.14 }))));
   }

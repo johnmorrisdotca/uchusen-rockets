@@ -295,3 +295,43 @@ export function flightNow(steps: readonly PlayStep[], at: number): { n: number; 
   const current = (going.length > 0 ? going : started).at(-1) ?? order[0];
   return { n: order.indexOf(current) + 1, slot: current.slot, title: flightTitle(current.slot) };
 }
+
+/**
+ * Real seconds one assembly flight takes at the Watch a flight speed.
+ * @example
+ * ```ts
+ * import { WATCH_FLIGHT_S } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(WATCH_FLIGHT_S);
+ * ```
+ */
+export const WATCH_FLIGHT_S = 30;
+
+/**
+ * The place after `seconds` of play. `rate` is story seconds in one real second. With `watch`, the flight underway takes {@link WATCH_FLIGHT_S} real seconds, whatever `rate` is.
+ *
+ * @param steps The ship's build order.
+ * @param at How far through the build, from 0 to 1.
+ * @param seconds Real seconds just elapsed.
+ * @param rate Story seconds in one real second.
+ * @param watch Whether one flight should take {@link WATCH_FLIGHT_S} real seconds.
+ * @returns The place, from 0 to 1.
+ * @example
+ * ```ts
+ * import { steppedPlace } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const steps = [{ slot: "keel", start: 0, days: 10 }];
+ * console.log(steppedPlace(steps, 0, 30, 1, true));
+ * ```
+ */
+export function steppedPlace(steps: readonly PlayStep[], at: number, seconds: number, rate: number, watch: boolean): number {
+  const total = Math.max(1, playFrame(steps, 1).total);
+  const elapsed = Math.max(0, seconds);
+  if (watch) {
+    const now = flightNow(steps, at);
+    const step = now ? steps.find((one) => one.slot === now.slot) : undefined;
+    const days = Math.max(1e-6, step?.days ?? 1);
+    return Math.min(1, Math.max(0, at) + (elapsed / WATCH_FLIGHT_S) * (days / total));
+  }
+  return Math.min(1, Math.max(0, at) + (rate * elapsed) / 86_400 / total);
+}

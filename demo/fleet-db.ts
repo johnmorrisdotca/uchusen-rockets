@@ -3,10 +3,11 @@ import { ROCKETS, SLOT_NAMES, variantOf } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { build } from "../src/build/index.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
-import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import { bindStage } from "./viewBinder.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize } from "./sizes.ts";
 import { WORDS } from "./words.js";
+import { chip } from "./chip.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -57,17 +58,6 @@ const chosen = () => {
   return { ship, rocket, variant, show, slots, modules, moduleId, cut, cutId };
 };
 
-const chip = (label: string, testid: string, pressed: boolean, on: () => void): HTMLButtonElement => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "chip";
-  button.textContent = label;
-  button.dataset.testid = testid;
-  button.setAttribute("aria-pressed", pressed ? "true" : "false");
-  button.addEventListener("click", on);
-  return button;
-};
-
 const draw = (): void => {
   const { ship, rocket, variant, show, slots, modules, moduleId, cut, cutId } = chosen();
   const shipsRow = byId("db-ships");
@@ -80,19 +70,15 @@ const draw = (): void => {
     address.set("cut", "");
     draw();
   })));
-  sectionsRow.replaceChildren(...slots.map((slot) => chip(slotLabel(slot), `db-show-${slot}`, !cut && slot === show, () => {
+  sectionsRow.replaceChildren(...slots.map((slot) => chip(slotLabel(slot), `db-show-${slot}`, slot === show, () => {
     address.set("ship", ship);
     address.set("show", slot);
-    address.set("cut", "");
     address.set("module", "");
     draw();
-  })), ...(cutId ? [chip(say("dbCutaway"), "db-cutaway", cut, () => {
-    address.set("ship", ship);
-    address.set("cut", cut ? "" : "on");
-    address.set("show", "together");
-    address.set("module", "");
-    draw();
-  })] : []));
+  })));
+  const cutButton = byId("db-cutaway") as HTMLButtonElement;
+  cutButton.disabled = cutId === "";
+  cutButton.setAttribute("aria-pressed", String(cut));
   modulesRow.replaceChildren(...modules.map((section) => chip(section.name, `db-module-${section.id}`, section.id === moduleId, () => {
     address.set("ship", ship);
     address.set("show", show);
@@ -114,6 +100,7 @@ const draw = (): void => {
   hero.setAttribute("rocket", ship);
   hero.setAttribute("variant", variant?.id ?? rocket.defaultVariant);
   hero.setAttribute("show", show);
+  hero.setAttribute("look", "painted");
   if (variant) {
     const size = fleetSize(variant);
     byId("db-length").textContent = metres(size.length);
@@ -154,9 +141,17 @@ const draw = (): void => {
   } else hero.focusAt(null);
 };
 
-document.querySelector("kazoku-view-controls")?.addEventListener("kazoku-viewchange", (event) => {
-  const rocket = document.getElementById("hero") as UchusenRocket | null;
-  rocket?.drive((event as CustomEvent).detail);
+{
+  const rocket = byId("hero") as UchusenRocket;
+  bindStage(rocket, (detail) => rocket.drive(detail));
+}
+
+byId("db-cutaway").addEventListener("click", () => {
+  const now = chosen();
+  if (!now.cutId) return;
+  address.set("ship", now.ship);
+  address.set("cut", now.cut ? "" : "on");
+  draw();
 });
 
 draw();

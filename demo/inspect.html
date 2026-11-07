@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!--family:head-->
+    <link rel="stylesheet" href="family.css" />
+    <link rel="stylesheet" href="demo.css" />
+    <link rel="stylesheet" href="inspect.css" />
+  </head>
+  <body class="demo inspect">
+    <main>
+      <!--family:header-->
+      <section class="inspect-page" aria-label="Drones around a finished ship" data-say-label="inspectTitle">
+        <div class="stage-box">
+          <h1 data-say="inspectTitle">Drones around a finished ship</h1>
+          <p data-say="inspectIntro">The ship is finished and stays still. Choose how many drones fly around it. They keep clear of the hull, pause, and shine a light on one spot.</p>
+          <div class="inspect-controls" data-testid="inspect-controls">
+            <label>
+              <span data-say="inspectShip">Ship</span>
+              <select id="inspect-ship" data-testid="inspect-ship"></select>
+            </label>
+            <label>
+              <span data-say="inspectDrones">Drones</span>
+              <span class="inspect-count">
+                <input id="inspect-count" data-testid="inspect-count" type="number" min="1" max="100" step="1" value="10" />
+                <input id="inspect-range" data-testid="inspect-range" type="range" min="1" max="100" step="1" value="10" />
+              </span>
+            </label>
+            <button type="button" id="inspect-play" data-testid="inspect-play" data-say="inspectPause">Pause</button>
+            <label>
+              <span data-say="inspectSpeed">Speed</span>
+              <input id="inspect-speed" data-testid="inspect-speed" type="range" min="0.5" max="3" step="0.5" value="1" />
+            </label>
+          </div>
+          <div class="view-space">
+            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="painted" view="three-quarter" inspector="off"></uchusen-rocket>
+          </div>
+          <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" theme="dark" controls="advanced" zoom-min="0.25"></kazoku-view-controls>
+        </div>
+      </section>
+      <!--family:footer-->
+    </main>
+    <!--family:scripts js/inspect.js-->
+  </body>
+</html>
