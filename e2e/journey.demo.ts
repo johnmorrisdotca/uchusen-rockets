@@ -530,3 +530,41 @@ test("the ship turns round for the braking burn, and the timeline names the flip
   await expect.poll(() => page.locator("#craft").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--turn"))).toBe("-90.0deg");
   await expect.poll(() => page.locator("#route g").last().getAttribute("data-turned")).toBe("180.0");
 });
+
+test("no braking shows where keeping on would reach, out to Andromeda", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari&to=mars`);
+  const toggle = page.getByTestId("no-brake");
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  const route = page.getByTestId("route");
+  await expect(route).toHaveAttribute("data-coast", "1");
+  await expect(route.getByTestId("coast-title")).toContainText("0.015 g");
+  await expect(route.getByTestId("coast-title")).toContainText("no braking");
+  await expect(route.getByTestId("coast-proxima")).toHaveText("Proxima");
+  await expect(route.getByTestId("coast-centre")).toContainText("Galactic");
+  await expect(route.getByTestId("coast-centre")).toContainText("centre");
+  await expect(route.getByTestId("coast-andromeda")).toHaveText("Andromeda");
+  await expect(route.getByTestId("coast-ship")).toContainText("Ship");
+  await expect(route.getByTestId("coast-earth")).toContainText("Earth");
+  await expect(route).toContainText("1 light second");
+  await expect(route).toContainText("1 million ly");
+  const before = Number(await route.getByTestId("coast-mark").getAttribute("data-x"));
+  const shipBefore = await route.getByTestId("coast-ship").textContent();
+  await page.locator("#scrub").evaluate((node) => {
+    const input = node as HTMLInputElement;
+    input.value = "800";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.getByTestId("phase")).toHaveText("DECELERATE");
+  const after = Number(await route.getByTestId("coast-mark").getAttribute("data-x"));
+  const proxima = Number(await route.getByTestId("coast-proxima").getAttribute("x"));
+  expect(after).toBeGreaterThan(before);
+  expect(after).toBeLessThan(proxima);
+  await expect.poll(async () => route.getByTestId("coast-ship").textContent()).not.toBe(shipBefore);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect(route.getByTestId("route-flip")).toHaveText("TURNING ROUND");
+  await expect(route.getByTestId("coast-andromeda")).toHaveCount(0);
+});

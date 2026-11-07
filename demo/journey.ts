@@ -31,6 +31,7 @@ import {
 import { assistApplies, assistWindows, swingPoint } from "../src/journey/assist.ts";
 import { conicPoint } from "../src/journey/lunar.ts";
 import { cmbAhead, transferPoint } from "../src/journey/physics.ts";
+import { buildCoast, drawCoast, type CoastArt } from "./journey-coast.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
@@ -722,9 +723,33 @@ const ROUTE_X0 = 70;
 const ROUTE_X1 = 930;
 let routeMarker: SVGElement | null = null;
 let routeDone: SVGElement | null = null;
+let coastOn = false;
+let coastArt: CoastArt | null = null;
+
+function refreshRoute(): void {
+  const show = trip.drive === "continuous" && trip.verdict.playable && trip.phases.length > 0;
+  const button = byId("no-brake");
+  button.hidden = !show;
+  if (!show) {
+    coastOn = false;
+    button.setAttribute("aria-pressed", "false");
+  }
+  if (!trip.verdict.playable || trip.phases.length === 0) {
+    routeSvg.replaceChildren();
+    routeSvg.removeAttribute("data-coast");
+    coastArt = null;
+    return;
+  }
+  if (coastOn) coastArt = buildCoast(routeSvg, trip, say);
+  else {
+    coastArt = null;
+    buildRoute();
+  }
+}
 
 function buildRoute(): void {
   routeSvg.replaceChildren();
+  routeSvg.removeAttribute("data-coast");
   const y = 70;
   const x = (f: number): number => ROUTE_X0 + (ROUTE_X1 - ROUTE_X0) * f;
   const add = (...nodes: SVGElement[]): void => routeSvg.append(...nodes);
@@ -1057,7 +1082,8 @@ function draw(force = false): void {
   craftBox.style.setProperty("--turn", turn);
   if (choice.look === "painted" && choice.view === "side") layout();
   syncPainted(turn, lit, id);
-  drawRoute(state);
+  if (coastOn && coastArt) drawCoast(coastArt, trip, state, say);
+  else drawRoute(state);
   if (choice.view === "map") drawMap(state);
   drawPanel(state);
   setText(byId("when-date"), dateWords(state.dateMs, true));
@@ -1164,11 +1190,16 @@ function start(): void {
   setCraft(false);
   if (ok) {
     buildMap();
-    buildRoute();
+    refreshRoute();
     buildPanel();
     setCraft(false);
   } else {
+    coastOn = false;
+    coastArt = null;
+    byId("no-brake").hidden = true;
+    byId("no-brake").setAttribute("aria-pressed", "false");
     routeSvg.replaceChildren();
+    routeSvg.removeAttribute("data-coast");
     mapSvg.replaceChildren();
     byId("now").replaceChildren();
     byId("trip").replaceChildren();
@@ -1197,6 +1228,12 @@ stage.addEventListener("click", (event) => {
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") hideSummary();
+});
+byId("no-brake").addEventListener("click", () => {
+  coastOn = !coastOn;
+  byId("no-brake").setAttribute("aria-pressed", String(coastOn));
+  refreshRoute();
+  draw(true);
 });
 byId("restart").addEventListener("click", () => {
   pause();
@@ -1252,7 +1289,7 @@ document.addEventListener("kazoku-languagechange", () =>
     drawCredit();
     if (trip.verdict.playable && trip.phases.length > 0) {
       buildMap();
-      buildRoute();
+      refreshRoute();
       buildPanel();
     }
     syncPlay();
