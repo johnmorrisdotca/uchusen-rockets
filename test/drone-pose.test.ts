@@ -6,7 +6,7 @@ import { farPieces } from "../src/model/fleet/drone/far.ts";
 import { ARMS, joints } from "../src/model/fleet/drone/layout.ts";
 import { meshOf } from "../src/model/pieces.ts";
 import { legPieces } from "../src/model/fleet/drone/legs.ts";
-import { DRONE_POSE, blendPose, fingerSpan, poseFor, poseOf, storedPose } from "../src/model/fleet/drone/poses.ts";
+import { DRONE_POSE, STORED_SHAPE, blendPose, fingerSpan, poseFor, poseOf, storedPose } from "../src/model/fleet/drone/poses.ts";
 
 const low = (name: "fly" | "park"): number => {
   let y = Number.POSITIVE_INFINITY;
@@ -61,21 +61,25 @@ test("a distant drone snaps to a folded, reaching or planted pose", () => {
   assert.equal(storedPose(poseFor("builder", "berth")), "park");
 });
 
-const farFlat = (name: "fly" | "park" | "place"): number[] => {
-  const parts: number[] = [];
-  for (const buffers of meshOf(farPieces(DRONE_POSE[name])).faces.values()) parts.push(...buffers.positions);
-  return parts;
+const farBox = (name: "fly" | "park" | "place"): { minY: number; maxZ: number; n: number } => {
+  let minY = Number.POSITIVE_INFINITY;
+  let maxZ = Number.NEGATIVE_INFINITY;
+  let n = 0;
+  for (const buffers of meshOf(farPieces(STORED_SHAPE[name])).faces.values()) {
+    n += buffers.positions.length;
+    for (let i = 1; i < buffers.positions.length; i += 3) minY = Math.min(minY, buffers.positions[i] ?? minY);
+    for (let i = 2; i < buffers.positions.length; i += 3) maxZ = Math.max(maxZ, buffers.positions[i] ?? maxZ);
+  }
+  return { minY, maxZ, n };
 };
 
-test("a distant planted drone is not the same shape as a distant folded one", () => {
-  const flown = farFlat("fly");
-  const planted = farFlat("park");
-  const reaching = farFlat("place");
-  assert.equal(flown.length, planted.length);
-  assert.equal(flown.length, reaching.length);
-  const moved = (left: number[], right: number[]) => left.some((value, i) => Math.abs(value - (right[i] ?? value)) > 0.1);
-  assert.equal(moved(flown, planted), true);
-  assert.equal(moved(flown, reaching), true);
+test("a distant planted drone stands on legs and a reaching one sticks out in front", () => {
+  const flown = farBox("fly");
+  const planted = farBox("park");
+  const reaching = farBox("place");
+  assert.ok(planted.n > flown.n);
+  assert.ok(planted.minY < flown.minY - 0.2);
+  assert.ok(reaching.maxZ > flown.maxZ + 0.15);
 });
 
 const counts = (name: "fly" | "park" | "weld"): number[] => {

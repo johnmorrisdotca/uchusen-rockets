@@ -40,6 +40,15 @@ export function fingerSpan(open: number): number {
 export const STORED_POSES = ["fly", "place", "park"] as const;
 export type StoredPose = (typeof STORED_POSES)[number];
 
+/**
+ * The three shapes a distant drone is drawn as. They are pushed apart so each reads at a glance: the folded arms sit behind the saucer, the reaching arms come out in front, and the planted drone stands on its legs.
+ */
+export const STORED_SHAPE: Record<StoredPose, DronePose> = {
+  fly: { pitch: [80, 60, 40, 20], grip: 0.1, legs: 0, point: 0 },
+  place: { pitch: [-55, -50, -30, -20], grip: 0.4, legs: 0, point: 0 },
+  park: { pitch: [80, 60, 40, 20], grip: 0.1, legs: 1, point: 0 },
+};
+
 /** A distant drone keeps one rigid pose: folded, reaching, or planted. */
 export function storedPose(name: PoseName): StoredPose {
   if (name === "fly" || name === "carry") return "fly";

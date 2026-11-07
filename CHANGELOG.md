@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **A distant drone keeps one of three poses** (MODULES-487): folded, reaching or planted. It stays rigid. The nearest six still ease between the eight poses.
+- **A distant drone keeps one of three poses** (MODULES-487): folded arms sit behind the saucer, reaching arms come out in front, and planted legs stand clear. It stays rigid. The nearest six still ease between the eight poses.
 - **A pose eases into the next** (MODULES-487): a near drone blends to its next pose over 0.3 to 0.8 seconds. Reduced motion cuts straight to the pose.
 - **The nearest drones wear their pose** (MODULES-487): up to six drones nearest the camera are drawn from the posed model. Fly, approach, grip, carry, place, weld, inspect and park each set the arm, the gripper and the legs. A boss points further than a manager.
 - **No braking** (MODULES-398): on a ship that can burn the whole way, the trip line becomes a log line from one light second out past Andromeda, with ship time and Earth time. Turning it off brings the trip line back, including the flip.
