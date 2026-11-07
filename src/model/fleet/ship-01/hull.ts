@@ -76,7 +76,7 @@ export function boomPieces(sx: number, detail = 0.3): Piece[] {
     const a = deg(120 * k);
     out.push(...place(mnThruster(0.45), { at: [6.8 * Math.sin(a), 100, 6.8 * Math.cos(a)] }));
   }
-  return place(out, { at: [sx * SPIN.boomX, 0, 0] });
+  return moving(place(out, { at: [sx * SPIN.boomX, 0, 0] }), { name: "spin", pivot: [0, 0, 0], axis: [0, 1, 0] });
 }
 
 /** The hubs the wheels turn on: a drum on a bearing round the keel at each wheel, with cross-beams to the booms, and the axial glazed lift down the keel with a lit car at each wheel and at the docking node. */
@@ -84,8 +84,9 @@ export function hubPieces(): Piece[] {
   const out: Piece[] = [];
   const ys = [...SPIN.close.ys, SPIN.industrial.y];
   for (const y of ys) {
-    out.push({ kind: "lathe", material: "hull-white", at: [0, 0], segs: 48, body: true, outline: true, profile: [[SPIN.hubR, y - 8], [SPIN.hubR, y + 8]] } as Lathe, { kind: "lathe", material: "hull-grey-dark", at: [0, 0], segs: 48, only: "mesh", profile: [[SPIN.hubR, y - 8], [SPIN.hubR + 1.3, y - 8], [SPIN.hubR + 1.3, y + 8], [SPIN.hubR, y + 8]] } as Lathe);
-    for (const sx of [-1, 1]) for (const dz of [-1, 1]) out.push(...ibeam("hull-grey", [sx * (SPIN.hubR - 1), y + dz * 7, 0], [sx * (SPIN.boomX - 4.5), y + dz * 7, 0], 1.6, 1.0, [0, 0, 1]));
+    const drum: Piece[] = [{ kind: "lathe", material: "hull-white", at: [0, 0], segs: 48, body: true, outline: true, profile: [[SPIN.hubR, y - 8], [SPIN.hubR, y + 8]] } as Lathe, { kind: "lathe", material: "hull-grey-dark", at: [0, 0], segs: 48, only: "mesh", profile: [[SPIN.hubR, y - 8], [SPIN.hubR + 1.3, y - 8], [SPIN.hubR + 1.3, y + 8], [SPIN.hubR, y + 8]] } as Lathe];
+    for (const sx of [-1, 1]) for (const dz of [-1, 1]) drum.push(...ibeam("hull-grey", [sx * (SPIN.hubR - 1), y + dz * 7, 0], [sx * (SPIN.boomX - 4.5), y + dz * 7, 0], 1.6, 1.0, [0, 0, 1]));
+    out.push(...moving(drum, { name: y === SPIN.industrial.y ? "spin-wheel" : "spin", pivot: [0, y, 0], axis: [0, 1, 0] }));
   }
   const top = SPINE_Y.node + 4;
   out.push(...liftTube([0, 130, 13.5], [0, top, 13.5], "glass-clear", 2.2, [], 0));

@@ -77,6 +77,21 @@ test("a mission pod rises off the collar and settles back", () => {
   assert.ok(motionsOf("fleet-ship-ariake").some((m) => m.group === "pod-swap"));
 });
 
+test("the propellant booms turn with the rings, about the keel", () => {
+  const along = (id: string) => {
+    const axis = meshOf(hanabusa().find((p) => p.id === id)!.pieces({ detail: 0.3 })).moves.find((g) => g.name === "spin")?.axis;
+    assert.ok(axis, id);
+    near(Math.abs(axis[1]), Math.hypot(axis[0], axis[1], axis[2]), 1e-6);
+  };
+  along("boom-port");
+  along("boom-starboard");
+  const hubs = meshOf(hanabusa().find((p) => p.id === "hubs")!.pieces({ detail: 0.3 })).moves.map((g) => g.name);
+  assert.ok(hubs.includes("spin"));
+  assert.ok(hubs.includes("spin-wheel"));
+  assert.ok(hubs.includes("keel-lift-node"));
+  assert.match(motionNote("fleet-ship-01"), /booms/);
+});
+
 test("a keel lift car rides toward the tail and comes back, and the docking node has one", () => {
   const car = motionsOf("fleet-ship-01").find((m) => m.group === "keel-lift-node")!;
   assert.equal(car.kind, "slide");
@@ -91,6 +106,20 @@ test("an airlock hatch opens outward on its top hinge", () => {
   near(angleAt(hatch, 0), 0);
   near(angleAt(hatch, hatch.period! * 0.5), -70);
   assert.equal(motionsOf("fleet-kyotori").filter((m) => m.group.startsWith("airlock-hatch-")).length, 4);
+});
+
+test("Kyotori's outer mast slides 22 m from flared to full and does not turn", () => {
+  const mast = motionsOf("fleet-kyotori").find((m) => m.group === "mast-extend")!;
+  assert.equal(mast.kind, "slide");
+  assert.equal(mast.travel, 22);
+  const axis = meshOf(KYOTORI_PARTS.find((p) => p.id === "s-wings-flared")!.pieces({ detail: 0.3 })).moves.find((g) => g.name === "mast-extend")?.axis;
+  assert.ok(axis);
+  near(Math.hypot(axis[0], axis[1], axis[2]), 22, 0.05);
+  near(slideAt(mast, 0), 0);
+  near(slideAt(mast, mast.period! * 0.5), 22);
+  near(slideAt(mast, mast.period! * 0.99), 0);
+  near(angleAt(mast, mast.period! * 0.5), 0);
+  assert.ok(motionsOf("fleet-kyotori").some((m) => m.group === "wing-turn"));
 });
 
 test("Kyotori's bay doors are drawn open and swing shut", () => {

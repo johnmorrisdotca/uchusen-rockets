@@ -20,7 +20,7 @@ What the record gives, from `specification()` in that file. A row it does not gi
 | Crew | not given as a number. The class table says "the standard crew", and ship D adds about a hundred |
 | Max g, cruise, theoretical speed, range, endurance | not given |
 
-Strengths, from the page below: the four ships can part, and a ship alone is a lean runner while the station stays. Weaknesses the record states: the ships' names are not chosen, and the mast extension of the solar wings is a follow-up, not built.
+Strengths, from the page below: the four ships can part, and a ship alone is a lean runner while the station stays. Weaknesses the record states: the ships' names are not chosen.
 
 ## The class: four ships of one design
 
@@ -42,7 +42,7 @@ A hub on a bearing with four airlocks, four lift houses and four S-class ports; 
 
 ## Solar wings
 
-Four wings on diagonal masts, in the ISS manner and in three states: stowed (two canisters of folded blanket on each mast), flared (the wing swung out with half the blanket let out), and full (the mast, an extending lattice of two sections, extended by 22 m so that the blanket unfolds to double its length). The blankets are one group, wing-turn, for the viewer's Motion choice; the mast's extension needs a translation and is a follow-up of the motion work. Descends from the ISS solar wings on their rotary joints and masts.
+Four wings on diagonal masts, in the ISS manner and in three states: stowed (two canisters of folded blanket on each mast), flared (the wing swung out with half the blanket let out), and full (the mast, an extending lattice of two sections, extended by 22 m so that the blanket unfolds to double its length). The blankets are one group, wing-turn, for the viewer's Motion choice. On the flared wings the outer lattice is its own group, mast-extend, and slides 22 m out to the full length. The full wings stay the extended drawing. Descends from the ISS solar wings on their rotary joints and masts.
 
 ## Docking (LESSONS 31)
 
@@ -69,7 +69,7 @@ Each ship has its own drive of twelve field coils flaring out of a reactor chamb
 
 ## Honest weak spots
 
-The rooms are the kit's furniture sets in plain decks; the quarters' outsides are patterned shells. The wing mast's extension is a different part per state, not a motion, until the motion work gets a translation. The mirror segments are shallow facets. Latch frame loads are not computed. See the concept boards in the pictures folder for the references and the look.
+The rooms are the kit's furniture sets in plain decks; the quarters' outsides are patterned shells. The full wings are still their own drawing; the slide lives on the flared wings. The mirror segments are shallow facets. Latch frame loads are not computed. See the concept boards in the pictures folder for the references and the look.
 
 ## Motion
 
