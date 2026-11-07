@@ -16,7 +16,10 @@
         <div class="stage-row">
           <div class="stage-box">
             <uchusen-rocket id="hero" data-testid="db-hero" rocket="fleet-ship-01" variant="hanabusa" look="painted" show="together" inspector="off"></uchusen-rocket>
-            <kazoku-view-controls for="hero" theme="dark"></kazoku-view-controls>
+            <div class="db-cut">
+              <button type="button" class="chip" id="db-cutaway" data-testid="db-cutaway" data-say="dbCutaway" aria-pressed="false">Cutaway</button>
+            </div>
+            <kazoku-view-controls for="hero" theme="dark" data-testid="db-controls"></kazoku-view-controls>
             <table class="db-facts" data-testid="db-facts">
               <tbody>
                 <tr><th colspan="2" data-say="dbTheShip">The ship</th></tr>

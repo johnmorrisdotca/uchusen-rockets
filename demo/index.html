@@ -14,7 +14,7 @@
             <div class="earth-back" id="earth-back" data-testid="earth" aria-hidden="true" hidden></div>
             <div class="earth-back" id="sky-back" data-testid="sky" aria-hidden="true" hidden></div>
             <div class="sky-moons" id="sky-moons" data-testid="sky-moons" aria-hidden="true" hidden></div>
-            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="line" view="three-quarter"></uchusen-rocket>
+            <uchusen-rocket id="hero" data-testid="hero" rocket="starship" variant="v3" show="together" look="painted" view="three-quarter"></uchusen-rocket>
           </div>
           <kazoku-view-controls id="view-bar" data-testid="view-bar" for="hero" address autoplay autoplay-for="60" speed="5" theme="dark" controls="advanced" zoom-min="0.25"></kazoku-view-controls>
           <div class="chips turn-row" id="turn" role="group" aria-label="Which way it turns" data-say-label="turnLabel" data-testid="turn"></div>
@@ -57,6 +57,10 @@
               <div class="chips" id="shows" role="group" aria-labelledby="show-title"></div>
             </div>
             <div class="field-pair">
+              <div class="field">
+                <h2 id="form-title" data-say="cmpForm">Shown</h2>
+                <div class="chips" id="forms" data-testid="forms" role="group" aria-labelledby="form-title"></div>
+              </div>
               <div class="field">
                 <h2 id="look-title" data-say="look">Look</h2>
                 <div class="chips" id="looks" role="group" aria-labelledby="look-title"></div>

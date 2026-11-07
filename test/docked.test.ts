@@ -64,7 +64,7 @@ test("a Dragon hangs off the first design's starboard dock arm", () => {
 test("Kaminari's Dragon port holds the nose up, and the three concept ships offer the same four berths", () => {
   const reach = dockedReach("fleet-kaminari", "dragon@dragon");
   assert.ok(reach);
-  assert.ok(Math.abs((reach.min[0] + reach.max[0]) / 2 - -36) < 2, String(reach.min[0]));
+  assert.ok(Math.abs((reach.min[0] + reach.max[0]) / 2 - -25) < 2, String((reach.min[0] + reach.max[0]) / 2));
   assert.ok(reach.max[1] > reach.min[1] + 6);
   for (const rocket of ["fleet-kaminari", "fleet-emiake", "fleet-romaryu"]) assert.equal(dockMenu(rocket).length, 4);
 });

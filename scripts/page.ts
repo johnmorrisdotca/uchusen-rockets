@@ -16,6 +16,7 @@ const TITLES = {
   "poster.html": ["Uchusen Rockets 宇宙船: Rockets of the World", "Every built craft at one true scale, with the SPX ships in their own row, to print or to zoom."],
   "beam.html": ["Uchusen Rockets 宇宙船: tractor beam", "A soft cone from a drone to the part it carries, in the painted look, the line look, and as a dotted line when motion is reduced."],
   "swarm.html": ["Uchusen Rockets 宇宙船: drone swarm", "Boxes stand in for the drones. They fly outside the hull and move in on the last leg, at the busiest moment of the build."],
+  "inspect.html": ["Uchusen Rockets 宇宙船: inspect", "A finished ship sits still. From one drone to a hundred fly around it, pause to look, and move on. Nothing is built."],
   "fleet-db.html": ["Uchusen Rockets 宇宙船: fleet record", "The SPX ships, then one ship's sections, chosen in one row and kept in the address."],
   "fleet-compare.html": ["Uchusen Rockets 宇宙船: three ships at one scale", "The explorer, the command ship and the heavy transport stand side by side at one scale, from their own models, and the view stays in the address."],
   "yard.html": ["Uchusen Rockets 宇宙船: yard", "Three bays side by side. The name is a placeholder. Choose a bay, the lounge, the visitor port or the free spine, and play that bay's ship being built."],

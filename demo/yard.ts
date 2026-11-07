@@ -1,10 +1,7 @@
 // The yard on a page: one mesh for the bays and one for the spine that can leave. A still view draws once. While the build player plays, the frame loop stays running so the drones keep working.
 import { ACESFilmicToneMapping, AmbientLight, BackSide, BufferGeometry, CanvasTexture, Color, DirectionalLight, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PMREMGenerator, PerspectiveCamera, RepeatWrapping, Scene, SphereGeometry, Vector3, WebGLRenderer, SRGBColorSpace } from "three";
-import { discRadius } from "@johnmorrisdotca/chikyu-earth/realistic";
-import type { ChikyuEarthRealistic } from "@johnmorrisdotca/chikyu-earth/realistic/element";
-import "@johnmorrisdotca/chikyu-earth/realistic/element";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import { bindStage } from "./viewBinder.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { paintSky } from "../src/element/paint.ts";
 import { setAssetBase } from "../src/element.ts";
@@ -16,9 +13,9 @@ import { MATERIALS, type MaterialName, type MaterialSpec } from "../src/model/ma
 import { meshOf, type PartMesh } from "../src/model/pieces.ts";
 import { BAYS, yardFixed, yardLoose } from "../src/model/fleet/shipyard-concepts/multibay.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
-import { placementIn, START_TIME } from "./earth-model.ts";
+import { mountStillEarth } from "./earth.ts";
+import { bayWord, buildBarWords, mountYardChoice } from "./yardChoose.ts";
 import { mountBays, type BayId } from "./yardShips.ts";
-
 setAssetBase(new URL("assets/", document.baseURI).href);
 defineUchusenBuild();
 
@@ -173,23 +170,10 @@ const forward = new Vector3();
 const right = new Vector3();
 const up = new Vector3();
 
-const painted = document.createElement("chikyu-earth-realistic") as ChikyuEarthRealistic;
-painted.setAttribute("center", "18,8");
-painted.setAttribute("texture-base", new URL("textures/", document.baseURI).href);
-painted.setAttribute("max-texture", "2048");
-painted.setAttribute("max-ratio", "1");
-painted.setAttribute("role", "presentation");
-earthHolder.append(painted);
+const painted = mountStillEarth(earthHolder, "placed");
 
 function frameEarth(): void {
-  const night = sky === "night";
-  const w = earthHolder.clientWidth || 1;
-  const h = earthHolder.clientHeight || 1;
-  const place = placementIn(w, h);
-  painted.time = night ? START_TIME + 12 * 60 * 60 * 1000 : START_TIME;
-  painted.lights = night;
-  painted.clouds = !night;
-  painted.setView({ yaw: 0, tilt: 0, zoom: place.radius / discRadius(w, h, 1), panX: place.panX, panY: place.panY }, true);
+  painted.setNight(sky === "night");
 }
 
 function applySky(): void {
@@ -293,19 +277,54 @@ function poke(): void {
 let playing = false;
 let playQueued = 0;
 let playFrames = 0;
+const droneMark = document.createElement("div");
+droneMark.dataset.testid = "yard-drone";
+droneMark.hidden = true;
+droneMark.style.position = "absolute";
+droneMark.style.width = "12px";
+droneMark.style.height = "12px";
+droneMark.style.margin = "-6px 0 0 -6px";
+droneMark.style.borderRadius = "50%";
+droneMark.style.background = "#ffd36a";
+droneMark.style.pointerEvents = "none";
+droneMark.style.zIndex = "4";
+stage.append(droneMark);
+const droneSpot = new Vector3();
+
+/** The first working drone, in the picture's own pixels, so a test can see it move. */
+function placeDrone(where: readonly [number, number, number] | null): void {
+  if (!where) {
+    droneMark.hidden = true;
+    return;
+  }
+  droneSpot.set(where[0], where[1], where[2]).project(camera);
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  const x = ((droneSpot.x + 1) / 2) * w;
+  const y = ((1 - droneSpot.y) / 2) * h;
+  if (droneSpot.z > 1 || w < 2 || h < 2 || x < 0 || y < 0 || x > w || y > h) {
+    droneMark.hidden = true;
+    return;
+  }
+  droneMark.hidden = false;
+  droneMark.style.left = `${x}px`;
+  droneMark.style.top = `${y}px`;
+}
 
 function playLoop(now: number): void {
   playQueued = 0;
   if (!playing || document.hidden) return;
   const bay = bayNow();
+  let where: readonly [number, number, number] | null = null;
   if (bay) {
-    const where = bays.paint(bay, along[bay] ?? 0, reduce, now / 1000);
+    where = bays.paint(bay, along[bay] ?? 0, reduce, now / 1000);
     bays.step(bay, now / 1000);
     if (where) stage.dataset.drone = where.map((n) => n.toFixed(2)).join(",");
   }
   playFrames += 1;
   stage.dataset.frames = String(playFrames);
   draw();
+  placeDrone(where);
   playQueued = requestAnimationFrame(playLoop);
 }
 
@@ -345,6 +364,7 @@ function showShip(): void {
   stage.dataset.build = building ? "on" : "off";
   stage.dataset.ship = bay ? bays.variant(bay) : "";
   if (building && bay) {
+    bar.lead = `${bays.name(bay)}, ${bayWord(bay)}`;
     bar.steps = bays.steps(bay);
     bar.at = along[bay] ?? bays.rest(bay);
     bar.onMove = (at) => {
@@ -399,8 +419,15 @@ document.querySelector<HTMLButtonElement>("[data-testid=yard-build]")!.addEventL
   poke();
 });
 
-document.querySelector("#view-bar")!.addEventListener("kazoku-viewchange", (event) => {
-  choice = (event as CustomEvent<ViewChoice>).detail;
+bindStage(canvas, (detail) => {
+  choice = {
+    yaw: detail.yaw ?? choice.yaw,
+    tilt: detail.tilt ?? choice.tilt,
+    zoom: detail.zoom ?? choice.zoom,
+    panX: detail.panX ?? choice.panX,
+    panY: detail.panY ?? choice.panY,
+    ...(detail.roll === undefined ? {} : { roll: detail.roll }),
+  };
   poke();
 });
 
@@ -434,25 +461,19 @@ new ResizeObserver(() => {
 }).observe(stage);
 
 applySky();
+mountYardChoice((id, rocket, variant) => {
+  if (!bays.place(id, rocket, variant)) return;
+  along[id] = 0;
+  building = true;
+  const framed = bays.frame(id);
+  if (framed) shots[id] = { at: framed.at, eye: [framed.at[0] + framed.span, framed.at[1], framed.at[2] + framed.span * 0.3], fov: 32 };
+  document.querySelector("[data-testid=yard-build]")!.setAttribute("aria-pressed", "true");
+  pressShot(id);
+});
 showShip();
 size();
 draw();
 stage.dataset.ready = "yes";
 
-type Chooser = { word(key: string): string | undefined };
-const say = (key: string): string => (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage?.word(key) ?? key;
-function buildWords(): void {
-  bar.words = {
-    play: say("buildPlay"),
-    pause: say("buildPause"),
-    start: say("buildStart"),
-    repeat: say("buildRepeat"),
-    range: say("buildRange"),
-    day: say("buildDay"),
-    done: say("buildDone"),
-    rate: say("buildRate"),
-    flight: say("buildFlight"),
-  };
-}
-document.addEventListener("kazoku-languagechange", () => queueMicrotask(buildWords));
-buildWords();
+document.addEventListener("kazoku-languagechange", () => queueMicrotask(() => buildBarWords(bar)));
+buildBarWords(bar);

@@ -164,9 +164,9 @@ const levelUsage = async (page: Page) => {
   }
   return before;
 };
-/** Draws and page frames over a stretch long enough for `frames` of the page's own: a slow machine (software WebGL on a runner) has few in a second. */
-const measure = async (page: Page, frames = 12) => {
-  const start = { drawn: await drawn(page), page: (await usage(page)).pageFrames };
+/** Draws and page frames over a stretch long enough for `frames` of the page's own: a slow machine (software WebGL on a runner) has few in a second. `begun` is a count taken in the same turn as the spin was asked for, so the first long frame is one of the twelve. */
+const measure = async (page: Page, frames = 12, begun?: { drawn: number; page: number }) => {
+  const start = begun ?? { drawn: await drawn(page), page: (await usage(page)).pageFrames };
   await expect.poll(async () => (await usage(page)).pageFrames - start.page, { timeout: 90_000 }).toBeGreaterThanOrEqual(frames);
   const end = { drawn: await drawn(page), page: (await usage(page)).pageFrames };
   return { drew: end.drawn - start.drawn, frames: end.page - start.page };
@@ -384,9 +384,15 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   expect(last.buffers).toBeLessThanOrEqual(first.buffers);
   expect(last.arrays).toBeLessThanOrEqual(first.arrays);
   expect(last.textures).toBeLessThanOrEqual(first.textures);
-  await bar(page).evaluate((node) => (node as HTMLElement & { play(): void }).play());
-  await settle(page, 800);
-  const { drew, frames } = await measure(page);
+  // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.
+  const begun = await page.evaluate(() => {
+    const seen = (window as unknown as { __seen: { frames: number } }).__seen.frames;
+    const canvas = document.querySelector('[data-testid="hero"]')?.shadowRoot?.querySelector("canvas");
+    const drawnNow = Number(canvas?.getAttribute("data-frames") ?? 0);
+    (document.querySelector('[data-testid="view-bar"]') as HTMLElement & { play(): void }).play();
+    return { drawn: drawnNow, page: seen };
+  });
+  const { drew, frames } = await measure(page, 12, begun);
   expect(drew).toBeLessThanOrEqual(frames + 3);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   // a canvas past its budget is never made: the fleet's ships are far bigger than a rocket, the pixels are the same
@@ -1505,7 +1511,7 @@ test("the Earth on the page and the embed page: what is copied carries the lit r
   test.setTimeout(240_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(`${URL}?background=earth#embed`);
+  await page.goto(`${URL}?background=earth&look=line#embed`);
   await pause(page);
   // the address opens at the section, so the view may be out of sight, and then it rightly stays a picture
   await page.evaluate(() => window.scrollTo(0, 0));

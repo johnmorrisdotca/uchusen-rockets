@@ -5,6 +5,7 @@ import { VIEWS } from "../src/framing.ts";
 import { frameSky } from "./sky.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import { chip } from "./chip.ts";
+import { bindStage } from "./viewBinder.ts";
 
 type Detail = { yaw?: number; tilt?: number; roll?: number; zoom?: number; panX?: number; panY?: number; reason?: string };
 type Mode = "free" | "all" | "follow" | "selected" | "planet";
@@ -253,8 +254,7 @@ export function mountCamera(opts: {
     if (far < MOON_M * 0.5) mark.dataset.place = "far";
   }
 
-  function onView(event: Event): void {
-    const detail = (event as CustomEvent<Detail>).detail ?? {};
+  function onView(detail: Detail): void {
     if (applying) {
       hero.drive(detail);
       return;
@@ -329,7 +329,7 @@ export function mountCamera(opts: {
   back.addEventListener("click", () => {
     if (held) choose(held);
   });
-  bar.addEventListener("kazoku-viewchange", onView);
+  bindStage(hero, onView);
   hero.addEventListener("uchusen-draw", () => paintOverlay());
   paintModes();
   hero.setAttribute("edges", edges);
