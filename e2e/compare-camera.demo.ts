@@ -3,6 +3,23 @@ import { expect, test } from "@playwright/test";
 
 const URL = "/uchusen-rockets/compare.html?with=none";
 
+test("sky groups start on, and turning the planets off is kept in the address", async ({ page }, testInfo) => {
+  await page.goto(URL);
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  const row = page.getByTestId("cw-groups");
+  await expect(row.getByTestId("group-planets")).toHaveAttribute("aria-pressed", "true");
+  await expect(row.getByTestId("group-moons")).toHaveAttribute("aria-pressed", "true");
+  await expect(row.getByTestId("group-dwarfs")).toHaveAttribute("aria-pressed", "true");
+  await expect(row.getByTestId("group-belts")).toHaveAttribute("aria-pressed", "true");
+  await expect(row.getByTestId("group-craft")).toHaveAttribute("aria-pressed", "true");
+  await row.scrollIntoViewIfNeeded();
+  if (testInfo.project.name.startsWith("chromium")) await page.screenshot({ path: testInfo.outputPath("sky-groups.png") });
+  await row.getByTestId("group-planets").click();
+  await expect(row.getByTestId("group-planets")).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(() => new URLSearchParams(page.url().split("?")[1] ?? "").get("groups")).toBe("moons,dwarfs,belts,craft");
+  await expect(page.locator("#hero")).toHaveAttribute("data-groups", "moons,dwarfs,belts,craft");
+});
+
 test("the camera row keeps the choice, and open space is the start", async ({ page }) => {
   await page.goto(URL);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Sky groups** (MODULES-485): on Compare, planets, moons, dwarf planets, belts and craft marks can each be turned off. Marks keep the largest and the nearest, so they do not pile up. The choice stays in the address.
 - **The research ring is laboratories** (MODULES-433): benches with a blue lamp bar over each one step up both walls round an open atrium. It is no longer a second copy of the living town, so it has no canal and no houses.
 - **Sky wash inside the glass** (MODULES-433): the living ring and the garden ring carry a pale shell just inside the glass, so the hall is lit by sky.
 - **The travelling clock** (MODULES-400): one sentence under the two clocks says the clock on board runs slower. When the rounded times match, it adds that the difference is smaller than the times above.
