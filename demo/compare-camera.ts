@@ -2,7 +2,8 @@
 import { BODIES, heliocentric, moonGeocentric, type HostId } from "@johnmorrisdotca/wakusei-planets";
 import type { UchusenRocket } from "../src/element.ts";
 import { skyGroupOf, skyQuery, skyShown, thinSky, type SkyGroup, type SkyShown, type SkySpot } from "../src/element/solarGroups.ts";
-import { bodyScene, moonScene } from "../src/element/solarPlace.ts";
+import { beltAim, bodyScene, moonScene, type BeltKind } from "../src/element/solarPlace.ts";
+import { VIEWS } from "../src/framing.ts";
 import { frameSky } from "./sky.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import { chip } from "./chip.ts";
@@ -11,6 +12,12 @@ import { bindStage } from "./viewBinder.ts";
 type Detail = { yaw?: number; tilt?: number; roll?: number; zoom?: number; panX?: number; panY?: number; reason?: string };
 type Mode = "free" | "all" | "follow" | "selected" | "planet";
 type Box = { craft: number; x: number; y: number; w: number; h: number; on: boolean };
+type FlyId = "sun" | HostId | "moon" | BeltKind;
+
+function isFly(value: string | null): value is FlyId {
+  if (value === "asteroids" || value === "kuiper" || value === "moon") return true;
+  return value !== null && value in BODIES && value !== "moon";
+}
 
 const HAND = new Set(["drag", "pinch", "wheel", "key", "pan"]);
 const MOON_M = 384_400_000;
@@ -284,14 +291,60 @@ export function mountCamera(opts: {
     if (far < MOON_M * 0.5) mark.dataset.place = "far";
   }
 
-  function goTo(id: "sun" | HostId | "moon"): void {
-    const canvas = hero.shadowRoot?.querySelector("canvas");
-    const fit = Number(canvas?.dataset.distance ?? "400");
-    const at = id === "moon" ? moonScene(when) : bodyScene(id, when);
+  const asked = address.get("at");
+  let flown: FlyId | null = isFly(asked) ? asked : null;
+  let flownZoomed = flown === null;
+
+  function placeOf(id: FlyId): readonly [number, number, number] {
+    if (id === "moon") return moonScene(when);
+    if (id === "asteroids" || id === "kuiper") return beltAim(id, when);
+    return bodyScene(id, when);
+  }
+
+  function reachOf(id: FlyId): number {
+    if (id === "asteroids") return 0.25 * AU;
+    if (id === "kuiper") return 2 * AU;
     const km = BODIES[id].radiusKm;
-    const reach = Math.max(km * 1000 * (id === "moon" ? 14 : 36), 50_000);
-    hero.setPivot(at, id);
-    bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(reach, 1))), tilt: 0 });
+    return Math.max(km * 1000 * 6, 50_000);
+  }
+
+  /** The camera stands on the lit side. The view's yaw is measured from the craft's three-quarter angle. */
+  function litSide(id: FlyId): { yaw: number; tilt: number } {
+    const at = placeOf(id);
+    const lamp = id === "sun" ? bodyScene("earth", when) : bodyScene("sun", when);
+    const dx = lamp[0] - at[0];
+    const dy = lamp[1] - at[1];
+    const dz = lamp[2] - at[2];
+    const span = Math.hypot(dx, dy, dz) || 1;
+    const az = (Math.atan2(dx / span, dz / span) * 180) / Math.PI;
+    const el = (Math.asin(Math.max(-1, Math.min(1, dy / span))) * 180) / Math.PI;
+    const home = VIEWS["three-quarter"];
+    return { yaw: home.az - az, tilt: home.el - el };
+  }
+
+  function goTo(id: FlyId): void {
+    flown = id;
+    flownZoomed = false;
+    hero.dataset.at = id;
+    address.set("at", id);
+    hero.setPivot(placeOf(id), id);
+    paintMarks();
+    const fit = Number(hero.shadowRoot?.querySelector("canvas")?.dataset.distance ?? "");
+    if (!Number.isFinite(fit) || fit <= 0) return;
+    flownZoomed = true;
+    const face = litSide(id);
+    bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(reachOf(id), 1))), yaw: face.yaw, tilt: face.tilt });
+  }
+
+  function park(metres: number): void {
+    flown = null;
+    flownZoomed = true;
+    delete hero.dataset.at;
+    address.set("at", null);
+    hero.setPivot(null);
+    paintMarks();
+    const fit = Number(hero.shadowRoot?.querySelector("canvas")?.dataset.distance ?? "400");
+    bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(metres, 1))) });
   }
 
   function fromEarth(id: "sun" | HostId, ms: number): [number, number, number] {
@@ -301,7 +354,8 @@ export function mountCamera(opts: {
   }
 
   function paintSolar(width: number, height: number, far: number): void {
-    if (far < 20_000_000) return;
+    const pivot = hero.shadowRoot?.querySelector("canvas")?.dataset.pivot ?? "craft";
+    if (pivot !== "craft" || far < 20_000_000) return;
     const ms = when;
     const yaw = ((turn === "camera" ? bar.state.yaw : 0) * Math.PI) / 180;
     const spots: SkySpot[] = [];
@@ -402,6 +456,14 @@ export function mountCamera(opts: {
       applyTurn();
     }),
   );
+  const flyMark: Record<string, FlyId> = {
+    cmpMarkMoon: "moon",
+    cmpBodyJupiter: "jupiter",
+    cmpBodyNeptune: "neptune",
+    cmpBodyCeres: "ceres",
+    cmpMarkAsteroids: "asteroids",
+    cmpMarkKuiper: "kuiper",
+  };
   const marks: [string, number][] = [
     ["cmpMark100", 100],
     ["cmpMark1k", 1_000],
@@ -411,30 +473,29 @@ export function mountCamera(opts: {
     ["cmpMarkAu", AU],
     ["cmpBodyJupiter", 0],
     ["cmpBodyNeptune", 0],
-    ["cmpMarkKuiper", 50 * AU],
+    ["cmpBodyCeres", 0],
+    ["cmpMarkAsteroids", 0],
+    ["cmpMarkKuiper", 0],
   ];
-  byId("cw-marks").replaceChildren(
-    ...marks.map(([key, metres]) => chip(say(key), `mark-${key}`, false, () => {
-      const canvas = hero.shadowRoot?.querySelector("canvas");
-      const fit = Number(canvas?.dataset.distance ?? "400");
-      const live = key === "cmpBodyJupiter" ? "jupiter" : key === "cmpBodyNeptune" ? "neptune" : null;
-      if (key === "cmpMarkMoon") {
-        goTo("moon");
-        return;
-      }
-      if (live) {
-        goTo(live);
-        return;
-      }
-      hero.setPivot(null);
-      bar.set({ zoom: Math.max(ZOOM_MIN, Math.min(8, fit / Math.max(metres, 1))) });
-    })),
-  );
+  function paintMarks(): void {
+    byId("cw-marks").replaceChildren(
+      ...marks.map(([key, metres]) => chip(say(key), `mark-${key}`, flyMark[key] === flown, () => {
+        const id = flyMark[key];
+        if (id) goTo(id);
+        else park(metres);
+      })),
+    );
+  }
+  paintMarks();
   back.addEventListener("click", () => {
     if (held) choose(held);
   });
   bindStage(hero, onView);
-  hero.addEventListener("uchusen-draw", () => paintOverlay());
+  if (flown) goTo(flown);
+  hero.addEventListener("uchusen-draw", () => {
+    paintOverlay();
+    if (flown && !flownZoomed) goTo(flown);
+  });
   const day = document.createElement("button");
   day.type = "button";
   day.className = "chip";

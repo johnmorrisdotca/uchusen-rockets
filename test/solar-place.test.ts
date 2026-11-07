@@ -1,7 +1,7 @@
 // The belts are the published spans, and a major moon sits where the package says it does.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { beltPlaces, bodyScene, majorMoons } from "../src/element/solarPlace.ts";
+import { beltAim, beltPlaces, bodyScene, majorMoons } from "../src/element/solarPlace.ts";
 
 const when = Date.UTC(2026, 10, 6);
 
@@ -22,6 +22,15 @@ test("the asteroid band sits between Mars and Jupiter, and the Kuiper band at th
     const reach = apart(place.at, sun) / au;
     assert.ok(reach > 29 && reach < 51, String(reach));
   }
+});
+
+test("a belt mark aims at the middle of that band", () => {
+  const sun = bodyScene("sun", when);
+  const au = 149_597_870_700;
+  const asteroids = apart(beltAim("asteroids", when), sun) / au;
+  const kuiper = apart(beltAim("kuiper", when), sun) / au;
+  assert.ok(asteroids > 2.6 && asteroids < 2.8, String(asteroids));
+  assert.ok(kuiper > 39 && kuiper < 41, String(kuiper));
 });
 
 test("Io is a major moon, nearer to Jupiter than Callisto", () => {

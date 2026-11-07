@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Click a body to fly there** (MODULES-485): on Compare, a planet, moon, dwarf planet or belt mark moves the camera onto that body. The address keeps the place.
 - **Sky groups** (MODULES-485): on Compare, planets, moons, dwarf planets, belts and craft marks can each be turned off. Marks keep the largest and the nearest, so they do not pile up. The choice stays in the address.
 - **The research hall, from inside** (MODULES-433): terraces of benches and blue lamps around an open atrium, under the glass. The living ring stays a street with a canal and trees.
 - **The research ring is laboratories** (MODULES-433): benches with a blue lamp bar over each one step up both walls round an open atrium. It is no longer a second copy of the living town, so it has no canal and no houses.

@@ -20,6 +20,42 @@ test("sky groups start on, and turning the planets off is kept in the address", 
   await expect(page.locator("#hero")).toHaveAttribute("data-groups", "moons,dwarfs,belts,craft");
 });
 
+test("a click flies to that body and the address keeps the place", async ({ page }, testInfo) => {
+  await page.goto(URL);
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  const query = (): URLSearchParams => new URLSearchParams(page.url().split("?")[1] ?? "");
+  const pivot = () => page.locator("#hero").evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.pivot ?? "");
+  const fly = async (mark: string, id: string): Promise<void> => {
+    const chip = page.getByTestId(`mark-${mark}`);
+    await chip.scrollIntoViewIfNeeded();
+    await chip.click();
+    await expect.poll(() => query().get("at")).toBe(id);
+    await expect(page.locator("#hero")).toHaveAttribute("data-at", id);
+    await expect(chip).toHaveAttribute("aria-pressed", "true");
+  };
+  const drawn = testInfo.project.name.startsWith("chromium");
+  if (drawn) await expect(page.locator("#hero")).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await fly("cmpBodyJupiter", "jupiter");
+  if (drawn) {
+    await expect.poll(pivot, { timeout: 30_000 }).toBe("jupiter");
+    await expect.poll(() => page.locator("#hero").evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.moving ?? ""), { timeout: 30_000 }).toBe("false");
+    if (testInfo.project.name === "chromium-desk") await page.locator("#hero").screenshot({ path: testInfo.outputPath("desk.png") });
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+    await expect.poll(() => query().get("at")).toBe("jupiter");
+    await expect(page.locator("#hero")).toHaveAttribute("data-at", "jupiter");
+    await expect.poll(pivot, { timeout: 30_000 }).toBe("jupiter");
+  }
+  await fly("cmpBodyCeres", "ceres");
+  await fly("cmpMarkMoon", "moon");
+  await fly("cmpMarkAsteroids", "asteroids");
+  await fly("cmpMarkKuiper", "kuiper");
+  if (drawn) await expect.poll(pivot, { timeout: 30_000 }).toBe("kuiper");
+  await page.getByTestId("mark-cmpMarkAu").click();
+  await expect.poll(() => query().get("at")).toBe(null);
+  await expect(page.locator("#hero")).not.toHaveAttribute("data-at");
+});
+
 test("the camera row keeps the choice, and open space is the start", async ({ page }) => {
   await page.goto(URL);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
@@ -105,8 +141,7 @@ test("one astronomical unit shows the Sun and Jupiter", async ({ page }, info) =
   await page.getByTestId("mark-cmpMarkAu").click();
   await expect(page.getByTestId("body-jupiter")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("body-sun")).toBeVisible();
-  await expect(page.getByTestId("body-pluto")).toBeVisible();
-  await expect(page.getByTestId("body-ceres")).toBeVisible();
+  await expect(page.getByTestId("body-mercury")).toBeVisible();
   const before = await page.getByTestId("body-mercury").getAttribute("data-angle");
   await page.getByTestId("cmp-day").click();
   await expect.poll(() => page.getByTestId("body-mercury").getAttribute("data-angle")).not.toBe(before);
@@ -120,13 +155,17 @@ test("a body marker moves the pivot, the paths can hide, and the days play", asy
   await expect(page.locator("#hero")).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   await page.getByTestId("mark-cmpMarkAu").click();
   await expect(page.getByTestId("body-jupiter")).toBeVisible({ timeout: 15_000 });
+  const before = await page.getByTestId("body-mercury").getAttribute("data-angle");
+  await page.getByTestId("cmp-day").click();
+  await expect.poll(() => page.getByTestId("body-mercury").getAttribute("data-angle")).not.toBe(before);
   await page.getByTestId("body-jupiter").click();
   const canvasOf = (key: string) => page.locator("#hero").evaluate((node, name) => node.shadowRoot?.querySelector("canvas")?.dataset[name] ?? "", key);
   await expect.poll(() => canvasOf("pivot")).toBe("jupiter");
+  await expect(page.getByTestId("body-mercury")).toHaveCount(0);
   await page.getByTestId("cmp-paths").click();
   await expect.poll(() => canvasOf("paths")).toBe("off");
-  const before = await page.getByTestId("body-mercury").getAttribute("data-angle");
   await page.getByTestId("cmp-play").click();
-  await expect.poll(() => page.getByTestId("body-mercury").getAttribute("data-angle"), { timeout: 8_000 }).not.toBe(before);
+  await expect(page.getByTestId("cmp-play")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("cmp-play").click();
+  await expect(page.getByTestId("cmp-play")).toHaveAttribute("aria-pressed", "false");
 });

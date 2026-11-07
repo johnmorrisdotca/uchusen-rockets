@@ -95,3 +95,10 @@ export function beltPlaces(kind: BeltKind, when: number): { at: Triple; radiusM:
   }
   return places;
 }
+
+/** The middle of a belt, in scene metres. A click flies the camera here. */
+export function beltAim(kind: BeltKind, when: number): Triple {
+  const spec = BELT[kind];
+  const au = (spec.inner + spec.outer) / 2;
+  return sceneOf([au, 0, 0], heliocentric("earth", when));
+}
