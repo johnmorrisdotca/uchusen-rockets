@@ -53,4 +53,7 @@ body.compare main { max-width: 1560px; }
   .cw-pickers { grid-template-columns: minmax(0, 1fr); }
   .cw-stage uchusen-rocket { --uchusen-aspect: 3 / 4; }
   #cw-table { min-width: 0; width: 100%; }
+  /* the sheet's frame leaves overflow visible, so a variant pill paints past the stage and takes the camera row's click */
+  .cw-stage .picker-frame { max-height: calc(100% - 16px); overflow: auto; }
+  .cw-stage .picker-frame .pk { max-height: calc(70vh - 4.5rem); overflow: auto; }
 }
