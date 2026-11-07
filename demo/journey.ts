@@ -326,6 +326,7 @@ function drawPickers(): void {
         ]
       : []),
   );
+  pullLonger(continuous);
   byId("when").replaceChildren(...options.map((option, index) => chip(option.label, `when-${index}`, index === choice.when, () => change({ when: index }))));
   byId("views").replaceChildren(...VIEWS.map((view) => chip(say(VIEW_WORD[view]), `view-${view}`, choice.view === view, () => setView(view))));
   const holdButton = byId("hold");
@@ -336,6 +337,24 @@ function drawPickers(): void {
     chip(say("jSizePerceived"), "size-perceived", choice.size !== "true", () => setSize("perceived")),
     chip(say("jSizeTrue"), "size-true", choice.size === "true", () => setSize("true")),
   );
+}
+
+function pullLonger(continuous: boolean): void {
+  const node = byId("pull-longer");
+  if (!continuous) {
+    node.hidden = true;
+    return;
+  }
+  const craft = craftNow();
+  const date = options[choice.when]?.ms ?? choice.base;
+  const via = choice.via === "jupiter" ? "jupiter" : undefined;
+  const rated = choice.pull === "1" ? planTrip(SOURCE, craft, choice.from, choice.to, date, undefined, via) : trip;
+  const one = choice.pull === "1" ? trip : planTrip(SOURCE, craft, choice.from, choice.to, date, 1, via);
+  const extra = rated.frameS - one.frameS;
+  node.hidden = false;
+  if (extra > 60) setText(node, say("jPullLonger", { extra: duration(extra) }));
+  else if (-extra > 60) setText(node, say("jPullShorter", { extra: duration(-extra) }));
+  else setText(node, say("jPullSame"));
 }
 
 function change(next: Partial<{ from: string; to: string; craft: string; when: number; pull: "ship" | "1"; via: "direct" | "jupiter" }>): void {
