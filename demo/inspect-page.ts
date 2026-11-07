@@ -8,11 +8,8 @@ import { WORDS } from "./words.js";
 setAssetBase(new URL("assets/", document.baseURI).href);
 defineUchusenRocket();
 
-type Chooser = { word(key: string): string | undefined };
-const say = (key: string): string => {
-  const chooser = (window as unknown as { uchusenLanguage?: Chooser }).uchusenLanguage;
-  return chooser?.word(key) ?? WORDS.en[key] ?? key;
-};
+const say = (key: string): string =>
+  (window as unknown as { uchusenLanguage?: { word(key: string): string | undefined } }).uchusenLanguage?.word(key) ?? WORDS.en[key] ?? key;
 
 const hero = document.querySelector<UchusenRocket>("#hero");
 const ship = document.querySelector<HTMLSelectElement>("#inspect-ship");
