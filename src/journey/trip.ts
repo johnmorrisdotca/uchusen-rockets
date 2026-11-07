@@ -162,8 +162,14 @@ const stopOf = (source: BodySource, id: string): Stop => {
 const muOf = (source: BodySource, id: string): number => stopOf(source, id).muKm3s2 ?? GM_KM3_S2[id] ?? NaN;
 const periodOf = (source: BodySource, id: string): number => stopOf(source, id).periodDays ?? PERIOD_DAYS[id] ?? NaN;
 
-/** A place's position in a frame, km. A moon is its offset from its planet; in the Sun's frame that planet's place is added. The Earth's own place is the origin of the Earth's frame. */
+/** A place's position in a frame, km. A moon is its offset from its planet; in the Sun's frame that planet's place is added. The Earth's own place is the origin of the Earth's frame. Past the solar system is a fixed point 120 AU from the Sun, about the heliopause. */
 export function positionKm(source: BodySource, id: string, ms: number, frame: "sun" | "earth"): Vec3 {
+  if (id === "beyond") {
+    const far: Vec3 = [120 * AU_KM, 0, 0];
+    if (frame === "sun") return far;
+    const earth = source.positionAu("earth", ms);
+    return [far[0] - earth[0] * AU_KM, far[1] - earth[1] * AU_KM, far[2] - earth[2] * AU_KM];
+  }
   const stop = source.stops.find((one) => one.id === id);
   if (stop?.kind === "moon" && stop.parent) {
     if (frame === "earth" && stop.parent === "earth") return source.offsetKm(id, ms);
@@ -368,7 +374,36 @@ const unavailable = (craft: Craft, from: string, to: string, departMs: number, l
  */
 export function planTrip(source: BodySource, craft: Craft, from: string, to: string, departMs: number, g?: number, via?: "jupiter"): Trip {
   if (from === to) return unavailable(craft, from, to, departMs, "Pick two different places.", []);
+  if (to === "beyond" && craft.drive === "ballistic") return pastTheSolarSystem(source, craft, from, departMs);
   return craft.drive === "ballistic" ? planBallistic(source, craft, from, to, departMs, via) : planContinuous(source, craft, from, to, departMs, g);
+}
+
+/** The burn from an Earth parking orbit onto a path that escapes the Sun, metres a second. The excess speed is the Sun's escape speed at the Earth, minus the Earth's own orbital speed. */
+function solarEscapeMs(source: BodySource): number {
+  const vCirc = circularSpeed(GM_KM3_S2.sun!, AU_KM);
+  const vInf = vCirc * (Math.SQRT2 - 1);
+  return escapeBurn(muOf(source, "earth"), parkRadius(source, "earth"), vInf) * 1000;
+}
+
+function pastTheSolarSystem(source: BodySource, craft: BallisticCraft, from: string, departMs: number): Trip {
+  if (from !== "earth") {
+    return unavailable(craft, from, "beyond", departMs, "A chemical rocket aimed past the solar system leaves from the Earth.", [
+      "The figure is the burn from an Earth parking orbit onto a path that escapes the Sun.",
+    ]);
+  }
+  const dvMs = solarEscapeMs(source);
+  const rounded = Math.round(dvMs).toLocaleString("en-US");
+  const trip = unavailable(
+    craft,
+    from,
+    "beyond",
+    departMs,
+    `Cannot leave the solar system: the departure from a parking orbit needs ${rounded} m/s, and this rocket has no published burn that large.`,
+    ["A fuel load is not invented for a burn this rocket is not rated to fly."],
+  );
+  trip.dv = { departure: dvMs, arrival: 0, total: dvMs };
+  trip.fuel = { usedT: null, carriedT: null, note: "A fuel load is not invented for a burn this rocket is not rated to fly." };
+  return trip;
 }
 
 /** Apollo 11's trans-Earth injection, from the mission report's Table 7-II: 3,279 ft/s in 151.4 seconds. */

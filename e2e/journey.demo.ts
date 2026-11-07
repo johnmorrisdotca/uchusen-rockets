@@ -100,6 +100,21 @@ test("a craft that cannot go says why in one line and offers no Play; one that c
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "not-rated");
 });
 
+test("Saturn V aimed past the solar system says it cannot and names the delta-v", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${URL}&from=earth&to=beyond&craft=saturn-v`);
+  await expect(page.getByTestId("to-beyond")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
+  await expect(page.getByTestId("verdict")).toContainText(/needs [\d,]+ m\/s/);
+  await expect(page.locator("#verdict-because")).toContainText("not invented");
+  await expect(page.getByTestId("blocked-why")).toContainText(/needs [\d,]+ m\/s/);
+  await expect(page.getByTestId("play")).toBeDisabled();
+  await page.locator("[data-testid=ship-picker-window]").evaluate((node) => {
+    (node as HTMLElement).hidden = true;
+  });
+  await page.screenshot({ path: "/tmp/its-batch/mass-ratio-desk.png" });
+});
+
 test("leaving the Moon for the Earth is rated for Saturn V and can be played; Falcon Heavy cannot leave", async ({ page }) => {
   await page.goto(`${URL}&from=moon&to=earth&craft=saturn-v`);
   await expect(page.getByTestId("from-moon")).toHaveAttribute("aria-pressed", "true");
@@ -277,7 +292,7 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
   await expect(page.getByTestId("trip-payload")).toContainText("n/a: no published payload figure covers a trip to Mars");
   await page.goto(`${URL}&craft=kaminari&to=mars`);
   await expect(page.getByTestId("trip-fuel")).toContainText("/");
-  await expect(page.getByTestId("trip-ratio")).toHaveText(/^[0-9]+\.[0-9]+$/);
+  await expect(page.getByTestId("trip-ratio")).toHaveText(/^[0-9]+\.[0-9]+, the tanks hold it$/);
   await expect(page.getByTestId("trip-escsurf")).toHaveCount(0);
   await expect(page.getByTestId("trip-payload")).toContainText("million t");
 });
