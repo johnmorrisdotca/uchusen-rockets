@@ -1,5 +1,5 @@
 // The three bay ships, from the same build the viewer plays, standing in the yard at true size.
-import { Group, type Object3D } from "three";
+import { Group, Vector3, type Object3D } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { build } from "../src/build/index.ts";
 import { buildOf, playFrame, type PlayStep } from "../src/buildPlay.ts";
@@ -26,6 +26,7 @@ interface Bay {
   swarm: SwarmRig;
   scale: number;
   length: [number, number];
+  group: Group;
 }
 
 /** Builds the three ships once and parents them on `root`. `addMesh` is the yard's own mesh builder. */
@@ -70,9 +71,11 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
       swarm: new SwarmRig(group, (file) => new GLTFLoader().loadAsync(new URL(`assets/models/${file}`, document.baseURI).href).then((gltf) => gltf.scene), wake),
       scale: Math.min(16, Math.max(1, longest / 50)),
       length: [Math.min(...ys), Math.max(...ys)],
+      group,
     };
   });
 
+  const world = new Vector3();
   const roam = (point: readonly [number, number, number], age: number, index: number, reach: number): [number, number, number] => {
     if (reach === 0) return [point[0], point[1], point[2]];
     const lap = age * 0.9 + index * 0.7;
@@ -99,11 +102,22 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
       const working = active === bay.id;
       const open = frame.going.filter((slot) => grounded(slot, frame.done));
       const jobs = working && open.length > 0 ? swarmJobs(bay.steps.filter((step) => !frame.going.includes(step.slot) || open.includes(step.slot)), count, here) : [];
-      const reach = working && !reduced ? 14 : 0;
+      const span = Math.max(1, bay.length[1] - bay.length[0]);
+      const reach = working && !reduced ? Math.max(36, span * 0.1) : 0;
+      const midY = (bay.length[0] + bay.length[1]) / 2;
+      let nearest = Number.POSITIVE_INFINITY;
       const poses: SwarmPose[] = carries(jobs, here, bay.steps, (slot) => bay.places.get(slot), dock, bay.length).map((pose, index) => {
         const box = bay.boxes.get(pose.slot);
         const where = roam(pose.where, age, index, reach);
-        if (working && lead === null) lead = where;
+        if (working) {
+          const away = where[0] * where[0] + (where[1] - midY) * (where[1] - midY) + where[2] * where[2];
+          if (away < nearest) {
+            nearest = away;
+            bay.group.updateWorldMatrix(true, false);
+            world.set(where[0], where[1], where[2]).applyMatrix4(bay.group.matrixWorld);
+            lead = [world.x, world.y, world.z];
+          }
+        }
         return {
           where,
           part: pose.part,
@@ -116,7 +130,17 @@ export function mountBays(root: Object3D, addMesh: (mesh: PartMesh, parent: Grou
         };
       });
       const berths = (jobs.length ? [] : berthRing(count, dock)).map((point, index) => roam(point, age, index, reach));
-      if (working && lead === null && berths[0]) lead = berths[0];
+      if (working && lead === null) {
+        bay.group.updateWorldMatrix(true, false);
+        for (const where of berths) {
+          const away = where[0] * where[0] + (where[1] - midY) * (where[1] - midY) + where[2] * where[2];
+          if (away < nearest) {
+            nearest = away;
+            world.set(where[0], where[1], where[2]).applyMatrix4(bay.group.matrixWorld);
+            lead = [world.x, world.y, world.z];
+          }
+        }
+      }
       bay.swarm.show(poses, berths, dock, reduced || !working, bay.scale);
     }
     return lead;

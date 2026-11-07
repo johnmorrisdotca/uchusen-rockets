@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Yard drones move on the picture** (MODULES-514): while a bay is building, a drone flies around the part it is working, the light leaves that drone's lens, and a pause holds the drone and the light together. The test reads the drone on the screen.
+
 - **The fleet walk waits for a settled frame**: the memory count waits until the objects stop moving, and a turn waits until a frame has been drawn.
 - **Craft line fixes** (MODULES-474): on a phone the count and Add a craft get their own line so the craft line has the full width; the page bar marks only the open page; Fit frames a row of craft whole, with the ground under their feet.
 - **The craft line on a phone** (MODULES-474): the count and Add a craft sit on their own line, so the scrolling line is the width of the phone and two chips show. Only the open page is marked in the page bar. A row of craft is framed with the ground under their feet, so none is cut off at the bottom of the stage.
