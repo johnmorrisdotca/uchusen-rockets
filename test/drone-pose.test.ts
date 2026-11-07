@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Mesh } from "three";
 import { blendPoses, posedDrone } from "../src/element/nearPoses.ts";
+import { farPieces } from "../src/model/fleet/drone/far.ts";
 import { ARMS, joints } from "../src/model/fleet/drone/layout.ts";
+import { meshOf } from "../src/model/pieces.ts";
 import { legPieces } from "../src/model/fleet/drone/legs.ts";
 import { DRONE_POSE, blendPose, fingerSpan, poseFor, poseOf, storedPose } from "../src/model/fleet/drone/poses.ts";
 
@@ -57,6 +59,23 @@ test("a distant drone snaps to a folded, reaching or planted pose", () => {
   assert.equal(storedPose("weld"), "place");
   assert.equal(storedPose("inspect"), "place");
   assert.equal(storedPose(poseFor("builder", "berth")), "park");
+});
+
+const farFlat = (name: "fly" | "park" | "place"): number[] => {
+  const parts: number[] = [];
+  for (const buffers of meshOf(farPieces(DRONE_POSE[name])).faces.values()) parts.push(...buffers.positions);
+  return parts;
+};
+
+test("a distant planted drone is not the same shape as a distant folded one", () => {
+  const flown = farFlat("fly");
+  const planted = farFlat("park");
+  const reaching = farFlat("place");
+  assert.equal(flown.length, planted.length);
+  assert.equal(flown.length, reaching.length);
+  const moved = (left: number[], right: number[]) => left.some((value, i) => Math.abs(value - (right[i] ?? value)) > 0.1);
+  assert.equal(moved(flown, planted), true);
+  assert.equal(moved(flown, reaching), true);
 });
 
 const counts = (name: "fly" | "park" | "weld"): number[] => {

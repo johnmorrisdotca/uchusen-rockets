@@ -1,4 +1,4 @@
-// The nearest drones, drawn from the posed model. One group is built per pose and cloned, so six drones share the geometry. Distant drones stay the rigid instance. Pure of the page: three.js meshes only.
+// The nearest drones, drawn from the posed model. One group is built per pose and cloned, so six drones share the geometry. Distant drones are three baked poses. Pure of the page: three.js meshes only.
 import { BufferAttribute, BufferGeometry, Group, Mesh, MeshStandardMaterial } from "three";
 import { dronePieces } from "../model/fleet/drone/index.ts";
 import { DRONE_POSE, type PoseName } from "../model/fleet/drone/poses.ts";

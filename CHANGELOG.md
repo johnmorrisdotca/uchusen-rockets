@@ -2,8 +2,9 @@
 
 ## [Unreleased]
 
+- **A distant drone keeps one of three poses** (MODULES-487): folded, reaching or planted. It stays rigid. The nearest six still ease between the eight poses.
 - **A pose eases into the next** (MODULES-487): a near drone blends to its next pose over 0.3 to 0.8 seconds. Reduced motion cuts straight to the pose.
-- **The nearest drones wear their pose** (MODULES-487): up to six drones nearest the camera are drawn from the posed model. Fly, approach, grip, carry, place, weld, inspect and park each set the arm, the gripper and the legs. A boss points further than a manager. Distant drones stay one rigid instance, snapped to folded, reaching or planted.
+- **The nearest drones wear their pose** (MODULES-487): up to six drones nearest the camera are drawn from the posed model. Fly, approach, grip, carry, place, weld, inspect and park each set the arm, the gripper and the legs. A boss points further than a manager.
 - **Tree contact patches** (MODULES-433): each tree sits on a soft dark patch, so the crown reads as standing on the ground.
 - **Garden racks** (MODULES-433): the garden ring's middle tread carries trays of seedlings, a feed pipe and a grow-lamp bar.
 
