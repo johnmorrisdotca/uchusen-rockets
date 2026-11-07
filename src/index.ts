@@ -41,6 +41,8 @@ export { FLIGHTS } from "./data/flights.ts";
 export { burnsOf, clockWords, FlightClock, flightOf, frameAt, lastPosition, phaseAt, phasePosition, SECONDS_PER_PHASE } from "./flight.ts";
 export { PLAY_RATES, SHOP_LIMIT_M, WATCH_FLIGHT_S, assemblyOf, buildOf, flightNow, playFrame, playFrom, stepPhase, steppedPlace, stills } from "./buildPlay.ts";
 export { SWARM_CAP, approachPath, berthRing, carries, grounded, pathClears, rankOf, swarmCount, swarmJobs } from "./swarm.ts";
+export { inspectAt } from "./inspect.ts";
+export type { InspectPlace } from "./inspect.ts";
 export type { Carry, CrewTask, HullBox, Rank, SwarmJob } from "./swarm.ts";
 export { DRONE } from "./model/fleet/drone/index.ts";
 export { DRONE_FILES } from "./model/drone.ts";

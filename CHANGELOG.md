@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Drones inspect a finished ship** (MODULES-516): the ship sits still and from one drone to a hundred fly around it, pause with a light on the hull, then move on. Play, pause and speed are on the page, and the choices stay in the address.
 - **The fleet walk waits for a settled frame**: the memory count waits until the objects stop moving, and a turn waits until a frame has been drawn.
 - **Craft line fixes** (MODULES-474): on a phone the count and Add a craft get their own line so the craft line has the full width; the page bar marks only the open page; Fit frames a row of craft whole, with the ground under their feet.
 - **The craft line on a phone** (MODULES-474): the count and Add a craft sit on their own line, so the scrolling line is the width of the phone and two chips show. Only the open page is marked in the page bar. A row of craft is framed with the ground under their feet, so none is cut off at the bottom of the stage.

@@ -62,6 +62,7 @@ import { assemblyOf, inspectAlong, playFrame } from "../buildPlay.ts";
 import { clearArc, fitoutOf, growPart, spinUp } from "./buildArc.ts";
 import { fitTanks } from "./fitOut.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
+import { inspectAt } from "../inspect.ts";
 import { berthRing, carries, grounded, swarmCount, swarmJobs } from "../swarm.ts";
 import { SwarmRig } from "./swarm.ts";
 import type { Spin } from "../spin.ts";
@@ -362,6 +363,12 @@ export class RocketViewer {
   private press: { x: number; y: number } | null = null;
   private readonly slotRay = new Raycaster();
   private swarm: SwarmRig | null = null;
+  /** Drones looking over the finished ship. Zero is off. The age is seconds, and it moves only while playing. */
+  private inspectCount = 0;
+  private inspectPlaying = false;
+  private inspectSpeed = 1;
+  private inspectAge = 0;
+  private inspectMark: HTMLElement | null = null;
   private progressAt: number | null = null;
   private progressFramed = false;
   /** A module that has left its mount, and how far along that separation is, from 0 to 1. */
@@ -1850,6 +1857,78 @@ export class RocketViewer {
     if (this.built && this.parts.length) this.applyProgress();
   }
 
+  /** Drones fly around the finished ship. A count of 0 clears them. The ship stays as it is. */
+  setInspect(count: number, playing = true, speed = 1): void {
+    this.inspectCount = Math.max(0, Math.min(100, Math.round(count) || 0));
+    this.inspectPlaying = playing;
+    this.inspectSpeed = Math.max(0.25, Math.min(4, speed));
+    if (this.inspectCount === 0) {
+      if (this.progressAt === null) this.swarm?.hide();
+      if (this.inspectMark) this.inspectMark.hidden = true;
+      delete this.canvas.dataset.inspect;
+      return;
+    }
+    this.paintInspect();
+    this.wake();
+  }
+
+  /** Puts every drone on its path for the current age. A paused drone aims its light at the hull. */
+  private paintInspect(): void {
+    const built = this.built;
+    if (!built || this.inspectCount === 0 || this.progressAt !== null) return;
+    const bounds = built.boundsOf(this.show);
+    const hull = { min: bounds.min, max: bounds.max };
+    const poses = Array.from({ length: this.inspectCount }, (_, index) => {
+      const spot = inspectAt(index, this.inspectCount, this.inspectAge, hull, 1);
+      return { where: spot.where, part: spot.part, duty: spot.paused ? ("work" as const) : ("transit" as const), skin: spot.paused ? hull : undefined };
+    });
+    this.swarm ??= new SwarmRig(this.root, async (file) => (await new GLTFLoader().loadAsync(`${this.options.assets}models/${file}`)).scene, () => this.wake());
+    this.swarm.setGlow(this.glowOn);
+    const longest = Math.max(bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]);
+    const mid: [number, number, number] = [(bounds.min[0] + bounds.max[0]) / 2, (bounds.min[1] + bounds.max[1]) / 2, (bounds.min[2] + bounds.max[2]) / 2];
+    this.swarm.show(poses, [], mid, this.options.reducedMotion, Math.min(DRONE_SCALE_MAX, Math.max(6, longest / 18)));
+    this.canvas.dataset.swarm = String(this.inspectCount);
+    this.needsDraw = true;
+  }
+
+  /** The first drone, as a point on the picture, so a test can see that it moves. */
+  private placeInspect(): void {
+    if (this.inspectCount === 0 || !this.built || this.progressAt !== null) {
+      if (this.inspectMark) this.inspectMark.hidden = true;
+      return;
+    }
+    const mark = this.inspectMark ?? document.createElement("div");
+    if (!this.inspectMark) {
+      mark.dataset.testid = "inspect-mark";
+      mark.style.position = "absolute";
+      mark.style.width = "10px";
+      mark.style.height = "10px";
+      mark.style.margin = "-5px 0 0 -5px";
+      mark.style.borderRadius = "50%";
+      mark.style.background = "#ffd36a";
+      mark.style.pointerEvents = "none";
+      mark.style.zIndex = "4";
+      this.holder.append(mark);
+      this.inspectMark = mark;
+    }
+    const bounds = this.built.boundsOf(this.show);
+    const spot = inspectAt(0, this.inspectCount, this.inspectAge, { min: bounds.min, max: bounds.max }, 1);
+    const point = this.corner.set(spot.where[0], spot.where[1], spot.where[2]).project(this.camera);
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    if (point.z > 1 || width < 2 || height < 2) {
+      mark.hidden = true;
+      return;
+    }
+    const sx = ((point.x + 1) / 2) * width;
+    const sy = ((1 - point.y) / 2) * height;
+    mark.hidden = false;
+    mark.style.left = `${sx}px`;
+    mark.style.top = `${sy}px`;
+    this.canvas.dataset.inspect = `${Math.round(sx)},${Math.round(sy)}`;
+    this.canvas.dataset.inspectPaused = spot.paused ? "1" : "0";
+  }
+
   private applyProgress(): void {
     const built = this.built;
     if (!built) return;
@@ -1868,6 +1947,12 @@ export class RocketViewer {
         fitTanks(part.holder, 0);
         for (const lines of part.feature) lines.visible = true;
         part.holder.visible = place.shown;
+      }
+      if (this.inspectCount > 0) {
+        this.paintInspect();
+        this.applyLeave();
+        this.wake();
+        return;
       }
       this.swarm?.hide();
       delete this.canvas.dataset.swarm;
@@ -2033,6 +2118,8 @@ export class RocketViewer {
     this.disposeParts();
     this.clearGhost();
     this.scaleBar?.remove();
+    this.inspectMark?.remove();
+    this.inspectMark = null;
     this.thrusters?.dispose();
     this.thrusters = null;
     this.plumes.dispose();
@@ -2651,6 +2738,12 @@ export class RocketViewer {
     }
     const motioning = this.motionOn && !this.clockNow;
     if (motioning) this.stepMotion(now);
+    const inspecting = this.inspectCount > 0 && this.progressAt === null && this.built !== null && this.inspectPlaying && !this.options.reducedMotion;
+    if (inspecting) {
+      this.inspectAge += dt * this.inspectSpeed;
+      this.paintInspect();
+      this.needsDraw = true;
+    }
     const welding = (this.swarm?.live() ?? false) && !this.options.reducedMotion;
     if (welding) {
       this.swarm?.step(now / 1000);
@@ -2692,6 +2785,7 @@ export class RocketViewer {
         const began = performance.now();
         this.canvas.dataset.swarmNear = String(this.swarm.lod([this.camera.position.x, this.camera.position.y, this.camera.position.z]));
         this.canvas.dataset.swarmLod = (performance.now() - began).toFixed(3);
+        if (this.inspectCount > 0) this.canvas.dataset.drones = this.swarm.shown() ? "ready" : "wait";
       }
       this.applyFittingLod(dt * 1000);
       const drawn = performance.now();
@@ -2701,6 +2795,7 @@ export class RocketViewer {
       this.canvas.dataset.drawCalls = String(info.calls);
       this.canvas.dataset.triangles = String(info.triangles);
       this.placeMarks();
+      this.placeInspect();
       this.placeBeside();
       this.updateScaleBar();
       if (this.options.onNear && !this.nearSaid && !this.focusing && this.nearAt > 0 && this.camera.position.distanceTo(this.controls.target) < this.nearAt) {
@@ -2746,7 +2841,8 @@ export class RocketViewer {
     // the controls' own change event may already have asked for the next frame (wake): one frame is asked for, never two, or each frame would double the next
     const drifting = this.drifting();
     const jetting = this.thrusterChoice === "station-keeping" && !this.options.reducedMotion && awake || (this.thrusters?.puffCount() ?? 0) > 0;
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || pulsing || drifting || jetting || this.ghost || this.paintFades.length > 0)) this.frame = requestAnimationFrame(this.tick);
+    const inspectingOn = this.inspectCount > 0 && this.inspectPlaying && this.progressAt === null && !this.options.reducedMotion;
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || pulsing || drifting || jetting || inspectingOn || this.ghost || this.paintFades.length > 0)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 

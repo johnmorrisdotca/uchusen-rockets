@@ -157,6 +157,8 @@ export class UchusenRocket extends HTMLBase {
   private holder: HTMLElement | null = null;
   private drawing: HTMLElement | null = null;
   private viewer: RocketViewer | null = null;
+  /** Drones looking over the finished ship, put back after a rocket loads. */
+  private inspectNow: { count: number; playing: boolean; speed: number } | null = null;
   /** The inset the page asked for, put back after a rocket loads, and the words that mark its point. */
   private framed: ViewerFocus | null = null;
   private frameLabel = "";
@@ -274,6 +276,14 @@ export class UchusenRocket extends HTMLBase {
     if (before && now && (Object.keys(now) as (keyof ViewChoice)[]).every((key) => before[key] === now[key])) return;
     this.viewer?.drive(this.driven, reason);
     this.place();
+  }
+
+  /** Drones fly around the finished ship. A count of 0 clears them. The ship is not built and does not move. */
+  setInspect(count: number, playing = true, speed = 1): void {
+    const n = Math.max(0, Math.min(100, Math.round(Number(count)) || 0));
+    const rate = Math.max(0.25, Math.min(4, Number(speed) || 1));
+    this.inspectNow = { count: n, playing, speed: rate };
+    this.viewer?.setInspect(n, playing, rate);
   }
 
   /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. It is drawn at most about 20 times a second and never while out of sight: it is made again when it comes back. */
@@ -715,6 +725,7 @@ export class UchusenRocket extends HTMLBase {
         if (now.look !== look) viewer.setLook(now.look);
         if (now.show !== show) viewer.setShow(now.show);
         viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
+        if (this.inspectNow) viewer.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
         viewer.setLeave(...this.leaveNow());
         this.lightViewer(viewer);
         this.applyFrame();
@@ -913,6 +924,7 @@ export class UchusenRocket extends HTMLBase {
       if (now.look !== look) made.setLook(now.look);
       if (now.show !== show) made.setShow(now.show);
       made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
+      if (this.inspectNow) made.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
       made.setLeave(...this.leaveNow());
       this.lightViewer(made);
       this.applyFrame();

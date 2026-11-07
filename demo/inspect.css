@@ -1,0 +1,10 @@
+.inspect h1 { margin: 0.25rem 0.4rem 0.2rem; font-size: 1.35rem; }
+.inspect .stage-box > p { margin: 0 0.4rem 0.6rem; max-width: 42rem; }
+.inspect-controls { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; align-items: end; padding: 0.35rem 0.25rem 0.55rem; }
+.inspect-controls label { display: grid; gap: 0.25rem; color: #d5deee; font-size: 0.9rem; }
+.inspect-count { display: flex; gap: 0.6rem; align-items: center; }
+.inspect-controls select, .inspect-controls input, .inspect-controls button { min-height: 44px; font: inherit; color: #f4f7fb; }
+.inspect-controls select, .inspect-controls input[type="number"] { background: #102033; border: 1px solid #6d829c; border-radius: 8px; padding: 0 0.45rem; }
+.inspect-controls select { max-width: 16rem; }
+.inspect-controls button { min-width: 5.5rem; padding: 0 0.9rem; border-radius: 10px; border: 1px solid #9fb0c8; background: #1a4f86; }
+.inspect-controls input[type="range"] { width: min(100%, 11rem); }
