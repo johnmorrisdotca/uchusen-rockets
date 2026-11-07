@@ -10,6 +10,7 @@ import { mountCamera } from "./compare-camera.ts";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
 import { chip, fillLooks, PAGE_LOOK } from "./chip.ts";
+import { bindStage } from "./viewBinder.ts";
 import { craftBudget, craftPicture, kindOf, type PickerKind } from "./shipPicker.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -34,6 +35,15 @@ const NEXT: readonly Craft[] = [
   { rocket: "iss", variant: "iss", form: "stack" },
   { rocket: "space-shuttle", variant: "stack", form: "stack" },
 ];
+const lineupStage = document.getElementById("cmp-view");
+const lineupPicture = document.getElementById("lineup");
+if (lineupStage && lineupPicture) {
+  bindStage(lineupStage, (detail) => {
+    const zoom = detail.zoom ?? 1;
+    const svg = lineupPicture.shadowRoot?.querySelector("svg");
+    if (svg instanceof SVGElement) svg.style.transform = Math.abs(zoom - 1) < 0.001 ? "" : `scale(${zoom})`;
+  }, { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8" });
+}
 if (new URLSearchParams(location.search).get("layout") === "lineup") {
   document.body.classList.add("fleet-cmp");
   const wide = document.getElementById("wide");

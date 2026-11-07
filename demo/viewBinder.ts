@@ -31,8 +31,12 @@ export type BindOptions = {
  */
 export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => void, options: BindOptions = {}): HTMLElement {
   if (stage.id === "") throw new Error("a stage needs an id");
-  stage.dataset.viewStage = "";
   const root = stage.ownerDocument;
+  if (stage.dataset.viewStage !== undefined) {
+    const ready = root.querySelector(`kazoku-view-controls[for="${stage.id}"]`);
+    if (ready instanceof HTMLElement) return ready;
+  }
+  stage.dataset.viewStage = "";
   const found = root.querySelector(`kazoku-view-controls[for="${stage.id}"]`);
   const bar = found instanceof HTMLElement ? found : root.createElement("kazoku-view-controls");
   if (!(found instanceof HTMLElement)) {
