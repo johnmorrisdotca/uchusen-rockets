@@ -953,19 +953,15 @@ export class UchusenRocket extends HTMLBase {
       made.setNameLabels(this.getAttribute("names") !== "off");
       const wait = revealDelay(this.shownAt, performance.now(), reduced);
       this.revealTimer = window.setTimeout(() => {
-        if (generation !== this.generation || this.viewer !== made) return;
-        const canvas = this.holder?.querySelector("canvas");
-        // The canvas is already at full from its one fade. Dropping the inline opacity while a transition is set would start that fade again.
-        if (canvas instanceof HTMLCanvasElement && canvas.style.opacity !== "") {
-          canvas.style.transition = "none";
-          this.setState("3d");
-          canvas.style.opacity = "";
-          requestAnimationFrame(() => {
-            canvas.style.transition = "";
-          });
-        } else this.setState("3d");
-        this.emit("uchusen-ready", { frames: made.frames });
-        this.startTilt();
+        if (generation === this.generation && this.viewer === made) {
+          if (made.fadeHeld()) {
+            made.pinFade();
+            this.setState("3d");
+            made.settleFade();
+          } else this.setState("3d");
+          this.emit("uchusen-ready", { frames: made.frames });
+          this.startTilt();
+        }
       }, wait);
     } catch (error) {
       if (generation === this.generation) {
