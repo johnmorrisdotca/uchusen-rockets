@@ -1,6 +1,6 @@
 // How the fleet's moving parts move: one table, one helper, shared by every ship. A part that moves is tagged with a `Move` (a name, a pivot and an axis) where its ship builds it, and this file says what each name does over time: a ring that
-// spins at its stated rpm, a door leaf that swings up and comes back, an array or a dish that sweeps. It moves only parts that exist: no geometry is made here, and nothing is rebuilt; the viewer turns each tagged group about its pivot. A
-// `Move` turns about its axis, and a slide moves along that same axis. A roller shutter is still drawn as its leaf swinging up about the lintel (a real one winds on a drum). Pure: no three.js and no DOM.
+// spins at its stated rpm, a door leaf that rides up its tracks and comes back, an array or a dish that sweeps. It moves only parts that exist: no geometry is made here, and nothing is rebuilt; the viewer turns or slides each tagged group. A
+// `Move` turns about its axis, and a slide moves along that same axis. A hangar leaf slides up its tracks. An array that unfolds is still two parts. Pure: no three.js and no DOM.
 import type { Move, Piece } from "../pieces.ts";
 import { rpmFor } from "./ship-01/spin.ts";
 
@@ -126,8 +126,10 @@ const HANABUSA_RPM = rpmFor(76, 1);
 const WHEEL_RPM = rpmFor(112, 1);
 const rpmNote = (rpm: number): string => `${rpm.toFixed(2)} rpm, one turn every ${(60 / rpm).toFixed(1)} s`;
 
+const DOOR_TRAVEL_M = 16;
+
 const doorLeaves = (ship: string): Motion[] =>
-  Array.from({ length: 5 }, (_, k): Motion => ({ ship, group: `door-leaf-${k}`, kind: "swing", from: 0, to: 80, period: 24, phase: k * 0.04, note: "A hangar door leaf swings up about the lintel and back, one after the next: the roller shutters of a hangar door lifting, as the doors of the Vehicle Assembly Building lift in stages (24 s a cycle, drawn faster than the real door)." }));
+  Array.from({ length: 5 }, (_, k): Motion => ({ ship, group: `door-leaf-${k}`, kind: "slide", from: 0, travel: DOOR_TRAVEL_M, period: 24, phase: k * 0.04, note: "A hangar door leaf rides 16 m up its tracks and back, one after the next, in 24 s: a roller shutter on the tracks of a hangar door, as the doors of the Vehicle Assembly Building lift in stages. Drawn faster than a real door." }));
 
 /**
  * Every motion of the fleet, by ship. Hanabusa's rings and the wheel turn at their real rpm; the others are drawn at a pace that can be watched, and say so.

@@ -24,16 +24,21 @@ test("Hanabusa's rings turn at the rpm that gives the living ring 1 g, and the p
   assert.match(motionNote("fleet-ship-01"), /3\.43 rpm, one turn every 17\.5 s/);
 });
 
-test("a door leaf is shut, opens to its angle, holds, and comes back, and the five leaves go one after the next", () => {
+test("a door leaf is shut, rides up its tracks, and comes back, and the five leaves go one after the next", () => {
   const leaf = (k: number) => motionsOf("fleet-ship-03").find((m) => m.group === `door-leaf-${k}`)!;
   const first = leaf(0);
-  near(angleAt(first, 0), 0);
-  near(angleAt(first, first.period! * 0.5), first.to!);
-  near(angleAt(first, first.period! * 0.99), 0);
-  assert.ok(angleAt(leaf(4), 0.3 * first.period!) !== angleAt(first, 0.3 * first.period!));
+  assert.equal(first.kind, "slide");
+  const axis = miyamoto().flatMap((part) => meshOf(part.pieces({ detail: 0.3 })).moves).find((group) => group.name === "door-leaf-0")?.axis;
+  assert.ok(axis);
+  near(Math.hypot(axis[0], axis[1], axis[2]), first.travel!, 0.05);
+  near(slideAt(first, 0), 0);
+  near(slideAt(first, first.period! * 0.5), first.travel!);
+  near(slideAt(first, first.period! * 0.99), 0);
+  near(angleAt(first, first.period! * 0.5), 0);
+  assert.ok(slideAt(leaf(4), 0.3 * first.period!) !== slideAt(first, 0.3 * first.period!));
   for (let t = 0; t < 100; t += 0.37) {
-    const a = angleAt(first, t);
-    assert.ok(a >= -1e-9 && a <= first.to! + 1e-9);
+    const d = slideAt(first, t);
+    assert.ok(d >= -1e-9 && d <= first.travel! + 1e-9);
   }
 });
 
