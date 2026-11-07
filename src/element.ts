@@ -22,6 +22,7 @@ import { cleanLook, type LookName } from "./looks.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
 import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
 import type { RocketViewer, ViewerFocus } from "./element/scene.ts";
+import { skyQuery, type SkyShown } from "./element/solarGroups.ts";
 import { Panel } from "./element/panel.ts";
 import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
@@ -291,6 +292,7 @@ export class UchusenRocket extends HTMLBase {
   private pivotWanted: { at: readonly [number, number, number] | null; label: string } | null = null;
   private pathsWanted: boolean | null = null;
   private whenWanted: number | null = null;
+  private groupsWanted: SkyShown | null = null;
 
   /** Moves the camera's pivot onto a body in the scene, or back to the craft when `at` is null. */
   setPivot(at: readonly [number, number, number] | null, label = "craft"): void {
@@ -308,6 +310,13 @@ export class UchusenRocket extends HTMLBase {
   setWhen(ms: number): void {
     this.whenWanted = ms;
     this.viewer?.setWhen(ms);
+  }
+
+  /** Shows or hides the planets, moons, dwarf planets, belts and craft marks. */
+  setGroups(groups: SkyShown): void {
+    this.groupsWanted = groups;
+    this.dataset.groups = skyQuery(groups) ?? "all";
+    this.viewer?.setGroups(groups);
   }
 
   /** The drawing, turned and moved to the chosen view. The 3D view moves itself, so only the drawing needs it, and only until the 3D view shows. It is drawn at most about 20 times a second and never while out of sight: it is made again when it comes back. */
@@ -950,6 +959,7 @@ export class UchusenRocket extends HTMLBase {
       if (this.pivotWanted) made.setPivot(this.pivotWanted.at, this.pivotWanted.label);
       if (this.pathsWanted !== null) made.setPaths(this.pathsWanted);
       if (this.whenWanted !== null) made.setWhen(this.whenWanted);
+      if (this.groupsWanted) made.setGroups(this.groupsWanted);
       window.cancelAnimationFrame(this.flightFrame);
       this.flightFrame = 0;
       if (this.clock) made.setFlight(this.clock);

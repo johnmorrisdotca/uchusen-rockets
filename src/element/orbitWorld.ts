@@ -1,6 +1,7 @@
 // The compare page's Earth, its Moon, the major moons, and a star field. The craft stay at the origin, 400 km above the surface. Loaded only when a page asks for it.
 import { BODIES, DWARF_IDS, heliocentric, PLANET_IDS, type HostId } from "@johnmorrisdotca/wakusei-planets";
 import { BufferAttribute, BufferGeometry, Group, InstancedMesh, LineLoop, LineBasicMaterial, Mesh, MeshBasicMaterial, Object3D, Points, PointsMaterial, SphereGeometry, SRGBColorSpace, TextureLoader } from "three";
+import { skyGroupOf, type SkyShown } from "./solarGroups.ts";
 import { beltPlaces, bodyScene, earthCentre, majorMoons, moonScene, sceneOf, type BeltKind } from "./solarPlace.ts";
 
 const STAR_R_M = 2e13;
@@ -138,6 +139,22 @@ function planetGroup(when: number): Group {
     bodies.add(mesh);
   }
   return bodies;
+}
+
+/** Shows or hides the planets, the dwarf planets and the moons. The Earth under the craft stays. Belts and paths are the viewer's, because they also depend on how far the camera is. */
+export function applySolarGroups(root: Object3D, groups: Pick<SkyShown, "planets" | "moons" | "dwarfs">): void {
+  const planets = root.getObjectByName("planets");
+  if (planets) {
+    for (const child of planets.children) {
+      const id = child.name.startsWith("body-") ? child.name.slice("body-".length) : "";
+      const group = skyGroupOf(id);
+      if (group === "planets" || group === "dwarfs") child.visible = groups[group];
+    }
+  }
+  const moon = root.getObjectByName("moon");
+  if (moon) moon.visible = groups.moons;
+  const major = root.getObjectByName("major-moons");
+  if (major) major.visible = groups.moons;
 }
 
 /** Moves the Moon, the major moons and the sketch so they match `when`. The paths and belts were drawn around the Sun at the first instant, so the whole sketch shifts with the Earth. */

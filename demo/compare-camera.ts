@@ -1,6 +1,7 @@
 // The compare page's camera. Free is the view as it was. The other choices keep craft in frame, follow one, or keep the planet with them. Follow selected only reads `data-selected` on the stage, which MODULES-476 will set. The camera orbits when Turn is Camera: the craft stay where they are and the Earth moves. Edges Wrap is only the free camera.
 import { BODIES, heliocentric, moonGeocentric, type HostId } from "@johnmorrisdotca/wakusei-planets";
 import type { UchusenRocket } from "../src/element.ts";
+import { skyGroupOf, skyQuery, skyShown, thinSky, type SkyGroup, type SkyShown, type SkySpot } from "../src/element/solarGroups.ts";
 import { bodyScene, moonScene } from "../src/element/solarPlace.ts";
 import { frameSky } from "./sky.ts";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
@@ -58,6 +59,7 @@ export function mountCamera(opts: {
   let when = Date.now();
   let playing = false;
   let paths = true;
+  let shown: SkyShown = skyShown(address.get("groups"));
   let playFrame = 0;
   let steppedAt = 0;
 
@@ -206,7 +208,7 @@ export function mountCamera(opts: {
     names.forEach((name, index) => {
       const box = pageBox(index);
       const off = Boolean(box && box.on && (box.x + box.w < 0 || box.y + box.h < 0 || box.x > width || box.y > height));
-      if (edges === "open" && off && box) {
+      if (shown.craft && edges === "open" && off && box) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "cw-edge";
@@ -225,7 +227,7 @@ export function mountCamera(opts: {
         });
         arrows.append(button);
       }
-      if (box && box.on && box.w < MARK_PX && box.h < MARK_PX) {
+      if (shown.craft && box && box.on && box.w < MARK_PX && box.h < MARK_PX) {
         const mark = document.createElement("span");
         mark.className = "cw-mark";
         mark.dataset.testid = `mark-${index}`;
@@ -244,6 +246,7 @@ export function mountCamera(opts: {
   }
 
   function paintMoon(width: number, height: number, far: number): void {
+    if (!shown.moons) return;
     if (hero.getAttribute("world") === "earth") {
       const pivot = hero.shadowRoot?.querySelector("canvas")?.dataset.pivot ?? "craft";
       if (pivot !== "craft" && pivot !== "moon") return;
@@ -301,33 +304,44 @@ export function mountCamera(opts: {
     if (far < 20_000_000) return;
     const ms = when;
     const yaw = ((turn === "camera" ? bar.state.yaw : 0) * Math.PI) / 180;
-    let stacked = 0;
+    const spots: SkySpot[] = [];
+    const placed = new Map<string, { key: string; px: number; angle: number }>();
     for (const [id, key] of SOLAR) {
+      const group = skyGroupOf(id);
+      if (!group || !shown[group]) continue;
       const [x, y] = fromEarth(id, ms);
       const range = Math.hypot(x, y, 0);
       const angle = Math.atan2(x, y) - yaw;
       const span = (range / Math.max(far, 1)) * width;
       const px = width / 2 + Math.sin(angle) * span;
-      const left = Math.min(width - 16, Math.max(16, px));
-      const off = Math.abs(px - left) > 1;
+      spots.push({ id, x: px, y: height / 2, range, radius: BODIES[id].radiusKm });
+      placed.set(id, { key, px, angle });
+    }
+    let stacked = 0;
+    for (const spot of thinSky(spots, 8, 36)) {
+      const place = placed.get(spot.id);
+      if (!place) continue;
+      const left = Math.min(width - 16, Math.max(16, place.px));
+      const off = Math.abs(place.px - left) > 1;
       const top = off ? 16 + stacked * 22 : height / 2;
       if (off) stacked += 1;
       const mark = document.createElement("button");
       mark.type = "button";
       mark.className = "cw-mark";
-      mark.dataset.testid = `body-${id}`;
-      mark.dataset.angle = angle.toFixed(5);
-      mark.setAttribute("aria-label", say(key));
+      mark.dataset.testid = `body-${spot.id}`;
+      mark.dataset.angle = place.angle.toFixed(5);
+      mark.setAttribute("aria-label", say(place.key));
       mark.style.left = `${left}px`;
       mark.style.top = `${top}px`;
       mark.style.width = "14px";
       mark.style.height = "14px";
       mark.style.padding = "0";
-      mark.style.borderColor = id === "sun" ? "#e6d38a" : BODIES[id].colour;
-      mark.addEventListener("click", () => goTo(id));
+      const bodyId = spot.id as "sun" | HostId;
+      mark.style.borderColor = bodyId === "sun" ? "#e6d38a" : BODIES[bodyId].colour;
+      mark.addEventListener("click", () => goTo(bodyId));
       const name = document.createElement("span");
       name.className = "cw-mark";
-      name.textContent = say(key);
+      name.textContent = say(place.key);
       name.style.pointerEvents = "none";
       name.style.left = `${left + 16}px`;
       name.style.top = `${top}px`;
@@ -456,6 +470,24 @@ export function mountCamera(opts: {
     };
     playFrame = window.requestAnimationFrame(loop);
   });
+  const groupKeys: [SkyGroup, string][] = [
+    ["planets", "cmpGroupPlanets"],
+    ["moons", "cmpGroupMoons"],
+    ["dwarfs", "cmpGroupDwarfs"],
+    ["belts", "cmpGroupBelts"],
+    ["craft", "cmpGroupCraft"],
+  ];
+  const paintGroups = (): void => {
+    byId("cw-groups").replaceChildren(...groupKeys.map(([id, key]) => chip(say(key), `group-${id}`, shown[id], () => {
+      shown = { ...shown, [id]: !shown[id] };
+      hero.setGroups(shown);
+      address.set("groups", skyQuery(shown));
+      paintGroups();
+      paintOverlay();
+    })));
+  };
+  paintGroups();
+  hero.setGroups(shown);
   distance.insertAdjacentElement("afterend", day);
   day.insertAdjacentElement("afterend", pathsButton);
   pathsButton.insertAdjacentElement("afterend", playButton);

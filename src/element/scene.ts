@@ -58,6 +58,7 @@ import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
 import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
+import { skyGroupOf, skyQuery, type SkyShown } from "./solarGroups.ts";
 import { assemblyOf, inspectAlong, playFrame } from "../buildPlay.ts";
 import { clearArc, fitoutOf, growPart, spinUp } from "./buildArc.ts";
 import { fitTanks } from "./fitOut.ts";
@@ -411,8 +412,11 @@ export class RocketViewer {
   private pivot: [number, number, number] = [0, 0, 0];
   /** The faint paths and belts. The page turns them on and off. */
   private pathsOn = true;
+  /** Which sky groups the page is showing. The Earth under the craft is not one of them. */
+  private skyGroups: SkyShown = { planets: true, moons: true, dwarfs: true, belts: true, craft: true };
   private skyWhen = Date.now();
   private moveSky: ((ms: number) => void) | null = null;
+  private paintSkyGroups: ((groups: SkyShown) => void) | null = null;
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
     this.holder = holder;
@@ -575,6 +579,15 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Shows or hides each sky group. The craft marks are the page's; this only remembers that choice on the canvas. */
+  setGroups(groups: SkyShown): void {
+    this.skyGroups = groups;
+    this.canvas.dataset.groups = skyQuery(groups) ?? "all";
+    this.paintSkyGroups?.(groups);
+    this.showSketch();
+    this.wake();
+  }
+
   /** Puts the Moon, the major moons and the belts at `ms`. */
   setWhen(ms: number): void {
     if (!Number.isFinite(ms)) return;
@@ -588,14 +601,28 @@ export class RocketViewer {
     if (!sketch) return;
     const away = Math.hypot(this.pivot[0], this.pivot[1], this.pivot[2]);
     const reach = this.orbitFit / Math.max(this.driven?.zoom ?? 1, 1e-8);
-    sketch.visible = this.pathsOn && (reach > 30_000_000 || away > 30_000_000);
+    const far = reach > 30_000_000 || away > 30_000_000;
+    const belts = this.skyGroups.belts && far;
+    let anyPath = false;
+    for (const child of sketch.children) {
+      if (child.name === "asteroids" || child.name === "kuiper") {
+        child.visible = belts;
+        continue;
+      }
+      const id = child.name.startsWith("orbit-") ? child.name.slice("orbit-".length) : "";
+      const group = skyGroupOf(id);
+      const on = this.pathsOn && far && (group ? this.skyGroups[group] : true);
+      child.visible = on;
+      if (on) anyPath = true;
+    }
+    sketch.visible = belts || anyPath;
   }
 
   /** Brings the globe in once. A page that never asks never loads it. */
   private mountOrbit(): void {
     if (this.orbitGone || this.scene.getObjectByName("orbit-world")) return;
     this.orbitGone = () => {};
-    void import("./orbitWorld.ts").then(({ moveOrbit, orbitWorld }) => {
+    void import("./orbitWorld.ts").then(({ applySolarGroups, moveOrbit, orbitWorld }) => {
       if (this.disposed) return;
       const world = orbitWorld(() => {
         this.canvas.dataset.earth = "painted";
@@ -606,6 +633,8 @@ export class RocketViewer {
       this.moonNode = world.group.getObjectByName("moon") ?? null;
       this.orbitGone = world.dispose;
       this.moveSky = (ms: number) => moveOrbit(world.group, ms);
+      this.paintSkyGroups = (groups) => applySolarGroups(world.group, groups);
+      this.paintSkyGroups(this.skyGroups);
       this.canvas.dataset.globe = this.orbitOn ? "earth" : "off";
       this.showSketch();
       this.wake();
