@@ -2,6 +2,7 @@
 // a canal with banks, reeds and an arched bridge, people at scale, lamps and benches, soft dark contact patches under everything for ambient occlusion, and for the garden ring racks of trays with seedlings, feed pipes and workers with carts. Built in the ring's own frame at azimuth 0
 // (x along the street, y along the axis, z outward: up is -z) and stamped round the ring. On demand, for the section view only. Pure: no three.js and no DOM.
 import { box, discX, hoop, place, prism, quad, rod, type Lathe, type MaterialName, type Piece, type Vec3 } from "./adapter.ts";
+import { trayRack } from "./gardenRacks.ts";
 import { cutaway4, dims, geoOf, glass, ground, hydroHall, ringPieces, rings, STEP, townHall } from "./rings.ts";
 
 const TAU = 2 * Math.PI;
@@ -451,7 +452,7 @@ function wall(e0: number, z0: number, bay: number, i: number, k: number, s: numb
   return out;
 }
 
-/** The garden ring's hall: bare terraces and glass from the ring code, then long rows of golden and green crop on every tread, a lawn and a sand aisle in the nave, workers in hats with carts, and fruit trees. `coarse` keeps the rows as plain stems and the people to a third. */
+/** The garden ring's hall: bare terraces and glass from the ring code, then long rows of golden and green crop on every tread, a lawn and a sand aisle in the nave, workers in hats with carts, fruit trees, and on the middle tread a rack of seedling trays with a feed pipe and a grow-lamp bar. `coarse` keeps the rows as plain stems, the people to a third, and the racks without seedlings. */
 export function gardenInterior(gap = 58, level: Level = "fine"): Piece[] {
   fineRound = level === "fine";
   try {
@@ -485,6 +486,7 @@ function garden(gap: number, level: Level): Piece[] {
       const rk = rg - STEP * k;
       bay.push(...crops(s > 0 ? e0 + 0.1 : -(e0 + tread - 0.1), s > 0 ? e0 + tread - 0.1 : -(e0 + 0.1), rk, 5.2, i, k, s, level), ...wall(e0, rk, 5.2, i, k, s, level));
       if (h01(i, k + (s > 0 ? 70 : 80)) > (fine ? 0.8 : 0.95)) bay.push(...person(1.4, s > 0 ? e0 + tread * 0.62 : -(e0 + tread * 0.62), rk, i * 5 + k + 300, true, h01(i, k + 120) > 0.3 ? "bend" : "stand"));
+      if (k === 2 && i % 8 === 2) bay.push(...trayRack(s > 0 ? e0 + tread * 0.55 : -(e0 + tread * 0.55), rk, fine));
     }
     out.push(...place(bay, { at: [0, 0, 0], yaw: az }));
   }
