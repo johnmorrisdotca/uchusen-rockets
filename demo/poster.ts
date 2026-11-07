@@ -33,7 +33,7 @@ const MARK: Record<MakerId, string> = {
 const PAD = 28;
 const GAP = 4;
 const MIN_CELL = 36;
-const LABEL = 88;
+const LABEL = 102;
 
 export interface PosterCopy {
   title: string;
@@ -62,7 +62,16 @@ export interface PosterCraft {
   metres: number;
   widthM: number;
   height: string;
+  /** The year it first flew, or the short note when it has not. */
+  flight: string;
 }
+
+/** A first flight as a year, or the short note when there is no date. */
+const flightWords = (figure: { value: string | null; brief?: string }): string => {
+  if (figure.value === null) return figure.brief ?? "";
+  const year = /^(\d{4})/.exec(figure.value);
+  return year ? year[1] : (figure.brief ?? figure.value);
+};
 
 const measure = (built: Built): { metres: number; widthM: number } => {
   const show = built.shows[0] ?? "together";
@@ -87,7 +96,7 @@ export function posterCraft(): PosterCraft[] {
     const named = variantOf(rocket.id, rocket.defaultVariant);
     if (!named || !check({ rocket: rocket.id, variant: named.id }).ok) continue;
     const size = measure(build({ rocket: rocket.id, variant: named.id }));
-    craft.push({ key, name: rocket.name, maker: rocket.maker, metres: size.metres, widthM: size.widthM, height: figureWords(named.facts.height, " m") });
+    craft.push({ key, name: rocket.name, maker: rocket.maker, metres: size.metres, widthM: size.widthM, height: figureWords(named.facts.height, " m"), flight: flightWords(named.firstFlight) });
   }
   craft.sort((a, b) => a.metres - b.metres || a.name.localeCompare(b.name));
   return craft;
@@ -279,7 +288,8 @@ export function posterSvg(copy: PosterCopy = ENGLISH, look: LookName = "painted"
       const stagger = index % 2 === 1 ? 40 : 0;
       const nameTop = base + 16 + stagger;
       const nameLines = lines.map((line, lineIndex) => `<tspan x="${x + cell / 2}" dy="${lineIndex === 0 ? 0 : 9}">${escape(line)}</tspan>`).join("");
-      parts.push(`<text data-poster-label="1" x="${x + cell / 2}" y="${nameTop}" text-anchor="middle" fill="#172033" font-size="8" font-family="sans-serif">${nameLines}<tspan x="${x + cell / 2}" dy="10">${escape(one.height)}</tspan></text>`);
+      const flight = one.flight ? `<tspan x="${x + cell / 2}" dy="10">${escape(one.flight)}</tspan>` : "";
+      parts.push(`<text data-poster-label="1" x="${x + cell / 2}" y="${nameTop}" text-anchor="middle" fill="#172033" font-size="8" font-family="sans-serif">${nameLines}<tspan x="${x + cell / 2}" dy="10">${escape(one.height)}</tspan>${flight}</text>`);
       x += cell + gap;
     }
     y = base + LABEL + 4;
