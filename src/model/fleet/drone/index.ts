@@ -3,6 +3,8 @@
 // the painted look swaps in NASA's models for the core, the equipment block, the arms' links, the gripper, the tool and the legs (`scripts/make-drone.ts`). Pure: no three.js and no DOM.
 import type { Piece, Vec3 } from "../../pieces.ts";
 import { armPieces, standInPieces, weldNozzle, weldTip } from "./arms.ts";
+import { legPieces } from "./legs.ts";
+import type { DronePose } from "./poses.ts";
 import { antennaPieces, lensPieces, podPieces, rearBlockPieces, underglowPieces } from "./front.ts";
 import { ARMS, joints, wristOf } from "./layout.ts";
 import { workLamp } from "../lights.ts";
@@ -57,14 +59,15 @@ export const DRONE = {
  * The drone's pieces. `standIn` adds the plain stand-ins for what NASA's models give in the painted look (the long links, the gripper, the tool, the equipment block): the line looks need them, the painted
  * model does not. `finest` keeps the fine detail (bolts, slots) too: the painted model has it; the line looks and the code-made mesh stay inside the mesh limit without it.
  */
-export function dronePieces(standIn = true, finest = false): Piece[] {
+export function dronePieces(standIn = true, finest = false, pose?: DronePose): Piece[] {
   const natural: Piece[] = [...shellPieces(), ...lensPieces(), ...podPieces(), ...antennaPieces(), ...underglowPieces(), ...workLamp([0.42, 0.12, 0.5], 0.045)];
-  for (const arm of ARMS) natural.push(...armPieces(arm));
-  natural.push(...weldNozzle(ARMS[1]));
+  for (const arm of ARMS) natural.push(...armPieces(arm, pose));
+  natural.push(...weldNozzle(ARMS[1], pose));
   if (standIn) {
     natural.push(...rearBlockPieces());
-    for (const arm of ARMS) natural.push(...standInPieces(arm));
+    for (const arm of ARMS) natural.push(...standInPieces(arm, pose));
     natural.push(...coreStandIn());
+    if (pose) natural.push(...legPieces(pose.legs));
   }
   return lifted(finest ? natural : natural.filter((piece) => !FINE.has(piece)), DRONE_LIFT);
 }

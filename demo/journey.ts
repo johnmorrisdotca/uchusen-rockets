@@ -909,7 +909,10 @@ function gammaWords(gamma: number): string {
 function ratioWords(): string {
   if (trip.massRatio === null) return `${say("jNA")}: ${trip.fuel.note}`;
   const text = trip.massRatio >= 100 ? trip.massRatio.toFixed(0) : trip.massRatio.toFixed(3);
-  return trip.drive === "ballistic" ? `${text}${japanese() ? "、" : ", "}${say("jBrakeOnly")}` : text;
+  const sep = japanese() ? "、" : ", ";
+  if (trip.drive === "ballistic") return `${text}${sep}${say("jBrakeOnly")}`;
+  if (trip.propellantUsedT !== undefined && trip.propellantCarriedT !== undefined) return `${text}${sep}${say(trip.propellantUsedT <= trip.propellantCarriedT ? "jTanksHold" : "jTanksShort")}`;
+  return text;
 }
 
 function fuelWords(): string {

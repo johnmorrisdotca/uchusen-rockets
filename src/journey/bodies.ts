@@ -14,7 +14,7 @@
 export interface Stop {
   id: string;
   name: { en: string; ja: string };
-  kind: "star" | "planet" | "dwarf-planet" | "moon";
+  kind: "star" | "planet" | "dwarf-planet" | "moon" | "beyond";
   /** The planet a moon goes round. */
   parent?: string;
   /** The equatorial radius, km. */
