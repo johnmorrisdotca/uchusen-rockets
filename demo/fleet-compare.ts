@@ -154,11 +154,3 @@ bindStage(byId("cmp-view"), (detail) => placeZoom(lineup, detail), { overlay: tr
 
 draw();
 window.addEventListener("resize", () => byId("lineup").setAttribute("fit", fitOf()));
-
-const lineup = byId("lineup");
-byId("cmp-bar").addEventListener("kazoku-viewchange", (event) => {
-  const zoom = (event as CustomEvent<{ zoom?: number }>).detail.zoom;
-  const svg = lineup.shadowRoot?.querySelector("svg");
-  if (!(svg instanceof SVGElement) || typeof zoom !== "number") return;
-  svg.style.transform = Math.abs(zoom - 1) < 0.001 ? "" : `scale(${zoom})`;
-});
