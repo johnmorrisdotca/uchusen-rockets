@@ -633,10 +633,6 @@ export interface Bounds {
   max: Vec3;
 }
 
-/**
- * The box a part's pieces fill, worked from the pieces and not from a mesh, so a part with a very large number of pieces can be measured without building its triangles. A lathe counts as its full circle (its mesh is a polygon inside
- * that circle, so this is never smaller than the mesh's box and at most a percent or two larger).
- */
 /** Grow a box so it holds one point. */
 const take = (min: Vec3, max: Vec3, x: number, y: number, z: number): void => {
   if (x < min[0]) min[0] = x;
@@ -647,6 +643,10 @@ const take = (min: Vec3, max: Vec3, x: number, y: number, z: number): void => {
   if (z > max[2]) max[2] = z;
 };
 
+/**
+ * The box a part's pieces fill, worked from the pieces and not from a mesh, so a part with a very large number of pieces can be measured without building its triangles. A lathe counts as its full circle (its mesh is a polygon inside
+ * that circle, so this is never smaller than the mesh's box and at most a percent or two larger).
+ */
 export function boundsOfPieces(pieces: readonly Piece[]): Bounds {
   const min: Vec3 = [Infinity, Infinity, Infinity];
   const max: Vec3 = [-Infinity, -Infinity, -Infinity];
