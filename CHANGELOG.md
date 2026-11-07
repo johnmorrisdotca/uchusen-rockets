@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The research hall, from inside** (MODULES-433): terraces of benches and blue lamps around an open atrium, under the glass. The living ring stays a street with a canal and trees.
 - **The research ring is laboratories** (MODULES-433): benches with a blue lamp bar over each one step up both walls round an open atrium. It is no longer a second copy of the living town, so it has no canal and no houses.
 - **Sky wash inside the glass** (MODULES-433): the living ring and the garden ring carry a pale shell just inside the glass, so the hall is lit by sky.
 - **The travelling clock** (MODULES-400): one sentence under the two clocks says the clock on board runs slower. When the rounded times match, it adds that the difference is smaller than the times above.
