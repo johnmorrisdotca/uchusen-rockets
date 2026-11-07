@@ -1,8 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { Mesh } from "three";
+import { posedDrone } from "../src/element/nearPoses.ts";
 import { ARMS, joints } from "../src/model/fleet/drone/layout.ts";
 import { legPieces } from "../src/model/fleet/drone/legs.ts";
 import { DRONE_POSE, blendPose, fingerSpan, poseFor, poseOf, storedPose } from "../src/model/fleet/drone/poses.ts";
+
+const low = (name: "fly" | "park"): number => {
+  let y = Number.POSITIVE_INFINITY;
+  posedDrone(name).traverse((node) => {
+    if (!(node instanceof Mesh)) return;
+    const position = node.geometry.getAttribute("position");
+    for (let i = 0; i < position.count; i += 1) y = Math.min(y, position.getY(i));
+  });
+  return y;
+};
 
 const grip = ARMS[0];
 const reach = (name: keyof typeof DRONE_POSE): number => {
@@ -45,6 +57,11 @@ test("a distant drone snaps to a folded, reaching or planted pose", () => {
   assert.equal(storedPose("weld"), "place");
   assert.equal(storedPose("inspect"), "place");
   assert.equal(storedPose(poseFor("builder", "berth")), "park");
+});
+
+test("a planted drone reaches lower than a flying one", () => {
+  assert.ok(low("park") < low("fly"));
+  assert.equal(posedDrone("weld").name, "drone-pose-weld");
 });
 
 test("a blend sits between the two poses", () => {

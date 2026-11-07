@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **Repair drone poses** (MODULES-487): fly, approach, grip, carry, place, weld, inspect and park each set the arm pitch, the gripper, the legs and the weld arm's yaw. A boss points further than a manager. A distant drone snaps to folded, reaching or planted. The view still draws one rigid mesh.
+- **The nearest drones wear their pose** (MODULES-487): up to six drones nearest the camera are drawn from the posed model. Fly, approach, grip, carry, place, weld, inspect and park each set the arm, the gripper and the legs. A boss points further than a manager. Distant drones stay one rigid instance, snapped to folded, reaching or planted.
 - **Tree contact patches** (MODULES-433): each tree sits on a soft dark patch, so the crown reads as standing on the ground.
 - **Garden racks** (MODULES-433): the garden ring's middle tread carries trays of seedlings, a feed pipe and a grow-lamp bar.
 

@@ -1,8 +1,10 @@
-// The construction swarm in the 3D view. Each drone is the SPX repair drone: the coarse model for every drone, the fine one for the few nearest the camera, both instanced. The tractor beam leaves the lens (DRONE.emitter) and runs to the part, the weld arc leaves the tool (DRONE.weldTip), a working drone faces its part, and a parked one faces away from the stack. One set of instanced meshes, disposed with the view.
+// The construction swarm in the 3D view. Each drone is the SPX repair drone. Distant drones are one rigid instance. The nearest few are the posed model. The tractor beam leaves the lens (DRONE.emitter) and runs to the part, the weld arc leaves the tool (DRONE.weldTip), a working drone faces its part, and a parked one faces away from the stack. Disposed with the view.
 import { AdditiveBlending, BufferAttribute, BufferGeometry, CanvasTexture, Color, CylinderGeometry, DynamicDrawUsage, Group, InstancedMesh, LineBasicMaterial, LineSegments, type Material, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Points, PointsMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D, type Texture } from "three";
 import { DRONE_FILES } from "../model/drone.ts";
 import { DRONE } from "../model/fleet/drone/index.ts";
+import { poseFor, type PoseName } from "../model/fleet/drone/poses.ts";
 import { DRONE_SIZE } from "../model/fleet/drone/size.ts";
+import { clearPosedDrones, posedDrone } from "./nearPoses.ts";
 
 const CAP = 100;
 const RINGS = 2;
@@ -66,6 +68,8 @@ export interface SwarmPose {
   weld?: boolean;
   /** Working a part (faces it, beam on it), flying the path (faces where it is going), or parked (faces away from the stack, no beam). Omitted, it is working. */
   duty?: "work" | "transit" | "berth";
+  /** The job, when the crew has one. It chooses the pose. */
+  task?: string;
   /** The part's box in the scene. The weld ends on this skin; the part point itself is the middle. */
   skin?: { min: Vec; max: Vec };
   /** Boss, manager, builder or grunt. The drawn size and the lamp follow it. */
@@ -228,6 +232,8 @@ export class SwarmRig {
   private lampColours = new Float32Array(CAP * 3);
   private count = 0;
   private nearSig = "";
+  private readonly poseName: PoseName[] = [];
+  private readonly limbs: Group[] = [];
 
   private readonly load: DroneLoader | undefined;
   private readonly wake: () => void;
@@ -312,6 +318,7 @@ export class SwarmRig {
       const pose = list[i];
       if (!pose) continue;
       const duty = pose.duty ?? "work";
+      this.poseName[i] = poseFor(pose.rank, duty, pose.task);
       const rankScale = RANK_SCALE[pose.rank ?? "builder"];
       this.rankScale[i] = rankScale;
       this.lampColours.set(RANK_LAMP[pose.rank ?? "builder"], i * 3);
@@ -488,7 +495,7 @@ export class SwarmRig {
   }
 
   /**
-   * Chooses which drones are drawn fine and which coarse, for a camera at `eye`: the nearest few within a short reach get the fine model, every other one the coarse model. Does nothing when no drone has moved into or out of the near set.
+   * Chooses which drones are drawn posed and which stay rigid, for a camera at `eye`: the nearest few within a short reach wear their pose, every other one stays the coarse model. The coarse matrices are rewritten when that set changes.
    * @returns How many are drawn fine.
    */
   lod(eye: Vec): number {
@@ -502,9 +509,8 @@ export class SwarmRig {
     }
     ranked.sort((a, b) => a.d - b.d);
     for (const { i } of ranked.slice(0, NEAR_MAX)) near.push(i);
-    if (near.length > 0 && this.nearState === "none") void this.loadLevel("near");
-    // until the fine model is in, the coarse one stands for it
-    const fine = this.near && this.nearState === "ready" ? near : [];
+    this.placeLimbs(near);
+    const fine = near;
     const sig = fine.join(",");
     if (sig === this.nearSig) return fine.length;
     this.nearSig = sig;
@@ -521,12 +527,33 @@ export class SwarmRig {
     }
     this.far.mesh.count = coarse;
     this.far.mesh.instanceMatrix.needsUpdate = true;
-    if (this.near) {
-      fine.forEach((i, slot) => this.near?.mesh.setMatrixAt(slot, this.scratch.fromArray(this.bodies, i * 16)));
-      this.near.mesh.count = fine.length;
-      this.near.mesh.instanceMatrix.needsUpdate = true;
-    }
+    if (this.near) this.near.mesh.count = 0;
     return fine.length;
+  }
+
+  /** The nearest drones wear the posed model, on the same matrix as the rigid one. */
+  private placeLimbs(near: readonly number[]): void {
+    for (let slot = 0; slot < NEAR_MAX; slot += 1) {
+      const i = near[slot];
+      const name = i === undefined ? undefined : this.poseName[i];
+      const have = this.limbs[slot];
+      if (i === undefined || !name) {
+        if (have) have.visible = false;
+        continue;
+      }
+      const wanted = `drone-pose-${name}`;
+      let group = have;
+      if (!group || group.name !== wanted) {
+        group?.removeFromParent();
+        group = posedDrone(name);
+        group.matrixAutoUpdate = false;
+        this.group.add(group);
+        this.limbs[slot] = group;
+      }
+      group.visible = true;
+      group.matrix.fromArray(this.bodies, i * 16);
+      group.matrixWorldNeedsUpdate = true;
+    }
   }
 
   /** The lights of the drones glow when the ship's lights are on, as a painted ship's do. */
@@ -563,6 +590,8 @@ export class SwarmRig {
     this.weldCount = 0;
     this.count = 0;
     this.nearSig = "?";
+    this.poseName.length = 0;
+    for (const limb of this.limbs) limb.visible = false;
     this.generation += 1;
     if (this.near) this.freeLevel(this.near);
     this.near = null;
@@ -572,6 +601,7 @@ export class SwarmRig {
   dispose(): void {
     this.disposed = true;
     this.generation += 1;
+    clearPosedDrones();
     this.group.removeFromParent();
     if (this.far) this.freeLevel(this.far);
     if (this.near) this.freeLevel(this.near);
