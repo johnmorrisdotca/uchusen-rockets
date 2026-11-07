@@ -811,6 +811,20 @@ function drawRoute(state: State): void {
 type Row = { dd: HTMLElement; est?: HTMLElement };
 const nowRows = new Map<string, Row>();
 
+// The two live clocks sit side by side, and the one sentence sits under them.
+function placeClocks(sentence: string): void {
+  const ship = nowRows.get("ship")?.dd.parentElement;
+  const frame = nowRows.get("frame")?.dd.parentElement;
+  if (!ship || !frame) return;
+  const box = document.createElement("div");
+  box.className = "clocks";
+  const note = document.createElement("p");
+  note.dataset.testid = "now-clocks";
+  note.textContent = sentence;
+  ship.replaceWith(box);
+  box.append(ship, frame, note);
+}
+
 function rows(listId: string, spec: [string, string][]): Map<string, Row> {
   const list = byId(listId);
   const map2 = new Map<string, Row>();
@@ -851,6 +865,7 @@ function buildPanel(): void {
   ];
   nowRows.clear();
   for (const [key, row] of rows("now", keys.map(([k, w]) => [k, say(w)]))) nowRows.set(key, row);
+  if (trip.drive === "continuous") placeClocks(duration(trip.shipS) === duration(trip.frameS) ? `${say("jTwin")} ${say("jTwinSmall")}` : say("jTwin"));
   const tripRows: [string, string, string, boolean?][] = [
     ["leaves", say("jDeparts"), dateWords(trip.departMs, true)],
     ["arrives", say("jArrives"), dateWords(arrivalMs(), true)],

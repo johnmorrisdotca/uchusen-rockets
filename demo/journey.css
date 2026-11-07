@@ -158,6 +158,8 @@ body.journey { --bad: #a1262b; }
 .jr-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 0.8rem 1.4rem; }
 .jr-panel h3 { margin: 0 0 0.3rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
 .jr-list { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem 0.8rem; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+.jr-list .clocks { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem 0.8rem; }
+.jr-list .clocks p { grid-column: 1 / -1; margin: 0; font-weight: 500; }
 .jr-list div { min-width: 0; }
 .jr-list dt { color: var(--muted); font-size: 0.74rem; }
 .jr-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }

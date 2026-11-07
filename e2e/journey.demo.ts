@@ -163,6 +163,19 @@ test("seeking to a moment draws that moment on its own, and the end shows the su
   await expect(page.getByTestId("summary-arrives")).toContainText("UTC");
   await expect(page.getByTestId("summary")).toContainText("runs slower than the clocks at the two ends");
   await expect(page.getByTestId("summary")).toContainText("smaller than the times above");
+  await expect(page.getByTestId("now-clocks")).toContainText("runs slower than the clocks at the two ends");
+  const beside = await page.getByTestId("now-clocks").evaluate((note) => {
+    const box = note.parentElement;
+    const ship = box?.querySelector("[data-testid=now-ship]");
+    const frame = box?.querySelector("[data-testid=now-frame]");
+    if (!box || !ship || !frame) return false;
+    const clocks = box.getBoundingClientRect();
+    const line = note.getBoundingClientRect();
+    const left = ship.getBoundingClientRect();
+    const right = frame.getBoundingClientRect();
+    return Math.abs(left.top - right.top) < 2 && line.top >= left.bottom - 1 && line.left <= clocks.left + 1 && line.right >= clocks.right - 1;
+  });
+  expect(beside, "the sentence sits under the two clocks").toBe(true);
   const fit = await page.getByTestId("summary").evaluate((el) => {
     const stage = el.closest("[data-testid=stage]");
     const card = el.getBoundingClientRect();
@@ -172,9 +185,16 @@ test("seeking to a moment draws that moment on its own, and the end shows the su
   });
   expect(fit.inside, "the arrival card stays inside the stage").toBe(true);
   expect(fit.slack, "the arrival card shows every row").toBeGreaterThanOrEqual(-1);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.locator("[data-testid=ship-picker-window]").evaluate((node) => {
+    (node as HTMLElement).hidden = true;
+  });
+  await page.getByTestId("now-clocks").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "/tmp/its-batch/twin-clocks-desk.png" });
   await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("summary")).not.toContainText("runs slower");
+  await expect(page.getByTestId("now-clocks")).toHaveCount(0);
 });
 
 test("no control is left in the browser's own style, and nothing scrolls sideways", async ({ page }) => {

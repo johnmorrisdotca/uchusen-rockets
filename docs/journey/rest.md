@@ -13,13 +13,13 @@ These are in `src/journey/` and on `demo/journey.html`. They are not built again
 - **The Moon's own speed as a help.** Leaving the Moon for another planet takes the Moon's orbital speed as helping (`leaveForPlanet`). A swing past a third body is not this, and is still to do.
 - **Delta-v of the trip.** Both burns are on the panel. A continuous-thrust ship uses flip-and-burn, and the propellant used is checked against what it carries.
 - **Signal delay.** `signalS` is on the panel during the flight and on the arrival card.
-- **Two clocks.** Ship time and Earth time are on the panel and the card for a flip-and-burn. The sentence that says what that means is still to do.
+- **Two clocks.** Ship time and Earth time are on the panel and the card for a flip-and-burn. One sentence beside those two rows says the travelling clock runs slow. The summary states the two times together.
 - **A 1 g comfort choice.** A fleet ship flies at its design acceleration, or at 1 g beside that. The page says how much longer the ship's own acceleration takes. 1.61 million g is named on the reference sheet and is not a way to fly.
 - **Mass ratio on this trip.** The ratio row is the rocket equation for the trip on screen, and it says whether the tanks hold it. A chemical rocket aimed past the solar system says it cannot, with the delta-v from a parking orbit, and no fuel load is invented.
+- **The twin-paradox note.** The two clocks stay the numbers they were. One sentence beside them says the travelling clock runs slow, and the summary is where the two times are stated together. No new formula.
 
 ## Still to build
 
-3. **The twin-paradox note.** The two clocks are already numbers. Add one sentence beside them: the travelling clock runs slow, and the summary is where the two times are stated together. No new formula.
 4. **Escape speed as its own line.** The burn is shown. The escape speed of the parking orbit, and the body's escape speed from the surface, are not labelled. One line each, from the same `mu` the burn already uses.
 5. **A gravity assist.** A direct Hohmann is what the page flies. A later slice can offer one swing past a third body (Jupiter on the way out), with the delta-v it saves and a path that says it is an assist. The Moon's help, above, stays as it is.
 6. **Radiation and dust.** On the panel. The ship bibles describe shields and name no figure, so the row says no source. Not a simulation.
@@ -27,4 +27,4 @@ These are in `src/journey/` and on `demo/journey.html`. They are not built again
 
 ## What done looks like for this list
 
-This file is the slice. Row 2 is on the page. The next slice is row 3.
+This file is the slice. Row 3 is on the page. The next slice is row 4.
