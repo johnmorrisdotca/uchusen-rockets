@@ -100,17 +100,17 @@ export function deepTruss(a: Vec3, b: Vec3, depth = TRUSS_DEEP): Piece[] {
   return out;
 }
 
-/** Saddle pads and two latches on the face the craft sits against. `outward` is +1 when the craft is at greater x. */
+/** Saddle pads and two latches on the face the craft sits against. `outward` is +1 when the craft is at greater x. The pads are a couple of metres, so the cradle reads beside a ship. */
 export function berthCradle(at: Vec3, outward: 1 | -1): Piece[] {
   const face = at[0] + outward * 0.15;
   const y = at[1];
   const z = at[2];
   return [
-    box("hull-grey", [face, y - 0.3, z - 3], 0.4, 1.4, 0.6),
-    box("hull-grey", [face, y - 0.3, z + 3], 0.4, 1.4, 0.6),
-    box("engine-metal", [face, y - 0.15, z], 0.28, 7.2, 0.3),
-    box("panel-dark", [face + outward * 0.15, y - 0.2, z - 2.2], 0.22, 0.4, 0.55),
-    box("panel-dark", [face + outward * 0.15, y - 0.2, z + 2.2], 0.22, 0.4, 0.55),
+    box("hull-grey", [face - outward * 0.2, y - 1.1, z - 3.1], 0.9, 2.0, 2.4),
+    box("hull-grey", [face - outward * 0.2, y - 1.1, z + 3.1], 0.9, 2.0, 2.4),
+    box("engine-metal", [face - outward * 0.15, y - 0.55, z], 0.7, 8.0, 1.2),
+    box("panel-dark", [face + outward * 0.35, y - 0.15, z - 2.2], 0.45, 0.9, 1.1),
+    box("panel-dark", [face + outward * 0.35, y - 0.15, z + 2.2], 0.45, 0.9, 1.1),
   ];
 }
 
