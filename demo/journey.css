@@ -89,7 +89,7 @@ body.journey { --bad: #a1262b; }
 .jr-views { position: absolute; left: 0.4rem; right: 0.4rem; top: 0.45rem; z-index: 3; gap: 0.25rem; justify-content: flex-end; flex-wrap: nowrap; }
 .jr-views .chip { min-height: 44px; font-size: 0.78rem; padding-inline: 0.5rem; }
 
-.jr-route { width: 100%; height: auto; border: 1px solid #27344c; border-radius: 12px; background: linear-gradient(180deg, #0a1120, #05080f); font-family: inherit; }
+.jr-route { width: 100%; height: auto; border: 1px solid #27344c; border-radius: 12px; background: linear-gradient(180deg, #0a1120, #05080f); font-family: inherit; container-type: inline-size; }
 .jr-route text { fill: var(--accent); font-size: 12px; letter-spacing: 0.08em; }
 .jr-route .warm { fill: var(--warm); }
 .jr-route .rail { stroke: var(--trace); stroke-width: 2; fill: none; }
@@ -97,6 +97,13 @@ body.journey { --bad: #a1262b; }
 .jr-route .bracket { stroke: var(--trace); stroke-width: 2; fill: none; }
 .jr-route .tick { stroke: var(--trace); stroke-width: 2; }
 .jr-route .chev { fill: none; stroke: #e6f2ff; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+.jr-route .coast-title { font-size: clamp(11px, 1.6cqw, 15px); letter-spacing: 0.1em; text-transform: uppercase; }
+.jr-route .coast-clock { font-size: clamp(10px, 1.4cqw, 13px); letter-spacing: 0.08em; text-transform: uppercase; }
+.jr-route .coast-tick { font-size: clamp(9px, 1.15cqw, 12px); letter-spacing: 0.04em; text-transform: uppercase; }
+.jr-route .coast-name { font-size: clamp(9px, 1.25cqw, 13px); letter-spacing: 0.06em; text-transform: uppercase; }
+.jr-route .coast-under { font-size: clamp(8px, 1cqw, 11px); letter-spacing: 0.12em; }
+.jr-route .coast-star { fill: #ffb457; }
+.jr-route .coast-body { fill: #d7e6ff; }
 
 .jr-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 0.7rem; align-items: center; }
 .jr-controls .chips, .jr-controls kazoku-speed-buttons { margin-left: auto; }
@@ -151,6 +158,8 @@ body.journey { --bad: #a1262b; }
 .jr-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 0.8rem 1.4rem; }
 .jr-panel h3 { margin: 0 0 0.3rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
 .jr-list { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem 0.8rem; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+.jr-list .clocks { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem 0.8rem; }
+.jr-list .clocks p { grid-column: 1 / -1; margin: 0; font-weight: 500; }
 .jr-list div { min-width: 0; }
 .jr-list dt { color: var(--muted); font-size: 0.74rem; }
 .jr-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }

@@ -197,6 +197,28 @@ test("the mass ratio is the rocket equation, and a craft with no exhaust speed i
   assert.equal(planTrip(S, craftOf("saturn-v")!, "moon", "earth", NOW).massRatio, null);
 });
 
+test("a chemical rocket aimed past the solar system cannot, and names the delta-v instead of a fuel load", () => {
+  const saturn = planTrip(S, craftOf("saturn-v")!, "earth", "beyond", NOW);
+  const dv = saturn.dv.total;
+  assert.ok(dv > 8_000 && dv < 9_500, `${dv} m/s from a parking orbit`);
+  for (const id of ["saturn-v", "sls", "falcon-heavy"]) {
+    const trip = planTrip(S, craftOf(id)!, "earth", "beyond", NOW);
+    assert.equal(trip.verdict.level, "cannot", id);
+    assert.equal(trip.verdict.playable, false, id);
+    assert.equal(trip.dv.total, dv, id);
+    assert.match(trip.verdict.line, new RegExp(`${Math.round(dv).toLocaleString("en-US")} m/s`));
+    assert.equal(trip.fuel.usedT, null, id);
+    assert.equal(trip.massRatio, null, id);
+    assert.match(trip.fuel.note, /not invented/);
+  }
+  const moon = planTrip(S, craftOf("saturn-v")!, "moon", "beyond", NOW);
+  assert.equal(moon.verdict.level, "cannot");
+  assert.match(moon.verdict.line, /leaves from the Earth/);
+  const ship = planTrip(S, fleetShip, "earth", "beyond", NOW);
+  assert.ok(ship.massRatio !== null && ship.massRatio > 1, "a ship that burns all the way still gets the rocket equation");
+  assert.ok(ship.propellantUsedT !== undefined && ship.propellantCarriedT !== undefined);
+});
+
 test("asking a ship for 1 g shortens the trip and says the ship is not built for it", () => {
   const rated = planTrip(S, fleetShip, "earth", "mars", NOW);
   const one = planTrip(S, fleetShip, "earth", "mars", NOW, 1);

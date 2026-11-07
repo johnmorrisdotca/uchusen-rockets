@@ -76,6 +76,7 @@
             <button type="button" class="chip jr-play" id="play" data-testid="play" aria-pressed="false"><svg class="jr-ico" viewBox="0 0 16 16" aria-hidden="true"><path id="play-icon" d="M4 2.2 13 8 4 13.8z" /></svg><span id="play-label" data-say="jPlay">Play</span></button>
             <button type="button" class="chip" id="restart" data-testid="restart" data-say-title="jRestart"><svg class="jr-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h2.2v12H2zM14 3 6.2 8 14 13z" /></svg><span data-say="jRestart">Back to start</span></button>
             <button type="button" class="chip" id="hold" data-testid="hold" aria-pressed="false" data-say="jHold">Hold</button>
+            <button type="button" class="chip" id="no-brake" data-testid="no-brake" aria-pressed="false" data-say="jNoBraking" hidden>No braking</button>
             <label class="jr-scrub" for="scrub"><span class="jr-visually" data-say="jScrub">Where in the trip</span><input type="range" id="scrub" data-testid="scrub" min="0" max="1000" step="1" value="0" /></label>
             <kazoku-speed-buttons id="speeds" data-testid="speeds" steps="0.5 1 2 4" value="1" no-label></kazoku-speed-buttons>
             <div class="chips" id="sizes" role="group" aria-label="Size" data-say-label="jSizeLabel"></div>
@@ -100,6 +101,7 @@
           <div class="field" id="pull-field" data-testid="pull-field" hidden>
             <h2 id="pull-title" data-say="jPull">Acceleration</h2>
             <div class="chips" id="pulls" role="group" aria-labelledby="pull-title"></div>
+            <p class="jr-note" id="pull-longer" data-testid="pull-longer" hidden></p>
           </div>
           <div class="field" id="via-field" data-testid="via-field" hidden>
             <h2 id="via-title" data-say="jVia">Route</h2>

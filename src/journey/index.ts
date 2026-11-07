@@ -10,3 +10,4 @@ export { placeAt, playSeconds, stateAt } from "./timeline.ts";
 export type { Place, PlaySpeed, State } from "./timeline.ts";
 export { burnTimer, ignition, preheat } from "./countdown.ts";
 export { astronomicalUnits, duration, gWords, kilometres, lightTime, percentOfLight, speedWords, tonnesWords } from "./words.ts";
+export { ANDROMEDA_LY, ANDROMEDA_PC, COAST_MAX_LY, COAST_MIN_M, GALACTIC_CENTRE_LY, GALACTIC_CENTRE_PC, PROXIMA_LY, coastPlace, keptGoing } from "./coast.ts";

@@ -2163,6 +2163,7 @@ export class RocketViewer {
           weld: pose.duty === "work",
           duty: pose.duty,
           rank: pose.rank,
+          task: pose.task,
           skin: box
             ? {
                 min: [pose.part[0] + box.min[0], pose.part[1] + box.min[1], pose.part[2] + box.min[2]] as [number, number, number],

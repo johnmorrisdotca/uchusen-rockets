@@ -2,6 +2,7 @@
 // a gripper and the weld arm in a welding tool; the plain stand-ins for the links, the gripper and the tool are in `standIn`, so the painted look can swap in NASA's own and the line looks keep a whole arm.
 import type { Piece, Vec3 } from "../../pieces.ts";
 import { ARMS, joints, wristOf, type ArmSpec, type Joint } from "./layout.ts";
+import { fingerSpan, type DronePose } from "./poses.ts";
 import { add, block, bolt, boltRing, cross, cyl, len, mix, mul, pipe, rng, stack, sub, unit } from "./shapes.ts";
 
 /** How long the welding tool and the gripper are beyond the wrist, metres. */
@@ -81,9 +82,9 @@ function cables(j: Joint, arm: ArmSpec, seed: number): Piece[] {
 }
 
 /** Everything code-made on an arm that stays in the painted look. */
-export function armPieces(arm: ArmSpec): Piece[] {
+export function armPieces(arm: ArmSpec, pose?: DronePose): Piece[] {
   const out: Piece[] = [];
-  const js = joints(arm);
+  const js = joints(arm, pose);
   const mount = js[0].from;
   // the shoulder mount on the belly: a bracket block and a plate
   out.push(block("hull-grey-dark", add(mount, [-arm.side * 0.02, 0.05, 0]), { u: [1, 0, 0], v: [0, 1, 0] }, [0.1, 0.1, 0.1], 0.016));
@@ -98,25 +99,26 @@ export function armPieces(arm: ArmSpec): Piece[] {
 }
 
 /** The plain stand-ins: a tube for each long link, the gripper, the welding tool. The painted look replaces these with NASA's. */
-export function standInPieces(arm: ArmSpec): Piece[] {
+export function standInPieces(arm: ArmSpec, pose?: DronePose): Piece[] {
   const out: Piece[] = [];
-  const js = joints(arm);
+  const js = joints(arm, pose);
   js.forEach((j) => {
     if (j.link.name === "upper arm" || j.link.name === "forearm") out.push(cyl("hull-white", mix(j.from, j.to, 0.38), j.to, j.link.r * 0.75, 20));
   });
-  out.push(...standInTool(arm, wristOf(arm)));
+  out.push(...standInTool(arm, wristOf(arm, pose), pose?.grip));
   return out;
 }
 
 /** The plain gripper (a palm and three fingers) or tool (a stepped tube) at a wrist. */
-export function standInTool(arm: ArmSpec, w: Joint): Piece[] {
+export function standInTool(arm: ArmSpec, w: Joint, open?: number): Piece[] {
   const out: Piece[] = [];
+  const spread = open === undefined ? 0.014 : fingerSpan(open);
   if (arm.id === "grip") {
     const palm = add(w.to, mul(w.d, 0.035));
     out.push(block("hull-grey-dark", palm, { u: w.axis, v: w.up }, [0.07, 0.06, 0.07], 0.01));
     for (const k of [-1, 0, 1]) {
       const root = add(palm, add(mul(w.d, 0.035), mul(w.axis, k * 0.024)));
-      const tip = add(add(w.to, mul(w.d, GRIP_LENGTH)), mul(w.axis, k * 0.014));
+      const tip = add(add(w.to, mul(w.d, GRIP_LENGTH)), mul(w.axis, k * spread));
       out.push(...pipe("engine-pale", [root, mix(root, tip, 0.55), tip], 0.007, 8));
     }
   } else {
@@ -126,8 +128,8 @@ export function standInTool(arm: ArmSpec, w: Joint): Piece[] {
 }
 
 /** The welding tip: a nozzle at the end of the weld arm's tool, with a glowing point, and the shield round it. */
-export function weldNozzle(arm: ArmSpec): Piece[] {
-  const w = wristOf(arm);
+export function weldNozzle(arm: ArmSpec, pose?: DronePose): Piece[] {
+  const w = wristOf(arm, pose);
   const at = add(w.to, mul(w.d, TOOL_LENGTH - 0.03));
   const out: Piece[] = [];
   out.push(...stack("copper", at, w.d, [[0.015, 0.012], [0.0105, 0.016, "engine-pale"], [0.0075, 0.014, "copper"]], 16));
