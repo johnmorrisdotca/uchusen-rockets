@@ -5,13 +5,13 @@
 - **A distant drone keeps one of three poses** (MODULES-487): folded arms tuck back under the saucer and do not hang, reaching arms stick out past the lens, and planted legs stand clear. It stays rigid. The nearest six still ease between the eight poses.
 - **A pose eases into the next** (MODULES-487): a near drone blends to its next pose over 0.3 to 0.8 seconds. Reduced motion cuts straight to the pose.
 - **The nearest drones wear their pose** (MODULES-487): up to six drones nearest the camera are drawn from the posed model. Fly, approach, grip, carry, place, weld, inspect and park each set the arm, the gripper and the legs. A boss points further than a manager.
+- **A hangar ship leaves** (MODULES-450): the outer ship in Miyamoto and Ariake's hangars slides 24 m out through the bay door and comes back. The booster on the inner cradle stays.
 - **A 1 g choice** (MODULES-400): a fleet ship still flies at its design acceleration, or at 1 g. The page says how much longer the ship's own acceleration takes. 1.61 million g is not a way to fly.
 - **Ship picker targets** (MODULES-474): the pills and the search are 44px, and the title is a label.
 - **No braking** (MODULES-398): on a ship that can burn the whole way, the trip line becomes a log line from one light second out past Andromeda, with ship time and Earth time. Turning it off brings the trip line back, including the flip.
 - **The poster names a first flight** (MODULES-423): each rocket's label carries the year it first flew, or a short note when it has not.
 - **Tree contact patches** (MODULES-433): each tree sits on a soft dark patch, so the crown reads as standing on the ground.
 - **Garden racks** (MODULES-433): the garden ring's middle tread carries trays of seedlings, a feed pipe and a grow-lamp bar.
-
 - **The fleet walk counts the frame already on screen**, so twelve frames fit in ninety seconds.
 - **Background planets fill the frame** (MODULES-502) when the camera pulls back. A pinch on a stage zooms the view and leaves the page still (MODULES-513).
 - **On a desk the line-up names wrap** (MODULES-505), so every name is whole. Planets and moons come from wakusei-planets 0.17.1 (MODULES-455). Visiting craft sit on cradles and ports (MODULES-494).
@@ -19,6 +19,7 @@
 - **Drones inspect a finished ship** (MODULES-516): the ship sits still and from one drone to a hundred fly around it, pause with a light on the hull, then move on. Play, pause and speed are on the page, and the choices stay in the address.
 - **A named bay builds the ship you choose** (MODULES-515): the yard's own bays, the ship in the address, and the build starts at the beginning. Building anywhere else is not this page.
 - **Yard drones move on the picture** (MODULES-514): while a bay is building, a drone flies around the part it is working, the light leaves that drone's lens, and a pause holds the drone and the light together. The test reads the drone on the screen.
+- **Mission pods rise off the collar** (MODULES-450): Miyamoto and Ariake's pod lifts 12 m off the dorsal collar and settles back. The isolator stays.
 - **Keel lift cars ride the tube** (MODULES-450): Hanabusa's cars, one at each wheel and one at the docking node, ride 15 m toward the tail and back.
 - **Airlock hatches swing open** (MODULES-450): Kyotori's four hatches open outward on their top hinges and shut again.
 - **Kyotori's bay doors swing shut** (MODULES-450): the two payload-bay doors, drawn open, swing shut on their hinges and back.

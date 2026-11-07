@@ -1,6 +1,7 @@
 // What the hangar boxes and the service berths hold: the package's own Starship ship, on cradles, with the racks and the ports. Super Heavy is not carried in space. The bodies are not redrawn. Pure: no three.js and no DOM.
 import { STARSHIP_DRAWS, shipPieces } from "../../starship.ts";
 import { aimedPort, berthArm, deepTruss, transferCoupling } from "../dockJoints.ts";
+import { moving } from "../motion.ts";
 import { cub, ibeam, type Piece, place, rod, roundStrut } from "./adapter.ts";
 import type { Vec3 } from "../../pieces.ts";
 import { type BayId, bayBox } from "./dims.ts";
@@ -45,7 +46,9 @@ export function starshipBay(bay: BayId): Piece[] {
   const a = cradleAxes(bay);
   const z = a.floor + 1.2 + 5.42;
   const out: Piece[] = [...cradle(a.spine, a.y0, BODY.booster, a.floor), ...cradle(a.outer, a.y0, BODY.ship, a.floor)];
-  out.push(...body(a.spine, a.y0, z), ...body(a.outer, a.y0, z));
+  const dir = Math.sign(a.outer - a.spine) || 1;
+  const leaving = moving(shipBody(), { name: "craft-leave", pivot: [0, 0, 0], axis: [dir * 24, 0, 0] });
+  out.push(...body(a.spine, a.y0, z), ...place(leaving, { at: [a.outer, a.y0, z] }));
   // work platforms: one along the booster's open engine bay, one along the ship's flank where the panels come off
   out.push(cub("hull-yellow", [a.spine - 7, a.spine - 5.4], [a.y0, a.y0 + 16], [a.floor + 1.2, a.floor + 1.5]));
   out.push(cub("hull-yellow", [a.outer + 5.4, a.outer + 7], [a.y0 + 8, a.y0 + 28], [a.floor + 1.2, a.floor + 1.5]));

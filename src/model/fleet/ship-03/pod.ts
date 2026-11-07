@@ -1,5 +1,6 @@
 // The mission pod on the keyed dorsal collar, station 174 to 234 m: one mount, two payloads that swap. The relay pod is a communications bay under a tower of dishes and phased arrays; the relief pod is a rack of six
 // relief and equipment containers under a gantry. Both stand on the collar's isolator, which has its own pressure and power locks, so a pod is exchanged at a dock. Pure: no three.js and no DOM.
+import { moving } from "../motion.ts";
 import { antenna, cub, discZ, ibeam, type Piece, rng, rod, roundStrut } from "./adapter.ts";
 import { COLLAR, SPINE as S } from "./dims.ts";
 import { dressedFace, pipe } from "./hulls.ts";
@@ -44,7 +45,8 @@ function container(x: number, y: number, z: number, material: "hull-orange" | "h
 }
 
 export function pod(kind: PodKind, detail = 1, seed = `pod-${kind}`): Piece[] {
-  const out: Piece[] = [...isolator(seed)];
+  const seat = isolator(seed);
+  const out: Piece[] = [];
   const base = Z0 + 3.1;
   if (kind === "relay") {
     // a communications bay on the isolator, plated, with a mast tower and a ring of dishes
@@ -104,5 +106,5 @@ export function pod(kind: PodKind, detail = 1, seed = `pod-${kind}`): Piece[] {
     out.push(...container(-4.5, CY + 6, top, "hull-white", seed), ...container(4.5, Y0 + 5, top, "hull-grey", seed));
     out.push(...rail(along({ n: "z", sign: 1, at: top, a: deck.x, b: deck.y }), 9.6, deck.y[0] + 1, deck.y[1] - 1), ...rail(along({ n: "z", sign: 1, at: top, a: deck.x, b: deck.y }), -9.6, deck.y[0] + 1, deck.y[1] - 1));
   }
-  return out;
+  return [...seat, ...moving(out, { name: "pod-swap", pivot: [0, CY, base], axis: [0, 0, 1] })];
 }
