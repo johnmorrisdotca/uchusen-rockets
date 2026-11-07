@@ -2,12 +2,13 @@
 import type { RocketOptions } from "../src/attrs.ts";
 import type { UchusenRocket } from "../src/element.ts";
 import { paintedCredit } from "../src/embed.ts";
+import { bindStage } from "./viewBinder.ts";
 
 let loading: Promise<void> | null = null;
 let ticket = 0;
 
 function load(): Promise<void> {
-  loading ??= Promise.all([import("../src/element.ts"), import("@johnmorrisdotca/kazoku-ui/view-controls/define")]).then(([element]) => {
+  loading ??= import("../src/element.ts").then((element) => {
     element.setAssetBase(new URL("assets/", document.baseURI).href);
   });
   return loading;
@@ -68,17 +69,9 @@ export function showPainted(host: HTMLElement, barHost: HTMLElement, credit: HTM
     made.dataset.testid = "painted-rocket";
     made.setAttribute("look", "painted");
     made.setAttribute("spin", "off");
-    const bar = document.createElement("kazoku-view-controls");
-    bar.dataset.testid = "painted-controls";
-    bar.setAttribute("for", "painted-rocket");
-    bar.setAttribute("theme", "dark");
-    bar.setAttribute("controls", "basic");
-    bar.addEventListener("kazoku-viewchange", (event) => {
-      const detail = (event as CustomEvent<Parameters<UchusenRocket["drive"]>[0]>).detail;
-      if (detail) made.drive(detail);
-    });
     host.replaceChildren(made);
-    barHost.replaceChildren(bar);
+    barHost.replaceChildren();
+    bindStage(made, (detail) => made.drive(detail), { where: barHost, theme: "dark", controls: "basic", testid: "painted-controls" });
     host.hidden = false;
     barHost.hidden = false;
     apply(made);

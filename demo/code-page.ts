@@ -7,6 +7,7 @@ import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { isListed } from "./listed.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
 import { fillChoices, fillLooks } from "./chip.ts";
+import { bindStage } from "./viewBinder.ts";
 
 /** Fills the builder's rows. `address` keeps the choice in the query, which the Embed page does and the builder does not. */
 export function mountCodePage(options: { address: boolean }): void {
@@ -14,6 +15,7 @@ export function mountCodePage(options: { address: boolean }): void {
 
   const byId = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
   const rocketNode = byId<UchusenRocket>("rocket");
+  bindStage(rocketNode, (detail) => rocketNode.drive(detail), { theme: "dark", controls: "basic", testid: "view-bar" });
   const first = Object.values(ROCKETS)[0];
   const state = { maker: (first?.maker ?? "spacex") as MakerId, rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", engines: "off" };
   const panel = byId<EmbedPanelElement>("embed-panel");

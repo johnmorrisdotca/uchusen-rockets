@@ -151,30 +151,73 @@ function realisticEarth(): ChikyuEarthRealistic {
   return made;
 }
 
+/** How a still painted Earth sits. `disc` fills its box. `placed` uses the same framing as the Earth behind a rocket. */
+export type StillFrame = "disc" | "placed";
+
+export interface StillEarth {
+  /** Night lights the cities and hides the clouds. Day is the blue marble. */
+  setNight(night: boolean): void;
+  /** Frame the globe in the box it sits in. */
+  frame(): void;
+  stop(): void;
+}
+
+/**
+ * The one painted Earth. The realistic globe is loaded when this is asked for, so a page that never calls it does not carry that package.
+ * @param holder The box the globe fills.
+ * @param frame `disc` for a round body, `placed` for the Earth behind a scene.
+ */
+export function mountStillEarth(holder: HTMLElement, frame: StillFrame = "disc"): StillEarth {
+  let stopped = false;
+  let earth: ChikyuEarthRealistic | null = null;
+  let night = false;
+  let radius: ((width: number, height: number, margin: number) => number) | null = null;
+  const apply = (): void => {
+    if (!earth || !radius) return;
+    const fallback = frame === "disc" ? 1024 : 1;
+    const w = holder.clientWidth || fallback;
+    const h = holder.clientHeight || fallback;
+    if (frame === "placed") {
+      const place = placementIn(w, h);
+      earth.time = night ? START_TIME + 12 * 60 * 60 * 1000 : START_TIME;
+      earth.lights = night;
+      earth.clouds = !night;
+      earth.setView({ yaw: 0, tilt: 0, zoom: place.radius / radius(w, h, 1), panX: place.panX, panY: place.panY }, true);
+      return;
+    }
+    earth.setView({ yaw: 0, tilt: 0, zoom: (Math.min(w, h) * 0.48) / radius(w, h, 1), panX: 0, panY: 0 }, true);
+  };
+  void Promise.all([import("@johnmorrisdotca/chikyu-earth/realistic"), import("@johnmorrisdotca/chikyu-earth/realistic/element")]).then(([{ discRadius }]) => {
+    if (stopped || !holder.isConnected) return;
+    radius = discRadius;
+    const made = realisticEarth();
+    if (frame === "disc") made.style.cssText = "display:block;width:100%;height:100%";
+    holder.prepend(made);
+    earth = made;
+    apply();
+  });
+  return {
+    setNight(next) {
+      night = next;
+      apply();
+    },
+    frame: apply,
+    stop() {
+      stopped = true;
+      earth?.remove();
+      earth = null;
+    },
+  };
+}
+
 /**
  * A still painted Earth that fills its box, for a disc on another page. The element is the one `showEarth` uses.
  * @param holder The box the globe fills.
  * @returns A stop that takes the globe off the page.
  */
 export function paintEarthDisc(holder: HTMLElement): EarthShow {
-  let stopped = false;
-  let earth: ChikyuEarthRealistic | null = null;
-  void Promise.all([import("@johnmorrisdotca/chikyu-earth/realistic"), import("@johnmorrisdotca/chikyu-earth/realistic/element")]).then(([{ discRadius }]) => {
-    if (stopped || !holder.isConnected) return;
-    const made = realisticEarth();
-    made.style.cssText = "display:block;width:100%;height:100%";
-    holder.prepend(made);
-    earth = made;
-    const w = holder.clientWidth || 1024;
-    const h = holder.clientHeight || 1024;
-    made.setView({ yaw: 0, tilt: 0, zoom: (Math.min(w, h) * 0.48) / discRadius(w, h, 1), panX: 0, panY: 0 }, true);
-  });
-  return {
-    stop() {
-      stopped = true;
-      earth?.remove();
-    },
-  };
+  const earth = mountStillEarth(holder, "disc");
+  return { stop: () => earth.stop() };
 }
 
 function showRealistic(holder: HTMLElement, unavailable: () => void): EarthShow {

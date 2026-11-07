@@ -1,10 +1,7 @@
 // The yard on a page: one mesh for the bays and one for the spine that can leave. A still view draws once. While the build player plays, the frame loop stays running so the drones keep working.
 import { ACESFilmicToneMapping, AmbientLight, BackSide, BufferGeometry, CanvasTexture, Color, DirectionalLight, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PMREMGenerator, PerspectiveCamera, RepeatWrapping, Scene, SphereGeometry, Vector3, WebGLRenderer, SRGBColorSpace } from "three";
-import { discRadius } from "@johnmorrisdotca/chikyu-earth/realistic";
-import type { ChikyuEarthRealistic } from "@johnmorrisdotca/chikyu-earth/realistic/element";
-import "@johnmorrisdotca/chikyu-earth/realistic/element";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import { bindStage } from "./viewBinder.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { paintSky } from "../src/element/paint.ts";
 import { setAssetBase } from "../src/element.ts";
@@ -16,7 +13,7 @@ import { MATERIALS, type MaterialName, type MaterialSpec } from "../src/model/ma
 import { meshOf, type PartMesh } from "../src/model/pieces.ts";
 import { BAYS, yardFixed, yardLoose } from "../src/model/fleet/shipyard-concepts/multibay.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
-import { placementIn, START_TIME } from "./earth-model.ts";
+import { mountStillEarth } from "./earth.ts";
 import { bayWord, buildBarWords, mountYardChoice } from "./yardChoose.ts";
 import { mountBays, type BayId } from "./yardShips.ts";
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -173,23 +170,10 @@ const forward = new Vector3();
 const right = new Vector3();
 const up = new Vector3();
 
-const painted = document.createElement("chikyu-earth-realistic") as ChikyuEarthRealistic;
-painted.setAttribute("center", "18,8");
-painted.setAttribute("texture-base", new URL("textures/", document.baseURI).href);
-painted.setAttribute("max-texture", "2048");
-painted.setAttribute("max-ratio", "1");
-painted.setAttribute("role", "presentation");
-earthHolder.append(painted);
+const painted = mountStillEarth(earthHolder, "placed");
 
 function frameEarth(): void {
-  const night = sky === "night";
-  const w = earthHolder.clientWidth || 1;
-  const h = earthHolder.clientHeight || 1;
-  const place = placementIn(w, h);
-  painted.time = night ? START_TIME + 12 * 60 * 60 * 1000 : START_TIME;
-  painted.lights = night;
-  painted.clouds = !night;
-  painted.setView({ yaw: 0, tilt: 0, zoom: place.radius / discRadius(w, h, 1), panX: place.panX, panY: place.panY }, true);
+  painted.setNight(sky === "night");
 }
 
 function applySky(): void {
@@ -435,8 +419,15 @@ document.querySelector<HTMLButtonElement>("[data-testid=yard-build]")!.addEventL
   poke();
 });
 
-document.querySelector("#view-bar")!.addEventListener("kazoku-viewchange", (event) => {
-  choice = (event as CustomEvent<ViewChoice>).detail;
+bindStage(canvas, (detail) => {
+  choice = {
+    yaw: detail.yaw ?? choice.yaw,
+    tilt: detail.tilt ?? choice.tilt,
+    zoom: detail.zoom ?? choice.zoom,
+    panX: detail.panX ?? choice.panX,
+    panY: detail.panY ?? choice.panY,
+    ...(detail.roll === undefined ? {} : { roll: detail.roll }),
+  };
   poke();
 });
 

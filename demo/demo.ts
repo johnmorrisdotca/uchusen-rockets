@@ -9,7 +9,7 @@ import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/ele
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
-import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import { bindStage, placeZoom } from "./viewBinder.ts";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
 import { isListed } from "./listed.ts";
@@ -65,8 +65,7 @@ bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 /** A size change calls `fit()` to hold the new ship. That is not the Fit button, so it must not turn true scale off or replace a concept's percent. */
 let fittingForSize = false;
-bar.addEventListener("kazoku-viewchange", (event) => {
-  const detail = (event as CustomEvent).detail as { zoom?: number; reason?: string };
+bindStage(hero, (detail) => {
   if (detail.reason === "fit" && !fittingForSize) setScale(false);
   hero.drive(detail);
   const zoom = Math.max(0.25, detail.zoom ?? 1);
@@ -77,6 +76,7 @@ bar.addEventListener("kazoku-viewchange", (event) => {
   const node = sky.querySelector("wakusei-body:not([data-moon])");
   if (node instanceof HTMLElement) frameSky(node, sky, zoom);
   else earth?.dispatchEvent(new Event("orbit"));
+  drawTurn();
 });
 // The auto-turn is an introduction: the controls stop it after a minute (`autoplay-for`) and keep it idle while the view is out of sight, and the Play button starts it again.
 const address = createAddressState({ defaults: { background: "none", moon: "", beside: "off", motion: "on", scale: "false", kscale: String(SCALE_PERCENT.default), rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", panel: "look", spin: "slow" } });
@@ -753,7 +753,6 @@ const compareLink = el("a", { className: "chip compare-open", href: "compare.htm
 compareLink.dataset.testid = "compare-open";
 compareLink.dataset.say = "cmpOpen";
 turnBox.append(compareLink);
-bar.addEventListener("kazoku-viewchange", drawTurn);
 // the speed buttons write the speed to the bar's `pace`
 new MutationObserver(() => drawEmbed()).observe(bar, { attributes: true, attributeFilter: ["pace"] });
 
@@ -971,12 +970,8 @@ let compareFilter: CompareFilter = (FILTERS as readonly string[]).includes(asked
 // real craft for scale lie in the fleet band: on unless the address says `real=off`
 let compareReal = new URLSearchParams(location.search).get("real") !== "off";
 const compareFrame = byId("compare-view");
-const compareBar = byId<HTMLElement>("compare-bar") as ViewControlsElement;
 // the family's controls zoom and pan the whole lineup; Fit is the lineup fitted to the frame
-compareBar.addEventListener("kazoku-viewchange", (event) => {
-  const { zoom, panX, panY } = (event as CustomEvent).detail as { zoom: number; panX: number; panY: number };
-  lineup.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-});
+bindStage(compareFrame, (detail) => placeZoom(lineup, detail));
 function renderCompare() {
   for (const button of comparePicks.querySelectorAll("button")) {
     const key = (button.dataset.testid as string).slice(8);

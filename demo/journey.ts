@@ -36,6 +36,7 @@ import { viewOf, stagedSvg } from "./journey-craft.ts";
 import type { WakuseiBody } from "@johnmorrisdotca/wakusei-planets/element";
 import { paintEarthDisc, type EarthShow } from "./earth.ts";
 import { loadBody } from "./sky.ts";
+import { bindStage, placeZoom } from "./viewBinder.ts";
 import { WORDS } from "./words.js";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { bodySpan, forwardStar, perceivedSpan } from "../src/journey/forward.ts";
@@ -412,6 +413,9 @@ function setSpeed(value: PlaySpeed): void {
 
 // ---- the stage ----
 const stage = byId("stage");
+const picture = byId("jr-picture");
+// Ctrl or Command and the wheel zoom the drawing. The painted model has its own bar, and that one keeps the wheel.
+bindStage(stage, (detail) => placeZoom(picture, detail), { overlay: true, flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "4", testid: "view-bar" });
 const sky = byId<HTMLCanvasElement>("sky");
 const craftBox = byId("craft");
 const pose = { yaw: 0, pitch: 0, roll: 0, nx: 0, ny: 0 };
