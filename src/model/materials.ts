@@ -117,6 +117,7 @@ export const MATERIALS = {
   "halo-beacon-soft": { color: "#ff4a4a", metal: 0, rough: 1, fill: "white", glow: 3.2, glowColor: P.navRed, opacity: 0.2 },
   "halo-window": { color: "#ffe6c0", metal: 0, rough: 1, fill: "white", glow: 5, glowColor: "#ffe6c0", opacity: 0.9 },
   "glass-clear": { color: "#c3dbe8", metal: 0.15, rough: 0.04, fill: "dark", opacity: 0.26 },
+  "sky-wash": { color: "#b7d7ee", metal: 0, rough: 0.9, fill: "white", opacity: 0.16 },
   "grow-lamp": { color: "#7a4a8a", metal: 0, rough: 0.3, fill: "metal", glow: 2.6, glowColor: P.growLamp },
   leaf: { color: "#3f8f45", metal: 0, rough: 0.7, fill: "dark" },
   soil: { color: "#4a3a2c", metal: 0, rough: 0.95, fill: "dark" },

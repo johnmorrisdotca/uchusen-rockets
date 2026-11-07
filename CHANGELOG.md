@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Sky wash inside the glass** (MODULES-433): the living ring and the garden ring carry a pale shell just inside the glass, so the hall is lit by sky.
 - **Tree contact patches** (MODULES-433): each tree sits on a soft dark patch, so the crown reads as standing on the ground.
 - **Garden racks** (MODULES-433): the garden ring's middle tread carries trays of seedlings, a feed pipe and a grow-lamp bar.
 
