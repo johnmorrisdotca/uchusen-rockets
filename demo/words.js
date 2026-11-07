@@ -561,7 +561,7 @@ export const WORDS = {
     swarmIntro: "箱はドローンの代わりです。船体の外を通り、最後の区間で中へ入ります。",
     swarmNow: "{day}日目、ドローン{drones}機、同時に{slots}箇所",
     inspectTitle: "完成した船の周りのドローン",
-    inspectIntro: "船は完成していて、止まったままです。周りを飛ぶドローンの数を選べます。ドローンは船体に当たらず、立ち止まって、一箇所を照らします。",
+    inspectIntro: "船は完成していて、止まったままです。周りを飛ぶドローンの数を選べます。ドローンは船体に当たらず、いったん止まって、一箇所を照らします。",
     inspectShip: "船",
     inspectDrones: "ドローン",
     inspectPlay: "再生",
