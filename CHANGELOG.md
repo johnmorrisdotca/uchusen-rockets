@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Kyotori's bay doors swing shut** (MODULES-450): the two payload-bay doors, drawn open, swing shut on their hinges and back.
 - **Hangar doors ride their tracks** (MODULES-450): Miyamoto and Ariake's door leaves slide 16 m up and back, one after the next. A slide moves a tagged part along its axis and does not turn it.
 
 - **The fleet walk waits for a settled frame**: the memory count waits until the objects stop moving, and a turn waits until a frame has been drawn.

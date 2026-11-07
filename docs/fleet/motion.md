@@ -26,8 +26,9 @@ The view draws the moving parts at most thirty times a second, only while it is 
 | Emiake (`fleet-emiake`) | The two outer radiator sails (`sail-swing-port`, `sail-swing-starboard`) | Swing down and out 115 degrees on their hinge along the ship's axis and back, 40 s a cycle | The ISS radiator wings deploying. The sails' own file gained one tag and nothing else. Drawn faster |
 
 | Kyotori (`fleet-kyotori`) | The four solar wings (`wing-turn`), in all three wing states | Sweep 90 degrees on their masts to face the star, 90 s a cycle | The ISS arrays on their rotary joints. The mast extending from flared to full needs a translation: a follow-up |
+| Kyotori | The two payload-bay doors (`bay-door-0`, `bay-door-1`) | Swing shut from the drawn-open pose and back, 48 s a cycle | The Space Shuttle's payload bay doors, on vertical hinges along the sill. A full open or close took several minutes. Drawn faster |
 
-Not yet: Kyotori's bay doors, Ayanagi's sails, Kyotori's bay doors (on a concept branch), the airlock hatches, the docking-node lifts, the mission pod swap and the small craft. Hanabusa's propellant booms and hubs stay still as drawn; the booms turn with the rings in the ship's notes, and a real turn needs the hub drums and the booms in one tagged group.
+Not yet: Ayanagi's sails (no such ship is in the model), the airlock hatches, the docking-node lifts, the mission pod swap and the small craft. Hanabusa's propellant booms and hubs stay still as drawn; the booms turn with the rings in the ship's notes, and a real turn needs the hub drums and the booms in one tagged group.
 
 ## Limits, honestly
 

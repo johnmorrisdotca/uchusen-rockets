@@ -55,6 +55,14 @@ test("a slide pays out along its travel and comes back, and it does not turn", (
   }
 });
 
+test("Kyotori's bay doors are drawn open and swing shut", () => {
+  const door = motionsOf("fleet-kyotori").find((m) => m.group === "bay-door-0")!;
+  near(angleAt(door, 0), 0);
+  near(angleAt(door, door.period! * 0.5), -100);
+  const other = motionsOf("fleet-kyotori").find((m) => m.group === "bay-door-1")!;
+  near(angleAt(other, other.period! * 0.5), 100);
+});
+
 test("a sweep stays between its angles", () => {
   const dish = motionsOf("fleet-ship-03").find((m) => m.group === "dish-track")!;
   for (let t = 0; t < 200; t += 0.7) {
@@ -68,7 +76,7 @@ test("a sweep stays between its angles", () => {
 test("every motion names a group that a part of its ship really carries, so none moves nothing", () => {
   const groups = (list: { pieces: (o?: { detail?: number }) => Parameters<typeof meshOf>[0] }[]) => new Set(list.flatMap((p) => meshOf(p.pieces({ detail: 0.3 })).moves.map((g) => g.name)));
   const sails = new Set(SAIL_SLOTS.flatMap((slot) => meshOf(slot.pieces()).moves.map((g) => g.name)));
-  const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings"))), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
+  const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings") || p.id.includes("-bay"))), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
   for (const m of MOTIONS) assert.ok(have[m.ship]?.has(m.group), `${m.ship}: ${m.group}`);
 });
 

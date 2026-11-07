@@ -1,7 +1,7 @@
 // The ship-side hardware of Kyotori V2 that the boards called weak: tanks with insulation blankets and valve clusters, the payload bay with its doors drawn from the Shuttle photographs (sectioned doors, hinge fittings, centreline latch gangs, radiator
 // panels on the doors' inner faces, door drive units at the bulkheads), the figured JWST-style mirror with its backplane, the load-bearing latch frames between the two shafts, and two designed bows. Concepts for John's V2. Pure: no three.js and no DOM.
 import { lampHalo } from "../lights.ts";
-import { antenna, ball, beam, box, collar, hoop, horn, ibeam, lamps, navLight, pipeRun, place, quad, rod, roundStrut, type Lathe, type MaterialName, type Piece, type Vec3 } from "./adapter.ts";
+import { antenna, ball, beam, box, collar, hoop, horn, ibeam, lamps, moving, navLight, pipeRun, place, quad, rod, roundStrut, type Lathe, type MaterialName, type Piece, type Vec3 } from "./adapter.ts";
 import { framedTank, payloadBay2 } from "./pods.ts";
 
 const TAU = 2 * Math.PI;
@@ -53,20 +53,22 @@ export function bay(y0: number, open = 100): Piece[] {
       const q = turn(rel(r, a, y), deg(s * open));
       return [H[0] + q[0], q[1], H[2] + q[2]];
     };
+    const doorBits: Piece[] = [];
     for (const sec of [0, 1]) {
       const yc = y0 + L * (sec ? 0.75 : 0.25);
       for (let k = 0; k < 6; k++) {
         const y = yc - 7 + k * 2.8;
         const p = at(R + 0.3, free, y);
-        out.push(box("hull-grey-dark", p, 0.7, 0.7, 0.9, 0, { only: "mesh", plain: true }), box("hull-yellow", [p[0], p[1] + 0.9, p[2]], 0.5, 0.5, 0.35, 0, { only: "mesh", plain: true }));
+        doorBits.push(box("hull-grey-dark", p, 0.7, 0.7, 0.9, 0, { only: "mesh", plain: true }), box("hull-yellow", [p[0], p[1] + 0.9, p[2]], 0.5, 0.5, 0.35, 0, { only: "mesh", plain: true }));
       }
       // the radiator panel on the inside of the door: a flat white panel with eleven coolant tubes
       const mid = (free + hingeA) / 2;
       const a0 = at(R - 0.7, mid, yc - 9);
       const a1 = at(R - 0.7, mid, yc + 9);
-      out.push(...ibeam("hull-white-worn", a0, a1, 0.3, 4.6, [0, 1, 0]).slice(0, 1));
-      for (let t = -5; t <= 5; t++) out.push(rod("copper", at(R - 0.55, mid + t * 0.07, yc - 8.6), at(R - 0.55, mid + t * 0.07, yc + 8.6), 0.045, 6, { only: "mesh" }));
+      doorBits.push(...ibeam("hull-white-worn", a0, a1, 0.3, 4.6, [0, 1, 0]).slice(0, 1));
+      for (let t = -5; t <= 5; t++) doorBits.push(rod("copper", at(R - 0.55, mid + t * 0.07, yc - 8.6), at(R - 0.55, mid + t * 0.07, yc + 8.6), 0.045, 6, { only: "mesh" }));
     }
+    out.push(...moving(doorBits, { name: s > 0 ? "bay-door-0" : "bay-door-1", pivot: [H[0], y0 + L / 2, H[2]], axis: [0, 1, 0] }));
   }
   return out;
 }
