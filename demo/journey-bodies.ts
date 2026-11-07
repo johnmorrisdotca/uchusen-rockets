@@ -4,10 +4,13 @@ import type { BodySource, Stop } from "../src/journey/index.ts";
 
 const IDS = ["mercury", "venus", "earth", "moon", "mars", "jupiter", "saturn", "uranus", "neptune"] as const;
 
-const stops: Stop[] = IDS.map((id) => {
-  const facts = BODIES[id];
-  return { id, name: facts.name, kind: facts.kind, ...(facts.parent ? { parent: facts.parent } : {}), radiusKm: facts.radiusKm, colour: facts.colour };
-});
+const stops: Stop[] = [
+  ...IDS.map((id) => {
+    const facts = BODIES[id];
+    return { id, name: facts.name, kind: facts.kind, ...(facts.parent ? { parent: facts.parent } : {}), radiusKm: facts.radiusKm, colour: facts.colour };
+  }),
+  { id: "beyond", name: { en: "Past the solar system", ja: "太陽系の外" }, kind: "beyond", radiusKm: 0, colour: "#9fb4d4" },
+];
 
 /** The places the journey page offers, from wakusei-planets. */
 export const WAKUSEI_SOURCE: BodySource = {
