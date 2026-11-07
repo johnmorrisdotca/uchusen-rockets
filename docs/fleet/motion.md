@@ -22,6 +22,7 @@ The view draws the moving parts at most thirty times a second, only while it is 
 | Hanabusa | The industrial wheel (`spin-wheel`) | Turns at 2.83 rpm (1.00 g at its 112 m rim) | The same |
 | Hanabusa | The keel lift cars (`keel-lift-0` to `-3`, `keel-lift-node`) | Slide 15 m toward the tail and back, 24 s a cycle | A glazed lift along the keel, one car at each wheel and one at the docking node. Drawn faster than a real lift |
 | Miyamoto and Ariake (`fleet-ship-03`, `fleet-ship-ariake`) | Hangar door leaves (`door-leaf-0` to `-4`) | Slide 16 m up their tracks and back, one after the next, 24 s a cycle | The doors of the Vehicle Assembly Building lift in stages; a hangar roller shutter rides its tracks. Drawn faster than a real door |
+| Miyamoto and Ariake | The outer ship in each hangar (`craft-leave`) | Slides 24 m out through the bay door and comes back, 40 s a cycle | The booster on the inner cradle stays. Drawn faster than a real departure |
 | Miyamoto and Ariake | The mission pod (`pod-swap`) | Rises 12 m off the dorsal collar and settles back, 36 s a cycle | The keyed collar's isolator stays; the pod is exchanged at a dock. Drawn faster |
 | Miyamoto | The deployed gold solar array (`array-turn`) | Sweeps 100 degrees on its root beam to face the star, 90 s a cycle | The ISS solar array rotary joints (the Solar Alpha Rotary Joint turns once an orbit, about 92 minutes, and each array can also tilt on its Beta Gimbal Assembly). Drawn faster |
 | Miyamoto and Ariake | The four dishes on the command tower (`dish-track`) | Tilt back and forth 70 degrees, 60 s a cycle | A Deep Space Network dish tracks a spacecraft across the sky at about the Earth's rate, a degree every four minutes. Drawn faster |
@@ -32,7 +33,7 @@ The view draws the moving parts at most thirty times a second, only while it is 
 
 | Kyotori | The four airlock hatches (`airlock-hatch-0` to `-3`) | Swing open on the top hinge and shut, 16 s a cycle | A station hatch opens outward. Drawn faster than a real hatch |
 
-Not yet: Ayanagi's sails (no such ship is in the model) and the small craft. Hanabusa's propellant booms and hubs stay still as drawn; the booms turn with the rings in the ship's notes, and a real turn needs the hub drums and the booms in one tagged group.
+Not yet: Ayanagi's sails (no such ship is in the model). Hanabusa's propellant booms and hubs stay still as drawn; the booms turn with the rings in the ship's notes, and a real turn needs the hub drums and the booms in one tagged group.
 
 ## Limits, honestly
 

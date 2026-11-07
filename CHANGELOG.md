@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **A hangar ship leaves** (MODULES-450): the outer ship in Miyamoto and Ariake's hangars slides 24 m out through the bay door and comes back. The booster on the inner cradle stays.
 - **The fleet walk counts the frame already on screen**, so twelve frames fit in ninety seconds.
 - **Background planets fill the frame** (MODULES-502) when the camera pulls back. A pinch on a stage zooms the view and leaves the page still (MODULES-513).
 - **On a desk the line-up names wrap** (MODULES-505), so every name is whole. Planets and moons come from wakusei-planets 0.17.1 (MODULES-455). Visiting craft sit on cradles and ports (MODULES-494).

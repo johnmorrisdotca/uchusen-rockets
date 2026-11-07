@@ -55,6 +55,19 @@ test("a slide pays out along its travel and comes back, and it does not turn", (
   }
 });
 
+test("the outer hangar ship slides out through the door and comes back, and it does not turn", () => {
+  const craft = motionsOf("fleet-ship-03").find((m) => m.group === "craft-leave")!;
+  assert.equal(craft.kind, "slide");
+  const axis = miyamoto().flatMap((part) => meshOf(part.pieces({ detail: 0.3 })).moves).find((group) => group.name === "craft-leave")?.axis;
+  assert.ok(axis);
+  near(Math.hypot(axis[0], axis[1], axis[2]), craft.travel!, 0.05);
+  near(slideAt(craft, 0), 0);
+  near(slideAt(craft, craft.period! * 0.5), 24);
+  near(slideAt(craft, craft.period! * 0.99), 0);
+  near(angleAt(craft, craft.period! * 0.5), 0);
+  assert.ok(motionsOf("fleet-ship-ariake").some((m) => m.group === "craft-leave"));
+});
+
 test("a mission pod rises off the collar and settles back", () => {
   const pod = motionsOf("fleet-ship-03").find((m) => m.group === "pod-swap")!;
   assert.equal(pod.kind, "slide");
