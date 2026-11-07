@@ -6,6 +6,8 @@
 - **Drones inspect a finished ship** (MODULES-516): the ship sits still and from one drone to a hundred fly around it, pause with a light on the hull, then move on. Play, pause and speed are on the page, and the choices stay in the address.
 - **A named bay builds the ship you choose** (MODULES-515): the yard's own bays, the ship in the address, and the build starts at the beginning. Building anywhere else is not this page.
 - **Yard drones move on the picture** (MODULES-514): while a bay is building, a drone flies around the part it is working, the light leaves that drone's lens, and a pause holds the drone and the light together. The test reads the drone on the screen.
+- **Kyotori's bay doors swing shut** (MODULES-450): the two payload-bay doors, drawn open, swing shut on their hinges and back.
+- **Hangar doors ride their tracks** (MODULES-450): Miyamoto and Ariake's door leaves slide 16 m up and back, one after the next. A slide moves a tagged part along its axis and does not turn it.
 - **The fleet walk waits for a settled frame**: the memory count waits until the objects stop moving, and a turn waits until a frame has been drawn.
 - **Craft line fixes** (MODULES-474): on a phone the count and Add a craft get their own line so the craft line has the full width; the page bar marks only the open page; Fit frames a row of craft whole, with the ground under their feet.
 - **The craft line on a phone** (MODULES-474): the count and Add a craft sit on their own line, so the scrolling line is the width of the phone and two chips show. Only the open page is marked in the page bar. A row of craft is framed with the ground under their feet, so none is cut off at the bottom of the stage.

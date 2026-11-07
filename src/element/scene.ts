@@ -52,7 +52,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
 import { dutyOf, lampFactor } from "../model/fleet/lights.ts";
-import { angleAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
+import { angleAt, slideAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
 import { type Angle, directionOf, easedDistance, easeInOut, FOV_DEG, frameFor, PICTURE_H, rolledUp, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
@@ -243,7 +243,7 @@ interface PartView {
   /** Its flames, made the first time an engine of it is lit. */
   plumes: PartPlumes | null;
   /** What a flight turns: each moving group is a node of its own, at its pivot, with the axis it turns about (they come from the file, so the viewer holds no table of them). */
-  moves: { name: string; group: Group; axis: Vector3; angle: number }[];
+  moves: { name: string; group: Group; axis: Vector3; angle: number; home: Vector3 | null }[];
 }
 
 /** The materials of an engine's bell, in this package's own meshes. */
@@ -659,7 +659,7 @@ export class RocketViewer {
         group.position.copy(node.position);
         code.add(group);
         this.takeMeshes(node, group, view);
-        view.moves.push({ name: String(node.userData.group), group, axis: new Vector3(axis[0], axis[1], axis[2]).normalize(), angle: 0 });
+        view.moves.push({ name: String(node.userData.group), group, axis: new Vector3(axis[0], axis[1], axis[2]).normalize(), angle: 0, home: null });
       }
       const place = places.find((p) => p.slot === part.slot);
       holder.position.set(...(place?.at ?? [0, 0, 0]));
@@ -1012,12 +1012,25 @@ export class RocketViewer {
         const turned = this.progressAt === null ? null : spinUp(own);
         // a ring still being built stays at its own angle, so an open arc does not swing with a sibling that has already spun up
         const angle = turned !== null ? turned : this.progressAt !== null ? 0 : (motion ? angleAt(motion, seconds, this.motionSpeed) : 0);
+        const along = motion?.kind === "slide" ? slideAt(motion, seconds, this.motionSpeed) : 0;
         if (typeof own === "number" && own > 0 && (shown === undefined || own > shown)) shown = own;
-        else if (motion && shown === undefined) shown = angle;
-        if (Math.abs(angle - move.angle) < 0.005) continue;
-        move.angle = angle;
-        move.group.quaternion.setFromAxisAngle(move.axis, MathUtils.degToRad(angle));
-        changed = true;
+        else if (motion && shown === undefined) shown = motion.kind === "slide" ? along : angle;
+        let moved = Math.abs(angle - move.angle) >= 0.005;
+        if (moved) {
+          move.angle = angle;
+          move.group.quaternion.setFromAxisAngle(move.axis, MathUtils.degToRad(angle));
+        }
+        if (move.home || along !== 0) {
+          move.home ??= move.group.position.clone();
+          const x = move.home.x + move.axis.x * along;
+          const y = move.home.y + move.axis.y * along;
+          const z = move.home.z + move.axis.z * along;
+          if (Math.abs(x - move.group.position.x) > 0.001 || Math.abs(y - move.group.position.y) > 0.001 || Math.abs(z - move.group.position.z) > 0.001) {
+            move.group.position.set(x, y, z);
+            moved = true;
+          }
+        }
+        if (moved) changed = true;
       }
     }
     if (changed) {
