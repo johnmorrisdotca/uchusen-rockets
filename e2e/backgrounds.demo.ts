@@ -243,3 +243,18 @@ test("a globe turns between two dates, its moons move, and the Sun's glow fades 
   }
   expect(problems).toEqual([]);
 });
+
+test("a far camera keeps the background body filling the frame", async ({ page }) => {
+  await page.goto(`${URL}?background=saturn`);
+  const sky = page.locator('[data-testid="sky"]');
+  await expect(sky).toHaveAttribute("data-draws", "saturn");
+  const frameZoom = () => sky.locator("wakusei-body").first().getAttribute("data-frame-zoom").then((value) => Number(value));
+  await page.locator("#view-bar").evaluate((node) => (node as unknown as { set(view: { zoom: number }): void }).set({ zoom: 4 }));
+  await expect.poll(frameZoom).toBeGreaterThan(6);
+  await page.locator("#view-bar").evaluate((node) => (node as unknown as { set(view: { zoom: number }): void }).set({ zoom: 0.25 }));
+  await expect.poll(frameZoom).toBeGreaterThan(3.5);
+  await page.goto(`${URL}?background=mars`);
+  await expect(sky).toHaveAttribute("data-draws", "mars");
+  await page.locator("#view-bar").evaluate((node) => (node as unknown as { set(view: { zoom: number }): void }).set({ zoom: 0.25 }));
+  await expect.poll(frameZoom).toBeGreaterThan(3.5);
+});

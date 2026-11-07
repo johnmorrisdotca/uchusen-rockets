@@ -136,8 +136,8 @@ export const aimOrbit = (open: number, holder: HTMLElement, animate: boolean): v
   frame = requestAnimationFrame(step);
 };
 
-/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened a little and tipped so its rings cross the sky as a band; the horizon stays on the middle. A higher orbit eases that picture out until the whole disc is in frame. `viewZoom` below 1 opens the same picture further. */
-const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: number) => {
+/** Put the body where the Earth sits: horizon across the middle, the surface filling everything under it, a tenth of the width to the right. Saturn is opened a little and tipped so its rings cross the sky as a band; the horizon stays on the middle. A craft camera that pulls back does not shrink the body: its edge stays outside the frame. */
+const paintFrame = (node: Framed, holder: HTMLElement, viewZoom: number) => {
   const width = holder.clientWidth;
   const height = holder.clientHeight;
   if (width < 2 || height < 2 || typeof node.setView !== "function") return;
@@ -149,10 +149,11 @@ const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: 
   const saturn = node.getAttribute("body") === "saturn";
   const moons = node.hasAttribute("moons");
   const open = Math.min(1, Math.max(0, Number(node.dataset.open) || 0));
-  const widen = saturn ? 0.48 + 0.52 * open : 1;
-  const fullZoom = (0.84 * Math.min(width, height) * ROOM) / side / (saturn ? 2.4 : 1);
-  const camera = moons ? ORBIT_ZOOM : (ORBIT_ZOOM * widen * (1 - open) + fullZoom * open) * viewZoom;
-  const shrink = moons ? ROOM / Math.max(ROOM, range) : viewZoom * widen * (1 - open);
+  // A pulled-back camera and a high orbit used to shrink the disc until its edge sat inside the frame.
+  const fillZoom = Math.max(viewZoom, 1);
+  const camera = ORBIT_ZOOM * (moons ? 1 : fillZoom);
+  node.dataset.frameZoom = camera.toFixed(4);
+  const shrink = moons ? 1 : fillZoom;
   const face = node.dataset.face;
   node.setView({
     yaw: 0,
@@ -163,7 +164,7 @@ const paintFrame = (node: Framed, holder: HTMLElement, range: number, viewZoom: 
   });
 };
 
-/** The reader's zoom. Below 1 opens the picture further. A moon picture opens its range; a body alone opens the camera, and neither one adds moons. */
+/** The reader's zoom. Below 1 leaves the body filling the frame. Above 1 comes closer. A moon picture keeps its own size. */
 export const frameSky = (node: HTMLElement, holder: HTMLElement, viewZoom = 1) => {
   node.dataset.open = shown.toFixed(4);
   const pull = Number(node.dataset.pull) || 1;
@@ -172,7 +173,7 @@ export const frameSky = (node: HTMLElement, holder: HTMLElement, viewZoom = 1) =
   const base = Number(node.dataset.baseRange);
   const range = node.hasAttribute("moons") ? (base > 0 ? base / zoom : Number(node.getAttribute("range")) || ROOM) : ROOM;
   if (node.hasAttribute("moons") && base > 0) node.setAttribute("range", range.toFixed(2));
-  paintFrame(node as Framed, holder, range, zoom * pull);
+  paintFrame(node as Framed, holder, zoom * pull);
 };
 
 const watchFrame = (node: HTMLElement, holder: HTMLElement) => {
