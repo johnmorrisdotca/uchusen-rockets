@@ -14,10 +14,10 @@ These are in `src/journey/` and on `demo/journey.html`. They are not built again
 - **Delta-v of the trip.** Both burns are on the panel. A continuous-thrust ship uses flip-and-burn, and the propellant used is checked against what it carries.
 - **Signal delay.** `signalS` is on the panel during the flight and on the arrival card.
 - **Two clocks.** Ship time and Earth time are on the panel and the card for a flip-and-burn. The sentence that says what that means is still to do.
+- **A 1 g comfort choice.** A fleet ship flies at its design acceleration, or at 1 g beside that. The page says how much longer the ship's own acceleration takes. 1.61 million g is named on the reference sheet and is not a way to fly.
 
 ## Still to build
 
-1. **A 1 g comfort choice.** The page flies each fleet ship at its own design acceleration. Add a choice of 1 g beside that, and show how much longer the same trip takes. The ticket names 1.61 million g as the extreme on the reference sheet. The page does not offer that as a way to fly.
 2. **Mass ratio on this trip.** The fleet bibles already compute a mass ratio for their own voyages. The journey page should say, for the trip on screen, the mass ratio the rocket equation gives and whether the craft's tanks hold it. A chemical rocket aimed past the solar system says it cannot, with the delta-v it would need, rather than a made-up fuel load.
 3. **The twin-paradox note.** The two clocks are already numbers. Add one sentence beside them: the travelling clock runs slow, and the summary is where the two times are stated together. No new formula.
 4. **Escape speed as its own line.** The burn is shown. The escape speed of the parking orbit, and the body's escape speed from the surface, are not labelled. One line each, from the same `mu` the burn already uses.
@@ -27,4 +27,4 @@ These are in `src/journey/` and on `demo/journey.html`. They are not built again
 
 ## What done looks like for this list
 
-This file is the slice. The seven rows above are not built here. The next slice is row 1.
+This file is the slice. Row 1 is on the page. The next slice is row 2.
