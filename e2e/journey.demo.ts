@@ -26,6 +26,10 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
   await expect(page.getByTestId("craft").locator("svg")).toHaveCount(1);
   await expect(page.getByTestId("route").locator("text").first()).toBeVisible();
   await expect(page.getByTestId("trip-straight")).toContainText("km");
+  await expect(page.getByTestId("trip-radiation")).toContainText("No source");
+  await expect(page.getByTestId("trip-cmb")).toContainText("2.72548 K");
+  await expect(page.getByTestId("trip-cmb")).toContainText("Fixsen 2009");
+  await expect(page.getByTestId("trip-cmb")).toContainText("matches");
   await expect(page.getByTestId("trip-time")).toContainText("d");
   await expect(page.getByTestId("trip-dvout")).toContainText("km/s");
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
@@ -502,4 +506,27 @@ test("the page bar links every page on one row and marks this page", async ({ pa
   const tops = await bar.locator("a, button").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
   expect(new Set(tops).size, tops.join(",")).toBe(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test("a fast trip shows a hotter microwave sky ahead", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari&to=neptune&pull=1`);
+  await expect(page.getByTestId("craft-kaminari")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("trip-radiation")).toContainText("No source");
+  await expect(page.getByTestId("trip-cmb")).toContainText("straight ahead");
+  const text = await page.getByTestId("trip-cmb").innerText();
+  const kelvin = Number(text.match(/([\d.]+) K straight/)?.[1]);
+  expect(kelvin).toBeGreaterThan(2.73);
+});
+
+test("the ship turns round for the braking burn, and the timeline names the flip", async ({ page }) => {
+  await page.goto(`${URL}&craft=kaminari&to=mars`);
+  await expect(page.getByTestId("route-flip")).toHaveText("TURNING ROUND");
+  await page.locator("#scrub").evaluate((node) => {
+    const input = node as HTMLInputElement;
+    input.value = "800";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.getByTestId("phase")).toHaveText("DECELERATE");
+  await expect.poll(() => page.locator("#craft").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--turn"))).toBe("-90.0deg");
+  await expect.poll(() => page.locator("#route g").last().getAttribute("data-turned")).toBe("180.0");
 });

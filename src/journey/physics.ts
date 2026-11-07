@@ -160,3 +160,17 @@ export const wrapPi = (angle: number): number => angle - TAU * Math.round(angle 
 
 /** The Lorentz factor of a speed in metres a second. */
 export const lorentz = (v: number): number => 1 / Math.sqrt(1 - (v / C) ** 2);
+
+/** Rest temperature of the microwave background, kelvin (Fixsen 2009, ApJ 707, 916). */
+export const CMB_REST_K = 2.72548;
+
+/**
+ * The microwave background straight ahead of a ship at `speedMs`.
+ * Below 1% of the speed of light the sky matches the rest temperature.
+ * Above that, a blackbody is hotter by the head-on relativistic Doppler factor, the square root of (1+v/c) over (1-v/c) (Peebles and Wilkinson 1968, Phys. Rev. 174, 2168).
+ */
+export function cmbAhead(speedMs: number): { kelvin: number; fast: boolean } {
+  const beta = Math.min(0.999, Math.abs(speedMs) / C);
+  if (!(beta >= 0.01)) return { kelvin: CMB_REST_K, fast: false };
+  return { kelvin: CMB_REST_K * Math.sqrt((1 + beta) / (1 - beta)), fast: true };
+}

@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 - **The poster names a first flight** (MODULES-423): each rocket's label carries the year it first flew, or a short note when it has not.
+- **Tree contact patches** (MODULES-433): each tree sits on a soft dark patch, so the crown reads as standing on the ground.
+- **Garden racks** (MODULES-433): the garden ring's middle tread carries trays of seedlings, a feed pipe and a grow-lamp bar.
 
 - **The fleet walk counts the frame already on screen**, so twelve frames fit in ninety seconds.
 - **Background planets fill the frame** (MODULES-502) when the camera pulls back. A pinch on a stage zooms the view and leaves the page still (MODULES-513).
