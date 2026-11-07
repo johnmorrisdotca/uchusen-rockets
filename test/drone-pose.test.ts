@@ -61,25 +61,33 @@ test("a distant drone snaps to a folded, reaching or planted pose", () => {
   assert.equal(storedPose(poseFor("builder", "berth")), "park");
 });
 
-const farBox = (name: "fly" | "park" | "place"): { minY: number; maxZ: number; n: number } => {
+const farBox = (name: "fly" | "park" | "place"): { minY: number; frontMinY: number; maxZ: number; n: number } => {
   let minY = Number.POSITIVE_INFINITY;
+  let frontMinY = Number.POSITIVE_INFINITY;
   let maxZ = Number.NEGATIVE_INFINITY;
   let n = 0;
   for (const buffers of meshOf(farPieces(STORED_SHAPE[name])).faces.values()) {
-    n += buffers.positions.length;
-    for (let i = 1; i < buffers.positions.length; i += 3) minY = Math.min(minY, buffers.positions[i] ?? minY);
-    for (let i = 2; i < buffers.positions.length; i += 3) maxZ = Math.max(maxZ, buffers.positions[i] ?? maxZ);
+    const p = buffers.positions;
+    n += p.length;
+    for (let i = 0; i < p.length; i += 3) {
+      const y = p[i + 1] ?? minY;
+      const z = p[i + 2] ?? maxZ;
+      minY = Math.min(minY, y);
+      maxZ = Math.max(maxZ, z);
+      if (z > 0.45) frontMinY = Math.min(frontMinY, y);
+    }
   }
-  return { minY, maxZ, n };
+  return { minY, frontMinY, maxZ, n };
 };
 
-test("a distant planted drone stands on legs and a reaching one sticks out in front", () => {
+test("a distant folded drone hangs nothing in front and a reaching one sticks out", () => {
   const flown = farBox("fly");
   const planted = farBox("park");
   const reaching = farBox("place");
   assert.ok(planted.n > flown.n);
   assert.ok(planted.minY < flown.minY - 0.2);
-  assert.ok(reaching.maxZ > flown.maxZ + 0.15);
+  assert.ok(reaching.maxZ > flown.maxZ + 0.18);
+  assert.ok(flown.frontMinY > flown.minY + 0.05);
 });
 
 const counts = (name: "fly" | "park" | "weld"): number[] => {

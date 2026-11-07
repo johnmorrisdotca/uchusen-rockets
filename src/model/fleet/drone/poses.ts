@@ -41,12 +41,12 @@ export const STORED_POSES = ["fly", "place", "park"] as const;
 export type StoredPose = (typeof STORED_POSES)[number];
 
 /**
- * The three shapes a distant drone is drawn as. They are pushed apart so each reads at a glance: the folded arms sit behind the saucer, the reaching arms come out in front, and the planted drone stands on its legs.
+ * The three shapes a distant drone is drawn as. Folded arms lie back under the saucer and do not hang. Reaching arms point out past the lens. A planted drone stands on its legs.
  */
 export const STORED_SHAPE: Record<StoredPose, DronePose> = {
-  fly: { pitch: [80, 60, 40, 20], grip: 0.1, legs: 0, point: 0 },
-  place: { pitch: [-55, -50, -30, -20], grip: 0.4, legs: 0, point: 0 },
-  park: { pitch: [80, 60, 40, 20], grip: 0.1, legs: 1, point: 0 },
+  fly: { pitch: [100, 130, -20, 110], grip: 0.1, legs: 0, point: 0 },
+  place: { pitch: [-56, -34, -4, -54], grip: 0.4, legs: 0, point: 0 },
+  park: { pitch: [100, 130, -20, 110], grip: 0.1, legs: 1, point: 0 },
 };
 
 /** A distant drone keeps one rigid pose: folded, reaching, or planted. */

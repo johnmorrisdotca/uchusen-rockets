@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **A distant drone keeps one of three poses** (MODULES-487): folded arms sit behind the saucer, reaching arms come out in front, and planted legs stand clear. It stays rigid. The nearest six still ease between the eight poses.
+- **A distant drone keeps one of three poses** (MODULES-487): folded arms tuck back under the saucer and do not hang, reaching arms stick out past the lens, and planted legs stand clear. It stays rigid. The nearest six still ease between the eight poses.
 - **A pose eases into the next** (MODULES-487): a near drone blends to its next pose over 0.3 to 0.8 seconds. Reduced motion cuts straight to the pose.
 - **The nearest drones wear their pose** (MODULES-487): up to six drones nearest the camera are drawn from the posed model. Fly, approach, grip, carry, place, weld, inspect and park each set the arm, the gripper and the legs. A boss points further than a manager.
 - **A 1 g choice** (MODULES-400): a fleet ship still flies at its design acceleration, or at 1 g. The page says how much longer the ship's own acceleration takes. 1.61 million g is not a way to fly.
