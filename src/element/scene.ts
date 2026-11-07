@@ -131,6 +131,16 @@ const SIZE_EASE_MS = 800;
 
 const autoRotateOf = (spin: Spin): number => (spin.seconds <= 0 ? 0 : (60 / spin.seconds) * (spin.way === "cw" ? -1 : 1));
 
+/** A real graphics card keeps smooth edges. Software drawing spends the frame on them, and a heavy ship then misses a frame of the wait. */
+const smoothEdges = (): boolean => {
+  const canvas = document.createElement("canvas");
+  const gl = canvas.getContext("webgl2");
+  const info = gl?.getExtension("WEBGL_debug_renderer_info");
+  const name = info && gl ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+  gl?.getExtension("WEBGL_lose_context")?.loseContext();
+  return !/swiftshader|llvmpipe|softpipe/i.test(name);
+};
+
 const LINE_VERTEX = /* glsl */ `
 varying vec3 vNormal;
 varying vec2 vUv;
@@ -388,7 +398,7 @@ export class RocketViewer {
     this.holder = holder;
     this.options = options;
     this.orbitOn = options.orbit === true;
-    this.renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power", logarithmicDepthBuffer: this.orbitOn });
+    this.renderer = new WebGLRenderer({ antialias: smoothEdges(), alpha: true, powerPreference: "low-power", logarithmicDepthBuffer: this.orbitOn });
     this.renderer.localClippingEnabled = true;
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;

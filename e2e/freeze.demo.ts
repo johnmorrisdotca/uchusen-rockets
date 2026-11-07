@@ -385,7 +385,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   expect(last.arrays).toBeLessThanOrEqual(first.arrays);
   expect(last.textures).toBeLessThanOrEqual(first.textures);
   await bar(page).evaluate((node) => (node as HTMLElement & { play(): void }).play());
-  await settle(page, 800);
+  // Count from the moment the spin is asked for. A pause first lets one long frame of the ship left on screen begin and not count, and ninety seconds then hold eleven frames where twelve fit.
   const { drew, frames } = await measure(page);
   expect(drew).toBeLessThanOrEqual(frames + 3);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
