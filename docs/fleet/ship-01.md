@@ -26,7 +26,7 @@ Every number below is computed in code (`src/model/fleet/ship-01/spin.ts`, `spec
 | Ring | Radius | Depth | At 3.43 rpm | Inside |
 |---|---|---|---|---|
 | Garden (hydroponics) | 48 m | 20 m | 0.63 g | three tiers of crop beds each side under LED grow-lamps, a service aisle with a gantry, two water channels, fruit trees |
-| Research | 62 m | 24 m | 0.82 g | terraces of laboratories and ateliers under a glass roof, a central canal |
+| Research | 62 m | 24 m | 0.82 g | terraces of laboratories and ateliers under a glass roof, with a central atrium |
 | Living | 76 m | 26 m | 1.00 g | a street with a canal down the middle and tree rows, three steps of homes up each side wall with lit window bands and balconies, a theatre, market arcade, sports hall, school and clinic, a glass roof of fine mullions |
 | Industrial | 112 m | 22 m | 2.83 rpm = 1.00 g | closed: workshops, spares, quarantine rooms and the yard |
 
