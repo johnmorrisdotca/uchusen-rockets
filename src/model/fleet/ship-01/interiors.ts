@@ -3,6 +3,7 @@
 // (x along the street, y along the axis, z outward: up is -z) and stamped round the ring. On demand, for the section view only. Pure: no three.js and no DOM.
 import { box, discX, hoop, place, prism, quad, rod, type Lathe, type MaterialName, type Piece, type Vec3 } from "./adapter.ts";
 import { trayRack } from "./gardenRacks.ts";
+import { skyWash } from "./skyWash.ts";
 import { cutaway4, dims, geoOf, glass, ground, hydroHall, ringPieces, rings, STEP, townHall } from "./rings.ts";
 
 const TAU = 2 * Math.PI;
@@ -374,7 +375,7 @@ function living(gap: number, level: Level): Piece[] {
   const rg = ground(g);
   const { nave: nv, tread } = dims(g);
   const n = Math.round((TAU * rg) / 6.4);
-  const out: Piece[] = [...glass(g, 0, gap), ...townHall(g, 0, "living", gap, true)];
+  const out: Piece[] = [...glass(g, 0, gap), ...skyWash(g, 0, gap), ...townHall(g, 0, "living", gap, true)];
   for (let i = 0; i < n; i++) {
     const az = (360 * i) / n;
     if (az < gap || az > 360 - gap) continue;
@@ -470,7 +471,7 @@ function garden(gap: number, level: Level): Piece[] {
   const { nave: nv, tread } = dims(g);
   const n = Math.round((TAU * rg) / 5.2);
   const fine = level === "fine";
-  const out: Piece[] = [...glass(g, 0, gap), ...hydroHall(g, 0, gap, true).map((p): Piece => (p.kind === "lathe" && p.material === "hull-white" ? { ...p, material: "soil" } : p))];
+  const out: Piece[] = [...glass(g, 0, gap), ...skyWash(g, 0, gap), ...hydroHall(g, 0, gap, true).map((p): Piece => (p.kind === "lathe" && p.material === "hull-white" ? { ...p, material: "soil" } : p))];
   for (let i = 0; i < n; i++) {
     const az = (360 * i) / n;
     if (az < gap || az > 360 - gap) continue;
