@@ -637,17 +637,20 @@ export interface Bounds {
  * The box a part's pieces fill, worked from the pieces and not from a mesh, so a part with a very large number of pieces can be measured without building its triangles. A lathe counts as its full circle (its mesh is a polygon inside
  * that circle, so this is never smaller than the mesh's box and at most a percent or two larger).
  */
+/** Grow a box so it holds one point. */
+const take = (min: Vec3, max: Vec3, x: number, y: number, z: number): void => {
+  if (x < min[0]) min[0] = x;
+  if (x > max[0]) max[0] = x;
+  if (y < min[1]) min[1] = y;
+  if (y > max[1]) max[1] = y;
+  if (z < min[2]) min[2] = z;
+  if (z > max[2]) max[2] = z;
+};
+
 export function boundsOfPieces(pieces: readonly Piece[]): Bounds {
   const min: Vec3 = [Infinity, Infinity, Infinity];
   const max: Vec3 = [-Infinity, -Infinity, -Infinity];
-  const add = (x: number, y: number, z: number) => {
-    if (x < min[0]) min[0] = x;
-    if (x > max[0]) max[0] = x;
-    if (y < min[1]) min[1] = y;
-    if (y > max[1]) max[1] = y;
-    if (z < min[2]) min[2] = z;
-    if (z > max[2]) max[2] = z;
-  };
+  const add = (x: number, y: number, z: number): void => take(min, max, x, y, z);
   for (const piece of expandInstances(pieces)) {
     if (piece.only === "drawing") continue;
     if (piece.kind === "plate") {
@@ -679,14 +682,6 @@ export function boundsOf(mesh: PartMesh): Bounds {
           if (value > max[c]) max[c] = value;
         }
   };
-  const corner = (x: number, y: number, z: number) => {
-    if (x < min[0]) min[0] = x;
-    if (x > max[0]) max[0] = x;
-    if (y < min[1]) min[1] = y;
-    if (y > max[1]) max[1] = y;
-    if (z < min[2]) min[2] = z;
-    if (z > max[2]) max[2] = z;
-  };
   sweep(mesh, [0, 0, 0]);
   for (const group of mesh.moves) sweep(group.mesh, group.pivot);
   for (const stamp of mesh.stamps) {
@@ -698,7 +693,7 @@ export function boundsOf(mesh: PartMesh): Bounds {
       const s = Math.sin(t);
       for (const x of [box.min[0], box.max[0]])
         for (const y of [box.min[1], box.max[1]])
-          for (const z of [box.min[2], box.max[2]]) corner(x * c + z * s + pose.at[0], y + pose.at[1], -x * s + z * c + pose.at[2]);
+          for (const z of [box.min[2], box.max[2]]) take(min, max, x * c + z * s + pose.at[0], y + pose.at[1], -x * s + z * c + pose.at[2]);
     }
   }
   return { min, max };
