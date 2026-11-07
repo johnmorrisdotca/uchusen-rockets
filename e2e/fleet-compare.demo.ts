@@ -52,6 +52,15 @@ test("the three ships stand at one scale, the view stays in the address, and the
   await expect(page.getByTestId("cmp-length-fleet-emiake")).not.toHaveText("");
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(wide).toBe(false);
+  const cut = await picks.evaluate((node) => {
+    if (window.innerWidth < 1000) return [];
+    const view = node.getBoundingClientRect();
+    return [...node.children].flatMap((child) => {
+      const box = child.getBoundingClientRect();
+      return box.left < view.left - 1 || box.right > view.right + 1 ? [child.textContent ?? ""] : [];
+    });
+  });
+  expect(cut).toEqual([]);
 });
 
 test("ctrl and the wheel zooms the line-up and the page does not scroll", async ({ page }) => {

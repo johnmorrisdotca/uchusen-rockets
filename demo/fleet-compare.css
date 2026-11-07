@@ -1,7 +1,10 @@
-/* Three SPX ships standing side by side at one scale. The first picture fits every ship in the frame. The craft line scrolls sideways on a phone, and the chart sits against its controls. */
+/* Three SPX ships standing side by side at one scale. The first picture fits every ship in the frame. On a desk the craft names wrap so each one is whole; on a phone the line scrolls. The chart sits against its controls. */
 .fleet-cmp .cmp { display: grid; gap: 12px; }
 .fleet-cmp .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .fleet-cmp .craft-line { flex-wrap: nowrap; overflow-x: auto; }
+@media (min-width: 821px) {
+  .fleet-cmp .craft-line { flex-wrap: wrap; overflow: visible; }
+}
 .fleet-cmp .craft-line .chip { flex: 0 0 auto; }
 .fleet-cmp .cmp-view { position: relative; overflow: hidden; height: calc(100svh - 26rem); min-height: 18rem; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 0.5rem; }
 .fleet-cmp .cmp-view uchusen-lineup { display: block; width: 100%; height: 100%; }
