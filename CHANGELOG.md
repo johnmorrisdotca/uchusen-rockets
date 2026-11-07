@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **No braking** (MODULES-398): on a ship that can burn the whole way, the trip line becomes a log line from one light second out past Andromeda, with ship time and Earth time. Turning it off brings the trip line back, including the flip.
 - **Tree contact patches** (MODULES-433): each tree sits on a soft dark patch, so the crown reads as standing on the ground.
 - **Garden racks** (MODULES-433): the garden ring's middle tread carries trays of seedlings, a feed pipe and a grow-lamp bar.
 
