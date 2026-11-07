@@ -36,6 +36,17 @@ export function fingerSpan(open: number): number {
   return 0.006 + 0.024 * clamp(open);
 }
 
+/** The few poses a distant drone may wear. Anything else snaps to the nearest of these. */
+export const STORED_POSES = ["fly", "place", "park"] as const;
+export type StoredPose = (typeof STORED_POSES)[number];
+
+/** A distant drone keeps one rigid pose: folded, reaching, or planted. */
+export function storedPose(name: PoseName): StoredPose {
+  if (name === "fly" || name === "carry") return "fly";
+  if (name === "park") return "park";
+  return "place";
+}
+
 /** Which named pose a drone holds for this rank, duty and task. */
 export function poseFor(rank: "boss" | "manager" | "builder" | "grunt" | undefined, duty: "work" | "transit" | "berth", task?: string): PoseName {
   if (duty === "berth") return "park";

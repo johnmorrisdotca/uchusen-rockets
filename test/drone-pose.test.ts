@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { ARMS, joints } from "../src/model/fleet/drone/layout.ts";
 import { legPieces } from "../src/model/fleet/drone/legs.ts";
-import { DRONE_POSE, blendPose, fingerSpan, poseFor, poseOf } from "../src/model/fleet/drone/poses.ts";
+import { DRONE_POSE, blendPose, fingerSpan, poseFor, poseOf, storedPose } from "../src/model/fleet/drone/poses.ts";
 
 const grip = ARMS[0];
 const reach = (name: keyof typeof DRONE_POSE): number => {
@@ -36,6 +36,15 @@ test("ranks hold different poses, and a boss points further than a manager", () 
   assert.equal(poseFor(undefined, "transit"), "fly");
   assert.equal(poseFor("builder", "berth"), "park");
   assert.ok(poseOf("boss", "work", "direct").point > poseOf("manager", "work", "inspect").point);
+});
+
+test("a distant drone snaps to a folded, reaching or planted pose", () => {
+  assert.equal(storedPose("fly"), "fly");
+  assert.equal(storedPose("carry"), "fly");
+  assert.equal(storedPose("park"), "park");
+  assert.equal(storedPose("weld"), "place");
+  assert.equal(storedPose("inspect"), "place");
+  assert.equal(storedPose(poseFor("builder", "berth")), "park");
 });
 
 test("a blend sits between the two poses", () => {
