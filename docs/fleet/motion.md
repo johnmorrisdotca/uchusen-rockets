@@ -28,7 +28,8 @@ The view draws the moving parts at most thirty times a second, only while it is 
 | Miyamoto and Ariake | The four dishes on the command tower (`dish-track`) | Tilt back and forth 70 degrees, 60 s a cycle | A Deep Space Network dish tracks a spacecraft across the sky at about the Earth's rate, a degree every four minutes. Drawn faster |
 | Emiake (`fleet-emiake`) | The two outer radiator sails (`sail-swing-port`, `sail-swing-starboard`) | Swing down and out 115 degrees on their hinge along the ship's axis and back, 40 s a cycle | The ISS radiator wings deploying. The sails' own file gained one tag and nothing else. Drawn faster |
 
-| Kyotori (`fleet-kyotori`) | The four solar wings (`wing-turn`), in all three wing states | Sweep 90 degrees on their masts to face the star, 90 s a cycle | The ISS arrays on their rotary joints. The mast extending from flared to full needs a translation: a follow-up |
+| Kyotori (`fleet-kyotori`) | The four solar wings (`wing-turn`), in all three wing states | Sweep 90 degrees on their masts to face the star, 90 s a cycle | The ISS arrays on their rotary joints |
+| Kyotori | The outer mast section (`mast-extend`), on the flared wings | Slides 22 m out of the inner lattice and back, 40 s a cycle | An ISS array mast telescoping from flared to full. The full wings stay the extended drawing. Drawn faster |
 | Kyotori | The two payload-bay doors (`bay-door-0`, `bay-door-1`) | Swing shut from the drawn-open pose and back, 48 s a cycle | The Space Shuttle's payload bay doors, on vertical hinges along the sill. A full open or close took several minutes. Drawn faster |
 
 | Kyotori | The four airlock hatches (`airlock-hatch-0` to `-3`) | Swing open on the top hinge and shut, 16 s a cycle | A station hatch opens outward. Drawn faster than a real hatch |

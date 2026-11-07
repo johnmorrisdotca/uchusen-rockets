@@ -93,6 +93,20 @@ test("an airlock hatch opens outward on its top hinge", () => {
   assert.equal(motionsOf("fleet-kyotori").filter((m) => m.group.startsWith("airlock-hatch-")).length, 4);
 });
 
+test("Kyotori's outer mast slides 22 m from flared to full and does not turn", () => {
+  const mast = motionsOf("fleet-kyotori").find((m) => m.group === "mast-extend")!;
+  assert.equal(mast.kind, "slide");
+  assert.equal(mast.travel, 22);
+  const axis = meshOf(KYOTORI_PARTS.find((p) => p.id === "s-wings-flared")!.pieces({ detail: 0.3 })).moves.find((g) => g.name === "mast-extend")?.axis;
+  assert.ok(axis);
+  near(Math.hypot(axis[0], axis[1], axis[2]), 22, 0.05);
+  near(slideAt(mast, 0), 0);
+  near(slideAt(mast, mast.period! * 0.5), 22);
+  near(slideAt(mast, mast.period! * 0.99), 0);
+  near(angleAt(mast, mast.period! * 0.5), 0);
+  assert.ok(motionsOf("fleet-kyotori").some((m) => m.group === "wing-turn"));
+});
+
 test("Kyotori's bay doors are drawn open and swing shut", () => {
   const door = motionsOf("fleet-kyotori").find((m) => m.group === "bay-door-0")!;
   near(angleAt(door, 0), 0);
