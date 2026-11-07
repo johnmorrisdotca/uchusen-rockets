@@ -129,7 +129,7 @@ What a trip still needs after this plan, and the order it will be built, is `doc
 | 395 | The numbers panel and the physics under it | The physics module and its tests; a panel with distance (km, AU, light-seconds), time, speed, acceleration, delta-v, ship time against Earth time, signal delay | Digits near c (99.999 999 999 99 %), "12 um/s slower than light", the Lorentz factor line for phase 2 |
 | 396 | Countdown, preheat, ignition, burn timers | Preheat bar, ignition ring, DECELERATION BURN IN and COMPLETE IN | Sound toggle, if the package grows one |
 | 397 | Views | Side and Map, buttons in a row | Front, Rear, Cockpit (aberration, Doppler colour, the destination growing), the kazoku-ui view controls, the painted 3D side view |
-| 398 | Flip and burn | The flip, the DECELERATION value and arrow, the plume ahead, speed falling to 0 at the destination | The "no braking" toggle on the log-scale line (phase 2) |
+| 398 | Flip and burn | The flip, the DECELERATION value and arrow, the plume ahead, speed falling to 0 at the destination, and the no-braking toggle on the log-scale line | The reachable-universe view stays with 399 |
 | 399 | Summary | The card with route, distance, times, top speed, peak g, delta-v, fuel, signal delay, one comparison | The reachable-universe view (phase 2), image of the card |
 | 401 | Bodies as stops | The `BodySource` interface, the demo adapter, the picker built from it, the Moon as a start (to the Earth and to Mars) | The wakusei export and its test, moons of other planets, stars |
 | 394 | Parent | The page, the address state, the craft verdicts | Interstellar, the fictional crew ships, cosmic views |
