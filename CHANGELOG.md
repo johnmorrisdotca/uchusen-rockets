@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **A 1 g choice** (MODULES-400): a fleet ship still flies at its design acceleration, or at 1 g. The page says how much longer the ship's own acceleration takes. 1.61 million g is not a way to fly.
 - **Ship picker targets** (MODULES-474): the pills and the search are 44px, and the title is a label.
 - **No braking** (MODULES-398): on a ship that can burn the whole way, the trip line becomes a log line from one light second out past Andromeda, with ship time and Earth time. Turning it off brings the trip line back, including the flip.
 - **The poster names a first flight** (MODULES-423): each rocket's label carries the year it first flew, or a short note when it has not.
