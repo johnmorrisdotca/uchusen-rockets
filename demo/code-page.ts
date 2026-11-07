@@ -6,7 +6,7 @@ import { embedCode, embedNote, LOOK_NAMES, MAKERS, OPTION_ATTRIBUTES, ROCKETS, V
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { isListed } from "./listed.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
-import { fillChoices, fillLooks } from "./chip.ts";
+import { fillChoices, fillEngines, fillLooks, fillParts, fillViews } from "./chip.ts";
 import { bindStage } from "./viewBinder.ts";
 
 /** Fills the builder's rows. `address` keeps the choice in the query, which the Embed page does and the builder does not. */
@@ -68,7 +68,7 @@ export function mountCodePage(options: { address: boolean }): void {
     const slots = variantOf(state.rocket, state.variant)?.slots ?? [];
     const shows = showsOf(slots);
     if (!shows.includes(state.show)) state.show = shows[0] ?? "together";
-    fill("shows", shows.map((id) => ({ id, label: id === "together" ? "Together" : id === "apart" ? "Apart" : id })), state.show, "show", (id) => {
+    fillParts(byId("shows"), shows, state.show, (id) => {
       state.show = id;
       draw();
     });
@@ -76,11 +76,11 @@ export function mountCodePage(options: { address: boolean }): void {
       state.look = id;
       draw();
     });
-    fill("views", VIEW_NAMES.map((id) => ({ id, label: id })), state.view, "view", (id) => {
+    fillViews(byId("views"), state.view, (id) => {
       state.view = id;
       draw();
     });
-    fill("engines", [{ id: "off", label: "Off" }, { id: "on", label: "On" }], state.engines, "engines", (id) => {
+    fillEngines(byId("engines"), state.engines, (id) => {
       state.engines = id;
       draw();
     });

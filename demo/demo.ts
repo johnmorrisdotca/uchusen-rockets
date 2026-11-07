@@ -22,7 +22,7 @@ import { aimOrbit, applyTurn, companionsFor, frameSky, orbitCatalogue, paceFromS
 import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm, type OrbitStep } from "./orbit.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
-import { chip, fillLooks } from "./chip.ts";
+import { chip, fillEngines, fillLooks, fillParts, fillViews, partLabel } from "./chip.ts";
 import { hasThrusters } from "../src/thrusters.ts";
 import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
 import { separationOf } from "../src/separation.ts";
@@ -51,7 +51,7 @@ const say = (key: string, values: Record<string, string | number> = {}): string 
 };
 const japanese = () => document.documentElement.lang === "ja";
 const slotWord = (slot: string) => (`slot_${slot}` in WORDS.en ? say(`slot_${slot}`) : (SLOT_NAMES[slot] ?? slot));
-const showWord = (show: string) => (show === "together" || show === "apart" ? say(`show_${show}`) : slotWord(show));
+const showWord = partLabel;
 /** The English name of a slot is what a builder row says; find the slot again to say it in the page's language. */
 const slotOfName = new Map(Object.entries(SLOT_NAMES).map(([slot, name]) => [name, slot]));
 const wordsKey = (text: string) => text.toLowerCase().replaceAll(" ", "_");
@@ -464,6 +464,8 @@ function renderMain() {
   const showBox = byId("shows");
   // a ship of dozens of parts would fill the page with chips: it gets together, apart and one menu for the rest
   const MANY = 16;
+  const listed = shows.length > MANY ? shows.slice(0, 2) : shows;
+  fillParts(showBox, listed, state.show, (show) => pick({ show }));
   if (shows.length > MANY) {
     const rest = shows.slice(2);
     const menu = el("select", { className: "chip", ariaLabel: "Show one part alone" }) as HTMLSelectElement;
@@ -472,8 +474,8 @@ function renderMain() {
     for (const show of rest) menu.append(el("option", { value: show, textContent: showWord(show) }));
     menu.value = rest.includes(state.show) ? state.show : "";
     menu.addEventListener("change", () => (menu.value ? pick({ show: menu.value }) : pick({ show: shows[0] })));
-    showBox.replaceChildren(...shows.slice(0, 2).map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))), menu);
-  } else showBox.replaceChildren(...shows.map((show) => chip(showWord(show), `show-${show}`, () => pick({ show }))));
+    showBox.append(menu);
+  }
   press(showBox, `show-${state.show}`);
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
@@ -651,7 +653,7 @@ function pickMaker(maker: MakerId) {
 byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker), `maker_${maker}`)));
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 fillLooks(byId("looks"), state.look, (look) => pick({ look: look as LookName }));
-byId("views").append(...VIEW_NAMES.map((view) => chip(WORDS.en[`view_${view.replaceAll("-", "_")}`], `view-${view}`, () => pick({ view }), `view_${view.replaceAll("-", "_")}`)));
+fillViews(byId("views"), state.view, (view) => pick({ view: view as ViewName }));
 const skyButton = (id: string, testid: string, on: () => void): HTMLButtonElement => {
   const button = el("button", { type: "button", className: id === "none" ? "thumb thumb-none" : "thumb" });
   button.dataset.testid = testid;
@@ -745,8 +747,7 @@ function lightEngines(on: boolean) {
   note.textContent = say("enginesNote");
   drawEmbed();
 }
-enginesBox.append(chip("Dark", "engines-off", () => lightEngines(false), "engines_off"), chip("Lit", "engines-on", () => lightEngines(true), "engines_on"));
-press(enginesBox, "engines-off");
+fillEngines(enginesBox, "off", (id) => lightEngines(id === "on"));
 
 // ------------------------------------------------------------- the lamps
 const lightsBox = byId("lights");

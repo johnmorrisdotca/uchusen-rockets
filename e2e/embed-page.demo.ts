@@ -47,3 +47,25 @@ test("the builder's bar comes from the same row and still leaves the address alo
   await expect(page.locator("#rocket")).toBeAttached();
   expect(new URL(page.url()).search).toBe("");
 });
+
+test("the builder and the Embed page name the view, the parts and the engines as the Rockets page does", async ({ page }) => {
+  await page.goto(`${BASE}builder.html`);
+  await page.waitForFunction(() => document.documentElement.dataset.ready === "true");
+  await expect(page.getByTestId("view-three-quarter")).toHaveText("Three-quarter");
+  await expect(page.getByTestId("view-front")).toHaveText("Front");
+  await expect(page.getByTestId("view-back")).toHaveText("Back");
+  await expect(page.getByTestId("view-side")).toHaveText("Side");
+  await expect(page.getByTestId("view-below")).toHaveText("Below");
+  await expect(page.getByTestId("show-together")).toHaveText("Together");
+  await expect(page.getByTestId("show-apart")).toHaveText("Apart");
+  await expect(page.getByTestId("show-booster")).toHaveText("Super Heavy");
+  await expect(page.getByTestId("show-ship")).toHaveText("Ship");
+  await expect(page.getByTestId("engines-off")).toHaveText("Dark");
+  await expect(page.getByTestId("engines-on")).toHaveText("Lit");
+  await page.goto(`${BASE}embed-page.html?lang=ja`);
+  await page.waitForFunction(() => document.documentElement.dataset.ready === "true");
+  await expect(page.getByTestId("view-front")).toHaveText("正面");
+  await expect(page.getByTestId("show-booster")).toHaveText("Super Heavy（1 段目）");
+  await expect(page.getByTestId("engines-on")).toHaveText("点火");
+  await expect(page.getByTestId("show-together")).toHaveText("合体");
+});
