@@ -1,6 +1,7 @@
 // The journey page: choose a start, an end and a craft, then fly the trip. The line views draw with one 2D canvas and the package's own line drawing. The painted side view is the package's element, loaded the first time it is asked for and dropped on leaving. Painted Earth is the same Chikyu globe as the compare page. The other planets are wakusei stills, so they give the context back.
 // It asks for a frame only while the trip plays and the page can be seen, at most 30 a second, and never when nothing moves.
 import { ROCKETS, SOURCES } from "../src/index.ts";
+import { mountShipPicker, type ShipPickerElement } from "./pickerView.ts";
 import {
   astronomicalUnits,
   bestDate,
@@ -242,6 +243,13 @@ function placeBody(which: "from" | "dest", id: string, distanceKm: number): void
   setText(byId(`body-${which}-name`), stopName(id));
 }
 const craftNow = (): Craft => craftOf(choice.craft) ?? CRAFTS[0]!;
+let shipPicker: ShipPickerElement | undefined;
+/** The catalogue craft the journey is flying. Kaminari's journey id is not its rocket id. */
+function journeyPickerChoice(): { rocket: string; variant: string } {
+  const craft = craftNow();
+  if (craft.id === "kaminari") return { rocket: "fleet-kaminari", variant: "fleet-kaminari" };
+  return { rocket: craft.rocket, variant: craft.variant };
+}
 const craftName = (craft: Craft): string => ROCKETS[craft.rocket]?.name ?? craft.name;
 const dateWords = (ms: number, time = false): string =>
   new Intl.DateTimeFormat(japanese() ? "ja" : "en-GB", { year: "numeric", month: "short", day: "numeric", ...(time ? { hour: "2-digit", minute: "2-digit", hour12: false } : {}), timeZone: "UTC" }).format(ms) + (time ? " UTC" : "");
@@ -295,6 +303,7 @@ function drawPickers(): void {
   byId("from").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.to).map((stop) => chip(stopName(stop.id), `from-${stop.id}`, stop.id === choice.from, () => change({ from: stop.id }))));
   byId("to").replaceChildren(...SOURCE.stops.filter((stop) => stop.id !== choice.from).map((stop) => chip(stopName(stop.id), `to-${stop.id}`, stop.id === choice.to, () => change({ to: stop.id }))));
   byId("crafts").replaceChildren(...CRAFTS.map((craft) => chip(craftName(craft), `craft-${craft.id}`, craft.id === choice.craft, () => change({ craft: craft.id }))));
+  shipPicker?.sync(journeyPickerChoice());
   const continuous = craftNow().drive === "continuous";
   byId("pull-field").hidden = !continuous;
   const swingChoice = assistApplies(choice.from, choice.to, craftNow().drive);
@@ -1236,6 +1245,14 @@ document.addEventListener("kazoku-languagechange", () =>
     if (!byId("summary").hidden) showSummary();
   }),
 );
+
+const journeyHost = document.querySelector<HTMLElement>(".jr-main");
+if (journeyHost) {
+  shipPicker = mountShipPicker(journeyHost, journeyPickerChoice(), (next) => {
+    const id = next.rocket === "fleet-kaminari" || next.rocket === "fleet-02" ? "kaminari" : CRAFTS.find((craft) => craft.rocket === next.rocket)?.id;
+    if (id) change({ craft: id });
+  });
+}
 
 start();
 const seek = Number(query.get("t"));

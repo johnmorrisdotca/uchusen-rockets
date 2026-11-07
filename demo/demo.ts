@@ -23,6 +23,7 @@ import { EARTH_ORBIT, groupKm, nearestOrbit, orbitOpen, orbitQuery, parseOrbitKm
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";
 import { WORDS } from "./words.js";
 import { chip, fillLooks } from "./chip.ts";
+import { mountShipPicker, type ShipPickerElement } from "./pickerView.ts";
 import { hasThrusters } from "../src/thrusters.ts";
 import { chosenSwap, mountsOf, swapParts, swapQuery } from "../src/swap.ts";
 import { separationOf } from "../src/separation.ts";
@@ -582,6 +583,7 @@ function renderMain() {
   byId("lights-field").hidden = !state.rocket.startsWith("fleet-");
   byId("thrusters-field").hidden = !hasThrusters(state.rocket);
   showPanels();
+  shipPicker?.sync({ rocket: state.rocket, variant: state.variant });
 }
 
 /** The maker's row, and in the rocket's row only that maker's rockets. */
@@ -648,6 +650,9 @@ function pickMaker(maker: MakerId) {
   drawMakers();
 }
 
+let shipPicker: ShipPickerElement | undefined;
+const stageBox = document.querySelector<HTMLElement>(".stage-box");
+if (stageBox) shipPicker = mountShipPicker(stageBox, { rocket: state.rocket, variant: state.variant }, (choice) => pick(choice));
 byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker), `maker_${maker}`)));
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
 fillLooks(byId("looks"), state.look, (look) => pick({ look: look as LookName }));

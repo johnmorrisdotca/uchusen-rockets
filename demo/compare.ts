@@ -12,6 +12,7 @@ import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
 import { chip, fillLooks } from "./chip.ts";
 import { craftBudget, craftPicture, kindOf, type PickerKind } from "./shipPicker.ts";
+import { mountShipPicker, type ShipPickerElement } from "./pickerView.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
@@ -434,6 +435,8 @@ function renderStage() {
     bar.fit();
   }
   syncEarth();
+  const open = state.craft[state.editing];
+  if (open) shipPicker?.sync(open);
 }
 
 function renderAll() {
@@ -547,6 +550,30 @@ function pickMoon(moon: string) {
   skyKey = "";
   renderAll();
 }
+
+let shipPicker: ShipPickerElement | undefined;
+function chooseFromPicker(choice: Craft): void {
+  const at = state.craft.findIndex((craft) => craft.rocket === choice.rocket);
+  if (at >= 0) {
+    state.editing = at;
+    state.craft[at] = { rocket: choice.rocket, variant: choice.variant };
+    renderAll();
+    return;
+  }
+  if (state.craft.length >= room()) {
+    state.refused = say("cmpBudget", { limit: room() });
+    renderCraft();
+    return;
+  }
+  state.refused = "";
+  state.craft.push({ rocket: choice.rocket, variant: choice.variant });
+  state.editing = state.craft.length - 1;
+  state.maker = ROCKETS[choice.rocket].maker;
+  state.kind = kindOf(choice.rocket);
+  renderAll();
+}
+const compareStage = document.querySelector<HTMLElement>(".stage-box");
+if (compareStage) shipPicker = mountShipPicker(compareStage, state.craft[0] ?? { rocket: "starship", variant: "v3" }, chooseFromPicker);
 
 mountCamera({
   hero,
