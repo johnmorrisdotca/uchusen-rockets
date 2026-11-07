@@ -69,3 +69,24 @@ test("the builder and the Embed page name the view, the parts and the engines as
   await expect(page.getByTestId("engines-on")).toHaveText("点火");
   await expect(page.getByTestId("show-together")).toHaveText("合体");
 });
+
+test("the builder follows the site theme and leaves the address alone", async ({ page }) => {
+  const colour = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  await page.addInitScript(() => localStorage.setItem("johnmorrisdotca.theme", "dark"));
+  await page.goto(`${BASE}builder.html`);
+  await page.waitForFunction(() => document.documentElement.dataset.ready === "true");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect.poll(colour).toBe("rgb(20, 22, 20)");
+  await expect(page.locator("#embed-panel")).toHaveAttribute("data-scheme", "dark");
+  const theme = page.locator("kazoku-theme-switch");
+  await theme.getByRole("button", { name: "Light" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect.poll(colour).toBe("rgb(244, 239, 228)");
+  await expect(page.locator("#embed-panel")).toHaveAttribute("data-scheme", "light");
+  expect(new URL(page.url()).search).toBe("");
+  await theme.getByRole("button", { name: "Auto" }).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+  expect(await page.evaluate(() => localStorage.getItem("johnmorrisdotca.theme"))).toBe("auto");
+  expect(new URL(page.url()).search).toBe("");
+  await expect(page.locator("#builder-label")).toBeVisible();
+});
