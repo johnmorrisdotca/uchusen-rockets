@@ -1,4 +1,5 @@
 // The still hull and the two rotating propellant booms of ISV Hanabusa: about 589 m of large real modules, and the cross-frames, hub drums and the axial lift. Pure: no three.js and no DOM.
+import { moving } from "../motion.ts";
 import { BUILDERS, box, ibeam, KIT, place, type KitModule, type Lathe, type Piece } from "./adapter.ts";
 import { DRIVE, mnThruster } from "./drive.ts";
 import { SPIN } from "./spin.ts";
@@ -88,7 +89,11 @@ export function hubPieces(): Piece[] {
   }
   const top = SPINE_Y.node + 4;
   out.push(...liftTube([0, 130, 13.5], [0, top, 13.5], "glass-clear", 2.2, [], 0));
-  for (const y of [...ys, top - 4]) out.push(box("hull-white", [0, y - 1.2, 13.5], 2.6, 2.6, 2.4, 0, { only: "mesh", plain: true }), box("window", [0, y - 0.9, 13.5], 2.7, 2.7, 1.1, 0, { only: "mesh", plain: true }), box("lamp-amber", [0, y + 1.2, 13.5], 0.8, 0.8, 0.3, 0, { only: "mesh", plain: true }));
+  const stops = [...ys, top - 4];
+  stops.forEach((y, k) => {
+    const car = [box("hull-white", [0, y - 1.2, 13.5], 2.6, 2.6, 2.4, 0, { only: "mesh", plain: true }), box("window", [0, y - 0.9, 13.5], 2.7, 2.7, 1.1, 0, { only: "mesh", plain: true }), box("lamp-amber", [0, y + 1.2, 13.5], 0.8, 0.8, 0.3, 0, { only: "mesh", plain: true })];
+    out.push(...moving(car, { name: k === stops.length - 1 ? "keel-lift-node" : `keel-lift-${k}`, pivot: [0, y, 13.5], axis: [0, 1, 0] }));
+  });
   return out;
 }
 
