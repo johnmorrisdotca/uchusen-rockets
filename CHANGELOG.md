@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Tree contact patches** (MODULES-433): each tree sits on a soft dark patch, so the crown reads as standing on the ground.
 - **Garden racks** (MODULES-433): the garden ring's middle tread carries trays of seedlings, a feed pipe and a grow-lamp bar.
 
 - **The fleet walk counts the frame already on screen**, so twelve frames fit in ninety seconds.

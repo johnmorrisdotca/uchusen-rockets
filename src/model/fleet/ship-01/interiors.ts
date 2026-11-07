@@ -42,6 +42,7 @@ export function tree(species: Species, x: number, y: number, z0: number, h: numb
   const out: Piece[] = [];
   const top = (f: number): number => z0 - h * f;
   const s = Math.sqrt(h / 4);
+  out.push(bx("black", x - 0.7 * s, x + 0.7 * s, y - 0.45 * s, y + 0.45 * s, z0 - 0.03, z0 - 0.01));
   if (species === "spruce") {
     out.push(rod("bark", [x, y, z0], [x, y, top(0.3)], 0.12 * s, 6, { only: "mesh" }));
     for (let i = 0; i < (coarse ? 4 : 7); i++) out.push(...cone(i % 2 ? "shrub" : "leaf", [x, y, top(0.08 + (coarse ? 0.21 : 0.12) * i)], h * 0.21 * (1 - i * (coarse ? 0.2 : 0.12)), h * (coarse ? 0.35 : 0.24), coarse ? 7 : 10));
