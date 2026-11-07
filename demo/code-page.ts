@@ -2,11 +2,11 @@
 // The builder leaves the address alone. The Embed page reads it and writes the choice back. The copied code still points at the bare frame, embed.html.
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
-import { embedCode, embedNote, LOOK_NAMES, MAKERS, OPTION_ATTRIBUTES, ROCKETS, VIEW_NAMES, attributesFromOptions, paintedCredit, rocketFromParams, rocketToParams, showsOf, variantOf, type MakerId, type RocketOptions } from "../src/index.ts";
+import { embedCode, embedNote, LOOK_NAMES, MAKERS, OPTION_ATTRIBUTES, ROCKETS, VIEW_NAMES, attributesFromOptions, paintedCredit, rocketFromParams, rocketToParams, showsOf, variantOf, type LookName, type MakerId, type RocketOptions } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { isListed } from "./listed.ts";
 import { KINDS, LABELS, packageKind, panelCode, pictureOf, SIZES, type Kind } from "./embed-code.ts";
-import { fillChoices, fillEngines, fillLooks, fillParts, fillViews } from "./chip.ts";
+import { fillChoices, fillEngines, fillLooks, fillParts, fillViews, PAGE_LOOK } from "./chip.ts";
 import { bindStage } from "./viewBinder.ts";
 
 /** Fills the builder's rows. `address` keeps the choice in the query, which the Embed page does and the builder does not. */
@@ -17,7 +17,7 @@ export function mountCodePage(options: { address: boolean }): void {
   const rocketNode = byId<UchusenRocket>("rocket");
   bindStage(rocketNode, (detail) => rocketNode.drive(detail), { theme: "dark", controls: "basic", testid: "view-bar" });
   const first = Object.values(ROCKETS)[0];
-  const state = { maker: (first?.maker ?? "spacex") as MakerId, rocket: "starship", variant: "v3", show: "together", look: "line", view: "three-quarter", engines: "off" };
+  const state = { maker: (first?.maker ?? "spacex") as MakerId, rocket: "starship", variant: "v3", show: "together", look: PAGE_LOOK, view: "three-quarter", engines: "off" };
   const panel = byId<EmbedPanelElement>("embed-panel");
   const here = new URL(".", location.href).href;
 
@@ -39,7 +39,7 @@ export function mountCodePage(options: { address: boolean }): void {
     state.variant = entry.variants.some((variant) => variant.id === asked.variant) ? asked.variant ?? entry.defaultVariant : entry.defaultVariant;
     const shows = showsOf(variantOf(state.rocket, state.variant)?.slots ?? []);
     state.show = asked.show && shows.includes(asked.show) ? asked.show : "together";
-    state.look = asked.look && (LOOK_NAMES as readonly string[]).includes(asked.look) ? asked.look : "line";
+    state.look = asked.look && (LOOK_NAMES as readonly string[]).includes(asked.look) ? (asked.look as LookName) : PAGE_LOOK;
     state.view = asked.view && (VIEW_NAMES as readonly string[]).includes(asked.view) ? asked.view : "three-quarter";
     state.engines = asked.engines === "on" ? "on" : "off";
   }
@@ -73,7 +73,7 @@ export function mountCodePage(options: { address: boolean }): void {
       draw();
     });
     fillLooks(byId("looks"), state.look, (id) => {
-      state.look = id;
+      state.look = id as LookName;
       draw();
     });
     fillViews(byId("views"), state.view, (id) => {

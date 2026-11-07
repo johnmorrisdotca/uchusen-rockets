@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The fleet line-up is a layout of the compare page** (MODULES-505): Compare to scale opens the upright line-up on compare.html (one baseline, true scale, the metre bar). fleet-compare.html opens that layout.
+- **Painted is the look a page opens on** (MODULES-498): every demo page with a rocket starts on the painted look. A line drawing is a choice. The package's own default, when a page names no look, stays the line drawing, because that is the drawing the unsuffixed files are.
 - **Craft line fixes** (MODULES-474): on a phone the count and Add a craft get their own line so the craft line has the full width; the page bar marks only the open page; Fit frames a row of craft whole, with the ground under their feet.
 - **The craft line on a phone** (MODULES-474): the count and Add a craft sit on their own line, so the scrolling line is the width of the phone and two chips show. Only the open page is marked in the page bar. A row of craft is framed with the ground under their feet, so none is cut off at the bottom of the stage.
 

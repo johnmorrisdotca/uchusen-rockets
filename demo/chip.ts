@@ -1,6 +1,6 @@
 // One chip for every demo page. A page passes the press first when the row shows which one is on, or a word key when the language script fills the label.
 import { VIEW_NAMES } from "../src/framing.ts";
-import { LOOK_NAMES } from "../src/looks.ts";
+import { LOOK_NAMES, type LookName } from "../src/looks.ts";
 import { SLOT_NAMES } from "../src/rockets.ts";
 import { WORDS } from "./words.js";
 
@@ -43,6 +43,9 @@ export function fillChoices(group: HTMLElement, choices: readonly { id: string; 
     return button;
   }));
 }
+
+/** The look a page opens on. A line drawing is a choice a reader makes. */
+export const PAGE_LOOK: LookName = "painted";
 
 /** The look row: line, thick lines, painted. The same three words on every page that offers all three. */
 export function fillLooks(group: HTMLElement, chosen: string, on: (look: string) => void): void {
