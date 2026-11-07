@@ -2,6 +2,7 @@
 import type { Description } from "./fit.ts";
 import type { Vec3 } from "./framing.ts";
 import type { Bounds } from "./model/pieces.ts";
+import { spaceLength } from "./inspace.ts";
 import { ROCKETS, variantOf } from "./rockets.ts";
 
 /**
@@ -54,7 +55,9 @@ export function craftName(description: Readonly<Description>, tall: number): str
   if (!rocket || !variant) return description.rocket;
   const name = variant.name.includes(rocket.name) || rocket.name.includes(variant.name) ? variant.name : `${rocket.name}, ${variant.name}`;
   const sourced = variant.facts.height.value;
-  const metres = typeof sourced === "number" && !description.rocket.startsWith("fleet-") ? sourced : Math.round(tall);
+  const whole = typeof sourced === "number" && !description.rocket.startsWith("fleet-") ? sourced : Math.round(tall);
+  const flying = description.form === "space" ? spaceLength(description.rocket, variant.slots, variant.facts.parts) : null;
+  const metres = flying ?? whole;
   return `${name}, ${metres.toLocaleString("en-US")} m`;
 }
 
@@ -87,10 +90,10 @@ export function besideCraft(value: string | null | undefined, rocket: string): D
   if (value === "on") return canBeside(rocket) ? [{ ...BESIDE_ROCKET }] : [];
   const out: Description[] = [];
   for (const key of (value ?? "").split(",")) {
-    const [id, variantId] = key.trim().split(":");
+    const [id, variantId, form] = key.trim().split(":");
     if (!id || !Object.hasOwn(ROCKETS, id)) continue;
     const variant = variantOf(id, variantId || undefined);
-    if (variant) out.push({ rocket: id, variant: variant.id });
+    if (variant) out.push({ rocket: id, variant: variant.id, ...(form === "space" ? { form: "space" as const } : {}) });
     if (out.length === BESIDE_MOST) break;
   }
   return out;

@@ -150,7 +150,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "form"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -383,7 +383,8 @@ export class UchusenRocket extends HTMLBase {
       }
     }
     const variant = this.getAttribute("variant");
-    return { rocket: this.getAttribute("rocket") ?? "starship", ...(variant ? { variant } : {}) };
+    const form = this.getAttribute("form") === "space" ? "space" : undefined;
+    return { rocket: this.getAttribute("rocket") ?? "starship", ...(variant ? { variant } : {}), ...(form ? { form } : {}) };
   }
 
   private queue(): void {
@@ -694,6 +695,9 @@ export class UchusenRocket extends HTMLBase {
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
     this.dataset.variant = this.builtNow.report.variant?.id ?? "";
+    this.dataset.slots = this.builtNow.parts.map((part) => part.slot).join(",");
+    this.dataset.form = this.descriptionNow().form ?? "stack";
+    this.dataset.detail = this.detailFor(this.descriptionNow());
     this.dataset.custom = String(this.builtNow.report.custom);
   }
 
