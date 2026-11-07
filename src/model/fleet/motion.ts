@@ -142,7 +142,7 @@ const doorLeaves = (ship: string): Motion[] =>
  * ```
  */
 export const MOTIONS: readonly Motion[] = [
-  { ship: "fleet-ship-01", group: "spin", kind: "spin", rate: HANABUSA_RPM * DEG_PER_RPM, note: `The three glazed rings turn together on one bearing at ${rpmNote(HANABUSA_RPM)}, which gives the living ring 1.00 g; the keel does not turn.` },
+  { ship: "fleet-ship-01", group: "spin", kind: "spin", rate: HANABUSA_RPM * DEG_PER_RPM, note: `The three glazed rings and the two propellant booms turn together on one bearing at ${rpmNote(HANABUSA_RPM)}, which gives the living ring 1.00 g; the keel does not turn.` },
   { ship: "fleet-ship-01", group: "spin-wheel", kind: "spin", rate: WHEEL_RPM * DEG_PER_RPM, note: `The industrial wheel turns at ${rpmNote(WHEEL_RPM)} (1.00 g at its rim).` },
   ...[0, 1, 2, 3, "node"].map((k, i): Motion => ({ ship: "fleet-ship-01", group: k === "node" ? "keel-lift-node" : `keel-lift-${k}`, kind: "slide", from: 0, travel: -15, period: 24, phase: i * 0.04, note: "A lift car rides 15 m along the keel toward the tail and back, one at each wheel and one at the docking node. The cars are drawn at every stop, so the ride stays short of the next car and inside the tube. Drawn faster than a real lift." })),
   { ship: "fleet-ship-03", group: "pod-swap", kind: "slide", from: 0, travel: 12, period: 36, note: "The mission pod rises 12 m off the dorsal collar and settles back. The isolator and its locks stay. A pod is exchanged at a dock. Drawn faster than a real exchange." },

@@ -78,7 +78,7 @@ const boom = (sx: number): HanabusaPart => ({
   height: 17 * 24,
   diameter: 12,
   note: `${sx < 0 ? "Port" : "Starboard"}: seventeen propellant tanks in a column that turns with the rings, with three small magnetic-nozzle trim thrusters at its tail. Descends from ${ANCESTORS.booms}.`,
-  pieces: (o) => local([...thin(boomPieces(sx, 0.3 * (o?.detail ?? 1))), { kind: "lathe", material: "hull-white", segs: 24, only: "drawing", body: true, outline: true, at: [sx * SPIN.boomX, 0], profile: [[5, 100], [5, 508]], rings: Array.from({ length: 16 }, (_, k) => 124 + 24 * k) } as Piece, ...lampHalo(sx < 0 ? "port" : "starboard", [sx * SPIN.boomX, 240, 8]), ...lampHalo(sx < 0 ? "beacon" : "nav-white", [sx * SPIN.boomX, 420, 8])], sx * SPIN.boomX, 100, 0, o?.level),
+  pieces: (o) => local(moving([...thin(boomPieces(sx, 0.3 * (o?.detail ?? 1))), { kind: "lathe", material: "hull-white", segs: 24, only: "drawing", body: true, outline: true, at: [sx * SPIN.boomX, 0], profile: [[5, 100], [5, 508]], rings: Array.from({ length: 16 }, (_, k) => 124 + 24 * k) } as Piece, ...lampHalo(sx < 0 ? "port" : "starboard", [sx * SPIN.boomX, 240, 8]), ...lampHalo(sx < 0 ? "beacon" : "nav-white", [sx * SPIN.boomX, 420, 8])], { name: "spin", pivot: [0, 0, 0], axis: [0, 1, 0] }), sx * SPIN.boomX, 100, 0, o?.level),
 });
 
 const hubs = (): HanabusaPart => ({

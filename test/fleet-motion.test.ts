@@ -77,6 +77,21 @@ test("a mission pod rises off the collar and settles back", () => {
   assert.ok(motionsOf("fleet-ship-ariake").some((m) => m.group === "pod-swap"));
 });
 
+test("the propellant booms turn with the rings, about the keel", () => {
+  const along = (id: string) => {
+    const axis = meshOf(hanabusa().find((p) => p.id === id)!.pieces({ detail: 0.3 })).moves.find((g) => g.name === "spin")?.axis;
+    assert.ok(axis, id);
+    near(Math.abs(axis[1]), Math.hypot(axis[0], axis[1], axis[2]), 1e-6);
+  };
+  along("boom-port");
+  along("boom-starboard");
+  const hubs = meshOf(hanabusa().find((p) => p.id === "hubs")!.pieces({ detail: 0.3 })).moves.map((g) => g.name);
+  assert.ok(hubs.includes("spin"));
+  assert.ok(hubs.includes("spin-wheel"));
+  assert.ok(hubs.includes("keel-lift-node"));
+  assert.match(motionNote("fleet-ship-01"), /booms/);
+});
+
 test("a keel lift car rides toward the tail and comes back, and the docking node has one", () => {
   const car = motionsOf("fleet-ship-01").find((m) => m.group === "keel-lift-node")!;
   assert.equal(car.kind, "slide");
