@@ -70,19 +70,15 @@ const draw = (): void => {
     address.set("cut", "");
     draw();
   })));
-  sectionsRow.replaceChildren(...slots.map((slot) => chip(slotLabel(slot), `db-show-${slot}`, !cut && slot === show, () => {
+  sectionsRow.replaceChildren(...slots.map((slot) => chip(slotLabel(slot), `db-show-${slot}`, slot === show, () => {
     address.set("ship", ship);
     address.set("show", slot);
-    address.set("cut", "");
     address.set("module", "");
     draw();
-  })), ...(cutId ? [chip(say("dbCutaway"), "db-cutaway", cut, () => {
-    address.set("ship", ship);
-    address.set("cut", cut ? "" : "on");
-    address.set("show", "together");
-    address.set("module", "");
-    draw();
-  })] : []));
+  })));
+  const cutButton = byId("db-cutaway") as HTMLButtonElement;
+  cutButton.disabled = cutId === "";
+  cutButton.setAttribute("aria-pressed", String(cut));
   modulesRow.replaceChildren(...modules.map((section) => chip(section.name, `db-module-${section.id}`, section.id === moduleId, () => {
     address.set("ship", ship);
     address.set("show", show);
@@ -104,6 +100,7 @@ const draw = (): void => {
   hero.setAttribute("rocket", ship);
   hero.setAttribute("variant", variant?.id ?? rocket.defaultVariant);
   hero.setAttribute("show", show);
+  hero.setAttribute("look", "painted");
   if (variant) {
     const size = fleetSize(variant);
     byId("db-length").textContent = metres(size.length);
@@ -147,6 +144,14 @@ const draw = (): void => {
 document.querySelector("kazoku-view-controls")?.addEventListener("kazoku-viewchange", (event) => {
   const rocket = document.getElementById("hero") as UchusenRocket | null;
   rocket?.drive((event as CustomEvent).detail);
+});
+
+byId("db-cutaway").addEventListener("click", () => {
+  const now = chosen();
+  if (!now.cutId) return;
+  address.set("ship", now.ship);
+  address.set("cut", now.cut ? "" : "on");
+  draw();
 });
 
 draw();
