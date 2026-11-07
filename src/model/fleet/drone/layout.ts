@@ -1,6 +1,7 @@
 // Where everything of the repair drone is, in metres: the saucer, the front lens, the two arms with their joints, and the two working points a build uses, the tractor beam's emitter and the weld's tip. Y is up and +Z
 // is the front, the way every part here is drawn; the origin is the middle of the drone's base (its lowest point, the grippers' tips at rest). Pure: no three.js and no DOM.
 import { add, cross, mul, unit } from "./shapes.ts";
+import type { DronePose } from "./poses.ts";
 import type { Vec3 } from "../../pieces.ts";
 
 /** The saucer's radius: the drone is about a metre across. */
@@ -72,23 +73,27 @@ export interface Joint {
   link: Link;
 }
 
-/** The joints of an arm at rest, in the natural frame. */
-export function joints(arm: ArmSpec): Joint[] {
+/** The joints of an arm, in the natural frame. With a pose, each link's pitch shifts and the weld arm yaws by `point`. */
+export function joints(arm: ArmSpec, pose?: DronePose): Joint[] {
   const out: Joint[] = [];
   let at = arm.base;
-  for (const link of arm.links) {
-    const d = direction(link, arm.side);
+  for (let i = 0; i < arm.links.length; i += 1) {
+    const link = arm.links[i];
+    const posed = pose
+      ? { ...link, pitch: link.pitch + pose.pitch[i], yaw: link.yaw + (arm.id === "weld" ? pose.point : 0) }
+      : link;
+    const d = direction(posed, arm.side);
     const axis = unit(cross([0, 1, 0], d));
     const up = unit(cross(d, axis));
     const to = add(at, mul(d, link.length));
-    out.push({ from: at, to, d, up, axis, link });
+    out.push({ from: at, to, d, up, axis, link: posed });
     at = to;
   }
   return out;
 }
 
 /** The end of an arm's last segment: where its gripper or tool is carried. */
-export const wristOf = (arm: ArmSpec): Joint => joints(arm)[arm.links.length - 1];
+export const wristOf = (arm: ArmSpec, pose?: DronePose): Joint => joints(arm, pose)[arm.links.length - 1];
 
 /**
  * The lens' radius, metres. The two working points of a build are in `index.ts`: the tractor beam leaves the middle of the lens glass along +Z, and the weld's tip is the end of the welding tool on the left arm.

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Repair drone poses** (MODULES-487): fly, approach, grip, carry, place, weld, inspect and park each set the arm pitch, the gripper, the legs and the weld arm's yaw. A boss points further than a manager. The view still draws one rigid mesh.
 - **Tree contact patches** (MODULES-433): each tree sits on a soft dark patch, so the crown reads as standing on the ground.
 - **Garden racks** (MODULES-433): the garden ring's middle tread carries trays of seedlings, a feed pipe and a grow-lamp bar.
 
