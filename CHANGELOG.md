@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Airlock hatches swing open** (MODULES-450): Kyotori's four hatches open outward on their top hinges and shut again.
 - **Kyotori's bay doors swing shut** (MODULES-450): the two payload-bay doors, drawn open, swing shut on their hinges and back.
 - **Hangar doors ride their tracks** (MODULES-450): Miyamoto and Ariake's door leaves slide 16 m up and back, one after the next. A slide moves a tagged part along its axis and does not turn it.
 
