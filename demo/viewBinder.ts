@@ -51,11 +51,29 @@ export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => vo
         const hint = [...box.children].find((child) => child.classList.contains("hint"));
         if (hint) box.insertBefore(bar, hint);
         else box.append(bar);
-      } else if (options.overlay) stage.append(bar);
+      } else if (options.overlay || stage.shadowRoot === null) stage.append(bar);
       else stage.insertAdjacentElement("afterend", bar);
     } else spot.append(bar);
   }
+  // The bar sits on the stage: over it when asked, otherwise directly under it, in the stage's own colour.
+  bar.style.margin = "0";
+  if (!bar.hasAttribute("overlay")) {
+    bar.style.position = "relative";
+    bar.style.zIndex = "1";
+  }
+  const paint = stagePaint(stage);
+  if (paint) bar.style.setProperty("--kazoku-surface", paint);
+  // The published controls put pan-y back on every change until the view is already zoomed. Put none back after each one.
+  const lock = (): void => {
+    stage.style.setProperty("touch-action", "none", "important");
+  };
+  lock();
+  stopPageGesture(stage);
+  bar.style.setProperty("touch-action", "manipulation", "important");
+  stopPageGesture(bar);
+  paintControls(bar);
   bar.addEventListener("kazoku-viewchange", (event) => {
+    lock();
     const detail = (event as CustomEvent<ViewDetail>).detail;
     if (detail) onView(detail);
   });
@@ -64,6 +82,49 @@ export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => vo
     if (event.ctrlKey || event.metaKey || event.altKey) event.stopPropagation();
   });
   return bar;
+}
+
+/** A colour a reader can see. A gradient's own colour is clear, so a child that is painted counts. */
+function stagePaint(stage: HTMLElement): string {
+  const own = getComputedStyle(stage).backgroundColor;
+  if (painted(own)) return own;
+  for (const node of stage.querySelectorAll("uchusen-lineup, uchusen-rocket, canvas")) {
+    if (!(node instanceof HTMLElement)) continue;
+    const color = getComputedStyle(node).backgroundColor;
+    if (painted(color)) return color;
+  }
+  return "";
+}
+
+function painted(color: string): boolean {
+  return color !== "" && color !== "transparent" && color !== "rgba(0, 0, 0, 0)";
+}
+
+/** Safari's own pinch and double-tap. Stopped on the stage and the bar, never on the page. */
+function stopPageGesture(node: HTMLElement): void {
+  const stop = (event: Event) => event.preventDefault();
+  for (const name of ["gesturestart", "gesturechange", "gestureend"]) node.addEventListener(name, stop, { passive: false });
+}
+
+/** The buttons take a tap without zooming the page, and the strip uses the stage colour set on the host. The builder refuses a style tag, so each control is set on its own. */
+function paintControls(bar: HTMLElement): void {
+  const write = (root: ParentNode): void => {
+    for (const node of root.querySelectorAll(".bar, button, input, a, select")) {
+      if (!(node instanceof HTMLElement) || node.getRootNode() !== root) continue;
+      if (node.classList.contains("bar")) {
+        const colour = bar.style.getPropertyValue("--kazoku-surface").trim();
+        if (colour) node.style.background = colour;
+      } else node.style.setProperty("touch-action", "manipulation");
+    }
+    for (const node of root.querySelectorAll("*")) if (node.shadowRoot) write(node.shadowRoot);
+  };
+  const run = (): void => {
+    if (bar.shadowRoot) write(bar.shadowRoot);
+  };
+  run();
+  if (bar.shadowRoot) requestAnimationFrame(run);
+  bar.addEventListener("kazoku-viewchange", run);
+  if (!bar.shadowRoot) void customElements.whenDefined("kazoku-view-controls").then(run);
 }
 
 /** A flat picture follows the bar: the same move the comparison lineup already uses. */

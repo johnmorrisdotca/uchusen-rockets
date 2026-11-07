@@ -69,12 +69,13 @@ const CSS = `
 .picture { position: relative; width: 100%; aspect-ratio: var(--uchusen-aspect, 3 / 4); margin: 0; border-radius: inherit; }
 .drawing, .drawing svg { display: block; width: 100%; height: 100%; }
 .drawing, .canvas { transition: opacity var(--uchusen-fade, 1500ms) ease-in-out, filter var(--uchusen-fade, 1500ms) ease-in-out; }
-.stage { position: absolute; inset: 0; }
+.stage, .canvas { position: absolute; inset: 0; touch-action: none; }
+.panel button, .tilt { touch-action: manipulation; }
 :host([data-driven]) .picture { overflow: hidden; }
-.canvas { display: block; width: 100%; height: 100%; opacity: 0; filter: blur(3px); cursor: grab; border-radius: inherit; }
+.canvas { display: block; width: 100%; height: 100%; opacity: 0; filter: blur(3px); cursor: grab; border-radius: inherit; touch-action: none; }
 .canvas:active { cursor: grabbing; }
 .canvas:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
-.picture[data-state="3d"] .drawing { opacity: 0; filter: blur(2px); }
+.picture[data-state="3d"] .drawing { display: none; visibility: hidden; opacity: 0; filter: none; }
 .picture[data-state="3d"] .canvas { opacity: 1; filter: none; }
 .panel { font: 0.85rem/1.4 system-ui, sans-serif; margin-top: 0.5rem; }
 .panel .bar { display: flex; flex-wrap: nowrap; gap: 0.3rem; overflow-x: auto; padding-bottom: 0.2rem; scrollbar-width: thin; }
@@ -410,11 +411,16 @@ export class UchusenRocket extends HTMLBase {
   }
 
   private setState(state: RocketState, why = ""): void {
+    const was = this.stateNow;
     this.stateNow = state;
     if (this.picture) this.picture.dataset.state = state;
     this.dataset.state = state;
+    // Opacity left the still drawing in the render tree, so its tiles stayed put while the ship turned.
+    if (this.drawing) this.drawing.toggleAttribute("hidden", state === "3d");
     if (why) this.dataset.why = why;
     else delete this.dataset.why;
+    // The still drawing is the first picture. Once the 3D view is in it is removed, and it comes back only if the 3D view is given up.
+    if (state === "3d" || was === "3d") this.redraw();
   }
 
   private emit(name: string, detail: unknown): void {
@@ -650,10 +656,16 @@ export class UchusenRocket extends HTMLBase {
   /** The drawing for what the attributes say now. It is made from code, so it needs no file. A zoom or a move only changes which part of it the box shows (its viewBox), so the drawing is as sharp as the box and never grows past it. */
   private redraw(): void {
     if (!this.builtNow || !this.drawing) return;
+    // A transparent drawing still paints on a phone. While the 3D view is showing, the drawing is not in the tree.
+    if (this.stateNow === "3d") {
+      if (this.drawing.childElementCount) this.drawing.replaceChildren();
+      this.drawn = { key: "", box: [0, 0, 1, 1] };
+      return;
+    }
     const { look, show: chosen, angle } = this.settings(this.builtNow);
     const flying = this.clock ? frameAt(this.clock.flight, this.clock.position, this.builtNow.parts.map((part) => ({ slot: part.slot, baseY: 0 })), 1) : null;
     const show = flying ? (flying.separated ? "apart" : "together") : chosen;
-    // when a 3D view is showing, a drawing of the same angle is ready behind it
+    // The still picture is only drawn while the 3D view is not in. A turn must not put it back behind the canvas.
     const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
     const label = this.getAttribute("label") ?? this.builtNow.report.label;
     const lit = flying ? (media("(prefers-reduced-motion: reduce)") ? false : flying.burns) : this.engineLights();

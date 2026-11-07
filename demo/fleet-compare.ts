@@ -138,7 +138,7 @@ const draw = (): void => {
 };
 
 const lineup = byId("lineup");
-bindStage(byId("cmp-view"), (detail) => placeZoom(lineup, detail), { overlay: true, flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "4", testid: "view-bar" });
+bindStage(byId("cmp-view"), (detail) => placeZoom(lineup, detail), { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "4", testid: "view-bar" });
 
 draw();
 window.addEventListener("resize", () => byId("lineup").setAttribute("fit", fitOf()));
