@@ -5,6 +5,8 @@
 <p align="center"><strong>Rockets drawn from sourced sizes, that you drop into a page, take apart and turn round.</strong><br>
 Uchūsen means "spaceship". Each rocket comes in every variant a source documents, each with its own sizes: a line drawing, thick lines and a painted 3D view, together, apart and each part alone, and a typed model that checks whether a rocket really goes together. The SPX fleet ships are original designs.</p>
 
+<p align="center">Part of <strong>SpaceProgramX (SPX)</strong>, the space packages: <a href="https://github.com/johnmorrisdotca/wakusei-planets">Wakusei Planets</a> · <a href="https://github.com/johnmorrisdotca/hoshi-stars">Hoshi Stars</a> · <a href="https://github.com/johnmorrisdotca/chikyu-earth">Chikyu Earth</a> · <a href="https://github.com/johnmorrisdotca/uchusen-rockets">Uchusen Rockets</a></p>
+
 <p align="center">
   <a href="https://github.com/johnmorrisdotca/uchusen-rockets/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/johnmorrisdotca/uchusen-rockets/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://www.npmjs.com/package/@johnmorrisdotca/uchusen-rockets"><img alt="npm" src="https://img.shields.io/npm/v/@johnmorrisdotca/uchusen-rockets?color=2f5d4a"></a>
