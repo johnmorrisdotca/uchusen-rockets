@@ -77,6 +77,7 @@ body:not(.embed) uchusen-rocket { display: block; aspect-ratio: var(--uchusen-as
 @media (hover: hover) { .chip:hover { border-color: var(--accent); } }
 .field-pair { display: flex; flex-wrap: wrap; gap: 0.9rem 1.5rem; }
 .field-pair > p { flex-basis: 100%; margin: 0; }
+.swap-leave:not(:has(> :not([hidden]))) { display: none; }
 .field-pair .note { color: var(--muted); font-size: 0.82rem; }
 .field .note { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.82rem; }
 .slider { display: flex; align-items: center; gap: 0.7rem; min-height: 44px; }
