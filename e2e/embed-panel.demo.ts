@@ -46,7 +46,7 @@ test("the index panel has the old six ways and the family's, a note each, Copy, 
     ["iframe", "embed.html?", "No script of your own"],
     ["svg", "<svg", "The drawing itself"],
     ["data", "data:image/svg+xml", "as an address"],
-    ["link", "dist/assets/starship-v3.svg", "A link to the file in the package"],
+    ["link", "dist/assets/starship-v3.painted.svg", "A link to the file in the package"],
   ];
   for (const [kind, needle, words] of ways) {
     await panel.locator(`button[data-kind="${kind}"]`).click();
