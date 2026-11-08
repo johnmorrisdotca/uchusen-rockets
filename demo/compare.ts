@@ -340,8 +340,8 @@ function renderPickers() {
     chip(say("cmpGround"), "place-ground", () => pickPlace("ground"), state.place === "ground"),
   );
   byId("forms").replaceChildren(
-    chip(say("cmpStack"), "form-stack", () => pickForm("stack"), editing.form !== "space"),
-    chip(say("cmpSpace"), "form-space", () => pickForm("space"), editing.form === "space"),
+    chip(say("cmpStack"), "form-stack", () => pickForm("stack"), editing?.form !== "space"),
+    chip(say("cmpSpace"), "form-space", () => pickForm("space"), editing?.form === "space"),
   );
   byId("label-toggle").replaceChildren(
     chip(say("cmpLabelsOn"), "labels-on", () => pickLabels(true), state.labels),
