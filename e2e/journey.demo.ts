@@ -4,6 +4,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 const URL = "/uchusen-rockets/journey.html?date=2026-11-04";
 
+/** Opens an address with the ship picker out of the way: on a phone its title bar floats over the rows of buttons, and these tests are about the trip, not the picker (e2e/ship-picker.demo.ts is). */
+const open = async (page: Page, address: string): Promise<void> => {
+  await page.goto(address);
+  await page.addStyleTag({ content: '[data-testid="ship-picker-window"] { display: none !important; }' });
+};
+
 const problems = (page: Page): string[] => {
   const found: string[] = [];
   page.on("console", (message) => {
@@ -15,7 +21,7 @@ const problems = (page: Page): string[] => {
 
 test("the page opens with Earth to Mars chosen, a verdict, a route, a map and the numbers, and the choices are rows of buttons", async ({ page }) => {
   const found = problems(page);
-  await page.goto(URL);
+  await open(page, URL);
   await expect(page.getByTestId("verdict")).toContainText("no braking engine");
   await expect(page.getByTestId("from-earth")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("to-mars")).toHaveAttribute("aria-pressed", "true");
@@ -66,7 +72,7 @@ test("the page opens with Earth to Mars chosen, a verdict, a route, a map and th
 
 test("choosing a place, a craft, a date and a view changes the trip and the address, and the address opens the same trip", async ({ page }) => {
   const found = problems(page);
-  await page.goto(URL);
+  await open(page, URL);
   await page.getByTestId("to-moon").click();
   await expect(page.getByTestId("verdict")).toContainText("no braking engine");
   await page.getByTestId("craft-saturn-v").click();
@@ -78,7 +84,7 @@ test("choosing a place, a craft, a date and a view changes the trip and the addr
   expect(page.url()).toContain("to=moon");
   expect(page.url()).toContain("craft=saturn-v");
   expect(page.url()).toContain("view=map");
-  await page.goto(page.url());
+  await open(page, page.url());
   await expect(page.getByTestId("craft-saturn-v")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("view-map")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("to-mars").click();
@@ -88,21 +94,21 @@ test("choosing a place, a craft, a date and a view changes the trip and the addr
 });
 
 test("a craft that cannot go says why in one line and offers no Play; one that can only fly past says so", async ({ page }) => {
-  await page.goto(`${URL}&from=mars&to=earth&craft=saturn-v`);
+  await open(page, `${URL}&from=mars&to=earth&craft=saturn-v`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
   await expect(page.getByTestId("verdict")).toContainText("leave from the Earth or the Moon");
   await expect(page.getByTestId("play")).toBeDisabled();
-  await page.goto(`${URL}&craft=sls&to=mars`);
+  await open(page, `${URL}&craft=sls&to=mars`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "flyby");
   await expect(page.getByTestId("verdict")).toContainText("not enough fuel on board to stop at Mars");
   await expect(page.getByTestId("play")).toBeEnabled();
-  await page.goto(`${URL}&craft=saturn-v&to=mars`);
+  await open(page, `${URL}&craft=saturn-v&to=mars`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "not-rated");
 });
 
 test("Saturn V aimed past the solar system says it cannot and names the delta-v", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${URL}&from=earth&to=beyond&craft=saturn-v`);
+  await open(page, `${URL}&from=earth&to=beyond&craft=saturn-v`);
   await expect(page.getByTestId("to-beyond")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
   await expect(page.getByTestId("verdict")).toContainText(/needs [\d,]+ m\/s/);
@@ -116,7 +122,7 @@ test("Saturn V aimed past the solar system says it cannot and names the delta-v"
 });
 
 test("leaving the Moon for the Earth is rated for Saturn V and can be played; Falcon Heavy cannot leave", async ({ page }) => {
-  await page.goto(`${URL}&from=moon&to=earth&craft=saturn-v`);
+  await open(page, `${URL}&from=moon&to=earth&craft=saturn-v`);
   await expect(page.getByTestId("from-moon")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "rated");
   await expect(page.getByTestId("verdict")).toContainText("Apollo 11");
@@ -130,14 +136,14 @@ test("leaving the Moon for the Earth is rated for Saturn V and can be played; Fa
   expect(path).not.toBeNull();
   expect(path!.width).toBeGreaterThan(20);
   expect(path!.height).toBeGreaterThan(10);
-  await page.goto(`${URL}&from=moon&to=earth&craft=falcon-heavy`);
+  await open(page, `${URL}&from=moon&to=earth&craft=falcon-heavy`);
   await expect(page.getByTestId("verdict")).toHaveAttribute("data-level", "cannot");
   await expect(page.getByTestId("play")).toBeDisabled();
 });
 
 test("Play counts down, flies, flips, brakes and ends on a summary; the numbers move and the clocks run", async ({ page }) => {
   const found = problems(page);
-  await page.goto(`${URL}&craft=saturn-v&to=moon&speed=4`);
+  await open(page, `${URL}&craft=saturn-v&to=moon&speed=4`);
   await page.getByTestId("play").click();
   await expect(page.getByTestId("phase")).toHaveText("MAIN ENGINE PREHEATING");
   await expect(page.getByTestId("preheat")).toBeVisible();
@@ -153,10 +159,10 @@ test("Play counts down, flies, flips, brakes and ends on a summary; the numbers 
 });
 
 test("seeking to a moment draws that moment on its own, and the end shows the summary", async ({ page }) => {
-  await page.goto(`${URL}&craft=kaminari&to=mars&t=30`);
+  await open(page, `${URL}&craft=kaminari&to=mars&t=30`);
   await expect(page.getByTestId("phase")).not.toHaveText("READY");
   await expect(page.getByTestId("now-since")).toContainText("T+");
-  await page.goto(`${URL}&craft=kaminari&to=mars&t=1000`);
+  await open(page, `${URL}&craft=kaminari&to=mars&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("now-speed")).toHaveText("0 m/s");
   await expect(page.getByTestId("summary-leaves")).toContainText("UTC");
@@ -191,14 +197,14 @@ test("seeking to a moment draws that moment on its own, and the end shows the su
   });
   await page.getByTestId("now-clocks").scrollIntoViewIfNeeded();
   await page.screenshot({ path: "/tmp/its-batch/twin-clocks-desk.png" });
-  await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
+  await open(page, `${URL}&craft=saturn-v&to=moon&t=1000`);
   await expect(page.getByTestId("summary")).toBeVisible();
   await expect(page.getByTestId("summary")).not.toContainText("runs slower");
   await expect(page.getByTestId("now-clocks")).toHaveCount(0);
 });
 
 test("no control is left in the browser's own style, and nothing scrolls sideways", async ({ page }) => {
-  await page.goto(URL);
+  await open(page, URL);
   const bad = await page.evaluate(() => {
     const out: string[] = [];
     for (const node of document.querySelectorAll<HTMLElement>("button, input, select, textarea")) {
@@ -236,7 +242,7 @@ test("the page makes no WebGL context and asks for no frame while nothing moves"
       return raf(callback);
     };
   });
-  await page.goto(`${URL}&look=line`);
+  await open(page, `${URL}&look=line`);
   await expect(page.getByTestId("phase")).toHaveText("READY");
   const before = await page.evaluate(() => (window as unknown as { __raf: number }).__raf);
   await page.waitForTimeout(900);
@@ -254,7 +260,7 @@ test("the page makes no WebGL context and asks for no frame while nothing moves"
 });
 
 test("the Japanese page says its words in Japanese and keeps the trip", async ({ page }) => {
-  await page.goto(`${URL}&lang=ja`);
+  await open(page, `${URL}&lang=ja`);
   await expect(page.getByTestId("phase")).toHaveText("準備完了");
   await expect(page.getByTestId("play")).toHaveText("再生");
   await expect(page.getByTestId("to-mars")).toHaveText("火星");
@@ -266,51 +272,51 @@ test("the Japanese page says its words in Japanese and keeps the trip", async ({
 
 test("after each burn only what is left is drawn: the whole rocket, the upper stage with its payload, then the payload", async ({ page }) => {
   const found = problems(page);
-  await page.goto(`${URL}&craft=saturn-v&to=moon`);
+  await open(page, `${URL}&craft=saturn-v&to=moon`);
   await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Saturn V");
   const size = async () => (await page.getByTestId("craft").locator("svg").innerHTML()).length;
   const whole = await size();
-  await page.goto(`${URL}&craft=saturn-v&to=moon&t=26`);
+  await open(page, `${URL}&craft=saturn-v&to=moon&t=26`);
   await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "S-IVB with the Apollo spacecraft");
   const upper = await size();
-  await page.goto(`${URL}&craft=saturn-v&to=moon&t=51`);
+  await open(page, `${URL}&craft=saturn-v&to=moon&t=51`);
   await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Apollo command and service module");
   const payload = await size();
   expect(whole).toBeGreaterThan(upper);
   expect(upper).toBeGreaterThan(payload);
-  await page.goto(`${URL}&craft=falcon-heavy&to=mars&t=26`);
+  await open(page, `${URL}&craft=falcon-heavy&to=mars&t=26`);
   await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Upper stage with its payload");
-  await page.goto(`${URL}&craft=sls&to=moon&t=26`);
+  await open(page, `${URL}&craft=sls&to=moon&t=26`);
   await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Upper stage with Orion");
   expect(found).toEqual([]);
 });
 
 test("Falcon Heavy at lift-off shows all three cores", async ({ page }) => {
-  await page.goto(`${URL}&craft=falcon-heavy&to=mars`);
+  await open(page, `${URL}&craft=falcon-heavy&to=mars`);
   await expect(page.getByTestId("craft")).toHaveAttribute("data-stage", "Falcon Heavy");
   // three cores are many more paths than the upper stage and its payload
-  await page.goto(`${URL}&craft=falcon-heavy&to=mars`);
+  await open(page, `${URL}&craft=falcon-heavy&to=mars`);
   const paths = await page.getByTestId("craft").locator("svg path").count();
-  await page.goto(`${URL}&craft=falcon-heavy&to=mars&t=26`);
+  await open(page, `${URL}&craft=falcon-heavy&to=mars&t=26`);
   const upperPaths = await page.getByTestId("craft").locator("svg path").count();
   expect(paths).toBeGreaterThan(upperPaths * 2);
 });
 
 test("the Fuel row is the propellant used or n/a with a reason, and the payload has its own row, named for the target", async ({ page }) => {
-  await page.goto(`${URL}&craft=falcon-heavy&to=mars`);
+  await open(page, `${URL}&craft=falcon-heavy&to=mars`);
   await expect(page.getByTestId("trip-payload")).toHaveText("16.8 t");
   await expect(page.locator("#trip").getByText("Payload to Mars")).toBeVisible();
   await expect(page.getByTestId("trip-fuel")).toContainText("n/a: it does not brake");
   await expect(page.getByTestId("trip-ratio")).toContainText("n/a: it does not brake");
-  await page.goto(`${URL}&craft=saturn-v&to=moon`);
+  await open(page, `${URL}&craft=saturn-v&to=moon`);
   await expect(page.getByTestId("trip-payload")).toHaveText("43.5 t");
   await expect(page.getByTestId("trip-fuel")).toContainText("10.2 t");
   await expect(page.getByTestId("trip-escsurf")).toContainText("km/s");
   await expect(page.getByTestId("trip-escpark")).toContainText("km/s");
   await expect(page.getByTestId("trip-ratio")).toContainText("the braking burn only");
-  await page.goto(`${URL}&craft=saturn-v&to=mars`);
+  await open(page, `${URL}&craft=saturn-v&to=mars`);
   await expect(page.getByTestId("trip-payload")).toContainText("n/a: no published payload figure covers a trip to Mars");
-  await page.goto(`${URL}&craft=kaminari&to=mars`);
+  await open(page, `${URL}&craft=kaminari&to=mars`);
   await expect(page.getByTestId("trip-fuel")).toContainText("/");
   await expect(page.getByTestId("trip-ratio")).toHaveText(/^[0-9]+\.[0-9]+, the tanks hold it$/);
   await expect(page.getByTestId("trip-escsurf")).toHaveCount(0);
@@ -319,7 +325,7 @@ test("the Fuel row is the propellant used or n/a with a reason, and the payload 
 
 test("Side, Front, Rear, Cockpit and Map are one row, and each one changes the picture", async ({ page }) => {
   const found = problems(page);
-  await page.goto(`${URL}&look=line`);
+  await open(page, `${URL}&look=line`);
   const names = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"];
   const tops = [];
   for (const name of names) {
@@ -375,7 +381,7 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
       return (real as (...args: unknown[]) => unknown).call(this, kind, ...rest) as never;
     } as typeof real;
   });
-  await page.goto(`${URL}&look=line`);
+  await open(page, `${URL}&look=line`);
   expect(await page.evaluate(() => (window as unknown as { __gl: number }).__gl)).toBe(0);
   await page.getByTestId("look-painted").click();
   await expect(page.getByTestId("painted-rocket")).toBeVisible();
@@ -399,7 +405,7 @@ test("Painted is the one WebGL context, and leaving Side lets it go", async ({ p
 });
 
 test("the painted craft stays whole and every HUD block has the same backing", async ({ page }) => {
-  await page.goto(`${URL}&from=earth&to=jupiter&craft=falcon-heavy&look=painted`);
+  await open(page, `${URL}&from=earth&to=jupiter&craft=falcon-heavy&look=painted`);
   const rocket = page.getByTestId("painted-rocket");
   await expect(rocket).toBeVisible();
   await expect(rocket).toHaveAttribute("look", "painted");
@@ -433,7 +439,7 @@ test("the painted craft stays whole and every HUD block has the same backing", a
 });
 
 test("a ship that burns all the way can be asked for 1 g, and a rocket is not offered the choice", async ({ page }) => {
-  await page.goto(`${URL}&craft=kaminari`);
+  await open(page, `${URL}&craft=kaminari`);
   await expect(page.getByTestId("pull-field")).toBeVisible();
   await expect(page.getByTestId("pull-ship")).toHaveAttribute("aria-pressed", "true");
   const rated = await page.getByTestId("trip-time").innerText();
@@ -449,7 +455,7 @@ test("a ship that burns all the way can be asked for 1 g, and a rocket is not of
   expect(page.url()).toContain("pull=1");
   expect(await page.getByTestId("trip-time").innerText()).not.toBe(rated);
   await expect(note).toHaveText(compared);
-  await page.goto(page.url());
+  await open(page, page.url());
   await expect(page.getByTestId("pull-1")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("craft-falcon-heavy").click();
   await expect(page.getByTestId("pull-field")).toBeHidden();
@@ -458,7 +464,7 @@ test("a ship that burns all the way can be asked for 1 g, and a rocket is not of
 });
 
 test("a rocket to Saturn can swing past Jupiter, and the path says it is an assist", async ({ page }) => {
-  await page.goto(`${URL}&from=earth&to=saturn&craft=falcon-heavy&view=map&via=jupiter`);
+  await open(page, `${URL}&from=earth&to=saturn&craft=falcon-heavy&view=map&via=jupiter`);
   await expect(page.getByTestId("via-field")).toBeVisible();
   await expect(page.getByTestId("via-jupiter")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("map").locator("[data-assist=jupiter]")).toHaveText("ASSIST");
@@ -470,12 +476,12 @@ test("a rocket to Saturn can swing past Jupiter, and the path says it is an assi
   expect(page.url()).not.toContain("via=");
   await page.getByTestId("to-mars").click();
   await expect(page.getByTestId("via-field")).toBeHidden();
-  await page.goto(`${URL}&from=moon&to=saturn&craft=saturn-v`);
+  await open(page, `${URL}&from=moon&to=saturn&craft=saturn-v`);
   await expect(page.getByTestId("via-field")).toBeHidden();
 });
 
 test("perceived size is the default and the destination grows through the trip; true size is a choice", async ({ page }) => {
-  await page.goto(URL);
+  await open(page, URL);
   await expect(page.getByTestId("size-perceived")).toHaveAttribute("aria-pressed", "true");
   expect(page.url()).not.toContain("size=");
   const span = () => page.getByTestId("dest").getAttribute("data-span").then((value) => Number(value));
@@ -494,7 +500,7 @@ test("perceived size is the default and the destination grows through the trip; 
 });
 
 test("Painted draws a painted planet and the craft's painted model", async ({ page }) => {
-  await page.goto(`${URL}&look=painted`);
+  await open(page, `${URL}&look=painted`);
   await expect(page.getByTestId("stage")).toHaveAttribute("data-look", "painted");
   const planet = page.getByTestId("dest").locator("wakusei-body");
   await expect(planet).toHaveAttribute("body", "mars");
@@ -504,7 +510,7 @@ test("Painted draws a painted planet and the craft's painted model", async ({ pa
 });
 
 test("the arrival card closes by the cross, Escape and a click outside, and Summary opens it again", async ({ page }) => {
-  await page.goto(`${URL}&craft=saturn-v&to=moon&t=1000`);
+  await open(page, `${URL}&craft=saturn-v&to=moon&t=1000`);
   const card = page.getByTestId("summary");
   await expect(card).toBeVisible();
   const stage = await page.getByTestId("stage").boundingBox();
@@ -522,7 +528,7 @@ test("the arrival card closes by the cross, Escape and a click outside, and Summ
 });
 
 test("a trip that cannot start says why on the stage and on Play, and can leave from the Earth", async ({ page }) => {
-  await page.goto(`${URL}&from=uranus&to=saturn&craft=falcon-heavy`);
+  await open(page, `${URL}&from=uranus&to=saturn&craft=falcon-heavy`);
   await expect(page.getByTestId("blocked")).toBeVisible();
   await expect(page.getByTestId("blocked-title")).toHaveText("NO TRIP");
   await expect(page.getByTestId("phase")).toHaveText("");
@@ -537,7 +543,7 @@ test("a trip that cannot start says why on the stage and on Play, and can leave 
 
 test("the page bar links every page on one row and marks this page", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(URL);
+  await open(page, URL);
   const bar = page.getByTestId("page-links");
   for (const name of ["Rockets", "Compare", "Journey", "Fleet", "Yard", "Builder", "Docs", "Embed"]) {
     await expect(bar.getByRole("link", { name })).toBeVisible();
@@ -551,7 +557,7 @@ test("the page bar links every page on one row and marks this page", async ({ pa
 });
 
 test("a fast trip shows a hotter microwave sky ahead", async ({ page }) => {
-  await page.goto(`${URL}&craft=kaminari&to=neptune&pull=1`);
+  await open(page, `${URL}&craft=kaminari&to=neptune&pull=1`);
   await expect(page.getByTestId("craft-kaminari")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("trip-radiation")).toContainText("No source");
   await expect(page.getByTestId("trip-cmb")).toContainText("straight ahead");
@@ -561,7 +567,7 @@ test("a fast trip shows a hotter microwave sky ahead", async ({ page }) => {
 });
 
 test("the ship turns round for the braking burn, and the timeline names the flip", async ({ page }) => {
-  await page.goto(`${URL}&craft=kaminari&to=mars`);
+  await open(page, `${URL}&craft=kaminari&to=mars`);
   await expect(page.getByTestId("route-flip")).toHaveText("TURNING ROUND");
   await page.locator("#scrub").evaluate((node) => {
     const input = node as HTMLInputElement;
@@ -574,7 +580,7 @@ test("the ship turns round for the braking burn, and the timeline names the flip
 });
 
 test("no braking shows where keeping on would reach, out to Andromeda", async ({ page }) => {
-  await page.goto(`${URL}&craft=kaminari&to=mars`);
+  await open(page, `${URL}&craft=kaminari&to=mars`);
   const toggle = page.getByTestId("no-brake");
   await expect(toggle).toBeVisible();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
