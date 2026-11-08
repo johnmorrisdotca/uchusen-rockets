@@ -615,7 +615,7 @@ function chooseFromPicker(choice: ShipChoice): void {
   state.kind = kindOf(choice.rocket);
   renderAll();
 }
-const compareStage = document.querySelector<HTMLElement>(".stage-box");
+const compareStage = document.querySelector<HTMLElement>(".stage-box .view-space");
 if (compareStage) shipPicker = mountShipPicker(compareStage, state.craft[0] ?? { rocket: "starship", variant: "v3" }, chooseFromPicker);
 
 mountCamera({
