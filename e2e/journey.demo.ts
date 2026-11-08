@@ -1,19 +1,20 @@
 // Journey mode in a real browser: the page opens with a trip already shown, the choices are rows of buttons kept in the address, Play reaches the summary, a craft that cannot go says why in one line, no control is left in the
 // browser's own style, nothing scrolls sideways. The line views draw with no WebGL and ask for no frame while nothing moves. The painted side view is the one context, and leaving it lets that context go.
 import { expect, test, type Page } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/journey.html?date=2026-11-04";
 
-/** Opens an address with the ship picker out of the way: on a phone its title bar floats over the rows of buttons, and these tests are about the trip, not the picker (e2e/ship-picker.demo.ts is). */
+/** Opens an address and folds the ship picker, as a reader does, so the buttons under it are the ones tapped. */
 const open = async (page: Page, address: string): Promise<void> => {
   await page.goto(address);
-  await page.addStyleTag({ content: '[data-testid="ship-picker-window"] { display: none !important; }' });
+  await foldPicker(page);
 };
 
 const problems = (page: Page): string[] => {
   const found: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") found.push(`console: ${message.text()}`);
+    if (message.type() === "error") found.push(`console: ${message.text()} ${message.location().url}`);
   });
   page.on("pageerror", (error) => found.push(`page: ${error.message}`));
   return found;
