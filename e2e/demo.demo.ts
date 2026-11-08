@@ -1509,10 +1509,8 @@ for (const rocket of Object.values(ROCKETS)) {
       const phone = await reading({ width: 390, height: 844 }, { hasTouch: true, isMobile: true });
       expect(desk.top).toBeLessThan(120);
       console.log(`${rocket.id}/${variant.id}: choices end at ${desk.bottom} px at 1440x900 (panel from ${desk.top}), controls at ${desk.stage}; phone choices ${phone.bottom - phone.top} px tall`);
-      // The runner's font wraps more chips than the Mac's; preserve the existing limits.
-      const fits = process.env.CI ? 1010 : 900;
-      expect(desk.bottom).toBeLessThanOrEqual(fits);
-      expect(desk.stage).toBeLessThanOrEqual(fits);
+      expect(desk.bottom).toBeLessThanOrEqual(900);
+      expect(desk.stage).toBeLessThanOrEqual(900);
     });
   }
 }
