@@ -210,6 +210,8 @@ body.demo main > header [data-help-switch] { display: none; }
 /* The ship picker. Browser is three columns. Card stacks the same parts. The window is the Card frame. */
 .picker-host { position: relative; }
 .picker-frame { z-index: 6; }
+.view-space > .picker-frame, .jr-stage > .picker-frame { max-height: calc(100% - 16px); overflow: auto; }
+.jr-stage > .picker-frame.as-sheet { bottom: 7rem; max-height: calc(100% - 7rem - 8px); }
 .pk { display: grid; gap: 8px; min-width: 0; background: #141820; color: #e8eef8; border-radius: 8px; padding: 4px; font: 500 13px/1.35 system-ui, sans-serif; }
 .pk-browser { grid-template-columns: 7.5rem minmax(0, 1fr) 9.5rem; }
 .pk-card, .pk-grid { grid-template-columns: minmax(0, 1fr); }

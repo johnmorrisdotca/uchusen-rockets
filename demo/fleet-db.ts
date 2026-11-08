@@ -157,7 +157,7 @@ byId("db-cutaway").addEventListener("click", () => {
   draw();
 });
 
-const fleetStage = document.querySelector<HTMLElement>(".stage-box");
+const fleetStage = document.querySelector<HTMLElement>(".stage-box .view-space");
 if (fleetStage) {
   const first = chosen();
   shipPicker = mountShipPicker(fleetStage, { rocket: first.ship, variant: first.variant?.id ?? first.rocket.defaultVariant }, (choice) => {

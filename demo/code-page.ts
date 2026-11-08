@@ -129,7 +129,7 @@ export function mountCodePage(options: { address: boolean }): void {
     draw();
   }
 
-  const codeStage = document.querySelector<HTMLElement>(".stage-box");
+  const codeStage = document.querySelector<HTMLElement>(".stage-box .view-space");
   if (codeStage) shipPicker = mountShipPicker(codeStage, { rocket: state.rocket, variant: state.variant }, (choice) => pick(choice.rocket, choice.variant));
 
   readAddress();

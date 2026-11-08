@@ -122,6 +122,10 @@ function writeAddress(): void {
   if (choice.size === "true") next.set("size", "true");
   if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
+  for (const key of ["picker", "picker-at"]) {
+    const kept = new URLSearchParams(location.search).get(key);
+    if (kept !== null) next.set(key, kept);
+  }
   const text = `${location.pathname}?${next.toString()}`;
   history.replaceState(null, "", text);
 }
@@ -1335,8 +1339,13 @@ document.addEventListener("kazoku-languagechange", () =>
   }),
 );
 
-const journeyHost = document.querySelector<HTMLElement>(".jr-main");
+const journeyHost = document.querySelector<HTMLElement>(".jr-stage");
 if (journeyHost) {
+  if (!query.has("picker-at")) {
+    const seeded = new URLSearchParams(location.search);
+    seeded.set("picker-at", "bl");
+    history.replaceState(null, "", `${location.pathname}?${seeded.toString()}`);
+  }
   shipPicker = mountShipPicker(journeyHost, journeyPickerChoice(), (next) => {
     const id = next.rocket === "fleet-kaminari" || next.rocket === "fleet-02" ? "kaminari" : CRAFTS.find((craft) => craft.rocket === next.rocket)?.id;
     if (id) change({ craft: id });
