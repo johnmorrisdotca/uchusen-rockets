@@ -51,7 +51,7 @@ export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
   const html = readFileSync(new URL(`../demo/${file}`, import.meta.url), "utf8");
   const [title, description] = TITLES[file];
   return html
-    .replace("<!--family:head-->", familyHead({ id, title, description }))
+    .replace("<!--family:head-->", `${familyHead({ id, title, description })}\n    <link rel="icon" href="icon.png" />`)
     .replace("<!--family:header-->", `${familyHeader({ id })}\n      ${pageBar(file)}`)
     .replace("<!--family:unreviewed-->", familyUnreviewed({ id }))
     .replace("<!--family:footer-->", familyFooter({ id }))
