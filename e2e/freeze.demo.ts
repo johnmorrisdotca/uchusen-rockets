@@ -379,8 +379,7 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 });
 
-// MODULES-584: fleet graphics memory must be fixed before release.
-test.fixme("the fleet kit: every module and the sample ship drawn painted, then contexts and graphics memory stay flat as they are walked again, and it still draws once a frame", async ({ page }) => {
+test("the fleet kit: every module and the sample ship drawn painted, then contexts and graphics memory stay flat as they are walked again, and it still draws once a frame", async ({ page }) => {
   await page.addInitScript(COUNT);
   test.setTimeout(45 * 60_000);
   await page.goto(URL);
@@ -398,7 +397,9 @@ test.fixme("the fleet kit: every module and the sample ship drawn painted, then 
   await hero(page).evaluate((node) =>
     node.addEventListener("uchusen-change", (event) => {
       const variant = (event as CustomEvent<{ report: { variant?: { rocket: string; id: string } } }>).detail.report.variant;
-      (window as unknown as { __in: string }).__in = `${variant?.rocket}/${variant?.id}`;
+      const state = window as unknown as { __in: string; __inFrame: number };
+      state.__in = `${variant?.rocket}/${variant?.id}`;
+      state.__inFrame = Number(node.shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0);
     }),
   );
   const walk = async (stride: number) => {
@@ -410,14 +411,23 @@ test.fixme("the fleet kit: every module and the sample ship drawn painted, then 
         await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
         await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
         await expect.poll(() => page.evaluate(() => (window as unknown as { __in?: string }).__in), { timeout: 90_000 }).toBe(`${rocket.id}/${variant.id}`);
+        const frame = await page.evaluate(() => (window as unknown as { __inFrame: number }).__inFrame);
+        await expect.poll(() => drawn(page), { timeout: 90_000 }).toBeGreaterThan(frame);
         await settle(page, 80);
       }
       // seconds a ship took, said as each ends, so a walk that slows down (or stops) says which ship did it
       console.log(`fleet walk, ${rocket.id}: ${Math.round((Date.now() - began) / 1000)} s`);
     }
   };
+  // Compare the same settled camera and detail level: a moving camera can expose more geometry after the first frame.
+  const settledView = async () => {
+    await expect.poll(() => canvasData(page, "moving"), { timeout: 30_000 }).toBe("false");
+    return { detail: await hero(page).getAttribute("data-detail"), distance: await canvasData(page, "distance") };
+  };
   await walk(1);
+  const firstView = await settledView();
   const first = await levelUsage(page);
+  console.log("fleet view 1", firstView);
   console.log(`fleet walk 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}`);
   // the opened ones and the apart view too: the shapes that are only built when chosen
   await walk(2);
@@ -426,7 +436,10 @@ test.fixme("the fleet kit: every module and the sample ship drawn painted, then 
   await settle(page, 600);
   await press(page, "show-together");
   await walk(1);
+  const lastView = await settledView();
   const last = await levelUsage(page);
+  console.log("fleet view 2", lastView);
+  expect(lastView.detail).toBe(firstView.detail);
   console.log(`fleet walk 2: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(first.buffers);

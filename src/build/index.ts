@@ -136,22 +136,35 @@ export interface Built {
  */
 export const HEAVY_PIECES = 2000;
 
+// Bound retained geometry when a page visits many of the large fleet models.
 const memo = new Map<string, { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }>();
 const memoKey = (id: string, k: number) => `${detail.level}/${dockedNow.spec ?? "-"}/${id}${k === 1 ? "" : `@${k}`}`;
+const remember = (key: string, value: { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }) => {
+  memo.set(key, value);
+  if (memo.size > 128) {
+    const oldest = memo.keys().next();
+    if (!oldest.done) memo.delete(oldest.value);
+  }
+};
 function made(id: string, k = 1) {
-  const known = memo.get(memoKey(id, k));
-  if (known) return known;
+  const key = memoKey(id, k);
+  const known = memo.get(key);
+  if (known) {
+    memo.delete(key);
+    memo.set(key, known);
+    return known;
+  }
   const entry = partEntry(id);
   if (!entry) throw new Error(`There is no part "${id}".`);
   const pieces = k === 1 ? entry.pieces() : scalePieces(entry.pieces(), k);
   if (pieces.length > HEAVY_PIECES) {
     const heavy = { pieces, bounds: boundsOfPieces(pieces), get mesh() { return meshOf(pieces); } };
-    memo.set(memoKey(id, k), heavy);
+    remember(key, heavy);
     return heavy;
   }
   const mesh = meshOf(pieces);
   const result = { pieces, mesh, bounds: boundsOf(mesh) };
-  memo.set(memoKey(id, k), result);
+  remember(key, result);
   return result;
 }
 
