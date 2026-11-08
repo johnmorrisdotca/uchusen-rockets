@@ -1,6 +1,7 @@
 // Choosing a docked craft: one row of buttons per port, kept in the address, still there with Fit, Beside it and true scale, and the graphics objects come back when the craft is taken off.
 import { expect, type Page, test } from "@playwright/test";
 import { DOCK } from "../src/model/fleet/ship-01/docking.ts";
+import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
@@ -52,6 +53,7 @@ const buffers = (page: Page) =>
 
 test("each port offers its craft, and the choice stays in the address with Fit, Beside it and true scale", async ({ page }) => {
   await page.goto(`${URL}?rocket=fleet-ship-01&variant=hanabusa`);
+  await foldPicker(page);
   await openDocked(page);
   await expect(page.getByTestId("docked-crew-s-dragon")).toBeVisible();
   await expect(page.getByTestId("docked-crew-s-orion")).toBeVisible();
@@ -78,6 +80,7 @@ test("each port offers its craft, and the choice stays in the address with Fit, 
 
 test("Miyamoto's ventral collars and the first design's arms offer a craft", async ({ page }) => {
   await page.goto(`${URL}?rocket=fleet-ship-03&variant=miyamoto`);
+  await foldPicker(page);
   await openDocked(page);
   await expect(page.getByTestId("docked-dragon-ventral-dragon")).toBeVisible();
   await expect(page.getByTestId("docked-starship-ventral-starship")).toBeVisible();
@@ -92,6 +95,7 @@ test("Miyamoto's ventral collars and the first design's arms offer a craft", asy
   await expect.poll(() => param(page, "docked")).toBe("dragon@dragon-ventral");
 
   await page.goto(`${URL}?rocket=fleet-kaminari&variant=fleet-kaminari`);
+  await foldPicker(page);
   await openDocked(page);
   await expect(page.getByTestId("docked-dragon-dragon")).toBeVisible();
   await expect(page.getByTestId("docked-methane-starship")).toBeVisible();
@@ -99,6 +103,7 @@ test("Miyamoto's ventral collars and the first design's arms offer a craft", asy
   await expect(page.getByTestId("docked-stack-starship")).toBeVisible();
 
   await page.goto(`${URL}?rocket=fleet-02&variant=fleet-02`);
+  await foldPicker(page);
   await openDocked(page);
   await expect(page.getByTestId("docked-starboard-26-dragon")).toBeVisible();
   await expect(page.getByTestId("docked-port-92-orion")).toBeVisible();
@@ -110,6 +115,7 @@ test("taking the craft off gives the graphics buffers back", async ({ page, brow
   test.skip(browserName !== "chromium", "the graphics count is read from Chromium");
   await page.addInitScript(COUNT);
   await page.goto(`${URL}?rocket=fleet-ship-01&variant=hanabusa`);
+  await foldPicker(page);
   await openDocked(page);
   await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   const before = await buffers(page);

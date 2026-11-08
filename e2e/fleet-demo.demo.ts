@@ -1,6 +1,7 @@
 // What the demo says about the SPX fleet: the Maker row and the Made by line read "SPX" for every fleet ship, the Rocket list holds the ships by their registry names and no placeholder, and the first tab of a ship's panel under the 3D view is drawn, not a blank pill.
 import { expect, type Page, test } from "@playwright/test";
 import { ROCKETS } from "../src/rockets.ts";
+import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";
 const SHIPS = ["fleet-ship-01", "fleet-kyotori", "fleet-ship-03", "fleet-ship-ariake", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"] as const;
@@ -33,12 +34,14 @@ test("the Maker row and the Made by line read SPX for every fleet ship chosen fr
 
 test("the Rocket list under SPX holds the fleet ships by their registry names, and no placeholder, on the demo and on the code builder", async ({ page }) => {
   await page.goto(URL);
+  await foldPicker(page);
   await page.locator('[data-testid="maker-fleet"]').click();
   const got = await listed(page);
   expect(got.every((name) => !name.startsWith("Fleet "))).toBe(true);
   expect(got).toEqual(names);
   await page.goto(`${URL}builder.html`);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  await foldPicker(page);
   await page.locator('[data-testid="maker-fleet"]').click();
   expect(await page.locator("#rockets button").allTextContents()).toEqual(names);
   expect(names.join(" ")).toContain("Miyamoto, SPX-452");
@@ -77,6 +80,7 @@ for (const scheme of ["dark", "light"] as const) {
   test(`the chosen tab of a ship's panel under the 3D view is readable in the ${scheme} theme`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto(`${URL}?rocket=fleet-kaminari`);
+    await foldPicker(page);
     const tab = page.locator("#hero").locator('.panel [role="tab"][aria-selected="true"]');
     await expect(tab).toHaveText("Specification", { timeout: 60_000 });
     await tab.scrollIntoViewIfNeeded();
