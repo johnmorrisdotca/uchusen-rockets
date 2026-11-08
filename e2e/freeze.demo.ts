@@ -819,7 +819,7 @@ test.describe("a played timeline", () => {
     }
     await leave();
     await settle(page, 500);
-    const first = await usage(page);
+    const first = await levelUsage(page);
     for (let i = 0; i < 40; i++) await round();
     await settle(page, 300);
     const last = await usage(page);
