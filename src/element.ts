@@ -766,19 +766,19 @@ export class UchusenRocket extends HTMLBase {
       const from = viewName !== this.lastView || this.driven ? angle : this.viewer.currentAngle();
       this.lastView = viewName;
       const viewer = this.viewer;
-      await viewer.load(this.builtNow, show, look, from);
-      if (this.viewer === viewer && this.builtNow) {
-        // a look or part chosen while the rocket loaded
-        const now = this.settings(this.builtNow);
-        if (now.look !== look) viewer.setLook(now.look);
-        if (now.show !== show) viewer.setShow(now.show);
-        viewer.setProgress(this.progress(), buildOf(this.builtNow.report.variant?.id ?? "") ?? null);
-        if (this.inspectNow) viewer.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
-        viewer.setLeave(...this.leaveNow());
-        this.lightViewer(viewer);
-        this.applyFrame();
-      }
-      this.emit("uchusen-change", { report: this.builtNow.report });
+      const built = this.builtNow;
+      await viewer.load(built, show, look, from);
+      if (this.viewer !== viewer || this.builtNow !== built) return;
+      // a look or part chosen while the rocket loaded
+      const now = this.settings(built);
+      if (now.look !== look) viewer.setLook(now.look);
+      if (now.show !== show) viewer.setShow(now.show);
+      viewer.setProgress(this.progress(), buildOf(built.report.variant?.id ?? "") ?? null);
+      if (this.inspectNow) viewer.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
+      viewer.setLeave(...this.leaveNow());
+      this.lightViewer(viewer);
+      this.applyFrame();
+      this.emit("uchusen-change", { report: built.report });
     }
     this.syncPanel();
     this.panel?.refresh();

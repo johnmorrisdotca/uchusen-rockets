@@ -1374,6 +1374,43 @@ for (const rocket of Object.values(ROCKETS)) {
   }
 }
 
+test("a superseded load does not announce the newer variant twice", async ({ page, browserName }) => {
+  test.skip(!is3d(browserName), "The race is in the 3D view");
+  await page.goto(URL);
+  await stopTurn(page);
+  await reach3d(page);
+  await hero(page).evaluate((node) => {
+    type Viewer = { load(...args: unknown[]): Promise<void> };
+    type State = { held: boolean; events: string[]; release: () => void };
+    const view = (node as unknown as { viewer: Viewer }).viewer;
+    const load = view.load.bind(view);
+    let release = () => {};
+    const gate = new Promise<void>((done) => { release = done; });
+    const state: State = { held: false, events: [], release };
+    Object.assign(window, { __loadRace: state });
+    view.load = async (...args: unknown[]) => {
+      await load(...args);
+      const built = args[0] as { report: { variant?: { id: string } } };
+      if (built.report.variant?.id === "v2") {
+        state.held = true;
+        await gate;
+      }
+    };
+    node.addEventListener("uchusen-change", (event) => {
+      const report = (event as CustomEvent<{ report: { variant?: { id: string } } }>).detail.report;
+      state.events.push(report.variant?.id ?? "");
+    });
+    node.setAttribute("variant", "v2");
+  });
+  const state = () => page.evaluate(() => (window as unknown as { __loadRace: { held: boolean; events: string[] } }).__loadRace);
+  await expect.poll(async () => (await state()).held).toBe(true);
+  await hero(page).evaluate((node) => node.setAttribute("variant", "v3"));
+  await expect.poll(async () => (await state()).events).toEqual(["v3"]);
+  await page.evaluate(() => (window as unknown as { __loadRace: { release(): void } }).__loadRace.release());
+  await page.evaluate(() => new Promise<void>((done) => setTimeout(done, 100)));
+  expect((await state()).events).toEqual(["v3"]);
+});
+
 test("the sources list every painted model and its licence", async ({ page, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
   const { creditLine, MODEL_CREDITS } = await import("../src/index.ts");
