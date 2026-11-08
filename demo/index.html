@@ -33,14 +33,16 @@
             <h2 id="variant-title" data-say="variant">Variant</h2>
             <div class="chips" id="variants" role="group" aria-labelledby="variant-title"></div>
           </div>
-          <div class="field" id="swap-field" data-testid="swap-field" hidden>
-            <h2 id="swap-title" data-say="swapTitle">Modules</h2>
-            <div id="swaps"></div>
-          </div>
-          <div class="field" id="leave-field" data-testid="leave-field" hidden>
-            <h2 id="leave-title" data-say="leaveTitle">Separate</h2>
-            <p id="leave-reason" data-testid="leave-reason"></p>
-            <input id="leave-range" data-testid="leave-range" type="range" min="0" max="1" step="0.01" value="0">
+          <div class="field-pair swap-leave">
+            <div class="field" id="swap-field" data-testid="swap-field" hidden>
+              <h2 id="swap-title" data-say="swapTitle">Modules</h2>
+              <div id="swaps"></div>
+            </div>
+            <div class="field" id="leave-field" data-testid="leave-field" hidden>
+              <h2 id="leave-title" data-say="leaveTitle">Separate</h2>
+              <p id="leave-reason" data-testid="leave-reason"></p>
+              <input id="leave-range" data-testid="leave-range" type="range" min="0" max="1" step="0.01" value="0">
+            </div>
           </div>
           <div class="chips panel-tabs" id="panel-tabs" role="tablist" data-say-label="panelLabel" data-testid="panel-tabs">
             <button type="button" class="chip" role="tab" data-testid="panel-look" data-say="look" aria-selected="true">Look</button>
@@ -69,12 +71,12 @@
                 <h2 id="view-title" data-say="from">From</h2>
                 <div class="chips" id="views" role="group" aria-labelledby="view-title"></div>
               </div>
-            </div>
-            <div class="field-pair">
               <div class="field">
                 <h2 id="engines-title" data-say="engines">Engines</h2>
                 <div class="chips" id="engines" role="group" aria-labelledby="engines-title"></div>
               </div>
+            </div>
+            <div class="field-pair">
               <div class="field" id="beside-field">
                 <h2 id="beside-title" data-say="besideTitle">Scale</h2>
                 <div class="chips" id="beside" role="group" aria-labelledby="beside-title"></div>
@@ -143,11 +145,11 @@
               <div id="docked" data-testid="docked"></div>
             </div>
           </div>
+          <div class="field" id="facts" data-testid="facts" aria-live="polite"></div>
           <div class="field flight-field" id="flight-field">
             <h2 id="flight-title" data-say="flight">Flight</h2>
             <uchusen-flight id="flight" data-testid="flight" for="hero" aria-labelledby="flight-title"></uchusen-flight>
           </div>
-          <div class="field" id="facts" data-testid="facts" aria-live="polite"></div>
           <p class="note" id="data-note" data-say="dataNote" hidden></p>
           <p class="credit" id="credit" data-testid="credit" hidden></p>
         </div>
