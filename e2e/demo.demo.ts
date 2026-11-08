@@ -940,38 +940,42 @@ test("the CDN snippet alone works on a stranger's page, with the 3D view, a pain
 test.describe("the engines", () => {
   test.use({ reducedMotion: "no-preference" });
 
-  test("light when asked and go dark when turned off, in the drawing and the 3D view", async ({ page, browserName }) => {
-    const problems = watch(page);
-    await page.goto(URL);
-    await foldPicker(page);
-    await stopTurn(page);
-    await expect(hero(page)).toHaveAttribute("data-engines", "off");
-    const plumes = () => hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
-    await expect.poll(plumes).toBe(0);
-    await press(page, "engines-on");
-    await expect(hero(page)).toHaveAttribute("data-engines", "on");
-    await expect.poll(plumes).toBe(33);
-    if (is3d(browserName)) {
-      await reach3d(page);
-      await expect.poll(() => canvasData(page, "engines")).toBe("on");
-      await expect.poll(() => canvasData(page, "plumes")).toBe("33");
-    }
-    await press(page, "engines-off");
-    await expect(hero(page)).toHaveAttribute("data-engines", "off");
-    await expect.poll(plumes).toBe(0);
-    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes")).toBe("0");
-    await press(page, "engines-on");
-    await press(page, "look-painted");
-    await expect.poll(plumes).toBe(33);
-    if (is3d(browserName)) {
-      await lookIs(page, "painted");
-      await expect.poll(() => canvasData(page, "plumes"), { timeout: 60_000 }).toBe("33");
-    }
-    await press(page, "show-ship");
-    await expect.poll(plumes, { timeout: 60_000 }).toBe(6);
-    if (is3d(browserName)) await expect.poll(() => canvasData(page, "plumes"), { timeout: 60_000 }).toBe("6");
-    expect(problems).toEqual([]);
-  });
+  for (const view of ["drawing", "3D view"] as const) {
+    test(`light when asked and go dark when turned off, in the ${view}`, async ({ page, browserName }) => {
+      const drawing = view === "drawing";
+      test.skip(!drawing && !is3d(browserName), "WebGL is drawn in Chromium here");
+      const problems = watch(page);
+      // the page opens on the painted look and takes the 3D view over from its drawing at once: a drawing to count is one the browser was never given WebGL for
+      if (drawing) await page.addInitScript(() => {
+        const real = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...rest: unknown[]) {
+          if (/webgl/i.test(kind)) return null;
+          return (real as (...args: unknown[]) => unknown).call(this, kind, ...rest) as never;
+        } as typeof real;
+      });
+      await page.goto(URL);
+      await foldPicker(page);
+      await stopTurn(page);
+      await expect(hero(page)).toHaveAttribute("data-engines", "off");
+      const plumes = () => (drawing ? hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0) : canvasData(page, "plumes").then(Number));
+      if (drawing) await expect(hero(page)).toHaveAttribute("data-state", "fallback");
+      else await reach3d(page);
+      await expect.poll(plumes, { timeout: 60_000 }).toBe(0);
+      await press(page, "engines-on");
+      await expect(hero(page)).toHaveAttribute("data-engines", "on");
+      await expect.poll(plumes).toBe(33);
+      await press(page, "engines-off");
+      await expect(hero(page)).toHaveAttribute("data-engines", "off");
+      await expect.poll(plumes).toBe(0);
+      await press(page, "engines-on");
+      await press(page, "look-painted");
+      if (!drawing) await lookIs(page, "painted");
+      await expect.poll(plumes, { timeout: 60_000 }).toBe(33);
+      await press(page, "show-ship");
+      await expect.poll(plumes, { timeout: 60_000 }).toBe(6);
+      expect(problems).toEqual([]);
+    });
+  }
 });
 
 test.describe("the way it turns", () => {
