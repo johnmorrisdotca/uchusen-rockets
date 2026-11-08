@@ -133,7 +133,7 @@ export function toGlb(parts: readonly GlbPart[]): Glb {
       };
       if (b.hasUv) {
         const uv = new Uint16Array(count * 2);
-        for (let i = 0; i < count * 2; i++) uv[i] = Math.round(Math.min(1, Math.max(0, b.uvs[i])) * 65535);
+        for (let i = 0; i < count * 2; i++) uv[i] = Math.round(Math.min(1, Math.max(0, b.uvs[i] ?? 0)) * 65535);
         attributes.TEXCOORD_0 = accessor({ bufferView: put(new Uint8Array(uv.buffer), ARRAY_BUFFER, 4), componentType: USHORT, count, type: "VEC2", normalized: true });
       }
       triangles += b.indices.length / 3;

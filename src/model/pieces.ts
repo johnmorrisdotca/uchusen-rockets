@@ -197,6 +197,7 @@ function latheFaces(mesh: PartMesh, piece: Lathe): void {
   const [cx, cz] = piece.at ?? [0, 0];
   const { profile, segs, arc } = piece;
   if (piece.uv) out.hasUv = true;
+  while (out.uvs.length < (out.positions.length / 3) * 2) out.uvs.push(0);
   const normalOf = (i: number): [number, number] => {
     const [r0, y0] = profile[i];
     const [r1, y1] = profile[i + 1];
@@ -303,7 +304,6 @@ function addTriangle(out: Buffers, points: readonly [Vec3, Vec3, Vec3], normals:
   for (let i = 0; i < 3; i++) {
     out.positions.push(...points[i]);
     out.normals.push(...normals[i]);
-    out.uvs.push(0, 0);
   }
   const face = cross3(diff3(points[1], points[0]), diff3(points[2], points[0]));
   if (dot3(face, normals[0]) >= 0) out.indices.push(base, base + 1, base + 2);
@@ -371,7 +371,6 @@ function relief(mesh: PartMesh, piece: Plate, half: number): void {
         for (const { p, n } of column) {
           field.positions.push(...p);
           field.normals.push(...n);
-          field.uvs.push(0, 0);
         }
       // the nine points are numbered column by column: the middle is 4, and the ring round it goes 0 3 6 7 8 5 2 1
       const ring = [0, 3, 6, 7, 8, 5, 2, 1];
@@ -438,7 +437,6 @@ function quadBox(mesh: PartMesh, piece: Plate): void {
     const o = frame.o;
     out.positions.push(o[0] + u[0] * a + v[0] * b + w[0] * c, o[1] + u[1] * a + v[1] * b + w[1] * c, o[2] + u[2] * a + v[2] * b + w[2] * c);
     out.normals.push(nx, ny, nz);
-    out.uvs.push(0, 0);
   };
   const fan = (out: Buffers, base: number, c: number, nx: number, ny: number, nz: number, reverse: boolean) => {
     put(out, a0, b0, c, nx, ny, nz);
@@ -489,10 +487,10 @@ function plateBody(mesh: PartMesh, piece: Plate): void {
   const addFan = (material: MaterialName, c: number, normal: Vec3, reverse: boolean) => {
     const out = buffersOf(mesh, material);
     const base = out.positions.length / 3;
-    for (const [a, b] of outline) {
-      out.positions.push(...pointOf(frame, a, b, c));
-      out.normals.push(...normal);
-      out.uvs.push(0, 0);
+    for (let i = 0; i < n; i++) {
+      const [a, b] = outline[i];
+      out.positions.push(frame.o[0] + frame.u[0] * a + frame.v[0] * b + frame.w[0] * c, frame.o[1] + frame.u[1] * a + frame.v[1] * b + frame.w[1] * c, frame.o[2] + frame.u[2] * a + frame.v[2] * b + frame.w[2] * c);
+      out.normals.push(normal[0], normal[1], normal[2]);
     }
     for (let i = 1; i + 1 < n; i++) {
       if (reverse) out.indices.push(base, base + i + 1, base + i);
@@ -528,10 +526,12 @@ function plateBody(mesh: PartMesh, piece: Plate): void {
     const l = Math.hypot(nu, nv) || 1;
     const normal: Vec3 = [(frame.u[0] * nu + frame.v[0] * nv) / l, (frame.u[1] * nu + frame.v[1] * nv) / l, (frame.u[2] * nu + frame.v[2] * nv) / l];
     const base = out.positions.length / 3;
-    for (const p of [pointOf(frame, a0, b0, -half), pointOf(frame, a1, b1, -half), pointOf(frame, a1, b1, half), pointOf(frame, a0, b0, half)]) {
-      out.positions.push(...p);
-      out.normals.push(...normal);
-      out.uvs.push(0, 0);
+    for (let k = 0; k < 4; k++) {
+      const a = k === 0 || k === 3 ? a0 : a1;
+      const b = k === 0 || k === 3 ? b0 : b1;
+      const c = k < 2 ? -half : half;
+      out.positions.push(frame.o[0] + frame.u[0] * a + frame.v[0] * b + frame.w[0] * c, frame.o[1] + frame.u[1] * a + frame.v[1] * b + frame.w[1] * c, frame.o[2] + frame.u[2] * a + frame.v[2] * b + frame.w[2] * c);
+      out.normals.push(normal[0], normal[1], normal[2]);
     }
     if (right) out.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
     else out.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
