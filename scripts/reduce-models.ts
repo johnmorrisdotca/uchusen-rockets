@@ -17,6 +17,7 @@ import { dedup, prune, quantize } from "@gltf-transform/functions";
 import { MeshoptSimplifier } from "meshoptimizer";
 import { chromium } from "@playwright/test";
 import { MODEL_RECIPES, type ModelRecipe, type Patch, type Piece, type RecipePart } from "./model-recipes.ts";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const sources: string = process.env.UCHUSEN_MODEL_SOURCES ?? "";
 if (!sources) throw new Error("UCHUSEN_MODEL_SOURCES must name the folder that holds the source models. They are kept outside this repository.");
@@ -336,6 +337,7 @@ let patchesReady = new Map<Texture, Uint8Array>();
 async function prepare(doc: Document, from: string, size: number | undefined, patches: readonly Patch[]): Promise<Map<Texture, Uint8Array>> {
   const material = doc.getRoot().listMaterials().find((m) => m.getName() === from);
   if (!material) throw new Error(`no material ${from}`);
+  await acquireBrowserLock();
   const browser = await chromium.launch();
   const done = new Map<Texture, Uint8Array>();
   try {

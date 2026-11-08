@@ -15,6 +15,7 @@ const testMatch = set === "freeze" ? /[\\/]freeze\.demo\.ts$/ : set === "rest" ?
 
 export default defineConfig({
   testDir: "e2e",
+  globalSetup: "@johnmorrisdotca/kazoku-ui/testing/global-setup",
   testMatch,
   fullyParallel: true,
   forbidOnly: true,

@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
 import process from "node:process";
 import { chromium } from "@playwright/test";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const root = resolve(process.argv[2] ?? "dist");
 const server = createServer((request, response) => {
@@ -18,6 +19,7 @@ const server = createServer((request, response) => {
 });
 const port = Number(process.env.TIMING_PORT ?? 7904);
 await new Promise<void>((ok) => server.listen(port, "127.0.0.1", ok));
+await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
 try {
   const page = await browser.newPage();

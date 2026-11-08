@@ -7,6 +7,7 @@ import { join } from "node:path";
 import process from "node:process";
 import { chromium, type Page } from "@playwright/test";
 import { captureDrawing, composeThumbnails } from "./family-thumbnail.mjs";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const onlyThumbnail = process.argv.includes("--thumbnail");
 const out = process.argv.slice(2).find((arg) => !arg.startsWith("--")) ?? "docs/images";
@@ -14,6 +15,7 @@ mkdirSync(out, { recursive: true });
 const port = 7902;
 const server = spawn("node", ["scripts/dev.ts"], { env: { ...process.env, PORT: String(port) }, stdio: "ignore" });
 await new Promise((resolve) => setTimeout(resolve, 600));
+await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--headless=new", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--disable-gpu-compositing", "--ignore-gpu-blocklist"] });
 const url = `http://127.0.0.1:${port}/uchusen-rockets/`;
 const errors: string[] = [];

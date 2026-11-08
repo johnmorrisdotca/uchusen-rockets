@@ -131,7 +131,7 @@
     "@gltf-transform/extensions": "4.5.1",
     "@gltf-transform/functions": "4.5.1",
     "@johnmorrisdotca/chikyu-earth": "0.10.0",
-    "@johnmorrisdotca/kazoku-ui": "0.19.0",
+    "@johnmorrisdotca/kazoku-ui": "0.20.0",
     "@johnmorrisdotca/wakusei-planets": "0.17.1",
     "@playwright/test": "1.64.0",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",

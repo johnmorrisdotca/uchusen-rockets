@@ -8,6 +8,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 import { MATERIALS } from "../src/model/materials.ts";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 interface Shot {
   name: string;
@@ -231,6 +232,7 @@ const server = createServer((request, response) => {
 });
 const port = Number(process.env.SHOTS_PORT ?? 7915);
 await new Promise<void>((ok) => server.listen(port, "127.0.0.1", ok));
+await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const problems: string[] = [];
 try {

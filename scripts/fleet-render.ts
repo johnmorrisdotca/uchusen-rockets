@@ -13,6 +13,7 @@ import { SHIP_02_SLOTS } from "../src/model/fleet/ship-02/index.ts";
 import { HABITAT } from "../src/model/fleet/ship-02/dims.ts";
 import { DECKS, ENGINE_CARDS, HULL_STACK_RING, HULL_STACK_TANK, INSETS, NOTES, SPEC } from "../src/model/fleet/ship-02/specs.ts";
 import { SECTIONS, type Section } from "../src/model/fleet/ship-02/sections.ts";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const out = process.argv[2] ?? "renders";
 const only = process.argv[3]?.split(",");
@@ -88,6 +89,7 @@ interface Mark {
 }
 const bundle = await build({ entryPoints: ["scripts/fleet-view.page.ts"], bundle: true, write: false, format: "iife", platform: "browser", target: "es2022", logLevel: "error" });
 const script = bundle.outputFiles[0].text;
+await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const marksOf: Record<string, Mark[]> = {};
 

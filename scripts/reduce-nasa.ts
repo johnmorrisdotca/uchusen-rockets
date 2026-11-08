@@ -15,6 +15,7 @@ import { chromium } from "@playwright/test";
 import draco3d from "draco3dgltf";
 import { MeshoptSimplifier } from "meshoptimizer";
 import { NASA_RECIPES, type NasaPart, type NasaRecipe, type Rect } from "./nasa-recipes.ts";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const sources = process.env.UCHUSEN_MODEL_SOURCES ?? "";
 if (!sources) throw new Error("UCHUSEN_MODEL_SOURCES must name the folder that holds the source models. They are kept outside this repository.");
@@ -148,6 +149,7 @@ function pack(cells: Cell[], side: number, gap: number): boolean {
   return true;
 }
 
+await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"], timeout: 60_000 });
 const page = await browser.newPage();
 

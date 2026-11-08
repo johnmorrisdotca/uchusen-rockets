@@ -9,6 +9,7 @@ import { join } from "node:path";
 import process from "node:process";
 import { chromium } from "@playwright/test";
 import { ROCKETS, showsOf } from "../src/index.ts";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const out = process.argv[2] ?? "docs/images/check";
 const rocketId = process.argv[3] ?? "starship";
@@ -22,6 +23,7 @@ mkdirSync(out, { recursive: true });
 const port = Number(process.env.SHOTS_PORT ?? 7902);
 const server = spawn("node", ["scripts/dev.ts"], { env: { ...process.env, PORT: String(port) }, stdio: "ignore" });
 await new Promise((resolve) => setTimeout(resolve, 700));
+await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const problems: string[] = [];
 try {

@@ -17,6 +17,7 @@ import { meshOf } from "../src/model/pieces.ts";
 import { apply, applyNormal, type V3 } from "./drone/math.ts";
 import { IMPORTS, SOURCE_FILES } from "./drone/recipe.ts";
 import { type Paint, readGlb, readStl, type Tri } from "./drone/sources.ts";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const sources = process.env.UCHUSEN_MODEL_SOURCES ?? "";
 if (!sources) throw new Error("UCHUSEN_MODEL_SOURCES must name the folder that holds NASA's models. They are kept outside this repository.");
@@ -169,6 +170,7 @@ async function gather(level: "near" | "far"): Promise<{ tris: Tri[]; paints: Map
   return { tris, paints, used };
 }
 
+await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"], timeout: 60_000 });
 const page = await browser.newPage();
 

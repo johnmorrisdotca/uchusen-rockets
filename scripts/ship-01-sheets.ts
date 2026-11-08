@@ -16,6 +16,7 @@ import { ENGINES, ENVELOPE, HULL, IDENTITY, labels, deckSummary, OPERATOR, speci
 import { HANABUSA_VARIANT_SLOTS } from "../src/model/fleet/ship-01/variants.ts";
 import { MATERIALS } from "../src/model/materials.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
+import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const out = resolve(process.argv[2] ?? "sheets");
 const pics = join(out, "pictures");
@@ -158,6 +159,7 @@ function callouts(name: string, width: number, height: number, items: { id: stri
   return { svg: `<svg class="leader" width="${margin * 2 + width}" height="${height}">${lines}</svg>`, texts, count: placed.length };
 }
 
+await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--no-sandbox"] });
 const tab = await browser.newPage({ viewport: { width: W, height: 1800 } });
 async function shoot(file: string, html: string) {
