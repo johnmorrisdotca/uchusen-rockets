@@ -437,14 +437,18 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   await press(page, "show-together");
   await walk(1);
   const lastView = await settledView();
-  const last = await levelUsage(page);
+  const second = await levelUsage(page);
   console.log("fleet view 2", lastView);
   expect(lastView.detail).toBe(firstView.detail);
-  console.log(`fleet walk 2: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
+  console.log(`fleet walk 2: buffers ${second.buffers}, arrays ${second.arrays}, textures ${second.textures}, programs ${second.programs}`);
+  // the first walk reads the caches still filling (15 more vertex arrays after it on a slow runner), so growth is read from the second walk to a third
+  await walk(1);
+  const last = await levelUsage(page);
+  console.log(`fleet walk 3: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
   expect(last.contexts).toBe(1);
-  expect(last.buffers).toBeLessThanOrEqual(first.buffers);
-  expect(last.arrays).toBeLessThanOrEqual(first.arrays);
-  expect(last.textures).toBeLessThanOrEqual(first.textures);
+  expect(last.buffers).toBeLessThanOrEqual(second.buffers);
+  expect(last.arrays).toBeLessThanOrEqual(second.arrays);
+  expect(last.textures).toBeLessThanOrEqual(second.textures);
   // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.
   const begun = await page.evaluate(() => {
     const seen = (window as unknown as { __seen: { frames: number } }).__seen.frames;
