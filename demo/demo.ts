@@ -674,7 +674,7 @@ function pickMaker(maker: MakerId) {
 }
 
 let shipPicker: ShipPickerElement | undefined;
-const stageBox = document.querySelector<HTMLElement>(".stage-box");
+const stageBox = document.querySelector<HTMLElement>(".stage-box .view-space");
 if (stageBox) shipPicker = mountShipPicker(stageBox, { rocket: state.rocket, variant: state.variant }, (choice) => pick(choice));
 byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker), `maker_${maker}`)));
 byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));

@@ -1,7 +1,10 @@
 // A phone: a tap or a pinch on a stage turns that view and leaves the Safari page at scale 1. Once a rocket is in 3D, its still picture is gone.
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 
 const BASE = "/uchusen-rockets/";
+
+test.use({ hasTouch: true });
 
 const zoomOf = async (stage: Locator): Promise<number> => {
   const id = await stage.getAttribute("id");
@@ -116,6 +119,7 @@ test("a tap or a pinch on a stage does not zoom the page, and the line-up bar si
 test("the still picture is gone once the 3D view is in, and a turn changes the ship", async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto(`${BASE}embed-page.html`, { waitUntil: "load" });
+  await foldPicker(page);
   const rocket = page.locator("#rocket");
   await expect.poll(async () => rocket.getAttribute("data-state")).toBe("3d");
   await expect.poll(() => rocket.evaluate((node) => getComputedStyle(node.shadowRoot?.querySelector("canvas") ?? node).opacity)).toBe("1");
