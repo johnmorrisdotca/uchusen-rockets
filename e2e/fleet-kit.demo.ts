@@ -15,15 +15,25 @@ test.beforeEach(({ browserName }, info) => {
  */
 async function look(page: Page, query: Record<string, string>, footprint?: number[]) {
   await page.setViewportSize({ width: 900, height: 900 });
-  await page.goto(`${URL}?${new URLSearchParams({ spin: "off", ...query })}`);
-  await page.evaluate(() => {
-    document.documentElement.style.background = "#101418";
-    document.body.style.cssText = "margin:0;background:#101418";
-    (document.getElementById("rocket") as HTMLElement).style.cssText = "display:block;width:900px;height:900px;--uchusen-aspect:900 / 900";
-  });
+  if (footprint !== undefined) {
+    // Keep the same geometry and camera for the matching line picture.
+    await hero(page).evaluate((node, value) => node.setAttribute("look", value), query.look);
+  } else {
+    await page.goto(`${URL}?${new URLSearchParams({ spin: "off", ...query })}`);
+    await page.evaluate(() => {
+      document.documentElement.style.background = "#101418";
+      document.body.style.cssText = "margin:0;background:#101418";
+      (document.getElementById("rocket") as HTMLElement).style.cssText = "display:block;width:900px;height:900px;--uchusen-aspect:900 / 900";
+    });
+  }
   await hero(page).and(page.locator('[data-state="3d"]')).waitFor({ timeout: 120_000 });
   await page.waitForFunction(() => (document.getElementById("rocket") as HTMLElement).dataset.painted !== "loading", undefined, { timeout: 120_000 });
-  await page.waitForTimeout(1500);
+  await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.look)).toBe(query.look);
+  await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.moving)).not.toBe("true");
+  await expect.poll(() => hero(page).evaluate((node) => {
+    const canvas = node.shadowRoot?.querySelector("canvas");
+    return canvas ? Number(getComputedStyle(canvas).opacity) : 0;
+  })).toBe(1);
   const png = await hero(page).screenshot();
   return page.evaluate(async ([data, over]) => {
     const bitmap = await createImageBitmap(new Blob([new Uint8Array(data)], { type: "image/png" }));
@@ -58,11 +68,20 @@ async function look(page: Page, query: Record<string, string>, footprint?: numbe
   }, [[...png], footprint ?? null] as const);
 }
 
-test("the fleet's pictures are not blank or flat, painted and in the line look", async ({ page }) => {
-  test.setTimeout(900_000);
-  const starship = await look(page, { rocket: "starship", variant: "v3", look: "painted", view: "side" });
-  console.log(`Starship Block 3: object ${(starship.object * 100).toFixed(1)}%, edges ${(starship.edges * 100).toFixed(1)}%`);
-  expect(starship.object).toBeGreaterThan(0.02);
+test.describe("the fleet's pictures are not blank or flat", () => {
+  let starship: { object: number; edges: number };
+  test.beforeAll(async ({ browser, browserName }, info) => {
+    if (browserName !== "chromium" || info.project.name !== "chromium-desk") return;
+    const page = await browser.newPage({ reducedMotion: "reduce", locale: "en-US" });
+    try {
+      const reference = await look(page, { rocket: "starship", variant: "v3", look: "painted", view: "side" });
+      starship = { object: reference.object, edges: reference.edges };
+      console.log(`Starship Block 3: object ${(starship.object * 100).toFixed(1)}%, edges ${(starship.edges * 100).toFixed(1)}%`);
+      expect(starship.object).toBeGreaterThan(0.02);
+    } finally {
+      await page.close();
+    }
+  });
   const choices: [string, string, string][] = [
     ["fleet-engines", "engine-fusion-7", "side"],
     ["fleet-tanks", "tank-cryo-12-cutaway", "three-quarter"],
@@ -76,13 +95,16 @@ test("the fleet's pictures are not blank or flat, painted and in the line look",
     ["fleet-samples", "hauler", "side"],
   ];
   for (const [rocket, variant, view] of choices) {
-    const painted = await look(page, { rocket, variant, look: "painted", view });
-    const lines = await look(page, { rocket, variant, look: "thick", view }, painted.footprint);
-    console.log(`${variant}: painted object ${(painted.object * 100).toFixed(1)}%, edges ${(painted.edges * 100).toFixed(1)}%; lines edges ${(lines.edges * 100).toFixed(1)}%`);
-    expect(painted.object, `${variant} is drawn`).toBeGreaterThan(0.02);
-    // a guard against a flat picture (the side by side frame is judged by eye): half of Starship Block 3's inside edges at least, and the line look not much emptier than the painted one (the line look draws a plate's outline, the painted look its shading, so the two are not equal: 0.6 is the floor, and the ratios are printed)
-    expect(painted.edges, `${variant}: detail on the face of it`).toBeGreaterThanOrEqual(starship.edges * 0.5);
-    expect(lines.edges, `${variant}: the line look is as dense as the painted one`).toBeGreaterThanOrEqual(painted.edges * 0.6);
+    test(`${rocket}/${variant}: painted and line detail`, async ({ page }) => {
+      test.setTimeout(60_000);
+      const painted = await look(page, { rocket, variant, look: "painted", view });
+      const lines = await look(page, { rocket, variant, look: "thick", view }, painted.footprint);
+      console.log(`${variant}: painted object ${(painted.object * 100).toFixed(1)}%, edges ${(painted.edges * 100).toFixed(1)}%; lines edges ${(lines.edges * 100).toFixed(1)}%`);
+      expect(painted.object, `${variant} is drawn`).toBeGreaterThan(0.02);
+      // Preserve the reference and density floors, on the same pixels in both looks.
+      expect(painted.edges, `${variant}: detail on the face of it`).toBeGreaterThanOrEqual(starship.edges * 0.5);
+      expect(lines.edges, `${variant}: the line look is as dense as the painted one`).toBeGreaterThanOrEqual(painted.edges * 0.6);
+    });
   }
 });
 

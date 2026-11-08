@@ -2,6 +2,7 @@
 // iframe, module, SVG, data address, image link), a note for each, Copy, Save SVG, Save PNG, Open the embed page, and the credit that shows only when the picture needs one; and the panel adds
 // React, Vue, Angular and Svelte, a size, the picture beside the code and Read the docs. The picture is the drawing itself: no WebGL context and no iframe of its own.
 import { expect, test, type Page } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";
 const PANEL = "#embed-panel";
@@ -17,6 +18,7 @@ const problems = (page: Page): string[] => {
 test("the index panel has the old six ways and the family's, a note each, Copy, Save SVG, Save PNG, the embed page, the docs, a size and a picture", async ({ page }) => {
   const found = problems(page);
   await page.goto(URL);
+  await foldPicker(page);
   const panel = page.locator(PANEL);
   await panel.scrollIntoViewIfNeeded();
   await expect(panel.locator('[role="tab"]')).toHaveText(["HTML", "ES module", "React", "Vue", "Angular", "Svelte", "iframe", "SVG", "Data address", "Image link"]);
@@ -56,6 +58,7 @@ test("the index panel has the old six ways and the family's, a note each, Copy, 
 
 test("the credit shows only for a painted rocket, and goes in the framework tabs too", async ({ page }) => {
   await page.goto(`${URL}?look=line`);
+  await foldPicker(page);
   const panel = page.locator(PANEL);
   await expect(panel.locator('[part="credits"]')).toBeHidden();
   await page.locator('[data-testid="look-painted"]').click();
@@ -69,6 +72,7 @@ test("the credit shows only for a painted rocket, and goes in the framework tabs
 
 test("a size sets the iframe's width and the picture's, and the picture is the drawing", async ({ page }) => {
   await page.goto(URL);
+  await foldPicker(page);
   const panel = page.locator(PANEL);
   await panel.scrollIntoViewIfNeeded();
   await panel.locator('button[data-kind="iframe"]').click();
@@ -83,6 +87,7 @@ test("copy puts the code on the clipboard, and Save SVG still saves the picture"
   test.skip(testInfo.project.name !== "chromium-desk", "One browser's clipboard and downloads are enough");
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto(URL);
+  await foldPicker(page);
   await page.locator(`${PANEL} [part="copy"]`).click();
   await expect(page.locator(`${PANEL} .status`)).toContainText("Copied");
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("<uchusen-rocket");
@@ -96,6 +101,7 @@ test("the builder page has the same panel, under its strict policy, with no erro
     if (response.status() >= 400) found.push(`${response.status()} ${response.url()}`);
   });
   await page.goto(`${URL}builder.html`);
+  await foldPicker(page);
   await page.waitForSelector('html[data-ready="true"]');
   const panel = page.locator(PANEL);
   await expect(panel.locator('[role="tab"]')).toHaveText(["HTML", "ES module", "React", "Vue", "Angular", "Svelte", "iframe", "SVG", "Data address", "Image link"]);
@@ -112,6 +118,7 @@ test("the builder page has the same panel, under its strict policy, with no erro
 
 test("the page stays still when it opens and when the language changes, whatever the panel draws", async ({ page }) => {
   await page.goto(URL);
+  await foldPicker(page);
   await page.waitForTimeout(800);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   await page.getByRole("button", { name: "日本語", exact: true }).click();

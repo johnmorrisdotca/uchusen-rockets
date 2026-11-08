@@ -1,5 +1,6 @@
 // The wide comparison page: two or three craft in one 3D view, each at its true size, floating, with the Earth behind, one set of view controls, the choices in rows and in the address. A phone shows one craft.
 import { expect, type Page, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 import { build } from "../src/build/index.ts";
 
 const URL = "/uchusen-rockets/compare.html";
@@ -21,6 +22,7 @@ test("the page opens with two craft on one ground, its stage is wide, and the ta
   test.skip(info.project.name.endsWith("phone"), "A desk's layout: a phone's width shows one craft");
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(craftChips(page)).toHaveCount(2);
   await expect(page.locator('[data-testid="cw-add"]')).toBeVisible();
@@ -43,6 +45,7 @@ test("the page opens with two craft on one ground, its stage is wide, and the ta
 test("a third craft is added, the choices are kept in the address, and a reload brings them back", async ({ page }, info) => {
   test.skip(info.project.name.endsWith("phone"), "A desk's layout: a phone's width shows one craft");
   await page.goto(URL);
+  await foldPicker(page);
   await page.locator('[data-testid="cw-add"]').click();
   await expect(craftChips(page)).toHaveCount(3);
   await expect(page.locator('[data-testid="cw-add"]')).toBeVisible();
@@ -56,6 +59,7 @@ test("a third craft is added, the choices are kept in the address, and a reload 
   expect(param(page, "with")?.split(",").length).toBe(3);
   const kept = page.url();
   await page.goto(kept);
+  await foldPicker(page);
   await expect(craftChips(page)).toHaveCount(4);
   await expect(page.locator('[data-testid="cw-table"] tbody tr')).toHaveCount(4);
   // remove asks first, and Cancel keeps the craft
@@ -94,6 +98,7 @@ test("a third craft is added, the choices are kept in the address, and a reload 
 test("a hostile address leaves one craft and no error", async ({ page }) => {
   const problems = watch(page);
   await page.goto(`${URL}?rocket=__proto__&variant=<img src=x onerror=alert(1)>&with=<script>alert(1)</script>,constructor:x,toString`);
+  await foldPicker(page);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(craftChips(page)).toHaveCount(1);
   expect(await page.locator('[data-testid="cw-craft-0"]').innerText()).toContain("Block 3");
@@ -104,6 +109,7 @@ test("the view controls tip as far as the first craft allows, and Fit holds all 
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "WebGL is drawn in Chromium here, at a desk's width");
   const problems = watch(page);
   await page.goto(`${URL}?rocket=iss&variant=iss&with=saturn-v:saturn-v,hubble:hubble`);
+  await foldPicker(page);
   await bar(page).evaluate((node) => (node as Bar).pause());
   await expect(bar(page)).toHaveAttribute("tilt-max", "90");
   await reach3d(page);
@@ -117,6 +123,7 @@ test("the view controls tip as far as the first craft allows, and Fit holds all 
     .toEqual(corners.map(() => true));
   // a rocket first holds the tip to 45
   await page.goto(`${URL}?rocket=saturn-v&variant=saturn-v&with=iss:iss`);
+  await foldPicker(page);
   await expect(bar(page)).toHaveAttribute("tilt-max", "45");
   expect(problems).toEqual([]);
 });
@@ -124,6 +131,7 @@ test("the view controls tip as far as the first craft allows, and Fit holds all 
 test("on a phone one craft is on the stage, the others stay in the line, and the page does not scroll sideways", async ({ page }, info) => {
   test.skip(!info.project.name.endsWith("phone"), "A phone's width");
   await page.goto(`${URL}?with=saturn-v:saturn-v,iss:iss`);
+  await foldPicker(page);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(craftChips(page)).toHaveCount(3);
   await expect(page.locator('[data-testid="cw-add"]')).toBeVisible();
@@ -160,6 +168,7 @@ const apart = (a: { left: number; top: number; right: number; bottom: number }, 
 test("each craft is named at the top right, inside the picture, and nothing stands on a plinth", async ({ page, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "WebGL is drawn in Chromium here, at a desk's width");
   await page.goto(URL);
+  await foldPicker(page);
   await page.locator('[data-testid="cw-add"]').click();
   await expect(craftChips(page)).toHaveCount(3);
   await reach3d(page);
@@ -175,6 +184,7 @@ test("each craft is named at the top right, inside the picture, and nothing stan
 test("on a phone the one craft's name stays inside the picture", async ({ page, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-phone", "WebGL is drawn in Chromium here, at a phone's width");
   await page.goto(URL);
+  await foldPicker(page);
   await reach3d(page);
   await expect.poll(async () => (await captions(page))?.names.length ?? 0, { timeout: 30_000 }).toBe(1);
   const shot = (await captions(page)) as Shot;
@@ -185,6 +195,7 @@ test("on a phone the one craft's name stays inside the picture", async ({ page, 
 test("any craft on the main page can be taken to the wide one", async ({ page }, info) => {
   test.skip(info.project.name === "chromium-phone", "A desk's layout");
   await page.goto("/uchusen-rockets/?rocket=saturn-v&variant=saturn-v");
+  await foldPicker(page);
   const link = page.locator('[data-testid="compare-open"]');
   await expect(link).toHaveAttribute("href", /compare\.html\?rocket=saturn-v&variant=saturn-v/);
   await link.click();
@@ -196,6 +207,7 @@ test("six craft stay on the page at a desk's width", async ({ page }, info) => {
   test.skip(info.project.name !== "chromium-desk", "A desk's width");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(URL);
+  await foldPicker(page);
   await page.locator('[data-testid="cw-add"]').click();
   await page.locator('[data-testid="cw-add"]').click();
   await page.locator('[data-testid="cw-add"]').click();
@@ -229,6 +241,7 @@ test("on a phone the craft line is one row that scrolls", async ({ page }, info)
   test.skip(info.project.name !== "chromium-phone", "A phone's width");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(URL);
+  await foldPicker(page);
   await page.locator('[data-testid="cw-add"]').click();
   await page.locator('[data-testid="cw-add"]').click();
   await page.locator('[data-testid="cw-add"]').click();
@@ -255,6 +268,7 @@ test("past the device's budget, adding says why", async ({ page }, info) => {
   test.skip(info.project.name !== "chromium-desk", "The budget message");
   await page.addInitScript(() => Object.defineProperty(navigator, "deviceMemory", { configurable: true, get: () => 0.25 }));
   await page.goto(URL);
+  await foldPicker(page);
   await page.locator('[data-testid="cw-add"]').click();
   await page.locator('[data-testid="cw-add"]').click();
   await expect(craftChips(page)).toHaveCount(4);
@@ -269,6 +283,7 @@ test("past the device's budget, adding says why", async ({ page }, info) => {
 test("a craft under about 12 px is marked with its name and size, and its chip opens a magnifier", async ({ page, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "WebGL is drawn in Chromium here, at a desk's width");
   await page.goto(`${URL}?rocket=starship&variant=v3&with=fleet-drone:repair-drone`);
+  await foldPicker(page);
   await reach3d(page);
   await page.locator('[data-testid="cam-all"]').click();
   const mark = hero(page).locator("[data-craft-mark]");

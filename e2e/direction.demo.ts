@@ -4,6 +4,7 @@
 // every rocket, and a camera at azimuth a sees a point on the near side at x = -R sin(a), so the surface goes right as the azimuth falls; at elevation e its height is -R sin(e), so it goes up as the elevation falls.
 // Desk Chromium only: the 3D looks draw in software here.
 import { expect, type Page, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 import { checkFollowsTheHand, dragBy } from "./ground.mjs";
 
 const URL = "/uchusen-rockets/";
@@ -17,6 +18,7 @@ test.beforeEach(({ browserName }, info) => {
 
 async function open(page: Page, rocket: string, variant: string, look: string) {
   await page.goto(`${URL}?rocket=${rocket}&variant=${variant}&look=${look}`);
+  await foldPicker(page);
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelector("canvas")?.dataset.look ?? ""), { timeout: 60_000 }).toBe(look);

@@ -1,5 +1,6 @@
 // A plain drag turns the craft at every zoom. Panning is the Move choice, not a side effect of zooming in.
 import { expect, type Page, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
@@ -22,6 +23,7 @@ test("zoomed in, a drag turns the craft and does not move it", async ({ page, br
   const problems: string[] = [];
   page.on("pageerror", (error) => problems.push(error.message));
   await page.goto(URL);
+  await foldPicker(page);
   await bar(page).evaluate((node) => (node as Bar).pause());
   await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   for (const zoom of [2, 5]) {

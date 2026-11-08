@@ -1,5 +1,6 @@
 // The build row: a ship with an order shows play, the rates and, under reduced motion, numbered stills. A rocket does not.
 import { expect, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 import { buildOf, playFrame } from "../src/buildPlay.ts";
 
 test("the build row is on a ship with an order, and a still keeps the place", async ({ page }) => {
@@ -8,9 +9,11 @@ test("the build row is on a ship with an order, and a still keeps the place", as
   const day = (at: number) => String(Math.floor(playFrame(steps, at).day));
 
   await page.goto("/uchusen-rockets/?rocket=starship&variant=v3");
+  await foldPicker(page);
   await expect(page.locator("#build-field")).toBeHidden();
 
   await page.goto("/uchusen-rockets/?rocket=fleet-ship-03&variant=miyamoto&build=on&at=0.25");
+  await foldPicker(page);
   await page.locator('[data-testid="panel-build"]').click();
   await expect(page.locator("#build-field")).toBeVisible();
   const bar = page.locator("uchusen-build");
@@ -33,12 +36,14 @@ test("the row is on for each ship with an order, and off for a ship without one"
   ];
   for (const url of shown) {
     await page.goto(url);
+    await foldPicker(page);
     await page.locator('[data-testid="panel-build"]').click();
     await expect(page.locator("#build-field")).toBeVisible();
     await expect(page.locator("uchusen-build").getByTestId("build-play")).toBeDisabled();
   }
   for (const url of ["/uchusen-rockets/?rocket=fleet-kyotori&variant=kyotori", "/uchusen-rockets/?rocket=fleet-02&variant=fleet-02"]) {
     await page.goto(url);
+    await foldPicker(page);
     await expect(page.locator("#build-field")).toBeHidden();
   }
 });
@@ -49,6 +54,7 @@ test.describe("the build plays", () => {
 
   test("1x is real time: the clock gains about one story second a second, and Pause shows while it plays", async ({ page }) => {
     await page.goto(miyamoto);
+    await foldPicker(page);
     await page.locator('[data-testid="panel-build"]').click();
     const bar = page.locator("uchusen-build");
     await expect(bar.getByTestId("build-now")).toContainText("Day 0, 00:00:00");
@@ -75,6 +81,7 @@ test.describe("the build plays", () => {
 
   test("repeat wraps from the end to the keel, and the address keeps the speed and the repeat", async ({ page }) => {
     await page.goto(miyamoto);
+    await foldPicker(page);
     await page.locator('[data-testid="panel-build"]').click();
     const bar = page.locator("uchusen-build");
     const speeds = bar.locator("kazoku-speed-buttons");
@@ -98,6 +105,7 @@ test.describe("the build plays", () => {
     expect(new URL(page.url()).searchParams.get("build-speed")).toBe("100000");
     expect(new URL(page.url()).searchParams.get("pace")).toBe(null);
     await page.goto(`${miyamoto}&build-speed=10000&repeat=on`);
+    await foldPicker(page);
     await page.locator('[data-testid="panel-build"]').click();
     await expect(bar.getByTestId("build-repeat")).toHaveAttribute("aria-pressed", "true");
     await expect(speeds.getByRole("button", { name: "10000×" })).toHaveAttribute("aria-pressed", "true");
@@ -106,6 +114,7 @@ test.describe("the build plays", () => {
 
   test("the build speed and the turn's pace keep their own address keys", async ({ page }) => {
     await page.goto(miyamoto);
+    await foldPicker(page);
     await page.locator('[data-testid="panel-build"]').click();
     const buildSpeeds = page.locator("uchusen-build kazoku-speed-buttons");
     const turnSpeeds = page.locator("#view-bar kazoku-speed-buttons");
@@ -122,6 +131,7 @@ test.describe("the build plays", () => {
 
   test("back to the start resets the build to day 0", async ({ page }) => {
     await page.goto(`${miyamoto}&build=on&at=0.25`);
+    await foldPicker(page);
     await page.locator('[data-testid="panel-build"]').click();
     const bar = page.locator("uchusen-build");
     await expect(bar.getByTestId("build-now")).not.toContainText("Day 0,");

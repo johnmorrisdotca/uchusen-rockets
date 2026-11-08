@@ -4,6 +4,9 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { flightOf, frameAt } from "../src/flight.ts";
 import { ROCKETS } from "../src/rockets.ts";
 import { isListed } from "../demo/listed.ts";
+import { foldPicker } from "./picker.ts";
+
+test.describe.configure({ mode: "parallel" });
 
 const URL = "/uchusen-rockets/";
 const is3d = (browserName: string) => browserName === "chromium";
@@ -33,6 +36,7 @@ function watch(page: Page): string[] {
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
 /** A rocket's button shows under its maker's, so its maker comes first. The fleet kit's boxes of parts are not listed, and are pressed without being seen. */
 const press = async (page: Page, id: string) => {
+  await foldPicker(page);
   const rocket = /^rocket-(.+)$/.exec(id)?.[1];
   if (rocket) await page.locator(`[data-testid="maker-${ROCKETS[rocket].maker}"]`).click();
   const button = page.locator(`[data-testid="${id}"]`);
@@ -51,7 +55,10 @@ const paintedIn = async (rocket: Locator) => {
   if ((await rocket.getAttribute("data-state")) === "3d") await expect(rocket).toHaveAttribute("data-painted", /^(model|mixed|code)$/, { timeout: 90_000 });
 };
 const bar = (page: Page) => page.locator('[data-testid="view-bar"]');
-const stopTurn = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+const stopTurn = async (page: Page) => {
+  await foldPicker(page);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+};
 const angle = (page: Page) => hero(page).evaluate((node) => (node as HTMLElement & { angle: { az: number; el: number } }).angle);
 
 test("the page loads clean, every address under the site's own path, and nothing costs more than it should at first", async ({ page, browserName }) => {
@@ -59,16 +66,25 @@ test("the page loads clean, every address under the site's own path, and nothing
   const addresses: string[] = [];
   page.on("request", (request) => addresses.push(request.url()));
   await page.goto(URL);
+  await foldPicker(page);
   await expect(hero(page)).toHaveAttribute("data-look", "painted");
   if (is3d(browserName)) await reach3d(page);
   else await page.waitForTimeout(800);
   expect(problems).toEqual([]);
-  for (const address of addresses) expect(new globalThis.URL(address).pathname.startsWith(URL)).toBe(true);
+  const site = new globalThis.URL(page.url());
+  for (const address of addresses) {
+    const resource = new globalThis.URL(address);
+    // Embedded GLTF textures use blob URLs owned by this origin, not network paths.
+    expect([site.protocol, "blob:"], address).toContain(resource.protocol);
+    expect(resource.origin, address).toBe(site.origin);
+    if (resource.protocol !== "blob:") expect(resource.pathname.startsWith(URL), address).toBe(true);
+  }
 });
 
 test("every control is on the main view and does what it says", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   for (const id of ["variant-v1", "variant-v1-flight1", "variant-v2", "variant-v3", "variant-v4", "variant-2019", "show-together", "show-apart", "show-booster", "show-ship", "look-line", "look-thick", "look-painted", "view-front", "view-back", "view-side", "view-below", "view-three-quarter"]) await expect(page.locator(`[data-testid="${id}"]`)).toBeVisible();
   await press(page, "variant-v1");
   await expect(hero(page)).toHaveAttribute("data-variant", "v1");
@@ -84,6 +100,7 @@ test("every control is on the main view and does what it says", async ({ page })
 
 test("each variant lists its own sizes with their sources, and a blank says so", async ({ page }) => {
   await page.goto(URL);
+  await foldPicker(page);
   const facts = page.locator('[data-testid="facts"]');
   await expect(facts).toContainText("124.4 m");
   await expect(facts).toContainText("72.3 m");
@@ -113,6 +130,7 @@ test("the look switches and the angle stays; the view controls turn it by drag a
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   await reach3d(page);
   await press(page, "view-side");
@@ -152,6 +170,7 @@ test("the tilt slider tips it, + zooms, the pad moves it, and Fit brings the who
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   await reach3d(page);
   const home = await angle(page);
@@ -175,6 +194,7 @@ test("the tilt slider tips it, + zooms, the pad moves it, and Fit brings the who
 test("a drawing follows the view controls too: turn, tip, zoom and move, and a hostile choice is only numbers", async ({ page }) => {
   const problems = watch(page);
   await page.goto(`${URL}element-check.html`);
+  await foldPicker(page);
   const drawn = page.locator("#drawn");
   await expect(drawn).toHaveAttribute("data-state", "picture");
   type Driven = HTMLElement & { drive(choice: unknown): void };
@@ -203,6 +223,7 @@ test("a drawing follows the view controls too: turn, tip, zoom and move, and a h
 test("a view in the address opens the same view, and what is chosen is kept in the address", async ({ page }) => {
   const problems = watch(page);
   await page.goto(`${URL}?yaw=40&tilt=10&zoom=2`);
+  await foldPicker(page);
   await stopTurn(page);
   await expect.poll(() => bar(page).evaluate((node) => JSON.stringify((node as HTMLElement & { state: { yaw: number; tilt: number; zoom: number } }).state))).toContain('"yaw":40');
   const state = await bar(page).evaluate((node) => (node as HTMLElement & { state: { yaw: number; tilt: number; zoom: number } }).state);
@@ -222,6 +243,7 @@ test("the rocket, variant, parts, look and view are kept in the address and come
   const problems = watch(page);
   const params = () => new globalThis.URL(page.url()).searchParams;
   await page.goto(`${URL}?rocket=falcon-9&variant=block-5&show=first-stage&look=thick&view=side`);
+  await foldPicker(page);
   await stopTurn(page);
   await expect(hero(page)).toHaveAttribute("data-variant", "block-5");
   await expect(hero(page)).toHaveAttribute("data-show", "first-stage");
@@ -238,6 +260,7 @@ test("the rocket, variant, parts, look and view are kept in the address and come
   await press(page, "view-three-quarter");
   await expect.poll(() => [params().get("look"), params().get("view")]).toEqual(["line", null]);
   await page.goto(`${URL}?show=__proto__&look=%22%3E%3Cscript%3E&view=constructor`);
+  await foldPicker(page);
   await expect(hero(page)).toHaveAttribute("data-look", "painted");
   await expect(hero(page)).toHaveAttribute("data-view-angle", "three-quarter");
   await expect(hero(page)).toHaveAttribute("data-show", "together");
@@ -247,6 +270,7 @@ test("the rocket, variant, parts, look and view are kept in the address and come
 test("Centre appears once the view is moved and puts the rocket back in the middle; a pan keeps a quarter of it in view", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   const centre = bar(page).locator('[data-b="centre"]');
   type Bar = HTMLElement & { set(next: object): void; state: { zoom: number; panX: number; panY: number; yaw: number; tilt: number } };
@@ -278,6 +302,7 @@ test("a variant change keeps the angle; every look draws every variant in a real
   test.setTimeout(240_000);
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   await reach3d(page);
   await press(page, "view-back");
@@ -304,6 +329,7 @@ test("together to apart is an animated move, and a cut under reduced motion", as
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "no-preference" });
   const page = await context.newPage();
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   await reach3d(page);
   await press(page, "show-apart");
@@ -338,6 +364,7 @@ test("the page opens on the painted model for the variant on screen, and the cre
     if (request.url().includes("/assets/models/")) models.push(request.url().split("/").pop() as string);
   });
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toBeVisible();
@@ -368,6 +395,7 @@ test("a look chosen while the 3D view starts, or while a rocket loads, is the lo
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   const problems = watch(page);
   await page.goto(`${URL}element-check.html`);
+  await foldPicker(page);
   // the look is changed in the same turn the 3D view's canvas appears, while its rocket is still being read
   const made = await page.evaluate(
     () =>
@@ -409,6 +437,7 @@ test("leaving the painted look clears data-painted, even while a model is still 
   // a model that never comes in leaves the painted look at "loading"
   await page.route("**/assets/models/**", () => {});
   await page.goto(`${URL}?look=line`);
+  await foldPicker(page);
   await reach3d(page);
   await press(page, "look-painted");
   await expect(hero(page)).toHaveAttribute("data-painted", "loading", { timeout: 60_000 });
@@ -420,6 +449,7 @@ test("leaving the painted look clears data-painted, even while a model is still 
 test("the page itself is in Japanese when asked, and the language picker switches all of it", async ({ page }) => {
   const problems = watch(page);
   await page.goto(`${URL}?lang=ja`);
+  await foldPicker(page);
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
   const text = (id: string) => page.locator(`[data-testid="${id}"]`).first();
   await expect(page.locator("#maker-title")).toHaveText("メーカー");
@@ -471,6 +501,7 @@ test("a painted model that cannot be fetched leaves this package's own paint, an
   test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
   await page.route("**/assets/models/**", (route) => route.abort());
   await page.goto(`${URL}?look=line`);
+  await foldPicker(page);
   await reach3d(page);
   await press(page, "look-painted");
   await expect(hero(page)).toHaveAttribute("data-painted", "code", { timeout: 60_000 });
@@ -480,6 +511,7 @@ test("a painted model that cannot be fetched leaves this package's own paint, an
 test("the comparison draws the variants at one scale, and lets a reader choose them", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await press(page, "more-compare");
   const lineup = page.locator('[data-testid="lineup"]');
   await expect(lineup).toHaveAttribute("data-count", "7");
@@ -507,6 +539,7 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
 test("the builder offers parts from every rocket, labels a mix as what it is, and never reaches one that does not fit", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await press(page, "more-builder");
   const report = page.locator('[data-testid="builder-report"]');
   const pick = (index: number) => page.locator(`[data-testid="pick-${index}"]`);
@@ -553,6 +586,7 @@ test("the builder offers parts from every rocket, labels a mix as what it is, an
 test("the sections under the rocket are one at a time, in a row of tabs, and the address keeps the choice", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   const shown = () => page.locator("main > section:not(#main-view):visible").evaluateAll((nodes) => nodes.map((node) => node.id));
   expect(await shown()).toEqual(["embed"]);
   await press(page, "more-builder");
@@ -561,6 +595,7 @@ test("the sections under the rocket are one at a time, in a row of tabs, and the
   await expect(page.locator('[data-testid="more-embed"]')).toHaveAttribute("aria-selected", "false");
   expect(new globalThis.URL(page.url()).hash).toBe("#builder");
   await page.goto(`${URL}#sources`);
+  await foldPicker(page);
   // WebKit reports a module the page was still importing as a failure when the page is reloaded under it: let the imports end first
   await page.waitForLoadState("networkidle");
   await page.reload();
@@ -570,6 +605,7 @@ test("the sections under the rocket are one at a time, in a row of tabs, and the
 
 test("the sources and the credits are on the page, and the page says no one endorsed it", async ({ page }) => {
   await page.goto(URL);
+  await foldPicker(page);
   await press(page, "more-sources");
   await expect(page.locator('[data-testid="sources"]')).toContainText("Wikipedia");
   const credits = page.locator('[data-testid="credits"]');
@@ -583,6 +619,7 @@ test("the sources and the credits are on the page, and the page says no one endo
 test("every rocket is on the main view, with its own variants and parts, and a variant only lists parts it has", async ({ page }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await press(page, "rocket-falcon-9");
   await expect(hero(page)).toHaveAttribute("data-variant", "block-5");
   for (const id of ["variant-v1.0", "variant-v1.1", "variant-ft", "variant-block-5", "variant-block-5-dragon-2", "show-first-stage", "show-second-stage", "show-fairing"]) await expect(page.locator(`[data-testid="${id}"]`)).toBeVisible();
@@ -615,6 +652,7 @@ test("each rocket's painted look fetches only its own models, and credits their 
     if (request.url().includes("/assets/models/")) models.push(request.url().split("/").pop() as string);
   });
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   await reach3d(page);
   await press(page, "look-painted");
@@ -644,6 +682,7 @@ test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited 
   test.setTimeout(240_000);
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   await reach3d(page);
   await press(page, "look-painted");
@@ -674,6 +713,7 @@ test("NASA's models load only when chosen, and are credited to NASA as public do
     if (request.url().includes("/assets/models/")) models.push(request.url());
   });
   await page.goto(`${URL}?look=line`);
+  await foldPicker(page);
   await stopTurn(page);
   await reach3d(page);
   const nasaFile = /(lunar-module|apollo-soyuz|gemini|mercury|jupiter-c|iss|hubble|space-shuttle-stack)-/;
@@ -699,6 +739,7 @@ test("the painted Falcon 9 second stage shows this package's own nozzle when it 
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
   test.setTimeout(240_000);
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   await reach3d(page);
   await press(page, "rocket-falcon-9");
@@ -724,6 +765,7 @@ test("the painted Falcon 9 second stage shows this package's own nozzle when it 
 test("no sideways scroll at a phone's width, and controls big enough for a finger", async ({ page }, info) => {
   test.skip(info.project.name === "chromium-desk", "A phone's width");
   await page.goto(URL);
+  await foldPicker(page);
   const width = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]);
   expect(width[0]).toBeLessThanOrEqual(width[1]);
   for (const id of ["show-apart", "look-painted", "view-below"]) {
@@ -741,6 +783,7 @@ test("no sideways scroll at a phone's width, and controls big enough for a finge
 test("a tap turns the look on a phone, and the drawing follows with no WebGL", async ({ page, browserName }, info) => {
   test.skip(browserName !== "webkit" && info.project.name !== "chromium-phone", "A phone");
   await page.goto(URL);
+  await foldPicker(page);
   await page.locator('[data-testid="look-thick"]').tap();
   await expect(hero(page)).toHaveAttribute("data-look", "thick");
 });
@@ -752,6 +795,7 @@ test("the drawing mode never loads three.js, and follows look, show and view", a
     if (request.resourceType() === "script") scripts.push(request.url());
   });
   await page.goto(`${URL}element-check.html`);
+  await foldPicker(page);
   const drawn = page.locator("#drawn");
   await expect(drawn).toHaveAttribute("data-state", "picture");
   const svg = () => drawn.evaluate((node) => (node as HTMLElement).shadowRoot?.querySelector("svg")?.outerHTML ?? "");
@@ -782,6 +826,7 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   if (browserName === "chromium") await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   // the panel is kept up to date while it is near the screen, and catches up when it comes near
   const near = () => page.locator("#embed-panel").scrollIntoViewIfNeeded();
   await near();
@@ -823,16 +868,19 @@ test("the copy panel matches the rocket on screen, in every form, and the embed 
   await expect(page.locator('#embed-panel [part="open"]')).toHaveAttribute("href", /embed\.html\?.*phase=liftoff/);
   // and the embed page draws what an address says
   await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&look=line&show=apart`);
+  await foldPicker(page);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-look", "line");
   await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-show", "apart");
   await expect(page.locator('[data-testid="embed-credit"]')).toBeHidden();
   await page.goto(`${URL}embed.html?rocket=starship&variant=v3&look=painted&show=ship`);
+  await foldPicker(page);
   await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Clarence365");
   await expect(page.locator('[data-testid="embed-credit"]')).toContainText("Ship");
   await expect(page.locator('[data-testid="embed-credit"]')).not.toContainText("Super Heavy");
   await paintedIn(page.locator('[data-testid="rocket"]'));
   await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&flight=1&phase=liftoff`);
+  await foldPicker(page);
   await expect(page.locator('[data-testid="rocket"]')).toHaveAttribute("data-phase", "liftoff");
   await expect(page.locator('[data-testid="flight"]').locator('[data-testid="flight-now"]')).toContainText("Liftoff");
   expect(problems).toEqual([]);
@@ -842,6 +890,7 @@ test("Save SVG and Save PNG give files of what is on the screen", async ({ page,
   test.skip(browserName !== "chromium", "One browser's downloads are enough");
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   const save = async (id: string) => {
     const [download] = await Promise.all([page.waitForEvent("download"), press(page, id)]);
     return download;
@@ -880,6 +929,7 @@ test("the CDN snippet alone works on a stranger's page, with the 3D view, a pain
   });
   await page.route("https://stranger.example/**", (route) => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><body style="background:#123">${snippet}</body></html>` }));
   await page.goto("https://stranger.example/page.html");
+  await foldPicker(page);
   const rocket = page.locator("uchusen-rocket");
   await expect(rocket).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   await expect(rocket).toHaveAttribute("data-painted", /^(model|mixed)$/, { timeout: 90_000 });
@@ -893,6 +943,7 @@ test.describe("the engines", () => {
   test("light when asked and go dark when turned off, in the drawing and the 3D view", async ({ page, browserName }) => {
     const problems = watch(page);
     await page.goto(URL);
+    await foldPicker(page);
     await stopTurn(page);
     await expect(hero(page)).toHaveAttribute("data-engines", "off");
     const plumes = () => hero(page).evaluate((node) => (node as HTMLElement).shadowRoot?.querySelectorAll("[data-plume]").length ?? 0);
@@ -933,6 +984,7 @@ test.describe("the way it turns", () => {
   test("a press changes the way at once, with no jump, starts it if it had stopped, and a change of look or parts keeps it", async ({ page, browserName }) => {
     const problems = watch(page);
     await page.goto(URL);
+    await foldPicker(page);
     if (is3d(browserName)) await reach3d(page);
     // going right by itself: the angle grows
     await stopTurn(page);
@@ -972,6 +1024,7 @@ test.describe("the way it turns", () => {
   test("the speed buttons are the family's 0.5×, 1× and 2×: they set the turn's speed, are kept as pace in the address, and the copied code turns as fast", async ({ page, browserName }) => {
     const problems = watch(page);
     await page.goto(URL);
+    await foldPicker(page);
     if (is3d(browserName)) await reach3d(page);
     await stopTurn(page);
     const buttons = bar(page).locator("kazoku-speed-buttons button");
@@ -1012,8 +1065,10 @@ test.describe("the way it turns", () => {
 
   test("an old address with speed=fast opens at 1×, and pace=fast reads as 2×", async ({ page }) => {
     await page.goto(`${URL}?speed=fast`);
+    await foldPicker(page);
     await expect(bar(page).locator("kazoku-speed-buttons button").nth(1)).toHaveAttribute("aria-pressed", "true");
     await page.goto(`${URL}?pace=fast`);
+    await foldPicker(page);
     await expect(bar(page).locator("kazoku-speed-buttons button").nth(2)).toHaveAttribute("aria-pressed", "true");
     await stopTurn(page);
   });
@@ -1022,6 +1077,7 @@ test.describe("the way it turns", () => {
     test.skip(!is3d(browserName), "WebGL is drawn in Chromium here");
     const problems = watch(page);
     await page.goto(URL);
+    await foldPicker(page);
     await stopTurn(page);
     await reach3d(page);
     await hero(page).evaluate((node) => {
@@ -1042,6 +1098,7 @@ test.describe("the way it turns", () => {
 
 test("under reduced motion nothing turns by itself, and the buttons are there for a press", async ({ page }) => {
   await page.goto(URL);
+  await foldPicker(page);
   expect(await bar(page).evaluate((node) => (node as HTMLElement & { state: { turning: boolean } }).state.turning)).toBe(false);
   await expect(page.locator('[data-testid="turn-left"]')).toBeVisible();
   await expect(page.locator('[data-testid="turn-left"]')).toHaveAttribute("aria-pressed", "false");
@@ -1056,6 +1113,7 @@ test.describe("the flight", () => {
   test("steps through the published engines, plays, and goes back to the rocket", async ({ page, browserName }) => {
     const problems = watch(page);
     await page.goto(URL);
+    await foldPicker(page);
     await stopTurn(page);
     await expect(part(page, "flight-now")).toContainText("T-0:03, Ignition");
     await expect(chart(page, "booster")).toHaveAttribute("data-burning", "33");
@@ -1094,6 +1152,7 @@ test.describe("the flight", () => {
 
   test("each version has its own flight or says it has none, and choosing parts leaves the flight", async ({ page }) => {
     await page.goto(URL);
+    await foldPicker(page);
     await stopTurn(page);
     await press(page, "variant-v4");
     await expect(part(page, "flight-none")).toBeVisible();
@@ -1116,6 +1175,7 @@ test.describe("the flight", () => {
 
   test("the drawing with no WebGL follows the flight too, and draws only the engines that burn", async ({ page }) => {
     await page.goto(`${URL}element-check.html`);
+    await foldPicker(page);
     const rocket = page.locator("uchusen-rocket").first();
     await rocket.evaluate((node) => {
       node.setAttribute("mode", "drawing");
@@ -1137,6 +1197,7 @@ test.describe("the flight", () => {
 
   test("the drawing with no WebGL has the grid fins and legs the 3D view has, to 5 degrees, a few redraws a phase", async ({ page }) => {
     await page.goto(`${URL}element-check.html`);
+    await foldPicker(page);
     const rocket = page.locator("uchusen-rocket").first();
     await rocket.evaluate((node) => {
       node.setAttribute("mode", "drawing");
@@ -1180,6 +1241,7 @@ test.describe("the flight", () => {
 test("under reduced motion the flight does not play and shows no flame, and the slider and the charts still work", async ({ page, browserName }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   const flight = page.locator('[data-testid="flight"]');
   const part = (id: string) => flight.locator(`[data-testid="${id}"]`);
   await expect(part("flight-play")).toBeDisabled();
@@ -1200,6 +1262,7 @@ test("under reduced motion the flight does not play and shows no flame, and the 
 test("under reduced motion the engines stay off, and the page says why", async ({ page, browserName }) => {
   const problems = watch(page);
   await page.goto(URL);
+  await foldPicker(page);
   await press(page, "engines-on");
   await expect(hero(page)).toHaveAttribute("data-engines", "off");
   await expect(page.locator('[data-testid="engines-note"]')).toContainText("reduced motion");
@@ -1215,6 +1278,7 @@ test("under reduced motion the engines stay off, and the page says why", async (
 test("the React wrapper draws the element", async ({ page }) => {
   const problems = watch(page);
   await page.goto(`${URL}react-check.html`);
+  await foldPicker(page);
   const node = page.locator("#react-rocket");
   await expect(node).toHaveAttribute("data-show", "ship");
   await expect(node).toHaveAttribute("data-look", "thick");
@@ -1226,6 +1290,7 @@ test("the Earth behind the rocket: off by default, kept in the address, behind t
   const earth = page.locator('[data-testid="earth"]');
   const credit = page.locator('[data-testid="earth-credit"]');
   await page.goto(URL);
+  await foldPicker(page);
   await expect(page.locator('[data-testid="background-none"]')).toHaveAttribute("aria-pressed", "true");
   await expect(earth).toBeHidden();
   await expect(credit).toBeHidden();
@@ -1286,27 +1351,37 @@ test("the Earth behind the rocket: off by default, kept in the address, behind t
   expect(problems).toEqual([]);
 });
 
-test("every variant's painted look names whose models it is, and the sources list every one", async ({ page, browserName }, info) => {
-  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
-  test.setTimeout(300_000);
-  const { check, creditLine, MODEL_CREDITS, ROCKETS } = await import("../src/index.ts");
-  const problems = watch(page);
-  await page.goto(URL);
-  await stopTurn(page);
-  await reach3d(page);
-  const credit = page.locator('[data-testid="credit"]');
-  // the page opens painted, so each variant names the models on screen
-  for (const rocket of Object.values(ROCKETS))
-    for (const variant of rocket.variants) {
-      await press(page, `rocket-${rocket.id}`);
-      await press(page, `variant-${variant.id}`);
+for (const rocket of Object.values(ROCKETS)) {
+  for (const variant of rocket.variants) {
+    test(`the painted credit names its models: ${rocket.id}/${variant.id}`, async ({ page, browserName }, info) => {
+      test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+      test.setTimeout(60_000);
+      const { check } = await import("../src/index.ts");
+      const problems = watch(page);
+      await page.goto(`${URL}?${new URLSearchParams({ rocket: rocket.id, variant: variant.id, look: "painted" })}`);
+      await stopTurn(page);
+      await reach3d(page);
+      await paintedIn(hero(page));
+      const credit = page.locator('[data-testid="credit"]');
       const { credits } = check({ rocket: rocket.id, variant: variant.id });
       if (credits.length === 0) await expect(credit, `${rocket.id} ${variant.id}`).toContainText("this package's own code");
       for (const one of credits) {
         await expect(credit, `${rocket.id} ${variant.id}`).toContainText(one.creator);
         await expect(credit, `${rocket.id} ${variant.id}`).toContainText(one.licence);
       }
-    }
+      expect(problems).toEqual([]);
+    });
+  }
+}
+
+test("the sources list every painted model and its licence", async ({ page, browserName }, info) => {
+  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once, at a desk's width");
+  const { creditLine, MODEL_CREDITS } = await import("../src/index.ts");
+  const problems = watch(page);
+  await page.goto(URL);
+  await stopTurn(page);
+  await reach3d(page);
+  await paintedIn(hero(page));
   await press(page, "more-sources");
   const listed = page.locator('[data-testid="credits"]');
   for (const id of Object.keys(MODEL_CREDITS) as (keyof typeof MODEL_CREDITS)[]) await expect(listed).toContainText(creditLine(id));
@@ -1319,6 +1394,7 @@ test("a maker first, then only that maker's rockets, kept in the address; a host
   const problems = watch(page);
   const rockets = page.locator('[data-testid^="rocket-"]:visible');
   await page.goto(URL);
+  await foldPicker(page);
   await stopTurn(page);
   if (is3d(browserName)) await reach3d(page);
   await expect(page.locator('[data-testid="maker-spacex"]')).toHaveAttribute("aria-pressed", "true");
@@ -1354,60 +1430,58 @@ test("a maker first, then only that maker's rockets, kept in the address; a host
   await press(page, "rocket-starbase");
   await expect(page.locator('[data-row="Made by"]')).toHaveCount(0);
   await page.goto(`${URL}?rocket=__proto__&maker=constructor&variant=%22%3E%3Cscript%3E`);
+  await foldPicker(page);
   await expect(hero(page)).toHaveAttribute("rocket", "starship");
   await expect(page.locator('[data-testid="maker-spacex"]')).toHaveAttribute("aria-pressed", "true");
   await expect(hero(page)).toHaveAttribute("data-variant", ROCKETS.starship.defaultVariant);
   expect(problems).toEqual([]);
 });
 
-test("the choices fit a 1440 by 900 window for every variant, Earth on and all, and a phone's width never scrolls sideways", async ({ browser, browserName }, info) => {
-  test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once");
-  test.setTimeout(900_000);
-  const tallest = async (viewport: { width: number; height: number }, extra: object) => {
-    const context = await browser.newContext({ viewport, reducedMotion: "reduce", ...extra });
-    const page = await context.newPage();
-    await page.goto(`${URL}?background=earth`);
-    await stopTurn(page);
-    // the drawing only: this measures the page's rows, and needs no 3D
-    const reading = () =>
-      page.evaluate(() => {
-        const facts = document.getElementById("facts") as HTMLElement;
-        const panel = document.querySelector(".panel") as HTMLElement;
-        const stage = document.querySelector(".stage-box") as HTMLElement;
-        return { bottom: facts.getBoundingClientRect().top + scrollY, top: panel.getBoundingClientRect().top + scrollY, stage: stage.getBoundingClientRect().bottom + scrollY, sideways: document.documentElement.scrollWidth - innerWidth };
-      });
-    let most = { bottom: 0, top: 0, stage: 0, sideways: 0, at: "" };
-    for (const rocket of Object.values(ROCKETS))
-      // the fleet has seventy variants, each its own module: its first and its last stand for the page layout
-      for (const variant of rocket.id.startsWith("fleet-") ? [rocket.variants[0], rocket.variants[rocket.variants.length - 1]] : rocket.variants) {
-        await press(page, `rocket-${rocket.id}`);
-        await press(page, `variant-${variant.id}`);
-        // the flight's row follows the rocket when it is in, and the height that counts is after it has
-        await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
-        await expect.poll(() => page.locator('[data-testid="flight"]').evaluate((node) => (node as HTMLElement & { rocket?: unknown }).shadowRoot?.querySelector('[data-testid="flight-play"]')?.closest("div")?.parentElement?.hidden), { timeout: 30_000 }).toBe(!flightOf(rocket.id, variant.id));
-        await page.evaluate(() => new Promise(requestAnimationFrame));
-        const now = await reading();
-        expect(now.sideways, `${rocket.id} ${variant.id}`).toBeLessThanOrEqual(0);
-        if (now.bottom > most.bottom) most = { ...now, at: `${rocket.id} ${variant.id}` };
-      }
-    await context.close();
-    return most;
-  };
-  const desk = await tallest({ width: 1440, height: 900 }, {});
-  const phone = await tallest({ width: 390, height: 844 }, { hasTouch: true, isMobile: true });
-  expect(desk.top).toBeLessThan(120);
-  console.log(`choices end at ${desk.bottom} px at 1440x900 (panel from ${desk.top}, ${desk.at}), the view and its controls at ${desk.stage}; on a phone the choices are ${phone.bottom - phone.top} px tall (${phone.at})`);
-  // The page uses the computer's own font. A hosted runner's is wider than a Mac's and wraps more chips: 999 px there, 878 px on a Mac.
-  const fits = process.env.CI ? 1010 : 900;
-  expect(desk.bottom).toBeLessThanOrEqual(fits);
-  expect(desk.stage).toBeLessThanOrEqual(fits);
-});
+for (const rocket of Object.values(ROCKETS)) {
+  for (const variant of rocket.variants) {
+    test(`the choices fit at a desk and on a phone: ${rocket.id}/${variant.id}`, async ({ browser, browserName }, info) => {
+      test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once");
+      test.setTimeout(60_000);
+      const reading = async (viewport: { width: number; height: number }, extra: object) => {
+        const context = await browser.newContext({ viewport, reducedMotion: "reduce", ...extra });
+        try {
+          const page = await context.newPage();
+          await page.goto(`${URL}?${new URLSearchParams({ background: "earth", rocket: rocket.id, variant: variant.id })}`);
+          await stopTurn(page);
+          await expect(hero(page)).toHaveAttribute("rocket", rocket.id);
+          await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
+          await expect.poll(() => page.locator('[data-testid="flight"]').evaluate((node) => (node as HTMLElement & { rocket?: unknown }).shadowRoot?.querySelector('[data-testid="flight-play"]')?.closest("div")?.parentElement?.hidden), { timeout: 30_000 }).toBe(!flightOf(rocket.id, variant.id));
+          await page.evaluate(() => new Promise(requestAnimationFrame));
+          const now = await page.evaluate(() => {
+            const facts = document.getElementById("facts") as HTMLElement;
+            const panel = document.querySelector(".panel") as HTMLElement;
+            const stage = document.querySelector(".stage-box") as HTMLElement;
+            return { bottom: facts.getBoundingClientRect().top + scrollY, top: panel.getBoundingClientRect().top + scrollY, stage: stage.getBoundingClientRect().bottom + scrollY, sideways: document.documentElement.scrollWidth - innerWidth };
+          });
+          expect(now.sideways, `${rocket.id} ${variant.id}`).toBeLessThanOrEqual(0);
+          return now;
+        } finally {
+          await context.close();
+        }
+      };
+      const desk = await reading({ width: 1440, height: 900 }, {});
+      const phone = await reading({ width: 390, height: 844 }, { hasTouch: true, isMobile: true });
+      expect(desk.top).toBeLessThan(120);
+      console.log(`${rocket.id}/${variant.id}: choices end at ${desk.bottom} px at 1440x900 (panel from ${desk.top}), controls at ${desk.stage}; phone choices ${phone.bottom - phone.top} px tall`);
+      // The runner's font wraps more chips than the Mac's; preserve the existing limits.
+      const fits = process.env.CI ? 1010 : 900;
+      expect(desk.bottom).toBeLessThanOrEqual(fits);
+      expect(desk.stage).toBeLessThanOrEqual(fits);
+    });
+  }
+}
 
 test("the embed page and the code builder run under a strict policy, in 3D, with no report: no inline script, no inline style, no refused stylesheet", async ({ page, browserName }) => {
   test.setTimeout(120_000);
   const problems = watch(page);
   const policy = async (path: string) => {
     await page.goto(`${URL}${path}`);
+    await foldPicker(page);
     expect(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content")).toContain("style-src 'self'");
     expect(await page.locator("style").count()).toBe(0);
   };
@@ -1423,6 +1497,7 @@ test("the embed page and the code builder run under a strict policy, in 3D, with
 test("the code builder is one screen of choices, and writes the code for exactly what is chosen", async ({ page }) => {
   const problems = watch(page);
   await page.goto(`${URL}builder.html`);
+  await foldPicker(page);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   const code = page.locator('#embed-panel [part="code"]');
   await expect(code).toContainText('rocket="starship"');
@@ -1454,6 +1529,7 @@ test("the wheel over the element's own 3D view zooms it, and a wheel that starts
   test.skip(!is3d(browserName), "The 3D view is drawn in Chromium");
   const problems = watch(page);
   await page.goto(`${URL}embed.html?rocket=falcon-9&variant=block-5&look=line`);
+  await foldPicker(page);
   const rocket = page.locator('[data-testid="rocket"]');
   await expect(rocket).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   const distance = () => rocket.evaluate((node) => Number(node.shadowRoot?.querySelector("canvas")?.dataset.distance ?? 0));
@@ -1493,6 +1569,7 @@ test("the wheel over the element's own 3D view zooms it, and a wheel that starts
 test("the comparison with the fleet in it: ships lie lengthwise on a scale that fits, the switch picks rockets, the fleet or all, and the view controls zoom and keep it in the address", async ({ page, browserName }, info) => {
   test.skip(!is3d(browserName) || info.project.name !== "chromium-desk", "Once");
   await page.goto(URL);
+  await foldPicker(page);
   await press(page, "more-compare");
   await press(page, "compare-fleet-kaminari:fleet-kaminari");
   const lineup = page.locator('[data-testid="lineup"]');

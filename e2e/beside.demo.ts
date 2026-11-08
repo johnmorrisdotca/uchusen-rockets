@@ -1,5 +1,6 @@
 // "Beside it": Starship with Super Heavy stands beside the craft on screen at true scale. The toggle is in the address and survives a reload, Fit holds both craft, and Starship itself is not offered it.
 import { expect, type Page, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 import { build } from "../src/build/index.ts";
 import { ROCKETS } from "../src/rockets.ts";
 
@@ -35,6 +36,7 @@ test("Beside it: Starship stands beside the craft, the toggle is in the address 
   page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
   page.on("pageerror", (error) => problems.push(error.message));
   await page.goto(URL);
+  await foldPicker(page);
   // Starship itself: nothing to stand beside it
   await expect(hero(page)).toHaveAttribute("data-beside", "off");
   await expect(toggle(page)).toBeHidden();
@@ -92,17 +94,28 @@ test("Beside it: Starship stands beside the craft, the toggle is in the address 
   await expect.poll(() => param(page, "beside")).toBeNull();
   if (is3d(browserName)) await expect(hero(page).locator("[data-beside-label]")).toHaveCount(0);
   await page.goto(`${URL}?rocket=starship&beside=on`);
+  await foldPicker(page);
   await expect(toggle(page)).toBeHidden();
   await expect(hero(page)).toHaveAttribute("data-beside", "off");
   expect(problems).toEqual([]);
 });
 
 test("Beside it with the drawing alone: the drawing holds both craft too", async ({ page }) => {
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    // @ts-expect-error this preserves the canvas overloads except for WebGL
+    HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+      if (/^(webgl2?|experimental-webgl)$/.test(type)) return null;
+      return getContext.call(this, type, ...(args as []));
+    };
+  });
   const paths = () => hero(page).evaluate((node) => node.shadowRoot?.querySelector(".drawing svg")?.querySelectorAll("path").length ?? 0);
   await page.goto(`${URL}?rocket=sls`);
+  await foldPicker(page);
   await expect.poll(paths, { timeout: 30_000 }).toBeGreaterThan(0);
   const alone = await paths();
   await page.goto(`${URL}?rocket=sls&beside=on`);
+  await foldPicker(page);
   await expect(hero(page)).toHaveAttribute("data-beside", "on", { timeout: 30_000 });
   await expect.poll(paths, { timeout: 30_000 }).toBeGreaterThan(alone);
 });

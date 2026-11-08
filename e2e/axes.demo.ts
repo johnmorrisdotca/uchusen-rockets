@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 
 test("the view bar offers roll and the drawing turns with it", async ({ page }) => {
   await page.goto("/uchusen-rockets/");
+  await foldPicker(page);
   const bar = page.getByTestId("view-bar");
   await bar.evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await expect(bar.locator("[data-b='axis-roll']")).toBeVisible();

@@ -72,6 +72,29 @@ const serve = async (page: Page, origin: string, folder: string, prefix = ""): P
 const opened = async (browser: Browser, run: (page: Page, errors: string[]) => Promise<void>): Promise<void> => {
   const context = await browser.newContext({ viewport: { width: 800, height: 700 }, reducedMotion: "reduce" });
   const page = await context.newPage();
+  // Bundled modules can finish upgrading before goto returns. Record the real SVG
+  // when it is inserted, before the 3D view deliberately removes it.
+  await page.addInitScript(() => {
+    const drawings = new WeakMap<Element, number>();
+    Object.assign(window, { __uchusenSvgReadings: drawings });
+    const attach = Element.prototype.attachShadow;
+    Element.prototype.attachShadow = function (this: Element, options: ShadowRootInit): ShadowRoot {
+      const root = attach.call(this, options);
+      if (this.localName === "uchusen-rocket") {
+        const shapes = "svg path, svg polyline, svg line";
+        const observer = new MutationObserver((records) => {
+          let count = root.querySelectorAll(shapes).length;
+          for (const record of records)
+            for (const node of record.addedNodes)
+              if (node instanceof Element) count = Math.max(count, node.querySelectorAll(shapes).length);
+          drawings.set(root.host, Math.max(drawings.get(root.host) ?? 0, count));
+          if (count > 10) observer.disconnect();
+        });
+        observer.observe(root, { childList: true, subtree: true });
+      }
+      return root;
+    };
+  });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
@@ -86,7 +109,11 @@ const opened = async (browser: Browser, run: (page: Page, errors: string[]) => P
 /** The rocket is drawn (an <svg> in the element's shadow root) and, where the page can draw WebGL, the 3D view takes over: its data-state reaches `3d`. */
 const seesRocket = async (page: Page, selector = "uchusen-rocket"): Promise<void> => {
   await page.locator(selector).first().waitFor({ state: "attached", timeout: 20_000 });
-  await page.waitForFunction((css) => (document.querySelector(css)?.shadowRoot?.querySelectorAll("svg path, svg polyline, svg line").length ?? 0) > 10, selector, { timeout: 20_000 });
+  await page.waitForFunction((css) => {
+    const rocket = document.querySelector(css);
+    const drawings = (window as unknown as { __uchusenSvgReadings: WeakMap<Element, number> }).__uchusenSvgReadings;
+    return rocket !== null && (drawings.get(rocket) ?? 0) > 10;
+  }, selector, { timeout: 20_000 });
   await page.waitForFunction((css) => document.querySelector(css)?.getAttribute("data-state") === "3d", selector, { timeout: 90_000 });
 };
 

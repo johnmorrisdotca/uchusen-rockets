@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/fleet-db.html";
 
 test("the fleet record opens on a ship, then a section, and keeps both in the address", async ({ page }) => {
   await page.goto(URL);
+  await foldPicker(page);
   const ships = page.getByTestId("db-ships");
   await expect(ships.getByRole("button", { pressed: true })).toBeVisible();
   await expect(ships.getByTestId("db-ship-fleet-emiake")).toBeVisible();
@@ -58,6 +60,7 @@ test("the fleet record opens on a ship, then a section, and keeps both in the ad
 
 test("a click on the stage does not leave a ring", async ({ page }) => {
   await page.goto(`${URL}?ship=fleet-romaryu`);
+  await foldPicker(page);
   const canvas = page.getByTestId("db-hero").locator("canvas");
   await canvas.click();
   await expect.poll(() => canvas.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("none");

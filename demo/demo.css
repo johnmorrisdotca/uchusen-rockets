@@ -154,7 +154,7 @@ uchusen-flight { --uchusen-accent: var(--accent); }
   body.demo:not(.code-builder) .hint { display: none; }
   .stage-row { grid-template-columns: minmax(0, 1fr) minmax(0, 40rem); margin-top: 0.4rem; }
   body.demo:not(.compare):not(.journey):not(.swarm):not(.poster):not(.beam):not(.code-builder) .stage-row { grid-template-columns: minmax(0, 1fr) minmax(0, 44rem); }
-  .stage-box uchusen-rocket { max-width: min(620px, calc((100vh - 22rem) * 0.75)); }
+  .stage-box uchusen-rocket { max-width: min(620px, max(10rem, calc((100vh - 28rem) * 0.75))); }
   /* the flight's words on the left and its engine charts on the right */
   uchusen-flight::part(flight-body) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 1rem; align-content: start; }
   uchusen-flight::part(flight-charts) { grid-column: 2; grid-row: 2 / span 3; margin: 0; align-content: start; }
@@ -162,7 +162,7 @@ uchusen-flight { --uchusen-accent: var(--accent); }
   uchusen-flight::part(flight-now), uchusen-flight::part(flight-what), uchusen-flight::part(flight-about) { grid-column: 1; }
 }
 @media (hover: hover) and (pointer: fine) and (min-width: 821px) {
-  .panel, .panel-group { gap: 0.2rem; }
+  .panel, .panel-group { gap: 0; }
   .field-pair { gap: 0.2rem 0.6rem; }
   .panel .chip { min-height: 32px; padding: 0.15rem 0.6rem; font-size: 0.85rem; }
   .panel .chips { gap: 0.3rem; }
@@ -187,6 +187,9 @@ uchusen-flight { --uchusen-accent: var(--accent); }
 }
 /* a ship with its panel under the picture gives the picture less of the window, so both fit */
 .stage-box uchusen-rocket[data-panel] { max-width: min(620px, calc((100vh - 28rem) * 0.75)); }
+@media (min-width: 1100px) {
+  .stage-box uchusen-rocket[data-panel] { max-width: min(620px, max(10rem, calc((100vh - 36rem) * 0.75))); }
+}
 a.chip { display: inline-flex; align-items: center; text-decoration: none; }
 
 /* The builder has its own title, and the same theme switch as the other pages. Its caption stays; a desk hides the other pages' hint. */
