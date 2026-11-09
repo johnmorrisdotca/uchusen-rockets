@@ -9,6 +9,15 @@ const URL = "/uchusen-rockets/journey.html?date=2026-11-04";
 const open = async (page: Page, address: string): Promise<void> => {
   await page.goto(address);
   await foldPicker(page);
+  // WebKit reports a texture or a model the page was still loading as a failure when the next address replaces it: let the painted craft finish first
+  await page.waitForLoadState("networkidle");
+  await page.waitForFunction(() => {
+    const host = document.getElementById("painted");
+    const rocket = document.getElementById("painted-rocket");
+    if (host === null || host.hidden) return true;
+    const state = rocket?.getAttribute("data-state");
+    return state === "fallback" || (state === "3d" && /^(model|mixed|code)$/.test(rocket?.getAttribute("data-painted") ?? ""));
+  }, undefined, { timeout: 90_000 });
 };
 
 const problems = (page: Page): string[] => {
