@@ -95,10 +95,9 @@ test("a tap or a pinch on a stage does not zoom the page, and the line-up bar si
       if (!beside) continue;
       const seated = await stage.evaluate((node) => {
         const bar = node.ownerDocument.querySelector(`kazoku-view-controls[for="${node.id}"]`);
-        const line = node.querySelector("uchusen-lineup");
-        if (!(bar instanceof HTMLElement) || !(line instanceof HTMLElement)) return "missing";
-        if (bar.parentElement !== node) return "outside";
-        return bar.offsetTop - (line.offsetTop + line.offsetHeight);
+        if (!(bar instanceof HTMLElement)) return "missing";
+        if (bar.parentElement !== node.parentElement) return "outside";
+        return bar.getBoundingClientRect().top - node.getBoundingClientRect().bottom;
       });
       expect(typeof seated === "number" && seated >= -2 && seated < 12, `${href} bar ${seated}`).toBe(true);
       const colours = await page.evaluate(() => {

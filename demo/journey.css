@@ -24,7 +24,7 @@ body.journey { --bad: #a1262b; }
 .jr-craft { position: absolute; inset: 0; z-index: 1; pointer-events: none; perspective: 900px; }
 .jr-stage[data-look="painted"] .jr-craft { visibility: hidden; }
 .jr-painted { position: absolute; inset: 0; z-index: 2; }
-.jr-stage > kazoku-view-controls { z-index: 4; }
+.jr-stage > kazoku-view-controls { z-index: 2; }
 .jr-painted[hidden] { display: none; }
 .jr-painted uchusen-rocket { display: block; position: absolute; left: 50%; top: 50%; height: var(--len, 300px); width: calc(var(--len, 300px) * 0.75); transform: translate(-50%, -50%) rotate(var(--turn, 90deg)); }
 .jr-stage[data-view="side"] .jr-painted uchusen-rocket { left: 50%; top: var(--craft-y, 42%); }
