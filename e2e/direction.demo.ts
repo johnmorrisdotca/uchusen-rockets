@@ -31,6 +31,7 @@ test.describe("drag, keys and Auto-turn", () => {
   test.use({ reducedMotion: "no-preference" });
   test("the Space Shuttle's stack follows the hand: drag right and up, the arrow keys, and Auto-turn takes the near side to the right", async ({ page }) => {
     test.setTimeout(240_000);
+    await page.setViewportSize({ width: 1280, height: 1200 });
     await open(page, "space-shuttle", "stack", "thick");
     await checkFollowsTheHand(page, { view: '[data-testid="hero"]', controls: "#view-bar", distance: 100, min: 2, autoTurn: "right" });
   });

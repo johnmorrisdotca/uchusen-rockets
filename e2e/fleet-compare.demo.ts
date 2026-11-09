@@ -74,7 +74,7 @@ test("ctrl and the wheel zooms the line-up and the page does not scroll", async 
   const before = await page.evaluate(() => window.scrollY);
   const box = await frame.boundingBox();
   if (!box) throw new Error("no frame");
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.move(box.x + box.width / 2, Math.max(box.y, 0) + Math.min(box.height, page.viewportSize()!.height) / 2);
   await page.keyboard.down("Control");
   await page.mouse.wheel(0, -200);
   await page.keyboard.up("Control");
