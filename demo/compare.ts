@@ -36,6 +36,8 @@ const NEXT: readonly Craft[] = [
   { rocket: "iss", variant: "iss", form: "stack" },
   { rocket: "space-shuttle", variant: "stack", form: "stack" },
 ];
+const lineupPage = new URLSearchParams(location.search).get("layout") === "lineup";
+if (lineupPage) document.body.classList.add("fleet-cmp");
 const lineupStage = document.getElementById("cmp-view");
 const lineupPicture = document.getElementById("lineup");
 if (lineupStage && lineupPicture) {
@@ -45,8 +47,7 @@ if (lineupStage && lineupPicture) {
     if (svg instanceof SVGElement) svg.style.transform = Math.abs(zoom - 1) < 0.001 ? "" : `scale(${zoom})`;
   }, { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8" });
 }
-if (new URLSearchParams(location.search).get("layout") === "lineup") {
-  document.body.classList.add("fleet-cmp");
+if (lineupPage) {
   const wide = document.getElementById("wide");
   const fold = document.getElementById("lineup-fold");
   if (wide) wide.hidden = true;
