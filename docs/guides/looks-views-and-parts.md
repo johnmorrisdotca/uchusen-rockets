@@ -41,6 +41,12 @@ for (const name of VIEW_NAMES) console.log(name, VIEWS[name], directionOf(VIEWS[
 
 Drag turns the view from the chosen angle, the arrow keys nudge it, the wheel over the view, a pinch, `+` and `-` zoom, and Home or a double-click puts it back. `spin` sets a slow turn of its own: `off`, `slow`, `medium`, `fast` or seconds a turn, and `way` is `cw` or `ccw`. With the family's view controls the turn is theirs instead: their speed buttons (0.5×, 1× and 2×) set how fast it goes, and `spin` stands down while they drive the element.
 
+## Zoom and Wide in the demo
+
+The demo's view bar shows the zoom between the minus and plus buttons (1×, 2.4×, 19×), in the family's form. It follows the buttons, the wheel and a pinch, and a polite live region says it once the zoom has settled. The poster's zoom slider has the same readout.
+
+The Wide button (or the T key) gives the view the whole width of the page, 16:9 and no taller than 80% of the window, and moves the side panel below it as a row of boxes. It is on every demo page that has a side panel (the rocket, the fleet record, the yard, the journey, the code builder and the embed page). The choice is kept in the address as `?wide=on` and on this device, and a phone, which is one column already, hides the button.
+
 ## Showing parts
 
 `show` is `together`, `apart` or the slot of one part. The slots depend on the variant.

@@ -14,7 +14,7 @@
         <p data-say="posterIntro">Every built craft at one true scale, and the SPX ships in their own row.</p>
         <div class="poster-tools">
           <button type="button" class="chip" id="look" data-testid="poster-look"></button>
-          <label class="poster-zoom"><span data-say="posterZoom">Zoom</span><input type="range" id="zoom" data-testid="poster-zoom" min="25" max="200" value="100" /></label>
+          <label class="poster-zoom"><span data-say="posterZoom">Zoom</span><input type="range" id="zoom" data-testid="poster-zoom" min="25" max="200" value="100" /><output id="zoom-readout" data-testid="poster-zoom-readout" for="zoom" aria-live="polite">1×</output></label>
           <button type="button" class="chip" id="save-svg" data-testid="poster-svg" data-say="posterSvg">SVG</button>
           <button type="button" class="chip" id="save-a2" data-testid="poster-a2" data-say="posterPngA2">PNG, A2</button>
           <button type="button" class="chip" id="save-a1" data-testid="poster-a1" data-say="posterPngA1">PNG, A1</button>

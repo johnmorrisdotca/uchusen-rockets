@@ -8,6 +8,7 @@ import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
+import "@johnmorrisdotca/kazoku-ui/wide-layout/define";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { bindStage, placeZoom } from "./viewBinder.ts";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";

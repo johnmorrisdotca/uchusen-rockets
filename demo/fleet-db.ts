@@ -1,4 +1,5 @@
 // The fleet record: the SPX ships already in the package, then one ship's sections, chosen in one row and kept in the address. Nothing new is drawn.
+import "@johnmorrisdotca/kazoku-ui/wide-layout/define";
 import { ROCKETS, SLOT_NAMES, variantOf } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { build } from "../src/build/index.ts";

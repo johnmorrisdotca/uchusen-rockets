@@ -1,5 +1,6 @@
 // The yard on a page: one mesh for the bays and one for the spine that can leave. A still view draws once. While the build player plays, the frame loop stays running so the drones keep working.
 import { ACESFilmicToneMapping, AmbientLight, BackSide, BufferGeometry, CanvasTexture, Color, DirectionalLight, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PMREMGenerator, PerspectiveCamera, RepeatWrapping, Scene, SphereGeometry, Vector3, WebGLRenderer, SRGBColorSpace } from "three";
+import "@johnmorrisdotca/kazoku-ui/wide-layout/define";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { bindStage } from "./viewBinder.ts";
 import { defineUchusenBuild, type UchusenBuild } from "../src/buildbar.ts";

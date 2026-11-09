@@ -153,8 +153,8 @@ uchusen-flight { --uchusen-accent: var(--accent); }
   body.demo:not(.compare):not(.journey):not(.swarm):not(.poster):not(.beam) main { max-width: none; }
   body.demo main > header { margin-bottom: 6px; }
   body.demo:not(.code-builder) .hint { display: none; }
-  .stage-row { grid-template-columns: minmax(0, 1fr) minmax(0, 40rem); margin-top: 0.4rem; }
-  body.demo:not(.compare):not(.journey):not(.swarm):not(.poster):not(.beam):not(.code-builder) .stage-row { grid-template-columns: minmax(0, 1fr) minmax(0, 44rem); }
+  html:not([data-wide="on"]) .stage-row { grid-template-columns: minmax(0, 1fr) minmax(0, 40rem); margin-top: 0.4rem; }
+  html:not([data-wide="on"]) body.demo:not(.compare):not(.journey):not(.swarm):not(.poster):not(.beam):not(.code-builder) .stage-row { grid-template-columns: minmax(0, 1fr) minmax(0, 44rem); }
   .stage-box uchusen-rocket { max-width: min(620px, max(10rem, calc((100vh - 28rem) * 0.75))); }
   /* the flight's words on the left and its engine charts on the right */
   uchusen-flight::part(flight-body) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 1rem; align-content: start; }
@@ -236,3 +236,19 @@ body.demo main > header [data-help-switch] { display: none; }
 .pk-facts strong { font-weight: 650; }
 .pk-variants { display: flex; flex-direction: column; gap: 4px; max-height: 8rem; overflow: auto; margin-top: 4px; }
 .pk-empty { margin: 0; }
+
+/* Wide: the kazoku-ui wide-layout rule (wideCss) for this demo's own stage and panel classes. The view takes the whole width, 16:9 and no taller than 80vh, and the panel moves below it as a row of boxes. A phone is one column already and the toggle hides itself. */
+.wide-row { display: flex; justify-content: flex-end; margin-top: 0.4rem; }
+@media (min-width: 641px) {
+  html[data-wide="on"] main { max-width: none; }
+  html[data-wide="on"] .stage-row, html[data-wide="on"] .yard-page { grid-template-columns: minmax(0, 1fr); }
+  html[data-wide="on"] .stage-box { position: static; }
+  html[data-wide="on"] .stage-box .view-space { display: grid; place-items: center; aspect-ratio: 16 / 9; max-height: 80vh; }
+  html[data-wide="on"] .stage-box .view-space > uchusen-rocket { height: 100%; width: auto; max-width: 100%; margin: 0; }
+  html[data-wide="on"] .stage-row > .panel, html[data-wide="on"] .yard-side, html[data-wide="on"] .jr-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; align-items: start; }
+  html[data-wide="on"] .stage-row > .panel > :is(.flight-field, .note, .credit) { grid-column: 1 / -1; }
+  html[data-wide="on"] .yard-stage, html[data-wide="on"] .yard-page:has(#yard-build:not([hidden])) .yard-stage { height: auto; aspect-ratio: 16 / 9; max-height: 80vh; }
+  html[data-wide="on"] .yard-side { grid-column: 1; grid-row: auto; }
+  html[data-wide="on"] .jr { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "side" "panel"; }
+  html[data-wide="on"] .jr-stage { aspect-ratio: 16 / 9; max-height: 80vh; width: min(100%, calc(80vh * 16 / 9)); margin-inline: auto; }
+}

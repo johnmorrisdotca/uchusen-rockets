@@ -1,4 +1,5 @@
 // The poster page: the picture, a zoom, and a download of the SVG or a PNG that fits an A2 or A1 sheet at 300 dpi.
+import { zoomText } from "@johnmorrisdotca/kazoku-ui/view-controls";
 import { WORDS } from "./words.js";
 import type { LookName } from "../src/looks.ts";
 import { fitSheet, posterSvg, SHEETS, type PosterCopy } from "./poster.ts";
@@ -16,6 +17,10 @@ const byId = (id: string): HTMLElement => {
 
 let picture = posterSvg();
 
+const showZoom = (): void => {
+  byId("zoom-readout").textContent = zoomText(Number((byId("zoom") as HTMLInputElement).value) / 100);
+};
+
 const asked = (): LookName => (new URLSearchParams(location.search).get("look") === "line" ? "line" : "painted");
 const copy = (): PosterCopy => ({ title: say("posterTitle"), same: say("posterMetre"), later: say("posterLater"), fleet: say("posterFleet"), person: say("posterPerson"), scale: "20 m" });
 
@@ -26,6 +31,7 @@ function draw(): void {
   const parsed = new DOMParser().parseFromString(picture.svg, "image/svg+xml");
   const svg = parsed.documentElement;
   svg.style.width = `${(byId("zoom") as HTMLInputElement).value}%`;
+  showZoom();
   byId("poster").replaceChildren(document.importNode(svg, true));
 }
 
@@ -65,6 +71,7 @@ byId("look").addEventListener("click", () => {
 byId("zoom").addEventListener("input", () => {
   const svg = byId("poster").querySelector("svg");
   if (svg) svg.style.width = `${(byId("zoom") as HTMLInputElement).value}%`;
+  showZoom();
 });
 byId("save-svg").addEventListener("click", () => save("rockets-of-the-world.svg", new Blob([picture.svg], { type: "image/svg+xml;charset=utf-8" })));
 byId("save-a2").addEventListener("click", () => png(SHEETS.a2, "rockets-of-the-world-a2.png"));

@@ -46,13 +46,19 @@ export function pageBar(file: string): string {
   return `<nav class="page-links" data-testid="page-links" aria-label="Pages">${links}${help}</nav>`;
 }
 
+/** The pages with a side panel, which get the Wide toggle under the page bar. */
+const WIDE_PAGES: readonly string[] = ["index.html", "fleet-db.html", "yard.html", "journey.html", "embed-page.html"];
+
+/** The Wide toggle, for a page with a side panel. The choice is kept in the address and on the device. */
+export const WIDE_TOGGLE = `<div class="wide-row"><kazoku-wide-toggle address storage="johnmorrisdotca.wide" data-testid="wide"></kazoku-wide-toggle></div>`;
+
 /** The page's text with the family's blocks put in where its comments say. */
 export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
   const html = readFileSync(new URL(`../demo/${file}`, import.meta.url), "utf8");
   const [title, description] = TITLES[file];
   return html
     .replace("<!--family:head-->", `${familyHead({ id, title, description })}\n    <link rel="icon" href="icon.png" />`)
-    .replace("<!--family:header-->", `${familyHeader({ id })}\n      ${pageBar(file)}`)
+    .replace("<!--family:header-->", `${familyHeader({ id })}\n      ${pageBar(file)}${WIDE_PAGES.includes(file) ? `\n      ${WIDE_TOGGLE}` : ""}`)
     .replace("<!--family:unreviewed-->", familyUnreviewed({ id }))
     .replace("<!--family:footer-->", familyFooter({ id }))
     .replace(

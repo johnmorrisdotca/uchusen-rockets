@@ -1,5 +1,6 @@
 // The builder and the Embed page share this screen: the same rows, the same live rocket and the same embed panel.
 // The builder leaves the address alone. The Embed page reads it and writes the choice back. The copied code still points at the bare frame, embed.html.
+import "@johnmorrisdotca/kazoku-ui/wide-layout/define";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
 import { embedCode, embedNote, LOOK_NAMES, MAKERS, OPTION_ATTRIBUTES, ROCKETS, VIEW_NAMES, attributesFromOptions, paintedCredit, rocketFromParams, rocketToParams, showsOf, variantOf, type LookName, type MakerId, type RocketOptions } from "../src/index.ts";
@@ -48,7 +49,10 @@ export function mountCodePage(options: { address: boolean }): void {
 
   function writeAddress(chosen: RocketOptions): void {
     if (!options.address) return;
-    const next = `?${rocketToParams(chosen).toString()}`;
+    const params = rocketToParams(chosen);
+    const wide = new URLSearchParams(location.search).get("wide");
+    if (wide !== null) params.set("wide", wide);
+    const next = `?${params.toString()}`;
     if (location.search !== next) history.replaceState(null, "", next);
   }
 

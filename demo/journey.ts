@@ -40,6 +40,7 @@ import { paintEarthDisc, type EarthShow } from "./earth.ts";
 import { loadBody } from "./sky.ts";
 import { bindStage, placeZoom } from "./viewBinder.ts";
 import { WORDS } from "./words.js";
+import "@johnmorrisdotca/kazoku-ui/wide-layout/define";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { bodySpan, forwardStar, perceivedSpan } from "../src/journey/forward.ts";
 import { chip, PAGE_LOOK } from "./chip.ts";
@@ -122,7 +123,7 @@ function writeAddress(): void {
   if (choice.size === "true") next.set("size", "true");
   if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
-  for (const key of ["picker", "picker-at", "layout"]) {
+  for (const key of ["picker", "picker-at", "layout", "wide"]) {
     const kept = new URLSearchParams(location.search).get(key);
     if (kept !== null) next.set(key, kept);
   }

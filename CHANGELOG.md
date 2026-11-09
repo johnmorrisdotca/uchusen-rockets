@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The demo takes kazoku-ui 0.23: a zoom readout and the Wide layout** (MODULES-717). The poster's zoom slider shows the zoom in the family's form (1×, 2.4×); every view bar already did, and the e2e now holds that the readout follows the buttons, the wheel and a pinch and is announced. The shared Wide toggle (button and T key, kept in `?wide=on` and on the device) is on every demo page with a side panel: the view takes the width, 16:9 up to 80vh, and the panel moves below it. A phone stays one column.
 - **Click a body to fly there** (MODULES-485): on Compare, a planet, moon, dwarf planet or belt mark moves the camera onto that body. The address keeps the place.
 - **The propellant booms turn with the rings** (MODULES-450): Hanabusa's two booms, and the hub drums and cross-beams, turn on the rings' bearing. The industrial hub turns with the industrial wheel. The keel and the axial lift stay still.
 - **Kyotori's mast slides out** (MODULES-450): on the flared wings the outer lattice slides 22 m out of the inner mast and back. The blankets keep turning. The full wings stay the extended drawing.
