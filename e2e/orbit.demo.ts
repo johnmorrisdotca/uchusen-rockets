@@ -27,29 +27,19 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBeNull();
   await expect(moons).toBeHidden();
 
-  await page.evaluate(() => {
-    const holder = document.querySelector('[data-testid="earth"]');
-    const button = document.querySelector('[data-testid="orbit-10000"]');
-    if (!(holder instanceof HTMLElement) || !(button instanceof HTMLButtonElement)) return;
-    const seen: number[] = [];
-    (window as unknown as { orbitSeen: number[] }).orbitSeen = seen;
-    const start = performance.now();
-    let moved = false;
-    const tick = () => {
-      seen.push(Number(holder.dataset.orbitOpen));
-      const elapsed = performance.now() - start;
-      if (holder.dataset.orbitMoving === "1") moved = true;
-      if (elapsed < 20000 && (holder.dataset.orbitMoving === "1" || !moved)) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-    button.click();
-  });
-  await expect.poll(async () => page.evaluate(() => ((window as unknown as { orbitSeen?: number[] }).orbitSeen ?? []).length)).toBeGreaterThan(2);
+  // the page's clock is driven by the test, a tenth of a second at a time, so the easing is read the same on a machine that draws a frame a second
+  await page.clock.install();
+  await page.locator('[data-testid="orbit-10000"]').evaluate((button) => (button as HTMLButtonElement).click());
+  const values: number[] = [Number(await earth.getAttribute("data-orbit-open"))];
+  for (let step = 0; step < 40 && (await earth.getAttribute("data-orbit-moving")) === "1"; step += 1) {
+    await page.clock.runFor(100);
+    values.push(Number(await earth.getAttribute("data-orbit-open")));
+  }
+  await page.clock.resume();
   await expect.poll(async () => earth.getAttribute("data-orbit-moving")).toBe("0");
   const open = await earth.getAttribute("data-orbit-open");
   const target = await earth.getAttribute("data-orbit-target");
   expect(open).toBe(target);
-  const values = await page.evaluate(() => (window as unknown as { orbitSeen: number[] }).orbitSeen);
   expect(new Set(values.map((value) => value.toFixed(3))).size).toBeGreaterThan(2);
   expect(values[values.length - 1]).toBeGreaterThan(values[0]);
   await expect(note).toHaveAttribute("data-km", "10000");

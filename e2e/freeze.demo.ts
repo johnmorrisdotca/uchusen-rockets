@@ -194,15 +194,17 @@ const reach3d = (page: Page) => expect(hero(page)).toHaveAttribute("data-state",
 const memoryClock = new WeakSet<Page>();
 const settle = (page: Page, ms: number) => memoryClock.has(page) ? page.clock.fastForward(ms) : page.waitForTimeout(ms);
 /**
- * A reading once the GPU objects have stopped moving: two readings a second apart agree, arrays included. The pictures the renderer is still giving back after their short linger are not kept ones, and a slow runner reads them
+ * A reading once the GPU objects have stopped moving: four readings a second apart agree, arrays included, so the two seconds a left-behind craft is kept (clearGhost) are inside the wait. The pictures the renderer is still giving back after their short linger are not kept ones, and a slow runner reads them
  * mid-way (24 textures where the first round read 21); a leak never settles lower than it began, and is still caught by the comparison.
  */
 const levelUsage = async (page: Page) => {
   let before = await usage(page);
-  for (let tries = 0; tries < 15; tries++) {
+  let still = 0;
+  for (let tries = 0; tries < 20; tries++) {
     await settle(page, 1000);
     const now = await usage(page);
-    if (now.textures === before.textures && now.buffers === before.buffers && now.arrays === before.arrays && now.programs === before.programs && now.framebuffers === before.framebuffers) return now;
+    still = now.textures === before.textures && now.buffers === before.buffers && now.arrays === before.arrays && now.programs === before.programs && now.framebuffers === before.framebuffers ? still + 1 : 0;
+    if (still === 3) return now;
     before = now;
   }
   return before;
