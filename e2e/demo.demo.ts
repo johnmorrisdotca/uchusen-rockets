@@ -34,6 +34,15 @@ function watch(page: Page): string[] {
 }
 
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
+/** A page with no WebGL draws the drawing, and the choices, the credit and the facts around it are the same. Software 3D costs several seconds a page, so a reading that is not about the 3D view skips it. */
+const noWebGL = () => {
+  const getContext = HTMLCanvasElement.prototype.getContext;
+  // @ts-expect-error this preserves the canvas overloads except for WebGL
+  HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+    if (/^(webgl2?|experimental-webgl)$/.test(type)) return null;
+    return getContext.call(this, type, ...(args as []));
+  };
+};
 /** A rocket's button shows under its maker's, so its maker comes first. The fleet kit's boxes of parts are not listed, and are pressed without being seen. */
 const press = async (page: Page, id: string) => {
   await foldPicker(page);
@@ -1363,10 +1372,10 @@ for (const rocket of Object.values(ROCKETS)) {
       test.setTimeout(60_000);
       const { check } = await import("../src/index.ts");
       const problems = watch(page);
+      await page.addInitScript(noWebGL);
       await page.goto(`${URL}?${new URLSearchParams({ rocket: rocket.id, variant: variant.id, look: "painted" })}`);
-      await stopTurn(page);
-      await reach3d(page);
-      await paintedIn(hero(page));
+      await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
+      await expect(page.locator('[data-testid="credit"]')).toBeVisible();
       const credit = page.locator('[data-testid="credit"]');
       const { credits } = check({ rocket: rocket.id, variant: variant.id });
       if (credits.length === 0) await expect(credit, `${rocket.id} ${variant.id}`).toContainText("this package's own code");
@@ -1487,6 +1496,7 @@ for (const rocket of Object.values(ROCKETS)) {
       const reading = async (viewport: { width: number; height: number }, extra: object) => {
         const context = await browser.newContext({ viewport, reducedMotion: "reduce", ...extra });
         try {
+          await context.addInitScript(noWebGL);
           const page = await context.newPage();
           await page.goto(`${URL}?${new URLSearchParams({ background: "earth", rocket: rocket.id, variant: variant.id })}`);
           await stopTurn(page);

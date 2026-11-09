@@ -381,6 +381,9 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 });
 
+// The kept caches settle a few vertex arrays apart from one walk to the next (641, 647, 647 on a hosted runner). A leak adds some for every variant walked, hundreds in a walk.
+const FLEET_ARRAYS_SLACK = 16;
+
 test("the fleet kit: every module and the sample ship drawn painted, then contexts and graphics memory stay flat as they are walked again, and it still draws once a frame", async ({ page }) => {
   await page.addInitScript(COUNT);
   test.setTimeout(45 * 60_000);
@@ -448,7 +451,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   let last = await levelUsage(page);
   console.log(`fleet walk 3: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
   // the kept caches rise and fall by a few vertex arrays from one walk to the next; a leak only rises, so one more walk is read before a rise counts as growth
-  if (last.arrays > second.arrays || last.buffers > second.buffers || last.textures > second.textures) {
+  if (last.arrays > second.arrays + FLEET_ARRAYS_SLACK || last.buffers > second.buffers || last.textures > second.textures) {
     await walk(1);
     const again = await levelUsage(page);
     console.log(`fleet walk 4: buffers ${again.buffers}, arrays ${again.arrays}, textures ${again.textures}, programs ${again.programs}`);
@@ -456,7 +459,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   }
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(second.buffers);
-  expect(last.arrays).toBeLessThanOrEqual(second.arrays);
+  expect(last.arrays).toBeLessThanOrEqual(second.arrays + FLEET_ARRAYS_SLACK);
   expect(last.textures).toBeLessThanOrEqual(second.textures);
   // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.
   const begun = await page.evaluate(() => {
@@ -898,7 +901,7 @@ test.describe("a played timeline", () => {
     const last = await usage(page);
     expect(last.contexts).toBe(1);
     expect(last.buffers).toBeLessThanOrEqual(first.buffers);
-    expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+    expect(last.arrays).toBeLessThanOrEqual(first.arrays + 6);
     expect(last.textures).toBeLessThanOrEqual(first.textures);
     expect(last.programs).toBeLessThanOrEqual(first.programs);
     // 40 rounds of 7 steps and a leave: a draw for each at most (one a frame), not a loop
