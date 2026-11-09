@@ -61,6 +61,8 @@ test("Beside it: Starship stands beside the craft, the toggle is in the address 
 
   if (is3d(browserName)) {
     // what stands beside it is named, under its foot and inside the picture
+    // a phone scrolls to the toggle, and a view out of sight draws nothing, so nothing is named yet
+    await hero(page).scrollIntoViewIfNeeded();
     const label = hero(page).locator("[data-beside-label]");
     await expect(label).toHaveText("Starship with Super Heavy, 124.4 m");
     await expect(label).toBeVisible();
