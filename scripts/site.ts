@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { publishThumbnails, thumbnailHead } from "./family-thumbnail.mjs";
-import { pageBar, renderIndex, WIDE_TOGGLE } from "./page.ts";
+import { pageBar, renderIndex } from "./page.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const site = join(root, "site");
@@ -25,7 +25,7 @@ writeFileSync(join(site, "fleet-db.html"), renderIndex("fleet-db.html").replace(
 writeFileSync(join(site, "fleet-compare.html"), renderIndex("fleet-compare.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "yard.html"), renderIndex("yard.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "embed-page.html"), renderIndex("embed-page.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
-writeFileSync(join(site, "builder.html"), readFileSync(join(root, "demo", "builder.html"), "utf8").replace("<!--page-bar-->", pageBar("builder.html")).replace("<main>", `<main>\n      ${WIDE_TOGGLE}`));
+writeFileSync(join(site, "builder.html"), readFileSync(join(root, "demo", "builder.html"), "utf8").replace("<!--page-bar-->", pageBar("builder.html")));
 publishThumbnails(root, site);
 for (const file of ["demo.css", "compare.css", "journey.css", "poster.css", "beam.css", "swarm.css", "inspect.css", "fleet-db.css", "fleet-compare.css", "yard.css", "family.css", "react-check.html", "element-check.html", "embed.html"]) cpSync(join(root, "demo", file), join(site, file));
 cpSync(join(root, "dist", "assets"), join(site, "assets"), { recursive: true });

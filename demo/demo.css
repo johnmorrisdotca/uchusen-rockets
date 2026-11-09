@@ -238,7 +238,7 @@ body.demo main > header [data-help-switch] { display: none; }
 .pk-empty { margin: 0; }
 
 /* Wide: the kazoku-ui wide-layout rule (wideCss) for this demo's own stage and panel classes. The view takes the whole width, 16:9 and no taller than 80vh, and the panel moves below it as a row of boxes. A phone is one column already and the toggle hides itself. */
-.wide-row { display: flex; justify-content: flex-end; margin-top: 0.4rem; }
+.page-links kazoku-wide-toggle { margin-left: auto; flex: none; }
 @media (min-width: 641px) {
   html[data-wide="on"] main { max-width: none; }
   html[data-wide="on"] .stage-row, html[data-wide="on"] .yard-page { grid-template-columns: minmax(0, 1fr); }

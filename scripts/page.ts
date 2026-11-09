@@ -43,14 +43,13 @@ function said(key: string): string {
 export function pageBar(file: string): string {
   const links = PAGES.map(([href, say]) => `<a href="${href}" data-say="${say}"${href === file ? ` aria-current="page"` : ""}>${said(say)}</a>`).join("");
   const help = `<button type="button" class="fam-button" data-help-switch aria-pressed="false" data-say="help" data-say-title="helpTip">${said("help")}</button>`;
-  return `<nav class="page-links" data-testid="page-links" aria-label="Pages">${links}${help}</nav>`;
+  const wide = WIDE_PAGES.includes(file) ? WIDE_TOGGLE : "";
+  return `<nav class="page-links" data-testid="page-links" aria-label="Pages">${links}${help}${wide}</nav>`;
 }
 
-/** The pages with a side panel, which get the Wide toggle under the page bar. */
-const WIDE_PAGES: readonly string[] = ["index.html", "fleet-db.html", "yard.html", "journey.html", "embed-page.html"];
-
-/** The Wide toggle, for a page with a side panel. The choice is kept in the address and on the device. */
-export const WIDE_TOGGLE = `<div class="wide-row"><kazoku-wide-toggle address storage="johnmorrisdotca.wide" data-testid="wide"></kazoku-wide-toggle></div>`;
+/** The pages with a side panel, which get the Wide toggle at the end of the page bar. The choice is kept in the address and on the device. */
+const WIDE_PAGES: readonly string[] = ["index.html", "fleet-db.html", "yard.html", "journey.html", "builder.html", "embed-page.html"];
+const WIDE_TOGGLE = `<kazoku-wide-toggle address storage="johnmorrisdotca.wide" data-testid="wide"></kazoku-wide-toggle>`;
 
 /** The page's text with the family's blocks put in where its comments say. */
 export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
@@ -58,7 +57,7 @@ export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
   const [title, description] = TITLES[file];
   return html
     .replace("<!--family:head-->", `${familyHead({ id, title, description })}\n    <link rel="icon" href="icon.png" />`)
-    .replace("<!--family:header-->", `${familyHeader({ id })}\n      ${pageBar(file)}${WIDE_PAGES.includes(file) ? `\n      ${WIDE_TOGGLE}` : ""}`)
+    .replace("<!--family:header-->", `${familyHeader({ id })}\n      ${pageBar(file)}`)
     .replace("<!--family:unreviewed-->", familyUnreviewed({ id }))
     .replace("<!--family:footer-->", familyFooter({ id }))
     .replace(
