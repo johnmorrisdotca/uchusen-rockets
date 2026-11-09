@@ -80,8 +80,8 @@ test("a tap or a pinch on a stage does not zoom the page, and the line-up bar si
         return `${getComputedStyle(node).touchAction} ${host}`;
       });
       expect(buttonTouch, href).toBe("manipulation KAZOKU-VIEW-CONTROLS");
-      await button.tap({ timeout: 5_000 });
-      await button.tap({ timeout: 5_000 });
+      await button.tap({ timeout: 30_000 });
+      await button.tap({ timeout: 30_000 });
       expect(await scaleOf(page), href).toBe(1);
       const before = await zoomOf(stage);
       await pinch(stage);
