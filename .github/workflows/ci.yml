@@ -7,7 +7,7 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     strategy:
       matrix:
         node: [22, 24]
@@ -20,7 +20,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-  # The site and the documentation site are built once and every demo job plays the tests against that copy (building took a minute and a half in each of 28 jobs).
+  # The package and the site are built once, and every demo job plays the tests against that copy (building took a minute and a half in each of 28 jobs). The tests read both dist (the package, as a CDN would serve it) and site.
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -37,9 +37,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: demo-site
-          path: site
+          path: |
+            site
+            dist
           retention-days: 1
-  # The demo's browser suite, split so every job ends in minutes, not an hour (one job took 1.3 to 2.4 hours). Playwright's own shards are contiguous runs of tests, and a run of one kind (161 tests, one a model) landed in one job. So each job plays several small shards that are far apart in the suite: job J of N plays shards J, J+N, J+2N and so on of N times `per` (8, unless set), and every shard is played by one job. The fleet walk is one test, split by ship (FLEET_PART). Every test still runs once.
+  # The demo's browser suite, split so every job ends in minutes, not an hour (one job took 1.3 to 2.4 hours). scripts/ci-shard.mjs fills the jobs with the tests longest first, by their measured seconds (scripts/demo-times.json), so each job takes about the same; every test is played by one job. The fleet walk is one test, split by ship (FLEET_PART).
   demo:
     name: demo (${{ matrix.name }})
     needs: build
@@ -49,34 +51,36 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: "graphics memory, fleet walk 1 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, per: 1, only: "--grep \"the fleet kit\"", part: "1/5" }
-          - { name: "graphics memory, fleet walk 2 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, per: 1, only: "--grep \"the fleet kit\"", part: "2/5" }
-          - { name: "graphics memory, fleet walk 3 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, per: 1, only: "--grep \"the fleet kit\"", part: "3/5" }
-          - { name: "graphics memory, fleet walk 4 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, per: 1, only: "--grep \"the fleet kit\"", part: "4/5" }
-          - { name: "graphics memory, fleet walk 5 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, per: 1, only: "--grep \"the fleet kit\"", part: "5/5" }
-          - { name: "graphics memory, the rest 1 of 4", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 4, per: 8, only: "--grep-invert \"the fleet kit\"" }
-          - { name: "graphics memory, the rest 2 of 4", set: freeze, project: chromium-desk, browser: chromium, job: 2, jobs: 4, per: 8, only: "--grep-invert \"the fleet kit\"" }
-          - { name: "graphics memory, the rest 3 of 4", set: freeze, project: chromium-desk, browser: chromium, job: 3, jobs: 4, per: 8, only: "--grep-invert \"the fleet kit\"" }
-          - { name: "graphics memory, the rest 4 of 4", set: freeze, project: chromium-desk, browser: chromium, job: 4, jobs: 4, per: 8, only: "--grep-invert \"the fleet kit\"" }
-          - { name: "desk, Chromium 1 of 10", set: rest, project: chromium-desk, browser: chromium, job: 1, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 2 of 10", set: rest, project: chromium-desk, browser: chromium, job: 2, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 3 of 10", set: rest, project: chromium-desk, browser: chromium, job: 3, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 4 of 10", set: rest, project: chromium-desk, browser: chromium, job: 4, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 5 of 10", set: rest, project: chromium-desk, browser: chromium, job: 5, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 6 of 10", set: rest, project: chromium-desk, browser: chromium, job: 6, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 7 of 10", set: rest, project: chromium-desk, browser: chromium, job: 7, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 8 of 10", set: rest, project: chromium-desk, browser: chromium, job: 8, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 9 of 10", set: rest, project: chromium-desk, browser: chromium, job: 9, jobs: 10, per: 8 }
-          - { name: "desk, Chromium 10 of 10", set: rest, project: chromium-desk, browser: chromium, job: 10, jobs: 10, per: 8 }
-          - { name: "phone, Chromium 1 of 5", set: all, project: chromium-phone, browser: chromium, job: 1, jobs: 5, per: 8 }
-          - { name: "phone, Chromium 2 of 5", set: all, project: chromium-phone, browser: chromium, job: 2, jobs: 5, per: 8 }
-          - { name: "phone, Chromium 3 of 5", set: all, project: chromium-phone, browser: chromium, job: 3, jobs: 5, per: 8 }
-          - { name: "phone, Chromium 4 of 5", set: all, project: chromium-phone, browser: chromium, job: 4, jobs: 5, per: 8 }
-          - { name: "phone, Chromium 5 of 5", set: all, project: chromium-phone, browser: chromium, job: 5, jobs: 5, per: 8 }
-          - { name: "phone, WebKit 1 of 4", set: all, project: webkit-phone, browser: webkit, job: 1, jobs: 4, per: 8 }
-          - { name: "phone, WebKit 2 of 4", set: all, project: webkit-phone, browser: webkit, job: 2, jobs: 4, per: 8 }
-          - { name: "phone, WebKit 3 of 4", set: all, project: webkit-phone, browser: webkit, job: 3, jobs: 4, per: 8 }
-          - { name: "phone, WebKit 4 of 4", set: all, project: webkit-phone, browser: webkit, job: 4, jobs: 4, per: 8 }
+          - { name: "graphics memory, fleet walk 1 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, only: "--grep \"the fleet kit\"", part: "1/5" }
+          - { name: "graphics memory, fleet walk 2 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, only: "--grep \"the fleet kit\"", part: "2/5" }
+          - { name: "graphics memory, fleet walk 3 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, only: "--grep \"the fleet kit\"", part: "3/5" }
+          - { name: "graphics memory, fleet walk 4 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, only: "--grep \"the fleet kit\"", part: "4/5" }
+          - { name: "graphics memory, fleet walk 5 of 5", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 1, only: "--grep \"the fleet kit\"", part: "5/5" }
+          - { name: "graphics memory, the rest 1 of 4", set: freeze, project: chromium-desk, browser: chromium, job: 1, jobs: 4, only: "--grep-invert \"the fleet kit\"" }
+          - { name: "graphics memory, the rest 2 of 4", set: freeze, project: chromium-desk, browser: chromium, job: 2, jobs: 4, only: "--grep-invert \"the fleet kit\"" }
+          - { name: "graphics memory, the rest 3 of 4", set: freeze, project: chromium-desk, browser: chromium, job: 3, jobs: 4, only: "--grep-invert \"the fleet kit\"" }
+          - { name: "graphics memory, the rest 4 of 4", set: freeze, project: chromium-desk, browser: chromium, job: 4, jobs: 4, only: "--grep-invert \"the fleet kit\"" }
+          - { name: "desk, Chromium 1 of 10", set: rest, project: chromium-desk, browser: chromium, job: 1, jobs: 10 }
+          - { name: "desk, Chromium 2 of 10", set: rest, project: chromium-desk, browser: chromium, job: 2, jobs: 10 }
+          - { name: "desk, Chromium 3 of 10", set: rest, project: chromium-desk, browser: chromium, job: 3, jobs: 10 }
+          - { name: "desk, Chromium 4 of 10", set: rest, project: chromium-desk, browser: chromium, job: 4, jobs: 10 }
+          - { name: "desk, Chromium 5 of 10", set: rest, project: chromium-desk, browser: chromium, job: 5, jobs: 10 }
+          - { name: "desk, Chromium 6 of 10", set: rest, project: chromium-desk, browser: chromium, job: 6, jobs: 10 }
+          - { name: "desk, Chromium 7 of 10", set: rest, project: chromium-desk, browser: chromium, job: 7, jobs: 10 }
+          - { name: "desk, Chromium 8 of 10", set: rest, project: chromium-desk, browser: chromium, job: 8, jobs: 10 }
+          - { name: "desk, Chromium 9 of 10", set: rest, project: chromium-desk, browser: chromium, job: 9, jobs: 10 }
+          - { name: "desk, Chromium 10 of 10", set: rest, project: chromium-desk, browser: chromium, job: 10, jobs: 10 }
+          - { name: "phone, Chromium 1 of 6", set: all, project: chromium-phone, browser: chromium, job: 1, jobs: 6 }
+          - { name: "phone, Chromium 2 of 6", set: all, project: chromium-phone, browser: chromium, job: 2, jobs: 6 }
+          - { name: "phone, Chromium 3 of 6", set: all, project: chromium-phone, browser: chromium, job: 3, jobs: 6 }
+          - { name: "phone, Chromium 4 of 6", set: all, project: chromium-phone, browser: chromium, job: 4, jobs: 6 }
+          - { name: "phone, Chromium 5 of 6", set: all, project: chromium-phone, browser: chromium, job: 5, jobs: 6 }
+          - { name: "phone, Chromium 6 of 6", set: all, project: chromium-phone, browser: chromium, job: 6, jobs: 6 }
+          - { name: "phone, WebKit 1 of 5", set: all, project: webkit-phone, browser: webkit, job: 1, jobs: 5 }
+          - { name: "phone, WebKit 2 of 5", set: all, project: webkit-phone, browser: webkit, job: 2, jobs: 5 }
+          - { name: "phone, WebKit 3 of 5", set: all, project: webkit-phone, browser: webkit, job: 3, jobs: 5 }
+          - { name: "phone, WebKit 4 of 5", set: all, project: webkit-phone, browser: webkit, job: 4, jobs: 5 }
+          - { name: "phone, WebKit 5 of 5", set: all, project: webkit-phone, browser: webkit, job: 5, jobs: 5 }
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -92,21 +96,15 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: demo-site
-          path: site
+          path: .
       - name: The demo, played in ${{ matrix.name }}
-        run: |
-          status=0
-          total=$(( ${{ matrix.jobs }} * ${{ matrix.per }} ))
-          for shard in $(seq ${{ matrix.job }} ${{ matrix.jobs }} $total); do
-            pnpm exec playwright test --project=${{ matrix.project }} --shard=$shard/$total ${{ matrix.only }} || status=1
-          done
-          exit $status
+        run: node scripts/ci-shard.mjs ${{ matrix.project }} ${{ matrix.job }} ${{ matrix.jobs }} ${{ matrix.only }}
         env:
           DEMO_SET: ${{ matrix.set }}
           FLEET_PART: ${{ matrix.part }}
   usage:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -120,7 +118,7 @@ jobs:
         run: pnpm test:usage
   package:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -138,7 +136,7 @@ jobs:
         run: pnpm test:package
   readme:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
