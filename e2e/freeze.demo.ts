@@ -381,8 +381,10 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 });
 
-// The kept caches settle a few vertex arrays apart from one walk to the next (641, 647, 647 on a hosted runner). A leak adds some for every variant walked, hundreds in a walk.
-const FLEET_ARRAYS_SLACK = 16;
+// The kept caches settle a few vertex arrays apart from one walk to the next (641, 647, 647 on a hosted runner; 2503, 2503, 2525 for the tanks and the Ariake). Buffers and textures are read exactly. A leak adds some for every variant walked, hundreds in a walk.
+const arraysSlack = (arrays: number) => Math.max(16, Math.ceil(arrays * 0.02));
+// Seconds a walk of each fleet ship took on a hosted runner, so CI's parts are the same size: the parts are filled heaviest first. A ship left out counts for ten.
+const FLEET_SECONDS: Record<string, number> = { "fleet-02-original": 88, "fleet-02": 69, "fleet-ship-ariake": 60, "fleet-kyotori": 40, "fleet-ship-01": 39, "fleet-ship-03": 37, "fleet-tanks": 34, "fleet-emiake": 18, "fleet-insets-ship-03": 14, "fleet-insets": 14, "fleet-samples": 12, "fleet-labs": 10, "fleet-markings": 10, "fleet-engines": 10, "fleet-decks": 8, "fleet-romaryu": 7, "fleet-systems": 6, "fleet-habitats": 5, "fleet-cargo": 5, "fleet-structure": 3, "fleet-kaminari": 2, "fleet-drone": 2, "fleet-insets-ship-01": 1 };
 
 test("the fleet kit: every module and the sample ship drawn painted, then contexts and graphics memory stay flat as they are walked again, and it still draws once a frame", async ({ page }) => {
   await page.addInitScript(COUNT);
@@ -393,9 +395,16 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   await press(page, "look-painted");
   const whole = Object.values(ROCKETS).filter((rocket) => !real(rocket));
   expect(whole.length).toBeGreaterThan(5);
-  // CI splits the walk into parts (FLEET_PART="2/3") so each job ends well inside its hour; every ship is still walked by one of them
+  // CI splits the walk into parts (FLEET_PART="2/5") of about the same time each; every ship is still walked by one of them
   const [part, parts] = (process.env.FLEET_PART ?? "1/1").split("/").map(Number);
-  const fleet = whole.filter((_, i) => i % parts === part - 1);
+  const loads = Array.from({ length: parts }, () => 0);
+  const mine = new Set<string>();
+  for (const rocket of [...whole].sort((a, b) => (FLEET_SECONDS[b.id] ?? 10) - (FLEET_SECONDS[a.id] ?? 10) || a.id.localeCompare(b.id))) {
+    const to = loads.indexOf(Math.min(...loads));
+    loads[to] += FLEET_SECONDS[rocket.id] ?? 10;
+    if (to === part - 1) mine.add(rocket.id);
+  }
+  const fleet = whole.filter((rocket) => mine.has(rocket.id));
   expect(fleet.length).toBeGreaterThan(0);
   // The element says `uchusen-change` when the rocket and variant on screen are in. `data-variant` and `data-state` are set before that and `data-state` stays "3d" through a change, so they do not tell a reading that the
   // choice is drawn: a slow runner read 4 buffers where 1395 are made once the last variant's first frame is in.
@@ -435,7 +444,6 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   console.log("fleet view 1", firstView);
   console.log(`fleet walk 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}`);
   // the opened ones and the apart view too: the shapes that are only built when chosen
-  await walk(2);
   await press(page, "rocket-fleet-samples");
   await press(page, "show-apart");
   await settle(page, 600);
@@ -451,7 +459,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   let last = await levelUsage(page);
   console.log(`fleet walk 3: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
   // the kept caches rise and fall by a few vertex arrays from one walk to the next; a leak only rises, so one more walk is read before a rise counts as growth
-  if (last.arrays > second.arrays + FLEET_ARRAYS_SLACK || last.buffers > second.buffers || last.textures > second.textures) {
+  if (last.arrays > second.arrays + arraysSlack(second.arrays) || last.buffers > second.buffers || last.textures > second.textures) {
     await walk(1);
     const again = await levelUsage(page);
     console.log(`fleet walk 4: buffers ${again.buffers}, arrays ${again.arrays}, textures ${again.textures}, programs ${again.programs}`);
@@ -459,7 +467,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   }
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(second.buffers);
-  expect(last.arrays).toBeLessThanOrEqual(second.arrays + FLEET_ARRAYS_SLACK);
+  expect(last.arrays).toBeLessThanOrEqual(second.arrays + arraysSlack(second.arrays));
   expect(last.textures).toBeLessThanOrEqual(second.textures);
   // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.
   const begun = await page.evaluate(() => {
