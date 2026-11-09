@@ -128,3 +128,21 @@ jobs:
         run: pnpm test:readme
       - name: The documentation site's checks, every export documented and every example run
         run: pnpm docs:check
+  commits:
+    # A pushed commit message never names an AI as author or co-author.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: No AI attribution in the pushed commit messages
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          range="$BEFORE..HEAD"
+          git cat-file -e "$BEFORE^{commit}" 2>/dev/null || range="HEAD~1..HEAD"
+          if git log --format='%an %ae%n%cn %ce%n%B' "$range" | grep -i -E 'co-authored-by:.*(claude|anthropic|openai|chatgpt|gpt)|noreply@anthropic|noreply@openai'; then
+            echo "A commit names an AI as author (see AGENTS.md: no AI attribution)"; exit 1
+          fi
