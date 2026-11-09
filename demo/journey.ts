@@ -122,7 +122,7 @@ function writeAddress(): void {
   if (choice.size === "true") next.set("size", "true");
   if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
-  for (const key of ["picker", "picker-at"]) {
+  for (const key of ["picker", "picker-at", "layout"]) {
     const kept = new URLSearchParams(location.search).get(key);
     if (kept !== null) next.set(key, kept);
   }
@@ -1341,11 +1341,11 @@ document.addEventListener("kazoku-languagechange", () =>
 
 const journeyHost = document.querySelector<HTMLElement>(".jr-stage");
 if (journeyHost) {
-  if (!query.has("picker-at")) {
-    const seeded = new URLSearchParams(location.search);
-    seeded.set("picker-at", "bl");
-    history.replaceState(null, "", `${location.pathname}?${seeded.toString()}`);
-  }
+  const seeded = new URLSearchParams(location.search);
+  if (!seeded.has("picker")) seeded.set("picker", "off");
+  if (!seeded.has("picker-at")) seeded.set("picker-at", "tl");
+  if (!seeded.has("layout")) seeded.set("layout", "card");
+  history.replaceState(null, "", `${location.pathname}?${seeded.toString()}`);
   shipPicker = mountShipPicker(journeyHost, journeyPickerChoice(), (next) => {
     const id = next.rocket === "fleet-kaminari" || next.rocket === "fleet-02" ? "kaminari" : CRAFTS.find((craft) => craft.rocket === next.rocket)?.id;
     if (id) change({ craft: id });
