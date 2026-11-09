@@ -159,10 +159,10 @@ function fromDistanceKm(state: State): number {
 }
 const PLAY_ICON = "M4 2.2 13 8 4 13.8z";
 const PAUSE_ICON = "M3 2h3.2v12H3zM9.8 2H13v12H9.8z";
-let planetLoad: Promise<void> | null = null;
+let planetLoad: Promise<string> | null = null;
 
-function loadPlanets(): Promise<void> {
-  planetLoad ??= Promise.all([import("@johnmorrisdotca/wakusei-planets/element"), import("@johnmorrisdotca/wakusei-planets/saturn")]).then(() => undefined);
+function loadPlanets(): Promise<string> {
+  planetLoad ??= Promise.all([import("@johnmorrisdotca/wakusei-planets/element"), import("@johnmorrisdotca/wakusei-planets/saturn")]).then(([element]) => element.TEXTURE_FAR_BASE);
   return planetLoad;
 }
 
@@ -203,7 +203,7 @@ function mountPlanet(node: HTMLElement, id: string): void {
   earthDiscs.delete(node.id);
   node.querySelector("chikyu-earth-realistic")?.remove();
   node.querySelector("wakusei-body")?.remove();
-  void Promise.all([loadPlanets(), loadBody(id)]).then(() => {
+  void Promise.all([loadPlanets(), loadBody(id)]).then(([far]) => {
     if (node.dataset.planet !== id || !node.isConnected) return;
     const body = document.createElement("wakusei-body");
     body.setAttribute("live", "off");
@@ -212,7 +212,7 @@ function mountPlanet(node: HTMLElement, id: string): void {
     body.setAttribute("size", PLANET_PX);
     const maps = new URL("bodies/", document.baseURI).href;
     body.setAttribute("texture-base", maps);
-    body.setAttribute("texture-far-base", maps);
+    body.setAttribute("texture-far-base", far);
     body.setAttribute("body", id);
     body.setAttribute("look", id === "venus" ? "realistic" : "painted");
     body.setAttribute("lang", japanese() ? "ja" : "en");

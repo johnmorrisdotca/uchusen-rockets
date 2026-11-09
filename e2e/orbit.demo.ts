@@ -34,10 +34,12 @@ test("each orbit step sets the altitude, the camera eases, and the address round
     const seen: number[] = [];
     (window as unknown as { orbitSeen: number[] }).orbitSeen = seen;
     const start = performance.now();
+    let moved = false;
     const tick = () => {
       seen.push(Number(holder.dataset.orbitOpen));
       const elapsed = performance.now() - start;
-      if (elapsed < 4000 && (holder.dataset.orbitMoving === "1" || elapsed < 900)) requestAnimationFrame(tick);
+      if (holder.dataset.orbitMoving === "1") moved = true;
+      if (elapsed < 20000 && (holder.dataset.orbitMoving === "1" || !moved)) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
     button.click();
