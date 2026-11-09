@@ -12,8 +12,8 @@ test("the repair drone eases out to Kaminari and ends at Fit", async ({ page }) 
   // a real click scrolls the chip into view and, on a phone, scrolls the picture away, which stops the ease
   await page.getByTestId("db-ship-fleet-kaminari").evaluate((node) => (node as HTMLButtonElement).click());
   // software drawing of the far transition is slow, so the 0.8 s ease takes longer on the clock than on a graphics card
-  await expect.poll(async () => Number(await data(page, "ease")), { timeout: 40_000 }).toBeGreaterThanOrEqual(10);
-  await expect.poll(async () => data(page, "moving"), { timeout: 40_000 }).toBe("false");
+  await expect.poll(async () => Number(await data(page, "ease")), { timeout: 120_000 }).toBeGreaterThanOrEqual(10);
+  await expect.poll(async () => data(page, "moving"), { timeout: 120_000 }).toBe("false");
   expect(Number(await data(page, "distance"))).toBeGreaterThan(before * 20);
 });
 
