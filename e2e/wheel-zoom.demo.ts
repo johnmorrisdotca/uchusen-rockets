@@ -1,5 +1,6 @@
 // Ctrl or Command and the wheel zooms every stage. The pages come from the page bar, not from a list kept here.
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { foldPicker } from "./picker.ts";
 
 const BASE = "/uchusen-rockets/";
 // A drawing in a panel is not a stage. A rocket, a lineup, the journey or the yard is, and it has to wear the binder's mark.
@@ -30,6 +31,7 @@ test("ctrl and the wheel zooms every stage in the page list, and the page does n
     if (!href || seen.has(href)) continue;
     seen.add(href);
     await page.goto(`${BASE}${href}`, { waitUntil: "load" });
+    await foldPicker(page);
     if (!href.includes("docs/")) {
       const more = await page.locator('a[href$=".html"]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).getAttribute("href") ?? "").filter((one) => one !== "" && !one.includes("/") && !one.startsWith("http")));
       for (const one of more) if (!seen.has(one)) pending.push(one);
