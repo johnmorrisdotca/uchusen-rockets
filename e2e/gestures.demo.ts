@@ -12,13 +12,13 @@ const FLAT: Lacks = {
   "key-turn": "a flat picture has no turn",
 };
 
-const VIEWS: readonly { name: string; page: string; view: string; controls: string; lacks?: Lacks }[] = [
+const VIEWS: readonly { name: string; page: string; view: string; controls: string; lacks?: Lacks; height?: number }[] = [
   { name: "the rocket", page: "index.html?picker=off", view: "#hero", controls: "#view-bar" },
   { name: "the fleet record", page: "fleet-db.html?picker=off", view: "#hero", controls: "kazoku-view-controls" },
   { name: "the drones", page: "inspect.html", view: "#hero", controls: "#view-bar" },
   { name: "the yard", page: "yard.html?picker=off", view: "#yard-view", controls: "#view-bar", lacks: { picture: "the Earth behind the yard is its own still picture, so the moved yard cannot be told apart in a photograph of the middle" } },
   { name: "the comparison's first view", page: "compare.html?picker=off", view: "#hero", controls: "#view-bar", lacks: { turn: "a plain drag moves the view here; the Turn choice turns it", roll: "the scale scene stays level", "ctrl-drag-pan": "the comparison camera handles the drag itself (a ticket is open)", "space-drag-pan": "the comparison camera handles the drag itself (a ticket is open)", "right-drag-pan": "the comparison camera handles the drag itself (a ticket is open)", fit: "the comparison camera fits to a body, not to Fit (a ticket is open)" } },
-  { name: "the fleet comparison", page: "fleet-compare.html", view: "#cmp-view", controls: "#cmp-bar", lacks: { ...FLAT, picture: "the stage is a 3000 px tall scale chart, so a photograph of its middle cannot be matched to a move (a ticket is open)" } },
+  { name: "the fleet comparison", page: "fleet-compare.html", view: "#cmp-view", controls: "#cmp-bar", height: 3400, lacks: { ...FLAT, picture: "the stage is a 3000 px tall scale chart, so a photograph of its middle cannot be matched to a move (a ticket is open)" } },
   { name: "the journey", page: "journey.html?picker=off", view: ".jr-stage", controls: "kazoku-view-controls", lacks: { ...FLAT, "wheel-pan": "the plain wheel moves the controls but not the journey picture (a ticket is open)" } },
 ];
 
@@ -26,6 +26,8 @@ for (const one of VIEWS) {
   test(`${one.name} (${one.page}): every gesture the family has`, async ({ page }) => {
     test.skip(test.info().project.name !== "chromium-desk", "A mouse and a keyboard");
     test.setTimeout(240_000);
+    // a view taller than the window gets a window that holds all of it, so every gesture lands on the view
+    if (one.height) await page.setViewportSize({ width: 1280, height: one.height });
     await page.goto(`${BASE}${one.page}`);
     await foldPicker(page);
     await page.locator(one.controls).first().evaluate((node) => (node as HTMLElement & { pause?: () => void }).pause?.());
