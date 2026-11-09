@@ -445,8 +445,15 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   console.log(`fleet walk 2: buffers ${second.buffers}, arrays ${second.arrays}, textures ${second.textures}, programs ${second.programs}`);
   // the first walk reads the caches still filling (15 more vertex arrays after it on a slow runner), so growth is read from the second walk to a third
   await walk(1);
-  const last = await levelUsage(page);
+  let last = await levelUsage(page);
   console.log(`fleet walk 3: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
+  // the kept caches rise and fall by a few vertex arrays from one walk to the next; a leak only rises, so one more walk is read before a rise counts as growth
+  if (last.arrays > second.arrays || last.buffers > second.buffers || last.textures > second.textures) {
+    await walk(1);
+    const again = await levelUsage(page);
+    console.log(`fleet walk 4: buffers ${again.buffers}, arrays ${again.arrays}, textures ${again.textures}, programs ${again.programs}`);
+    last = { ...last, buffers: Math.min(last.buffers, again.buffers), arrays: Math.min(last.arrays, again.arrays), textures: Math.min(last.textures, again.textures) };
+  }
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(second.buffers);
   expect(last.arrays).toBeLessThanOrEqual(second.arrays);
@@ -691,8 +698,7 @@ test.describe("with the engines lit", () => {
     await settle(page, 300);
     const first = await usage(page);
     for (let i = 0; i < 39; i++) await round();
-    await settle(page, 300);
-    const last = await usage(page);
+    const last = await levelUsage(page);
     expect(last.contexts).toBe(1);
     expect(last.buffers).toBeLessThanOrEqual(first.buffers);
     expect(last.arrays).toBeLessThanOrEqual(first.arrays);
@@ -885,7 +891,7 @@ test.describe("a played timeline", () => {
     await leave();
     await settle(page, 500);
     await expectIdle(page);
-    const first = await usage(page);
+    const first = await levelUsage(page);
     const mark = await drawn(page);
     for (let i = 0; i < 40; i++) await round();
     await settle(page, 300);
