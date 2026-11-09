@@ -1,6 +1,7 @@
 // One CI job's share of the demo's browser tests: node scripts/ci-shard.mjs <project> <job> <jobs> [playwright arguments].
-// It lists the tests, gives each its measured seconds from scripts/demo-times.json (a test not in it counts for half a second), fills the jobs longest first so every job takes about the same, and plays this job's tests.
+// It lists the tests, gives each its measured seconds from scripts/demo-times.json (by a short hash of project and title; a test not in it counts for half a second), fills the jobs longest first so every job takes about the same, and plays this job's tests.
 // A test that is new or renamed is still played by one job: only its share is a guess.
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import process from "node:process";
@@ -21,7 +22,7 @@ const tests = [];
 const walk = (suite, path) => {
   for (const spec of suite.specs ?? []) {
     const key = `${project}|${[...path, spec.title].join(" › ")}`;
-    tests.push({ key, title: spec.title, seconds: times[key] ?? 0.5 });
+    tests.push({ key, title: spec.title, seconds: times[createHash("sha1").update(key).digest("hex").slice(0, 10)] ?? 0.5 });
   }
   for (const child of suite.suites ?? []) walk(child, [...path, child.title]);
 };

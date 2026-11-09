@@ -365,10 +365,10 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
   };
   await walk("line");
   await walk("painted");
-  const first = await usage(page);
+  const first = await levelUsage(page);
   await walk("line");
   await walk("painted");
-  const last = await usage(page);
+  const last = await levelUsage(page);
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(first.buffers);
   expect(last.arrays).toBeLessThanOrEqual(first.arrays);
