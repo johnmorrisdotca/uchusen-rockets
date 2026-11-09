@@ -44,7 +44,8 @@ if (lineupStage && lineupPicture) {
   bindStage(lineupStage, (detail) => {
     const zoom = detail.zoom ?? 1;
     const svg = lineupPicture.shadowRoot?.querySelector("svg");
-    if (svg instanceof SVGElement) svg.style.transform = Math.abs(zoom - 1) < 0.001 ? "" : `scale(${zoom})`;
+    const moved = Math.abs(zoom - 1) > 0.001 || Boolean(detail.panX) || Boolean(detail.panY);
+    if (svg instanceof SVGElement) svg.style.transform = moved ? `translate(${detail.panX ?? 0}px, ${detail.panY ?? 0}px) scale(${zoom})` : "";
   }, { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8" });
 }
 if (lineupPage) {

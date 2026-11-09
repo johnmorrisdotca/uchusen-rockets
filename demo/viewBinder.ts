@@ -37,6 +37,7 @@ export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => vo
     if (ready instanceof HTMLElement) return ready;
   }
   stage.dataset.viewStage = "";
+  if (!stage.hasAttribute("tabindex")) stage.tabIndex = 0;
   const found = root.querySelector(`kazoku-view-controls[for="${stage.id}"]`);
   const bar = found instanceof HTMLElement ? found : root.createElement("kazoku-view-controls");
   if (!(found instanceof HTMLElement)) {

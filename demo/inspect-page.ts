@@ -3,6 +3,7 @@ import "@johnmorrisdotca/kazoku-ui/view-controls/define";
 import { ROCKETS } from "../src/index.ts";
 import { defineUchusenRocket, setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { isListed } from "./listed.ts";
+import { bindStage } from "./viewBinder.ts";
 import { WORDS } from "./words.js";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
@@ -18,6 +19,7 @@ const rangeInput = document.querySelector<HTMLInputElement>("#inspect-range");
 const play = document.querySelector<HTMLButtonElement>("#inspect-play");
 const speedInput = document.querySelector<HTMLInputElement>("#inspect-speed");
 if (!hero || !ship || !countInput || !rangeInput || !play || !speedInput) throw new Error("inspect page is missing a control");
+bindStage(hero, (detail) => hero.drive(detail));
 
 const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const query = new URLSearchParams(location.search);
