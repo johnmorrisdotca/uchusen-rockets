@@ -16,6 +16,34 @@ Uchūsen means "spaceship". Each rocket comes in every variant a source document
 
 <p align="center"><a href="https://johnmorrisdotca.github.io/uchusen-rockets/"><strong>Open the demo →</strong></a> · <a href="./docs/variants.md">Variants and sizes</a> · <a href="./docs/parts.md">Build from parts</a> · <a href="./docs/element.md">The element</a> · <a href="./docs/flight.md">Lit engines and flights</a> · <a href="./docs/embed.md">Use one on your site</a> · <a href="./docs/assets.md">Assets</a> · <a href="./docs/guides/getting-started.md">Guides</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/builder.html">Code builder</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/journey.html">Journey mode</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/compare.html">Compare craft</a> · <a href="https://johnmorrisdotca.github.io/uchusen-rockets/docs/">Docs site</a></p>
 
+**[Open the demo](https://johnmorrisdotca.github.io/uchusen-rockets/)**: rockets drawn from sourced sizes that you turn, take apart, set side by side to scale and fly to another world, in English and Japanese. It runs in the browser of a phone, a tablet or a computer: nothing to install, no account, and it is free.
+
+<p align="center"><img alt="The journey page on a desk: a Falcon Heavy leaving the Earth for Mars, with the planets to pick from and the launch dates beside it" src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/journey-desk.webp" width="620"> <img alt="The same page on a phone: the Falcon Heavy above the Earth, with the view buttons and the zoom buttons under it" src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/journey-phone.webp" width="200"></p>
+
+Every size on a rocket names its source, and a size no source gives is left blank, never estimated. The limits of that picture are in [Limits](#limits), and every model and picture is credited in [NOTICE.md](NOTICE.md) and in the footer of each demo page.
+
+## Who it is for
+
+- **Rocket geeks:** every variant with its own sourced sizes ([Starship Block 3, each size with its source](https://johnmorrisdotca.github.io/uchusen-rockets/?rocket=starship&variant=v3&look=painted)), [the engines from below](https://johnmorrisdotca.github.io/uchusen-rockets/?rocket=starship&variant=v3&show=booster&view=below&look=painted), [the parts taken apart](https://johnmorrisdotca.github.io/uchusen-rockets/?rocket=falcon-9&variant=block-5&show=apart&look=painted), [the block-by-block comparison](https://johnmorrisdotca.github.io/uchusen-rockets/#compare) and [the fleet database](https://johnmorrisdotca.github.io/uchusen-rockets/fleet-db.html).
+- **Teachers and students:** [rockets to scale beside a person and a ten-storey building](https://johnmorrisdotca.github.io/uchusen-rockets/#compare), and [the journey to another world](https://johnmorrisdotca.github.io/uchusen-rockets/journey.html) from the planets' real positions, with the numbers as it goes. Every size has its source on the page, so a class can ask where a figure comes from.
+- **Model makers and writers:** the drawings as SVG and the meshes as `.glb` files, with the source of each dimension ([assets guide](docs/guides/assets-and-3d-files.md)); [the code builder](https://johnmorrisdotca.github.io/uchusen-rockets/builder.html) copies the code, or saves an SVG or a PNG, for the rocket you chose. Credit what you show: a painted model's licence travels with it.
+- **Researchers and outreach staff:** every figure is a value, its source and its date, and where sources disagree the page lists them. Read [Limits](#limits) first, then [NOTICE.md](NOTICE.md) and the [sources guide](docs/guides/variants-and-sources.md), and see [How to cite](#how-to-cite).
+- **Developers:** one tag, no build step, and a drawing that is there before any 3D has loaded; and rockets as typed data, with a check that says whether a mix of parts goes together. The install and the API are below.
+
+## Try it now, nothing to install
+
+**Fly:** **[A journey to Mars](https://johnmorrisdotca.github.io/uchusen-rockets/journey.html)** (a Falcon Heavy from the Earth to Mars; pick another world, craft or date) · **[The same page in Japanese](https://johnmorrisdotca.github.io/uchusen-rockets/journey.html?lang=ja)**
+
+**To scale:** **[Every rocket beside a person and a building](https://johnmorrisdotca.github.io/uchusen-rockets/#compare)** · **[Rockets of the World, the poster](https://johnmorrisdotca.github.io/uchusen-rockets/poster.html)** · **[Three ships of the SPX fleet side by side](https://johnmorrisdotca.github.io/uchusen-rockets/fleet-compare.html)**
+
+**Look closer:** **[Starship Block 3 taken apart](https://johnmorrisdotca.github.io/uchusen-rockets/?rocket=starship&variant=v3&show=apart&look=painted)** · **[Super Heavy from below](https://johnmorrisdotca.github.io/uchusen-rockets/?rocket=starship&variant=v3&show=booster&view=below&look=painted)** · **[The fleet database](https://johnmorrisdotca.github.io/uchusen-rockets/fleet-db.html)** · **[The yard](https://johnmorrisdotca.github.io/uchusen-rockets/yard.html)**
+
+**Put one on your page:** **[The code builder](https://johnmorrisdotca.github.io/uchusen-rockets/builder.html)** · **[日本語](https://johnmorrisdotca.github.io/uchusen-rockets/?lang=ja)** · **[English](https://johnmorrisdotca.github.io/uchusen-rockets/?lang=en)**
+
+## For teachers and families
+
+Uchusen Rockets works on a phone or a tablet as well as on a computer, in the browser, and it is free: the code is MIT-licensed, and nothing is installed or signed up for. A class can [fly a journey](https://johnmorrisdotca.github.io/uchusen-rockets/journey.html), set [every rocket beside a person and a building](https://johnmorrisdotca.github.io/uchusen-rockets/#compare) to see how big they are, or open [the poster](https://johnmorrisdotca.github.io/uchusen-rockets/poster.html), and then look at where a size comes from: each one links its source. [The scale guide](docs/guides/scale-lineups.md) and [the journey guide](docs/guides/journey.md) say what each page shows, and [the embed guide](docs/guides/embed-on-your-site.md) shows how to put a rocket on your own page. The painted models are other people's work under Creative Commons licences, credited in [NOTICE.md](NOTICE.md) and at the foot of each demo page.
+
 <p align="center"><img alt="Block 3 of the rocket as a painted 3D view, stainless steel with black tiles, beside its controls and its sizes, each with a source." src="https://raw.githubusercontent.com/johnmorrisdotca/uchusen-rockets/main/docs/images/main-painted.jpg" width="820"></p>
 
 <p align="center">
@@ -44,13 +72,6 @@ npm install @johnmorrisdotca/uchusen-rockets three
 ```
 
 That is all a page needs with a bundler. The drawing shows at once; when the element comes on screen and the browser can draw WebGL, the 3D view takes over without a jump. Drag to turn it, use the arrow keys, or leave it to its slow spin. `engines="on"` lights each engine at full thrust, in the painted look and as a drawn flame in the line looks, and a reader who asked for reduced motion has them off. A flame's length and its shock diamonds are a picture, not a measurement. `beside="on"` stands Starship with Super Heavy next to the rocket at true scale, to see how big it is. [A flight](docs/flight.md) plays each phase with the engines that burn in it, from published timelines. With no WebGL, under Save-Data, or on any failure, the drawing stays.
-
-## Who it is for
-
-- **A developer who wants a rocket on a page** with one tag, no build step, and a drawing that is there before any 3D has loaded.
-- **A writer or teacher** who needs a rocket to scale, beside a person and a building, with every size traceable to a source.
-- **A maker of tools** who wants rockets as data: variants, sourced sizes, parts that carry their own joints, and a check that says whether a mix goes together.
-- **Anyone who must credit what they show**: a painted rocket's licence travels with it, in every form it is copied.
 
 ## Features
 
@@ -388,8 +409,6 @@ Each guide has a Japanese twin in [docs/guides/ja](docs/guides/ja).
 | [React and other frameworks](docs/guides/react-and-frameworks.md) | React, Vue, Svelte, Angular |
 | [Bundlers and CDNs](docs/guides/bundlers-and-cdn.md) | unpkg, Vite, webpack |
 | [TypeScript and Node](docs/guides/typescript-and-node.md) | Types, and the core in Node |
-| [Bundlers and CDNs](docs/guides/bundlers-and-cdn.md) | unpkg, Vite, webpack |
-| [TypeScript and Node](docs/guides/typescript-and-node.md) | Types, and the core in Node |
 | [Ready files and 3D models](docs/guides/assets-and-3d-files.md) | The `.glb` and `.svg` files |
 | [Variants and sourced sizes](docs/guides/variants-and-sources.md) | Why a figure names its source |
 | [Licences, credits and trademarks](docs/guides/licences-and-credits.md) | What is MIT, CC BY, public domain, ODbL |
@@ -399,6 +418,10 @@ Each guide has a Japanese twin in [docs/guides/ja](docs/guides/ja).
 
 ## Limits
 
+Uchusen Rockets is made for learning, teaching, comparing and drawing. It is not made for engineering, for mission planning or for anything that needs more than its sources give, and it says where each number stops:
+
+- **Sizes.** A figure is as exact as its source, shown to the digits the source gives. Where sources disagree the page lists them side by side (Block 3's height has several), and a rocket announced but not built, such as Starship Block 4, shows its sizes as estimates.
+- **The journey.** The planets' positions are real, from NASA JPL's approximate orbit elements, good to about an arc minute (about 20,000 km at Mars). The trips are simple models (Hohmann transfers with patched conics, and flip-and-burn for the fleet ships), checked against the figures NASA prints (about 259 days to Mars), so they show what a trip costs, not what a mission would fly; a craft's burn length and turn times that no source gives are marked "est.".
 - A rocket is only as good as its sources. A figure no source gives is blank, never estimated, and a blank is shown as one.
 - A flame's length and its shock diamonds, how parts move between flight phases, smoke and the ground falling away are pictures, not measurements.
 - A part with no licensed model is painted by this package's own code from photographs and sizes. It is a likeness, not a scan.
@@ -411,6 +434,12 @@ import { variantOf } from "@johnmorrisdotca/uchusen-rockets";
 
 variantOf("starship", "2019").facts.diameter.value; // null
 ```
+
+## How to cite
+
+> Morris, J. (2026). *Uchusen Rockets* (version 0.14.0) [Computer software]. https://github.com/johnmorrisdotca/uchusen-rockets
+
+GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff) and gives BibTeX and APA. Cite the version you used (`npm ls @johnmorrisdotca/uchusen-rockets`), and credit the people behind the models and the numbers: [NOTICE.md](NOTICE.md) says who made each one and under what terms.
 
 ## Accessibility
 

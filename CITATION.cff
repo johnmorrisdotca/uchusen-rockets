@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use Uchusen Rockets in your work, please cite it as below, and credit the models and numbers it draws on (NOTICE.md)."
+title: "Uchusen Rockets"
+type: software
+version: 0.14.0
+date-released: "2026-11-06"
+authors:
+  - family-names: Morris
+    given-names: John
+repository-code: "https://github.com/johnmorrisdotca/uchusen-rockets"
+repository-artifact: "https://www.npmjs.com/package/@johnmorrisdotca/uchusen-rockets"
+url: "https://johnmorrisdotca.github.io/uchusen-rockets/"
+license: MIT
+abstract: "Rockets drawn from sourced sizes: line drawings and painted 3D views of each variant, together, apart and each part alone, rockets at one scale beside a person and a building, and journeys to other worlds, as a web component, an SVG string and a typed model. Every size names its source; every model and picture is credited in NOTICE.md."
+keywords:
+  - rockets
+  - spaceflight
+  - 3D models
+  - scale comparison
+  - astronomy education
