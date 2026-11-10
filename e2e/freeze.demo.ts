@@ -906,7 +906,7 @@ test.describe("a played timeline", () => {
     const mark = await drawn(page);
     for (let i = 0; i < 40; i++) await round();
     await settle(page, 300);
-    const last = await usage(page);
+    const last = await levelUsage(page);
     expect(last.contexts).toBe(1);
     expect(last.buffers).toBeLessThanOrEqual(first.buffers);
     expect(last.arrays).toBeLessThanOrEqual(first.arrays + 6);
