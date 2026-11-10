@@ -85,6 +85,8 @@ const FITTING = new Set(["pipe-steel", "blanket", "blanket-worn", "lamp-amber", 
 /** Drop the fittings below this shorter side, and bring them back only above the higher one, so a slow zoom does not flicker on the line. */
 const FITTING_OFF = 220;
 const FITTING_ON = 260;
+/** A fleet ship whose shorter side is this wide on screen is being looked into: the whole ships docked to it are worth their full detail. */
+const DOCKED_FINE_SPAN = 150;
 
 /** The fine model is due when the camera has come in, or when a page with the Earth shows the craft large. That page zooms the picture and leaves the camera where it is, so distance alone never sees a ship that fills the frame. */
 export function fineDue(close: boolean, orbit: boolean, spanPx: number): boolean {
@@ -114,6 +116,8 @@ export interface ViewerOptions {
   onLost: () => void;
   /** Said once, when the camera first comes near what is on screen: the page may then build the fine detail. */
   onNear?: () => void;
+  /** Said when a fleet ship fills the view across (its shorter side over `DOCKED_FINE_SPAN` pixels): the page may then build the whole ships docked to it in full. Said on each such frame until it returns true. */
+  onZoomedIn?: () => boolean;
   /** Where the licensed models are. */
   assets: string;
   /** Tells the page which painted parts have come in, or "" when the look is not painted. */
@@ -324,6 +328,8 @@ export class RocketViewer {
   private lodSmall: boolean | null = null;
   /** 1 is every fitting drawn, 0 is the small-ship hull. It moves over a fifth of a second so the switch does not pop. */
   private lodFade = 1;
+  /** Whether the craft was small before it was loaded again (the same craft built finer): its first decision keeps the same line, so a reload does not bring the fittings back. */
+  private lodWas: boolean | null = null;
   /** The smooth flood sheets. Cached with their material, so a new rocket reuses them. */
   private poolSheets: MeshBasicMaterial[] = [];
   private lampTexture: CanvasTexture | null = null;
@@ -397,6 +403,7 @@ export class RocketViewer {
   private focusing = false;
   private focusNow: ViewerFocus | null = null;
   private nearSaid = false;
+  private zoomedInSaid = false;
   private nearAt = 0;
   /** The compare page asked for the Earth in the scene. The depth stays logarithmic either way. */
   private orbitOn = false;
@@ -687,6 +694,7 @@ export class RocketViewer {
     }
     this.lampPoints = [];
     this.lampPending = [];
+    this.lodWas = craftChanged ? null : this.lodSmall;
     this.lodSmall = null;
     this.toss.clear();
     this.grab = null;
@@ -2673,7 +2681,7 @@ export class RocketViewer {
       shortest = Math.min(shortest, maxX - minX, maxY - minY);
     }
     this.canvas.dataset.lodSpan = String(Math.round(shortest));
-    const limit = this.lodSmall ? FITTING_ON : FITTING_OFF;
+    const limit = (this.lodSmall ?? this.lodWas) ? FITTING_ON : FITTING_OFF;
     return shortest < limit;
   }
 
@@ -2949,6 +2957,7 @@ export class RocketViewer {
         this.nearSaid = true;
         this.options.onNear();
       }
+      if (this.options.onZoomedIn && !this.zoomedInSaid && Number.isFinite(span) && span >= DOCKED_FINE_SPAN) this.zoomedInSaid = this.options.onZoomedIn();
       this.needsDraw = false;
       this.frames++;
       this.canvas.dataset.frames = String(this.frames);

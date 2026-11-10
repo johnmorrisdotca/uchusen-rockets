@@ -4,8 +4,8 @@ import type { Piece } from "./pieces.ts";
 
 export type DetailLevel = "full" | "coarse";
 
-/** The level in force while a part's pieces are being made. Set by `build`, never by hand. */
-export const detail: { level: DetailLevel } = { level: "full" };
+/** The level in force while a part's pieces are being made, and the level of a whole ship docked to a carrier (a page draws those coarse until it is zoomed in on them). Set by `build`, never by hand. */
+export const detail: { level: DetailLevel; docked: DetailLevel } = { level: "full", docked: "full" };
 
 /** The smallest a 3D-only piece may be, in metres, and stay in the coarse level. */
 export const COARSE_MIN = 6;

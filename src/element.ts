@@ -46,6 +46,8 @@ const HTMLBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class
 const RELEASE_MS = 30_000;
 /** The drawing, followed along a turn, is made again at most this often. */
 const PLACE_MS = 50;
+/** The carriers whose docked craft are whole ships of this package. */
+const CARRIERS = new Set(["fleet-romaryu"]);
 
 let assetBase: string | null = null;
 /**
@@ -639,7 +641,7 @@ export class UchusenRocket extends HTMLBase {
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description), ...this.besideOptions(description), scale: size, ...docked });
+        this.builtNow = build(description, { detail: this.detailFor(description), dockedDetail: this.dockedFine ? "full" : "coarse", ...this.besideOptions(description), scale: size, ...docked });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -797,11 +799,29 @@ export class UchusenRocket extends HTMLBase {
     if (this.detailFor(description) === "full") return;
     this.fine = true;
     try {
-      this.builtNow = build(description, { detail: "full", ...this.besideOptions(description), scale: this.sizeNow(description), ...this.dockedOption() });
+      this.builtNow = build(description, { detail: "full", dockedDetail: this.dockedFine ? "full" : "coarse", ...this.besideOptions(description), scale: this.sizeNow(description), ...this.dockedOption() });
     } catch {
       return;
     }
     await this.applyRocket();
+  }
+
+  /** The whole ships docked to a carrier (Romaryū's four) stay coarse in its fine build, where they are a small part of the picture and most of its triangles, until the view is zoomed in on the carrier: then they are built in full, once. */
+  private dockedFine = false;
+
+  /** True once there is nothing left to do; false while the fine build or a carrier is still to come, so the viewer asks again. */
+  private upgradeDocked(): boolean {
+    if (this.dockedFine) return true;
+    if (!this.fine || !this.builtNow || !CARRIERS.has(this.descriptionNow().rocket)) return false;
+    const description = this.descriptionNow();
+    this.dockedFine = true;
+    try {
+      this.builtNow = build(description, { detail: "full", dockedDetail: "full", ...this.besideOptions(description), scale: this.sizeNow(description), ...this.dockedOption() });
+    } catch {
+      return true;
+    }
+    void this.applyRocket();
+    return true;
   }
 
   private panel: Panel | null = null;
@@ -945,6 +965,7 @@ export class UchusenRocket extends HTMLBase {
         reducedMotion: reduced,
         onLost: () => this.fallBack("context-lost"),
         onNear: () => void this.upgrade(),
+        onZoomedIn: () => this.upgradeDocked(),
         assets: assets ? `${assets.replace(/\/$/, "")}/` : defaultBase(),
         onPainted: (state) => {
           this.dataset.painted = state;

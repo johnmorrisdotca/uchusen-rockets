@@ -138,7 +138,8 @@ export const HEAVY_PIECES = 2000;
 
 // Bound retained geometry when a page visits many of the large fleet models.
 const memo = new Map<string, { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }>();
-const memoKey = (id: string, k: number) => `${detail.level}/${dockedNow.spec ?? "-"}/${id}${k === 1 ? "" : `@${k}`}`;
+// A carrier's docked whole ships (its "miyamoto-" slots) are made at the docked level; every other part keeps its key, so building them in full makes nothing else again.
+const memoKey = (id: string, k: number) => `${detail.level}${id.includes("-miyamoto-") ? `:${detail.docked}` : ""}/${dockedNow.spec ?? "-"}/${id}${k === 1 ? "" : `@${k}`}`;
 const remember = (key: string, value: { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }) => {
   memo.set(key, value);
   if (memo.size > 128) {
@@ -328,7 +329,7 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * A rocket from a description. Throws FitError when it does not go together.
  *
  * @param description The rocket, its variant and any other part in a slot.
- * @param options `detail`: `"coarse"` leaves out the small 3D-only detail of a very detailed part, for a fast first view; left out, every piece is made. `beside`: the real Starship stack (Block 3) stands beside it at true scale, on the same ground, and `boundsOf`, `placesOf`, `glb` and `svg` take it in; Starship itself has nothing beside it. `scale`: the size, in per cent from 60 to 100, of a Kaminari concept hull (any other craft ignores it); every part, place and length is that share of the full size.
+ * @param options `detail`: `"coarse"` leaves out the small 3D-only detail of a very detailed part, for a fast first view; left out, every piece is made. `dockedDetail`: `"coarse"` builds a whole ship docked to a carrier (Romaryū's four) coarse even in the full pass, as a page does until it is zoomed in on them; left out, it follows `detail`. `beside`: the real Starship stack (Block 3) stands beside it at true scale, on the same ground, and `boundsOf`, `placesOf`, `glb` and `svg` take it in; Starship itself has nothing beside it. `scale`: the size, in per cent from 60 to 100, of a Kaminari concept hull (any other craft ignores it); every part, place and length is that share of the full size.
  * @returns The built rocket. It throws a `FitError` when the description does not go together.
  * @example
  * ```ts
@@ -338,12 +339,14 @@ export function drawnPieces(part: { record: PartRecord; pieces: readonly Piece[]
  * console.log(rocket.report.label, rocket.glb().bytes.length > 1000);
  * ```
  */
-export function build(description: Description, options: { detail?: DetailLevel; beside?: boolean | readonly Description[]; named?: boolean; scale?: number; docked?: string } = {}): Built {
+export function build(description: Description, options: { detail?: DetailLevel; dockedDetail?: DetailLevel; beside?: boolean | readonly Description[]; named?: boolean; scale?: number; docked?: string } = {}): Built {
   const report = check(description);
   if (!report.ok) throw new FitError(report);
   const before = detail.level;
+  const beforeDocked = detail.docked;
   const beforeDock = dockedNow.spec;
   detail.level = options.detail ?? "full";
+  detail.docked = options.dockedDetail ?? detail.level;
   dockedNow.spec = "docked" in options ? (options.docked ?? "") : null;
   try {
     const asked = options.beside === true ? (canBeside(description.rocket) ? [BESIDE_ROCKET] : []) : (options.beside || []);
@@ -357,6 +360,7 @@ export function build(description: Description, options: { detail?: DetailLevel;
     return built;
   } finally {
     detail.level = before;
+    detail.docked = beforeDocked;
     dockedNow.spec = beforeDock;
   }
 }
