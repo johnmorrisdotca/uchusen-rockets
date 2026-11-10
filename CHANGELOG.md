@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The old fleet page keeps the language** (MODULES-867): fleet-compare.html sends a reader on to the line-up with the whole address, so `?lang=ja` lands on the Japanese page, and the line-up's title names the line-up. The Japanese legal line writes スターベース (Starbase), as the credits do (MODULES-869).
+
 ## [0.15.0] - 2026-11-10
 
 - **Credits on every demo page** (MODULES-813): the footer of every page names who is credited and links to every credit (NOTICE.md), in English and Japanese, and the bare embed frame carries a credit link in its corner. NOTICE.md now credits the journey's planet pictures. A test checks each page on a desk and on a phone. The README opens with a picture of the demo on a desk and on a phone, who it is for, a row of pages to try, a Limits section and how to cite it, and a CITATION.cff.

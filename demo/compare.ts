@@ -37,7 +37,10 @@ const NEXT: readonly Craft[] = [
   { rocket: "space-shuttle", variant: "stack", form: "stack" },
 ];
 const lineupPage = new URLSearchParams(location.search).get("layout") === "lineup";
-if (lineupPage) document.body.classList.add("fleet-cmp");
+if (lineupPage) {
+  document.body.classList.add("fleet-cmp");
+  document.title = "Uchusen Rockets 宇宙船: three ships at one scale";
+}
 const lineupStage = document.getElementById("cmp-view");
 const lineupPicture = document.getElementById("lineup");
 if (lineupStage && lineupPicture) {

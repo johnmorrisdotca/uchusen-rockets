@@ -7,7 +7,12 @@
     <link rel="stylesheet" href="fleet-compare.css" />
   </head>
   <body class="demo fleet-cmp">
-    <script>location.replace("compare.html?layout=lineup");</script>
+    <script>
+      // The whole address comes along (the language, the view), with the line-up layout.
+      const query = new URLSearchParams(location.search);
+      query.set("layout", "lineup");
+      location.replace(`compare.html?${query}${location.hash}`);
+    </script>
     <main>
       <!--family:header-->
       <section class="cmp" aria-labelledby="cmp-title">

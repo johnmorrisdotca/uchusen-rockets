@@ -8,6 +8,18 @@ test("the old fleet page opens the line-up on the compare page", async ({ page }
   await foldPicker(page);
   await expect(page).toHaveURL(/layout=lineup/);
   await expect(page.getByTestId("cmp-lineup")).toHaveAttribute("pose", "stand");
+  await expect(page).toHaveTitle("Uchusen Rockets 宇宙船: three ships at one scale");
+});
+
+test("the old fleet page keeps the language and the rest of the address", async ({ page }) => {
+  await page.goto("/uchusen-rockets/fleet-compare.html?lang=ja&view=side");
+  await foldPicker(page);
+  await expect(page).toHaveURL(/layout=lineup/);
+  const query = new URLSearchParams(page.url().split("?")[1] ?? "");
+  expect(query.get("lang")).toBe("ja");
+  expect(query.get("view")).toBe("side");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  await expect(page.getByTestId("cmp-lineup")).toHaveAttribute("view", "side");
 });
 
 test("the three ships stand at one scale, the view stays in the address, and the transport is the long one", async ({ page }) => {

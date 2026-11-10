@@ -1017,7 +1017,7 @@ export const WORDS = {
     earth1: "（MIT）が描きます。国の輪郭は ",
     earth1b: "（パブリックドメイン）のもので、d3-geo で描いています。",
     earth2: "「彩色」の画像は NASA のものです。昼の面、水、雲は Blue Marble: Next Generation（NASA Earth Observatory、Reto Stöckli）、夜の面は Earth at Night, Black Marble 2016（NASA Earth Observatory、Suomi NPP VIIRS データ、Miguel Roman、NASA ゴダード宇宙飛行センター）です。NASA はこのプロジェクトを推薦していません。",
-    legal: "ここにあるロケットには、ロゴ、ロゴタイプ、旗はありません。すべての商標は各所有者のものです。このプロジェクトは、SpaceX、NASA、ここに名前が出るほかのメーカーや機関とは関係なく、推薦も受けていません。コードは MIT ライセンスです。彩色モデルは CC BY 4.0 かパブリックドメインで、それぞれ上にクレジットがあります。Starbase の地図データは © OpenStreetMap contributors（ODbL 1.0）、地球の画像は NASA のものです。",
+    legal: "ここにあるロケットには、ロゴ、ロゴタイプ、旗はありません。すべての商標は各所有者のものです。このプロジェクトは、SpaceX、NASA、ここに名前が出るほかのメーカーや機関とは関係なく、推薦も受けていません。コードは MIT ライセンスです。彩色モデルは CC BY 4.0 かパブリックドメインで、それぞれ上にクレジットがあります。スターベースの地図データは © OpenStreetMap contributors（ODbL 1.0）、地球の画像は NASA のものです。",
     slot_booster: "Super Heavy（1 段目）",
     slot_ship: "シップ（上段）",
     "slot_first-stage": "1 段目",
