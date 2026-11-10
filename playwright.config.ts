@@ -1,11 +1,12 @@
 // The demo's own tests: a real browser, real taps. `pnpm test:demo` builds the site and runs them.
 // The server is scripts/dev.ts on port 7901, at the site's real address /uchusen-rockets/: this package's block of ports is 7900 to 7999, and tests use 7901.
 import { defineConfig, devices } from "@playwright/test";
+import { SOFTWARE_GL_ARGS } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const port = Number(process.env.TEST_PORT ?? 7901);
 const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
 // Every WebGL page is drawn in software (SwiftShader), never on the machine's graphics card: a test run once panicked a Mac's graphics driver.
-const gl = { launchOptions: { args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] } };
+const gl = { launchOptions: { args: [...SOFTWARE_GL_ARGS] } };
 // WebKit has no software switch, and every page here can draw WebGL, so off CI it runs nothing; CI (a hosted runner, no graphics card) plays them.
 const webkitPages = process.env.CI ? undefined : /.*/;
 

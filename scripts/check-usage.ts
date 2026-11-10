@@ -10,7 +10,7 @@ import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium, type Browser, type Page } from "@playwright/test";
 import { build as esbuild } from "esbuild";
-import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
+import { acquireBrowserLock, SOFTWARE_GL_ARGS } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const at = (...parts: string[]) => join(root, ...parts);
@@ -120,9 +120,9 @@ const seesRocket = async (page: Page, selector = "uchusen-rocket"): Promise<void
 
 const pageOf = (file: string) => readFileSync(file, "utf8");
 
-// WebGL is drawn in software, never on the machine's graphics card (the family's rule; kazoku-ui exports these as `SOFTWARE_GL_ARGS`).
+// WebGL is drawn in software, never on the machine's graphics card (the family's rule).
 await acquireBrowserLock();
-const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+const browser = await chromium.launch({ args: [...SOFTWARE_GL_ARGS] });
 
 await step("node", () => {
   const out = execFileSync(process.execPath, [join(examples("node"), "server.mjs")], { cwd: usage, encoding: "utf8" }).trim();

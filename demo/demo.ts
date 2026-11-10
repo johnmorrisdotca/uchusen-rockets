@@ -62,8 +62,6 @@ const knownWord = (prefix: string, text: string) => (`${prefix}_${wordsKey(text)
 
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
-// A plain drag turns the craft at every zoom. The package pans a zoomed view unless Turn is chosen, and Move is its start; Turn is this page's start. Move, a second finger, Shift and the other mouse buttons still pan.
-bar.set({ drag: "turn" });
 // The family's view controls turn, tip, zoom and move it; the rocket follows.
 /** A size change calls `fit()` to hold the new ship. That is not the Fit button, so it must not turn true scale off or replace a concept's percent. */
 let fittingForSize = false;

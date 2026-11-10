@@ -60,8 +60,6 @@ if (lineupPage) {
 } else {
 const hero = byId<UchusenRocket>("hero");
 const bar = byId<HTMLElement>("view-bar") as ViewControlsElement;
-// A plain drag turns the picture. Move, a second finger, Shift and the other mouse buttons still pan. A drag that starts on a craft throws that craft.
-bar.set({ drag: "turn" });
 const address = createAddressState({ defaults: { rocket: "starship", variant: "v3", with: "saturn-v:saturn-v", look: PAGE_LOOK, background: "earth", moon: "", place: "float", labels: "on", spin: "slow" } });
 setTurnPace(paceNamed(address.get("spin")));
 const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
