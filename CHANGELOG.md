@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-10
+
 - **On a phone the journey's view buttons no longer cover the date** (MODULES-866): the readouts stack under the button row, one wide one to a row (the date with the phase, then the timer, then the push), and a long phase wraps instead of being cut. Checked at 390 and 360 pixels at rest, coasting and braking.
 - **The old fleet page keeps the language** (MODULES-867): fleet-compare.html sends a reader on to the line-up with the whole address, so `?lang=ja` lands on the Japanese page, and the line-up's title names the line-up. The Japanese legal line writes スターベース (Starbase), as the credits do (MODULES-869).
 
