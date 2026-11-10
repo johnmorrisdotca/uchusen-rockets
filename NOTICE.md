@@ -131,3 +131,7 @@ The Painted look's pictures, copied beside the demo page from chikyu-earth's `di
 | `day-*.webp`, and `water-*.webp`, made from it | Blue Marble: Next Generation, September 2004 (Visible Earth 73801) | NASA Earth Observatory (Reto Stöckli, Blue Marble Next Generation) |
 | `night-*.webp` | Earth at Night, Black Marble 2016 (Visible Earth 144898) | NASA Earth Observatory, Suomi NPP VIIRS data (Miguel Roman, NASA's Goddard Space Flight Center) |
 | `clouds-*.webp` | Blue Marble clouds (Visible Earth 57747) | NASA Earth Observatory (Reto Stöckli) |
+
+## The journey's planets and moons
+
+The planets' and moons' pictures on the journey page are copied beside the demo page from `@johnmorrisdotca/wakusei-planets` (MIT, a dev dependency here), from its `dist/textures/`. They are not in the published package. Each is public-domain imagery from NASA, JPL, USGS and others, or a CC BY 4.0 map (Solar System Scope, and the Sketchfab authors Shady Tex and Nestaeric), and wakusei-planets' own [NOTICE.md](https://github.com/johnmorrisdotca/wakusei-planets/blob/main/NOTICE.md) names the source, the licence and the credit of each picture. Whoever copies those pictures from this site must credit them as that file says. Where the planets stand on that page is worked out from NASA JPL's approximate orbit elements, through the same package.

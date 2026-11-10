@@ -49,6 +49,10 @@ If you save a picture or a file yourself, keep the credit with it.
 
 NASA's models are named as the source, as its guidelines ask, with no suggestion that NASA endorses this package. No NASA logo, insignia, flag or lettering is shipped. `NOTICE.md` says what that rests on.
 
+## The demo site's pictures
+
+The demo site shows more than the package ships: the Earth behind a rocket, the planets and moons on the journey page, and the map of Starbase. Their credits are in `NOTICE.md`, and every demo page links to it in its footer, with a short line of who is credited. The Earth's pictures are NASA's, through `@johnmorrisdotca/chikyu-earth`. The planets' and moons' pictures come from `@johnmorrisdotca/wakusei-planets`, which names each source and licence in its own `NOTICE.md`. Starbase's map is © OpenStreetMap contributors, under the ODbL.
+
 ## No logos, no marks, no flags
 
 No mesh or drawing carries a maker's logo, wordmark, flag or printed name. A test (`test/legal.test.ts`) holds it on the generated files and on the models. Rocket names appear only as plain descriptive words. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named. See [NOTICE.md](../../NOTICE.md) for each source and what was changed.
