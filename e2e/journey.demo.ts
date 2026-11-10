@@ -627,22 +627,26 @@ test("no braking shows where keeping on would reach, out to Andromeda", async ({
   await expect(route.getByTestId("coast-andromeda")).toHaveCount(0);
 });
 
-test("on a phone the view buttons never cover the date or the other readouts, at 390 and 360 pixels wide", async ({ page }) => {
+test("on a phone the view buttons, the zoom controls and the folded ship picker never cover the date or the other readouts, at 390 and 360 pixels wide", async ({ page }) => {
   type Box = { name: string; x: number; y: number; width: number; height: number };
   const boxes = (): Promise<Box[]> =>
-    page.evaluate(() =>
-      [...document.querySelectorAll("#views button, .jr-hud > *")]
-        .filter((node) => !(node as HTMLElement).hidden && getComputedStyle(node).visibility !== "hidden" && (node.textContent ?? "").trim() !== "")
-        .map((node) => {
-          const r = node.getBoundingClientRect();
-          return { name: (node as HTMLElement).dataset.testid ?? node.id, x: r.x, y: r.y, width: r.width, height: r.height };
-        }),
-    );
+    page.evaluate(() => {
+      const shown = (node: Element) => !(node as HTMLElement).hidden && getComputedStyle(node).visibility !== "hidden" && getComputedStyle(node).display !== "none";
+      const box = (node: Element, name: string) => {
+        const r = node.getBoundingClientRect();
+        return { name, x: r.x, y: r.y, width: r.width, height: r.height };
+      };
+      const hud = [...document.querySelectorAll("#views button, .jr-hud > *")].filter((node) => shown(node) && (node.textContent ?? "").trim() !== "").map((node) => box(node, (node as HTMLElement).dataset.testid ?? node.id));
+      const bar = document.querySelector(".jr-stage > kazoku-view-controls");
+      const zoom = [...(bar?.shadowRoot?.querySelectorAll("button") ?? [])].filter((node) => shown(node) && (node as HTMLElement).offsetParent !== null).map((node) => box(node, `view-controls ${node.getAttribute("data-b")}`));
+      const picker = [...document.querySelectorAll(".jr-stage kazoku-options-window")].filter(shown).map((node) => box(node, "ship picker"));
+      return [...hud, ...zoom, ...picker];
+    });
   const crossing = (all: Box[]): string[] => {
     const found: string[] = [];
     for (const [i, a] of all.entries())
       for (const b of all.slice(i + 1)) {
-        const buttons = a.name.startsWith("view-") && b.name.startsWith("view-");
+        const buttons = (a.name.startsWith("view-") && b.name.startsWith("view-")) || (a.name.startsWith("view-controls") && b.name.startsWith("view-controls"));
         if (!buttons && a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height) found.push(`${a.name} over ${b.name}`);
       }
     return found;
@@ -654,6 +658,10 @@ test("on a phone the view buttons never cover the date or the other readouts, at
     expect(rest.some((one) => one.name === "when-stamp"), `the date is shown at ${width}`).toBe(true);
     expect(crossing(rest), `at rest, ${width} px`).toEqual([]);
     await page.getByTestId("play").click();
+    await expect(page.getByTestId("preheat")).toBeVisible();
+    expect(crossing(await boxes()), `preheating, ${width} px`).toEqual([]);
+    await expect(page.getByTestId("ignition")).toBeVisible({ timeout: 8000 });
+    expect(crossing(await boxes()), `counting down, ${width} px`).toEqual([]);
     await expect(page.getByTestId("phase")).toHaveText("COASTING", { timeout: 15_000 });
     await expect(page.getByTestId("timer")).toBeVisible();
     expect(crossing(await boxes()), `coasting, ${width} px`).toEqual([]);

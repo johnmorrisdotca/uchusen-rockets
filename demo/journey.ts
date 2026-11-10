@@ -559,7 +559,8 @@ function layout(): void {
   const box = stage.getBoundingClientRect();
   const paintedSide = stage.dataset.look === "painted" && stage.dataset.view === "side";
   const topBand = 96;
-  const bottomBand = 168;
+  // The speed readout and what is under it (the view controls on a phone) are kept clear of the painted craft.
+  const bottomBand = Math.max(168, Math.round(box.bottom - byId("speed").getBoundingClientRect().top) + 4);
   const sideBand = 12;
   const roomW = Math.max(120, box.width - sideBand * 2);
   const roomH = Math.max(96, box.height - topBand - bottomBand);

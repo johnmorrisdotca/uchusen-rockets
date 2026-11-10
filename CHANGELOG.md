@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **On a phone the speed and the countdown no longer cover the zoom controls** (MODULES-886): on the journey's phone layout the speed, the preheat bar and the countdown sit above the view controls and the folded ship picker, the stage is a little taller to make room, and the painted craft is centred clear of the speed. A test holds every readout, the zoom buttons and the picker apart at 390 and 360 pixels, at rest, preheating, counting down and in flight.
+
 ## [0.16.0] - 2026-11-10
 
 - **On a phone the journey's view buttons no longer cover the date** (MODULES-866): the readouts stack under the button row, one wide one to a row (the date with the phase, then the timer, then the push), and a long phase wraps instead of being cut. Checked at 390 and 360 pixels at rest, coasting and braking.

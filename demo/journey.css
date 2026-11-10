@@ -183,7 +183,7 @@ body.journey { --bad: #a1262b; }
 @media (max-width: 40rem) {
   .jr-route text { font-size: 26px; }
   .jr-route .burn-label { display: none; }
-  .jr-stage { aspect-ratio: auto; height: 25rem; }
+  .jr-stage { aspect-ratio: auto; height: 30rem; }
   .jr-stage:has(.jr-summary:not([hidden])) { height: auto; min-height: 25rem; }
   .jr-stage:has(.jr-summary:not([hidden])) .jr-summary { position: relative; inset: auto; width: 78%; max-height: none; margin: 0.45rem 0.4rem 0.4rem; overflow: visible; }
   .jr-views .chip { font-size: 0.66rem; padding-inline: 0.28rem; }
@@ -195,6 +195,11 @@ body.journey { --bad: #a1262b; }
   .jr-phase { top: 3.3rem; left: auto; right: 0.8rem; transform: none; text-align: right; max-width: 34%; font-size: 0.66rem; letter-spacing: 0.1em; white-space: normal; }
   .jr-timer { top: 6.6rem; right: 0.8rem; }
   .jr-accel { top: 9.7rem; left: 0.8rem; }
+  /* The view controls take the bottom right in two rows of 48 px and the folded ship picker sits just above them, so the speed, the preheat bar and the countdown sit above both, where a
+     finger can still reach the zoom and the picker. */
+  .jr-speed, .jr-preheat { bottom: 10.2rem; }
+  .jr-ignition { bottom: 10.2rem; width: 6.5rem; height: 6.5rem; }
+  .jr-count { font-size: 2.6rem; }
   .jr-cols { grid-template-columns: minmax(0, 1fr); }
   .jr-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .jr-controls .chips, .jr-controls kazoku-speed-buttons { margin-left: 0; }
