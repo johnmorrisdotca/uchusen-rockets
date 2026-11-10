@@ -854,11 +854,13 @@ test.describe("a played timeline", () => {
       await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(mark);
     }
     await leave();
+    // one fast round as well: a few buffers are made on the frame after a step, and a run that left the flight first read 244 where every other run reads 247 before and after the forty
+    await round();
     await settle(page, 500);
     const first = await levelUsage(page);
     for (let i = 0; i < 40; i++) await round();
     await settle(page, 300);
-    const last = await usage(page);
+    const last = await levelUsage(page);
     expect(last.contexts).toBe(1);
     expect(last.buffers).toBeLessThanOrEqual(first.buffers);
     expect(last.arrays).toBeLessThanOrEqual(first.arrays);
