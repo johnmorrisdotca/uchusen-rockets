@@ -103,6 +103,14 @@ jobs:
         env:
           DEMO_SET: ${{ matrix.set }}
           FLEET_PART: ${{ matrix.part }}
+      # What a failed test left (its trace, where it keeps one), so a failure on a runner can be read rather than run again.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ strategy.job-index }}
+          path: test-results
+          retention-days: 7
+          if-no-files-found: ignore
   usage:
     runs-on: ubuntu-latest
     timeout-minutes: 10

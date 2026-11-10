@@ -1,6 +1,9 @@
 // The yard page: the whole yard, a jump to each bay, day and night, the free spine leaving and coming back, and the build player for the chosen bay.
 import { expect, test } from "@playwright/test";
 
+// A trace is kept when a yard test fails, so a pause that did not hold says what the page did (MODULES-896).
+test.use({ trace: "retain-on-failure" });
+
 const URL = "/uchusen-rockets/yard.html";
 
 test("the yard page jumps to a bay, lights the night, slides the free spine and plays that bay", async ({ page }) => {
@@ -85,7 +88,21 @@ test.describe("the build keeps moving while it plays", () => {
     await page.getByTestId("yard-watch").click();
     await expect(page.getByTestId("yard-watch")).toHaveAttribute("aria-pressed", "true");
     await expect.poll(built, { timeout: 45_000 }).toBeGreaterThan(before);
+    // The bar's own state and the clicks its button gets, around the pause: a failure then says whether the click was missed (0), doubled (2) or undone after it.
+    const barState = () =>
+      page.locator("#build-bar").evaluate((node) => ({
+        bar: (node as HTMLElement).dataset.playing ?? "",
+        pressed: node.shadowRoot?.querySelector("[data-testid=build-play]")?.getAttribute("aria-pressed") ?? "",
+        clicks: Number((node as HTMLElement).dataset.testClicks ?? "0"),
+      }));
+    await page.locator("#build-bar").evaluate((node) => {
+      const host = node as HTMLElement;
+      host.dataset.testClicks = "0";
+      node.shadowRoot?.querySelector("[data-testid=build-play]")?.addEventListener("click", () => (host.dataset.testClicks = String(Number(host.dataset.testClicks) + 1)));
+    });
+    expect(await barState(), "the bar plays before the pause").toEqual({ bar: "true", pressed: "true", clicks: 0 });
     await page.getByTestId("build-play").click();
+    await expect.poll(barState, { message: "after one click on Pause the bar stops" }).toEqual({ bar: "false", pressed: "false", clicks: 1 });
     await expect(stage).toHaveAttribute("data-playing", "no");
     await page.waitForTimeout(300);
     const held = Number(await stage.getAttribute("data-frames"));
