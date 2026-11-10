@@ -131,6 +131,7 @@ body.embed:has(uchusen-flight) { overflow: auto; height: auto; min-height: 100vh
 body.embed:has(uchusen-flight) uchusen-rocket { flex: none; width: min(100%, calc((100vh - 21rem) * 0.75)); }
 body.embed uchusen-flight { flex: none; width: 100%; box-sizing: border-box; padding: 0.4rem 0.75rem 0; }
 body.embed .embed-credit { flex: none; width: 100%; box-sizing: border-box; margin: 0; padding: 0.45rem 0.75rem 0.55rem; color: var(--muted); font-size: 0.78rem; line-height: 1.35; max-height: 6.2rem; overflow: auto; }
+body.embed .frame-credit { position: fixed; top: 6px; left: 6px; z-index: 5; max-width: calc(100% - 12px); box-sizing: border-box; padding: 1px 6px; border-radius: 4px; background: color-mix(in srgb, var(--ground) 82%, transparent); color: var(--muted); font: 0.7rem/1.4 system-ui, sans-serif; text-decoration: underline; }
 body.embed .embed-open { flex: none; margin: 0.55rem 0.75rem; font-size: 0.9rem; }
 body.embed .embed-open a { color: var(--ink, #e4ebf5); }
 uchusen-flight { --uchusen-accent: var(--accent); }

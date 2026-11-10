@@ -6,6 +6,12 @@ import { WORDS } from "../demo/words.js";
 import { FAMILY_SCRIPT, familyFooter, familyHead, familyHeader, familyUnreviewed } from "./family-template.mjs";
 
 const id = "uchusen-rockets";
+/** Where every credit is written in full. */
+const NOTICE = "https://github.com/johnmorrisdotca/uchusen-rockets/blob/main/NOTICE.md";
+
+/** The family's footer, with the credits in a line of words and a link to every one of them beside the one-line note, so a reader need not open anything to find the sources. */
+export const footer = (): string =>
+  familyFooter({ id }).replace('<span data-say="foot"></span>', `<span><span data-say="foot"></span> <span data-say="creditLine"></span> <a href="${NOTICE}" data-say="creditsAll"></a></span>`);
 const TITLE = "Uchusen Rockets 宇宙船: rockets drawn from sourced sizes";
 const DESCRIPTION = "Rockets drawn from sourced sizes: a line drawing, thick lines and a painted 3D view of each variant, together, apart and each part alone, for a page of your own. A web component, an SVG string and a typed model.";
 
@@ -59,7 +65,7 @@ export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
     .replace("<!--family:head-->", `${familyHead({ id, title, description })}\n    <link rel="icon" href="icon.png" />`)
     .replace("<!--family:header-->", `${familyHeader({ id })}\n      ${pageBar(file)}`)
     .replace("<!--family:unreviewed-->", familyUnreviewed({ id }))
-    .replace("<!--family:footer-->", familyFooter({ id }))
+    .replace("<!--family:footer-->", footer())
     .replace(
       /<!--family:scripts ([\w./-]+)-->/,
       (_, script: string) =>

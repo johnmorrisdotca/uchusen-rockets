@@ -2,10 +2,12 @@
 import { attributesFromOptions, paintedCredit, rocketFromParams, type RocketOptions } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { PAGE_LOOK } from "./chip.ts";
+import { frameCredit } from "./frame-credit.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
 const params = new URLSearchParams(location.search);
+frameCredit(params.get("lang") === "ja");
 const asked = rocketFromParams(params);
 // the models come from this site, whatever an address says
 delete asked.assets;
