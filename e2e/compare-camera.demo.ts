@@ -141,10 +141,10 @@ test("one astronomical unit shows the Sun and Jupiter", async ({ page }, info) =
   await page.getByTestId("mark-cmpMarkAu").click();
   await expect(page.getByTestId("body-jupiter")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("body-sun")).toBeVisible();
-  await expect(page.getByTestId("body-mercury")).toBeVisible();
-  const before = await page.getByTestId("body-mercury").getAttribute("data-angle");
+  // The Sun's mark is the one always kept: which small bodies have a mark beside it depends on the date (on 10 November 2026 a day's step brought Pluto's in and Mercury's out).
+  const before = await page.getByTestId("body-sun").getAttribute("data-angle");
   await page.getByTestId("cmp-day").click();
-  await expect.poll(() => page.getByTestId("body-mercury").getAttribute("data-angle")).not.toBe(before);
+  await expect.poll(() => page.getByTestId("body-sun").getAttribute("data-angle")).not.toBe(before);
   const text = await page.getByTestId("cw-distance").innerText();
   expect(Number(text.replaceAll(/[^0-9]/g, ""))).toBeGreaterThan(100_000_000);
 });
@@ -155,9 +155,9 @@ test("a body marker moves the pivot, the paths can hide, and the days play", asy
   await expect(page.locator("#hero")).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   await page.getByTestId("mark-cmpMarkAu").click();
   await expect(page.getByTestId("body-jupiter")).toBeVisible({ timeout: 15_000 });
-  const before = await page.getByTestId("body-mercury").getAttribute("data-angle");
+  const before = await page.getByTestId("body-sun").getAttribute("data-angle");
   await page.getByTestId("cmp-day").click();
-  await expect.poll(() => page.getByTestId("body-mercury").getAttribute("data-angle")).not.toBe(before);
+  await expect.poll(() => page.getByTestId("body-sun").getAttribute("data-angle")).not.toBe(before);
   await page.getByTestId("body-jupiter").click();
   const canvasOf = (key: string) => page.locator("#hero").evaluate((node, name) => node.shadowRoot?.querySelector("canvas")?.dataset[name] ?? "", key);
   await expect.poll(() => canvasOf("pivot")).toBe("jupiter");
