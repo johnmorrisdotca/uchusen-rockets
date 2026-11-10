@@ -514,6 +514,8 @@ export class RocketViewer {
     });
     this.canvas.addEventListener("keydown", (event) => this.key(event));
     document.addEventListener("visibilitychange", this.onVisibility);
+    document.addEventListener("keydown", this.onSpace);
+    document.addEventListener("keyup", this.onSpace);
     this.resize = new ResizeObserver(() => this.fit());
     this.resize.observe(holder);
     this.fit();
@@ -2252,6 +2254,8 @@ export class RocketViewer {
     this.moonNode = null;
     cancelAnimationFrame(this.frame);
     document.removeEventListener("visibilitychange", this.onVisibility);
+    document.removeEventListener("keydown", this.onSpace);
+    document.removeEventListener("keyup", this.onSpace);
     this.canvas.removeEventListener("wheel", this.onWheel);
     this.resize.disconnect();
     this.controls.dispose();
@@ -3036,10 +3040,17 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** Space held down: a drag then moves the view, as Ctrl or Command does, and throws no craft. */
+  private spaceHeld = false;
+
+  private onSpace = (event: KeyboardEvent): void => {
+    if (event.key === " " || event.key === "Spacebar") this.spaceHeld = event.type === "keydown";
+  };
+
   /** The wheel over the view zooms it, as does a pinch (Ctrl or Command and the wheel). A wheel that starts with the zoom already at its end, or a sideways swipe, leaves the page to scroll. */
-  /** A drag that starts on a craft throws that craft. Empty space still turns the picture. */
+  /** A drag that starts on a craft throws that craft, unless Ctrl, Command or Space asks to move the view. Empty space still turns the picture. */
   private grabCraft(event: PointerEvent): void {
-    if (!this.floating || event.button !== 0 || !event.isPrimary) return;
+    if (!this.floating || event.button !== 0 || !event.isPrimary || event.ctrlKey || event.metaKey || this.spaceHeld) return;
     const craft = this.craftUnder(event);
     if (craft === null) {
       this.canvas.dataset.hit = "miss";

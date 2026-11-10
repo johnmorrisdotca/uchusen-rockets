@@ -1,5 +1,6 @@
 // The one view bar. Every stage hears Ctrl or Command and the wheel through here, and nowhere else.
 import "@johnmorrisdotca/kazoku-ui/view-controls/define";
+import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 
 /** What a view change carries. The bar fills the numbers; a page may read only the ones it draws. */
 export type ViewDetail = {
@@ -88,6 +89,12 @@ export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => vo
     if (!(event.ctrlKey || event.metaKey || event.altKey)) return;
     if (stage.parentElement?.closest("[data-view-stage]")) return;
     event.stopPropagation();
+  });
+  // A press on a floating craft throws it and never reaches the bar, so the bar cannot count a double-click there: one on a craft fits a zoomed view, as one beside it does.
+  stage.addEventListener("dblclick", () => {
+    const hit = stage.shadowRoot?.querySelector("canvas")?.dataset.hit;
+    const controls = bar as ViewControlsElement;
+    if (hit !== undefined && hit !== "miss" && controls.state.zoom > 1.05) controls.fit();
   });
   return bar;
 }

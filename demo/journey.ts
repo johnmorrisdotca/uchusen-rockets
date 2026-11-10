@@ -448,8 +448,19 @@ function setSpeed(value: PlaySpeed): void {
 // ---- the stage ----
 const stage = byId("stage");
 const picture = byId("jr-picture");
-// Ctrl or Command and the wheel zoom the drawing. The painted model has its own bar and zooms with the same wheel.
-bindStage(stage, (detail) => placeZoom(picture, detail), { overlay: true, flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "4", testid: "view-bar" });
+// Ctrl or Command and the wheel zoom the drawing. The painted model has its own bar and zooms with the same wheel, about the same point; a move of the stage that keeps its zoom (the wheel, a drag) carries the model's
+// layer with the picture, and Fit puts it back.
+const paintedLayer = byId("painted");
+let stageWas = { zoom: 1, panX: 0, panY: 0 };
+let layerAt = { x: 0, y: 0 };
+bindStage(stage, (detail) => {
+  placeZoom(picture, detail);
+  const now = { zoom: detail.zoom ?? 1, panX: detail.panX ?? 0, panY: detail.panY ?? 0 };
+  if (now.zoom <= 1 && now.panX === 0 && now.panY === 0) layerAt = { x: 0, y: 0 };
+  else if (Math.abs(now.zoom - stageWas.zoom) < 1e-6) layerAt = { x: layerAt.x + now.panX - stageWas.panX, y: layerAt.y + now.panY - stageWas.panY };
+  stageWas = now;
+  paintedLayer.style.translate = `${layerAt.x}px ${layerAt.y}px`;
+}, { overlay: true, flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "4", testid: "view-bar" });
 const sky = byId<HTMLCanvasElement>("sky");
 const craftBox = byId("craft");
 const pose = { yaw: 0, pitch: 0, roll: 0, nx: 0, ny: 0 };
