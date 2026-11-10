@@ -186,10 +186,15 @@ body.journey { --bad: #a1262b; }
   .jr-stage { aspect-ratio: auto; height: 25rem; }
   .jr-stage:has(.jr-summary:not([hidden])) { height: auto; min-height: 25rem; }
   .jr-stage:has(.jr-summary:not([hidden])) .jr-summary { position: relative; inset: auto; width: 78%; max-height: none; margin: 0.45rem 0.4rem 0.4rem; overflow: visible; }
-  .jr-phase { max-width: 36%; font-size: 0.66rem; letter-spacing: 0.1em; }
   .jr-views .chip { font-size: 0.66rem; padding-inline: 0.28rem; }
-  .jr-accel { top: 3.7rem; }
-  .jr-timer { top: 3.7rem; right: 0.8rem; }
+  /* The view buttons fill the top row, so the readouts stack under them, one wide one to a row: the date with the phase beside it, then the timer, then the push. The date stays inside the
+     96 px top band that journey.ts keeps clear of the painted craft. */
+  .jr-when { top: 3.3rem; left: 0.8rem; }
+  .jr-when-date { font-size: 0.85rem; }
+  .jr-when-day { font-size: 0.72rem; }
+  .jr-phase { top: 3.3rem; left: auto; right: 0.8rem; transform: none; text-align: right; max-width: 34%; font-size: 0.66rem; letter-spacing: 0.1em; white-space: normal; }
+  .jr-timer { top: 6.6rem; right: 0.8rem; }
+  .jr-accel { top: 9.7rem; left: 0.8rem; }
   .jr-cols { grid-template-columns: minmax(0, 1fr); }
   .jr-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .jr-controls .chips, .jr-controls kazoku-speed-buttons { margin-left: 0; }

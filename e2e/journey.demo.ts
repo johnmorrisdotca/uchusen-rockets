@@ -626,3 +626,39 @@ test("no braking shows where keeping on would reach, out to Andromeda", async ({
   await expect(route.getByTestId("route-flip")).toHaveText("TURNING ROUND");
   await expect(route.getByTestId("coast-andromeda")).toHaveCount(0);
 });
+
+test("on a phone the view buttons never cover the date or the other readouts, at 390 and 360 pixels wide", async ({ page }) => {
+  type Box = { name: string; x: number; y: number; width: number; height: number };
+  const boxes = (): Promise<Box[]> =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("#views button, .jr-hud > *")]
+        .filter((node) => !(node as HTMLElement).hidden && getComputedStyle(node).visibility !== "hidden" && (node.textContent ?? "").trim() !== "")
+        .map((node) => {
+          const r = node.getBoundingClientRect();
+          return { name: (node as HTMLElement).dataset.testid ?? node.id, x: r.x, y: r.y, width: r.width, height: r.height };
+        }),
+    );
+  const crossing = (all: Box[]): string[] => {
+    const found: string[] = [];
+    for (const [i, a] of all.entries())
+      for (const b of all.slice(i + 1)) {
+        const buttons = a.name.startsWith("view-") && b.name.startsWith("view-");
+        if (!buttons && a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height) found.push(`${a.name} over ${b.name}`);
+      }
+    return found;
+  };
+  for (const width of [390, 360]) {
+    await page.setViewportSize({ width, height: 844 });
+    await open(page, `${URL}&craft=saturn-v&to=moon&speed=4`);
+    const rest = await boxes();
+    expect(rest.some((one) => one.name === "when-stamp"), `the date is shown at ${width}`).toBe(true);
+    expect(crossing(rest), `at rest, ${width} px`).toEqual([]);
+    await page.getByTestId("play").click();
+    await expect(page.getByTestId("phase")).toHaveText("COASTING", { timeout: 15_000 });
+    await expect(page.getByTestId("timer")).toBeVisible();
+    expect(crossing(await boxes()), `coasting, ${width} px`).toEqual([]);
+    await expect(page.getByTestId("phase")).toHaveText("DECELERATION BURN", { timeout: 20_000 });
+    await expect(page.getByTestId("accel")).toBeVisible();
+    expect(crossing(await boxes()), `braking, ${width} px`).toEqual([]);
+  }
+});
