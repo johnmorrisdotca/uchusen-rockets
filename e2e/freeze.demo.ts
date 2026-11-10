@@ -433,10 +433,13 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
       console.log(`fleet walk, ${rocket.id}: ${Math.round((Date.now() - began) / 1000)} s`);
     }
   };
-  // Compare the same settled camera and detail level: a moving camera can expose more geometry after the first frame.
+  // Compare the same settled camera and detail level: a moving camera can expose more geometry after the first frame. A painted model still on its way, or fittings mid-fade, hold their counts still for seconds on a slow
+  // runner (one walk read 410 vertex arrays where the others read about 1000), so the count waits for both.
   const settledView = async () => {
     await expect.poll(() => canvasData(page, "moving"), { timeout: 30_000 }).toBe("false");
-    return { detail: await hero(page).getAttribute("data-detail"), distance: await canvasData(page, "distance") };
+    await expect.poll(() => canvasData(page, "painted"), { timeout: 90_000 }).not.toBe("loading");
+    await expect.poll(() => canvasData(page, "lod"), { timeout: 30_000 }).not.toBe("fade");
+    return { detail: await hero(page).getAttribute("data-detail"), distance: await canvasData(page, "distance"), painted: await canvasData(page, "painted"), lod: await canvasData(page, "lod") };
   };
   await walk(1);
   const firstView = await settledView();
