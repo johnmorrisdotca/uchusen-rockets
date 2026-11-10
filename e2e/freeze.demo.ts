@@ -461,8 +461,12 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   await walk(1);
   let last = await levelUsage(page);
   console.log(`fleet walk 3: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
-  // the kept caches rise and fall by a few vertex arrays from one walk to the next; a leak only rises, so one more walk is read before a rise counts as growth
-  if (last.arrays > second.arrays + arraysSlack(second.arrays) || last.buffers > second.buffers || last.textures > second.textures) {
+  // the kept caches rise and fall by a few vertex arrays from one walk to the next; a leak only rises, so one more walk is read before a rise counts as growth.
+  // A vertex array is three.js's record of one geometry drawn with one program, made on the first draw and kept while the geometry lives: how many there are follows what the last frames drew (the
+  // shadow pass, the fittings of a small ship), not what is held. One runner read 2662, 2591, 2661 and 2661 over four walks with the buffers flat at 4438, so a low second walk is not the floor:
+  // the arrays are held to the higher of the first two walks. The buffers and textures, which do hold memory, stay held to the second walk exactly.
+  const arraysFloor = Math.max(first.arrays, second.arrays);
+  if (last.arrays > arraysFloor + arraysSlack(arraysFloor) || last.buffers > second.buffers || last.textures > second.textures) {
     await walk(1);
     const again = await levelUsage(page);
     console.log(`fleet walk 4: buffers ${again.buffers}, arrays ${again.arrays}, textures ${again.textures}, programs ${again.programs}`);
@@ -470,7 +474,7 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   }
   expect(last.contexts).toBe(1);
   expect(last.buffers).toBeLessThanOrEqual(second.buffers);
-  expect(last.arrays).toBeLessThanOrEqual(second.arrays + arraysSlack(second.arrays));
+  expect(last.arrays).toBeLessThanOrEqual(arraysFloor + arraysSlack(arraysFloor));
   expect(last.textures).toBeLessThanOrEqual(second.textures);
   // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.
   const begun = await page.evaluate(() => {
