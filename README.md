@@ -34,7 +34,7 @@ Every size on a rocket names its source, and a size no source gives is left blan
 
 **Fly:** **[A journey to Mars](https://johnmorrisdotca.github.io/uchusen-rockets/journey.html)** (a Falcon Heavy from the Earth to Mars; pick another world, craft or date) · **[The same page in Japanese](https://johnmorrisdotca.github.io/uchusen-rockets/journey.html?lang=ja)**
 
-**To scale:** **[Every rocket beside a person and a building](https://johnmorrisdotca.github.io/uchusen-rockets/#compare)** · **[Rockets of the World, the poster](https://johnmorrisdotca.github.io/uchusen-rockets/poster.html)** · **[Three ships of the SPX fleet side by side](https://johnmorrisdotca.github.io/uchusen-rockets/fleet-compare.html)**
+**To scale:** **[Every rocket beside a person and a building](https://johnmorrisdotca.github.io/uchusen-rockets/#compare)** · **[Rockets of the World, the poster](https://johnmorrisdotca.github.io/uchusen-rockets/poster.html)** · **[Three ships of the SPX fleet side by side](https://johnmorrisdotca.github.io/uchusen-rockets/compare.html?layout=lineup)**
 
 **Look closer:** **[Starship Block 3 taken apart](https://johnmorrisdotca.github.io/uchusen-rockets/?rocket=starship&variant=v3&show=apart&look=painted)** · **[Super Heavy from below](https://johnmorrisdotca.github.io/uchusen-rockets/?rocket=starship&variant=v3&show=booster&view=below&look=painted)** · **[The fleet database](https://johnmorrisdotca.github.io/uchusen-rockets/fleet-db.html)** · **[The yard](https://johnmorrisdotca.github.io/uchusen-rockets/yard.html)**
 
