@@ -1,28 +1,124 @@
-// Turns NASA's 3D models (kept outside this repository) into the small parts in models/. Run by hand, never by the build: `UCHUSEN_MODEL_SOURCES=<folder> node scripts/reduce-nasa.ts [only]`. The results are committed.
+// Turns NASA's 3D models, and the licensed models that are split into parts the same way (kept outside this repository), into the small parts in models/. Run by hand, never by the build:
+// `UCHUSEN_MODEL_SOURCES=<folder> node scripts/reduce-nasa.ts [id,id…]`. The results are committed.
 //
 // A source's files are data from outside: they are only read. What it does to a model: every triangle is moved to this package's convention (metres, Y up, the part's base on the axis at y = 0, the windward side
-// towards +Z) and scaled to a sourced size, sorted into parts, and simplified. Its many materials become one picture: each picture with its marks painted out first, each plain colour a small square, cropped to what
-// the triangles use. So no picture and no name of the source's reaches a file unless a recipe let it, and a part is one draw.
+// towards +Z) and scaled to a sourced size, sorted into parts (by where it is, what it is made of and which connected piece it belongs to), and simplified. Its many materials become one picture: each picture with
+// its marks painted out first, each plain colour a small square, cropped to what the triangles use. So no picture and no name of the source's reaches a file unless a recipe let it, and a part is one draw.
 import { Buffer } from "node:buffer";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { Document, type Material as GMaterial, type Node as GNode, NodeIO, type Primitive } from "@gltf-transform/core";
-import { KHRONOS_EXTENSIONS } from "@gltf-transform/extensions";
+import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { dedup, prune, quantize } from "@gltf-transform/functions";
 import { chromium } from "@playwright/test";
 // @ts-expect-error the decoder has no types of its own
 import draco3d from "draco3dgltf";
 import { MeshoptSimplifier } from "meshoptimizer";
-import { NASA_RECIPES, type NasaPart, type NasaRecipe, type Rect } from "./nasa-recipes.ts";
+import { NASA_RECIPES, type NasaPart, type NasaRecipe, type PieceBox, type Rect } from "./nasa-recipes.ts";
+import { PART_RECIPES } from "./part-recipes.ts";
 import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const sources = process.env.UCHUSEN_MODEL_SOURCES ?? "";
 if (!sources) throw new Error("UCHUSEN_MODEL_SOURCES must name the folder that holds the source models. They are kept outside this repository.");
-const only = process.argv[2];
+const only = new Set((process.argv[2] ?? "").split(",").filter(Boolean));
 const outDir = join(process.cwd(), "models");
-const io = new NodeIO().registerExtensions(KHRONOS_EXTENSIONS).registerDependencies({ "draco3d.decoder": await (draco3d as { createDecoderModule(): Promise<unknown> }).createDecoderModule() });
+const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "draco3d.decoder": await (draco3d as { createDecoderModule(): Promise<unknown> }).createDecoderModule() });
 await MeshoptSimplifier.ready;
+
+/** The connected pieces of a file: every triangle's piece, by primitive, from the vertices welded to a ten-thousandth of the file's size. */
+function piecesOf(nodes: readonly GNode[]): { pieceOf: Map<Primitive, Int32Array>; boxes: PieceBox[] } {
+  const lo = [Infinity, Infinity, Infinity];
+  const hi = [-Infinity, -Infinity, -Infinity];
+  const el = [0, 0, 0];
+  const pointsOf = (node: GNode, prim: Primitive): Float64Array => {
+    const pos = prim.getAttribute("POSITION");
+    const m = node.getWorldMatrix();
+    const out = new Float64Array((pos?.getCount() ?? 0) * 3);
+    for (let i = 0; pos && i < pos.getCount(); i++) {
+      pos.getElement(i, el);
+      for (let k = 0; k < 3; k++) out[i * 3 + k] = m[k] * el[0] + m[4 + k] * el[1] + m[8 + k] * el[2] + m[12 + k];
+    }
+    return out;
+  };
+  const points = new Map<Primitive, Float64Array>();
+  for (const node of nodes)
+    for (const prim of node.getMesh()?.listPrimitives() ?? []) {
+      const p = pointsOf(node, prim);
+      points.set(prim, p);
+      for (let i = 0; i < p.length; i += 3)
+        for (let c = 0; c < 3; c++) {
+          lo[c] = Math.min(lo[c], p[i + c]);
+          hi[c] = Math.max(hi[c], p[i + c]);
+        }
+    }
+  const grid = 10000 / Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2], 1e-9);
+  const ids = new Map<string, number>();
+  const vertexIds = new Map<Primitive, Int32Array>();
+  for (const [prim, p] of points) {
+    const mine = new Int32Array(p.length / 3);
+    for (let i = 0; i < mine.length; i++) {
+      const key = `${Math.round(p[i * 3] * grid)},${Math.round(p[i * 3 + 1] * grid)},${Math.round(p[i * 3 + 2] * grid)}`;
+      let id = ids.get(key);
+      if (id === undefined) {
+        id = ids.size;
+        ids.set(key, id);
+      }
+      mine[i] = id;
+    }
+    vertexIds.set(prim, mine);
+  }
+  const parent = Int32Array.from({ length: ids.size }, (_, i) => i);
+  const find = (x: number): number => {
+    while (parent[x] !== x) {
+      parent[x] = parent[parent[x]];
+      x = parent[x];
+    }
+    return x;
+  };
+  const cornerOf = (prim: Primitive, i: number): number => {
+    const idx = prim.getIndices();
+    return idx ? idx.getScalar(i) : i;
+  };
+  const cornerCount = (prim: Primitive): number => prim.getIndices()?.getCount() ?? prim.getAttribute("POSITION")?.getCount() ?? 0;
+  for (const [prim, mine] of vertexIds) {
+    const count = cornerCount(prim);
+    for (let f = 0; f + 2 < count; f += 3) {
+      const a = mine[cornerOf(prim, f)];
+      parent[find(a)] = find(mine[cornerOf(prim, f + 1)]);
+      parent[find(a)] = find(mine[cornerOf(prim, f + 2)]);
+    }
+  }
+  const boxes: { min: number[]; max: number[]; triangles: number }[] = [];
+  const boxOf = new Map<number, number>();
+  const pieceOf = new Map<Primitive, Int32Array>();
+  for (const [prim, mine] of vertexIds) {
+    const p = points.get(prim) as Float64Array;
+    const count = cornerCount(prim);
+    const out = new Int32Array(Math.floor(count / 3));
+    for (let f = 0; f + 2 < count; f += 3) {
+      const root = find(mine[cornerOf(prim, f)]);
+      let at = boxOf.get(root);
+      if (at === undefined) {
+        at = boxes.length;
+        boxOf.set(root, at);
+        boxes.push({ min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity], triangles: 0 });
+      }
+      const box = boxes[at];
+      box.triangles++;
+      for (const k of [f, f + 1, f + 2]) {
+        const v = cornerOf(prim, k);
+        for (let c = 0; c < 3; c++) {
+          box.min[c] = Math.min(box.min[c], p[v * 3 + c]);
+          box.max[c] = Math.max(box.max[c], p[v * 3 + c]);
+        }
+      }
+      out[f / 3] = at;
+    }
+    pieceOf.set(prim, out);
+  }
+  return { pieceOf, boxes };
+}
 
 /** A triangle, as three corners: positions, normals and picture coordinates. */
 interface Triangles {
@@ -69,6 +165,23 @@ function eachTriangle(prim: Primitive, node: GNode, visit: (p: number[][], n: nu
     }
     visit(p, n, c.map((i) => (uv ? uv.getElement(i, [0, 0]) : [0, 0])));
   }
+}
+
+type Corners = [number[][], number[][], number[][]];
+/** A triangle cut along its longest edge, again and again, until no side of its box is over `most` units: its corners' normals and picture coordinates are shared out along the cut. */
+function cut(p: number[][], n: number[][], t: number[][], most: number): Corners[] {
+  const size = Math.max(...[0, 1, 2].map((k) => Math.max(p[0][k], p[1][k], p[2][k]) - Math.min(p[0][k], p[1][k], p[2][k])));
+  if (!(size > most)) return [[p, n, t]];
+  const edge = (i: number, j: number) => Math.hypot(p[i][0] - p[j][0], p[i][1] - p[j][1], p[i][2] - p[j][2]);
+  const longest = [edge(0, 1), edge(1, 2), edge(2, 0)];
+  const a = longest.indexOf(Math.max(...longest));
+  const b = (a + 1) % 3;
+  const c = (a + 2) % 3;
+  const mid = (u: number[], v: number[]) => u.map((value, k) => (value + v[k]) / 2);
+  const mp = mid(p[a], p[b]);
+  const mn = mid(n[a], n[b]);
+  const mt = mid(t[a], t[b]);
+  return [...cut([p[a], mp, p[c]], [n[a], mn, n[c]], [t[a], mt, t[c]], most), ...cut([mp, p[b], p[c]], [mn, n[b], n[c]], [mt, t[b], t[c]], most)];
 }
 
 /** Joins vertices that are the same to within a tenth of a millimetre per metre of the part, so a simplifier sees one surface; a seam in the picture stays a seam. */
@@ -300,6 +413,8 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
       node.listChildren().forEach(walk);
     };
     for (const scene of doc.getRoot().listScenes()) scene.listChildren().forEach(walk);
+    const pieces = piecesOf(nodes);
+    console.log(`  ${file}: ${pieces.boxes.length} connected pieces`);
     for (const node of nodes)
       for (const prim of node.getMesh()?.listPrimitives() ?? []) {
         const material: GMaterial | null = prim.getMaterial();
@@ -310,13 +425,18 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
           const factor = material?.getBaseColorFactor() ?? [0.8, 0.8, 0.8, 1];
           paints.set(name, { name, colour: [factor[0], factor[1], factor[2]], image: image && texture ? { bytes: image, mime: texture.getMimeType() } : null });
         }
-        eachTriangle(prim, node, (p, n, t) => {
+        const pieceIds = pieces.pieceOf.get(prim);
+        let f = 0;
+        eachTriangle(prim, node, (p0, n0, t0) => {
           inTris++;
+          const piece: PieceBox = pieces.boxes[pieceIds?.[f++] ?? -1] ?? { min: [0, 1, 2].map((k) => (p0[0][k] + p0[1][k] + p0[2][k]) / 3), max: [0, 1, 2].map((k) => (p0[0][k] + p0[1][k] + p0[2][k]) / 3), triangles: 1 };
+          // a triangle longer than a part is cut, so a facet that runs the length of a hull falls where each piece of it stands
+          for (const [p, n, t] of cut(p0, n0, t0, recipe.maxTriangle ?? Infinity)) {
           const centre = [0, 1, 2].map((k) => (p[0][k] + p[1][k] + p[2][k]) / 3);
-          const part = recipe.partOf(centre, name, node.getName(), file);
+          const part = recipe.partOf(centre, name, node.getName(), file, piece);
           if (!part) {
             dropped.set(name, (dropped.get(name) ?? 0) + 1);
-            return;
+            continue;
           }
           const moved = recipe.copies?.filter((copy) => copy.file === file).map((copy) => copy.at) ?? [];
           for (const at of moved.length ? moved : [[0, 0, 0]]) {
@@ -334,12 +454,17 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
             bucket.uvs.push(t[k][0], t[k][1]);
           }
           }
+          }
         });
       }
   }
   for (const part of recipe.parts) {
     const buckets = parts.get(part.id);
-    if (!buckets) throw new Error(`${recipe.id}: nothing fell in ${part.id}`);
+    if (!buckets) {
+      // a part the model does not draw: no file, and this package's own paint shows for it
+      console.log(`${recipe.id}-${part.id}.glb  nothing fell in it: no file`);
+      continue;
+    }
     for (const t of buckets.values()) agree(t);
     const picture = await atlas(buckets, paints, recipe, part);
     // all its triangles as one
@@ -402,7 +527,8 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
         .setIndices(doc.createAccessor().setType("SCALAR").setArray(out).setBuffer(buffer)),
     );
     doc.getRoot().getAsset().generator = "uchusen-rockets";
-    doc.getRoot().getAsset().extras = { title: recipe.title, author: "NASA", license: "Public domain, NASA (https://www.nasa.gov/nasa-brand-center/images-and-media/)", source: recipe.source, changes: recipe.changes, part: part.id };
+    const credit = recipe.credit ?? { author: "NASA", license: "Public domain, NASA (https://www.nasa.gov/nasa-brand-center/images-and-media/)" };
+    doc.getRoot().getAsset().extras = { title: recipe.title, author: credit.author, license: credit.license, source: recipe.source, changes: recipe.changes, part: part.id };
     await doc.transform(dedup(), prune({ keepAttributes: true }), quantize({ quantizePosition: 14, quantizeNormal: 8, quantizeTexcoord: 12, pattern: /^(POSITION|NORMAL|TEXCOORD_0)$/ }));
     const file = join(outDir, `${recipe.id}-${part.id}.glb`);
     writeFileSync(file, await io.writeBinary(doc));
@@ -413,7 +539,7 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
 }
 
 try {
-  for (const recipe of NASA_RECIPES) if (!only || recipe.id === only) await runRecipe(recipe);
+  for (const recipe of [...NASA_RECIPES, ...PART_RECIPES]) if (only.size === 0 || only.has(recipe.id)) await runRecipe(recipe);
 } finally {
   await browser.close();
 }

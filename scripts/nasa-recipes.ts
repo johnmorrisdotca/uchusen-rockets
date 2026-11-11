@@ -19,6 +19,12 @@ export interface NasaPart {
   /** Metres the surface may move. */
   error?: number;
 }
+/** A connected piece of a file's mesh: the triangles that touch, welded, with the box they fill in the file's own space. */
+export interface PieceBox {
+  min: readonly number[];
+  max: readonly number[];
+  triangles: number;
+}
 export interface NasaRecipe {
   id: string;
   /** Under the sources folder. Its first file's material names go bare; another's carry its file's name. */
@@ -27,11 +33,13 @@ export interface NasaRecipe {
   /** The dataset's page. */
   source: string;
   changes: string;
+  /** Whose the model is when it is not NASA's: the author and the licence line written into each part's file. */
+  credit?: { author: string; license: string };
   parts: readonly NasaPart[];
   /** A file used more than once, each copy moved by this much in the first file's space. */
   copies?: readonly { file: string; at: readonly [number, number, number] }[];
-  /** Which part a triangle belongs to, by its middle in the file's own space; null leaves it out. */
-  partOf: (centre: readonly number[], material: string, node: string, file: string) => NasaPart | null;
+  /** Which part a triangle belongs to, by its middle in the file's own space, its material, its node and the connected piece it is part of; null leaves it out. */
+  partOf: (centre: readonly number[], material: string, node: string, file: string, piece: PieceBox) => NasaPart | null;
   patches?: Readonly<Record<string, readonly Patch[]>>;
   /** A material's plain colour in place of its own or its picture, in linear values. */
   colours?: Readonly<Record<string, readonly [number, number, number]>>;
@@ -44,6 +52,8 @@ export interface NasaRecipe {
   rough?: number;
   /** Let free edges move: for a model whose pieces can take it. */
   freeBorders?: boolean;
+  /** A triangle with a side of its box over this many of the file's units is cut up first, so a facet that runs the length of a hull falls where each piece of it stands. */
+  maxTriangle?: number;
 }
 
 const FOLDER = "nasa-3d-resources";
@@ -133,16 +143,111 @@ const GEMINI_CAPSULE: NasaPart = { id: "capsule", triangles: 14_000, error: 0.00
 const MERCURY: NasaPart = { id: "capsule", triangles: 40_000, error: 0.002, place: placer([-0.085, 0.86, 0.655], 3.3 / 9.23, 1.8 / 5.99, 0) };
 
 // Jupiter-C, up +y, 17.47 units: scaled to the sourced 21.3 m, which gives 1.83 m across against the sourced 1.8 m.
+// Its 23 named objects fall into four stages: the tail unit with its fins (y 1.36 to 3.9), the Redstone body with four small fittings (3.9 to 16.23), the spinning tub with its clustered motors (16.085 to 17.27) and the top
+// stage with Explorer 1 (17.25 to 18.83). Each stands in a frame of its own at its base.
 const JUPITER_SCALE = 21.3 / 17.47;
-const JUPITER_C: NasaPart = { id: "vehicle", triangles: 12_000, error: 0.01, place: placer([-0.135, 1.36, 0], JUPITER_SCALE, JUPITER_SCALE, 0) };
+const jupiterPart = (id: string, base: number, triangles: number): NasaPart => ({ id, triangles, error: 0.01, place: placer([-0.135, base, 0], JUPITER_SCALE, JUPITER_SCALE, 0) });
+const JC_TAIL = jupiterPart("tail", 1.362, 3_000);
+const JC_BODY = jupiterPart("first-stage", 3.901, 5_000);
+const JC_TUB = jupiterPart("tub", 16.085, 2_500);
+const JC_TOP = jupiterPart("fourth-stage", 17.25, 1_500);
+const JC_TAIL_NODES = /^(jupiterc_[2578]|jupiterc_6|jupiterc_9|jupiterc10|pCube3)/;
+const JC_TUB_NODES = /^(pCylinder2|jupiterc1[1-6]|pCube5)/;
 
-// The station, its truss along z, 45.54 units with its arrays: scaled to the sourced 109 m. Turned so the truss runs across the front. A ball of stray pieces far above it, at y 40 and over, is left out.
+// The station, its truss along z, 45.54 units with its arrays: scaled to the sourced 109 m. Turned so the truss runs across the front, and its module run put on the axis. A ball of stray pieces far above it, at y 40
+// and over, is left out. Then every part is cut out by where it stands in that frame, each in a frame of its own at its base, or at its root for one that lies out from the run: the module run stacks up the axis from
+// Zvezda's aft, the laboratories lie out along ±X from Harmony, the airlock and the visiting craft lie out along ±Z, and the truss, its arrays and its radiators stand where the model has them.
 const ISS_SCALE = 109 / 45.54;
-const ISS_STATION: NasaPart = { id: "station", triangles: 58_000, error: 0.03, place: placer([0, -4.17, -0.09], ISS_SCALE, ISS_SCALE, 90) };
-
-// Hubble, up +y, 525.49 units: scaled to the sourced 13.2 m, which gives 4.2 m across its tube, against the sourced 4.2 m.
-const HUBBLE_SCALE = 13.2 / 525.49;
-const HUBBLE: NasaPart = { id: "telescope", triangles: 8_000, error: 0.002, place: placer([-1.3, -266.03, 3.4], HUBBLE_SCALE, HUBBLE_SCALE, 0) };
+const issWhole = placer([0, -4.17, -0.006], ISS_SCALE, ISS_SCALE, 90);
+/** A part of the station in a frame of its own: the whole station's frame, moved so that `origin` is at its origin. */
+const issPart = (id: string, origin: readonly [number, number, number], triangles: number): NasaPart => ({
+  id,
+  triangles,
+  error: 0.03,
+  place: (p, n) => {
+    issWhole(p, n);
+    p[0] -= origin[0];
+    p[1] -= origin[1];
+    p[2] -= origin[2];
+  },
+});
+const ISS_AFT = 8.7;
+const ISS_ZARYA = 20.6;
+const ISS_UNITY = 31.4;
+const ISS_DESTINY = 36.1;
+const ISS_HARMONY = 42.4;
+const ISS_LAB_Y = 45;
+const ISS_LAB_ROOT = 1.85;
+const ISS_SIDE = 2;
+const ISS_PARTS: Readonly<Record<string, NasaPart>> = {
+  "soyuz-aft": issPart("soyuz-aft", [0, 3.2, 0], 1_600),
+  zvezda: issPart("zvezda", [0, ISS_AFT, 0], 4_500),
+  zarya: issPart("zarya", [0, ISS_ZARYA, 0], 3_500),
+  unity: issPart("unity", [0, ISS_UNITY, 0], 3_500),
+  destiny: issPart("destiny", [0, ISS_DESTINY, 0], 2_500),
+  harmony: issPart("harmony", [0, ISS_HARMONY, 0], 3_000),
+  columbus: issPart("columbus", [ISS_LAB_ROOT, ISS_LAB_Y, 0], 2_000),
+  kibo: issPart("kibo", [-ISS_LAB_ROOT, ISS_LAB_Y, 0], 3_500),
+  airlock: issPart("airlock", [0, 33.9, -1.3], 2_500),
+  "soyuz-zvezda-nadir": issPart("soyuz-zvezda-nadir", [0, 15.7, -ISS_SIDE], 1_800),
+  "soyuz-zvezda-zenith": issPart("soyuz-zvezda-zenith", [0, 19, ISS_SIDE], 1_800),
+  "soyuz-zarya-nadir": issPart("soyuz-zarya-nadir", [0, 25.7, -ISS_SIDE], 1_800),
+  "truss-s0": issPart("truss-s0", [0, 33, 2.5], 1_500),
+  "truss-s1": issPart("truss-s1", [7, 33, 2.5], 3_500),
+  "truss-p1": issPart("truss-p1", [-7, 33, 2.5], 3_500),
+  "truss-s3-s4": issPart("truss-s3-s4", [19, 33, 2.5], 3_000),
+  "truss-p3-p4": issPart("truss-p3-p4", [-19, 33, 2.5], 3_000),
+  "truss-s5": issPart("truss-s5", [33, 33, 2.5], 800),
+  "truss-p5": issPart("truss-p5", [-33, 33, 2.5], 800),
+  "truss-s6": issPart("truss-s6", [38, 33, 2.5], 1_200),
+  "truss-p6": issPart("truss-p6", [-38, 33, 2.5], 1_200),
+  "arrays-s4": issPart("arrays-s4", [35.5, 34.5, 2.5], 800),
+  "arrays-p4": issPart("arrays-p4", [-35.5, 34.5, 2.5], 800),
+  "arrays-s6": issPart("arrays-s6", [50.5, 34.5, 2.5], 800),
+  "arrays-p6": issPart("arrays-p6", [-50.5, 34.5, 2.5], 800),
+  "radiators-starboard": issPart("radiators-starboard", [19, 33, 2.5], 700),
+  "radiators-port": issPart("radiators-port", [-19, 33, 2.5], 700),
+};
+/** Which part a triangle of the station is, by its middle in the station's frame and the piece it belongs to. */
+function issPartOf(centre: readonly number[], piece: PieceBox): NasaPart | null {
+  const at = [...centre];
+  const n = [0, 1, 0];
+  issWhole(at, n);
+  const [x, y, z] = at;
+  const box = { min: [...piece.min], max: [...piece.max] };
+  issWhole(box.min, [0, 1, 0]);
+  issWhole(box.max, [0, 1, 0]);
+  // the turn swaps and flips the box's sides: read them back in order
+  const lo = [0, 1, 2].map((k) => Math.min(box.min[k], box.max[k]));
+  const hi = [0, 1, 2].map((k) => Math.max(box.min[k], box.max[k]));
+  const side = x < 0 ? "p" : "s";
+  // a ball of stray pieces far above the station
+  if (y > 80) return null;
+  const ax = Math.abs(x);
+  const segment = ISS_PARTS[ax <= 7 ? "truss-s0" : ax <= 19 ? `truss-${side}1` : ax <= 33 ? `truss-${side}3-${side}4` : ax <= 38 ? `truss-${side}5` : `truss-${side}6`];
+  // the one rail the model runs the length of the truss, cut up, falls into the segments by where each piece of it stands
+  if (hi[0] - lo[0] > 60) return segment;
+  // the solar array wings, in two pairs each side, with their masts' feet on the truss
+  if ((ax >= 30 && ax <= 40) || (ax >= 45 && ax <= 56)) return ISS_PARTS[`arrays-${side}${ax < 42 ? "4" : "6"}`];
+  // the three radiators each side, hanging from the truss
+  if (ax >= 13 && ax <= 25 && hi[1] - lo[1] > 15) return ISS_PARTS[`radiators-${side === "p" ? "port" : "starboard"}`];
+  // the truss, a lattice nine metres deep, clear of the module run, by its segments
+  if (y >= 32.5 && y <= 37.6 && ax > 2.5) return segment;
+  // the two laboratories across Harmony, Kibo with its logistics module and exposed facility, and the visiting craft lying out from the run
+  if (y > 41 && x >= ISS_SIDE) return ISS_PARTS.columbus;
+  if (y > 41 && x <= -ISS_SIDE) return ISS_PARTS.kibo;
+  if (y >= ISS_UNITY && y < 36.5 && z <= -1.2) return ISS_PARTS.airlock;
+  if (y >= 13.5 && y < 18 && z < -1.9) return ISS_PARTS["soyuz-zvezda-nadir"];
+  if (y >= 17.5 && y < 21 && z > 1.9) return ISS_PARTS["soyuz-zvezda-zenith"];
+  if (y >= 23.5 && y < 28 && z < -1.9) return ISS_PARTS["soyuz-zarya-nadir"];
+  // the module run, from the Soyuz at the aft up to Harmony's cone
+  if (y < ISS_AFT) return ISS_PARTS["soyuz-aft"];
+  if (y < ISS_ZARYA) return ISS_PARTS.zvezda;
+  if (y < ISS_UNITY) return ISS_PARTS.zarya;
+  if (y < ISS_DESTINY) return ISS_PARTS.unity;
+  if (y < ISS_HARMONY) return ISS_PARTS.destiny;
+  return ISS_PARTS.harmony;
+}
 
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
@@ -241,9 +346,9 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     files: [`${FOLDER}/jupiter-c.glb`],
     title: "Jupiter-C",
     source: page("nasa-3d-models-jupiter-c"),
-    changes: "the lettering removed with the two pictures that carried it, which are plain white here; rescaled to the sourced height; its materials made into one picture",
-    parts: [JUPITER_C],
-    partOf: () => JUPITER_C,
+    changes: "the lettering removed with the two pictures that carried it, which are plain white here; rescaled to the sourced height; separated into its tail unit, Redstone body, spinning tub and top stage by its own named objects; its materials made into one picture a part",
+    parts: [JC_TAIL, JC_BODY, JC_TUB, JC_TOP],
+    partOf: (_centre, _material, node) => (JC_TAIL_NODES.test(node) ? JC_TAIL : JC_TUB_NODES.test(node) ? JC_TUB : node.startsWith("pCylinder3") ? JC_TOP : JC_BODY),
     // its two pictures are lettering and stray lines on white: plain white is what is left once the marks are gone
     colours: { jupiterc_blinn6S: [1, 1, 1], jupiterc_blinn7S: [1, 1, 1] },
     atlas: 256,
@@ -253,22 +358,11 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     files: [`${FOLDER}/iss-b.glb`],
     title: "ISS",
     source: page("nasa-3d-models-iss"),
-    changes: "reduced from 174,440 triangles; a ball of stray pieces far above it left out; rescaled to the sourced length; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs",
-    parts: [ISS_STATION],
-    partOf: (centre) => (centre[1] > 35 ? null : ISS_STATION),
+    changes: "reduced from 174,440 triangles; a ball of stray pieces far above it left out; rescaled to the sourced length; separated into its modules, truss segments, arrays, radiators and visiting craft by where each stands; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs; one picture a part",
+    parts: Object.values(ISS_PARTS),
+    partOf: (centre, _material, _node, _file, piece) => issPartOf(centre, piece),
     colours: { "lambert7SG.001": [0.28, 0.16, 0.05], "bendedtruss_blin.001": [0.5, 0.5, 0.5], "blinn1SG.001": [0.62, 0.62, 0.6], "blinn3SG.001": [0.55, 0.55, 0.53], "lambert3SG.001": [0.7, 0.7, 0.68], "anisotropic1SG.001": [0.45, 0.45, 0.46], "soyuz_blinn4SG.001": [0.5, 0.5, 0.48] },
+    maxTriangle: 2,
     atlas: 256,
-  },
-  {
-    id: "hubble",
-    files: [`${FOLDER}/hubble-a.glb`],
-    title: "Hubble Space Telescope",
-    source: page("nasa-3d-models-hubble-space-telescope"),
-    changes: "a lettered plate painted out of its picture; rescaled to the sourced length; its materials made into one picture",
-    parts: [HUBBLE],
-    partOf: () => HUBBLE,
-    patches: { hbltel_wfc_1: [{ to: [0.2, 0.39, 0.16, 0.05], fill: "#2f2d2a" }] },
-    atlas: 1536,
-    pictureScale: { hbltel_3: 0.6 },
   },
 ];
