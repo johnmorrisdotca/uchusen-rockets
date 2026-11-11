@@ -84,6 +84,21 @@ The `launches` entry holds a log of every orbital launch attempt since 1957 (7,4
 - **What was changed:** a launch is kept when GCAT's launch code says orbital (O) or deep space from Earth (D) and success or failure (S, F); pad explosions and pad aborts, and the near-orbital tests and the suborbital flights, are left out. Each launch keeps its date and time, vehicle, variant and family, site and pad, organization and country, flight name, the first eight payload names with the count of all of them, the outcome (a fractional GCAT score is `partial`), and the orbit where GCAT gives one. Two site names are respelled (Baykonur as Baikonur, Vostochniy as Vostochny). Nothing is estimated to fill a gap: a perigee or an inclination that GCAT does not give is absent.
 - **Not affiliated:** this package and its owner are not affiliated with or endorsed by Jonathan McDowell. The vehicle names and organization names appear only as plain descriptive words.
 
+## Code ported from Orbiter (MIT)
+
+Parts of the flight physics (`src/physics/`, the `physics` entry) are ported to TypeScript from [Orbiter](https://github.com/orbitersim/orbiter), the space flight simulator, read at commit `dabade2` (2026-11-08) on 2026-11-11. Its licence, from the repository's `LICENSE` file, is the MIT licence with the line "Copyright (c) 2000-2026 Martin Schweiger", kept in full in [LICENSES/Orbiter-MIT.txt](LICENSES/Orbiter-MIT.txt). Each ported file names the Orbiter files it comes from and says what was changed:
+
+| This package | From Orbiter |
+| --- | --- |
+| `src/physics/elements.ts` (`elementsOf`, `stateOf`, `eccentricAnomaly`) | `Src/Orbiter/Element.cpp`, the `Elements` class |
+| `src/physics/gravity.ts` (`gravityAt`) | `Src/Orbiter/Psys.cpp`: `SingleGacc`, the J-coefficient terms of `SingleGacc_perturbation`, `PlanetarySystem::Gacc` |
+| `src/physics/propagate.ts` (`propagate`, `step`, `path`) | `Src/Orbiter/BodyIntegrator.cpp`: the linear parts of `RK4_LinAng` and `SY2_LinAng` to `SY8_LinAng` |
+| `src/physics/rocket.ts` (`massFlow`, `thrustAt`, `deltaV`) | `Src/Orbiter/Vessel.cpp` and `Vessel.h` (the thrusters' propellant flow and `ThrusterAtmScale`), `Src/Vessel/DeltaGlider/FuelMfd.cpp` (the rocket equation) |
+
+`scripts/orbiter-reference/` holds a small program, and stand-in headers with a few lines of Orbiter's `Astro.h` and `OrbiterAPI.h`, that compile Orbiter's own `Element.cpp` to make the answers in `test/data/orbiter-elements.json`. They are not in the published package. No Orbiter texture, mesh or other file is used.
+
+The answers the flight physics is measured against in `test/data/orbit-horizons.json` are from NASA/JPL Solar System Dynamics: JPL Horizons (https://ssd.jpl.nasa.gov/api/horizons.api) and the Astrodynamic Parameters page (https://ssd.jpl.nasa.gov/astro_par.html), read 2026-11-11 by `scripts/fetch-orbit-reference.ts`, one request at a time under the SSD API's fair-use policy. JPL says the data on its site "are considered public domain" (https://ssd.jpl.nasa.gov/faq.html). Credit: NASA/JPL Solar System Dynamics. They are test data, not in the published package.
+
 ## Facts
 
 Sizes are plain facts, each with its source in `src/data/sources.ts` and on the demo page. A figure is blank where no source gives one. Where sources disagree, the data keeps the one chosen and names the others.
