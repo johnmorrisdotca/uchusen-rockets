@@ -1,6 +1,6 @@
 // Orbital elements from a position and a speed, and back again after a time: the two-body orbit, closed or open. Pure.
 // Ported from Orbiter (https://github.com/orbitersim/orbiter), Src/Orbiter/Element.cpp, class Elements: Calculate, EccAnomaly,
-// TrueAnomaly_from_EccAnomaly, RelPos, Pol2Crt and PosVel. Copyright (c) 2000-2026 Martin Schweiger, MIT licence (LICENSES/Orbiter-MIT.txt).
+// TrueAnomaly_from_EccAnomaly, EccAnomaly_from_TrueAnomaly, MeanAnomaly_from_EccAnomaly, RelPos, Pol2Crt, PosVel and PosVel_TA. Copyright (c) 2000-2026 Martin Schweiger, MIT licence (LICENSES/Orbiter-MIT.txt).
 // Changed in the port: a right-handed frame with z as the pole (Orbiter's is left-handed with y as the pole, so its y and z swap
 // and its H = V x R becomes R x V); no cached state; the Kepler solver may take 64 rounds where Orbiter takes 16, so a long
 // hyperbolic path still converges; an orbit in the equator's plane run backwards (i = 180 degrees) takes the equatorial branch,
@@ -244,14 +244,64 @@ function toFrame(el: Elements, r: number, u: number): Vec3 {
  * ```
  */
 export function stateOf(elements: Elements, seconds: number): StateVector {
-  const { e, gm, semiLatus } = elements;
+  const { e } = elements;
   const ma = elements.meanAnomaly + elements.meanMotion * seconds;
-  let ta: number;
-  if (e < E_CIRCLE_LIMIT) ta = ma;
-  else ta = trueFromEccentric(eccentricAnomaly(e < 1 ? posAngle(ma) : ma, e), e);
+  const ta = e < E_CIRCLE_LIMIT ? ma : trueFromEccentric(eccentricAnomaly(e < 1 ? posAngle(ma) : ma, e), e);
+  return stateAtTrueAnomaly(elements, ta);
+}
+
+/**
+ * Where a craft is, and its speed, when it is at a given true anomaly on its orbit (Orbiter's `Elements::PosVel_TA`).
+ * @param elements The elements, from {@link elementsOf}.
+ * @param trueAnomaly The angle from periapsis, radians (on an open path, only angles the path reaches).
+ * @returns The position from the body's centre (metres) and the speed (metres a second).
+ * @example
+ * ```ts
+ * import { elementsOf, stateAtTrueAnomaly } from "@johnmorrisdotca/uchusen-rockets/physics";
+ *
+ * const orbit = elementsOf(3.986004418e14, [6_563_000, 0, 0], [0, 10_240, 0]);
+ * const apogee = stateAtTrueAnomaly(orbit, Math.PI);
+ * console.log((apogee.position[0] / 1000).toFixed(0), "km,", Math.hypot(...apogee.velocity).toFixed(0), "m/s");
+ * ```
+ */
+export function stateAtTrueAnomaly(elements: Elements, trueAnomaly: number): StateVector {
+  const { e, gm, semiLatus } = elements;
+  const ta = trueAnomaly;
   const r = semiLatus / (1 + e * Math.cos(ta));
   const muh = Math.sqrt(gm / semiLatus);
   const vx = -muh * Math.sin(ta);
   const vz = muh * (e + Math.cos(ta));
   return { position: toFrame(elements, r, ta + elements.argPeriapsis), velocity: toFrame(elements, Math.hypot(vx, vz), Math.atan2(vz, vx) + elements.argPeriapsis) };
+}
+
+/** The mean anomaly at a true anomaly (Orbiter's `MeanAnomaly_from_TrueAnomaly`, through `EccAnomaly_from_TrueAnomaly` and `MeanAnomaly_from_EccAnomaly`). */
+function meanFromTrue(ta: number, e: number): number {
+  if (e < 1) {
+    const ea = 2 * Math.atan(Math.tan(0.5 * ta) / Math.sqrt((1 + e) / (1 - e)));
+    return ea - e * Math.sin(ea);
+  }
+  const t = ta - TAU * Math.round(ta / TAU);
+  const cosTa = Math.cos(t);
+  const ea = Math.acosh((e + cosTa) / (e * cosTa + 1)) * (t >= 0 ? 1 : -1);
+  return e * Math.sinh(ea) - ea;
+}
+
+/**
+ * How long until a craft reaches a true anomaly on its orbit: Kepler's equation run backwards, as Orbiter's plane-alignment display times the nodes.
+ * @param elements The elements, from {@link elementsOf}.
+ * @param trueAnomaly The angle from periapsis to reach, radians.
+ * @returns Seconds from the time the elements were taken: 0 to one period on a closed orbit (the next time it is there); on an open path, negative if that point is already behind.
+ * @example
+ * ```ts
+ * import { elementsOf, timeToTrueAnomaly } from "@johnmorrisdotca/uchusen-rockets/physics";
+ *
+ * const orbit = elementsOf(3.986004418e14, [6_563_000, 0, 0], [0, 10_240, 0]);
+ * console.log((timeToTrueAnomaly(orbit, Math.PI) / 3600).toFixed(2), "hours to apogee");
+ * ```
+ */
+export function timeToTrueAnomaly(elements: Elements, trueAnomaly: number): number {
+  const { e, meanMotion } = elements;
+  if (e < E_CIRCLE_LIMIT) return posAngle(trueAnomaly - elements.meanAnomaly) / meanMotion;
+  const dm = meanFromTrue(trueAnomaly, e) - elements.meanAnomaly;
+  return e < 1 ? posAngle(dm) / meanMotion : dm / meanMotion;
 }

@@ -90,10 +90,12 @@ Parts of the flight physics (`src/physics/`, the `physics` entry) are ported to 
 
 | This package | From Orbiter |
 | --- | --- |
-| `src/physics/elements.ts` (`elementsOf`, `stateOf`, `eccentricAnomaly`) | `Src/Orbiter/Element.cpp`, the `Elements` class |
+| `src/physics/elements.ts` (`elementsOf`, `stateOf`, `eccentricAnomaly`, `stateAtTrueAnomaly`, `timeToTrueAnomaly`) | `Src/Orbiter/Element.cpp`, the `Elements` class |
 | `src/physics/gravity.ts` (`gravityAt`) | `Src/Orbiter/Psys.cpp`: `SingleGacc`, the J-coefficient terms of `SingleGacc_perturbation`, `PlanetarySystem::Gacc` |
 | `src/physics/propagate.ts` (`propagate`, `step`, `path`) | `Src/Orbiter/BodyIntegrator.cpp`: the linear parts of `RK4_LinAng` and `SY2_LinAng` to `SY8_LinAng` |
 | `src/physics/rocket.ts` (`massFlow`, `thrustAt`, `deltaV`) | `Src/Orbiter/Vessel.cpp` and `Vessel.h` (the thrusters' propellant flow and `ThrusterAtmScale`), `Src/Vessel/DeltaGlider/FuelMfd.cpp` (the rocket equation) |
+| `src/physics/burns.ts` (`directionOf`, `impulse`, `burnStart`) | `Src/Orbiter/Vessel.cpp` (the prograde, retrograde, normal and antinormal attitude modes), `Src/Orbiter/MfdAlign.cpp` (a burn centred on its point), `Src/Orbiter/MfdTransfer.cpp` (a burn along the speed) |
+| `src/physics/transfers.ts` (`speedChangeFor`, `crossings`, `nodes`, `relativeInclination`) | `Src/Orbiter/MfdTransfer.cpp` (`Instrument_Transfer::CalcElements` and the orbits' crossing), `Src/Orbiter/MfdAlign.cpp` (the relative inclination, the nodes and the time to each) |
 
 `scripts/orbiter-reference/` holds a small program, and stand-in headers with a few lines of Orbiter's `Astro.h` and `OrbiterAPI.h`, that compile Orbiter's own `Element.cpp` to make the answers in `test/data/orbiter-elements.json`. They are not in the published package. No Orbiter texture, mesh or other file is used.
 
