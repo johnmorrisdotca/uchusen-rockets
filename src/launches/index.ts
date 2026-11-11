@@ -1,7 +1,8 @@
 // The launch log: every orbital launch attempt since 1957, from GCAT (Jonathan McDowell, CC BY 4.0), with lookups and counts. Pure: no DOM, no clock, no dependency. The data is one packed string in ./data.ts, parsed on first use.
-import { LAUNCH_SOURCE, PACKED_LAUNCHES } from "./data.ts";
+import { PACKED_LAUNCHES } from "./data.ts";
 import { LAUNCH_VEHICLE_LINKS } from "./links.ts";
 
+export { LAUNCH_LOG_SOURCE } from "./source.ts";
 export { LAUNCH_VEHICLE_LINKS } from "./links.ts";
 export type { VehicleLink, VehicleMatch } from "./links.ts";
 
@@ -70,9 +71,9 @@ export const ORBIT_KINDS: Readonly<Record<OrbitKind, string>> = {
  */
 export interface LaunchOrbit {
   kind: OrbitKind;
-  /** Height of the insertion orbit's apogee above the surface, in km. */
+  /** Height of the insertion orbit's apogee above the surface, in km. For a launch on an escape trajectory (207 of them) it is 150000, GCAT's round figure for "leaves Earth", not a measurement. */
   apogeeKm?: number;
-  /** Height of its perigee, in km. */
+  /** Height of its perigee, in km. It is negative (13 launches, Starship's flights among them) where the path GCAT gives dips below the surface, so the flight did not complete an orbit at that figure; it is not a height. */
   perigeeKm?: number;
   /** Its inclination, in degrees. */
   inclinationDeg?: number;
@@ -133,27 +134,6 @@ export interface Launch {
   orbit: LaunchOrbit | null;
 }
 
-/**
- * Where the log comes from: GCAT, its author, its licence and the exact credit to print where the log is used, with the release it was packed from and the day its files were last updated.
- *
- * @example
- * ```ts
- * import { LAUNCH_LOG_SOURCE } from "@johnmorrisdotca/uchusen-rockets/launches";
- *
- * console.log(LAUNCH_LOG_SOURCE.credit);
- * ```
- */
-export const LAUNCH_LOG_SOURCE = {
-  title: "GCAT: General Catalog of Artificial Space Objects",
-  author: "Jonathan C. McDowell",
-  url: "https://planet4589.org/space/gcat",
-  licence: "CC BY 4.0",
-  licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
-  credit: "Data from GCAT (J. McDowell, planet4589.org/space/gcat)",
-  release: LAUNCH_SOURCE.release,
-  updated: LAUNCH_SOURCE.updated,
-} as const;
-
 interface Packed {
   vehicles: [string, string][];
   sites: [string, string][];
@@ -171,7 +151,7 @@ let parsed: readonly Launch[] | undefined;
 function parse(): readonly Launch[] {
   const packed = JSON.parse(PACKED_LAUNCHES) as Packed;
   const countries = new Map(packed.countries);
-  return packed.rows.map((row): Launch => {
+  const rows = packed.rows.map((row): Launch => {
     const [tag, date, time, v, variant, s, pad, a, outcome, score, o, apogee, perigee, inclination, flight, approximate, count, payloads] = row;
     const vehicle = packed.vehicles[v] as [string, string];
     const agency = packed.agencies[a] as [string, string, string];
@@ -198,13 +178,23 @@ function parse(): readonly Launch[] {
       payloadCount: count,
       outcome: OUTCOMES[outcome],
       score: score === 0 ? null : score,
-      orbit: o < 0 ? null : { kind: packed.orbits[o] as OrbitKind, ...orbitNumbers },
+      orbit: o < 0 ? null : Object.freeze({ kind: packed.orbits[o] as OrbitKind, ...orbitNumbers }),
     };
   });
+  return Object.freeze(rows.map(freezeLaunch));
+}
+
+/** Freezes a launch and the objects inside it: every caller reads the same rows, so one that wrote to a row would change them for all. */
+function freezeLaunch(launch: Launch): Launch {
+  Object.freeze(launch.site);
+  Object.freeze(launch.agency);
+  if (launch.country) Object.freeze(launch.country);
+  Object.freeze(launch.payloads);
+  return Object.freeze(launch);
 }
 
 /**
- * Every launch in the log, oldest first, each as a plain object. The first call parses the log; the rest return the same array.
+ * Every launch in the log, oldest first, each as a plain object. The first call parses the log; the rest return the same array. The array and every launch in it are frozen, because every caller shares them: copy a launch to change it.
  *
  * @returns Every orbital launch attempt in the log.
  * @example

@@ -7,6 +7,7 @@ import {
   countLaunches,
   findLaunches,
   LAUNCH_LOG_SOURCE,
+  type Launch,
   LAUNCH_VEHICLE_LINKS,
   launchByTag,
   launches,
@@ -186,12 +187,30 @@ test("the source is credited as its licence asks, in NOTICE.md, with the day it 
 
 test("the log is a sub-path of its own: one data file, no import from the rest of the package, and nothing else imports it", () => {
   const imports = (file: string) => [...readFileSync(file, "utf8").matchAll(/^(?:import|export)[^"\n]*from "([^"]+)"/gm)].map((match) => match[1] as string);
-  for (const file of ["src/launches/index.ts", "src/launches/links.ts", "src/launches/data.ts"]) for (const from of imports(file)) assert.match(from, /^\.\/(data|links|index)\.ts$/, `${file} imports ${from}`);
+  for (const file of ["src/launches/index.ts", "src/launches/links.ts", "src/launches/data.ts", "src/launches/source.ts"]) for (const from of imports(file)) assert.match(from, /^\.\/(data|links|index|source)\.ts$/, `${file} imports ${from}`);
   assert.deepEqual(imports("src/launches/data.ts"), []);
+  assert.deepEqual(imports("src/launches/source.ts"), [], "reading the credit loads no data");
+  assert.ok(statSync("src/launches/source.ts").size < 4096);
   const size = statSync("src/launches/data.ts").size;
   assert.ok(size < 1.25 * 1024 * 1024, `the data file is ${size} bytes`);
   assert.ok(!readFileSync("src/index.ts", "utf8").includes("launches"), "the main entry does not load the log");
   assert.ok(!readFileSync("src/build/index.ts", "utf8").includes("launches"));
   const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { exports: Record<string, { import: string }> };
   assert.equal(pkg.exports["./launches"]?.import, "./dist/launches/index.js");
+  assert.equal(pkg.exports["./launches/source"]?.import, "./dist/launches/source.js");
+});
+
+test("the rows are shared, so they are frozen", () => {
+  const all = launches();
+  assert.ok(Object.isFrozen(all));
+  const apollo = launchByTag("1969-059") as Launch;
+  for (const part of [apollo, apollo.site, apollo.agency, apollo.payloads, apollo.orbit]) assert.ok(part === null || Object.isFrozen(part));
+  assert.throws(() => {
+    (apollo as { vehicle: string }).vehicle = "x";
+  }, TypeError);
+});
+
+test("an escape trajectory's apogee is GCAT's round 150000 km, and a perigee can be negative", () => {
+  assert.equal(launches().filter((launch) => launch.orbit?.apogeeKm === 150000).length, 207);
+  assert.equal(launches().filter((launch) => (launch.orbit?.perigeeKm ?? 0) < 0).length, 13);
 });

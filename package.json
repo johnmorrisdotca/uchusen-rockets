@@ -89,6 +89,11 @@
       "import": "./dist/launches/index.js",
       "default": "./dist/launches/index.js"
     },
+    "./launches/source": {
+      "types": "./dist/launches/source.d.ts",
+      "import": "./dist/launches/source.js",
+      "default": "./dist/launches/source.js"
+    },
     "./assets/*": "./dist/assets/*",
     "./package.json": "./package.json"
   },
