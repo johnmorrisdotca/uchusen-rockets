@@ -469,16 +469,22 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   // the kept caches rise and fall by a few vertex arrays from one walk to the next; a leak only rises, so one more walk is read before a rise counts as growth.
   // A vertex array is three.js's record of one geometry drawn with one program, made on the first draw and kept while the geometry lives: how many there are follows what the last frames drew (the
   // shadow pass, the fittings of a small ship), not what is held. One runner read 2662, 2591, 2661 and 2661 over four walks with the buffers flat at 4438, so a low second walk is not the floor:
-  // the arrays are held to the higher of the first two walks. The buffers and textures, which do hold memory, stay held to the second walk exactly.
+  // the arrays are held to the higher of the first two walks. The textures, which do hold memory, stay held to the second walk exactly; the buffers are read as below.
   const arraysFloor = Math.max(first.arrays, second.arrays);
+  // The buffers read the same way. The second walk comes after the sample ship and the apart view and can read low: one runner read 1400, 1238, 1382 and 1381 over four walks of the same ships (and 1010, 410, 696 and
+  // 658 arrays). That is the second walk reading low, not a rise: the two walks after it are the same to one buffer, and a leak would keep rising from walk to walk. So the buffers are held to the higher of the first two
+  // walks as well, and when a walk after the third is read (the third was above the second) it must not rise from the third.
+  const buffersFloor = Math.max(first.buffers, second.buffers);
+  const third = last;
   if (last.arrays > arraysFloor + arraysSlack(arraysFloor) || last.buffers > second.buffers || last.textures > second.textures) {
     await walk(1);
     const again = await levelUsage(page);
     console.log(`fleet walk 4: buffers ${again.buffers}, arrays ${again.arrays}, textures ${again.textures}, programs ${again.programs}`);
+    expect(again.buffers).toBeLessThanOrEqual(third.buffers);
     last = { ...last, buffers: Math.min(last.buffers, again.buffers), arrays: Math.min(last.arrays, again.arrays), textures: Math.min(last.textures, again.textures) };
   }
   expect(last.contexts).toBe(1);
-  expect(last.buffers).toBeLessThanOrEqual(second.buffers);
+  expect(last.buffers).toBeLessThanOrEqual(buffersFloor);
   expect(last.arrays).toBeLessThanOrEqual(arraysFloor + arraysSlack(arraysFloor));
   expect(last.textures).toBeLessThanOrEqual(second.textures);
   // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.

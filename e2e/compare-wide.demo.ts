@@ -229,6 +229,10 @@ test("six craft stay on the page at a desk's width", async ({ page }, info) => {
     expect(box.bottom).toBeLessThanOrEqual(frame.bottom + 1);
   }
   await expect(page.locator(".cw-craft-list")).toHaveCount(0);
+  // The names are drawn for the craft of the picture that is in. Each add builds every craft again, and a hosted runner drawing in software builds six, the station among them, in well over thirty seconds, so the
+  // chips (which are the page's own list) say six long before the picture does. The canvas lists the craft it has placed in `data-craft-boxes`, one entry each: wait for six of those, then read the names.
+  await reach3d(page);
+  await expect.poll(() => hero(page).evaluate((node) => (node.shadowRoot?.querySelector("canvas")?.dataset.craftBoxes ?? "").split(" ").filter(Boolean).length), { timeout: 150_000 }).toBe(6);
   await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelectorAll("[data-beside-label]").length ?? 0), { timeout: 30_000 }).toBe(6);
   const off = await hero(page).evaluate((node) => [...(node.shadowRoot?.querySelectorAll("[data-beside-label]") ?? [])].some((el) => (el.textContent ?? "").includes("off screen")));
   expect(off).toBe(false);
