@@ -78,6 +78,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Jupiter-C | This package's plain shapes, from sourced sizes | NASA's model, its lettering removed: 8,933 triangles and 136 KB |
 | International Space Station | This package's plain shapes, from sourced sizes, where its arrays and modules stand measured from NASA's model | NASA's model, its colours judged from photographs: 60,701 triangles and 1,050 KB |
 | Hubble Space Telescope | This package's plain shapes, from sourced sizes, its arrays and door measured from NASA's model | NASA's model, a lettered plate painted out: 7,672 triangles and 470 KB |
+| Roadster, with Starman | This package's plain shapes, the car's length, wheels and seat measured from each model at its sourced scale; Starman this package's own | The 86 guy's model of the first generation: 38,517 triangles and 547 KB. Two models of the second generation, metarex.4d's (77,622 triangles and 1,272 KB) and Michael's with minchou19's wheels (39,191 triangles and 1,092 KB). Badges and lettering left out of all three; Starman is this package's own in every look |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
