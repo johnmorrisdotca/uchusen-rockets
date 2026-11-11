@@ -7,13 +7,14 @@ description: What is MIT, what is CC BY 4.0, what is public domain and ODbL, and
 
 This package holds work under several licences, and the difference matters when you ship a painted rocket.
 
-## Four kinds of work
+## Five kinds of work
 
 | What | Licence |
 | --- | --- |
 | The code, the code-made meshes and the drawings | MIT |
 | The painted models in `models/` | CC BY 4.0, except one under CC0 and NASA's, which are public domain |
 | Starbase's coordinates, outlines and map heights, and the tower's 13 m footprint | © OpenStreetMap contributors, ODbL 1.0 |
+| The launch log's data (`launches`) | CC BY 4.0, from GCAT by Jonathan C. McDowell |
 | Nothing else from outside | Anything else must be MIT, ISC, BSD or Apache |
 
 **The painted models are not MIT: using them means crediting them.** The package's own licence line reads `MIT AND CC-BY-4.0 AND ODbL-1.0` for that reason.
@@ -52,6 +53,8 @@ NASA's models are named as the source, as its guidelines ask, with no suggestion
 ## The demo site's pictures
 
 The demo site shows more than the package ships: the Earth behind a rocket, the planets and moons on the journey page, and the map of Starbase. Their credits are in `NOTICE.md`, and every demo page links to it in its footer, with a short line of who is credited. The Earth's pictures are NASA's, through `@johnmorrisdotca/chikyu-earth`. The planets' and moons' pictures come from `@johnmorrisdotca/wakusei-planets`, which names each source and licence in its own `NOTICE.md`. Starbase's map is © OpenStreetMap contributors, under the ODbL.
+
+The launch log (the `launches` entry, see [the launch log](launch-log.md)) is data from GCAT, the General Catalog of Artificial Space Objects by Jonathan C. McDowell, under CC BY 4.0, not MIT. Whatever shows it must credit it: Data from GCAT (J. McDowell, planet4589.org/space/gcat).
 
 ## No logos, no marks, no flags
 

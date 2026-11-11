@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The launch log: every orbital launch attempt since 1957, as the `launches` entry** (MODULES-1001). 7,425 launches from GCAT, the General Catalog of Artificial Space Objects by Jonathan C. McDowell (CC BY 4.0, credited in NOTICE.md and as `LAUNCH_LOG_SOURCE`): each with its UTC date and time, vehicle, variant and family, site and pad, organization and country, flight name, payload names, outcome (success, partial with GCAT's score, failure) and the orbit where GCAT gives one. `launchByTag`, `findLaunches`, `launchesByVehicle`, `launchesBySite`, `launchesByYear`, `launchesByOutcome`, `countLaunches` and `launchTotals` look them up and count them, and `LAUNCH_VEHICLE_LINKS` links 24 vehicles (Falcon 9, Saturn V, Soyuz and the rest) to this package's rocket ids, with a test. It is one data file of about 1.1 MB (about 240 KB compressed) that only the `launches` entry loads, and `scripts/make-launches.ts` packs it again from a newer GCAT release. A guide in English and Japanese says what was decided.
+
 ## [0.18.0] - 2026-11-11
 
 - **Every demo page says what it is, links home and shows its credits** (MODULES-868, first screen Part B): the demo takes kazoku-ui 0.32 and its page frame. Under the page links each page has kazoku-ui's header line ("Uchusen Rockets 宇宙船: journey mode", in Japanese on the Japanese page, with Home), the title and description follow the reader's language, and the credit line with "Data and credits" sits above the footer, which keeps its one-line note. The bare embed frame has the small credit line in its corner. The family's check-standard is the 2026-11-10b copy, which holds every page to the frame.
