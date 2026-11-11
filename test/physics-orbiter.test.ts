@@ -3,9 +3,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { elementsOf, stateOf, type Vec3 } from "../src/physics/index.ts";
+import { elementsOf, stateAtTrueAnomaly, stateOf, timeToTrueAnomaly, type Vec3 } from "../src/physics/index.ts";
 
-interface Answer { a: number; e: number; i: number; node: number; argPeriapsis: number; longitudePeriapsis: number; trueAnomaly: number; eccentricAnomaly: number; meanAnomaly: number; periapsis: number; semiLatus: number; period: number | null; apoapsis: number | null; timeToPeriapsis: number; states: { t: number; position: Vec3; velocity: Vec3 }[] }
+interface Answer { anomalies: { trueAnomaly: number; meanAnomaly: number; speed: number; position: Vec3; velocity: Vec3 }[]; a: number; e: number; i: number; node: number; argPeriapsis: number; longitudePeriapsis: number; trueAnomaly: number; eccentricAnomaly: number; meanAnomaly: number; periapsis: number; semiLatus: number; period: number | null; apoapsis: number | null; timeToPeriapsis: number; states: { t: number; position: Vec3; velocity: Vec3 }[] }
 const DATA = JSON.parse(readFileSync(new URL("data/orbiter-elements.json", import.meta.url), "utf8")) as { cases: { name: string; gm: number; position: Vec3; velocity: Vec3; orbiter: Answer }[] };
 
 const relative = (a: number, b: number) => Math.abs(a - b) / Math.max(1, Math.abs(b));
@@ -44,6 +44,22 @@ for (const c of DATA.cases) {
       const got = stateOf(mine, want.t);
       assert.ok(apart(got.position, want.position) < 1e-3 + own, `at ${want.t} s: ${apart(got.position, want.position)} m apart`);
       assert.ok(apart(got.velocity, want.velocity) < 1e-6 + 2 * ownSpeed, `at ${want.t} s: ${apart(got.velocity, want.velocity)} m/s apart`);
+    }
+  });
+}
+
+for (const c of DATA.cases) {
+  test(`at given true anomalies, "${c.name}" has Orbiter's position, speed and mean anomaly (PosVel_TA, Spd_TA, MeanAnomaly_from_TrueAnomaly)`, () => {
+    const mine = elementsOf(c.gm, c.position, c.velocity);
+    const turn = (x: number) => Math.atan2(Math.sin(x), Math.cos(x));
+    // As above, Orbiter's 1.5e-8 radians on the circle move its points by up to its own miss at time 0.
+    const own = apart(c.orbiter.states.find((s) => s.t === 0)!.position, c.position);
+    for (const want of c.orbiter.anomalies) {
+      const got = stateAtTrueAnomaly(mine, want.trueAnomaly);
+      assert.ok(apart(got.position, want.position) < 1e-3 + own, `${want.trueAnomaly}: ${apart(got.position, want.position)} m`);
+      assert.ok(Math.abs(Math.hypot(...got.velocity) - want.speed) < 1e-6);
+      const meanThen = mine.meanAnomaly + mine.meanMotion * timeToTrueAnomaly(mine, want.trueAnomaly);
+      assert.ok(Math.abs(turn(meanThen - want.meanAnomaly)) < 1e-9, `${want.trueAnomaly}: mean anomaly ${meanThen} against ${want.meanAnomaly}`);
     }
   });
 }

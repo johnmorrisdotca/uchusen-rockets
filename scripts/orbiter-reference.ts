@@ -14,7 +14,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 type V = [number, number, number];
-interface Case { name: string; gm: number; position: V; velocity: V; times: number[] }
+interface Case { name: string; gm: number; position: V; velocity: V; times: number[]; anomalies: number[] }
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const source = process.env.ORBITER_SOURCE;
@@ -26,12 +26,12 @@ const EARTH = 3.986004418e14;
 const circular = Math.sqrt(EARTH / 7_000_000);
 const tilt = (63.4 * Math.PI) / 180;
 const CASES: Case[] = [
-  { name: "low orbit, tilted and slightly oval", gm: EARTH, position: [7_000_000, 100_000, 200_000], velocity: [100, 7_400, 1_500], times: [0, 600, 1_800, 5_000, -1_200, 20_000] },
-  { name: "Molniya-like, 63.4 degrees", gm: EARTH, position: [6_900_000, 0, 0], velocity: [0, 10_000 * Math.cos(tilt), 10_000 * Math.sin(tilt)], times: [0, 3_600, 21_600, 43_000, -7_200] },
-  { name: "transfer orbit, nearly in the equator", gm: EARTH, position: [6_563_000, 0, 1], velocity: [0, 10_240, 0.5], times: [0, 1_000, 19_000, 40_000] },
-  { name: "circle, tilted 51.6 degrees", gm: EARTH, position: [7_000_000, 0, 0], velocity: [0, circular * Math.cos((51.6 * Math.PI) / 180), circular * Math.sin((51.6 * Math.PI) / 180)], times: [0, 1_000, 4_000] },
-  { name: "oval in the equator", gm: EARTH, position: [8_000_000, 0, 0], velocity: [-500, 6_000, 0], times: [0, 2_000, 9_000] },
-  { name: "escape, hyperbolic", gm: EARTH, position: [7_000_000, 0, 0], velocity: [0, 12_000, 500], times: [0, 3_600, 20_000, -1_800] },
+  { name: "low orbit, tilted and slightly oval", gm: EARTH, position: [7_000_000, 100_000, 200_000], velocity: [100, 7_400, 1_500], times: [0, 600, 1_800, 5_000, -1_200, 20_000], anomalies: [0.3, 1.5, 3.0, 4.5, 6.0] },
+  { name: "Molniya-like, 63.4 degrees", gm: EARTH, position: [6_900_000, 0, 0], velocity: [0, 10_000 * Math.cos(tilt), 10_000 * Math.sin(tilt)], times: [0, 3_600, 21_600, 43_000, -7_200], anomalies: [0.3, 1.5, 3.0, 4.5, 6.0] },
+  { name: "transfer orbit, nearly in the equator", gm: EARTH, position: [6_563_000, 0, 1], velocity: [0, 10_240, 0.5], times: [0, 1_000, 19_000, 40_000], anomalies: [0.3, 1.5, 3.0, 4.5, 6.0] },
+  { name: "circle, tilted 51.6 degrees", gm: EARTH, position: [7_000_000, 0, 0], velocity: [0, circular * Math.cos((51.6 * Math.PI) / 180), circular * Math.sin((51.6 * Math.PI) / 180)], times: [0, 1_000, 4_000], anomalies: [0.3, 1.5, 3.0, 4.5, 6.0] },
+  { name: "oval in the equator", gm: EARTH, position: [8_000_000, 0, 0], velocity: [-500, 6_000, 0], times: [0, 2_000, 9_000], anomalies: [0.3, 1.5, 3.0, 4.5, 6.0] },
+  { name: "escape, hyperbolic", gm: EARTH, position: [7_000_000, 0, 0], velocity: [0, 12_000, 500], times: [0, 3_600, 20_000, -1_800], anomalies: [0.3, 1.5, -1.0, 0.8] },
 ];
 
 const work = mkdtempSync(join(tmpdir(), "orbiter-reference-"));
@@ -45,11 +45,11 @@ try {
   writeFileSync(vecmat, readFileSync(vecmat, "latin1").replaceAll("int *sing = 0);", "int *sing);"), "latin1");
   execFileSync("c++", ["-std=c++17", "-O1", "-w", "-I.", "-o", "harness", "harness.cpp", "Element.cpp", "Vecmat.cpp"], { cwd: work, stdio: "inherit" });
   const swap = (v: V): V => [v[0], v[2], v[1]];
-  const input = CASES.map((c) => [c.gm, ...swap(c.position), ...swap(c.velocity), ...c.times].map((n) => n.toPrecision(17)).join(" ")).join("\n");
-  const answers = JSON.parse(execFileSync(join(work, "harness"), { input, encoding: "utf8" })) as { states: { t: number; position: V; velocity: V }[]; period: number; apoapsis: number }[];
+  const input = CASES.map((c) => [...[c.gm, ...swap(c.position), ...swap(c.velocity), ...c.times].map((n) => n.toPrecision(17)), "|", ...c.anomalies.map((n) => n.toPrecision(17))].join(" ")).join("\n");
+  const answers = JSON.parse(execFileSync(join(work, "harness"), { input, encoding: "utf8" })) as { states: { t: number; position: V; velocity: V }[]; anomalies: { position: V; velocity: V }[]; period: number; apoapsis: number }[];
   const commit = execFileSync("git", ["-C", source, "log", "-1", "--format=%H %cs"], { encoding: "utf8" }).trim();
   const out = {
-    source: `Orbiter, https://github.com/orbitersim/orbiter, commit ${commit}, Src/Orbiter/Element.cpp (Elements::Calculate and Elements::PosVel), Copyright (c) 2000-2026 Martin Schweiger, MIT licence`,
+    source: `Orbiter, https://github.com/orbitersim/orbiter, commit ${commit}, Src/Orbiter/Element.cpp (Elements::Calculate, PosVel, PosVel_TA, Spd_TA and MeanAnomaly_from_TrueAnomaly), Copyright (c) 2000-2026 Martin Schweiger, MIT licence`,
     frame: "right-handed, z the pole (Orbiter's y and z swapped back)",
     cases: CASES.map((c, k) => {
       const answer = answers[k]!;
@@ -60,6 +60,7 @@ try {
           period: answer.period < 0 ? null : answer.period,
           apoapsis: answer.apoapsis < 0 ? null : answer.apoapsis,
           states: answer.states.map((s) => ({ t: s.t, position: swap(s.position), velocity: swap(s.velocity) })),
+          anomalies: answer.anomalies.map((s) => ({ ...s, position: swap(s.position), velocity: swap(s.velocity) })),
         },
       };
     }),
