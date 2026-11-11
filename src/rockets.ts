@@ -256,8 +256,6 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "ascent": "Ascent stage",
   "csm": "Apollo command and service module",
   "docking-module": "Docking module",
-  "station": "The station",
-  "telescope": "The telescope",
   tail: "Tail unit",
   tub: "Spinning tub",
   "fourth-stage": "Fourth stage",
