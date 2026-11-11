@@ -113,6 +113,30 @@ test.describe("the build keeps moving while it plays", () => {
     if (heldAt && still) expect(Math.hypot(still.x - heldAt.x, still.y - heldAt.y)).toBeLessThan(2);
   });
 
+  test("a press on Pause that is held while the bar redraws still counts as a click", async ({ page }) => {
+    await page.goto(URL);
+    const stage = page.getByTestId("yard-stage");
+    await expect(stage).toHaveAttribute("data-ready", "yes", { timeout: 60_000 });
+    await page.getByTestId("yard-spine").click();
+    await page.getByTestId("yard-build").click();
+    await page.getByTestId("build-play").click();
+    await expect(stage).toHaveAttribute("data-playing", "yes");
+    await expect.poll(async () => Number(await stage.getAttribute("data-frames"))).toBeGreaterThan(2);
+    await page.locator("#build-bar").evaluate((node) => {
+      const host = node as HTMLElement;
+      host.dataset.testClicks = "0";
+      node.shadowRoot?.querySelector("[data-testid=build-play]")?.addEventListener("click", () => (host.dataset.testClicks = String(Number(host.dataset.testClicks) + 1)));
+    });
+    const box = await page.getByTestId("build-play").boundingBox();
+    expect(box).toBeTruthy();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    // a finger rests on the button for a few tenths of a second while the playing bar redraws every tenth: the click is the press and the release on the same button, however the bar was redrawn between them
+    await page.waitForTimeout(450);
+    await page.mouse.up();
+    await expect.poll(() => page.locator("#build-bar").evaluate((node) => ({ bar: (node as HTMLElement).dataset.playing ?? "", clicks: Number((node as HTMLElement).dataset.testClicks ?? "0") })), { message: "a press held across redraws is one click and pauses" }).toEqual({ bar: "false", clicks: 1 });
+  });
+
   test("play builds the chosen ship from the start, and a drone is on the picture", async ({ page }) => {
     await page.goto(`${URL}?bay=hall&ship=miyamoto`);
     const stage = page.getByTestId("yard-stage");
