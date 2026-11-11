@@ -65,3 +65,21 @@ test("a click on the stage does not leave a ring", async ({ page }) => {
   await canvas.click();
   await expect.poll(() => canvas.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("none");
 });
+
+test("Romaryu's docked ships are built in full once the view is zoomed in on the carrier", async ({ page }, info) => {
+  test.skip(info.project.name !== "chromium-desk", "WebGL is drawn on the desk");
+  test.setTimeout(300_000);
+  await page.goto(`${URL}?ship=fleet-romaryu&picker=off`);
+  const hero = page.getByTestId("db-hero");
+  const canvas = hero.locator("canvas");
+  await expect(hero).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  await expect(hero).toHaveAttribute("data-docked", "coarse");
+  const bar = page.locator('kazoku-view-controls[for="hero"]').first();
+  // the buttons zoom the picture and leave the camera where it is: the carrier's shorter side on screen is what says it is being looked at
+  for (let step = 0; step < 8 && Number(await canvas.getAttribute("data-lod-span")) < 150; step += 1) {
+    await bar.evaluate((node) => (node.shadowRoot?.querySelector("[data-b='in']") as HTMLButtonElement).click());
+    await expect.poll(async () => Number(await canvas.getAttribute("data-lod-span")), { timeout: 30_000 }).toBeGreaterThan(0);
+  }
+  expect(Number(await canvas.getAttribute("data-lod-span"))).toBeGreaterThanOrEqual(150);
+  await expect(hero).toHaveAttribute("data-docked", "full", { timeout: 240_000 });
+});
