@@ -96,35 +96,37 @@ function wingZY(side: 1 | -1, z0: number, length: number, width: number, y: numb
   ];
 }
 
-// ------------------------------------------------------------------------------------------------ Tianhe
+// ------------------------------------------------------------------------------------------------ Tianhe, its hub and its wings
 
-/**
- * The core, upright: aft port, service section, living quarters, hub, forward port. Where the sections end is judged from photographs; the total, 16.6 m, and the width, 4.2 m, are sourced.
- */
-const tianhe = (): Piece[] => {
-  const out: Piece[] = [
-    tube("engine-metal", 0.55, 0, 0.4),
-    taper("white", 0.9, 0.4, 1.4, 0.9),
-    tube("white", 1.4, 0.9, 5.0, { rings: [2.2, 3.6], welds: [4.4] }),
-    taper("white", 1.4, 5.0, HULL_R, 5.8),
-    tube("white", HULL_R, 5.8, 13.0, { rings: [7.6, 9.4, 11.2], welds: [8.5, 10.3] }),
-    taper("engine-pale", HULL_R, 13.0, HUB_R, 13.4),
-    tube("engine-pale", HUB_R, 13.4, 16.0, { rings: [14.0, 15.4] }),
-    taper("engine-metal", HUB_R, 16.0, 0.8, 16.45),
-    tube("engine-metal", 0.8, 16.45, TIANHE),
-    // the hub's two side ports, where the laboratories dock
-    ...drumX("engine-metal", 1.3, PORT_R, SIDE, PORT_R, HUB_Y, 0),
-    ...drumX("engine-metal", -1.3, PORT_R, -SIDE, PORT_R, HUB_Y, 0),
-  ];
-  // two solar wings, out along the depth, so the laboratories' wings stay in their own plane
-  out.push(...wingZY(1, HULL_R, 12, 4.6, 9.4), ...wingZY(-1, HULL_R, 12, 4.6, 9.4));
-  return out;
-};
+/** Where the living quarters end and the docking hub begins, up the core: judged from photographs. The core and its hub together are the sourced 16.6 m. */
+const CORE_TOP = 13.0;
+const HUB_LONG = TIANHE - CORE_TOP;
+/** The hub's side ports, up the hub from its base. */
+const HUB_AT = HUB_Y - CORE_TOP;
+
+/** The core without its hub, upright: the aft port, the service section and the living quarters. Where the sections end is judged; the width, 4.2 m, is sourced. */
+const tianhe = (): Piece[] => [
+  tube("engine-metal", 0.55, 0, 0.4),
+  taper("white", 0.9, 0.4, 1.4, 0.9),
+  tube("white", 1.4, 0.9, 5.0, { rings: [2.2, 3.6], welds: [4.4] }),
+  taper("white", 1.4, 5.0, HULL_R, 5.8),
+  tube("white", HULL_R, 5.8, CORE_TOP, { rings: [7.6, 9.4, 11.2], welds: [8.5, 10.3] }),
+];
+
+/** The docking hub on its own: a short drum with its forward port and the two side ports where the laboratories dock. */
+const hub = (): Piece[] => [
+  taper("engine-pale", HULL_R, 0, HUB_R, 0.4),
+  tube("engine-pale", HUB_R, 0.4, 3.0, { rings: [1.0, 2.4] }),
+  taper("engine-metal", HUB_R, 3.0, 0.8, 3.45),
+  tube("engine-metal", 0.8, 3.45, HUB_LONG),
+  ...drumX("engine-metal", 1.3, PORT_R, SIDE, PORT_R, HUB_AT, 0),
+  ...drumX("engine-metal", -1.3, PORT_R, -SIDE, PORT_R, HUB_AT, 0),
+];
+
+/** The core's two solar wings, out along the depth so the laboratories' wings stay in their own plane. Their width and length are judged. */
+const tianheWings = (): Piece[] => [...wingZY(1, HULL_R, 12, 4.6, 2.3), ...wingZY(-1, HULL_R, 12, 4.6, 2.3)];
 
 // ------------------------------------------------------------------------------------------------ Wentian and Mengtian
-
-/** Where a laboratory's axis stands in its own part, so its wings, which run up and down, start at the part's base. */
-const AXIS_Y = HULL_R + WING;
 
 /**
  * A laboratory lying across the top: from its docking end, a port ring, the long working cabin, a step down, the airlock cabin and the cap. `side` is +1 for Wentian, whose x runs to the right, and -1 for Mengtian.
@@ -132,24 +134,32 @@ const AXIS_Y = HULL_R + WING;
  */
 const laboratory = (side: 1 | -1, airlock: boolean): Piece[] => {
   const x = (d: number) => side * d;
+  const Y = HULL_R;
   const out: Piece[] = [
-    ...drumX("engine-metal", x(0), PORT_R, x(0.4), PORT_R, AXIS_Y, 0),
-    ...drumX("white", x(0.4), HULL_R, x(12.4), HULL_R, AXIS_Y, 0),
-    ...drumX("engine-pale", x(12.4), HULL_R, x(13.2), 1.5, AXIS_Y, 0),
-    ...drumX("steel", x(13.2), 1.5, x(16.9), 1.5, AXIS_Y, 0),
-    ...drumX("engine-pale", x(16.9), 1.5, x(LAB), 0.9, AXIS_Y, 0),
-    capX("engine-metal", x(LAB), 0.9, AXIS_Y, 0, side),
-    capX("engine-metal", x(0), PORT_R, AXIS_Y, 0, side === 1 ? -1 : 1),
+    ...drumX("engine-metal", x(0), PORT_R, x(0.4), PORT_R, Y, 0),
+    ...drumX("white", x(0.4), HULL_R, x(12.4), HULL_R, Y, 0),
+    ...drumX("engine-pale", x(12.4), HULL_R, x(13.2), 1.5, Y, 0),
+    ...drumX("steel", x(13.2), 1.5, x(16.9), 1.5, Y, 0),
+    ...drumX("engine-pale", x(16.9), 1.5, x(LAB), 0.9, Y, 0),
+    capX("engine-metal", x(LAB), 0.9, Y, 0, side),
+    capX("engine-metal", x(0), PORT_R, Y, 0, side === 1 ? -1 : 1),
   ];
   if (airlock) {
     // the payload airlock, a box on the working cabin's side toward the viewer
-    out.push({ kind: "plate", material: "steel", frame: { o: [x(6.4), AXIS_Y, HULL_R + 0.7], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, outline: [[-1.5, -0.9], [1.5, -0.9], [1.5, 0.9], [-1.5, 0.9]], thickness: 1.4, plain: false });
+    out.push({ kind: "plate", material: "steel", frame: { o: [x(6.4), Y, HULL_R + 0.7], u: [1, 0, 0], v: [0, 1, 0], w: [0, 0, 1] }, outline: [[-1.5, -0.9], [1.5, -0.9], [1.5, 0.9], [-1.5, 0.9]], thickness: 1.4, plain: false });
   }
-  // two long wings, up and down from the middle of the working cabin
-  const mid = x(8.9);
-  out.push(...wingXY(mid, AXIS_Y + HULL_R, AXIS_Y + HULL_R + WING, WING_W), ...wingXY(mid, AXIS_Y - HULL_R - WING, AXIS_Y - HULL_R, WING_W));
   return out;
 };
+
+/** Where a laboratory's wings stand on their own: its axis is this high, so the wings, which run up and down from it, start at the part's base. */
+const WINGS_AXIS = HULL_R + WING;
+const WINGS_X = 8.9;
+
+/** A laboratory's two long wings, up and down from the middle of its working cabin: 27 m each (Xinhua), about 110 m² each. */
+const laboratoryWings = (side: 1 | -1): Piece[] => [
+  ...wingXY(side * WINGS_X, WINGS_AXIS + HULL_R, WINGS_AXIS + HULL_R + WING, WING_W),
+  ...wingXY(side * WINGS_X, WINGS_AXIS - HULL_R - WING, WINGS_AXIS - HULL_R, WING_W),
+];
 
 // ------------------------------------------------------------------------------------------------ Shenzhou and Tianzhou
 
@@ -186,33 +196,27 @@ const tianzhou = (): Piece[] => {
 
 // ------------------------------------------------------------------------------------------------ the parts
 
-const SPAN_JUDGED: Figure = blank("The wings' size is judged from photographs; no source read here gives the module's widest size as drawn.");
 const SHENZHOU_SPAN: Figure = { value: 17, source: "wikipedia-shenzhou", note: "55 ft 9 in, the service module's solar arrays." };
 const TIANZHOU_SPAN: Figure = { value: 14.9, source: "wikipedia-tianzhou", note: "49 feet, the solar array span." };
 
-const TIANHE_PART: StackPart = { slot: "tianhe", kind: "module", name: "Tianhe core module 天和", height: TIANHE, diameter: (HULL_R + 12) * 2, sourcedDiameter: SPAN_JUDGED, pieces: tianhe };
-const WENTIAN_PART: StackPart = {
-  slot: "wentian",
-  kind: "module",
-  name: "Wentian laboratory module 問天",
-  height: AXIS_Y * 2,
-  diameter: LAB * 2,
-  place: { x: SIDE, z: 0, y: HUB_Y - AXIS_Y },
-  sourcedDiameter: SPAN_JUDGED,
-  pieces: () => laboratory(1, false),
-};
-const MENGTIAN_PART: StackPart = {
-  slot: "mengtian",
-  kind: "module",
-  name: "Mengtian laboratory module 夢天",
-  height: AXIS_Y * 2,
-  diameter: (MENGTIAN_LONG.value ?? LAB) * 2,
-  place: { x: -SIDE, z: 0, y: HUB_Y - AXIS_Y },
-  sourcedDiameter: SPAN_JUDGED,
-  pieces: () => laboratory(-1, true),
-};
-const SHENZHOU_PART: StackPart = { slot: "shenzhou", kind: "spacecraft", name: "Shenzhou crew ship 神舟", height: SHENZHOU, diameter: 17, place: { x: 0, z: 0, y: TIANHE }, sourcedDiameter: SHENZHOU_SPAN, pieces: shenzhou };
-const TIANZHOU_PART: StackPart = { slot: "tianzhou", kind: "spacecraft", name: "Tianzhou cargo ship 天舟", height: TIANZHOU, diameter: 14.9, place: { x: 0, z: 0, y: -TIANZHOU }, sourcedDiameter: TIANZHOU_SPAN, pieces: tianzhou };
+const MODULE_WIDTH: Figure = { value: 4.2, source: "wikipedia-tiangong", note: "14 feet, for each of the three modules." };
+const NOT_A_FIGURE: Figure = blank("Judged from photographs; no source read here gives it.");
+const WINGS_TIANHE_WIDE = (HULL_R + 12) * 2;
+const WINGS_LAB_WIDE = (WINGS_X + WING_W / 2) * 2;
+const AT = (x: number, y: number): StackPart["place"] => ({ x, z: 0, y });
+
+const TIANHE_PART: StackPart = { slot: "tianhe", kind: "module", name: "Tianhe core module 天和, without its hub", height: CORE_TOP, diameter: HULL_R * 2, sourcedDiameter: MODULE_WIDTH, alsoTrueTo: ["tiangong-docked"], pieces: tianhe };
+const HUB_PART: StackPart = { slot: "docking-hub", kind: "module", name: "Tiangong docking hub", height: HUB_LONG, diameter: HULL_R * 2, place: AT(0, CORE_TOP), sourcedDiameter: NOT_A_FIGURE, alsoTrueTo: ["tiangong-docked"], pieces: hub };
+const WENTIAN_PART: StackPart = { slot: "wentian", kind: "module", name: "Wentian laboratory module 問天", height: HULL_R * 2, diameter: LAB * 2, place: AT(SIDE, HUB_Y - HULL_R), sourcedDiameter: NOT_A_FIGURE, alsoTrueTo: ["tiangong-docked"], pieces: () => laboratory(1, false) };
+const MENGTIAN_PART: StackPart = { slot: "mengtian", kind: "module", name: "Mengtian laboratory module 夢天", height: HULL_R * 2, diameter: (MENGTIAN_LONG.value ?? LAB) * 2, place: AT(-SIDE, HUB_Y - HULL_R), sourcedDiameter: NOT_A_FIGURE, alsoTrueTo: ["tiangong-docked"], pieces: () => laboratory(-1, true) };
+const TIANHE_WINGS_PART: StackPart = { slot: "tianhe-wings", kind: "module", name: "Tianhe solar wings", height: 4.6, diameter: WINGS_TIANHE_WIDE, place: AT(0, 9.4 - 2.3), sourcedDiameter: NOT_A_FIGURE, alsoTrueTo: ["tiangong-docked"], pieces: tianheWings };
+const WENTIAN_WINGS_PART: StackPart = { slot: "wentian-wings", kind: "module", name: "Wentian solar wings", height: WINGS_AXIS * 2, diameter: WINGS_LAB_WIDE, place: AT(SIDE, HUB_Y - WINGS_AXIS), sourcedDiameter: NOT_A_FIGURE, alsoTrueTo: ["tiangong-docked"], pieces: () => laboratoryWings(1) };
+const MENGTIAN_WINGS_PART: StackPart = { slot: "mengtian-wings", kind: "module", name: "Mengtian solar wings", height: WINGS_AXIS * 2, diameter: WINGS_LAB_WIDE, place: AT(-SIDE, HUB_Y - WINGS_AXIS), sourcedDiameter: NOT_A_FIGURE, alsoTrueTo: ["tiangong-docked"], pieces: () => laboratoryWings(-1) };
+const SHENZHOU_PART: StackPart = { slot: "shenzhou", kind: "spacecraft", name: "Shenzhou crew ship 神舟", height: SHENZHOU, diameter: 17, place: AT(0, TIANHE), sourcedDiameter: SHENZHOU_SPAN, pieces: shenzhou };
+const TIANZHOU_PART: StackPart = { slot: "tianzhou", kind: "spacecraft", name: "Tianzhou cargo ship 天舟", height: TIANZHOU, diameter: 14.9, place: AT(0, -TIANZHOU), sourcedDiameter: TIANZHOU_SPAN, pieces: tianzhou };
+
+/** The station's own parts, in the order the variants list them. Each is a part on its own, so a builder can use the hub or one laboratory alone. */
+const STATION_PARTS: readonly StackPart[] = [TIANHE_PART, HUB_PART, WENTIAN_PART, MENGTIAN_PART, TIANHE_WINGS_PART, WENTIAN_WINGS_PART, MENGTIAN_WINGS_PART];
 
 const DRAWN =
   "This package's own code, from the sourced lengths and widths of the modules, the hub-and-arms layout read from the pages named in its data and the 27 m of Wentian's wings; no licensed model, picture or code is used. Where each section ends, the hub, the ports, the other wings' widths and the colours are judged from photographs. No flag, mark or lettering is drawn.";
@@ -233,7 +237,7 @@ const shifted = (piece: Piece, dx: number, dy: number, dz: number): Piece => {
 
 /** The whole station in one piece for the detailed model's line looks: every part where it stands together, the lowest point lifted to y = 0 as the model is. */
 const whole = (): Piece[] => {
-  const parts = [TIANHE_PART, WENTIAN_PART, MENGTIAN_PART, SHENZHOU_PART, TIANZHOU_PART];
+  const parts = [...STATION_PARTS, SHENZHOU_PART, TIANZHOU_PART];
   const out = parts.flatMap((part) => part.pieces().map((piece) => shifted(piece, part.place?.x ?? 0, part.place?.y ?? 0, part.place?.z ?? 0)));
   return out.map((piece) => shifted(piece, 0, TIANZHOU, 0));
 };
@@ -250,8 +254,9 @@ const STATION_PART: StackPart = {
 };
 
 export const TIANGONG_BUILDS: readonly StackBuild[] = [
-  { rocket: "tiangong", variant: "tiangong", drawnFrom: DRAWN, parts: [TIANHE_PART, WENTIAN_PART, MENGTIAN_PART] },
-  { rocket: "tiangong", variant: "tiangong-docked", drawnFrom: DRAWN, parts: [TIANHE_PART, WENTIAN_PART, MENGTIAN_PART, SHENZHOU_PART, TIANZHOU_PART] },
+  { rocket: "tiangong", variant: "tiangong", drawnFrom: DRAWN, parts: STATION_PARTS },
+  // the station's own parts are the first variant's, shared by the second through its partIds; only the visiting craft are its own
+  { rocket: "tiangong", variant: "tiangong-docked", drawnFrom: DRAWN, parts: [SHENZHOU_PART, TIANZHOU_PART] },
   {
     rocket: "tiangong",
     variant: "tiangong-detailed",

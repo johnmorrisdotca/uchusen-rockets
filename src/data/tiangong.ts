@@ -40,6 +40,18 @@ const more: Readonly<Record<string, Figure<number | string>>> = {
   "Mengtian launched": { value: "2022-10-31", source: S, note: "07:37:23 UTC; it moved to its side port on 3 November 2022." },
 };
 
+const STATION_SLOTS = ["tianhe", "docking-hub", "wentian", "mengtian", "tianhe-wings", "wentian-wings", "mengtian-wings"] as const;
+const JUDGED = (what: string) => blank(`${what} Judged from photographs; no source read here gives it.`);
+const STATION_PARTS: Readonly<Record<string, Figure>> = {
+  tianhe: blank("The core without its hub. With the hub it is the sourced 16.6 m; where the one ends and the other begins is judged from photographs."),
+  "docking-hub": JUDGED("The hub's length."),
+  wentian: blank("Its sourced 17.9 m runs sideways, across the top; it is under sizes."),
+  mengtian: blank("Its sourced 17.9 m runs sideways, across the top; it is under sizes."),
+  "tianhe-wings": JUDGED("The core's wings."),
+  "wentian-wings": blank("Each wing is a sourced 27 m; the two together stand up and down across the laboratory, as drawn."),
+  "mengtian-wings": blank("Drawn the same size as Wentian's; its article gives a wingspan of over 55 m."),
+};
+
 const diameter: Figure = { value: 39, source: S, note: "The infobox gives about 39 m (128 ft) and does not say what it measures." };
 
 export const TIANGONG_VARIANTS: readonly Variant[] = [
@@ -50,12 +62,12 @@ export const TIANGONG_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstWord: "First module",
     firstFlight: { value: "2021-04-29", source: S, note: "Tianhe, the core module." },
-    slots: ["tianhe", "wentian", "mengtian"],
+    slots: STATION_SLOTS,
     note: `The station as a T: the Tianhe core, and the Wentian and Mengtian laboratories on its hub's two side ports. ${DRAWN}`,
     facts: {
       height: blank("A T has no one height: its modules' lengths are under sizes.", "not given"),
       diameter,
-      parts: { tianhe: TIANHE_LONG, wentian: blank("Its 17.9 m runs sideways, across the top; it is under sizes."), mengtian: blank("Its 17.9 m runs sideways, across the top; it is under sizes.") },
+      parts: STATION_PARTS,
       engines: {},
       more,
       sizes,
@@ -68,18 +80,14 @@ export const TIANGONG_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstWord: "First module",
     firstFlight: { value: "2021-04-29", source: S, note: "Tianhe, the core module; the T itself was complete on 2022-11-03." },
-    slots: ["tianhe", "wentian", "mengtian", "shenzhou", "tianzhou"],
+    slots: [...STATION_SLOTS, "shenzhou", "tianzhou"],
+    // the station's own parts are the first variant's; only the visiting craft are this one's
+    partIds: Object.fromEntries(STATION_SLOTS.map((slot) => [slot, `tiangong-tiangong-${slot}`])),
     note: `The station as it usually stands: a Shenzhou crew ship on the hub's forward port and a Tianzhou cargo ship on the core's aft port. ${DRAWN}`,
     facts: {
       height: blank("A T has no one height: its modules' lengths are under sizes.", "not given"),
       diameter,
-      parts: {
-        tianhe: TIANHE_LONG,
-        wentian: blank("Its 17.9 m runs sideways, across the top; it is under sizes."),
-        mengtian: blank("Its 17.9 m runs sideways, across the top; it is under sizes."),
-        shenzhou: SHENZHOU_LONG,
-        tianzhou: TIANZHOU_LONG,
-      },
+      parts: { ...STATION_PARTS, shenzhou: SHENZHOU_LONG, tianzhou: TIANZHOU_LONG },
       engines: {},
       more,
       sizes: { ...sizes, "Shenzhou width": SHENZHOU_WIDE, "Tianzhou width": TIANZHOU_WIDE },
