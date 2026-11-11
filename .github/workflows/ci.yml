@@ -90,10 +90,10 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # The runner's package mirror is sometimes slow (a few minutes for a font), and can fail: a failed install is tried again, and the step is cut off at 25 minutes. Never cut one off sooner: the package manager it started goes on holding its lock, and the next try fails on that.
-      - name: The browser
-        timeout-minutes: 25
-        run: for try in 1 2 3; do pnpm exec playwright install --with-deps ${{ matrix.browser }} && exit 0; echo "try $try failed"; sleep 20; done; exit 1
+      # The browsers, cached, and their system libraries, each bounded and tried twice (.github/actions/playwright).
+      - uses: ./.github/actions/playwright
+        with:
+          browsers: ${{ matrix.browser }}
       - uses: actions/download-artifact@v4
         with:
           name: demo-site
@@ -122,7 +122,9 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - uses: ./.github/actions/playwright
+        with:
+          browsers: chromium
       - name: Every way to use it (a script tag, Vite, webpack, React, Vue, Svelte, Angular, an iframe, TypeScript, Node), from the package as npm packs it
         run: pnpm test:usage
   package:
