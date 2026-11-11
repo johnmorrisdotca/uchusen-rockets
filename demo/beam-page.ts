@@ -41,4 +41,4 @@ picture("beam-dotted", "painted", beamLight(from, to, 0.4, 6, cam, "painted", "s
 
 const stage = document.getElementById("beam-stage");
 const row = document.getElementById("beam-row");
-if (stage && row) bindStage(stage, (detail) => placeZoom(row, detail), { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8", testid: "view-bar" });
+if (stage && row) bindStage(stage, (view) => placeZoom(row, view), { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8", testid: "view-bar" });
