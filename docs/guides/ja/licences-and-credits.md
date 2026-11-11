@@ -7,13 +7,14 @@ description: どれが MIT で、どれが CC BY 4.0、パブリックドメイ�
 
 このパッケージには複数のライセンスの作品が含まれ、彩色したロケットを配布するときにはその違いが重要です。
 
-## 4種類の作品
+## 5種類の作品
 
 | 内容 | ライセンス |
 | --- | --- |
 | コード、コードで作ったメッシュ、図面 | MIT |
 | `models/` の彩色モデル | CC BY 4.0。ただし1点は CC0、NASA のものはパブリックドメイン |
 | スターベースの座標・輪郭・標高、タワーの13 mの敷地 | © OpenStreetMap contributors、ODbL 1.0 |
+| 打ち上げ記録のデータ（`launches`） | CC BY 4.0。ジョナサン・C・マクダウェルの GCAT による |
 | 上記以外の外部由来のもの | MIT、ISC、BSD、Apache のいずれかでなければならない |
 
 **彩色モデルは MIT ではなく、使うならクレジットを付ける必要があります。** パッケージ自身のライセンス表記が `MIT AND CC-BY-4.0 AND ODbL-1.0` なのはそのためです。
@@ -52,6 +53,8 @@ NASA のモデルは、NASA の指針が求めるとおり出典として名前�
 ## デモサイトの画像
 
 デモサイトには、パッケージに同梱していないものも映ります。ロケットの背後の地球、ジャーニーモードのページの惑星と衛星、スターベースの地図です。それぞれのクレジットは `NOTICE.md` にあり、どのデモページのフッターにも、誰のクレジットかを示す短い一文と、`NOTICE.md` へのリンクがあります。地球の画像は NASA のもので、`@johnmorrisdotca/chikyu-earth` を通して使っています。惑星と衛星の画像は `@johnmorrisdotca/wakusei-planets` のもので、出典とライセンスはそのパッケージ自身の `NOTICE.md` にあります。スターベースの地図は © OpenStreetMap contributors で、ODbL のもとにあります。
+
+打ち上げ記録（`launches` エントリー。[打ち上げ記録](launch-log.md)を参照）は、ジョナサン・C・マクダウェルの GCAT（General Catalog of Artificial Space Objects）のデータで、ライセンスは MIT ではなく CC BY 4.0 です。データを表示するときは、必ず次のクレジットを添えてください。Data from GCAT (J. McDowell, planet4589.org/space/gcat)
 
 ## ロゴ・マーク・旗なし
 

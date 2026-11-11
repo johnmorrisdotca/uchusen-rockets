@@ -260,6 +260,7 @@ rocket.svg({ look: "thick", view: "below", show: "booster" }).startsWith("<svg")
 | `.../element` | `<uchusen-rocket>`, `<uchusen-lineup>` and `<uchusen-flight>`: load `three` only when a 3D view is wanted, and a painted model only when the painted look is | `three` for 3D |
 | `.../react` | A thin `<UchusenRocket>` wrapper | `react` |
 | `.../assets/*` | Ready files: `starship-v3.glb`, `starship-v3.svg`, `starship-v3-booster.thick.svg`, `parts/raptor-vacuum.glb`, `models/starship-v3-ship.glb` | Nothing |
+| `.../launches` | The launch log: 7,425 orbital launch attempts since 1957 (`launches`, `launchByTag`, `findLaunches`, `countLaunches`, `launchTotals`), each linked to this package's rocket where it is one (`LAUNCH_VEHICLE_LINKS`), in one data file of about 1.1 MB that only this entry loads. Credit GCAT, as [NOTICE.md](NOTICE.md) says | Nothing |
 
 ## To scale
 
@@ -287,6 +288,8 @@ import { check } from "@johnmorrisdotca/uchusen-rockets";
 check({ rocket: "starship", variant: "v3" }).credits[0].licence; // "CC BY 4.0"
 ```
  **Starbase's coordinates and outlines, its map heights and the tower's 13 m footprint are © OpenStreetMap contributors, under ODbL 1.0, not MIT** (https://www.openstreetmap.org/copyright).
+
+**The launch log (`.../launches`) is data from GCAT, the General Catalog of Artificial Space Objects, by Jonathan C. McDowell, under CC BY 4.0, not MIT. Whatever shows it must credit it: Data from GCAT (J. McDowell, planet4589.org/space/gcat).** [NOTICE.md](NOTICE.md) has the licence, the release and what was changed.
 
 | Painted | Title | Creator | Source | Changed |
 | --- | --- | --- | --- | --- |
@@ -416,6 +419,7 @@ Each guide has a Japanese twin in [docs/guides/ja](docs/guides/ja).
 | [Architecture](docs/guides/architecture.md) | How the layers fit |
 | [Troubleshooting](docs/guides/troubleshooting.md) | Why the 3D view or the model is missing |
 | [Upgrading](docs/guides/upgrading.md) | What to look for between versions |
+| [The launch log](docs/guides/launch-log.md) | Every orbital launch since 1957: lookups, counts, links to the rockets, the GCAT credit |
 
 ## Limits
 

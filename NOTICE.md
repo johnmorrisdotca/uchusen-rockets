@@ -8,6 +8,8 @@ This package holds work under three licences, and NASA's models, which are publi
 
 **The map data is under the Open Database License, not MIT.** The coordinates, outlines and map heights of Starbase, in `src/data/starbase.ts` and `src/model/starbase.ts`, and the tower's 13 m footprint, in `src/data/tower.ts` and `src/model/tower.ts`, and those figures wherever they are built into `dist/`, are © OpenStreetMap contributors, https://www.openstreetmap.org/copyright, under ODbL 1.0 (see [LICENSES/ODbL-1.0.txt](LICENSES/ODbL-1.0.txt)). Each such figure names this source in the data (`SOURCES.openstreetmap`). The plain shapes standing on those places, and the rest of the package, stay MIT.
 
+**The launch log is data under the Creative Commons Attribution 4.0 licence, not MIT.** The launches in `src/launches/data.ts`, and those facts wherever they are built into `dist/`, are from GCAT, the General Catalog of Artificial Space Objects by Jonathan C. McDowell, https://planet4589.org/space/gcat, CC BY 4.0 (see [LICENSES/CC-BY-4.0.txt](LICENSES/CC-BY-4.0.txt) and the section "Launch log" below). Whatever shows them must credit it as that section says. The code that reads them, in `src/launches/index.ts`, stays MIT.
+
 No mesh or drawing carries a logo, wordmark or flag. Those were removed from the models below (the Tiangong model's flags and agency mark, and the Hubble model's wordmark and logos, among them), and no photograph is shipped or traced: photographs were looked at for where parts sit.
 
 All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. "SpaceX", "Starship", "Super Heavy", "Raptor", "Falcon", "Dragon" and the names of other makers' rockets appear only as plain descriptive words.
@@ -70,6 +72,17 @@ The fleet's hull markings are lettering made from the outlines of open-licence f
 - **Oxanium ExtraBold**, Copyright 2019 The Oxanium Project Authors (https://github.com/sevmeyer/oxanium), SIL Open Font License 1.1 ([LICENSES/OFL-Oxanium.txt](LICENSES/OFL-Oxanium.txt)). Its outlines are kept with the other faces.
 - **Goldman Bold**, Copyright 2018 The Goldman Project Authors (https://github.com/magictype/goldman), SIL Open Font License 1.1 ([LICENSES/OFL-Goldman.txt](LICENSES/OFL-Goldman.txt)). Offered as a lettering concept, used as drawn.
 - **M PLUS 1p Bold**, Copyright 2016 The M+ Project Authors (https://github.com/google/fonts/tree/main/ofl/mplus1p), SIL Open Font License 1.1, https://openfontlicense.org. Used for the fourteen kanji and katakana of the ships' names and the class.
+
+## Launch log (CC BY 4.0)
+
+The `launches` entry holds a log of every orbital launch attempt since 1957 (7,425 of them, up to 2026-11-08), packed into one data file, `src/launches/data.ts`, by `scripts/make-launches.ts`.
+
+- **Source:** GCAT, the General Catalog of Artificial Space Objects, by Jonathan C. McDowell, https://planet4589.org/space/gcat. The launch list (https://planet4589.org/space/gcat/tsv/launch/launch.tsv), the orbital launch log (https://planet4589.org/space/gcat/tsv/derived/launchlog.tsv, for the payload names) and the vehicle, launch-site and organization tables (https://planet4589.org/space/gcat/tsv/tables/). Release 1.8.9 of 2026-11-06, data updated 2026-11-09, read on 2026-11-11.
+- **Licence, as GCAT's page says it (https://planet4589.org/space/gcat/, read 2026-11-11):** "GCAT is released under the Creative Commons CC-BY licence. You are free to use the data in GCAT as long as you include a citation to it." and, under COPYRIGHT NOTICE, "(c) 2020-2026 Jonathan McDowell. Licence: CC-BY-4.0 Creative Commons/Attribution. This data may be freely reproduced as long as you cite it." The licence text is [LICENSES/CC-BY-4.0.txt](LICENSES/CC-BY-4.0.txt) and https://creativecommons.org/licenses/by/4.0/.
+- **The credit to print wherever the log is shown (GCAT's own short citation):** Data from GCAT (J. McDowell, planet4589.org/space/gcat)
+- **The full citation GCAT gives:** McDowell, Jonathan C., 2020. General Catalog of Artificial Space Objects, Release 1.8.9, https://planet4589.org/space/gcat. It is also `LAUNCH_LOG_SOURCE` in the entry.
+- **What was changed:** a launch is kept when GCAT's launch code says orbital (O) or deep space from Earth (D) and success or failure (S, F); pad explosions and pad aborts, and the near-orbital tests and the suborbital flights, are left out. Each launch keeps its date and time, vehicle, variant and family, site and pad, organization and country, flight name, the first eight payload names with the count of all of them, the outcome (a fractional GCAT score is `partial`), and the orbit where GCAT gives one. Two site names are respelled (Baykonur as Baikonur, Vostochniy as Vostochny). Nothing is estimated to fill a gap: a perigee or an inclination that GCAT does not give is absent.
+- **Not affiliated:** this package and its owner are not affiliated with or endorsed by Jonathan McDowell. The vehicle names and organization names appear only as plain descriptive words.
 
 ## Facts
 
