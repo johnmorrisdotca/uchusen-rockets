@@ -23,24 +23,28 @@ test("Still holds the Earth, and so does reduced motion", async ({ page, browser
   await page.goto(`${BASE}compare.html?picker=off&background=earth&with=none&spin=still`);
   await expect(canvas(page)).toHaveAttribute("data-earth", "painted", { timeout: 90_000 });
   await expect(canvas(page)).toHaveAttribute("data-world-turning", "false");
-  // the view settles into its place and then draws nothing more: the count of frames stops rising and stays
+  // the view settles into its place and then draws nothing more: the count of frames stops rising, and stays so across two more animation frames
   const count = async () => Number(await canvas(page).getAttribute("data-frames"));
-  let frames = await count();
+  const twoFrames = () => page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
   await expect.poll(async () => {
-    const was = frames;
-    await page.waitForTimeout(500);
-    frames = await count();
-    return frames === was;
+    const was = await count();
+    await twoFrames();
+    return (await count()) === was;
   }, { timeout: 30_000 }).toBe(true);
-  await page.waitForTimeout(1500);
-  expect(await count()).toBe(frames);
+  const settled = await count();
+  await twoFrames();
+  expect(await count()).toBe(settled);
+  await expect(canvas(page)).toHaveAttribute("data-world-turning", "false");
 
   const reduced = await browser.newContext({ reducedMotion: "reduce" });
-  const still = await reduced.newPage();
-  await still.goto(`${BASE}compare.html?picker=off&background=earth&with=none`);
-  await expect(canvas(still)).toHaveAttribute("data-earth", "painted", { timeout: 90_000 });
-  await expect(canvas(still)).toHaveAttribute("data-world-turning", "false");
-  await reduced.close();
+  try {
+    const still = await reduced.newPage();
+    await still.goto(`${BASE}compare.html?picker=off&background=earth&with=none`);
+    await expect(canvas(still)).toHaveAttribute("data-earth", "painted", { timeout: 90_000 });
+    await expect(canvas(still)).toHaveAttribute("data-world-turning", "false");
+  } finally {
+    await reduced.close();
+  }
 });
 
 test("a background planet turns: its picture changes with nothing touched", async ({ page }) => {
