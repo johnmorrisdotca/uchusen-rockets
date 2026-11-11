@@ -229,8 +229,10 @@ test("six craft stay on the page at a desk's width", async ({ page }, info) => {
     expect(box.bottom).toBeLessThanOrEqual(frame.bottom + 1);
   }
   await expect(page.locator(".cw-craft-list")).toHaveCount(0);
-  // The names are drawn for the craft of the picture that is in. Each add builds every craft again, and a hosted runner drawing in software builds six, the station among them, in well over thirty seconds, so the
-  // chips (which are the page's own list) say six long before the picture does. The canvas lists the craft it has placed in `data-craft-boxes`, one entry each: wait for six of those, then read the names.
+  // Choosing a craft in the picker below scrolled the picture away. A 3D view that is off screen gives its graphics context back after 30 seconds (RELEASE_MS in element.ts) and the element goes back to its flat
+  // picture, with no canvas to count: on a hosted runner, which draws in software, building six craft (the station among them) takes longer than that, so the picture was gone before it was done. Bring it back
+  // into view first, then wait for the canvas to list the six craft it has placed (`data-craft-boxes`, one entry each) and only then read their names.
+  await hero(page).scrollIntoViewIfNeeded();
   await reach3d(page);
   await expect.poll(() => hero(page).evaluate((node) => (node.shadowRoot?.querySelector("canvas")?.dataset.craftBoxes ?? "").split(" ").filter(Boolean).length), { timeout: 150_000 }).toBe(6);
   await expect.poll(() => hero(page).evaluate((node) => node.shadowRoot?.querySelectorAll("[data-beside-label]").length ?? 0), { timeout: 30_000 }).toBe(6);
