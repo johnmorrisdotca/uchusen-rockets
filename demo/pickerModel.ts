@@ -36,7 +36,7 @@ export function parseLayout(raw: string | null | undefined): PickerLayout {
 export function pickerKind(id: string): PickerKind {
   const maker = ROCKETS[id]?.maker;
   if (maker === "fleet" || id.startsWith("fleet-")) return "fleet";
-  if (maker === "sites" || id === "iss" || id === "hubble") return "station";
+  if (maker === "sites" || id === "iss" || id === "hubble" || id === "tiangong") return "station";
   return "rocket";
 }
 
