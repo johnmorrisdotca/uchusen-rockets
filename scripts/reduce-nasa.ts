@@ -17,6 +17,8 @@ import draco3d from "draco3dgltf";
 import { MeshoptSimplifier } from "meshoptimizer";
 import { NASA_RECIPES, type NasaPart, type NasaRecipe, type PieceBox, type Rect } from "./nasa-recipes.ts";
 import { PART_RECIPES } from "./part-recipes.ts";
+import { piecesOf } from "./pieces.ts";
+import { PointIndex } from "./point-index.ts";
 import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const sources = process.env.UCHUSEN_MODEL_SOURCES ?? "";
@@ -25,100 +27,6 @@ const only = new Set((process.argv[2] ?? "").split(",").filter(Boolean));
 const outDir = join(process.cwd(), "models");
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "draco3d.decoder": await (draco3d as { createDecoderModule(): Promise<unknown> }).createDecoderModule() });
 await MeshoptSimplifier.ready;
-
-/** The connected pieces of a file: every triangle's piece, by primitive, from the vertices welded to a ten-thousandth of the file's size. */
-function piecesOf(nodes: readonly GNode[]): { pieceOf: Map<Primitive, Int32Array>; boxes: PieceBox[] } {
-  const lo = [Infinity, Infinity, Infinity];
-  const hi = [-Infinity, -Infinity, -Infinity];
-  const el = [0, 0, 0];
-  const pointsOf = (node: GNode, prim: Primitive): Float64Array => {
-    const pos = prim.getAttribute("POSITION");
-    const m = node.getWorldMatrix();
-    const out = new Float64Array((pos?.getCount() ?? 0) * 3);
-    for (let i = 0; pos && i < pos.getCount(); i++) {
-      pos.getElement(i, el);
-      for (let k = 0; k < 3; k++) out[i * 3 + k] = m[k] * el[0] + m[4 + k] * el[1] + m[8 + k] * el[2] + m[12 + k];
-    }
-    return out;
-  };
-  const points = new Map<Primitive, Float64Array>();
-  for (const node of nodes)
-    for (const prim of node.getMesh()?.listPrimitives() ?? []) {
-      const p = pointsOf(node, prim);
-      points.set(prim, p);
-      for (let i = 0; i < p.length; i += 3)
-        for (let c = 0; c < 3; c++) {
-          lo[c] = Math.min(lo[c], p[i + c]);
-          hi[c] = Math.max(hi[c], p[i + c]);
-        }
-    }
-  const grid = 10000 / Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2], 1e-9);
-  const ids = new Map<string, number>();
-  const vertexIds = new Map<Primitive, Int32Array>();
-  for (const [prim, p] of points) {
-    const mine = new Int32Array(p.length / 3);
-    for (let i = 0; i < mine.length; i++) {
-      const key = `${Math.round(p[i * 3] * grid)},${Math.round(p[i * 3 + 1] * grid)},${Math.round(p[i * 3 + 2] * grid)}`;
-      let id = ids.get(key);
-      if (id === undefined) {
-        id = ids.size;
-        ids.set(key, id);
-      }
-      mine[i] = id;
-    }
-    vertexIds.set(prim, mine);
-  }
-  const parent = Int32Array.from({ length: ids.size }, (_, i) => i);
-  const find = (x: number): number => {
-    while (parent[x] !== x) {
-      parent[x] = parent[parent[x]];
-      x = parent[x];
-    }
-    return x;
-  };
-  const cornerOf = (prim: Primitive, i: number): number => {
-    const idx = prim.getIndices();
-    return idx ? idx.getScalar(i) : i;
-  };
-  const cornerCount = (prim: Primitive): number => prim.getIndices()?.getCount() ?? prim.getAttribute("POSITION")?.getCount() ?? 0;
-  for (const [prim, mine] of vertexIds) {
-    const count = cornerCount(prim);
-    for (let f = 0; f + 2 < count; f += 3) {
-      const a = mine[cornerOf(prim, f)];
-      parent[find(a)] = find(mine[cornerOf(prim, f + 1)]);
-      parent[find(a)] = find(mine[cornerOf(prim, f + 2)]);
-    }
-  }
-  const boxes: { min: number[]; max: number[]; triangles: number }[] = [];
-  const boxOf = new Map<number, number>();
-  const pieceOf = new Map<Primitive, Int32Array>();
-  for (const [prim, mine] of vertexIds) {
-    const p = points.get(prim) as Float64Array;
-    const count = cornerCount(prim);
-    const out = new Int32Array(Math.floor(count / 3));
-    for (let f = 0; f + 2 < count; f += 3) {
-      const root = find(mine[cornerOf(prim, f)]);
-      let at = boxOf.get(root);
-      if (at === undefined) {
-        at = boxes.length;
-        boxOf.set(root, at);
-        boxes.push({ min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity], triangles: 0 });
-      }
-      const box = boxes[at];
-      box.triangles++;
-      for (const k of [f, f + 1, f + 2]) {
-        const v = cornerOf(prim, k);
-        for (let c = 0; c < 3; c++) {
-          box.min[c] = Math.min(box.min[c], p[v * 3 + c]);
-          box.max[c] = Math.max(box.max[c], p[v * 3 + c]);
-        }
-      }
-      out[f / 3] = at;
-    }
-    pieceOf.set(prim, out);
-  }
-  return { pieceOf, boxes };
-}
 
 /** A triangle, as three corners: positions, normals and picture coordinates. */
 interface Triangles {
@@ -184,24 +92,22 @@ function cut(p: number[][], n: number[][], t: number[][], most: number): Corners
   return [...cut([p[a], mp, p[c]], [n[a], mn, n[c]], [t[a], mt, t[c]], most), ...cut([mp, p[b], p[c]], [mn, n[b], n[c]], [mt, t[b], t[c]], most)];
 }
 
-/** Joins vertices that are the same to within a tenth of a millimetre per metre of the part, so a simplifier sees one surface; a seam in the picture stays a seam. */
-function weld(t: Triangles, size: number) {
-  const seen = new Map<string, number>();
+/** Joins vertices that are the same to within a ten-thousandth of the part's size on every axis, a normal within a fiftieth and a picture coordinate within 1/8192, so a simplifier sees one surface; a seam in the picture stays a seam. */
+function weld(t: Triangles, size: number, low: readonly number[]) {
   const count = t.positions.length / 3;
   const indices = new Uint32Array(count);
   const positions: number[] = [];
   const normals: number[] = [];
   const uvs: number[] = [];
-  const grid = 10000 / size;
+  const seen = new PointIndex(size / 10000, [low[0] as number, low[1] as number, low[2] as number]);
   for (let i = 0; i < count; i++) {
-    const [x, y, z] = [t.positions[i * 3], t.positions[i * 3 + 1], t.positions[i * 3 + 2]];
-    const [a, b, c] = [t.normals[i * 3], t.normals[i * 3 + 1], t.normals[i * 3 + 2]];
-    const [u, v] = [t.uvs[i * 2], t.uvs[i * 2 + 1]];
-    const key = `${Math.round(x * grid)},${Math.round(y * grid)},${Math.round(z * grid)}|${Math.round(a * 50)},${Math.round(b * 50)},${Math.round(c * 50)}|${Math.round(u * 8192)},${Math.round(v * 8192)}`;
-    let at = seen.get(key);
+    const [x, y, z] = [t.positions[i * 3] as number, t.positions[i * 3 + 1] as number, t.positions[i * 3 + 2] as number];
+    const [a, b, c] = [t.normals[i * 3] as number, t.normals[i * 3 + 1] as number, t.normals[i * 3 + 2] as number];
+    const [u, v] = [t.uvs[i * 2] as number, t.uvs[i * 2 + 1] as number];
+    // the vertex already kept that is the same place, with the same normal and picture coordinate
+    let at = seen.find(x, y, z, (id) => Math.abs((normals[id * 3] as number) - a) <= 0.02 && Math.abs((normals[id * 3 + 1] as number) - b) <= 0.02 && Math.abs((normals[id * 3 + 2] as number) - c) <= 0.02 && Math.abs((uvs[id * 2] as number) - u) <= 1 / 8192 && Math.abs((uvs[id * 2 + 1] as number) - v) <= 1 / 8192);
     if (at === undefined) {
-      at = positions.length / 3;
-      seen.set(key, at);
+      at = seen.add(x, y, z);
       positions.push(x, y, z);
       normals.push(a, b, c);
       uvs.push(u, v);
@@ -425,7 +331,7 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
           const factor = material?.getBaseColorFactor() ?? [0.8, 0.8, 0.8, 1];
           paints.set(name, { name, colour: [factor[0], factor[1], factor[2]], image: image && texture ? { bytes: image, mime: texture.getMimeType() } : null });
         }
-        const pieceIds = pieces.pieceOf.get(prim);
+        const pieceIds = pieces.pieceOf(node, prim);
         let f = 0;
         eachTriangle(prim, node, (p0, n0, t0) => {
           inTris++;
@@ -461,6 +367,8 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
   for (const part of recipe.parts) {
     const buckets = parts.get(part.id);
     if (!buckets) {
+      // a part nothing fell in is a mistake in the recipe (a typo in a name, a box in the wrong place) unless the recipe says the model may not draw it
+      if (!part.optional) throw new Error(`${recipe.id}: nothing fell in the part "${part.id}"; check its rule, or mark the part optional: true where the model does not draw it`);
       // a part the model does not draw: no file, and this package's own paint shows for it
       console.log(`${recipe.id}-${part.id}.glb  nothing fell in it: no file`);
       continue;
@@ -482,7 +390,7 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
         hi[c] = Math.max(hi[c], whole.positions[i + c]);
       }
     const size = Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
-    const w = weld(whole, size);
+    const w = weld(whole, size, lo);
     const startTris = w.indices.length / 3;
     const target = Math.min(part.triangles, startTris) * 3;
     const ATTR = new Float32Array(w.normals.length + w.uvs.length);

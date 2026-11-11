@@ -18,6 +18,8 @@ export interface NasaPart {
   triangles: number;
   /** Metres the surface may move. */
   error?: number;
+  /** True where the model may not draw this part at all: nothing falling in it is then no file and this package's own paint shows for it. Without it, a part nothing falls in stops the run, so a typo cannot drop a file unseen. */
+  optional?: boolean;
 }
 /** A connected piece of a file's mesh: the triangles that touch, welded, with the box they fill in the file's own space. */
 export interface PieceBox {
