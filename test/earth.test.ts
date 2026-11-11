@@ -1,7 +1,7 @@
 // The sums behind the demo's Earth: a slow turn, the Sun keeping its place in the picture, and a planet much wider than the view.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { placementIn, START_TIME, stepSeconds, TURN_SECONDS, turnAt } from "../demo/earth-model.ts";
+import { DISC_TURN_SECONDS, placementIn, START_TIME, stepSeconds, TURN_SECONDS, turnAt } from "../demo/earth-model.ts";
 import { subsolarPoint } from "@johnmorrisdotca/chikyu-earth/realistic";
 
 test("one turn takes TURN_SECONDS, and a day of the Sun goes with it", () => {
@@ -36,4 +36,14 @@ test("the Earth is much wider than the view, and its edge crosses the picture", 
     assert.ok(edge > 0 && edge < height, `its top edge is inside the picture: ${edge}`);
     assert.ok(Math.abs(panX) < width / 2, "its middle is under the picture");
   }
+});
+
+test("the Earth disc on the journey turns once in ten minutes, the Sun keeping its place", () => {
+  assert.equal(DISC_TURN_SECONDS, 600);
+  assert.deepEqual(turnAt(0, DISC_TURN_SECONDS), { yaw: 0, time: START_TIME });
+  assert.equal(turnAt(DISC_TURN_SECONDS, DISC_TURN_SECONDS).yaw, 360);
+  assert.equal(turnAt(150, DISC_TURN_SECONDS).yaw, 90);
+  const { yaw, time } = turnAt(200, DISC_TURN_SECONDS);
+  const apart = Math.abs((subsolarPoint(time).lon + yaw) - subsolarPoint(START_TIME).lon);
+  assert.ok(Math.min(apart % 360, 360 - (apart % 360)) < 1, `${apart} degrees`);
 });

@@ -1,7 +1,7 @@
 // The Earth behind the rocket, loaded only when someone asks for it. The line globe redraws its SVG and needs no canvas; the realistic one is `<chikyu-earth-realistic>`, a second WebGL context, made only for the
 // Painted look and given back when it is left. Both turn from one slow timer: a few draws a second, none out of sight, none on a hidden tab, none under reduced motion, and none once nobody has touched the page for a while.
 import type { ChikyuEarthRealistic } from "@johnmorrisdotca/chikyu-earth/realistic/element";
-import { CENTRE, placementIn, type Placement, START_TIME, stepSeconds, turnAt } from "./earth-model.ts";
+import { CENTRE, DISC_TURN_SECONDS, placementIn, type Placement, START_TIME, stepSeconds, turnAt } from "./earth-model.ts";
 
 /** The orbit picture fills the frame. A closer camera grows it. A higher orbit or a pulled-back camera does not shrink it, so the edge stays outside the frame. */
 const orbitBlend = (holder: HTMLElement, box: Placement & { width: number; height: number }) => {
@@ -158,6 +158,8 @@ export interface StillEarth {
   setNight(night: boolean): void;
   /** Frame the globe in the box it sits in. */
   frame(): void;
+  /** Turn a `disc` to where it is after this many seconds of its slow turn, the Sun keeping its place in the picture. */
+  turnTo(seconds: number): void;
   stop(): void;
 }
 
@@ -170,6 +172,7 @@ export function mountStillEarth(holder: HTMLElement, frame: StillFrame = "disc")
   let stopped = false;
   let earth: ChikyuEarthRealistic | null = null;
   let night = false;
+  let turned = turnAt(0, DISC_TURN_SECONDS);
   let radius: ((width: number, height: number, margin: number) => number) | null = null;
   const apply = (): void => {
     if (!earth || !radius) return;
@@ -184,7 +187,9 @@ export function mountStillEarth(holder: HTMLElement, frame: StillFrame = "disc")
       earth.setView({ yaw: 0, tilt: 0, zoom: place.radius / radius(w, h, 1), panX: place.panX, panY: place.panY }, true);
       return;
     }
-    earth.setView({ yaw: 0, tilt: 0, zoom: (Math.min(w, h) * 0.48) / radius(w, h, 1), panX: 0, panY: 0 }, true);
+    earth.time = turned.time;
+    earth.setView({ yaw: turned.yaw, tilt: 0, zoom: (Math.min(w, h) * 0.48) / radius(w, h, 1), panX: 0, panY: 0 }, true);
+    holder.dataset.earthTurn = String(Math.round((turned.yaw % 360) * 10) / 10);
   };
   void Promise.all([import("@johnmorrisdotca/chikyu-earth/realistic"), import("@johnmorrisdotca/chikyu-earth/realistic/element")]).then(([{ discRadius }]) => {
     if (stopped || !holder.isConnected) return;
@@ -201,22 +206,33 @@ export function mountStillEarth(holder: HTMLElement, frame: StillFrame = "disc")
       apply();
     },
     frame: apply,
+    turnTo(seconds) {
+      turned = turnAt(seconds, DISC_TURN_SECONDS);
+      apply();
+    },
     stop() {
       stopped = true;
       earth?.remove();
       earth = null;
+      delete holder.dataset.earthTurn;
     },
   };
 }
 
 /**
- * A still painted Earth that fills its box, for a disc on another page. The element is the one `showEarth` uses.
+ * A painted Earth that fills its box and turns once in ten minutes, for a disc on another page, on the same slow timer as the Earth behind a rocket: it draws nothing out of sight, on a hidden tab, under reduced motion or once nobody has touched the page for a while. The element is the one `showEarth` uses.
  * @param holder The box the globe fills.
  * @returns A stop that takes the globe off the page.
  */
 export function paintEarthDisc(holder: HTMLElement): EarthShow {
   const earth = mountStillEarth(holder, "disc");
-  return { stop: () => earth.stop() };
+  const stopTurn = turn(holder, TICK_MS.realistic, (seconds) => earth.turnTo(seconds));
+  return {
+    stop() {
+      stopTurn();
+      earth.stop();
+    },
+  };
 }
 
 function showRealistic(holder: HTMLElement, unavailable: () => void): EarthShow {

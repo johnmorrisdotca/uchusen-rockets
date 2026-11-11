@@ -78,3 +78,30 @@ test("a planet on the journey turns on its own axis, and stays still under reduc
   await expect(held).toHaveAttribute("turn", "0");
   await reduced.close();
 });
+
+test("the Earth disc on the journey turns about once in ten minutes, and stays still under reduced motion", async ({ page, browser }) => {
+  test.skip(test.info().project.name !== "chromium-desk", "WebGL is drawn on the desk");
+  test.setTimeout(180_000);
+  const address = `${BASE}journey.html?date=2026-11-04&look=painted`;
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(address);
+  const disc = page.getByTestId("from");
+  await expect(disc.locator("chikyu-earth-realistic")).toBeAttached({ timeout: 90_000 });
+  await expect(disc).toHaveAttribute("data-turning", "true");
+  const turned = async () => Number(await disc.getAttribute("data-earth-turn"));
+  const first = await turned();
+  // nothing is touched: the turn is the page's own, and at 0.6 degrees a second it moves within a few seconds
+  await expect.poll(turned, { timeout: 30_000 }).not.toBe(first);
+
+  const reduced = await browser.newContext({ reducedMotion: "reduce" });
+  try {
+    const still = await reduced.newPage();
+    await still.goto(address);
+    const held = still.getByTestId("from");
+    await expect(held.locator("chikyu-earth-realistic")).toBeAttached({ timeout: 90_000 });
+    await expect(held).toHaveAttribute("data-turning", "false");
+    await expect(held).toHaveAttribute("data-earth-turn", "0");
+  } finally {
+    await reduced.close();
+  }
+});

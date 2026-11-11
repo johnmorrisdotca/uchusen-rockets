@@ -9,9 +9,12 @@ export const CENTRE = { lon: 18, lat: 8 };
 
 const WIDEST_STEP_S = 1;
 
+/** One whole turn of the Earth drawn as a disc on the journey takes this long, the pace the journey's other planets turn at. */
+export const DISC_TURN_SECONDS = 600;
+
 /** The turn after this many seconds on screen. The Sun keeps its place in the picture while the land turns under it, as a time-lapse from orbit does, so the part in view never goes dark. */
-export function turnAt(seconds: number): { yaw: number; time: number } {
-  return { yaw: (seconds * 360) / TURN_SECONDS, time: START_TIME + (seconds * 86_400_000) / TURN_SECONDS };
+export function turnAt(seconds: number, turnSeconds: number = TURN_SECONDS): { yaw: number; time: number } {
+  return { yaw: (seconds * 360) / turnSeconds, time: START_TIME + (seconds * 86_400_000) / turnSeconds };
 }
 
 /** The seconds a timer's gap adds to the turn: a late timer (a busy page) is not a jump. */
