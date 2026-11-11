@@ -258,11 +258,14 @@ export function orbitWorld(ready: () => void, when = Date.now()): { group: Group
   // The cloud layer is its own shell a little above the ground, drawn from the cloud picture's brightness, so it can turn at its own pace.
   const clouds = new Mesh(new SphereGeometry(earthR * 1.004, 96, 64), new MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.8, depthWrite: false }));
   clouds.name = "earth-clouds";
+  // hidden until its picture has arrived: without it the shell would be a flat white globe, and it stays out if the picture never loads
+  clouds.visible = false;
   earth.add(clouds);
   loader.load(new URL("clouds-1024.webp", base).href, (map) => {
     const material = clouds.material as MeshBasicMaterial;
     material.alphaMap = map;
     material.needsUpdate = true;
+    clouds.visible = true;
   });
   paint("day-2048.webp", earth);
   paint("moon-2048.webp", moon);
