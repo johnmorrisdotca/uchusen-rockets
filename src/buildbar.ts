@@ -63,6 +63,22 @@ function labelled(kind: keyof typeof ICON, text: string): Node[] {
   return [icon(kind), word];
 }
 
+/**
+ * Sets a button's icon and word only when they are not already there. The playing bar draws every tenth of a second, and a button whose children are replaced under a finger that is already down loses the click (WebKit sends none when
+ * the node the press began on has left the page), so a redraw that changes nothing must touch nothing.
+ */
+function setLabel(button: HTMLElement, kind: keyof typeof ICON, text: string): void {
+  const key = `${kind}\u0001${text}`;
+  if (button.dataset.label === key) return;
+  button.dataset.label = key;
+  button.replaceChildren(...labelled(kind, text));
+}
+
+/** Sets a node's text only when it differs, so an unchanged text is not replaced. */
+function setText(node: HTMLElement, text: string): void {
+  if (node.textContent !== text) node.textContent = text;
+}
+
 const DAY_S = 86_400;
 
 function clockOf(day: number): { day: number; clock: string } {
@@ -302,13 +318,13 @@ export class UchusenBuild extends HTMLBase {
     const playing = this.dataset.playing === "true";
     const playWord = this.word(playing ? "pause" : "play");
     const startWord = this.word("start");
-    parts.play.replaceChildren(...labelled(playing ? "pause" : "play", playWord));
+    setLabel(parts.play, playing ? "pause" : "play", playWord);
     parts.play.title = playWord;
     parts.play.disabled = reduced;
     parts.play.setAttribute("aria-pressed", String(playing));
-    parts.start.replaceChildren(...labelled("back", startWord));
+    setLabel(parts.start, "back", startWord);
     parts.start.title = startWord;
-    parts.repeat.textContent = this.word("repeat");
+    setText(parts.repeat, this.word("repeat"));
     parts.repeat.setAttribute("aria-pressed", String(this.repeatOn));
     parts.range.value = String(this.place);
     parts.range.setAttribute("aria-label", this.word("range"));
@@ -316,7 +332,7 @@ export class UchusenBuild extends HTMLBase {
     const flight = flightNow(order, this.place);
     const flightText = flight ? this.fill("flight", { n: flight.n, name: this.named[flight.slot] || flight.title }) : "";
     parts.range.setAttribute("aria-valuetext", flightText ? `${flightText}. ${dayText}` : dayText);
-    parts.stills.replaceChildren();
+    if (parts.stills.childNodes.length) parts.stills.replaceChildren();
     if (reduced) {
       const frames = stills(order);
       for (const [index, still] of frames.entries()) {
@@ -332,7 +348,7 @@ export class UchusenBuild extends HTMLBase {
     const doneText = this.fill("done", { done: frame.done.length, total: order.length });
     const line = flightText ? `${flightText}. ${dayText}, ${doneText}` : `${dayText}, ${doneText}`;
     const body = this.stageText ? `${line}, ${this.stageText}` : line;
-    parts.now.textContent = this.leadText ? `${this.leadText}. ${body}` : body;
+    setText(parts.now, this.leadText ? `${this.leadText}. ${body}` : body);
   }
 
   /** The ship and the bay, already in the reader's language. Empty leaves the day line as it was. */
