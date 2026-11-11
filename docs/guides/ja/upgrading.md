@@ -9,9 +9,9 @@ description: バージョンの間で、プロジェクトが影響を受けう�
 
 ## 0.18 から 0.19 へ
 
-宇宙ステーション、望遠鏡、ジュピターC も、ロケットと同じように部品ごとのスロットに分かれました。これまでの単一のスロットを名指ししていたページは、影響を受けます。
+宇宙ステーション、望遠鏡、ジュピターC も、ロケットと同じように部品ごとのスロットに分かれました。これまでの単一のスロットを指定していたページは、影響を受けます。
 
-- **スロット**：ISS の `station`、ハッブルの `telescope`、ジュピターC の `vehicle` はなくなりました。`show="station"` は `together` に戻ります。型式にない名前は `cleanShow` がいつもそう扱うので、全体を見せていたページは、そのまま全体が表示されます。一部だけ見せたいページは、その部品を名指しします：`show="zvezda"`、`show="light-shield"`、`show="tub"`。ISS は27スロット、ハッブルは9、ジュピターC は4で、`variantOf(rocket)?.slots` に一覧があります。
+- **部品とスロット**：単一の部品 `iss-iss-station`、`hubble-hubble-telescope`、`jupiter-c-jupiter-c-vehicle` はなくなり、あわせてこの3つの `station`、`telescope`、`vehicle` スロットもなくなりました（グラスホッパーの `vehicle` は残ります）。これらに対する `parts: { station: "…" }`、`parts: { telescope: "…" }`、`parts: { vehicle: "…" }` を含む記述は、適合チェックで `unknown-slot` と判定されます。新しいスロットを指定し（`parts: { zvezda: "…" }`、`parts: { "light-shield": "…" }`、`parts: { tub: "…" }`）、そのスロットの種類の部品を入れてください。種類が違うと `check` は `wrong-kind` を返します。`show="station"` は `together` として扱われます。型式にない名前は `cleanShow` がいつもそう扱うので、全体を見せていたページは、そのまま全体を表示します。一部だけ見せたいページは、その部品を指定します：`show="zvezda"`、`show="light-shield"`、`show="tub"`。ISS は27スロット、ハッブルは9、ジュピターC は4で、`variantOf(rocket)?.slots` に一覧があります。
 - **ハッブルのクレジット**：彩色の見た目は、NASA のモデルに代わり、Cybertron B-127 のモデル（CC BY 4.0）を使うようになりました。ハッブルを彩色で見せるページは、そのクレジットを示す必要があります。`check({ rocket: "hubble" }).credits` と `paintedCredit` が、これまでどおりそれを返します。
 - **天宮**：`rocket="tiangong"` が使えるようになりました。`MAKERS` の新しいグループ `china` に入ります。
 - **種類**：`PartKind` に `tail`、`fourth-stage`、`array`、`antenna` が加わりました。すべての種類を網羅する switch には、この4つの `case` が必要です。
