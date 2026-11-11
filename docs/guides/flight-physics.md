@@ -2,12 +2,12 @@
 title: Flight physics
 section: how-to
 order: 8
-description: Orbits from a position and a speed, gravity from the bodies of a scene, a craft moved forward in time, and the rocket equation. Ported in part from Orbiter and measured against JPL Horizons.
+description: Orbits from a position and a speed, gravity from the bodies of a scene, a craft moved forward in time, the rocket equation, burns and transfers. Ported in part from Orbiter and measured against JPL Horizons.
 ---
 
-The `physics` entry is the arithmetic of flying a craft: what orbit a position and a speed make, the pull of the bodies around it, where it is after a while, and what a burn costs. It is pure (no DOM, no clock, no dependency), so it runs in Node, in a test or under your own page, and it works in SI units throughout: metres, seconds, kilograms, newtons. A gravitational parameter is in m^3/s^2, so the journey's `GM_KM3_S2` values are multiplied by `1e9`.
+The `physics` entry is the arithmetic of flying a craft: what orbit a position and a speed make, the pull of the bodies around it, where it is after a while, what a burn costs, and how to fly from one orbit to another. It is pure (no DOM, no clock, no dependency), so it runs in Node, in a test or under your own page, and it works in SI units throughout: metres, seconds, kilograms, newtons. A gravitational parameter is in m^3/s^2, so the journey's `GM_KM3_S2` values are multiplied by `1e9`.
 
-Parts of it are ported from [Orbiter](https://github.com/orbitersim/orbiter), the open-source space flight simulator (MIT licence, Copyright (c) 2000-2026 Martin Schweiger); [Where it comes from](#where-it-comes-from) names each file. This is the first part of the flight physics: burns and transfers, turning the craft with its thrusters, and the air come in later releases.
+Parts of it are ported from [Orbiter](https://github.com/orbitersim/orbiter), the open-source space flight simulator (MIT licence, Copyright (c) 2000-2026 Martin Schweiger); [Where it comes from](#where-it-comes-from) names each file. Burns and transfers are here; turning the craft with its thrusters, and the air, come in later releases.
 
 ## An orbit from a position and a speed
 
@@ -104,6 +104,71 @@ console.log(deltaV(exhaustSpeedOf(314), 30_000, 20_000).toFixed(0), "m/s");
 
 It prints `92.6 minutes round, back where it started` and `1249 m/s`.
 
+## Burns
+
+A burn is either all at once (`impulse`, the way a plan treats a short burn) or flown (`flyBurn`): the engine pushes for a time, or until it has given a change of speed, while gravity pulls and the craft's mass falls at the engine's flow. The push points `prograde` (along the speed), `retrograde`, `normal` (along the orbit's angular momentum), `antinormal`, `radial-out`, `radial-in`, or along a fixed vector; the named directions are taken from the body the craft orbits (`centre`, still at the origin unless you say). `flyPlan` flies a list of burns with the coasts between them, starting each so that its middle falls on its planned time (`burnStart`), as Orbiter's plane-alignment display times one, and a burn stops early, marked `short`, if the propellant runs out (`dryMass`).
+
+```ts
+import { elementsOf, exhaustSpeedOf, flyBurn, gravityAt, impulse } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+const gm = 3.986004418e14;
+const earth = [{ gm, position: [0, 0, 0] as const }];
+const leo = { t: 0, position: [6_778_000, 0, 0] as const, velocity: [0, 7_669, 0] as const };
+
+const kick = impulse(leo, 100, "prograde");
+console.log("all at once:", ((elementsOf(gm, kick.position, kick.velocity).apoapsis - 6_378_137) / 1000).toFixed(0), "km apogee");
+
+const engine = { thrust: 91_189, exhaustSpeed: exhaustSpeedOf(314) };
+const flown = flyBurn(leo, 20_000, { engine, direction: "prograde", dv: 100 }, { step: 1, gravity: (_t, p) => gravityAt(p, earth) });
+console.log("flown:", flown.seconds.toFixed(1), "s,", flown.propellant.toFixed(0), "kg,", ((elementsOf(gm, flown.state.position, flown.state.velocity).apoapsis - 6_378_137) / 1000).toFixed(0), "km apogee");
+```
+
+## Transfers
+
+The closed forms plan a transfer and the burns fly it. `hohmann` of the `journey` entry gives the two burns and the time of a Hohmann transfer in any one set of units, so it takes metres and m^3/s^2 too. Here `biElliptic` adds the three-burn transfer by a far point, `speedChangeFor` the burn that sets an orbit's size (the vis-viva equation, as Orbiter's transfer display rescales a burn), `planeChange` the change of speed that turns the orbit's plane, with or without a change of size (the law of cosines), `nodes` where and when a craft's orbit crosses another plane, and the cost there (Orbiter's plane-alignment display), `relativeInclination` the angle between two planes, and `crossings` where two orbits in one plane meet (Orbiter's transfer display). `timeToTrueAnomaly` and `stateAtTrueAnomaly` say when the craft reaches a point of its orbit and how it moves there, for timing a burn.
+
+```ts
+import { biElliptic, elementsOf, nodes, planeChange, timeToTrueAnomaly } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+const gm = 3.986004418e14;
+const tilted = elementsOf(gm, [6_778_000, 0, 0], [0, 6_739, 3_660]);
+const equator = elementsOf(gm, [6_778_000, 0, 0], [0, 7_669, 0]);
+const n = nodes(tilted, equator);
+console.log(((n!.relativeInclination * 180) / Math.PI).toFixed(1), "degrees apart; the next node in", Math.min(n!.ascending.seconds, n!.descending.seconds).toFixed(0), "s, costing", n!.ascending.dv.toFixed(0), "m/s");
+const [low, high] = [6_778_000, 42_164_000];
+const atApogee = Math.sqrt(gm * (2 / high - 2 / (low + high)));
+console.log(planeChange(atApogee, (28.5 * Math.PI) / 180, Math.sqrt(gm / high)).toFixed(0), "m/s to turn 28.5 degrees and circularise at once, at the far point of a transfer to", high / 1000, "km");
+console.log((timeToTrueAnomaly(tilted, Math.PI) / 60).toFixed(1), "minutes to the far side");
+
+const far = biElliptic(gm, 6_778_000, 20 * 6_778_000, 100 * 6_778_000);
+console.log(far.total.toFixed(0), "m/s in", (far.seconds / 86_400).toFixed(1), "days by a far point");
+```
+
+A Hohmann transfer flown with two finite burns, each centred on its point, as a plain script (`examples/node/transfer.mjs`, run against the package as npm packs it):
+
+```js
+import { hohmann, GM_KM3_S2 } from "@johnmorrisdotca/uchusen-rockets/journey";
+import { elementsOf, exhaustSpeedOf, flyPlan, gravityAt } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+// From a 400 km circle to the geostationary radius, with two burns of a 1 MN engine, each centred on its point. Metres and seconds.
+const gm = GM_KM3_S2.earth * 1e9;
+const earth = [{ gm, position: [0, 0, 0] }];
+const [r1, r2] = [6_778_137, 42_164_000];
+const plan = hohmann(gm, r1, r2);
+const engine = { thrust: 1_000_000, exhaustSpeed: exhaustSpeedOf(314) };
+const burns = [
+  { at: 600, engine, direction: "prograde", dv: plan.dv1 },
+  { at: 600 + plan.seconds, engine, direction: "prograde", dv: plan.dv2 },
+];
+const start = { t: 0, position: [r1, 0, 0], velocity: [0, Math.sqrt(gm / r1), 0] };
+const flown = flyPlan(start, 20_000, burns, 600 + plan.seconds + 3_600, { step: 2, gravity: (_t, p) => gravityAt(p, earth) });
+const orbit = elementsOf(gm, flown.state.position, flown.state.velocity);
+console.log((plan.dv1 + plan.dv2).toFixed(0), "m/s,", (20_000 - flown.mass).toFixed(0), "kg of propellant");
+console.log("ends", Math.round(Math.abs(orbit.a - r2) / 1000), "km from the circle, eccentricity", orbit.e.toFixed(4));
+```
+
+It prints `3854 m/s, 14279 kg of propellant` and `ends 4 km from the circle, eccentricity 0.0000`. A weaker engine burns longer, and more of each burn is off its point: with this craft's 91 kN engine the same plan ends 404 km short, with an eccentricity of 0.025, so a plan for a weak engine splits a long burn or corrects it afterwards.
+
 ## How exact it is
 
 Each figure below is a test, measured on 2026-11-11 against saved answers: the tests never call the network.
@@ -117,6 +182,11 @@ Each figure below is a test, measured on 2026-11-11 against saved answers: the t
 | The ISS flown 100 minutes | JPL Horizons | 0.20 km with the Earth's J2, 48 km without |
 | The period of the Earth-Moon barycentre's orbit | Horizons' sidereal year, 365.25636 days | 365.2574 days |
 | A burn of 300 s flown step by step | The rocket equation | The same to 1e-10 m/s |
+| A Hohmann transfer to the geostationary radius, all at once | `hohmann` of `journey/physics.ts` | The far circle to the millimetre, eccentricity below 1e-9 |
+| The same flown with finite burns of a 20 t craft | `hohmann` | 1.3 km off with a 3 MN engine, 3.5 km with 1 MN, 39 km with 300 kN, 404 km with 91 kN |
+| A Hohmann transfer from a 28.5-degree orbit, its second burn turning the plane | The law of cosines | The equator's circle, inclination and eccentricity below 1e-9 |
+| A burn along the normal of Orbiter's estimate, speed times 5 degrees | The angle | 4.995 degrees |
+| Positions, speeds and times at five points of each of the six orbits | Orbiter's `PosVel_TA`, `Spd_TA` and `MeanAnomaly_from_TrueAnomaly`, compiled | The same to the millimetre |
 
 What is left over is what each flight leaves out (the higher terms of a body's gravity, the air, the push of sunlight), not the integrator.
 
@@ -128,5 +198,8 @@ Ported from Orbiter, https://github.com/orbitersim/orbiter (MIT licence, Copyrig
 - `gravityAt`: `Src/Orbiter/Psys.cpp` (`SingleGacc`, its J2 to J4 terms, and the sum over the bodies).
 - `propagate`, `step`, `path`: `Src/Orbiter/BodyIntegrator.cpp` (the fourth-order Runge-Kutta and the symplectic methods).
 - `massFlow`, `thrustAt`: `Src/Orbiter/Vessel.cpp` and `Vessel.h`; `deltaV`: the rocket equation as the DeltaGlider's fuel display has it (`Src/Vessel/DeltaGlider/FuelMfd.cpp`).
+- `stateAtTrueAnomaly`, `timeToTrueAnomaly`: `Src/Orbiter/Element.cpp` (`PosVel_TA`, `MeanAnomaly_from_TrueAnomaly`).
+- `directionOf`, `impulse`, `burnStart`: the attitude modes of `Src/Orbiter/Vessel.cpp`, the burn timing of `Src/Orbiter/MfdAlign.cpp` and the burn of `Src/Orbiter/MfdTransfer.cpp`; `flyBurn` and `flyPlan` are written here on the propagator.
+- `speedChangeFor`, `crossings`: `Src/Orbiter/MfdTransfer.cpp`; `nodes`, `relativeInclination`: `Src/Orbiter/MfdAlign.cpp`. `biElliptic` and `planeChange` are written here.
 
 Each source file says what was changed. The answers the tests compare with are from JPL Horizons (NASA/JPL, public domain), saved by `scripts/fetch-orbit-reference.ts`, and from Orbiter's own code, by `scripts/orbiter-reference.ts`. [NOTICE.md](../../NOTICE.md) has the credits.

@@ -260,7 +260,7 @@ rocket.svg({ look: "thick", view: "below", show: "booster" }).startsWith("<svg")
 | `.../element` | `<uchusen-rocket>`, `<uchusen-lineup>` and `<uchusen-flight>`: load `three` only when a 3D view is wanted, and a painted model only when the painted look is | `three` for 3D |
 | `.../react` | A thin `<UchusenRocket>` wrapper | `react` |
 | `.../assets/*` | Ready files: `starship-v3.glb`, `starship-v3.svg`, `starship-v3-booster.thick.svg`, `parts/raptor-vacuum.glb`, `models/starship-v3-ship.glb` | Nothing |
-| `.../physics` | Flight physics: orbits from a position and a speed (`elementsOf`, `stateOf`), gravity from the bodies of a scene (`gravityAt`), a craft moved forward in time (`propagate`, `path`), the rocket equation (`deltaV`, `burnSeconds`, `massFlow`). Ported in part from Orbiter (MIT), measured against JPL Horizons | Nothing |
+| `.../physics` | Flight physics: orbits from a position and a speed (`elementsOf`, `stateOf`), gravity from the bodies of a scene (`gravityAt`), a craft moved forward in time (`propagate`, `path`), the rocket equation (`deltaV`, `burnSeconds`, `massFlow`), burns flown or all at once (`flyBurn`, `flyPlan`, `impulse`) and transfers (`biElliptic`, `planeChange`, `nodes`, `crossings`). Ported in part from Orbiter (MIT), measured against JPL Horizons | Nothing |
 | `.../launches` | The launch log: 7,425 orbital launch attempts since 1957 (`launches`, `launchByTag`, `findLaunches`, `countLaunches`, `launchTotals`), each linked to this package's rocket where it is one (`LAUNCH_VEHICLE_LINKS`), in one data file of about 1.1 MB that only this entry loads. Credit GCAT, as [NOTICE.md](NOTICE.md) says | Nothing |
 
 ## To scale
@@ -410,7 +410,7 @@ Each guide has a Japanese twin in [docs/guides/ja](docs/guides/ja).
 | [Lit engines and flights](docs/guides/engines-and-flights.md) | Engines at full thrust, flights, what is sourced |
 | [Rockets to scale](docs/guides/scale-lineups.md) | `<uchusen-lineup>` and `lineupSvg` |
 | [Journey mode](docs/guides/journey.md) | Fly a rocket or a fleet ship to the Moon or a planet: windows, burns, the flip |
-| [Flight physics](docs/guides/flight-physics.md) | Orbits, gravity from the bodies of a scene, propagation and the rocket equation, and how exact they are |
+| [Flight physics](docs/guides/flight-physics.md) | Orbits, gravity from the bodies of a scene, propagation, the rocket equation, burns and transfers, and how exact they are |
 | [Put a rocket on your own site](docs/guides/embed-on-your-site.md) | Six ways, and the credit |
 | [React and other frameworks](docs/guides/react-and-frameworks.md) | React, Vue, Svelte, Angular |
 | [Bundlers and CDNs](docs/guides/bundlers-and-cdn.md) | unpkg, Vite, webpack |
