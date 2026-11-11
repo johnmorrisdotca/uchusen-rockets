@@ -96,23 +96,23 @@ const TG_WING_ALONG = 27.8 / 3.25;
 const TG_WING_WIDE = 4.0 / 0.95;
 /** The file's z up, its y towards the reader: a proper turn, the station seen from where its nadir faces. */
 const STAND: readonly [readonly [number, number], readonly [number, number], readonly [number, number]] = [[0, 1], [2, -1], [1, 1]];
-const TG_TIANHE: NasaPart = { id: "tianhe", triangles: 12_000, error: 0.02, place: mover([0, 0, TG_AFT], [TG, TG, TG], STAND) };
-const TG_HUB: NasaPart = { id: "hub", triangles: 7_000, error: 0.02, place: mover([0, 0, TG_NODE], [TG, TG, TG], STAND) };
+const TG_TIANHE: NasaPart = { id: "tianhe", triangles: 12_000, error: 0.15, place: mover([0, 0, TG_AFT], [TG, TG, TG], STAND) };
+const TG_HUB: NasaPart = { id: "hub", triangles: 7_000, error: 0.15, place: mover([0, 0, TG_NODE], [TG, TG, TG], STAND) };
 // a laboratory's frame begins at the node's collar and runs out along ±x, centred on its own axis
 // Wentian, with its small arm, is the file's -x laboratory and Mengtian its +x one
-const TG_WENTIAN: NasaPart = { id: "wentian", triangles: 9_000, error: 0.02, place: mover([-TG_LAB_FROM, 0, TG_LAB_AXIS_Z], [TG_LAB_ALONG, TG, TG], STAND) };
-const TG_MENGTIAN: NasaPart = { id: "mengtian", triangles: 9_000, error: 0.02, place: mover([TG_LAB_FROM, 0, TG_LAB_AXIS_Z], [TG_LAB_ALONG, TG, TG], STAND) };
+const TG_WENTIAN: NasaPart = { id: "wentian", triangles: 9_000, error: 0.15, place: mover([-TG_LAB_FROM, 0, TG_LAB_AXIS_Z], [TG_LAB_ALONG, TG, TG], STAND) };
+const TG_MENGTIAN: NasaPart = { id: "mengtian", triangles: 9_000, error: 0.15, place: mover([TG_LAB_FROM, 0, TG_LAB_AXIS_Z], [TG_LAB_ALONG, TG, TG], STAND) };
 // a laboratory's wings: their frame on the laboratory's axis at the wings' middle, x ±2.72, the wings running up and down
-const TG_WENTIAN_WINGS: NasaPart = { id: "wentian-arrays", triangles: 2_000, error: 0.06, place: mover([-2.72, 0, TG_LAB_AXIS_Z], [TG_WING_WIDE, TG, TG_WING_ALONG], STAND) };
-const TG_MENGTIAN_WINGS: NasaPart = { id: "mengtian-arrays", triangles: 2_000, error: 0.06, place: mover([2.72, 0, TG_LAB_AXIS_Z], [TG_WING_WIDE, TG, TG_WING_ALONG], STAND) };
+const TG_WENTIAN_WINGS: NasaPart = { id: "wentian-arrays", triangles: 2_000, error: 0.3, weld: 0.1, place: mover([-2.72, 0, TG_LAB_AXIS_Z], [TG_WING_WIDE, TG, TG_WING_ALONG], STAND) };
+const TG_MENGTIAN_WINGS: NasaPart = { id: "mengtian-arrays", triangles: 2_000, error: 0.3, weld: 0.1, place: mover([2.72, 0, TG_LAB_AXIS_Z], [TG_WING_WIDE, TG, TG_WING_ALONG], STAND) };
 // Tianhe's own two wings, on its axis where they stand, z -0.63
-const TG_TIANHE_WINGS: NasaPart = { id: "tianhe-arrays", triangles: 1_500, error: 0.06, place: mover([0, 0, -0.63], [TG, TG, TG], STAND) };
+const TG_TIANHE_WINGS: NasaPart = { id: "tianhe-arrays", triangles: 1_500, error: 0.3, weld: 0.1, place: mover([0, 0, -0.63], [TG, TG, TG], STAND) };
 // Shenzhou at the forward port: 1.8 units long from the node's face, 0.58 across; scaled to 9.25 m and 2.8 m
-const TG_SHENZHOU_FORWARD: NasaPart = { id: "shenzhou-forward", triangles: 4_000, error: 0.02, place: mover([0, 0, TG_NODE_TOP], [2.8 / 0.58, 2.8 / 0.58, 9.25 / 1.8], STAND) };
+const TG_SHENZHOU_FORWARD: NasaPart = { id: "shenzhou-forward", triangles: 4_000, error: 0.15, place: mover([0, 0, TG_NODE_TOP], [2.8 / 0.58, 2.8 / 0.58, 9.25 / 1.8], STAND) };
 // Shenzhou under the nadir port: it hangs down the file's -y from the collar at -0.6 to -2.15; its frame begins at the collar and runs out towards the reader
-const TG_SHENZHOU_NADIR: NasaPart = { id: "shenzhou-nadir", triangles: 4_000, error: 0.02, place: mover([0, -0.6, TG_LAB_AXIS_Z], [2.8 / 0.58, 9.25 / 1.55, 2.8 / 0.58], [[0, 1], [2, -1], [1, 1]]) };
+const TG_SHENZHOU_NADIR: NasaPart = { id: "shenzhou-nadir", triangles: 4_000, error: 0.15, place: mover([0, -0.6, TG_LAB_AXIS_Z], [2.8 / 0.58, 9.25 / 1.55, 2.8 / 0.58], [[0, 1], [2, -1], [1, 1]]) };
 // Tianzhou at the aft: from the file's z -3.94 to the aft port at -2.2, 0.62 across; scaled to 10.6 m and 3.35 m, standing on its own far end
-const TG_TIANZHOU: NasaPart = { id: "tianzhou", triangles: 5_000, error: 0.02, place: mover([0, 0, -3.94], [3.35 / 0.62, 3.35 / 0.62, 10.6 / 1.74], STAND) };
+const TG_TIANZHOU: NasaPart = { id: "tianzhou", triangles: 5_000, error: 0.15, place: mover([0, 0, -3.94], [3.35 / 0.62, 3.35 / 0.62, 10.6 / 1.74], STAND) };
 
 const tiangongPartOf = (centre: readonly number[], material: string): NasaPart | null => {
   // the flags and the agency's mark are decals of their own, left out whole
