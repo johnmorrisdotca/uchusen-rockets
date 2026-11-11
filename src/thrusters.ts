@@ -125,19 +125,19 @@ function dragonJets(variant: string): Jet[] {
 }
 
 /**
- * Zvezda's aft end, in the station's plain model: the module tube runs from y = 16, and that low end is aft.
+ * Zvezda's aft end, in the station's plain model: Zvezda is the foot of the module run, and its low end is aft.
  * Two large bells side by side, then a ring of small attitude jets.
  */
 function issJets(): Jet[] {
   const out: Jet[] = [
-    jet("station", [0.7, 15.2, 0], [0, -1, 0], "hypergolic", 0.9),
-    jet("station", [-0.7, 15.2, 0], [0, -1, 0], "hypergolic", 0.9),
+    jet("zvezda", [0.7, 0.3, 0], [0, -1, 0], "hypergolic", 0.9),
+    jet("zvezda", [-0.7, 0.3, 0], [0, -1, 0], "hypergolic", 0.9),
   ];
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
     const c = Math.cos(angle);
     const s = Math.sin(angle);
-    out.push(jet("station", [c * 2.25, 16.3, s * 2.25], [c * 0.6, -0.8, s * 0.6], "hypergolic", 0.22));
+    out.push(jet("zvezda", [c * 2.15, 1.4, s * 2.15], [c * 0.6, -0.8, s * 0.6], "hypergolic", 0.22));
   }
   return out;
 }
