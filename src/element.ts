@@ -7,6 +7,7 @@ import { buildOf } from "./buildPlay.ts";
 import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
 import { lightMode } from "./model/fleet/lights.ts";
 import { thrusterMode } from "./thrusters.ts";
+import { parseSun } from "./sun.ts";
 import { motionsOf, motionSpeed, motionWanted } from "./model/fleet/motion.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
@@ -155,7 +156,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "form"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "form", "sun"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -382,6 +383,7 @@ export class UchusenRocket extends HTMLBase {
     else if (name === "off-screen") this.viewer?.setOffScreen(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "edges") this.viewer?.setEdges(after === "open");
+    else if (name === "sun") this.viewer?.setSun(parseSun(after));
     else if (name === "world") this.viewer?.setOrbit(after === "earth");
     else if (name === "names") this.viewer?.setNameLabels(after !== "off");
     else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
@@ -987,6 +989,7 @@ export class UchusenRocket extends HTMLBase {
       if (this.driven) made.drive(this.driven);
       made.setFloating(this.hasAttribute("float"));
       made.setEdges(this.getAttribute("edges") === "open");
+      made.setSun(parseSun(this.getAttribute("sun")));
       made.setNameLabels(this.getAttribute("names") !== "off");
       made.setVisible(true);
       const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
