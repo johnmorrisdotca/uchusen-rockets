@@ -2,12 +2,12 @@
 title: 飛行の物理
 section: how-to
 order: 8
-description: 位置と速度から軌道を出し、場面の天体の重力を足し合わせ、機体を先の時刻へ進めます。ロケット方程式もあります。一部は Orbiter から移植し、JPL Horizons と比べて確かめています。
+description: 位置と速度から軌道を出し、場面の天体の重力を足し合わせ、機体を先の時刻へ進めます。ロケット方程式、噴射、軌道の乗り換えもあります。一部は Orbiter から移植し、JPL Horizons と比べて確かめています。
 ---
 
-`physics` エントリーは、機体を飛ばすための計算です。位置と速度からどんな軌道になるか、まわりの天体がどれだけ引くか、しばらく後にどこにいるか、噴射にどれだけの推進剤がいるかを出します。純粋な計算で、DOM も時計も依存パッケージも使わないので、Node でもテストでも自分のページの中でも動きます。単位はすべて SI です（メートル、秒、キログラム、ニュートン）。重力パラメーター（GM）は m^3/s^2 で表すので、`journey` エントリーの `GM_KM3_S2` の値は `1e9` 倍して使います。
+`physics` エントリーは、機体を飛ばすための計算です。位置と速度からどんな軌道になるか、まわりの天体がどれだけ引くか、しばらく後にどこにいるか、噴射にどれだけの推進剤がいるか、ある軌道から別の軌道へどう乗り換えるかを出します。純粋な計算で、DOM も時計も依存パッケージも使わないので、Node でもテストでも自分のページの中でも動きます。単位はすべて SI です（メートル、秒、キログラム、ニュートン）。重力パラメーター（GM）は m^3/s^2 で表すので、`journey` エントリーの `GM_KM3_S2` の値は `1e9` 倍して使います。
 
-一部は、オープンソースの宇宙飛行シミュレーター [Orbiter](https://github.com/orbitersim/orbiter) から移植しました（MIT ライセンス、Copyright (c) 2000-2026 Martin Schweiger）。どのファイルから来たかは、[出どころ](#出どころ)に書いてあります。これは飛行の物理の最初の部分です。噴射と軌道の乗り換え、スラスターで向きを変えること、空気の影響は、このあとのリリースで加わります。
+一部は、オープンソースの宇宙飛行シミュレーター [Orbiter](https://github.com/orbitersim/orbiter) から移植しました（MIT ライセンス、Copyright (c) 2000-2026 Martin Schweiger）。どのファイルから来たかは、[出どころ](#出どころ)に書いてあります。噴射と軌道の乗り換えも入っています。スラスターで向きを変えることと、空気の影響は、このあとのリリースで加わります。
 
 ## 位置と速度から軌道を出す
 
@@ -104,6 +104,71 @@ console.log(deltaV(exhaustSpeedOf(314), 30_000, 20_000).toFixed(0), "m/s");
 
 `92.6 minutes round, back where it started` と `1249 m/s` が表示されます。
 
+## 噴射
+
+噴射には2通りあります。一瞬で速度を変えるもの（`impulse`。計画を立てるとき、短い噴射はこう扱います）と、実際に飛ばすもの（`flyBurn`）です。`flyBurn` では、エンジンは決めた時間のあいだ、または決めた速度の変化を出すまで押し続けます。その間も重力は引き続け、機体の質量は、エンジンが推進剤を使う分だけ減っていきます。押す向きは、`prograde`（速度の向き）、`retrograde`（その逆）、`normal`（軌道の角運動量の向き）、`antinormal`（その逆）、`radial-out`（天体から遠ざかる向き）、`radial-in`（天体に向かう向き）、または決まったベクトルの向きです。名前のついた向きは、機体が回っている天体（`centre`。指定しなければ原点に止まっているもの）から見て決まります。`flyPlan` は、いくつもの噴射とその間の慣性飛行をまとめて飛ばします。それぞれの噴射は、真ん中が予定の時刻に来るように始めます（`burnStart`）。これは Orbiter の軌道面合わせの画面と同じ決め方です。推進剤がなくなると（`dryMass`）、噴射は予定より早く止まり、`short` の印が付きます。
+
+```ts
+import { elementsOf, exhaustSpeedOf, flyBurn, gravityAt, impulse } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+const gm = 3.986004418e14;
+const earth = [{ gm, position: [0, 0, 0] as const }];
+const leo = { t: 0, position: [6_778_000, 0, 0] as const, velocity: [0, 7_669, 0] as const };
+
+const kick = impulse(leo, 100, "prograde");
+console.log("all at once:", ((elementsOf(gm, kick.position, kick.velocity).apoapsis - 6_378_137) / 1000).toFixed(0), "km apogee");
+
+const engine = { thrust: 91_189, exhaustSpeed: exhaustSpeedOf(314) };
+const flown = flyBurn(leo, 20_000, { engine, direction: "prograde", dv: 100 }, { step: 1, gravity: (_t, p) => gravityAt(p, earth) });
+console.log("flown:", flown.seconds.toFixed(1), "s,", flown.propellant.toFixed(0), "kg,", ((elementsOf(gm, flown.state.position, flown.state.velocity).apoapsis - 6_378_137) / 1000).toFixed(0), "km apogee");
+```
+
+## 軌道の乗り換え
+
+式で乗り換えを計画し、噴射で実際に飛ばします。`journey` エントリーの `hohmann` は、ホーマン遷移の2回の噴射と、かかる時間を出します。単位をそろえればどの単位でも使えるので、メートルと m^3/s^2 でもかまいません。このエントリーにはさらに次のものがあります。`biElliptic` は、遠い点を通る3回噴射の乗り換えを出します。`speedChangeFor` は、軌道の大きさを決める噴射を出します（活力方程式。Orbiter の乗り換えの画面が噴射の大きさを直すやり方と同じです）。`planeChange` は、軌道の面を回すのに必要な速度の変化を出します。大きさを同時に変えても、変えなくても使えます（余弦定理）。`nodes` は、機体の軌道がほかの面と交わる場所と、そこに着く時刻、そこでかかる速度の変化を出します（Orbiter の軌道面合わせの画面）。`relativeInclination` は2つの面の間の角度を、`crossings` は同じ面にある2つの軌道が交わる場所を出します（Orbiter の乗り換えの画面）。`timeToTrueAnomaly` と `stateAtTrueAnomaly` は、機体が軌道のある点に着くまでの時間と、そこでの動きを出します。噴射の時刻を決めるのに使います。
+
+```ts
+import { biElliptic, elementsOf, nodes, planeChange, timeToTrueAnomaly } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+const gm = 3.986004418e14;
+const tilted = elementsOf(gm, [6_778_000, 0, 0], [0, 6_739, 3_660]);
+const equator = elementsOf(gm, [6_778_000, 0, 0], [0, 7_669, 0]);
+const n = nodes(tilted, equator);
+console.log(((n!.relativeInclination * 180) / Math.PI).toFixed(1), "degrees apart; the next node in", Math.min(n!.ascending.seconds, n!.descending.seconds).toFixed(0), "s, costing", n!.ascending.dv.toFixed(0), "m/s");
+const [low, high] = [6_778_000, 42_164_000];
+const atApogee = Math.sqrt(gm * (2 / high - 2 / (low + high)));
+console.log(planeChange(atApogee, (28.5 * Math.PI) / 180, Math.sqrt(gm / high)).toFixed(0), "m/s to turn 28.5 degrees and circularise at once, at the far point of a transfer to", high / 1000, "km");
+console.log((timeToTrueAnomaly(tilted, Math.PI) / 60).toFixed(1), "minutes to the far side");
+
+const far = biElliptic(gm, 6_778_000, 20 * 6_778_000, 100 * 6_778_000);
+console.log(far.total.toFixed(0), "m/s in", (far.seconds / 86_400).toFixed(1), "days by a far point");
+```
+
+時間をかけた2回の噴射で、それぞれの真ん中を予定の点に合わせてホーマン遷移を飛ばす、ふつうのスクリプトの例です（`examples/node/transfer.mjs`。npm が作るとおりのパッケージで実行しています）。
+
+```js
+import { hohmann, GM_KM3_S2 } from "@johnmorrisdotca/uchusen-rockets/journey";
+import { elementsOf, exhaustSpeedOf, flyPlan, gravityAt } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+// From a 400 km circle to the geostationary radius, with two burns of a 1 MN engine, each centred on its point. Metres and seconds.
+const gm = GM_KM3_S2.earth * 1e9;
+const earth = [{ gm, position: [0, 0, 0] }];
+const [r1, r2] = [6_778_137, 42_164_000];
+const plan = hohmann(gm, r1, r2);
+const engine = { thrust: 1_000_000, exhaustSpeed: exhaustSpeedOf(314) };
+const burns = [
+  { at: 600, engine, direction: "prograde", dv: plan.dv1 },
+  { at: 600 + plan.seconds, engine, direction: "prograde", dv: plan.dv2 },
+];
+const start = { t: 0, position: [r1, 0, 0], velocity: [0, Math.sqrt(gm / r1), 0] };
+const flown = flyPlan(start, 20_000, burns, 600 + plan.seconds + 3_600, { step: 2, gravity: (_t, p) => gravityAt(p, earth) });
+const orbit = elementsOf(gm, flown.state.position, flown.state.velocity);
+console.log((plan.dv1 + plan.dv2).toFixed(0), "m/s,", (20_000 - flown.mass).toFixed(0), "kg of propellant");
+console.log("ends", Math.round(Math.abs(orbit.a - r2) / 1000), "km from the circle, eccentricity", orbit.e.toFixed(4));
+```
+
+`3854 m/s, 14279 kg of propellant` と `ends 4 km from the circle, eccentricity 0.0000` が表示されます。エンジンが弱いと噴射が長くなり、それぞれの噴射のうち、予定の点から離れた部分が増えます。この機体の 91 kN のエンジンでは、同じ計画でも 404 km 足りずに終わり、離心率は 0.025 になります。そのため弱いエンジンでは、長い噴射をいくつかに分けるか、あとから直す計画にします。
+
 ## どれくらい正確か
 
 下の数字はどれもテストで、2026-11-11 に、保存しておいた答えと比べて測りました。テストはネットワークを使いません。
@@ -117,6 +182,11 @@ console.log(deltaV(exhaustSpeedOf(314), 30_000, 20_000).toFixed(0), "m/s");
 | ISS を 100 分飛ばす | JPL Horizons | 地球の J2 を入れて 0.20 km、入れないと 48 km |
 | 地球と月の重心が太陽を回る周期 | Horizons の恒星年 365.25636 日 | 365.2574 日 |
 | 300 秒の噴射を、少しずつ進めて計算する | ロケット方程式 | 1e-10 m/s まで同じ |
+| 静止軌道の半径へのホーマン遷移を、一瞬の噴射で | `journey/physics.ts` の `hohmann` | 遠い円にミリメートルの単位まで合い、離心率は 1e-9 より小さい |
+| 同じものを、20 t の機体で、時間をかけた噴射で飛ばす | `hohmann` | 3 MN のエンジンで 1.3 km、1 MN で 3.5 km、300 kN で 39 km、91 kN で 404 km のずれ |
+| 傾き 28.5 度の軌道からのホーマン遷移。2回目の噴射で面も回す | 余弦定理 | 赤道の上の円に着き、傾きと離心率は 1e-9 より小さい |
+| Orbiter の見積もり（速度かける 5 度）の大きさで、面に垂直に噴射する | その角度 | 4.995 度 |
+| 6つの軌道それぞれの5つの点での位置、速さ、時刻 | Orbiter の `PosVel_TA`、`Spd_TA`、`MeanAnomaly_from_TrueAnomaly` をコンパイルしたもの | ミリメートルの単位まで同じ |
 
 残るずれは、それぞれの計算が入れていないもの（天体の重力の高次の項、空気、太陽の光が押す力）から来ています。計算の方法（積分のしかた）のせいではありません。
 
@@ -128,5 +198,8 @@ Orbiter（https://github.com/orbitersim/orbiter 、MIT ライセンス、Copyrig
 - `gravityAt`：`Src/Orbiter/Psys.cpp`（`SingleGacc`、その J2 から J4 の項、すべての天体の足し合わせ）
 - `propagate`、`step`、`path`：`Src/Orbiter/BodyIntegrator.cpp`（4次のルンゲ＝クッタ法と、シンプレクティック法）
 - `massFlow`、`thrustAt`：`Src/Orbiter/Vessel.cpp` と `Vessel.h`。`deltaV`：DeltaGlider の燃料表示にあるロケット方程式（`Src/Vessel/DeltaGlider/FuelMfd.cpp`）
+- `stateAtTrueAnomaly`、`timeToTrueAnomaly`：`Src/Orbiter/Element.cpp`（`PosVel_TA`、`MeanAnomaly_from_TrueAnomaly`）
+- `directionOf`、`impulse`、`burnStart`：`Src/Orbiter/Vessel.cpp` の姿勢のモード、`Src/Orbiter/MfdAlign.cpp` の噴射の時刻の決め方、`Src/Orbiter/MfdTransfer.cpp` の噴射。`flyBurn` と `flyPlan` は、時間を進める計算を使って、ここで新しく書いたものです
+- `speedChangeFor`、`crossings`：`Src/Orbiter/MfdTransfer.cpp`。`nodes`、`relativeInclination`：`Src/Orbiter/MfdAlign.cpp`。`biElliptic` と `planeChange` は、ここで新しく書いたものです
 
 移植したどのソースファイルにも、何を変えたかが書いてあります。テストで比べる答えは、JPL Horizons（NASA/JPL、パブリックドメイン）から `scripts/fetch-orbit-reference.ts` で保存したものと、Orbiter 自身のコードから `scripts/orbiter-reference.ts` で作ったものです。クレジットは [NOTICE.md](../../../NOTICE.md) にあります。
