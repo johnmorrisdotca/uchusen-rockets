@@ -137,7 +137,8 @@ test("the parts that have engines in their data and no bell in their drawing sta
     "dragon/dragon-2/capsule",
     "falcon-9/block-5-dragon-2/capsule",
     "falcon-9/v1.0-dragon/capsule",
-    "jupiter-c/jupiter-c/vehicle",
+    "jupiter-c/jupiter-c/tail",
+    "jupiter-c/jupiter-c/tub",
     "lunar-module/lunar-module/ascent",
   ]);
   for (const key of ["dragon/dragon-1", "dragon/dragon-2", "dragon/cargo-dragon-2", "apollo-soyuz/apollo-soyuz", "jupiter-c/jupiter-c"]) {
