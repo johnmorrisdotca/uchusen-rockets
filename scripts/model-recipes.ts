@@ -407,7 +407,7 @@ export const ROADSTER_RECIPES: ModelRecipe[] = [
   {
     id: "roadster-first-generation",
     file: "roadster-first-generation-the86guy/model.glb",
-    changes: "reduced from 502,492 triangles; the badges, lettering and dial faces removed with the materials that carried them; the roof panel and the lamps' insides left out; rescaled to the sourced length; the bonnet made bare carbon; materials merged and renamed",
+    changes: "Reduced from 502,492 triangles; the badges, lettering and dial faces removed with the materials that carried them; the roof panel, the lamps' insides and the wheel nuts left out; rescaled to the sourced length; the bonnet made bare carbon; materials merged and renamed.",
     extras: { title: "2008 Roadster" },
     materials: (name, _material, node) => (/^Roof/.test(node) ? null : R1_MATERIALS[name]),
     materialSpec: ROADSTER_PAINT,
@@ -419,7 +419,7 @@ export const ROADSTER_RECIPES: ModelRecipe[] = [
   {
     id: "roadster-second-generation",
     file: "roadster-second-generation-metarex4d/model.glb",
-    changes: "reduced from 608,850 triangles; the badge on the nose, the lettering on the tail and the marks on the wheels and the steering wheel removed; its textures left out; rescaled to the sourced wheelbase; repainted in the first generation's red; materials merged and renamed",
+    changes: "Reduced from 608,850 triangles; the badge on the nose, the lettering on the tail and the marks on the wheels and the steering wheel removed; its textures left out; rescaled to the sourced wheelbase; repainted in the first generation's red; materials merged and renamed.",
     extras: { title: "Roadster 2020" },
     materials: (name) => R2_MATERIALS[name],
     materialSpec: ROADSTER_PAINT,
@@ -436,7 +436,7 @@ export const ROADSTER_RECIPES: ModelRecipe[] = [
   {
     id: "roadster-second-generation-2",
     file: "roadster-second-generation-gmmichaelonearth/model.glb",
-    changes: "reduced from 552,876 triangles; the wheels' middle caps, which carry a mark, removed; its body's picture shrunk and its white made the first generation's red; rescaled to the sourced wheelbase; materials merged and renamed. Its wheels are minchou19's",
+    changes: "Reduced from 552,876 triangles; the wheels' middle caps, which carry a mark, removed; its body's picture shrunk and its white made the first generation's red; rescaled to the sourced wheelbase; materials merged and renamed.",
     extras: { title: "Roadster 2.0 (Will be enchanced soon)" },
     materials: r3Material,
     materialSpec: ROADSTER_PAINT,

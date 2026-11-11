@@ -1,6 +1,6 @@
 // The Roadster: one kind, three cars, only the first of them flown; Starman in the seat of each; Falcon Heavy's test flight carrying the first in its fairing; each model small and credited; the Sun read safely.
 import assert from "node:assert/strict";
-import { statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { test } from "node:test";
 import { check, parseSun, ROCKETS, spaceSlots, variantOf } from "../src/index.ts";
 import { build } from "../src/build/index.ts";
@@ -32,6 +32,15 @@ test("each car is its own licensed file, about a megabyte, credited; Starman is 
     assert.equal(car?.painted?.file, `roadster-${variant}-car.glb`);
     assert.equal(starman?.painted, null);
     assert.ok(statSync(`models/${car?.painted?.file}`).size < 1.4 * 1024 * 1024, variant);
+  }
+});
+
+test("what each car's file says was changed is what NOTICE.md says", () => {
+  const notice = readFileSync("NOTICE.md", "utf8");
+  for (const variant of ROCKETS.roadster.variants) {
+    const bytes = readFileSync(`models/roadster-${variant.id}-car.glb`);
+    const json = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString()) as { asset: { extras: { changes: string } } };
+    assert.ok(notice.includes(`| ${json.asset.extras.changes} |`), variant.id);
   }
 });
 
