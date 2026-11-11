@@ -436,8 +436,12 @@ test("the fleet kit: every module and the sample ship drawn painted, then contex
   // Compare the same settled camera and detail level: a moving camera can expose more geometry after the first frame. A painted model still on its way, or fittings mid-fade, hold their counts still for seconds on a slow
   // runner (one walk read 410 vertex arrays where the others read about 1000), so the count waits for both.
   const settledView = async () => {
-    // the camera's last ease after a walk is a few frames, and a frame of the heaviest ships takes seconds on a runner drawing in software: the same 90 s the walk's own steps allow
-    await expect.poll(() => canvasData(page, "moving"), { timeout: 90_000 }).toBe("false");
+    // The camera's ease to a new craft is 800 ms, and each frame moves it on by 40 ms at most, so a hitch while the next craft is built does not skip it (scene.ts, startPose with
+    // `capped`): it ends after 20 drawn frames, whatever the clock says. A frame of the heaviest fleet ships takes 2 to 4 s on a runner drawing in software, so those 20 frames can take
+    // over a minute there (30 s ran out on CI). The wait is for those frames: up to 180 s, and the number of frames it took is logged.
+    const framesAt = Number(await canvasData(page, "frames"));
+    await expect.poll(() => canvasData(page, "moving"), { timeout: 180_000 }).toBe("false");
+    console.log(`fleet walk: the camera settled after ${Number(await canvasData(page, "frames")) - framesAt} frames`);
     await expect.poll(() => canvasData(page, "painted"), { timeout: 90_000 }).not.toBe("loading");
     await expect.poll(() => canvasData(page, "lod"), { timeout: 30_000 }).not.toBe("fade");
     return { detail: await hero(page).getAttribute("data-detail"), distance: await canvasData(page, "distance"), painted: await canvasData(page, "painted"), lod: await canvasData(page, "lod") };
