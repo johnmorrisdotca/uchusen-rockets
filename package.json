@@ -84,6 +84,11 @@
       "import": "./dist/react.js",
       "default": "./dist/react.js"
     },
+    "./launches": {
+      "types": "./dist/launches/index.d.ts",
+      "import": "./dist/launches/index.js",
+      "default": "./dist/launches/index.js"
+    },
     "./assets/*": "./dist/assets/*",
     "./package.json": "./package.json"
   },
