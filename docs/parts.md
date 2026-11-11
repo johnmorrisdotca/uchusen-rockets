@@ -78,6 +78,8 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Jupiter-C | This package's plain shapes, from sourced sizes | NASA's model, its lettering removed: 8,933 triangles and 136 KB |
 | International Space Station | This package's plain shapes, from sourced sizes, where its arrays and modules stand measured from NASA's model | NASA's model, its colours judged from photographs: 60,701 triangles and 1,050 KB |
 | Hubble Space Telescope | This package's plain shapes, from sourced sizes, its arrays and door measured from NASA's model | NASA's model, a lettered plate painted out: 7,672 triangles and 470 KB |
+| Tiangong, `tiangong` and `tiangong-docked` | This package's code, from sourced lengths and widths; no model | The same shapes, painted |
+| Tiangong, `tiangong-detailed` | This package's plain shapes, from sourced sizes | A model by w29572227 (CC BY 4.0), its flag's picture removed: about 75,000 triangles and 818 KB |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.

@@ -196,6 +196,10 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 `hubble`: 13.2 m by 4.2 m, launched on 1990-04-24. Its arrays have no size in a source read here: they are NASA's model's. Painted, it is NASA's model with a lettered plate painted out; its line looks are this package's own plain shapes.
 
+## Tiangong space station 天宮
+
+`tiangong`: the Chinese space station, three modules in a T, each 4.2 m across: the Tianhe core, 16.6 m long, with Wentian and Mengtian, 17.9 m each, on its hub's two side ports. Its first module launched on 2021-04-29 and the T was complete on 2022-11-03. Three variants. `tiangong` is the station alone and `tiangong-docked` adds a Shenzhou on the hub's forward port and a Tianzhou on the aft port: both are drawn by this package's code from the sourced lengths and widths, for every look, so each module and craft is a part of its own. `tiangong-detailed` is a detailed model by the Sketchfab user w29572227 (CC BY 4.0) for the painted look, one piece 39 m across; its credit shows wherever it shows. Where a section ends, the hub, the ports and the arrays' widths are judged from photographs and are not figures. 天宮 (Tiāngōng) is its name.
+
 ## Whose each one is
 
 Each row of `ROCKETS` has a `maker`, one of the keys of `MAKERS`, and `madeBy`, what its source says, with the companies that built it where the source names them. The demo lists rockets under their maker. A site has the maker `sites` and a blank `madeBy`: its maker has not been read.
