@@ -755,6 +755,8 @@ export class UchusenRocket extends HTMLBase {
     this.dataset.slots = this.builtNow.parts.map((part) => part.slot).join(",");
     this.dataset.form = this.descriptionNow().form ?? "stack";
     this.dataset.detail = this.detailFor(this.descriptionNow());
+    if (CARRIERS.has(this.descriptionNow().rocket)) this.dataset.docked = this.dockedFine ? "full" : "coarse";
+    else delete this.dataset.docked;
     this.dataset.custom = String(this.builtNow.report.custom);
   }
 
@@ -813,9 +815,11 @@ export class UchusenRocket extends HTMLBase {
   /** True once there is nothing left to do; false while the fine build or a carrier is still to come, so the viewer asks again. */
   private upgradeDocked(): boolean {
     if (this.dockedFine) return true;
-    if (!this.fine || !this.builtNow || !CARRIERS.has(this.descriptionNow().rocket)) return false;
+    if (!this.builtNow || !CARRIERS.has(this.descriptionNow().rocket)) return false;
     const description = this.descriptionNow();
+    // A page that zooms the picture and leaves the camera where it is never brings the fine build in by distance, so the carrier is brought to its full build here too.
     this.dockedFine = true;
+    this.fine = true;
     try {
       this.builtNow = build(description, { detail: "full", dockedDetail: "full", ...this.besideOptions(description), scale: this.sizeNow(description), ...this.dockedOption() });
     } catch {
