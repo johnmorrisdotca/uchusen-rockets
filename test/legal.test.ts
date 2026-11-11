@@ -38,8 +38,8 @@ test("no material is named for a product or a mark", () => {
   for (const name of Object.keys(MATERIALS)) assert.ok(!BRANDS.test(name), name);
 });
 
-/** NASA's models that had no mark to remove: looked at, from every side. */
-const NO_MARKS_FOUND = new Set(["iss-station.glb", "mercury-capsule.glb", "space-shuttle-stack-external-tank.glb", "space-shuttle-stack-srb.glb"]);
+/** NASA's models that had no mark to remove: looked at, from every side. The station's parts, `iss-*.glb`, are one of them. */
+const NO_MARKS_FOUND = new Set(["mercury-capsule.glb", "space-shuttle-stack-external-tank.glb", "space-shuttle-stack-srb.glb"]);
 const OUR_MATERIALS = new Set([...Object.keys(MATERIALS), "atlas", "painted"]);
 const modelFiles = readdirSync("models").filter((name) => name.endsWith(".glb"));
 
@@ -85,12 +85,59 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "gemini-adapter.glb": [2.39, 3],
     "gemini-capsule.glb": [3.23, Number.NaN],
     "mercury-capsule.glb": [3.3, 1.8],
-    "jupiter-c-vehicle.glb": [21.3, 1.8],
-    "iss-station.glb": [71.67, 109],
-    "hubble-telescope.glb": [13.2, 4.2],
     "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
     "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
     "space-shuttle-stack-srb.glb": [45.46, 3.71],
+    "hubble-aft-shroud.glb": [4.25, 4.69],
+    "hubble-antenna-far.glb": [0.72, 1.14],
+    "hubble-antenna-near.glb": [1.31, 0.88],
+    "hubble-aperture-door.glb": [0.28, 3.03],
+    "hubble-array-left.glb": [6.97, 3.67],
+    "hubble-array-right.glb": [6.97, 3.67],
+    "hubble-equipment-section.glb": [1.89, 4.72],
+    "hubble-forward-shell.glb": [3.37, 4.24],
+    "hubble-light-shield.glb": [5.31, 4.18],
+    "iss-airlock.glb": [4.63, 3.66],
+    "iss-arrays-p4.glb": [71.66, 8.13],
+    "iss-arrays-p6.glb": [71.66, 8.13],
+    "iss-arrays-s4.glb": [71.66, 8.13],
+    "iss-arrays-s6.glb": [71.66, 8.13],
+    "iss-columbus.glb": [3.68, 5.48],
+    "iss-destiny.glb": [6.31, 3.74],
+    "iss-harmony.glb": [6.09, 4.15],
+    "iss-kibo.glb": [4.22, 16.21],
+    "iss-radiators-port.glb": [19.42, 10.47],
+    "iss-radiators-starboard.glb": [19.42, 10.47],
+    "iss-soyuz-aft.glb": [5.57, 5.44],
+    "iss-soyuz-zarya-nadir.glb": [4.66, 2.29],
+    "iss-soyuz-zvezda-nadir.glb": [5.48, 2.29],
+    "iss-soyuz-zvezda-zenith.glb": [2.29, 7.22],
+    "iss-truss-p1.glb": [1.76, 13.25],
+    "iss-truss-p3-p4.glb": [3.88, 15.98],
+    "iss-truss-p5.glb": [1.63, 6.81],
+    "iss-truss-p6.glb": [1.63, 13.25],
+    "iss-truss-s0.glb": [1.63, 13.25],
+    "iss-truss-s1.glb": [3.89, 13.25],
+    "iss-truss-s3-s4.glb": [3.89, 16.39],
+    "iss-truss-s5.glb": [1.63, 6.81],
+    "iss-truss-s6.glb": [1.63, 13.25],
+    "iss-unity.glb": [4.99, 2.26],
+    "iss-zarya.glb": [11.08, 14.62],
+    "iss-zvezda.glb": [11.85, 24.52],
+    "jupiter-c-first-stage.glb": [15.03, 1.99],
+    "jupiter-c-fourth-stage.glb": [1.93, 0.33],
+    "jupiter-c-tail.glb": [3.09, 2.94],
+    "jupiter-c-tub.glb": [1.44, 0.96],
+    "tiangong-hub.glb": [4.58, 5.68],
+    "tiangong-mengtian-arrays.glb": [55.25, 3.99],
+    "tiangong-mengtian.glb": [5.02, 17.56],
+    "tiangong-shenzhou-forward.glb": [9.08, 15.47],
+    "tiangong-shenzhou-nadir.glb": [3.04, 16.58],
+    "tiangong-tianhe-arrays.glb": [5.39, 24.26],
+    "tiangong-tianhe.glb": [12.31, 6.35],
+    "tiangong-tianzhou.glb": [10.6, 14.05],
+    "tiangong-wentian-arrays.glb": [56.6, 4.13],
+    "tiangong-wentian.glb": [5.0, 18.16],
     "fleet-drone-repair-near.glb": [1.337, 1.048],
     "fleet-drone-repair-far.glb": [1.319, 1.029],
   };
@@ -126,7 +173,7 @@ test("NASA's models rest on the owner's decision, which says so, with no suggest
   for (const c of Object.values(MODEL_CREDITS) as readonly ModelCredit[]) if (c.creator === "NASA") assert.match(c.sourceUrl, /^https:\/\/(data\.nasa\.gov\/dataset|science\.nasa\.gov\/3d-resources)\//);
   for (const name of modelFiles) {
     const extras = (JSON.parse(glbJson(new Uint8Array(readFileSync(join("models", name))))) as { asset: { extras: Record<string, string> } }).asset.extras;
-    if (extras.author === "NASA") assert.ok(/painted out|removed|no mark/i.test(extras.changes) || NO_MARKS_FOUND.has(name), `${name} says what became of its marks`);
+    if (extras.author === "NASA") assert.ok(/painted out|removed|no mark/i.test(extras.changes) || NO_MARKS_FOUND.has(name) || name.startsWith("iss-"), `${name} says what became of its marks`);
   }
 });
 

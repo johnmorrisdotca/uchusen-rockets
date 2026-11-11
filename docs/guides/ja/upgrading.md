@@ -7,6 +7,16 @@ description: バージョンの間で、プロジェクトが影響を受けう�
 
 パッケージはまだ0.xなので、マイナーバージョンで動作が変わることがあります。移る前に [CHANGELOG.md](../../../CHANGELOG.md) を読んでください。このページは、何に注意するかを示します。
 
+## 0.18 から 0.19 へ
+
+宇宙ステーション、望遠鏡、ジュピターC も、ロケットと同じように部品ごとのスロットに分かれました。これまでの単一のスロットを名指ししていたページは、影響を受けます。
+
+- **スロット**：ISS の `station`、ハッブルの `telescope`、ジュピターC の `vehicle` はなくなりました。`show="station"` は `together` に戻ります。型式にない名前は `cleanShow` がいつもそう扱うので、全体を見せていたページは、そのまま全体が表示されます。一部だけ見せたいページは、その部品を名指しします：`show="zvezda"`、`show="light-shield"`、`show="tub"`。ISS は27スロット、ハッブルは9、ジュピターC は4で、`variantOf(rocket)?.slots` に一覧があります。
+- **ハッブルのクレジット**：彩色の見た目は、NASA のモデルに代わり、Cybertron B-127 のモデル（CC BY 4.0）を使うようになりました。ハッブルを彩色で見せるページは、そのクレジットを示す必要があります。`check({ rocket: "hubble" }).credits` と `paintedCredit` が、これまでどおりそれを返します。
+- **天宮**：`rocket="tiangong"` が使えるようになりました。`MAKERS` の新しいグループ `china` に入ります。
+- **種類**：`PartKind` に `tail`、`fourth-stage`、`array`、`antenna` が加わりました。すべての種類を網羅する switch には、この4つの `case` が必要です。
+- **ファイル**：`assets/models/` から `iss-station.glb`、`hubble-telescope.glb`、`jupiter-c-vehicle.glb` がなくなり、部品ごとに1ファイル（`iss-zvezda.glb` など）になりました。これらを読み込むのは彩色の見た目だけで、すでに新しい名前に対応しています。
+
 ## 0.6 から 0.7 へ
 
 パッケージ本体は変わりません。`spin` と `way` は今までどおり使えます。

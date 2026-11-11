@@ -186,15 +186,21 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 ## Jupiter-C
 
-`jupiter-c`: 21.3 m tall and 1.8 m across, first flown on 1956-09-20. Painted, it is NASA's model with its lettering removed; its line looks are this package's own plain shapes.
+`jupiter-c`: 21.3 m tall and 1.8 m across, first flown on 1956-09-20, as four stages in slots: `tail` (the tail unit with its four fins), `first-stage` (the Redstone body), `tub` (the spinning tub with stages 2 and 3) and `fourth-stage` (the top stage with Explorer 1, as NASA's model shows it). Its article gives no stage lengths, so where each begins is measured from NASA's model at the sourced height, and each stage's figure is blank with the model's length in its note. Painted, it is NASA's model with its lettering removed, one file a stage; its line looks are this package's own plain shapes.
 
 ## International Space Station
 
 `iss`: 109 m long overall and 73 m across its solar arrays, its first module launched on 1998-11-20. NASA's model is scaled to the 109 m, and its arrays then span 71.7 m. It shows the station as it was when the model was made, not today's. NASA's copy leaves its materials all one grey, so their colours are judged from photographs. Its line looks are this package's own plain shapes.
 
+It is 27 parts in slots, each cut from NASA's model by where it stands and painted by its own file: the module run stacks up the axis from Zvezda's aft (`zvezda`, `zarya`, `unity` with PMA-1, `destiny`, `harmony` with PMA-2), and the rest are placed: four visiting craft (`soyuz-aft`, `soyuz-zvezda-nadir`, `soyuz-zvezda-zenith`, `soyuz-zarya-nadir`, Soyuz or Progress as the model draws them), the `airlock` where the model hangs it under Unity, `columbus` and `kibo` across Harmony, the nine truss segments (`truss-s0`, `truss-s1`, `truss-p1`, `truss-s3-s4`, `truss-p3-p4`, `truss-s5`, `truss-p5`, `truss-s6`, `truss-p6`), four pairs of arrays (`arrays-s4`, `arrays-p4`, `arrays-s6`, `arrays-p6`) and the `radiators-starboard` and `radiators-port`. A module's drawn length is the model's at the station's scale; its article's figure stands beside it in the note, and in `facts.more` (`zvezda-length`, `destiny-length` and so on). A part that lies out from the run has its width as its height.
+
+## Tiangong 天宮
+
+`tiangong`: China's station, 55.6 m long and 39 m across as its article gives it, its first module launched on 2021-04-29. It stands on end like the ISS, Tianhe's axis up and its aft at the foot, so its height here is the laboratories' wings tip to tip and its width is across the two laboratories. Ten parts in slots, each drawn from its own published dimensions: `tianhe` (the core module's body, 4.2 m across) and `hub` (its docking node) stack up the axis with `shenzhou-forward` (9.25 m by 2.8 m, with its 17 m wings) at the forward port; `tianzhou` (10.6 m by 3.35 m, with its 14.9 m wings) hangs under the aft port; `wentian` and `mengtian` (17.9 m by 4.2 m each) lie out from the node, Wentian to the left; `wentian-arrays` and `mengtian-arrays` are each laboratory's two wings, over 55 m tip to tip and 110 m² each; `tianhe-arrays` are Tianhe's own, with no size in a source read here; and `shenzhou-nadir` lies out from the nadir port. Painted, it is w29572227's model with its flags and agency mark left out, one file a part, each at its own sourced size; its line looks are this package's own plain shapes.
+
 ## Hubble Space Telescope
 
-`hubble`: 13.2 m by 4.2 m, launched on 1990-04-24. Its arrays have no size in a source read here: they are NASA's model's. Painted, it is NASA's model with a lettered plate painted out; its line looks are this package's own plain shapes.
+`hubble`: 13.2 m by 4.2 m, launched on 1990-04-24, as nine parts in slots: `aft-shroud`, `equipment-section`, `forward-shell`, `light-shield` and `aperture-door` stack up the axis, `array-left` and `array-right` lie out from the forward shell along X, and `antenna-near` and `antenna-far` along Z. Its parts' lengths and its arrays' size have no figure in a source read here: they are the licensed model's, at the sourced length and width, each a blank with the model's figure in its note. Painted, it is Cybertron B-127's model with its wordmark and logos painted out and its door turned shut, one file a part; its line looks are this package's own plain shapes.
 
 ## Whose each one is
 

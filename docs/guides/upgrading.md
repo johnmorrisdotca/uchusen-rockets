@@ -7,6 +7,16 @@ description: What changed between versions that a project might feel, and how to
 
 The package is at 0.x, so a minor version may change behaviour. Read [CHANGELOG.md](../../CHANGELOG.md) before you move; this page says what to look for.
 
+## From 0.18 to 0.19
+
+The stations, the telescope and Jupiter-C are parts in slots now, like the rockets. A page that names one of their old single slots feels it.
+
+- **Slots:** the ISS's `station`, Hubble's `telescope` and Jupiter-C's `vehicle` are gone. `show="station"` falls back to `together` (as `cleanShow` does for any name a variant lacks), so a page that showed the whole still shows the whole; a page that wants one part names it: `show="zvezda"`, `show="light-shield"`, `show="tub"`. The ISS has 27 slots, Hubble 9 and Jupiter-C 4; `variantOf(rocket)?.slots` lists them.
+- **Hubble's credit:** its painted look is Cybertron B-127's model (CC BY 4.0) in place of NASA's. A page that shows Hubble painted must show that credit; `check({ rocket: "hubble" }).credits` and `paintedCredit` give it, as they always did.
+- **Tiangong:** `rocket="tiangong"`, under the new maker group `china` in `MAKERS`.
+- **Kinds:** `PartKind` gains `tail`, `fourth-stage`, `array` and `antenna`. A switch over every kind needs the four new cases.
+- **Files:** `iss-station.glb`, `hubble-telescope.glb` and `jupiter-c-vehicle.glb` are gone from `assets/models/`, replaced by one file a part (`iss-zvezda.glb` and so on). Nothing loads them but the painted look, which knows the new names.
+
 ## From 0.6 to 0.7
 
 The package itself is unchanged: `spin` and `way` work as before.

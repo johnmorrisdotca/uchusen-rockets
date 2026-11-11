@@ -75,9 +75,10 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Apollo and Soyuz | This package's plain shapes, from sourced sizes, where their parts begin measured from NASA's model | NASA's model, flags and names painted out: 29,314 triangles and 497 KB in three files |
 | Gemini | This package's plain shapes, from sourced sizes, where the adapter ends measured from NASA's model | NASA's model, flag and name painted out: 27,007 triangles and 548 KB in two files |
 | Mercury, Friendship 7 | This package's plain shape, from sourced sizes | NASA's model, its colours judged from photographs: 40,000 triangles and 591 KB |
-| Jupiter-C | This package's plain shapes, from sourced sizes | NASA's model, its lettering removed: 8,933 triangles and 136 KB |
-| International Space Station | This package's plain shapes, from sourced sizes, where its arrays and modules stand measured from NASA's model | NASA's model, its colours judged from photographs: 60,701 triangles and 1,050 KB |
-| Hubble Space Telescope | This package's plain shapes, from sourced sizes, its arrays and door measured from NASA's model | NASA's model, a lettered plate painted out: 7,672 triangles and 470 KB |
+| Jupiter-C | This package's plain shapes, from sourced sizes, where each stage begins measured from NASA's model | NASA's model, its lettering removed, cut into its four stages by its own named objects: 8,471 triangles and 140 KB in four files |
+| International Space Station | This package's plain shapes, from sourced sizes, where each part stands measured from NASA's model | NASA's model, its colours judged from photographs, cut into 27 parts by where each stands: 76,940 triangles and 1,378 KB in 27 files |
+| Tiangong 天宮 | This package's plain shapes, from the sourced lengths and widths of each module and craft; where the ports and the wings stand judged from w29572227's model and photographs | w29572227's model, its flags and mark left out, each module at its own sourced size, cut into ten parts: 105,529 triangles and 2,130 KB in ten files |
+| Hubble Space Telescope | This package's plain shapes, from sourced sizes, where each part begins and its arrays and antennas stand measured from Cybertron B-127's model | Cybertron B-127's model, its wordmark and logos painted out and its door turned shut, cut into nine parts: 21,688 triangles and 1,243 KB in nine files |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
