@@ -40,6 +40,10 @@ export interface ModelRecipe {
   holdPicture?: boolean;
   /** For a model of many small meshes: the part by each primitive's own box, in the file's units. */
   wholeNodes?: (lo: number[], hi: number[]) => RecipePart;
+  /** One of our materials split into two by place: the triangle's middle and its facing, in the file's own units; returns the material it becomes. */
+  split?: (material: string, middle: number[], facing: number[]) => string;
+  /** The file's own record, where this package words it otherwise. */
+  extras?: Record<string, string>;
   /** Something no outside view reaches, by its box: left out. */
   hidden?: (material: string, lo: number[], hi: number[]) => boolean;
 }
@@ -275,6 +279,171 @@ export const MODEL_RECIPES: ModelRecipe[] = [
     textures: { atlas: { from: "Starship", maps: ["base", "metalRough", "normal", "emissive"] } },
     partAt: () => MD_SHIP,
     budgets: { ship: { "*": { ratio: 1, error: 0 } } },
+  },
+];
+
+// The three Roadsters. One set of materials for all three, so they read as one family under the same light: the paint, the carbon, the black trim, the tyres and the interior, the glass, the bright
+// metal, the discs and the lamps. The nose points towards +Z, the car stands on its tyres at y = 0 and its middle is on the axis. No badge, lettering or wheel cap that carries a mark gets through.
+const ROADSTER_PAINT: Record<string, MaterialSpecEntry> = {
+  red: { base: [0.33, 0.015, 0.02], metal: 0.35, rough: 0.22 },
+  soot: { base: [0.025, 0.025, 0.028], metal: 0.3, rough: 0.32 },
+  black: { base: [0.015, 0.015, 0.017], metal: 0.1, rough: 0.5 },
+  dark: { base: [0.03, 0.03, 0.03], metal: 0, rough: 0.8 },
+  "fin-dark": { base: [0.03, 0.03, 0.032], metal: 0.6, rough: 0.35 },
+  glass: { base: [0.01, 0.015, 0.02], metal: 0.2, rough: 0.05 },
+  "engine-pale": { base: [0.8, 0.8, 0.82], metal: 1, rough: 0.15 },
+  "engine-metal": { base: [0.35, 0.35, 0.36], metal: 0.9, rough: 0.35 },
+  "lamp-amber": { base: [0.8, 0.3, 0.02], metal: 0, rough: 0.3 },
+  "lamp-red": { base: [0.6, 0.02, 0.02], metal: 0, rough: 0.3 },
+  white: { base: [0.7, 0.7, 0.7], metal: 0, rough: 0.4 },
+  // the second model's body is one baked picture of white paint and black trim: its white becomes the same red
+  atlas: { base: [0.33, 0.015, 0.02], metal: 0.35, rough: 0.22 },
+};
+const ROADSTER_BUDGET = { red: { ratio: 0.15, error: 0.004 }, black: { ratio: 0.05, error: 0.006 }, dark: { ratio: 0.05, error: 0.01 }, "engine-metal": { ratio: 0.02, error: 0.02 }, "engine-pale": { ratio: 0.1, error: 0.006 }, "fin-dark": { ratio: 0.08, error: 0.008 }, glass: { ratio: 0.15, error: 0.006 }, soot: { ratio: 0.15, error: 0.006 }, "*": { ratio: 0.2, error: 0.01 } };
+
+// The first generation, by the 86 guy: 3.932 units from nose to tail, already in metres. Scaled to the sourced 3,946 mm. Its roof panel is left off, as the car flew.
+const R1_SCALE = 3.946 / 3.932;
+const R1: RecipePart = { id: "car", place: placer([0, -0.002, -0.002], R1_SCALE, R1_SCALE, 0) };
+const R1_MATERIALS: Record<string, string | null> = {
+  Paint: "red",
+  Trim: "black",
+  Grill: "dark",
+  Glass: "glass",
+  Headllight_case: "glass",
+  Taillight_glass: "glass",
+  Cluster_gauge_glass: "glass",
+  Light_glass: "glass",
+  "3rd_taillight": "lamp-red",
+  Fender_lights_red: "lamp-red",
+  Rear_lights: "lamp-red",
+  Reflector: "lamp-red",
+  Fender_lights_orange: "lamp-amber",
+  Signal_lights: "lamp-amber",
+  Light_glass_orange: "lamp-amber",
+  Emissive_lights_orange: "lamp-amber",
+  Fender_lights_LED: "white",
+  Reverse_lights: "white",
+  Emissive_lights: "white",
+  Projector_lights: "white",
+  Mirrors: "engine-pale",
+  light_reflector_bowl: "engine-pale",
+  Light_metal: "engine-pale",
+  Interior_trim: "engine-pale",
+  Interior: "dark",
+  Seat: "dark",
+  Leather_pattern: "dark",
+  Leather: "dark",
+  Screen: "dark",
+  Brake_pads: "dark",
+  Light_cork: "dark",
+  Tread: "dark",
+  Tire: "dark",
+  Carbon_fiber: "soot",
+  Rims: "fin-dark",
+  Disk: "engine-metal",
+  Caliper: "engine-metal",
+  // inside the headlamps, where no view reaches; the dial needles; the wheel nuts, thousands of triangles each too small to see
+  Wheel_bolts: null,
+  Tungsten: null,
+  Coil: null,
+  Needle: null,
+  // these carry the maker's badge, lettering or symbols
+  Tesla_logo: null,
+  Tesla_text: null,
+  Tesla_logo_rims: null,
+  Symbol: null,
+  Radio_buttons: null,
+  Cluster_gauge: null,
+};
+
+// The second generation, by metarex.4d: its wheels' middles 2.921 units apart. Scaled to the sourced wheelbase of 2,825 mm.
+const R2_SCALE = 2.825 / (1.534 + 1.387);
+const R2: RecipePart = { id: "car", place: placer([0, -0.012, 0.0685], R2_SCALE, R2_SCALE, 0) };
+const R2_MATERIALS: Record<string, string | null> = {
+  car_main_paint: "red",
+  carbon_fibre: "soot",
+  "Metal_-_Black_rough": "black",
+  Rims: "fin-dark",
+  mirror: "engine-pale",
+  chrome: "engine-pale",
+  Brake_Disc: "engine-metal",
+  calipers: "engine-metal",
+  Thread: "dark",
+  Sidewall: "dark",
+  grill: "dark",
+  interior: "dark",
+  seats: "dark",
+  non_lustrous_metal: "dark",
+  Glass_mid_tint: "glass",
+  Glass_Clear: "glass",
+  Glass_Tint_max: "glass",
+  Glass_Amber: "lamp-amber",
+  indicator_left: "lamp-amber",
+  indicator_right: "lamp-amber",
+  headlights_AHO: "white",
+  headlights_main: "white",
+  licence_plate_light: "white",
+  Glass_rear_lights_main: "lamp-red",
+  ior_1: "lamp-red",
+  Glass_rear_lights_DHO: "lamp-red",
+};
+
+// The second generation, by Michael, its wheels by minchou19: in the file's own units, its wheels' middles 117.4 apart and its axis at x 211.35. Scaled to the sourced wheelbase of 2,825 mm.
+const R3_SCALE = 2.825 / (58.127 + 59.329);
+const R3: RecipePart = { id: "car", place: placer([211.35, -0.516, 0.051], R3_SCALE, R3_SCALE, 0) };
+/** The body is one picture; each wheel is its own model_N, its parts numbered alike. */
+function r3Material(name: string): string | null {
+  if (name === "model_1_asset_0") return "atlas";
+  const asset = /^model_[0234]_asset_(\d+)$/.exec(name);
+  if (!asset) return null;
+  const n = Number(asset[1]);
+  // the tyre; the rim, its spokes and its brake; the middle caps carry a mark
+  if (n === 2) return "dark";
+  if (n === 0 || n === 1) return null;
+  return n === 3 || n === 10 || n === 11 ? "fin-dark" : "engine-metal";
+}
+
+export const ROADSTER_RECIPES: ModelRecipe[] = [
+  {
+    id: "roadster-first-generation",
+    file: "roadster-first-generation-the86guy/model.glb",
+    changes: "reduced from 502,492 triangles; the badges, lettering and dial faces removed with the materials that carried them; the roof panel and the lamps' insides left out; rescaled to the sourced length; the bonnet made bare carbon; materials merged and renamed",
+    extras: { title: "2008 Roadster" },
+    materials: (name, _material, node) => (/^Roof/.test(node) ? null : R1_MATERIALS[name]),
+    materialSpec: ROADSTER_PAINT,
+    partAt: () => R1,
+    // the bonnet, between the front wings and ahead of the windscreen, is bare carbon on the car that flew
+    split: (material, [x, y, z], facing) => (material === "red" && z > 0.98 && y > 0.6 && Math.abs(x) < 0.55 && Math.abs(facing[1]) > 0.5 ? "soot" : material),
+    budgets: { car: ROADSTER_BUDGET },
+  },
+  {
+    id: "roadster-second-generation",
+    file: "roadster-second-generation-metarex4d/model.glb",
+    changes: "reduced from 608,850 triangles; the badge on the nose, the lettering on the tail and the marks on the wheels and the steering wheel removed; its textures left out; rescaled to the sourced wheelbase; repainted in the first generation's red; materials merged and renamed",
+    extras: { title: "Roadster 2020" },
+    materials: (name) => R2_MATERIALS[name],
+    materialSpec: ROADSTER_PAINT,
+    partAt: () => R2,
+    hidden: (material, lo, hi) => {
+      const size = [0, 1, 2].map((k) => hi[k] - lo[k]);
+      // the badge on the nose, the lettering across the tail, the marks in the middle of each wheel and of the steering wheel
+      if (material === "chrome" && size[0] < 0.1 && lo[2] > 2) return true;
+      if (material === "chrome" && size[1] < 0.03 && hi[2] < -2) return true;
+      return material === "mirror" && size[0] < 0.01;
+    },
+    budgets: { car: { ...ROADSTER_BUDGET, red: { ratio: 0.1, error: 0.008 }, "lamp-red": { ratio: 0.05, error: 0.03 }, glass: { ratio: 0.1, error: 0.01 }, soot: { ratio: 0.1, error: 0.01 }, "fin-dark": { ratio: 0.05, error: 0.01 }, black: { ratio: 0.05, error: 0.01 } } },
+  },
+  {
+    id: "roadster-second-generation-2",
+    file: "roadster-second-generation-gmmichaelonearth/model.glb",
+    changes: "reduced from 552,876 triangles; the wheels' middle caps, which carry a mark, removed; its body's picture shrunk and its white made the first generation's red; rescaled to the sourced wheelbase; materials merged and renamed. Its wheels are minchou19's",
+    extras: { title: "Roadster 2.0 (Will be enchanced soon)" },
+    materials: r3Material,
+    materialSpec: ROADSTER_PAINT,
+    textures: { atlas: { from: "model_1_asset_0", maps: ["base"], size: 1024 } },
+    partAt: () => R3,
+    holdPicture: true,
+    budgets: { car: { atlas: { ratio: 0.05, error: 0.01 }, dark: { ratio: 0.1, error: 0.01 }, "*": { ratio: 0.2, error: 0.01 } } },
   },
 ];
 
