@@ -79,9 +79,15 @@ export const spinRate = (hours: number): string => {
   return String(signed * (turnPace === "faster" ? calm * 10 : calm));
 };
 
+/** The Earth drawn inside a rocket view turns at the pace its own day and the current pace ask for. */
+export const applyWorldTurn = (rocket: HTMLElement): void => {
+  void import("@johnmorrisdotca/wakusei-planets").then(({ BODIES }) => rocket.setAttribute("world-turn", spinRate(BODIES.earth.rotationHours)));
+};
+
 /** Give every globe on the page the rate its own day and the current pace ask for. */
 export const applyTurn = (root: ParentNode): void => {
   for (const node of root.querySelectorAll<HTMLElement>("wakusei-body")) node.setAttribute("rate", spinRate(Number(node.dataset.dayHours) || 24));
+  for (const rocket of root.querySelectorAll<HTMLElement>("uchusen-rocket[world]")) applyWorldTurn(rocket);
 };
 /** The picture's half-width, in body radii, when a body is drawn on its own. The package uses the same room. */
 const ROOM = 2.2;

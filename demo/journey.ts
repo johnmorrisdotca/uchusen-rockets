@@ -35,6 +35,7 @@ import { buildCoast, drawCoast, type CoastArt } from "./journey-coast.ts";
 import { WAKUSEI_SOURCE as SOURCE } from "./journey-bodies.ts";
 import { hidePainted, showPainted } from "./journey-painted.ts";
 import { viewOf, stagedSvg } from "./journey-craft.ts";
+import { BODIES } from "@johnmorrisdotca/wakusei-planets";
 import type { WakuseiBody } from "@johnmorrisdotca/wakusei-planets/element";
 import { paintEarthDisc, type EarthShow } from "./earth.ts";
 import { loadBody } from "./sky.ts";
@@ -68,6 +69,14 @@ const setText = (node: Element, text: string): void => {
   if (node.textContent !== text) node.textContent = text;
 };
 const reduced = (): boolean => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** A planet turns on its own axis, in its own direction, a full turn in about ten minutes. A reader who prefers less motion gets it still. */
+const CALM_TURN = 360 / 600;
+const turnOf = (id: string): string => {
+  if (reduced()) return "0";
+  const hours = (BODIES as Record<string, { rotationHours?: number }>)[id]?.rotationHours ?? 24;
+  return String(Math.sign(hours || 1) * CALM_TURN);
+};
 const VIEWS = ["side", "front", "rear", "cockpit", "chase", "orbit", "map"] as const;
 type JourneyView = (typeof VIEWS)[number];
 const VIEW_WORD: Record<JourneyView, string> = { side: "jSide", front: "jFront", rear: "jRear", cockpit: "jCockpit", chase: "jChase", orbit: "jOrbit", map: "jMap" };
@@ -208,6 +217,7 @@ function mountPlanet(node: HTMLElement, id: string): void {
     if (node.dataset.planet !== id || !node.isConnected) return;
     const body = document.createElement("wakusei-body");
     body.setAttribute("live", "off");
+    body.setAttribute("turn", turnOf(id));
     body.setAttribute("labels", "off");
     body.setAttribute("fit", "tight");
     body.setAttribute("size", PLANET_PX);

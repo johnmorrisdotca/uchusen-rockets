@@ -155,7 +155,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "form"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "world-turn", "form"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -383,6 +383,7 @@ export class UchusenRocket extends HTMLBase {
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "edges") this.viewer?.setEdges(after === "open");
     else if (name === "world") this.viewer?.setOrbit(after === "earth");
+    else if (name === "world-turn") this.viewer?.setWorldTurn(Number(after));
     else if (name === "names") this.viewer?.setNameLabels(after !== "off");
     else if (name === "progress") this.viewer?.setProgress(this.progress(), buildOf(this.getAttribute("variant") ?? "") ?? null);
     else if (name === "leave") this.viewer?.setLeave(...this.leaveNow());
@@ -977,6 +978,7 @@ export class UchusenRocket extends HTMLBase {
       });
       this.viewer = made;
       made.setOrbit(this.getAttribute("world") === "earth");
+      made.setWorldTurn(Number(this.getAttribute("world-turn")));
       if (this.pivotWanted) made.setPivot(this.pivotWanted.at, this.pivotWanted.label);
       if (this.pathsWanted !== null) made.setPaths(this.pathsWanted);
       if (this.whenWanted !== null) made.setWhen(this.whenWanted);
