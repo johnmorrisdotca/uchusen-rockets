@@ -1,6 +1,6 @@
 // Every part there is, with its record and how to make its pieces. A new rocket adds its rows here and nothing else changes.
 import { DRAGON_VARIANTS } from "../data/dragon.ts";
-import { FALCON_9_VARIANTS } from "../data/falcon.ts";
+import { FALCON_9_VARIANTS, FALCON_HEAVY_VARIANTS } from "../data/falcon.ts";
 import { STARSHIP_VARIANTS } from "../data/starship.ts";
 import type { Figure, Variant } from "../data/types.ts";
 import type { CreditId } from "../data/credits.ts";
@@ -41,6 +41,8 @@ import { HUBBLE_VARIANTS } from "../data/hubble.ts";
 import { HUBBLE_BUILDS } from "./hubble.ts";
 import { TIANGONG_VARIANTS } from "../data/tiangong.ts";
 import { TIANGONG_BUILDS } from "./tiangong.ts";
+import { ROADSTER_VARIANTS } from "../data/roadster.ts";
+import { ROADSTER_BUILDS } from "./roadster.ts";
 import { DRONE_VARIANTS } from "../data/drone.ts";
 import { DRONE_BUILDS } from "./drone.ts";
 import { DRAGON_INSIDE_BUILDS } from "./dragoninside.ts";
@@ -175,16 +177,16 @@ const FH_OFFSET = 4.25;
 const figure = (value: number, source: Figure["source"]): Figure => ({ value, source });
 entries.push(
   { record: { id: "falcon-heavy-falcon-heavy-centre", kind: "first-stage", name: "Falcon Heavy centre core, with its upper stage and fairing", rocket: "falcon-heavy", trueTo: ["falcon-heavy"], height: 70, diameter: 5.2, sourced: { height: figure(70, "wikipedia-falcon-heavy"), diameter: { ...blankFigure, note: "3.7 m the core; 5.2 m the fairing." } }, joints: {}, painted: PAINTED["falcon-heavy-falcon-heavy-centre"], drawnFrom: FH_FROM }, pieces: () => centreCore(70, 1.85) },
-  { record: { id: "falcon-heavy-falcon-heavy-side-left", kind: "first-stage", name: "Falcon Heavy side booster, left", rocket: "falcon-heavy", trueTo: ["falcon-heavy"], height: FH_SIDE_HEIGHT, diameter: 3.7, strapOn: { x: -FH_OFFSET, z: 0 }, sourced: { height: blankFigure, diameter: figure(3.7, "wikipedia-falcon-heavy") }, joints: {}, painted: PAINTED["falcon-heavy-falcon-heavy-side-left"], drawnFrom: FH_FROM }, pieces: () => sideBooster(FH_SIDE_HEIGHT, 1.85, -1) },
-  { record: { id: "falcon-heavy-falcon-heavy-side-right", kind: "first-stage", name: "Falcon Heavy side booster, right", rocket: "falcon-heavy", trueTo: ["falcon-heavy"], height: FH_SIDE_HEIGHT, diameter: 3.7, strapOn: { x: FH_OFFSET, z: 0 }, sourced: { height: blankFigure, diameter: figure(3.7, "wikipedia-falcon-heavy") }, joints: {}, painted: PAINTED["falcon-heavy-falcon-heavy-side-right"], drawnFrom: FH_FROM }, pieces: () => sideBooster(FH_SIDE_HEIGHT, 1.85, 1) },
+  { record: { id: "falcon-heavy-falcon-heavy-side-left", kind: "first-stage", name: "Falcon Heavy side booster, left", rocket: "falcon-heavy", trueTo: ["falcon-heavy", "test-flight"], height: FH_SIDE_HEIGHT, diameter: 3.7, strapOn: { x: -FH_OFFSET, z: 0 }, sourced: { height: blankFigure, diameter: figure(3.7, "wikipedia-falcon-heavy") }, joints: {}, painted: PAINTED["falcon-heavy-falcon-heavy-side-left"], drawnFrom: FH_FROM }, pieces: () => sideBooster(FH_SIDE_HEIGHT, 1.85, -1) },
+  { record: { id: "falcon-heavy-falcon-heavy-side-right", kind: "first-stage", name: "Falcon Heavy side booster, right", rocket: "falcon-heavy", trueTo: ["falcon-heavy", "test-flight"], height: FH_SIDE_HEIGHT, diameter: 3.7, strapOn: { x: FH_OFFSET, z: 0 }, sourced: { height: blankFigure, diameter: figure(3.7, "wikipedia-falcon-heavy") }, joints: {}, painted: PAINTED["falcon-heavy-falcon-heavy-side-right"], drawnFrom: FH_FROM }, pieces: () => sideBooster(FH_SIDE_HEIGHT, 1.85, 1) },
   { record: { id: "grasshopper-grasshopper-vehicle", kind: "test-vehicle", name: "Grasshopper, test vehicle", rocket: "grasshopper", trueTo: ["grasshopper"], height: 32, diameter: 3.2, sourced: { height: figure(32, "wikipedia-grasshopper"), diameter: blankFigure }, joints: {}, painted: PAINTED["grasshopper-grasshopper-vehicle"], drawnFrom: "This package's code for the two line looks, proportions taken from Echo_3's low-poly model at the sourced height; that model for the painted look." }, pieces: () => grasshopper(32) },
 );
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...TIANGONG_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS];
-const stacks: readonly StackBuild[] = [...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...TIANGONG_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS];
+const stackFacts = [...ROADSTER_VARIANTS, ...FALCON_HEAVY_VARIANTS, ...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...TIANGONG_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS];
+const stacks: readonly StackBuild[] = [...ROADSTER_BUILDS, ...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...TIANGONG_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);
