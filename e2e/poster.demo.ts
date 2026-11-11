@@ -10,10 +10,14 @@ test("the poster shows the rockets, the fleet and what is still to add, and the 
   await expect(poster).toContainText("SPX-207");
   await expect(poster).toContainText("To add later");
   await expect(poster).toContainText("Vulcan Centaur");
-  const before = await poster.locator("svg").evaluate((node) => node.getBoundingClientRect().width);
-  await page.getByTestId("poster-zoom").fill("50");
-  const after = await poster.locator("svg").evaluate((node) => node.getBoundingClientRect().width);
-  expect(after).toBeLessThan(before);
+  const wide = () => poster.locator("svg").evaluate((node) => node.getBoundingClientRect().width);
+  const before = await wide();
+  const bar = page.locator('kazoku-view-controls[for="poster-stage"]');
+  await expect(bar).toBeVisible();
+  await bar.evaluate((node) => (node.shadowRoot?.querySelector("[data-b='in']") as HTMLButtonElement).click());
+  await expect.poll(wide).toBeGreaterThan(before);
+  await bar.evaluate((node) => (node.shadowRoot?.querySelector("[data-b='fit']") as HTMLButtonElement).click());
+  await expect.poll(wide).toBeCloseTo(before, 0);
 });
 
 test("no two rocket labels touch", async ({ page }) => {

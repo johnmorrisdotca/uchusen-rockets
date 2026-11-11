@@ -13,6 +13,9 @@ const PAGES: readonly { page: string; stage: string }[] = [
   { page: "journey.html", stage: ".jr-stage" },
   { page: "inspect.html", stage: "#hero" },
   { page: "fleet-compare.html", stage: "#cmp-view" },
+  { page: "poster.html", stage: "#poster-stage" },
+  { page: "swarm.html", stage: "#swarm-stage" },
+  { page: "beam.html", stage: "#beam-stage" },
 ];
 
 type Bar = HTMLElement & { state: { zoom: number } };
@@ -82,15 +85,3 @@ for (const one of PAGES) {
     await expect.poll(() => shown(b)).toBe("1×");
   });
 }
-
-test("the poster's zoom slider has a readout, announced politely", async ({ page }) => {
-  await page.goto(`${BASE}poster.html`);
-  const readout = page.getByTestId("poster-zoom-readout");
-  await expect(readout).toHaveText("1×");
-  expect(await readout.evaluate((node) => node.tagName)).toBe("OUTPUT");
-  await expect(readout).toHaveAttribute("aria-live", "polite");
-  await page.getByTestId("poster-zoom").fill("50");
-  await expect(readout).toHaveText(zoomText(0.5));
-  await page.getByTestId("poster-zoom").fill("200");
-  await expect(readout).toHaveText("2×");
-});

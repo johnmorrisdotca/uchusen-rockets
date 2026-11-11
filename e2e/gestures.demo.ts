@@ -22,6 +22,9 @@ const VIEWS: readonly { name: string; page: string; view: string; controls: stri
   { name: "the comparison's first view", page: "compare.html?picker=off", view: "#hero", controls: "#view-bar", lacks: { turn: "a drag that starts on a floating craft throws that craft, and the middle of this view holds one", roll: "the scale scene stays level" } },
   { name: "the fleet comparison", page: "fleet-compare.html", view: "#cmp-view", controls: "#cmp-bar", height: 3400, lacks: { ...FLAT, "ctrl-drag-pan": "on the Linux CI machine a Ctrl or Command drag moves this view only by its first step, though it passes on a Mac (a ticket is open)", "space-drag-pan": "on the Linux CI machine a Space drag moves this view only by its first step, though it passes on a Mac (a ticket is open)", picture: "the stage is a 3000 px tall scale chart, so a photograph of its middle cannot be matched to a move (a ticket is open)" } },
   { name: "the journey", page: "journey.html?picker=off", view: ".jr-stage", controls: "kazoku-view-controls", lacks: FLAT },
+  { name: "the poster", page: "poster.html", view: "#poster-stage", controls: "kazoku-view-controls", lacks: FLAT },
+  { name: "the drone swarm map", page: "swarm.html", view: "#swarm-stage", controls: "kazoku-view-controls", lacks: FLAT },
+  { name: "the tractor beam pictures", page: "beam.html", view: "#beam-stage", controls: "kazoku-view-controls", lacks: FLAT },
 ];
 
 for (const one of VIEWS) {
