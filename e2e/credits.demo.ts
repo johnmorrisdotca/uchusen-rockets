@@ -19,10 +19,14 @@ async function insideAndClear(credit: Locator, others: Locator): Promise<void> {
   const size = page.viewportSize()!;
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(size.width + 1);
+  // A link that wraps onto two lines has a bounding box as wide as both lines, which "overlaps" a neighbour it does not touch: compare the boxes of each line instead.
+  const lines = (node: Locator) => node.evaluate((element) => [...element.getClientRects()].map((r) => ({ x: r.x, y: r.y, width: r.width, height: r.height })));
+  const mine = await lines(credit);
   for (const other of await others.all()) {
     if (!(await other.isVisible())) continue;
-    const there = await other.boundingBox();
-    if (there) expect(overlaps(box, there), `the credits sit on top of ${await other.evaluate((node) => node.outerHTML.slice(0, 80))}`).toBe(false);
+    const theirs = await lines(other);
+    const hit = mine.some((a) => theirs.some((b) => overlaps(a, b)));
+    expect(hit, `the credits sit on top of ${await other.evaluate((node) => node.outerHTML.slice(0, 80))}`).toBe(false);
   }
 }
 
