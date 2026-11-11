@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **CI's browser jobs run in the Playwright image and need no apt mirror** (KAZOKU-UI-100). The runner's apt mirror stopped answering on 2026-11-11 from about 13:50 UTC, and every browser job failed in its setup before a test ran. The demo and usage jobs (`ci.yml`) now run in `mcr.microsoft.com/playwright:v1.64.0-noble`, the lockfile's Playwright version, which has the browsers and their system libraries. `.github/actions/playwright` (the family's, kazoku-ui's copy is canonical) checks the libraries with `ldd` first and runs apt only when one is missing, skips the browser cache in the image, works without `sudo`, and warns when a workflow's image and the lockfile name different Playwright versions.
+
 ## [0.18.0] - 2026-11-11
 
 - **Every demo page says what it is, links home and shows its credits** (MODULES-868, first screen Part B): the demo takes kazoku-ui 0.32 and its page frame. Under the page links each page has kazoku-ui's header line ("Uchusen Rockets 宇宙船: journey mode", in Japanese on the Japanese page, with Home), the title and description follow the reader's language, and the credit line with "Data and credits" sits above the footer, which keeps its one-line note. The bare embed frame has the small credit line in its corner. The family's check-standard is the 2026-11-10b copy, which holds every page to the frame.
