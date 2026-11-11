@@ -21,6 +21,8 @@ export interface ModelCredit {
   licenceUrl: string;
   /** What this package changed. */
   changes: string;
+  /** The credit line the author asks for, word for word, when there is one: it is shown first, as written. */
+  line?: string;
 }
 
 const LICENCE_URL = "https://creativecommons.org/licenses/by/4.0/";
@@ -135,6 +137,16 @@ export const MODEL_CREDITS = {
   "nasa-gemini": nasa("Gemini", "nasa-3d-models-gemini", "The flag and the country's name painted out of its picture; reduced from 38,840 triangles; rescaled to the sourced length; separated into adapter and capsule; its materials made into one picture."),
   "nasa-friendship-7": nasa("Friendship 7", "nasa-3d-models-friendship-7", "Reduced from 164,622 triangles; rescaled to the sourced length and width; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove."),
   "nasa-jupiter-c": nasa("Jupiter-C", "nasa-3d-models-jupiter-c", "The lettering removed with the two pictures that carried it, which are plain white here; rescaled to the sourced height; its materials made into one picture."),
+  "w29572227-tiangong": {
+    title: "tianGong",
+    creator: "w29572227",
+    creatorUrl: "https://sketchfab.com/w29572227",
+    sourceUrl: "https://sketchfab.com/3d-models/tiangong-aca22b1dd6d242c1ae7b88de2f483b77",
+    licence: "CC BY 4.0",
+    licenceUrl: "http://creativecommons.org/licenses/by/4.0/",
+    line: 'This work is based on "tianGong" (https://sketchfab.com/3d-models/tiangong-aca22b1dd6d242c1ae7b88de2f483b77) by w29572227 (https://sketchfab.com/w29572227) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/).',
+    changes: "Reduced from 4,425,408 triangles to about 75,000; its flag's picture dropped and the flag patches given the skin's plain colour; its materials renamed to this package's; turned to this package's axes and scaled to the sourced 39 m across.",
+  },
   "nasa-iss": nasa("ISS", "nasa-3d-models-iss", "Reduced from 174,440 triangles; a ball of stray pieces far above it left out; rescaled to the sourced length; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove."),
   "nasa-hubble": nasa("Hubble Space Telescope", "nasa-3d-models-hubble-space-telescope", "A lettered plate painted out of its picture; rescaled to the sourced length; its materials made into one picture."),
   "nasa-cluster-ii": nasa("Cluster II", "https://science.nasa.gov/3d-resources/cluster-ii/", "Only the drum, its lid and the instruments on it kept, the booms left out; turned over so its gold foil faces down; squeezed to a third of its height and a third of its size across; its materials made into one picture with this package's own. No mark was on it."),
@@ -172,5 +184,6 @@ export type CreditId = keyof typeof MODEL_CREDITS;
  */
 export function creditLine(id: CreditId): string {
   const c: ModelCredit = MODEL_CREDITS[id];
+  if (c.line) return `${c.line} ${c.changes}`;
   return `"${c.title}" by ${c.creator} (${c.sourceUrl}), ${c.licence} (${c.licenceUrl}). ${c.changes}`;
 }

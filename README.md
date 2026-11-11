@@ -75,7 +75,7 @@ That is all a page needs with a bundler. The drawing shows at once; when the ele
 
 ## Features
 
-- Twenty-three kinds of thing, from Starship to the Hubble Space Telescope, each in every variant a source documents, with its own sizes.
+- Twenty-four kinds of thing, from Starship to the Tiangong space station, each in every variant a source documents, with its own sizes.
 - Three looks (`line`, `thick`, `painted`), five views, together, apart and each part alone, for every one of them.
 - A drawing made by code, and a 3D view that takes over without a jump. With no WebGL, under Save-Data or on any failure, the drawing stays.
 - Lit engines at full thrust in the colour of what they burn, and flights played phase by phase from published timelines, with grid fins, legs and flaps that turn.
@@ -139,8 +139,8 @@ embedCode({ rocket: "starship", variant: "v3", look: "line" }, "element").includ
 
 | Attribute | Values |
 | --- | --- |
-| `rocket` | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper`, `falcon-1`, `saturn-v`, `space-shuttle`, `sls`, `new-glenn`, `electron`, `soyuz`, `droneship`, `landing-zone`, `launch-tower`, `starbase`, `lunar-module`, `apollo-soyuz`, `gemini`, `mercury`, `jupiter-c`, `iss`, `hubble` |
-| `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.0-dragon`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2`, `cargo-dragon-2`, `crew-dragon-inside`. Falcon 1: `falcon-1`, `falcon-1e`. Saturn V: `saturn-v`. Space Shuttle: `stack`, `discovery`. Space Launch System: `block-1`. New Glenn: `7x2`. Electron: `electron`. Soyuz: `soyuz-2`. Drone ships: `ocisly`, `jrti`, `asog`. Landing zones: `lz-1`, `lz-4`. Launch tower: `tower`, `stack`, `catch`. Starbase: `launch-site`, `build-site`, `city`. Apollo lunar module: `lunar-module`. Apollo and Soyuz: `apollo-soyuz`. Gemini: `gemini`. Mercury: `friendship-7`. Jupiter-C: `jupiter-c`. International Space Station: `iss`. Hubble Space Telescope: `hubble` |
+| `rocket` | `starship`, `falcon-9`, `falcon-heavy`, `dragon`, `grasshopper`, `falcon-1`, `saturn-v`, `space-shuttle`, `sls`, `new-glenn`, `electron`, `soyuz`, `droneship`, `landing-zone`, `launch-tower`, `starbase`, `lunar-module`, `apollo-soyuz`, `gemini`, `mercury`, `jupiter-c`, `iss`, `hubble`, `tiangong` |
+| `variant` | Starship: `v1-flight1`, `v1`, `v2`, `v3`, `v4`, `2019`. Falcon 9: `v1.0`, `v1.0-dragon`, `v1.1`, `ft`, `block-5`, `block-5-dragon-2`. Dragon: `dragon-1`, `dragon-2`, `cargo-dragon-2`, `crew-dragon-inside`. Falcon 1: `falcon-1`, `falcon-1e`. Saturn V: `saturn-v`. Space Shuttle: `stack`, `discovery`. Space Launch System: `block-1`. New Glenn: `7x2`. Electron: `electron`. Soyuz: `soyuz-2`. Drone ships: `ocisly`, `jrti`, `asog`. Landing zones: `lz-1`, `lz-4`. Launch tower: `tower`, `stack`, `catch`. Starbase: `launch-site`, `build-site`, `city`. Apollo lunar module: `lunar-module`. Apollo and Soyuz: `apollo-soyuz`. Gemini: `gemini`. Mercury: `friendship-7`. Jupiter-C: `jupiter-c`. International Space Station: `iss`. Hubble Space Telescope: `hubble`. Tiangong space station: `tiangong`, `tiangong-docked`, `tiangong-detailed` |
 | `show` | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right`, and each rocket's own: `descent`, `ascent`, `csm`, `docking-module`, `soyuz`, `adapter`, `station`, `telescope` and the rest |
 | `look` | `line`, `thick`, `painted` |
 | `view` | `three-quarter`, `front`, `back`, `side`, `below` |
@@ -298,6 +298,7 @@ check({ rocket: "starship", variant: "v3" }).credits[0].licence; // "CC BY 4.0"
 | Dragon 2 | SpaceX - Dragon 2 | [KUBAHA](https://sketchfab.com/KUBAHA) | [Sketchfab](https://sketchfab.com/3d-models/spacex-dragon-2-1b125e30a2cb442288580290536fbe5d) | Reduced, rescaled to sourced sizes, parts separated |
 | Dragon 1 | SpaceX Cargo Dragon | [ProgressTH](https://sketchfab.com/ProgressTH) | [Sketchfab](https://sketchfab.com/3d-models/spacex-cargo-dragon-0ca8951e47b343dc8a41e23b3e9c55e5) | Merged, logo and hidden pressure vessel removed, rescaled to sourced sizes, parts separated |
 | Falcon Heavy | SpaceX Falcon Heavy(Low Poly) | [Antonio_Adams](https://sketchfab.com/AAdams3112) | [Sketchfab](https://sketchfab.com/3d-models/spacex-falcon-heavylow-poly-0dc068a462e34258b3872085a7f592c8) | Wordmark and logos painted out, rescaled to sourced sizes, side boosters separated |
+| Tiangong, a detailed model | tianGong | [w29572227](https://sketchfab.com/w29572227) | [Sketchfab](https://sketchfab.com/3d-models/tiangong-aca22b1dd6d242c1ae7b88de2f483b77) | Reduced from 4,425,408 triangles, the flag's picture dropped, materials renamed, scaled to the sourced 39 m across |
 | Grasshopper | SpaceX Grasshopper | [Echo_3](https://sketchfab.com/Echo_3) | [Sketchfab](https://sketchfab.com/3d-models/spacex-grasshopper-35c07a68cdb246c59bb425610b934bf8) | Wordmark and logo removed, rescaled to the sourced height, reduced |
 
 | Discovery | Orbiter, Space Shuttle, OV-103, Discovery | [Smithsonian Institution, National Air and Space Museum](https://3d.si.edu/) | [Smithsonian 3D](https://3d.si.edu/object/3d/orbiter-space-shuttle-ov-103-discovery:d8c636ce-4ebc-11ea-b77f-2e728ce88125) | Marks painted out, reduced, stood upright, rescaled to the sourced length. Under CC0 |

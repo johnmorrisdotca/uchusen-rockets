@@ -87,6 +87,7 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "mercury-capsule.glb": [3.3, 1.8],
     "jupiter-c-vehicle.glb": [21.3, 1.8],
     "iss-station.glb": [71.67, 109],
+    "tiangong-station.glb": [44.65, 39],
     "hubble-telescope.glb": [13.2, 4.2],
     "space-shuttle-stack-orbiter.glb": [37.24, 23.79],
     "space-shuttle-stack-external-tank.glb": [46.88, 8.41],
