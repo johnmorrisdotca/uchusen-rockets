@@ -207,7 +207,7 @@ import { SOURCES, variantOf } from "@johnmorrisdotca/uchusen-rockets";
 const v3 = variantOf("starship", "v3");
 v3.facts.height.value; // 124.4
 v3.facts.parts.booster.value; // 72.3
-SOURCES[v3.facts.parts.booster.source].publisher; // "Wikipedia"
+SOURCES[v3.facts.parts.booster.source].publisher; // the name of whoever published that figure
 v3.facts.parts.booster.others.some((other) => other.value === 81); // true
 ```
 
