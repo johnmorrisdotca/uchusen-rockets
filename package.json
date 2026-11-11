@@ -74,6 +74,11 @@
       "import": "./dist/journey/index.js",
       "default": "./dist/journey/index.js"
     },
+    "./physics": {
+      "types": "./dist/physics/index.d.ts",
+      "import": "./dist/physics/index.js",
+      "default": "./dist/physics/index.js"
+    },
     "./element": {
       "types": "./dist/element.d.ts",
       "import": "./dist/element.js",
