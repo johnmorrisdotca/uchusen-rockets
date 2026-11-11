@@ -75,11 +75,8 @@ test("Romaryu's docked ships are built in full once the view is zoomed in on the
   await expect(hero).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   await expect(hero).toHaveAttribute("data-docked", "coarse");
   const bar = page.locator('kazoku-view-controls[for="hero"]').first();
-  // the buttons zoom the picture and leave the camera where it is: the carrier's shorter side on screen is what says it is being looked at
-  for (let step = 0; step < 8 && Number(await canvas.getAttribute("data-lod-span")) < 150; step += 1) {
-    await bar.evaluate((node) => (node.shadowRoot?.querySelector("[data-b='in']") as HTMLButtonElement).click());
-    await expect.poll(async () => Number(await canvas.getAttribute("data-lod-span")), { timeout: 30_000 }).toBeGreaterThan(0);
-  }
-  expect(Number(await canvas.getAttribute("data-lod-span"))).toBeGreaterThanOrEqual(150);
+  // the buttons zoom the picture and leave the camera where it is: the carrier's shorter side on screen, which the view reports, is what says it is being looked at
+  for (let step = 0; step < 6; step += 1) await bar.evaluate((node) => (node.shadowRoot?.querySelector("[data-b='in']") as HTMLButtonElement).click());
+  await expect.poll(async () => Number(await canvas.getAttribute("data-lod-span")), { timeout: 60_000 }).toBeGreaterThanOrEqual(150);
   await expect(hero).toHaveAttribute("data-docked", "full", { timeout: 240_000 });
 });
