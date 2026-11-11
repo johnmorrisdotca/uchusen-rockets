@@ -1,4 +1,5 @@
 // Falcon 9 and Falcon Heavy as the sources give them. r/SpaceX's SpaceX-API (Apache-2.0, archived in 2024) has one row per rocket, not per version, read from its repository's docs. A blank stays blank.
+import { ROADSTER_FLIGHT } from "./roadster.ts";
 import { blank, type Figure, type Variant } from "./types.ts";
 
 const F9 = "wikipedia-falcon-9" as const;
@@ -126,21 +127,33 @@ export const FALCON_9_VARIANTS: readonly Variant[] = [
   },
 ];
 
+const FALCON_HEAVY: Variant = {
+  id: "falcon-heavy",
+  rocket: "falcon-heavy",
+  name: "Falcon Heavy",
+  status: "flown",
+  firstFlight: said("2018-02-06", FH, { note: "The test flight." }),
+  slots: ["centre", "side-left", "side-right"],
+  note: "The painted model is one merged mesh. Its side boosters separate by their own connected pieces, and its centre core, upper stage and fairing are one continuous shell, so they stay one part: nothing is cut to fake a separation. Low detail: a low-poly model.",
+  facts: {
+    height: m(70, FH, { others: [{ value: 70, source: API, note: "SpaceX-API says the same." }] }),
+    diameter: m(12.2, FH, { brief: "across the three cores; 3.7 m each" }),
+    parts: { centre: m(70, FH), "side-left": blank("No source read here gives a side booster's height."), "side-right": blank("No source read here gives a side booster's height.") },
+    engines: { centre: said("9 Merlin 1D, and 1 vacuum Merlin above", FH), "side-left": said("9 Merlin 1D", FH), "side-right": said("9 Merlin 1D", FH) },
+    more: { engines: num(27, FH, { note: "On the three cores." }) },
+  },
+};
+
 export const FALCON_HEAVY_VARIANTS: readonly Variant[] = [
+  FALCON_HEAVY,
   {
-    id: "falcon-heavy",
-    rocket: "falcon-heavy",
-    name: "Falcon Heavy",
-    status: "flown",
-    firstFlight: said("2018-02-06", FH, { note: "The test flight." }),
-    slots: ["centre", "side-left", "side-right"],
-    note: "The painted model is one merged mesh. Its side boosters separate by their own connected pieces, and its centre core, upper stage and fairing are one continuous shell, so they stay one part: nothing is cut to fake a separation. Low detail: a low-poly model.",
-    facts: {
-      height: m(70, FH, { others: [{ value: 70, source: API, note: "SpaceX-API says the same." }] }),
-      diameter: m(12.2, FH, { brief: "across the three cores; 3.7 m each" }),
-      parts: { centre: m(70, FH), "side-left": blank("No source read here gives a side booster's height."), "side-right": blank("No source read here gives a side booster's height.") },
-      engines: { centre: said("9 Merlin 1D, and 1 vacuum Merlin above", FH), "side-left": said("9 Merlin 1D", FH), "side-right": said("9 Merlin 1D", FH) },
-      more: { engines: num(27, FH, { note: "On the three cores." }) },
-    },
+    ...FALCON_HEAVY,
+    id: ROADSTER_FLIGHT.id,
+    name: ROADSTER_FLIGHT.name,
+    firstFlight: ROADSTER_FLIGHT.firstFlight,
+    slots: ["centre", "side-left", "side-right", "car", "starman"],
+    partIds: { "side-left": "falcon-heavy-falcon-heavy-side-left", "side-right": "falcon-heavy-falcon-heavy-side-right" },
+    note: `${ROADSTER_FLIGHT.note} ${FALCON_HEAVY.note}`,
+    facts: { ...FALCON_HEAVY.facts, parts: { ...FALCON_HEAVY.facts.parts, ...ROADSTER_FLIGHT.payload } },
   },
 ];

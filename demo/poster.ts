@@ -133,7 +133,8 @@ const wrapName = (name: string): string[] => {
   return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
 };
 
-const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.max(...wrapName(craft.name).map((line) => line.length)) * 4.6);
+/** How wide a craft's cell is on the sheet: its drawing or its name, whichever is wider. */
+export const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.max(...wrapName(craft.name).map((line) => line.length)) * 4.6);
 
 /**
  * Rows of craft, shortest first, each row staying within the sheet. A row takes the next craft until the next one would pass the width.

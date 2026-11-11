@@ -8,6 +8,7 @@ const SPACE: Readonly<Record<string, readonly string[]>> = {
   sls: ["upper-stage", "service-module", "capsule"],
   "falcon-9": ["second-stage", "fairing", "trunk", "capsule"],
   dragon: ["trunk", "capsule"],
+  "falcon-heavy": ["car", "starman"],
 };
 
 /**

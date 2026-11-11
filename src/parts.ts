@@ -14,7 +14,7 @@ import type { Figure } from "./data/types.ts";
  * console.log(kind);
  * ```
  */
-export type PartKind = "booster" | "first-stage" | "ship" | "second-stage" | "fairing" | "capsule" | "trunk" | "engine" | "fin" | "flap" | "ring" | "test-vehicle" | "third-stage" | "adapter" | "service-module" | "tower" | "tank" | "solid-booster" | "liquid-booster" | "orbiter" | "deck" | "mount" | "arms" | "site" | "spacecraft" | "module";
+export type PartKind = "booster" | "first-stage" | "ship" | "second-stage" | "fairing" | "capsule" | "trunk" | "engine" | "fin" | "flap" | "ring" | "test-vehicle" | "third-stage" | "adapter" | "service-module" | "tower" | "tank" | "solid-booster" | "liquid-booster" | "orbiter" | "deck" | "mount" | "arms" | "site" | "spacecraft" | "module" | "payload";
 
 /**
  * Where a part mates. Every part's origin is the middle of its base on its axis, at its lowest point; Y is up and the windward side faces +Z, in metres.

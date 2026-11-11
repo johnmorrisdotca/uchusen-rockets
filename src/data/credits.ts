@@ -142,6 +142,42 @@ export const MODEL_CREDITS = {
   "nasa-curiosity": nasa("Curiosity Rover (Detailed)", "https://science.nasa.gov/3d-resources/curiosity-rover-detailed/", "Only the arm's two links, its tool turret and a swivel kept, from NASA's printable parts (STL, no textures); painted by this package; moved and scaled to the drone's arms. No mark was on it."),
   "nasa-hete": nasa("High Energy Transient Explorer", "https://science.nasa.gov/3d-resources/high-energy-transient-explorer/", "Its body kept as the drone's equipment block, turned and scaled; its materials made into one picture with this package's own. No mark was on it."),
   "nasa-grease-gun": nasa("Grease Gun", "https://science.nasa.gov/3d-resources/grease-gun/", "Scaled from millimetres to the drone's welding tool and given a welding nozzle of this package's own; its materials made into one picture. No mark was on it."),
+  "the86guy-roadster": {
+    title: "2008 Roadster",
+    creator: "the 86 guy",
+    creatorUrl: "https://sketchfab.com/the_86_guy",
+    sourceUrl: "https://sketchfab.com/3d-models/2008-tesla-roadster-317dabbe5e824948a92091f7bd39c2de",
+    licence: "CC BY 4.0",
+    licenceUrl: LICENCE_URL,
+    changes: "Reduced from 502,492 triangles; the badges, lettering and dial faces removed with the materials that carried them; the roof panel, the lamps' insides and the wheel nuts left out; rescaled to the sourced length; the bonnet made bare carbon; materials merged and renamed.",
+  },
+  "metarex4d-roadster": {
+    title: "Roadster 2020",
+    creator: "metarex.4d",
+    creatorUrl: "https://sketchfab.com/metarex.4d",
+    sourceUrl: "https://sketchfab.com/3d-models/tesla-roadster-2020-1fbf29e297bd4a17ac39a00a378441d8",
+    licence: "CC BY 4.0",
+    licenceUrl: LICENCE_URL,
+    changes: "Reduced from 608,850 triangles; the badge on the nose, the lettering on the tail and the marks on the wheels and the steering wheel removed; its textures left out; rescaled to the sourced wheelbase; repainted in the first generation's red; materials merged and renamed.",
+  },
+  "gmmichaelonearth-roadster": {
+    title: "Roadster 2.0 (Will be enchanced soon)",
+    creator: "Michael (gmmichaelonearth)",
+    creatorUrl: "https://sketchfab.com/gmmichaelonearth",
+    sourceUrl: "https://sketchfab.com/3d-models/tesla-roadster-20-will-be-enchanced-soon-8d5da3904e434fc3830edf558cb9014d",
+    licence: "CC BY 4.0",
+    licenceUrl: LICENCE_URL,
+    changes: "Reduced from 552,876 triangles; the wheels' middle caps, which carry a mark, removed; its body's picture shrunk and its white made the first generation's red; rescaled to the sourced wheelbase; materials merged and renamed. Its wheels are minchou19's, credited on their own.",
+  },
+  "minchou19-wheels": {
+    title: "Roadster fly wheels",
+    creator: "minchou19",
+    creatorUrl: "https://sketchfab.com/minchou19",
+    sourceUrl: "https://sketchfab.com/3d-models/tesla-roadster-fly-wheels-31a0476f5fd14fc282e799b8ae4ae4f3",
+    licence: "CC BY 4.0",
+    licenceUrl: LICENCE_URL,
+    changes: "Used as Michael's model has them, on its second-generation Roadster: their middle caps, which carry a mark, removed; reduced; rescaled with the car; materials merged and renamed.",
+  },
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

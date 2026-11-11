@@ -1,7 +1,7 @@
 // The poster is one sheet: the package's own craft at one scale, shortest first, and the ships in their own band.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fitSheet, fleetKeys, laterNames, packRows, posterCraft, posterSvg, SHEETS } from "../demo/poster.ts";
+import { cellOf, fitSheet, fleetKeys, laterNames, packRows, posterCraft, posterSvg, SHEETS } from "../demo/poster.ts";
 
 test("the craft run from short to tall, and a row stays within the sheet", () => {
   const craft = posterCraft();
@@ -16,8 +16,9 @@ test("the craft run from short to tall, and a row stays within the sheet", () =>
   assert.ok(rows.length > 1);
   assert.ok(rows[0][0].metres <= rows[rows.length - 1][0].metres);
   for (const row of rows) {
-    const width = row.reduce((sum, one) => sum + Math.max(58, one.widthM * 3.2 + 8), 0);
-    assert.ok(width <= 844 + 58);
+    // the cells and the gaps between them, as the sheet lays them out
+    const width = row.reduce((sum, one) => sum + cellOf(one, 3.2) + 4, -4);
+    assert.ok(width <= 844, `${width}`);
   }
 });
 
