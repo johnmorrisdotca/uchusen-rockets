@@ -185,14 +185,14 @@ function cut(p: number[][], n: number[][], t: number[][], most: number): Corners
 }
 
 /** Joins vertices that are the same to within a tenth of a millimetre per metre of the part, so a simplifier sees one surface; a seam in the picture stays a seam. */
-function weld(t: Triangles, size: number, within?: number) {
+function weld(t: Triangles, size: number) {
   const seen = new Map<string, number>();
   const count = t.positions.length / 3;
   const indices = new Uint32Array(count);
   const positions: number[] = [];
   const normals: number[] = [];
   const uvs: number[] = [];
-  const grid = within ? 1 / within : 10000 / size;
+  const grid = 10000 / size;
   for (let i = 0; i < count; i++) {
     const [x, y, z] = [t.positions[i * 3], t.positions[i * 3 + 1], t.positions[i * 3 + 2]];
     const [a, b, c] = [t.normals[i * 3], t.normals[i * 3 + 1], t.normals[i * 3 + 2]];
@@ -482,7 +482,7 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
         hi[c] = Math.max(hi[c], whole.positions[i + c]);
       }
     const size = Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
-    const w = weld(whole, size, part.weld);
+    const w = weld(whole, size);
     const startTris = w.indices.length / 3;
     const target = Math.min(part.triangles, startTris) * 3;
     const ATTR = new Float32Array(w.normals.length + w.uvs.length);

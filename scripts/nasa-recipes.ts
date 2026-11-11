@@ -18,8 +18,6 @@ export interface NasaPart {
   triangles: number;
   /** Metres the surface may move. */
   error?: number;
-  /** Vertices this close, in metres, are joined before simplifying: for a sheet drawn as thousands of separate cells, which the simplifier could otherwise never merge. */
-  weld?: number;
 }
 /** A connected piece of a file's mesh: the triangles that touch, welded, with the box they fill in the file's own space. */
 export interface PieceBox {
