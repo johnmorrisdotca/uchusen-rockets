@@ -1,8 +1,8 @@
 // The poster page: the picture, a zoom, and a download of the SVG or a PNG that fits an A2 or A1 sheet at 300 dpi.
-import { zoomText } from "@johnmorrisdotca/kazoku-ui/view-controls";
 import { WORDS } from "./words.js";
 import type { LookName } from "../src/looks.ts";
 import { fitSheet, posterSvg, SHEETS, type PosterCopy } from "./poster.ts";
+import { bindStage, placeZoom } from "./viewBinder.ts";
 
 type Chooser = { word(key: string): string | undefined };
 const say = (key: string): string => {
@@ -17,10 +17,6 @@ const byId = (id: string): HTMLElement => {
 
 let picture = posterSvg();
 
-const showZoom = (): void => {
-  byId("zoom-readout").textContent = zoomText(Number((byId("zoom") as HTMLInputElement).value) / 100);
-};
-
 const asked = (): LookName => (new URLSearchParams(location.search).get("look") === "line" ? "line" : "painted");
 const copy = (): PosterCopy => ({ title: say("posterTitle"), same: say("posterMetre"), later: say("posterLater"), fleet: say("posterFleet"), person: say("posterPerson"), scale: "20 m" });
 
@@ -30,8 +26,6 @@ function draw(): void {
   picture = posterSvg(copy(), look);
   const parsed = new DOMParser().parseFromString(picture.svg, "image/svg+xml");
   const svg = parsed.documentElement;
-  svg.style.width = `${(byId("zoom") as HTMLInputElement).value}%`;
-  showZoom();
   byId("poster").replaceChildren(document.importNode(svg, true));
 }
 
@@ -68,13 +62,9 @@ byId("look").addEventListener("click", () => {
   history.replaceState(null, "", next);
   draw();
 });
-byId("zoom").addEventListener("input", () => {
-  const svg = byId("poster").querySelector("svg");
-  if (svg) svg.style.width = `${(byId("zoom") as HTMLInputElement).value}%`;
-  showZoom();
-});
 byId("save-svg").addEventListener("click", () => save("rockets-of-the-world.svg", new Blob([picture.svg], { type: "image/svg+xml;charset=utf-8" })));
 byId("save-a2").addEventListener("click", () => png(SHEETS.a2, "rockets-of-the-world-a2.png"));
 byId("save-a1").addEventListener("click", () => png(SHEETS.a1, "rockets-of-the-world-a1.png"));
 document.addEventListener("kazoku-languagechange", () => queueMicrotask(draw));
 draw();
+bindStage(byId("poster-stage"), (detail) => placeZoom(byId("poster"), detail), { where: byId("poster-bar"), flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8", testid: "view-bar" });

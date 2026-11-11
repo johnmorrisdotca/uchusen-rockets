@@ -12,7 +12,8 @@
       <section class="beam-page" aria-label="Tractor beam" data-say-label="beamTitle">
         <h1 data-say="beamTitle">Tractor beam</h1>
         <p data-say="beamIntro">A soft cone from the drone to the part. Reduced motion draws a dotted line.</p>
-        <div class="beam-row">
+        <div class="beam-stage" id="beam-stage" data-testid="beam-stage">
+        <div class="beam-row" id="beam-row">
           <figure>
             <div id="beam-carry" data-testid="beam-carry"></div>
             <figcaption data-say="beamCarry">Carrying</figcaption>
@@ -25,6 +26,7 @@
             <div id="beam-dotted" data-testid="beam-dotted"></div>
             <figcaption data-say="beamReduced">Reduced motion</figcaption>
           </figure>
+        </div>
         </div>
       </section>
       <!--frame:credits-->

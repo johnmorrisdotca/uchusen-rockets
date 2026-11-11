@@ -1,6 +1,7 @@
 // One moment of the Miyamoto build: a box for each drone, on a lane outside the hull, with the last leg running in to the slot.
 import { buildOf, playFrame } from "../src/buildPlay.ts";
 import { approachPath, pathClears, swarmCount, swarmJobs, type HullBox } from "../src/swarm.ts";
+import { bindStage, placeZoom } from "./viewBinder.ts";
 import { WORDS } from "./words.js";
 
 const hull: HullBox = { min: [-69, 0, -40], max: [69, 380, 34] };
@@ -75,3 +76,5 @@ if (host) {
 }
 const caption = document.getElementById("swarm-now");
 if (caption && frame) caption.textContent = say("swarmNow", { day: Math.round(frame.day), drones: count, slots });
+const stage = document.getElementById("swarm-stage");
+if (stage && host) bindStage(stage, (detail) => placeZoom(host, detail), { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8", testid: "view-bar" });

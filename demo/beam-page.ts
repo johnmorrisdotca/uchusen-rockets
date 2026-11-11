@@ -8,6 +8,7 @@ import { MATERIALS } from "../src/model/materials.ts";
 import { boundsOfPieces } from "../src/model/pieces.ts";
 import { box, rng } from "../src/model/fleet/ship-02/adapter.ts";
 import { container } from "../src/model/fleet/ship-02/cargo.ts";
+import { bindStage, placeZoom } from "./viewBinder.ts";
 
 detail.level = "coarse";
 
@@ -37,3 +38,7 @@ function picture(id: string, look: LookName, beam: string): void {
 picture("beam-carry", "painted", beamLight(from, to, 0.4, 6, cam, "painted", "carry"));
 picture("beam-line", "line", beamLight(from, to, 0.4, 6, cam, "line", "line"));
 picture("beam-dotted", "painted", beamLight(from, to, 0.4, 6, cam, "painted", "still", true));
+
+const stage = document.getElementById("beam-stage");
+const row = document.getElementById("beam-row");
+if (stage && row) bindStage(stage, (detail) => placeZoom(row, detail), { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8", testid: "view-bar" });

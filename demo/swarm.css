@@ -2,3 +2,5 @@
 .swarm-page figure { margin: 0; max-width: 420px; }
 .swarm-page svg { width: 100%; height: auto; background: #070b14; }
 .swarm-page figcaption { font: 14px sans-serif; margin-top: 6px; }
+.swarm-page .swarm-stage { max-width: 420px; position: relative; overflow: hidden; background: #070b14; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 0.5rem; }
+.swarm-page kazoku-view-controls { max-width: 420px; }
