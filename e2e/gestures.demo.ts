@@ -14,7 +14,9 @@ const FLAT: Lacks = {
 
 const VIEWS: readonly { name: string; page: string; view: string; controls: string; lacks?: Lacks; height?: number }[] = [
   { name: "the rocket", page: "index.html?picker=off", view: "#hero", controls: "#view-bar" },
-  { name: "the fleet record", page: "fleet-db.html?picker=off", view: "#hero", controls: "kazoku-view-controls" },
+  // The record's own ship is Hanabusa, whose painted build takes seconds a frame in software GL: the check takes a picture for each of its 13 gestures and ran out of its four minutes on a runner
+  // (MODULES-905). The hands are the page's, not the ship's, so the check is made on the lightest ship of the record.
+  { name: "the fleet record", page: "fleet-db.html?picker=off&ship=fleet-kaminari", view: "#hero", controls: "kazoku-view-controls" },
   { name: "the drones", page: "inspect.html", view: "#hero", controls: "#view-bar" },
   { name: "the yard", page: "yard.html?picker=off", view: "#yard-view", controls: "#view-bar", lacks: { picture: "the Earth behind the yard is its own still picture, so the moved yard cannot be told apart in a photograph of the middle" } },
   { name: "the comparison's first view", page: "compare.html?picker=off", view: "#hero", controls: "#view-bar", lacks: { turn: "a drag that starts on a floating craft throws that craft, and the middle of this view holds one", roll: "the scale scene stays level" } },
