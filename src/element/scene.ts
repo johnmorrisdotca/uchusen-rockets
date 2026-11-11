@@ -423,6 +423,10 @@ export class RocketViewer {
   private skyGroups: SkyShown = { planets: true, moons: true, dwarfs: true, belts: true, craft: true };
   private skyWhen = Date.now();
   private moveSky: ((ms: number) => void) | null = null;
+  /** Seconds of the Earth's own day that pass in each real second; 0 holds it still. */
+  private worldRate = 0;
+  private worldAt = 0;
+  private turnWorld: ((seconds: number) => number) | null = null;
   private paintSkyGroups: ((groups: SkyShown) => void) | null = null;
 
   constructor(holder: HTMLElement, options: ViewerOptions) {
@@ -597,6 +601,13 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** How fast the Earth under the craft turns: seconds of its own day for each real second. 0 holds it still, and so does a reader who prefers less motion. */
+  setWorldTurn(rate: number): void {
+    this.worldRate = Number.isFinite(rate) ? rate : 0;
+    this.worldAt = 0;
+    this.wake();
+  }
+
   /** Puts the Moon, the major moons and the belts at `ms`. */
   setWhen(ms: number): void {
     if (!Number.isFinite(ms)) return;
@@ -631,7 +642,7 @@ export class RocketViewer {
   private mountOrbit(): void {
     if (this.orbitGone || this.scene.getObjectByName("orbit-world")) return;
     this.orbitGone = () => {};
-    void import("./orbitWorld.ts").then(({ applySolarGroups, moveOrbit, orbitWorld }) => {
+    void import("./orbitWorld.ts").then(({ applySolarGroups, moveOrbit, orbitWorld, turnOrbit }) => {
       if (this.disposed) return;
       const world = orbitWorld(() => {
         this.canvas.dataset.earth = "painted";
@@ -642,6 +653,7 @@ export class RocketViewer {
       this.moonNode = world.group.getObjectByName("moon") ?? null;
       this.orbitGone = world.dispose;
       this.moveSky = (ms: number) => moveOrbit(world.group, ms);
+      this.turnWorld = (seconds: number) => turnOrbit(world.group, seconds);
       this.paintSkyGroups = (groups) => applySolarGroups(world.group, groups);
       this.paintSkyGroups(this.skyGroups);
       this.canvas.dataset.globe = this.orbitOn ? "earth" : "off";
@@ -2901,6 +2913,15 @@ export class RocketViewer {
       this.swarm?.step(now / 1000);
       this.needsDraw = true;
     }
+    const worldTurning = this.orbitOn && this.turnWorld !== null && this.worldRate !== 0 && !this.options.reducedMotion;
+    if (worldTurning && this.turnWorld && now - this.worldAt >= MOTION_GAP_MS) {
+      // a gap longer than a few frames is the page being hidden or busy, not time the Earth should catch up on
+      const seconds = this.worldAt === 0 ? MOTION_GAP_MS / 1000 : Math.min(0.1, (now - this.worldAt) / 1000);
+      this.worldAt = now;
+      this.canvas.dataset.worldTurn = this.turnWorld(seconds * this.worldRate).toFixed(3);
+      this.needsDraw = true;
+    }
+    this.canvas.dataset.worldTurning = worldTurning ? "true" : "false";
     const pulsing = this.hasPulse && this.lightsMode !== "off" && !this.options.reducedMotion;
     if (pulsing && now - this.lampDrawn >= MOTION_GAP_MS) {
       this.lampDrawn = now;
@@ -2997,7 +3018,7 @@ export class RocketViewer {
     const drifting = this.drifting();
     const jetting = this.thrusterChoice === "station-keeping" && !this.options.reducedMotion && awake || (this.thrusters?.puffCount() ?? 0) > 0;
     const inspectingOn = this.inspectCount > 0 && this.inspectPlaying && this.progressAt === null && !this.options.reducedMotion;
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || pulsing || drifting || jetting || inspectingOn || this.ghost || this.paintFades.length > 0)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || worldTurning || pulsing || drifting || jetting || inspectingOn || this.ghost || this.paintFades.length > 0)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 

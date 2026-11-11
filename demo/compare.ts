@@ -5,7 +5,7 @@ import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
 import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant } from "./sizes.ts";
-import { applyTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
+import { applyTurn, applyWorldTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
 import { mountCamera } from "./compare-camera.ts";
 import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { WORDS } from "./words.js";
@@ -161,6 +161,7 @@ function syncEarth() {
   syncSky();
   earthHolder.hidden = true;
   hero.setAttribute("world", state.background === "earth" ? "earth" : "off");
+  applyWorldTurn(hero);
 }
 
 // ------------------------------------------------------------- what is chosen

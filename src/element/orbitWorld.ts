@@ -1,6 +1,6 @@
 // The compare page's Earth, its Moon, the major moons, and a star field. The craft stay at the origin, 400 km above the surface. Loaded only when a page asks for it.
 import { BODIES, DWARF_IDS, heliocentric, PLANET_IDS, type HostId } from "@johnmorrisdotca/wakusei-planets";
-import { BufferAttribute, BufferGeometry, Group, InstancedMesh, LineLoop, LineBasicMaterial, Mesh, MeshBasicMaterial, Object3D, Points, PointsMaterial, SphereGeometry, SRGBColorSpace, TextureLoader } from "three";
+import { BufferAttribute, BufferGeometry, Group, InstancedMesh, LineLoop, LineBasicMaterial, Mesh, MeshBasicMaterial, Object3D, Points, PointsMaterial, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3 } from "three";
 import { skyGroupOf, type SkyShown } from "./solarGroups.ts";
 import { beltPlaces, bodyScene, earthCentre, majorMoons, moonScene, sceneOf, type BeltKind } from "./solarPlace.ts";
 
@@ -157,12 +157,42 @@ export function applySolarGroups(root: Object3D, groups: Pick<SkyShown, "planets
   if (major) major.visible = groups.moons;
 }
 
+/** How much faster the cloud layer goes round than the ground under it, as a fraction of the ground's turn. */
+const CLOUD_DRIFT = 0.12;
+const NEAR_SIDE = new Vector3(1, 0, 0);
+const toEarth = new Vector3();
+
+/** The Moon keeps its near side toward the Earth, so it is turned to face it wherever it stands. */
+function faceEarth(moon: Object3D): void {
+  const [ex, ey, ez] = earthCentre();
+  toEarth.set(ex - moon.position.x, ey - moon.position.y, ez - moon.position.z);
+  if (toEarth.lengthSq() === 0) return;
+  moon.quaternion.setFromUnitVectors(NEAR_SIDE, toEarth.normalize());
+}
+
+/**
+ * Turns the Earth about its own axis by the time `seconds` of its own day (a sidereal day), and the cloud layer a little faster than the ground.
+ * Returns the ground's turn in degrees, kept under one turn.
+ */
+export function turnOrbit(group: Group, seconds: number): number {
+  const earth = group.getObjectByName("earth");
+  if (!earth) return 0;
+  const angle = (seconds * 2 * Math.PI) / (Math.abs(BODIES.earth.rotationHours) * 3600) * (BODIES.earth.rotationHours < 0 ? -1 : 1);
+  earth.rotation.y += angle;
+  const clouds = earth.getObjectByName("earth-clouds");
+  if (clouds) clouds.rotation.y += angle * CLOUD_DRIFT;
+  const moon = group.getObjectByName("moon");
+  if (moon) faceEarth(moon);
+  return ((((earth.rotation.y * 180) / Math.PI) % 360) + 360) % 360;
+}
+
 /** Moves the Moon, the major moons and the sketch so they match `when`. The paths and belts were drawn around the Sun at the first instant, so the whole sketch shifts with the Earth. */
 export function moveOrbit(group: Group, when: number): void {
   const moon = group.getObjectByName("moon");
   if (moon) {
     const [x, y, z] = moonScene(when);
     moon.position.set(x, y, z);
+    faceEarth(moon);
   }
   const moons = group.getObjectByName("major-moons");
   if (moons instanceof InstancedMesh) {
@@ -208,6 +238,7 @@ export function orbitWorld(ready: () => void, when = Date.now()): { group: Group
   const moon = new Mesh(new SphereGeometry(moonR, 48, 32), new MeshBasicMaterial({ color: "#c4bfb4" }));
   moon.name = "moon";
   moon.position.set(mx, my, mz);
+  faceEarth(moon);
   const sketch = solarSketch(when);
   const moons = moonMesh(when);
   const planets = planetGroup(when);
@@ -224,6 +255,15 @@ export function orbitWorld(ready: () => void, when = Date.now()): { group: Group
       if (body === earth) ready();
     });
   };
+  // The cloud layer is its own shell a little above the ground, drawn from the cloud picture's brightness, so it can turn at its own pace.
+  const clouds = new Mesh(new SphereGeometry(earthR * 1.004, 96, 64), new MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.8, depthWrite: false }));
+  clouds.name = "earth-clouds";
+  earth.add(clouds);
+  loader.load(new URL("clouds-1024.webp", base).href, (map) => {
+    const material = clouds.material as MeshBasicMaterial;
+    material.alphaMap = map;
+    material.needsUpdate = true;
+  });
   paint("day-2048.webp", earth);
   paint("moon-2048.webp", moon);
   return {
@@ -236,6 +276,7 @@ export function orbitWorld(ready: () => void, when = Date.now()): { group: Group
         const list = Array.isArray(material) ? material : material ? [material] : [];
         for (const one of list) {
           one.map?.dispose();
+          one.alphaMap?.dispose();
           one.dispose();
         }
       });
