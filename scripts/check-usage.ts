@@ -129,6 +129,11 @@ await step("node", () => {
   if (!/^true 69\.8 m, from \S/.test(out)) throw new Error(`unexpected output: ${out}`);
 });
 
+await step("node-physics", () => {
+  const out = execFileSync(process.execPath, [join(examples("node"), "orbit.mjs")], { cwd: usage, encoding: "utf8" }).trim();
+  if (!/^92\.6 minutes round, back where it started\n1249 m\/s$/.test(out)) throw new Error(`unexpected output: ${out}`);
+});
+
 await step("typescript", () => {
   writeFileSync(join(examples("typescript"), "tsconfig.json"), JSON.stringify({ compilerOptions: { target: "ES2022", module: "esnext", moduleResolution: "bundler", strict: true, noEmit: true, lib: ["es2023", "dom", "dom.iterable"], types: [], skipLibCheck: true }, include: ["index.ts"] }));
   sh(process.execPath, [require.resolve("typescript/bin/tsc"), "-p", join(examples("typescript"), "tsconfig.json")], usage);
@@ -266,6 +271,7 @@ const FILES: Record<string, string[]> = {
   "angular/rocket-view.component.ts": ["docs/guides/react-and-frameworks.md", "docs/guides/ja/react-and-frameworks.md"],
   "typescript/index.ts": ["docs/guides/typescript-and-node.md", "docs/guides/ja/typescript-and-node.md"],
   "node/server.mjs": ["docs/guides/typescript-and-node.md", "docs/guides/ja/typescript-and-node.md"],
+  "node/orbit.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
 };
 const normal = (text: string) => text.replace(/\r\n/g, "\n").trim();
 for (const [file, places] of everything ? Object.entries(FILES) : []) {
