@@ -81,8 +81,10 @@ writeFileSync(
 import { build } from ${JSON.stringify(`${pkg.name}/build`)};
 import { UchusenRocket } from ${JSON.stringify(`${pkg.name}/element`)};
 import { UchusenRocket as ReactRocket } from ${JSON.stringify(`${pkg.name}/react`)};
+import { launchByTag, launches } from ${JSON.stringify(`${pkg.name}/launches`)};
 import { createRequire } from "node:module";
 if (!check({ rocket: "starship", variant: "v3" }).ok || ROCKETS.starship.variants.length !== ${ROCKETS.starship.variants.length}) throw new Error("the catalogue");
+if (launches().length < 7000 || launchByTag("1957 ALP")?.site.name !== "Baikonur") throw new Error("the launch log");
 if (typeof UchusenRocket !== "function" || typeof ReactRocket !== "function") throw new Error("the element");
 const rocket = build({ rocket: "starship", variant: "v3" });
 if (rocket.svg() !== ${JSON.stringify(rocket.svg())}) throw new Error("the installed package drew another rocket");

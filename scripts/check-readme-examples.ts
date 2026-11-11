@@ -16,7 +16,7 @@ let ran = 0;
 let failed = 0;
 
 function rewrite(code: string): string {
-  const imports = code.replaceAll('"@johnmorrisdotca/uchusen-rockets/build"', `"${dist}/build/index.js"`).replaceAll('"@johnmorrisdotca/uchusen-rockets/journey"', `"${dist}/journey/index.js"`).replaceAll('"@johnmorrisdotca/uchusen-rockets"', `"${dist}/index.js"`);
+  const imports = code.replaceAll('"@johnmorrisdotca/uchusen-rockets/build"', `"${dist}/build/index.js"`).replaceAll('"@johnmorrisdotca/uchusen-rockets/journey"', `"${dist}/journey/index.js"`).replaceAll('"@johnmorrisdotca/uchusen-rockets/launches"', `"${dist}/launches/index.js"`).replaceAll('"@johnmorrisdotca/uchusen-rockets"', `"${dist}/index.js"`);
   return imports
     .split("\n")
     .map((line) => {
