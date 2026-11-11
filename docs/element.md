@@ -28,6 +28,7 @@
 | `mode` | `drawing` keeps the drawing and never loads three.js | `auto`, `drawing` |
 | `assets` | Where the painted models are | An address |
 | `label` | What a screen reader says | Words |
+| `sun` | Light it as in space: one light from the Sun, the far side dark, next to no fill | The direction towards the Sun in the craft's own frame (Y up, +Z its nose or windward side), as three numbers: `sun="1, 0.2, -0.5"`. Left out, or anything that is not three numbers, keeps the showroom light. `parseSun` reads it the same way |
 
 **Front** is the windward, tiled side and **back** the steel side.
 

@@ -51,6 +51,16 @@ Block 4 is announced, not built, so its height reads as an estimate. A reader ca
 
 A variant's `status` is `flown`, `announced`, `artist-model`, `test-vehicle` or `support`. A rocket labelled as a real version uses only parts true for it. Anything that mixes parts is a custom build and says so.
 
+## One kind, three cars: the Roadster
+
+`roadster` shows that a model is labelled as what it shows. Its three variants are chosen in one row. `first-generation` is the car that flew, with Starman at the wheel, `status: "flown"`. The two `second-generation` models are `status: "announced"`: shown as a prototype in 2017 and never flown, and their notes say so. Each is scaled to a sourced figure, the first to its length and the others to their wheelbase, and a size no source gives stays blank.
+
+```ts
+import { ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
+
+for (const variant of ROCKETS.roadster.variants) console.log(variant.id, variant.status, variant.facts.sizes?.Wheelbase?.value);
+```
+
 ## Finding what exists
 
 `ROCKETS` is a record by id. Each entry lists its variants in order and names its default.
