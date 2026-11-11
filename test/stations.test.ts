@@ -35,14 +35,12 @@ for (const craft of CRAFT) {
       const entry = partEntry(id);
       assert.ok(entry, id);
       assert.ok(entry.record.trueTo.includes(craft.variant), id);
-      // a part the model does not draw (the ISS's truss segments its model leaves out) has no file, and this package's own paint shows for it
-      if (entry.record.painted) {
-        assert.equal(entry.record.painted.credit, craft.credit, id);
-        const file = join("models", entry.record.painted.file);
-        assert.ok(existsSync(file), `${file} exists`);
-        bytes += statSync(file).size;
-        painted++;
-      } else assert.ok(craft.rocket === "iss" && slot.startsWith("truss-"), `${id} has a painted file`);
+      assert.ok(entry.record.painted, `${id} has a painted file`);
+      assert.equal(entry.record.painted?.credit, craft.credit, id);
+      const file = join("models", entry.record.painted?.file ?? "");
+      assert.ok(existsSync(file), `${file} exists`);
+      bytes += statSync(file).size;
+      painted++;
       // alone: its own pieces, a mesh, a drawing, and a size
       const alone = buildPart(id);
       assert.ok(alone.bounds.max[1] > alone.bounds.min[1], `${id} has a height`);
@@ -56,7 +54,7 @@ for (const craft of CRAFT) {
       assert.ok(Number.isFinite(whole.boundsOf(slot).max[1]), slot);
     }
     assert.ok(bytes <= MAX_BYTES * 1.6, `${craft.rocket}: ${(bytes / 1024).toFixed(0)} KB of painted files in all`);
-    assert.ok(painted >= craft.parts - 9, `${craft.rocket}: ${painted} parts painted by the model`);
+    assert.equal(painted, craft.parts, `${craft.rocket}: every part painted by the model`);
     for (const slot of variant.slots) {
       const file = partEntry(partIdOf(craft.rocket, craft.variant, slot))?.record.painted?.file;
       if (file) assert.ok(statSync(join("models", file)).size <= MAX_BYTES, slot);

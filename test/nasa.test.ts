@@ -38,7 +38,6 @@ for (const { rocket, variant, credit, files } of ROWS)
     assert.ok(variantOf(rocket, variant)?.note);
     for (const file of files) assert.ok(statSync(join("models", file)).size <= MAX_BYTES, file);
     const built = build({ rocket, variant });
-    // every part is painted by NASA's file, but the station's truss segments its model leaves out, which this package's own paint shows
-    assert.ok(built.parts.every((part) => part.pieces.length > 0 && (part.record.painted || (rocket === "iss" && part.slot.startsWith("truss-")))));
+    assert.ok(built.parts.every((part) => part.record.painted && part.pieces.length > 0));
     assert.ok(built.svg({ look: "line" }).startsWith("<svg"));
   });
