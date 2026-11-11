@@ -70,13 +70,13 @@ export const ORBIT_KINDS: Readonly<Record<OrbitKind, string>> = {
  * ```
  */
 export interface LaunchOrbit {
-  kind: OrbitKind;
+  readonly kind: OrbitKind;
   /** Height of the insertion orbit's apogee above the surface, in km. For a launch on an escape trajectory (207 of them) it is 150000, GCAT's round figure for "leaves Earth", not a measurement. */
-  apogeeKm?: number;
+  readonly apogeeKm?: number;
   /** Height of its perigee, in km. It is negative (13 launches, Starship's flights among them) where the path GCAT gives dips below the surface, so the flight did not complete an orbit at that figure; it is not a height. */
-  perigeeKm?: number;
+  readonly perigeeKm?: number;
   /** Its inclination, in degrees. */
-  inclinationDeg?: number;
+  readonly inclinationDeg?: number;
 }
 
 /**
@@ -92,46 +92,46 @@ export interface LaunchOrbit {
  */
 export interface Launch {
   /** GCAT's launch tag: the international (COSPAR) designation of a launch that reached orbit ("1957 ALP", "2018-017"), or one GCAT made up for a failure ("1957-F01"). Unique. */
-  tag: string;
+  readonly tag: string;
   /** The UTC date, `YYYY-MM-DD`. */
-  date: string;
+  readonly date: string;
   /** The UTC time, `HH:MM` or `HH:MM:SS`, or null where GCAT has none. */
-  time: string | null;
+  readonly time: string | null;
   /** The date and time in UTC as an ISO 8601 string, or just the date where there is no time. */
-  utc: string;
+  readonly utc: string;
   /** The launch in milliseconds since 1970, in UTC (midnight where there is no time). */
-  ms: number;
+  readonly ms: number;
   /** True where GCAT marks the date or time as uncertain. */
-  approximate: boolean;
+  readonly approximate: boolean;
   /** The vehicle's type name in GCAT, as `LAUNCH_VEHICLE_LINKS` and `launchesByVehicle` take it. */
-  vehicle: string;
+  readonly vehicle: string;
   /** The vehicle's variant (an upper stage, a series), or null. */
-  variant: string | null;
+  readonly variant: string | null;
   /** GCAT's name for the family the vehicle belongs to ("R-7", "Falcon9"), or null. */
-  family: string | null;
+  readonly family: string | null;
   /** The id of this package's rocket the vehicle is, or is a member of the family of, or null. See `LAUNCH_VEHICLE_LINKS`. */
-  rocket: string | null;
+  readonly rocket: string | null;
   /** The variant of that rocket that this vehicle is, where one is, or null. */
-  rocketVariant: string | null;
+  readonly rocketVariant: string | null;
   /** The launch site: GCAT's code and its name ("NIIP-5", "Baikonur"). */
-  site: { code: string; name: string };
+  readonly site: { readonly code: string; readonly name: string };
   /** The pad, as GCAT writes it ("LC1", "LC39A"), or null. */
-  pad: string | null;
+  readonly pad: string | null;
   /** The organization that launched: GCAT's code and short name ("SPX", "SpaceX"). */
-  agency: { code: string; name: string };
+  readonly agency: { readonly code: string; readonly name: string };
   /** The country of that organization, as GCAT gives it ("SU", "USSR"), or null. */
-  country: { code: string; name: string } | null;
+  readonly country: { readonly code: string; readonly name: string } | null;
   /** GCAT's name for the flight or mission ("Apollo 11", "Tesla Roadster"), or null. */
-  flight: string | null;
+  readonly flight: string | null;
   /** The names of the payloads, at most the first eight. */
-  payloads: readonly string[];
+  readonly payloads: readonly string[];
   /** How many payloads the launch carried in all; more than `payloads.length` for a launch of a constellation. */
-  payloadCount: number;
-  outcome: LaunchOutcome;
+  readonly payloadCount: number;
+  readonly outcome: LaunchOutcome;
   /** For a `partial` launch, GCAT's score from 1 (a tiny part of the job done) to 99 (nearly all of it); 75 and over is within GCAT's pass mark. Null otherwise. */
-  score: number | null;
+  readonly score: number | null;
   /** The orbit reached, or null for a launch that failed to reach one. */
-  orbit: LaunchOrbit | null;
+  readonly orbit: LaunchOrbit | null;
 }
 
 interface Packed {

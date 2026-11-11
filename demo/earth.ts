@@ -27,11 +27,12 @@ const TICK_MS: Record<EarthForm, number> = { line: 500, thick: 500, realistic: 2
 export const IDLE_STOP_MS = 5 * 60_000;
 const SIGNS_OF_LIFE = ["pointermove", "pointerdown", "keydown", "wheel", "scroll"] as const;
 
-/** How far it has turned, kept when the look or the choice changes, so the same land is in view afterwards. */
-let seconds = 0;
+/** How far the Earth behind the rocket has turned, kept when its look or the choice changes, so the same land is in view afterwards. A disc on another page counts for itself, so that two turning at once do not each add their own time to a shared count. */
+let behindSeconds = 0;
 
 /** Calls `draw` at once and then on one timer, only while it is worth anything to anyone. Everything it holds is given back by the function it returns. */
-function turn(holder: HTMLElement, tickMs: number, draw: (seconds: number, box: Placement & { width: number; height: number }) => void): () => void {
+function turn(holder: HTMLElement, tickMs: number, draw: (seconds: number, box: Placement & { width: number; height: number }) => void, from = 0): () => void {
+  let seconds = from;
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   let timer = 0;
   let last = 0;
@@ -120,11 +121,12 @@ function showLine(holder: HTMLElement, style: "line" | "thick"): EarthShow {
   void import("@johnmorrisdotca/chikyu-earth").then(({ globe }) => {
     if (stopped) return;
     stopTurn = turn(holder, TICK_MS[style], (seconds, box) => {
+      behindSeconds = seconds;
       const size = Math.max(box.width, box.height);
       const framed = orbitBlend(holder, box);
       picture.innerHTML = globe({ size, style, centre: CENTRE, graticule: true, view: { yaw: turnAt(seconds).yaw, tilt: 0, zoom: framed.radius / (size / 2 - 1), panX: framed.panX, panY: framed.panY } });
       holder.dataset.draws = String(++draws);
-    });
+    }, behindSeconds);
   });
   return {
     stop() {
@@ -246,11 +248,12 @@ function showRealistic(holder: HTMLElement, unavailable: () => void): EarthShow 
     holder.append(made);
     earth = made;
     stopTurn = turn(holder, TICK_MS.realistic, (seconds, box) => {
+      behindSeconds = seconds;
       const framed = orbitBlend(holder, box);
       const { yaw, time } = turnAt(seconds);
       made.time = time;
       made.setView({ yaw, tilt: 0, zoom: framed.radius / discRadius(box.width, box.height, 1), panX: framed.panX, panY: framed.panY }, true);
-    });
+    }, behindSeconds);
   });
   return {
     stop() {

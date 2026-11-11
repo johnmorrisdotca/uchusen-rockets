@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { Document } from "@gltf-transform/core";
 import { piecesOf } from "../scripts/pieces.ts";
+import { skipsEmptyPart } from "../scripts/recipe-parts.ts";
 import { PointIndex } from "../scripts/point-index.ts";
 
 test("two points a hair apart are one, wherever the grid's edge falls between them", () => {
@@ -65,7 +66,10 @@ test("triangles that meet within the tolerance are one piece, on either side of 
 });
 
 test("a recipe part nothing falls in stops the run unless it is marked optional", () => {
-  const script = readFileSync("scripts/reduce-nasa.ts", "utf8");
-  assert.match(script, /if \(!part\.optional\) throw new Error/);
-  assert.match(readFileSync("scripts/nasa-recipes.ts", "utf8"), /optional\?: boolean/);
+  assert.throws(() => skipsEmptyPart("iss", { id: "truss" }, false), /nothing fell in the part "truss"/);
+  assert.throws(() => skipsEmptyPart("iss", { id: "truss", optional: false }, false), /optional: true/);
+  assert.equal(skipsEmptyPart("iss", { id: "truss", optional: true }, false), true);
+  assert.equal(skipsEmptyPart("iss", { id: "truss" }, true), false);
+  // the run asks it for every part that has no triangles, and every part has a committed file today, so none is marked
+  assert.match(readFileSync("scripts/reduce-nasa.ts", "utf8"), /skipsEmptyPart\(recipe\.id, part, false\)/);
 });

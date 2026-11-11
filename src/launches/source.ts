@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { LAUNCH_LOG_SOURCE } from "@johnmorrisdotca/uchusen-rockets/launches";
+ * import { LAUNCH_LOG_SOURCE } from "@johnmorrisdotca/uchusen-rockets/launches/source";
  *
  * console.log(LAUNCH_LOG_SOURCE.credit);
  * ```

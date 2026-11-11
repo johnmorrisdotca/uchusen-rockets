@@ -18,6 +18,7 @@ import { MeshoptSimplifier } from "meshoptimizer";
 import { NASA_RECIPES, type NasaPart, type NasaRecipe, type PieceBox, type Rect } from "./nasa-recipes.ts";
 import { PART_RECIPES } from "./part-recipes.ts";
 import { piecesOf } from "./pieces.ts";
+import { skipsEmptyPart } from "./recipe-parts.ts";
 import { PointIndex } from "./point-index.ts";
 import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
@@ -367,9 +368,8 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
   for (const part of recipe.parts) {
     const buckets = parts.get(part.id);
     if (!buckets) {
-      // a part nothing fell in is a mistake in the recipe (a typo in a name, a box in the wrong place) unless the recipe says the model may not draw it
-      if (!part.optional) throw new Error(`${recipe.id}: nothing fell in the part "${part.id}"; check its rule, or mark the part optional: true where the model does not draw it`);
-      // a part the model does not draw: no file, and this package's own paint shows for it
+      // a part nothing fell in is a mistake in the recipe unless it is marked optional; an optional one is a part the model does not draw: no file, and this package's own paint shows for it
+      skipsEmptyPart(recipe.id, part, false);
       console.log(`${recipe.id}-${part.id}.glb  nothing fell in it: no file`);
       continue;
     }
