@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **The swarm, beam and poster pages take the shared hands** (MODULES-644): each picture sits in a view stage with kazoku-ui's view bar, so drag, a two-finger pinch, the wheel, the keys and the zoom buttons work from 0.25× to 8×, and the wheel scrolls the page at Fit. The poster's own zoom slider is gone, the bar's readout replaces it. These are flat pictures, so none turns or rolls; the gesture and readout checks name that.
+- **The Earth drawn inside the compare view turns, and so do the journey's planets** (MODULES-502): the Earth turns on its own axis with its cloud layer going round a little faster, and the Moon keeps its near side to it. A planet on the journey turns on its own axis too, a full turn in about ten minutes. Under reduced motion, and with the pace on Still, they stay still. Background planets already turned and filled the frame; a test now holds the Earth, a background and a journey planet.
+- **The page bar reaches every demo page** (MODULES-503): Drones, Poster, Swarm and Beam join it, so no page is reachable only by its address, and each page's own button is the pressed one with `aria-current="page"`. A test opens every page and checks the links, the one marked page, and one row at 1440 pixels.
+
 ## [0.18.0] - 2026-11-11
 
 - **Every demo page says what it is, links home and shows its credits** (MODULES-868, first screen Part B): the demo takes kazoku-ui 0.32 and its page frame. Under the page links each page has kazoku-ui's header line ("Uchusen Rockets 宇宙船: journey mode", in Japanese on the Japanese page, with Home), the title and description follow the reader's language, and the credit line with "Data and credits" sits above the footer, which keeps its one-line note. The bare embed frame has the small credit line in its corner. The family's check-standard is the 2026-11-10b copy, which holds every page to the frame.

@@ -2,7 +2,7 @@
 .poster-page h1 { margin: 0; font-size: 1.6rem; }
 .poster-page p { margin: 0; color: var(--muted, #93a6c0); }
 .poster-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
-.poster-frame { position: relative; overflow: hidden; height: min(78vh, 900px); min-height: 360px; border: 1px solid var(--line, #243044); border-radius: 12px 12px 0 0; background: #05080f; }
+.poster-frame { position: relative; overflow: hidden; height: max(360px, min(calc(100vh - 25rem), 900px)); border: 1px solid var(--line, #243044); border-radius: 12px 12px 0 0; background: #05080f; }
 .poster-frame #poster { width: 100%; height: 100%; }
 .poster-frame svg { display: block; width: 100%; height: 100%; }
 .poster-page kazoku-view-controls { border-radius: 0 0 12px 12px; }
