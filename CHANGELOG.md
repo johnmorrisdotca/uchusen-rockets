@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Flight physics, the `physics` entry** (MODULES-511, step 1 of 4): orbits from a position and a speed (`elementsOf`, closed and open, and `stateOf` a time later by Kepler's equation, `eccentricAnomaly`), gravity from the bodies of a scene with a body's J2, J3 and J4 (`gravityAt`), a craft moved forward under any acceleration in fixed steps (`propagate`, `path`, `step`; the classic Runge-Kutta and Yoshida's symplectic methods of second to eighth order), and the rocket equation (`deltaV`, `massAfter`, `burnSeconds`, `massFlow`, `exhaustSpeedOf`, and `thrustAt` for an engine in air). Pure, SI units, no dependency. Ported in part from Orbiter (MIT, Copyright (c) 2000-2026 Martin Schweiger; credited in NOTICE.md and `LICENSES/Orbiter-MIT.txt`), each file naming its source. Tests hold it to Orbiter's own `Elements` class (compiled from Orbiter's source) to the millimetre, and to JPL Horizons: the Moon over 28 days within 0.76 km with the Earth's J2, the ISS over 100 minutes within 0.20 km, the Tesla Roadster over half a year within 4,047 km (the rest is sunlight's push, which Horizons fits). A guide in English and Japanese, and a Node example. Burns and transfers, attitude and thrusters, and the air follow.
+
 ## [0.19.0] - 2026-11-11
 
 - **A tap on the build bar's Pause is no longer lost in Safari** (MODULES-1066): the playing bar redrew the button's icon and word every tenth of a second, and WebKit sends no click when the node a press began on has been replaced before the finger lifts. The bar now leaves a button, a text or the stills alone when a redraw would not change them. A test holds a press across redraws.
