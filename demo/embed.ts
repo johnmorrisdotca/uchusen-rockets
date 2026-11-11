@@ -2,12 +2,13 @@
 import { attributesFromOptions, paintedCredit, rocketFromParams, type RocketOptions } from "../src/index.ts";
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { PAGE_LOOK } from "./chip.ts";
-import { frameCredit } from "./frame-credit.ts";
+import "@johnmorrisdotca/kazoku-ui/page-frame/define";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
 const params = new URLSearchParams(location.search);
-frameCredit(params.get("lang") === "ja");
+// The credit in the corner (kazoku-ui's page frame, the small form) says its words in the address's language.
+if (params.get("lang") === "ja") document.querySelector("kazoku-page-credits")?.setAttribute("lang", "ja");
 const asked = rocketFromParams(params);
 // the models come from this site, whatever an address says
 delete asked.assets;

@@ -129,6 +129,8 @@ test("the still picture is gone once the 3D view is in, and a turn changes the s
     return { display: style.display, svg: layer.querySelector("svg") !== null, rects: layer.getClientRects().length };
   });
   expect(drawing).toEqual({ display: "none", svg: false, rects: 0 });
+  // the patches are read from the window, so the ship is brought into it first (on a phone the page frame's header line sits above it)
+  await rocket.scrollIntoViewIfNeeded();
   const box = await rocket.boundingBox();
   expect(box).toBeTruthy();
   if (!box) return;

@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { publishThumbnails, thumbnailHead } from "./family-thumbnail.mjs";
-import { pageBar, renderIndex } from "./page.ts";
+import { frame, pageBar, renderIndex } from "./page.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const site = join(root, "site");
@@ -25,7 +25,7 @@ writeFileSync(join(site, "fleet-db.html"), renderIndex("fleet-db.html").replace(
 writeFileSync(join(site, "fleet-compare.html"), renderIndex("fleet-compare.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "yard.html"), renderIndex("yard.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "embed-page.html"), renderIndex("embed-page.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
-writeFileSync(join(site, "builder.html"), readFileSync(join(root, "demo", "builder.html"), "utf8").replace("<!--page-bar-->", pageBar("builder.html")));
+writeFileSync(join(site, "builder.html"), frame(readFileSync(join(root, "demo", "builder.html"), "utf8").replace("<!--page-bar-->", pageBar("builder.html")), "builder.html", "Choose a rocket, how it looks and which parts show, and copy the code that puts exactly that on your own page."));
 publishThumbnails(root, site);
 for (const file of ["demo.css", "compare.css", "journey.css", "poster.css", "beam.css", "swarm.css", "inspect.css", "fleet-db.css", "fleet-compare.css", "yard.css", "family.css", "react-check.html", "element-check.html", "embed.html"]) cpSync(join(root, "demo", file), join(site, file));
 cpSync(join(root, "dist", "assets"), join(site, "assets"), { recursive: true });
@@ -52,7 +52,7 @@ await build({
   logLevel: "warning",
 });
 // The family header's language picker and theme switch: one small module for the page.
-writeFileSync(join(site, "kazoku-parts.src.js"), `import "@johnmorrisdotca/kazoku-ui/language-picker/define";\nimport "@johnmorrisdotca/kazoku-ui/theme-switch/define";\n`);
+writeFileSync(join(site, "kazoku-parts.src.js"), `import "@johnmorrisdotca/kazoku-ui/language-picker/define";\nimport "@johnmorrisdotca/kazoku-ui/theme-switch/define";\nimport "@johnmorrisdotca/kazoku-ui/page-frame/define";\n`);
 await build({ entryPoints: [join(site, "kazoku-parts.src.js")], outfile: join(site, "kazoku-parts.js"), bundle: true, format: "esm", minify: true, logLevel: "warning", absWorkingDir: root });
 rmSync(join(site, "kazoku-parts.src.js"));
 writeFileSync(join(site, ".nojekyll"), "");

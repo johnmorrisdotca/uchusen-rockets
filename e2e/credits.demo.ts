@@ -1,12 +1,13 @@
-// The credits: every page of the demo shows where its models and pictures come from, and a link to every credit, without opening a menu. The family pages carry them in the footer, the bare frame made for an iframe in a corner.
+// The credits and the page frame: every page of the demo says what it is, has a way home, and shows where its models and pictures come from with a link to every credit, without opening a menu
+// (kazoku-ui's <kazoku-page-header> and <kazoku-page-credits>). The bare frame made for an iframe has the small credit line in a corner.
 // On a phone the credits must not run off the side of the page or sit on top of anything else.
 import { expect, type Locator, test } from "@playwright/test";
 
 const BASE = "/uchusen-rockets/";
 const NOTICE = "https://github.com/johnmorrisdotca/uchusen-rockets/blob/main/NOTICE.md";
-/** Every page with the family's footer. The code builder has a footer of its own, in English only. */
+/** Every page with the family's page frame. */
 // fleet-compare.html only sends the reader on to compare.html?layout=lineup (and drops the language), so the test opens that.
-const PAGES = ["", "journey.html", "compare.html", "compare.html?layout=lineup", "fleet-db.html", "poster.html", "yard.html", "inspect.html", "swarm.html", "beam.html", "embed-page.html"];
+const PAGES = ["", "journey.html", "compare.html", "compare.html?layout=lineup", "fleet-db.html", "poster.html", "yard.html", "inspect.html", "swarm.html", "beam.html", "embed-page.html", "builder.html"];
 const FRAMES = ["embed.html", "embed.html?rocket=starship&variant=v3&look=painted", "embed.html?rocket=falcon-9&variant=block-5&look=thick&flight=1"];
 
 const overlaps = (a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }): boolean =>
@@ -32,15 +33,20 @@ async function insideAndClear(credit: Locator, others: Locator): Promise<void> {
 
 for (const lang of ["en", "ja"] as const) {
   for (const path of PAGES) {
-    test(`${path || "the home page"} in ${lang} shows its credits in the footer`, async ({ page }) => {
+    test(`${path || "the home page"} in ${lang} says what it is, links home, and shows its credits`, async ({ page }) => {
+      test.skip(lang === "ja" && path === "builder.html", "the code builder is in English only");
       await page.goto(`${BASE}${path}${path.includes("?") ? "&" : "?"}lang=${lang}`, { waitUntil: "domcontentloaded" });
-      const footer = page.locator("footer");
-      await expect(footer.locator('[data-say="creditLine"]')).toContainText(lang === "ja" ? "制作者" : "credited to their makers");
-      const all = footer.locator(`a[href="${NOTICE}"]`);
+      const header = page.locator("kazoku-page-header");
+      await expect(header.locator('[part="line"]')).toContainText(lang === "ja" ? "宇宙船 Uchusen Rockets" : "Uchusen Rockets 宇宙船");
+      await expect(header.locator('[part="link"]').first()).toHaveAttribute("href", "index.html");
+      const credits = page.locator("kazoku-page-credits");
+      await expect(credits.locator('[part="text"]')).toContainText(lang === "ja" ? "制作者" : "credited to their makers");
+      const all = credits.locator('[part="link"]');
       await all.scrollIntoViewIfNeeded();
       await expect(all).toBeVisible();
-      await expect(all).toContainText(lang === "ja" ? "クレジット" : "credit");
-      await insideAndClear(all, footer.locator(`a:not([href="${NOTICE}"]), code`));
+      await expect(all).toHaveAttribute("href", NOTICE);
+      await expect(all).toHaveText(lang === "ja" ? "データと出典" : "Data and credits");
+      await insideAndClear(all, page.locator("footer a, footer code"));
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "the page does not run off the side").toBe(true);
     });
   }
@@ -49,19 +55,11 @@ for (const lang of ["en", "ja"] as const) {
       await page.goto(`${BASE}${path}${path.includes("?") ? "&" : "?"}lang=${lang}`, { waitUntil: "domcontentloaded" });
       const credit = page.getByTestId("frame-credit");
       await expect(credit).toBeVisible();
-      await expect(credit).toContainText(lang === "ja" ? "クレジット一覧" : "All credits");
-      await expect(credit).toHaveAttribute("href", NOTICE);
-      await insideAndClear(credit, page.locator("button, a:not([data-testid='frame-credit']), #credit, uchusen-flight"));
+      await expect(credit.locator('[part="link"]')).toHaveText(lang === "ja" ? "データと出典" : "Data and credits");
+      await expect(credit.locator('[part="link"]')).toHaveAttribute("href", NOTICE);
+      await expect(credit.locator('[part="text"]')).toContainText(lang === "ja" ? "モデルの制作者" : "Models by their makers");
+      await insideAndClear(credit, page.locator("button, #credit, #open-in, uchusen-flight"));
     });
   }
 }
 
-test("the code builder shows its credits in its footer", async ({ page }) => {
-  await page.goto(`${BASE}builder.html`, { waitUntil: "domcontentloaded" });
-  const all = page.locator("footer").locator(`a[href="${NOTICE}"]`);
-  await all.scrollIntoViewIfNeeded();
-  await expect(all).toBeVisible();
-  await expect(page.locator("footer")).toContainText("credited to their makers");
-  await insideAndClear(all, page.locator(`footer a:not([href="${NOTICE}"])`));
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "the page does not run off the side").toBe(true);
-});
