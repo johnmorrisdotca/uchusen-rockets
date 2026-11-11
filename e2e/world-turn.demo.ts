@@ -23,9 +23,17 @@ test("Still holds the Earth, and so does reduced motion", async ({ page, browser
   await page.goto(`${BASE}compare.html?picker=off&background=earth&with=none&spin=still`);
   await expect(canvas(page)).toHaveAttribute("data-earth", "painted", { timeout: 90_000 });
   await expect(canvas(page)).toHaveAttribute("data-world-turning", "false");
-  const frames = Number(await canvas(page).getAttribute("data-frames"));
+  // the view settles into its place and then draws nothing more: the count of frames stops rising and stays
+  const count = async () => Number(await canvas(page).getAttribute("data-frames"));
+  let frames = await count();
+  await expect.poll(async () => {
+    const was = frames;
+    await page.waitForTimeout(500);
+    frames = await count();
+    return frames === was;
+  }, { timeout: 30_000 }).toBe(true);
   await page.waitForTimeout(1500);
-  expect(Number(await canvas(page).getAttribute("data-frames"))).toBe(frames);
+  expect(await count()).toBe(frames);
 
   const reduced = await browser.newContext({ reducedMotion: "reduce" });
   const still = await reduced.newPage();
