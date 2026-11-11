@@ -20,6 +20,7 @@ import { MERCURY_VARIANTS } from "./data/mercury.ts";
 import { JUPITER_C_VARIANTS } from "./data/jupiterc.ts";
 import { ISS_VARIANTS } from "./data/iss.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
+import { TIANGONG_VARIANTS } from "./data/tiangong.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import { FLEET_KIT_ROCKETS, FLEET_SLOT_NAMES } from "./data/fleet.ts";
 import { CONCEPT_SLOT_NAMES, KAMINARI_VARIANTS } from "./data/kaminari-concepts.ts";
@@ -89,7 +90,7 @@ export interface PlannedRocket {
 }
 
 /** Craft that fly in space: seen from any side, from straight above or below. Everything else stands on the ground or the sea, and keeps the ground in view. */
-const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble"]);
+const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong"]);
 
 /**
  * Whether a craft flies in space: the same ones that may be seen from straight above or below, including the fleet. A rocket or a place on the ground does not. On the compare page one of these stands on a marked plinth, so it is not read as a rocket on a pad.
@@ -141,6 +142,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "jupiter-c": { id: "jupiter-c", name: "Jupiter-C", status: "built", ...MADE_BY["jupiter-c"], variants: JUPITER_C_VARIANTS, defaultVariant: "jupiter-c" },
   "iss": { id: "iss", name: "International Space Station", status: "built", ...MADE_BY["iss"], variants: ISS_VARIANTS, defaultVariant: "iss" },
   "hubble": { id: "hubble", name: "Hubble Space Telescope", status: "built", ...MADE_BY["hubble"], variants: HUBBLE_VARIANTS, defaultVariant: "hubble" },
+  tiangong: { id: "tiangong", name: "Tiangong 天宮", status: "built", ...MADE_BY["tiangong"], variants: TIANGONG_VARIANTS, defaultVariant: "tiangong" },
   droneship: { id: "droneship", name: "Drone ships", status: "built", ...MADE_BY["droneship"], variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", ...MADE_BY["landing-zone"], variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", ...MADE_BY["launch-tower"], variants: TOWER_VARIANTS, defaultVariant: "stack" },
@@ -256,6 +258,55 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "docking-module": "Docking module",
   "station": "The station",
   "telescope": "The telescope",
+  tail: "Tail unit",
+  tub: "Spinning tub",
+  "fourth-stage": "Fourth stage",
+  "aft-shroud": "Aft shroud",
+  "equipment-section": "Equipment section",
+  "forward-shell": "Forward shell",
+  "light-shield": "Light shield",
+  "aperture-door": "Aperture door",
+  "array-left": "Solar array, left",
+  "array-right": "Solar array, right",
+  "antenna-near": "High-gain antenna, near side",
+  "antenna-far": "High-gain antenna, far side",
+  tianhe: "Tianhe core module",
+  hub: "Docking node",
+  "shenzhou-forward": "Shenzhou, forward port",
+  "shenzhou-nadir": "Shenzhou, nadir port",
+  tianzhou: "Tianzhou, aft port",
+  wentian: "Wentian laboratory",
+  mengtian: "Mengtian laboratory",
+  "tianhe-arrays": "Tianhe's solar wings",
+  "wentian-arrays": "Wentian's solar wings",
+  "mengtian-arrays": "Mengtian's solar wings",
+  zvezda: "Zvezda",
+  zarya: "Zarya",
+  unity: "Unity with PMA-1",
+  destiny: "Destiny",
+  harmony: "Harmony with PMA-2",
+  "soyuz-aft": "Visiting craft, Zvezda's aft port",
+  "soyuz-zvezda-nadir": "Visiting craft, Zvezda's nadir port",
+  "soyuz-zvezda-zenith": "Visiting craft, Zvezda's zenith port",
+  "soyuz-zarya-nadir": "Visiting craft, Zarya's nadir port",
+  airlock: "Airlock",
+  columbus: "Columbus",
+  kibo: "Kibo",
+  "truss-s0": "Truss S0",
+  "truss-s1": "Truss S1",
+  "truss-p1": "Truss P1",
+  "truss-s3-s4": "Truss S3 and S4",
+  "truss-p3-p4": "Truss P3 and P4",
+  "truss-s5": "Truss S5",
+  "truss-p5": "Truss P5",
+  "truss-s6": "Truss S6",
+  "truss-p6": "Truss P6",
+  "arrays-s4": "Solar arrays on S4",
+  "arrays-p4": "Solar arrays on P4",
+  "arrays-s6": "Solar arrays on S6",
+  "arrays-p6": "Solar arrays on P6",
+  "radiators-starboard": "Radiators, starboard",
+  "radiators-port": "Radiators, port",
   ground: "The ground and the road",
   pads: "The pads",
   "tank-farm": "The tank farm",

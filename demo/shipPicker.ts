@@ -26,7 +26,7 @@ export function craftBudget(): number {
 export function kindOf(rocketId: string): PickerKind {
   const maker = ROCKETS[rocketId]?.maker;
   if (maker === "fleet" || rocketId.startsWith("fleet-")) return "fleet";
-  if (rocketId === "iss") return "station";
+  if (rocketId === "iss" || rocketId === "tiangong") return "station";
   return "rocket";
 }
 

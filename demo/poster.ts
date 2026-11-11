@@ -26,6 +26,7 @@ const MARK: Record<MakerId, string> = {
   "rocket-lab": "#a6843c",
   russia: "#a14a4a",
   "us-army": "#5d7348",
+  china: "#8a3b3b",
   fleet: "#8a7048",
   sites: "#6e6e6e",
 };
@@ -133,7 +134,8 @@ const wrapName = (name: string): string[] => {
   return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
 };
 
-const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.max(...wrapName(craft.name).map((line) => line.length)) * 4.6);
+/** A craft's cell on the sheet: its width at the scale, with a little room, and never narrower than its name or the least a cell may be. */
+export const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.max(...wrapName(craft.name).map((line) => line.length)) * 4.6);
 
 /**
  * Rows of craft, shortest first, each row staying within the sheet. A row takes the next craft until the next one would pass the width.
