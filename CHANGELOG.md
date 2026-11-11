@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-11
+
 - **A tap on the build bar's Pause is no longer lost in Safari** (MODULES-1066): the playing bar redrew the button's icon and word every tenth of a second, and WebKit sends no click when the node a press began on has been replaced before the finger lifts. The bar now leaves a button, a text or the stills alone when a redraw would not change them. A test holds a press across redraws.
 - **The journey's Earth disc turns** (MODULES-1013): the painted Earth on the journey now turns once in about ten minutes, like the journey's other planets, with the Sun keeping its place so the lit side stays in view. It stays still under reduced motion, and draws nothing out of sight, on a hidden tab or once nobody has touched the page for a while. A test holds both.
 - **Launch log follow-ups** (MODULES-1011): `scripts/make-launches.ts` takes the GCAT release as `--release` (GCAT's files give the day of the data but not the release) and stops without it, or without the `# Updated` line, so a re-pack cannot stamp an old release. The credit is a small file of its own, `LAUNCH_LOG_SOURCE`, also imported as `@johnmorrisdotca/uchusen-rockets/launches/source` without loading the data. The rows `launches()` returns are frozen, and so their types are `readonly`, which is type-level breaking for code that wrote to a `Launch` or a `LaunchOrbit`. The TSDoc and the guide, in both languages, say that 150000 km is GCAT's round figure for an escape trajectory (207 launches) and that a perigee can be negative (13 launches).
