@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-11
+
 - **Every demo page says what it is, links home and shows its credits** (MODULES-868, first screen Part B): the demo takes kazoku-ui 0.32 and its page frame. Under the page links each page has kazoku-ui's header line ("Uchusen Rockets 宇宙船: journey mode", in Japanese on the Japanese page, with Home), the title and description follow the reader's language, and the credit line with "Data and credits" sits above the footer, which keeps its one-line note. The bare embed frame has the small credit line in its corner. The family's check-standard is the 2026-11-10b copy, which holds every page to the frame.
 
 - **CI installs Playwright's browsers in bounded, cached steps** (KAZOKU-UI-100). A slow package mirror held `playwright install --with-deps` for the whole job limit on 2026-11-09 and 2026-11-10, so no test ran and the failure read as a test failure. `.github/actions/playwright` (the family's, kazoku-ui's copy is canonical) caches the browsers by Playwright's version, then installs the system libraries in a step of their own: two tries, each cut off after 7 minutes, and a failure that says it is the runner's package mirror and that nothing was run. Free: GitHub-hosted Linux runners and the cache.
