@@ -30,7 +30,7 @@ test("every rocket, built or planned, has a valid code with a source, or a blank
 
 test("the ones with none: several countries or an international body, a source with two countries, and the SPX fleet", () => {
   const none = ALL.filter((rocket) => rocket.country.value === null && !isFleet(rocket.id)).map((rocket) => rocket.id);
-  assert.deepEqual(none.sort(), ["apollo-soyuz", "ariane-6", "electron", "hubble", "iss"]);
+  assert.deepEqual(none.sort(), ["apollo-soyuz", "ariane-6", "electron", "hubble", "iss", "jwst"]);
   for (const id of Object.keys(ROCKETS).filter(isFleet)) assert.equal(ROCKETS[id]?.country.value, null, id);
   assert.equal(countryOf("falcon-9").value, "US");
   assert.equal(countryOf("soyuz").value, "RU");
