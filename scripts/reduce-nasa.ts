@@ -19,7 +19,7 @@ import { NASA_RECIPES, type NasaPart, type NasaRecipe, type PieceBox, type Rect 
 import { PART_RECIPES } from "./part-recipes.ts";
 import { piecesOf } from "./pieces.ts";
 import { skipsEmptyPart } from "./recipe-parts.ts";
-import { PointIndex } from "./point-index.ts";
+import { weld } from "./weld.ts";
 import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const sources = process.env.UCHUSEN_MODEL_SOURCES ?? "";
@@ -91,31 +91,6 @@ function cut(p: number[][], n: number[][], t: number[][], most: number): Corners
   const mn = mid(n[a], n[b]);
   const mt = mid(t[a], t[b]);
   return [...cut([p[a], mp, p[c]], [n[a], mn, n[c]], [t[a], mt, t[c]], most), ...cut([mp, p[b], p[c]], [mn, n[b], n[c]], [mt, t[b], t[c]], most)];
-}
-
-/** Joins vertices that are the same to within a ten-thousandth of the part's size on every axis, a normal within a fiftieth and a picture coordinate within 1/8192, so a simplifier sees one surface; a seam in the picture stays a seam. */
-function weld(t: Triangles, size: number, low: readonly number[]) {
-  const count = t.positions.length / 3;
-  const indices = new Uint32Array(count);
-  const positions: number[] = [];
-  const normals: number[] = [];
-  const uvs: number[] = [];
-  const seen = new PointIndex(size / 10000, [low[0] as number, low[1] as number, low[2] as number]);
-  for (let i = 0; i < count; i++) {
-    const [x, y, z] = [t.positions[i * 3] as number, t.positions[i * 3 + 1] as number, t.positions[i * 3 + 2] as number];
-    const [a, b, c] = [t.normals[i * 3] as number, t.normals[i * 3 + 1] as number, t.normals[i * 3 + 2] as number];
-    const [u, v] = [t.uvs[i * 2] as number, t.uvs[i * 2 + 1] as number];
-    // the vertex already kept that is the same place, with the same normal and picture coordinate
-    let at = seen.find(x, y, z, (id) => Math.abs((normals[id * 3] as number) - a) <= 0.02 && Math.abs((normals[id * 3 + 1] as number) - b) <= 0.02 && Math.abs((normals[id * 3 + 2] as number) - c) <= 0.02 && Math.abs((uvs[id * 2] as number) - u) <= 1 / 8192 && Math.abs((uvs[id * 2 + 1] as number) - v) <= 1 / 8192);
-    if (at === undefined) {
-      at = seen.add(x, y, z);
-      positions.push(x, y, z);
-      normals.push(a, b, c);
-      uvs.push(u, v);
-    }
-    indices[i] = at;
-  }
-  return { positions: new Float32Array(positions), normals: new Float32Array(normals), uvs: new Float32Array(uvs), indices };
 }
 
 /** Each triangle turned to agree with its normals, since these files' materials are drawn from both sides and their windings are not to be trusted. */
@@ -390,7 +365,7 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
         hi[c] = Math.max(hi[c], whole.positions[i + c]);
       }
     const size = Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
-    const w = weld(whole, size, lo);
+    const w = weld(whole.positions, whole.normals, whole.uvs, size, lo, recipe.looseWeld === true);
     const startTris = w.indices.length / 3;
     const target = Math.min(part.triangles, startTris) * 3;
     const ATTR = new Float32Array(w.normals.length + w.uvs.length);
