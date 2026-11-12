@@ -33,8 +33,8 @@ importers:
         specifier: 4.5.1
         version: 4.5.1(@types/node@24.10.1)
       '@johnmorrisdotca/chikyu-earth':
-        specifier: 0.10.0
-        version: 0.10.0(@johnmorrisdotca/kazoku-ui@0.32.0(three@0.186.1))(three@0.186.1)
+        specifier: 0.36.0
+        version: 0.36.0(@johnmorrisdotca/wakusei-planets@0.17.1)(three@0.186.1)
       '@johnmorrisdotca/hata':
         specifier: 1.8.0
         version: 1.8.0
@@ -43,7 +43,7 @@ importers:
         version: 0.32.0(three@0.186.1)
       '@johnmorrisdotca/wakusei-planets':
         specifier: 0.17.1
-        version: 0.17.1(@johnmorrisdotca/chikyu-earth@0.10.0(@johnmorrisdotca/kazoku-ui@0.32.0(three@0.186.1))(three@0.186.1))(three@0.186.1)
+        version: 0.17.1(@johnmorrisdotca/chikyu-earth@0.36.0)(three@0.186.1)
       '@playwright/test':
         specifier: 1.64.0
         version: 1.64.0
@@ -557,16 +557,22 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@johnmorrisdotca/chikyu-earth@0.10.0':
-    resolution: {integrity: sha512-OYw/Sp0ahaZoQ32D8R1RD7xeI9iq9TF5mqSoBbyovzByo+/vX6ecEnv3/V4VfWRl6l6YKFpkeOgAThQEk4BCmw==}
+  '@johnmorrisdotca/chikyu-earth@0.36.0':
+    resolution: {integrity: sha512-iTg6Czj/bt5VeQMSb/v9eFhP5wBwMq8eM70Uu+kvEofCRVvWY0lfiD31PDp1saB7UIzeXbQtB1YnHeqfAn++CA==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@johnmorrisdotca/kazoku-ui': '>=0.9.0'
+      '@johnmorrisdotca/hoshi-stars': '>=0.30.0'
+      '@johnmorrisdotca/kuni': '>=1.6.1'
+      '@johnmorrisdotca/wakusei-planets': '>=0.5.0'
       astronomy-engine: '>=2.1.0'
       satellite.js: '>=6.0.0'
       three: '>=0.160.0'
     peerDependenciesMeta:
-      '@johnmorrisdotca/kazoku-ui':
+      '@johnmorrisdotca/hoshi-stars':
+        optional: true
+      '@johnmorrisdotca/kuni':
+        optional: true
+      '@johnmorrisdotca/wakusei-planets':
         optional: true
       astronomy-engine:
         optional: true
@@ -594,6 +600,16 @@ packages:
 
   '@johnmorrisdotca/kazoku-ui@0.32.0':
     resolution: {integrity: sha512-/clupIHbTRIRRYQygRr8CoJB8YdDqLELXeb7lWjV+XXkCWdvaoM3kvivn62p51rcR+fO0RGu3q3W4nweoar/5Q==}
+    engines: {node: '>=22'}
+    hasBin: true
+    peerDependencies:
+      three: '>=0.160.0'
+    peerDependenciesMeta:
+      three:
+        optional: true
+
+  '@johnmorrisdotca/kazoku-ui@0.41.1':
+    resolution: {integrity: sha512-PFqO5/G8A6npgOgwrBVe+Ii8yBMUg7bHabwhJRNl0CYYLKBPE7mUglLPm+C8c3S6YWxqepZz5Rf4zhWfI5pJzg==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -2581,12 +2597,13 @@ snapshots:
   '@img/sharp-win32-x64@0.35.5':
     optional: true
 
-  '@johnmorrisdotca/chikyu-earth@0.10.0(@johnmorrisdotca/kazoku-ui@0.32.0(three@0.186.1))(three@0.186.1)':
+  '@johnmorrisdotca/chikyu-earth@0.36.0(@johnmorrisdotca/wakusei-planets@0.17.1)(three@0.186.1)':
     dependencies:
       '@johnmorrisdotca/chizu': 1.6.1
+      '@johnmorrisdotca/kazoku-ui': 0.41.1(three@0.186.1)
       d3-geo: 3.1.1
     optionalDependencies:
-      '@johnmorrisdotca/kazoku-ui': 0.32.0(three@0.186.1)
+      '@johnmorrisdotca/wakusei-planets': 0.17.1(@johnmorrisdotca/chikyu-earth@0.36.0)(three@0.186.1)
       three: 0.186.1
 
   '@johnmorrisdotca/chizu@1.6.1': {}
@@ -2601,11 +2618,15 @@ snapshots:
     optionalDependencies:
       three: 0.186.1
 
-  '@johnmorrisdotca/wakusei-planets@0.17.1(@johnmorrisdotca/chikyu-earth@0.10.0(@johnmorrisdotca/kazoku-ui@0.32.0(three@0.186.1))(three@0.186.1))(three@0.186.1)':
+  '@johnmorrisdotca/kazoku-ui@0.41.1(three@0.186.1)':
+    optionalDependencies:
+      three: 0.186.1
+
+  '@johnmorrisdotca/wakusei-planets@0.17.1(@johnmorrisdotca/chikyu-earth@0.36.0)(three@0.186.1)':
     dependencies:
       '@johnmorrisdotca/kazoku-ui': 0.15.1(three@0.186.1)
     optionalDependencies:
-      '@johnmorrisdotca/chikyu-earth': 0.10.0(@johnmorrisdotca/kazoku-ui@0.32.0(three@0.186.1))(three@0.186.1)
+      '@johnmorrisdotca/chikyu-earth': 0.36.0(@johnmorrisdotca/wakusei-planets@0.17.1)(three@0.186.1)
       three: 0.186.1
 
   '@jridgewell/gen-mapping@0.3.13':

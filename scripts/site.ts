@@ -49,6 +49,8 @@ await build({
   sourcemap: false,
   chunkNames: "chunks/[name]-[hash]",
   define: { "process.env.NODE_ENV": '"production"' },
+  // chikyu-earth's optional layers (the star sky and the city names) import these two packages on demand. The demo never turns either layer on, so they are left out of the bundle rather than carried by every visitor.
+  external: ["@johnmorrisdotca/hoshi-stars/*", "@johnmorrisdotca/kuni/*"],
   logLevel: "warning",
 });
 // The family header's language picker and theme switch: one small module for the page.
