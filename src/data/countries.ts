@@ -66,6 +66,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   juno: us("wikipedia-nasa", "Operated by NASA with the Jet Propulsion Laboratory."),
   jwst: blank("A NASA, ESA and Canadian Space Agency space telescope.", "international"),
   "parker-solar-probe": us("wikipedia-nasa", "Operated by NASA with the Johns Hopkins Applied Physics Laboratory, which built it."),
+  "new-horizons": us("wikipedia-nasa", "Operated by NASA with the Johns Hopkins University Applied Physics Laboratory, which built it."),
   droneship: us("wikipedia-asds", "Based at Port Canaveral, the Port of Long Beach and the Port of Brownsville."),
   "landing-zone": us("wikipedia-lz", "At Cape Canaveral Space Force Station; Landing Zone 4 is at Vandenberg."),
   "launch-tower": us("wikipedia-starbase", "The tower at Starbase, Texas."),

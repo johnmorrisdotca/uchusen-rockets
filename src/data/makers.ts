@@ -58,6 +58,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   juno: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-juno" } },
   jwst: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-webb-fact-sheet" } },
   "parker-solar-probe": { maker: "nasa", madeBy: { value: "NASA", source: "nasa-parker-press-kit" } },
+  "new-horizons": { maker: "nasa", madeBy: { value: "NASA; built by the Johns Hopkins University Applied Physics Laboratory", source: "nasa-new-horizons" } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-drone": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kyotori": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
