@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The Earth freeze test reads frames by the page's own count** (MODULES-1181). "The Earth costs nothing until it is chosen" saw one extra page frame in 1.5 s with the Earth off, in a run under load. It now waits until the page has asked for no frame between two readings, then lets only a frame asked for before the window open pass, and fails a frame asked for inside it. Test only.
+
 ## [0.21.0] - 2026-11-12
 
 - **James Webb and Parker Solar Probe** (MODULES-1120): `rocket="jwst"` and `rocket="parker-solar-probe"`. The painted look is NASA's own model, fetched only when that look is asked for. Webb is scaled so the sunshield's long side is 21.197 m; Parker so the heat shield is 2.4 m. The line looks are this package's own plain shapes from the published sizes. Europa Clipper is not included: its page was not found, and the Europa Orbiter file is a different craft offered only as a printable part.
