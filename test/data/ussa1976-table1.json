@@ -1,0 +1,13 @@
+{
+ "source": "U.S. Standard Atmosphere, 1976 (NOAA, NASA and the U.S. Air Force; NASA-TM-X-74335), Table I, Geometric Altitude, Metric Units, pages 51 to 67, read from NASA's scan at https://ntrs.nasa.gov/citations/19770009539 on 2026-11-11. NASA's record marks it as a U.S. Government work, public use permitted. Typed by hand from the printed table, the first row of each altitude shown.",
+ "units": "altitude m (geometric), temperature K, pressure Pa (the table's millibars times 100), density kg/m^3",
+ "rows": [
+  { "altitude": 0, "temperature": 288.150, "pressure": 101325, "density": 1.2250 },
+  { "altitude": 3000, "temperature": 268.659, "pressure": 70121, "density": 0.90925 },
+  { "altitude": 7000, "temperature": 242.700, "pressure": 41105, "density": 0.59002 },
+  { "altitude": 11000, "temperature": 216.774, "pressure": 22699, "density": 0.36480 },
+  { "altitude": 19000, "temperature": 216.650, "pressure": 6467.4, "density": 0.10400 },
+  { "altitude": 38000, "temperature": 244.818, "pressure": 377.13, "density": 0.0053666 },
+  { "altitude": 60000, "temperature": 247.021, "pressure": 21.958, "density": 0.00030968 }
+ ]
+}

@@ -14,6 +14,7 @@
     ".": { "en": "Rockets, variants, parts and the fit check", "ja": "ロケット・型式・部品・適合チェック" },
     "./build": { "en": "Build a mesh and a drawing", "ja": "メッシュと図面を作る" },
     "./journey": { "en": "Journey mode: transfers, launch windows and flip-and-burn trips", "ja": "ジャーニーモード：ホーマン遷移・打ち上げ窓・フリップ＆バーンの旅" },
+    "./physics": { "en": "Flight physics: orbits, gravity from a scene's bodies, propagation, the rocket equation, burns, transfers, attitude and the air", "ja": "飛行の物理：軌道、天体の重力、時間を進める計算、ロケット方程式、噴射、軌道の乗り換え、姿勢、大気" },
     "./element": { "en": "The web components", "ja": "Webコンポーネント" },
     "./react": { "en": "The React wrapper", "ja": "Reactラッパー" },
     "./launches": { "en": "The launch log: every orbital launch attempt since 1957, with lookups and counts", "ja": "打ち上げ記録：1957年以降の軌道打ち上げ全試行と、検索・集計" }

@@ -129,6 +129,27 @@ await step("node", () => {
   if (!/^true 69\.8 m, from \S/.test(out)) throw new Error(`unexpected output: ${out}`);
 });
 
+await step("node-physics", () => {
+  const out = execFileSync(process.execPath, [join(examples("node"), "orbit.mjs")], { cwd: usage, encoding: "utf8" }).trim();
+  if (!/^92\.6 minutes round, back where it started\n1249 m\/s$/.test(out)) throw new Error(`unexpected output: ${out}`);
+});
+
+await step("node-transfer", () => {
+  const out = execFileSync(process.execPath, [join(examples("node"), "transfer.mjs")], { cwd: usage, encoding: "utf8" }).trim();
+  if (!/^3854 m\/s, 14279 kg of propellant\nends 4 km from the circle, eccentricity 0\.0000$/.test(out)) throw new Error(`unexpected output: ${out}`);
+});
+
+await step("node-attitude", () => {
+  const out = execFileSync(process.execPath, [join(examples("node"), "attitude.mjs")], { cwd: usage, encoding: "utf8" }).trim();
+  if (out !== "stopped in 8.3 s with 0.17 kg of propellant") throw new Error(`unexpected output: ${out}`);
+});
+
+await step("node-air", () => {
+  const out = execFileSync(process.execPath, [join(examples("node"), "air.mjs")], { cwd: usage, encoding: "utf8" }).trim();
+  const want = ["0 km: 101325 Pa (Orbiter), 101325 Pa (1976 standard)", "11 km: 22700 Pa (Orbiter), 22700 Pa (1976 standard)", "30 km: 1186 Pa (Orbiter), 1197 Pa (1976 standard)", "Mars at the surface: 610 Pa, 0.02 kg/m^3"].join("\n");
+  if (out !== want) throw new Error(`unexpected output: ${out}`);
+});
+
 await step("typescript", () => {
   writeFileSync(join(examples("typescript"), "tsconfig.json"), JSON.stringify({ compilerOptions: { target: "ES2022", module: "esnext", moduleResolution: "bundler", strict: true, noEmit: true, lib: ["es2023", "dom", "dom.iterable"], types: [], skipLibCheck: true }, include: ["index.ts"] }));
   sh(process.execPath, [require.resolve("typescript/bin/tsc"), "-p", join(examples("typescript"), "tsconfig.json")], usage);
@@ -266,6 +287,10 @@ const FILES: Record<string, string[]> = {
   "angular/rocket-view.component.ts": ["docs/guides/react-and-frameworks.md", "docs/guides/ja/react-and-frameworks.md"],
   "typescript/index.ts": ["docs/guides/typescript-and-node.md", "docs/guides/ja/typescript-and-node.md"],
   "node/server.mjs": ["docs/guides/typescript-and-node.md", "docs/guides/ja/typescript-and-node.md"],
+  "node/orbit.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
+  "node/transfer.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
+  "node/attitude.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
+  "node/air.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
 };
 const normal = (text: string) => text.replace(/\r\n/g, "\n").trim();
 for (const [file, places] of everything ? Object.entries(FILES) : []) {
