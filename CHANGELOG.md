@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Demo: chikyu-earth 0.36** (MODULES-111): the Earth behind the rocket (the Background row, off by default) takes `@johnmorrisdotca/chikyu-earth` 0.36.0, still a dependency of the demo alone. Its optional star and city layers, which the demo never turns on, are left out of the demo's bundle. The option has a guide section in English and Japanese. The Earth's freeze tests (one frame request each per page frame, nothing drawn out of sight, contexts, graphics objects and memory flat over 50 changes, canvases inside the budget) pass on it.
+
 ## [0.21.0] - 2026-11-12
 
 - **James Webb and Parker Solar Probe** (MODULES-1120): `rocket="jwst"` and `rocket="parker-solar-probe"`. The painted look is NASA's own model, fetched only when that look is asked for. Webb is scaled so the sunshield's long side is 21.197 m; Parker so the heat shield is 2.4 m. The line looks are this package's own plain shapes from the published sizes. Europa Clipper is not included: its page was not found, and the Europa Orbiter file is a different craft offered only as a printable part.

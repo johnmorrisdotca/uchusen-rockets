@@ -49,6 +49,14 @@ The demo's view bar shows the zoom between the minus and plus buttons (1Ã—, 2.4Ã
 
 The Wide button (or the T key) gives the view the whole width of the page, 16:9 and no taller than 80% of the window, and moves the side panel below it as a row of boxes. It is on every demo page that has a side panel (the rocket, the fleet record, the yard, the journey, the code builder and the embed page). The choice is kept in the address as `?wide=on` and on this device, and a phone, which is one column already, hides the button.
 
+## The Earth behind the rocket, in the demo
+
+The demo's Background row is None by default. Choose Earth and the rocket floats in front of the turning Earth, as it would look in orbit. The choice is kept in the address (`?background=earth`). It belongs to the demo page: the embed page and the code the demo copies carry the rocket alone, and say so, and nothing of it is in the published package.
+
+The Earth comes from `@johnmorrisdotca/chikyu-earth`, a dependency of the demo only. It matches the look: a line-drawn globe behind Line drawing and Thick lines (one SVG, no extra WebGL context), and the painted Earth behind Painted (a second WebGL context, made only while Earth is chosen and given back when it is turned off or the look changes). A page that never chooses it loads none of its code and none of its pictures.
+
+It keeps to the same budgets as the rocket: one frame request each per page frame, a turn of two to four draws a second, nothing drawn out of sight or on a hidden tab, and a stand-still under reduced motion or when nobody has touched the page for five minutes. `pnpm test:freeze` holds all of it, including contexts, graphics objects and memory staying flat over many on and off changes.
+
 ## Showing parts
 
 `show` is `together`, `apart` or the slot of one part. The slots depend on the variant.
