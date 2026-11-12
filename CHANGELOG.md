@@ -5,6 +5,7 @@
 ## [0.23.0] - 2026-11-12
 
 - **New Horizons** (MODULES-1120): `rocket="new-horizons"`. The painted look is NASA's own model (NASA Visualization Technology Applications and Development), fetched only when that look is asked for, with its pictures left out (one carried a flag) and plain colours in their place, scaled so the high-gain antenna is 2.1 m: 5,999 triangles, 92 KB. The line look is this package's own plain shape from the published body and antenna, and stands 2.2 m. It can be seen from straight above or below, and its country is the United States. Pioneer 11's launch date (1973-04-06) is now recorded and shown on the Pioneer variant. The reducer can read a binary STL, for a model that comes as print parts.
+- **The Earth freeze test reads frames by the page's own count** (MODULES-1181). "The Earth costs nothing until it is chosen" saw one extra page frame in 1.5 s with the Earth off, in a run under load. It now waits until the page has asked for no frame between two readings, then lets only a frame asked for before the window open pass, and fails a frame asked for inside it. Test only.
 
 ## [0.22.0] - 2026-11-12
 
