@@ -135,10 +135,14 @@
     "size": "node scripts/docs-site.mjs size"
   },
   "peerDependencies": {
+    "@johnmorrisdotca/hata": ">=1.8.0 <2",
     "react": ">=18",
     "three": ">=0.170.0"
   },
   "peerDependenciesMeta": {
+    "@johnmorrisdotca/hata": {
+      "optional": true
+    },
     "react": {
       "optional": true
     },
@@ -156,6 +160,7 @@
     "@gltf-transform/extensions": "4.5.1",
     "@gltf-transform/functions": "4.5.1",
     "@johnmorrisdotca/chikyu-earth": "0.10.0",
+    "@johnmorrisdotca/hata": "1.8.0",
     "@johnmorrisdotca/kazoku-ui": "^0.32.0",
     "@johnmorrisdotca/wakusei-planets": "0.17.1",
     "@playwright/test": "1.64.0",
