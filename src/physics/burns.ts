@@ -152,7 +152,7 @@ export interface FlyOptions {
   gravity: Acceleration;
   /** The body the craft orbits, for the named directions; at the origin and still when left out. */
   centre?: Centre;
-  /** The craft's mass with no propellant, kilograms: a burn that would go below it stops there. 0 when left out. */
+  /** The craft's mass with no propellant, kilograms: a burn that would go below it stops there. 0 when left out, and then a burn that would use all the mass is refused, as its change of speed has no end. */
   dryMass?: number;
   /** For the burns; `rk4` when left out, as a push along the speed depends on the speed. */
   burnMethod?: Method;
@@ -188,6 +188,7 @@ export interface BurnResult {
  * @param burn The engine, the direction, and how long or how much.
  * @param options The step, the gravity, the centre and the dry mass.
  * @returns Where the craft is when the engine stops, and what the burn did.
+ * @throws {RangeError} When the burn has no length, or would use all the mass with no `dryMass` above zero.
  * @example
  * ```ts
  * import { exhaustSpeedOf, flyBurn, gravityAt } from "@johnmorrisdotca/uchusen-rockets/physics";
@@ -205,6 +206,8 @@ export function flyBurn(start: State, mass: number, burn: Burn, options: FlyOpti
   if (!(seconds >= 0) || !Number.isFinite(seconds)) throw new RangeError("a burn needs seconds, or a dv and an engine that is lit");
   const reserve = options.dryMass ?? 0;
   const longest = flow > 0 ? (mass - reserve) / flow : Infinity;
+  // With nothing held back, a burn that empties the craft has no finite answer: the thrust over the mass grows without limit, and so does the change of speed.
+  if (!(reserve > 0) && seconds >= longest) throw new RangeError("a burn that uses all the mass has no finite change of speed: give a dryMass above zero, and it stops there");
   const short = seconds > longest;
   if (short) seconds = Math.max(0, longest);
   const centre = options.centre ?? ORIGIN;

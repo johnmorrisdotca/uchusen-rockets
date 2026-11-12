@@ -71,6 +71,25 @@ test("a burn that needs more propellant than there is stops at the dry mass and 
   assert.ok(Math.abs(burn.dv - deltaV(exhaustSpeedOf(314), 20_000, 12_000)) < 1e-9);
 });
 
+test("a burn that would use all the mass has no finite change of speed: it is refused, and with a dry mass it stops there with finite numbers", () => {
+  const engine: Engine = { thrust: 12_000, exhaustSpeed: 3_000 };
+  const free = { step: 1, gravity: () => [0, 0, 0] as Vec3 };
+  const still = { t: 0, position: [0, 0, 0] as Vec3, velocity: [0, 0, 0] as Vec3 };
+  // 4 kg/s from 1000 kg is empty after 250 s; the thrust over the mass grows without limit as it nears empty, so no dryMass means no answer.
+  assert.throws(() => flyBurn(still, 1_000, { engine, direction: [0, 1, 0], seconds: 500 }, free), RangeError);
+  assert.throws(() => flyBurn(still, 1_000, { engine, direction: [0, 1, 0], seconds: 250 }, free), RangeError);
+  assert.throws(() => flyBurn(still, 1_000, { engine, direction: [0, 1, 0], seconds: 500 }, { ...free, dryMass: 0 }), RangeError);
+  const kept = flyBurn(still, 1_000, { engine, direction: [0, 1, 0], seconds: 500 }, { ...free, dryMass: 100 });
+  assert.equal(kept.short, true);
+  assert.ok(Math.abs(kept.mass - 100) < 1e-9 && Math.abs(kept.seconds - 225) < 1e-9);
+  assert.ok(Number.isFinite(kept.dv) && Number.isFinite(kept.state.velocity[1]));
+  assert.ok(Math.abs(kept.dv - 3_000 * Math.log(10)) < 1e-9 && Math.abs(kept.state.velocity[1] - kept.dv) < 1e-3);
+  // A burn that stays above the mass at its end is untouched, with no dry mass given.
+  const part = flyBurn(still, 1_000, { engine, direction: [0, 1, 0], seconds: 100 }, free);
+  assert.equal(part.short, false);
+  assert.ok(Math.abs(part.dv - 3_000 * Math.log(1_000 / 600)) < 1e-9);
+});
+
 test("the named directions are the orbit's: along the speed, along the angular momentum, away from the body, and a body that moves carries them", () => {
   const p: Vec3 = [R1, 0, 0];
   const v: Vec3 = [0, V1, 0];
