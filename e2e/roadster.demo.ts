@@ -23,7 +23,9 @@ const COUNT = () => {
 };
 const live = (page: Page) => page.evaluate(() => ({ ...(window as unknown as { __live: { Buffer: number; Texture: number } }).__live }));
 
-test("each car's model loads only when it is chosen, and the one before is freed", async ({ page }) => {
+test("each car's model loads only when it is chosen, and the one before is freed", async ({ page, browserName }, info) => {
+  // one counter of the GPU's buffers for the whole page: read in software Chromium at a desk's width only, as the freeze test does
+  test.skip(browserName !== "chromium" || info.project.name !== "chromium-desk", "the GPU count is read in desk Chromium only");
   await page.addInitScript(COUNT);
   const fetched: string[] = [];
   page.on("request", (request) => {
@@ -59,8 +61,8 @@ test("each car's model loads only when it is chosen, and the one before is freed
   expect(problems).toEqual([]);
 });
 
-/** How much brighter the right half of the picture is than the left. */
-const tilt = async (page: Page): Promise<number> => {
+/** How much brighter the right half of the picture is than the left, and how bright it is overall. */
+const tilt = async (page: Page): Promise<{ tilt: number; mean: number }> => {
   const shot = (await page.locator("#r canvas").screenshot()).toString("base64");
   return page.evaluate(async (data) => {
     const image = new Image();
@@ -81,7 +83,8 @@ const tilt = async (page: Page): Promise<number> => {
         if (x < width / 2) left += luma;
         else right += luma;
       }
-    return (right - left) / ((width * height) / 4);
+    const cells = (width * height) / 4;
+    return { tilt: (right - left) / cells, mean: (right + left) / cells };
   }, shot);
 };
 
@@ -110,9 +113,13 @@ test("in space the car is lit from the Sun's side: from one side, then from the 
   await lightFrom("-1,0.2,0");
   const other = await tilt(page);
   // the bright half changes sides with the Sun, by a clear margin
-  expect(Math.sign(one)).toBe(-Math.sign(other));
-  expect(Math.abs(one - other)).toBeGreaterThan(1.5);
-  // without a Sun the showroom light comes back
+  expect(Math.sign(one.tilt)).toBe(-Math.sign(other.tilt));
+  expect(Math.abs(one.tilt - other.tilt)).toBeGreaterThan(1.5);
+  // without a Sun the showroom light comes back: lit from the front and all round, so the whole picture is brighter than under one Sun
+  const frames = Number((await canvas.getAttribute("data-frames")) ?? "0");
   await page.locator("#r").evaluate((node) => node.removeAttribute("sun"));
   await expect(canvas).toHaveAttribute("data-sun", "off");
+  await expect.poll(async () => Number((await canvas.getAttribute("data-frames")) ?? "0")).toBeGreaterThan(frames);
+  const showroom = await tilt(page);
+  expect(showroom.mean).toBeGreaterThan(Math.max(one.mean, other.mean) * 1.2);
 });
