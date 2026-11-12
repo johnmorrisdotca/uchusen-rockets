@@ -1,5 +1,6 @@
 // Writes test/data/orbiter-elements.json: what Orbiter's own Elements class (Src/Orbiter/Element.cpp, compiled unchanged) gives for a few
-// orbits, so test/physics-orbiter.test.ts can hold the port to it without Orbiter. By hand, never in the build or CI:
+// orbits, so test/physics-orbiter.test.ts can hold the port to it without Orbiter; and test/data/orbiter-attitude.json, from its quaternion
+// code and its Euler equation, for test/physics-attitude.test.ts. By hand, never in the build or CI:
 //
 //   ORBITER_SOURCE=<a checkout of github.com/orbitersim/orbiter> node scripts/orbiter-reference.ts
 //
@@ -67,6 +68,43 @@ try {
   };
   writeFileSync(join(root, "test", "data", "orbiter-elements.json"), `${JSON.stringify(out, null, 1)}\n`);
   console.log(`wrote test/data/orbiter-elements.json: ${CASES.length} orbits from ${commit}`);
+
+  // The attitude: Orbiter's quaternions (Vecmat.cpp) and Euler's equation (EulerInv_full's body, cut from Rigidbody.cpp unchanged).
+  const rigid = readFileSync(join(src, "Rigidbody.cpp"), "latin1");
+  const at = rigid.indexOf("Vector RigidBody::EulerInv_full");
+  const open = rigid.indexOf("\n{", at);
+  const close = rigid.indexOf("\n}", open);
+  if (at < 0 || open < 0 || close < 0) throw new Error("RigidBody::EulerInv_full not found in Rigidbody.cpp");
+  writeFileSync(join(work, "euler-body.inc"), `${rigid.slice(open + 1, close + 2)}\n`, "latin1");
+  copyFileSync(join(root, "scripts", "orbiter-reference", "attitude.cpp"), join(work, "attitude.cpp"));
+  execFileSync("c++", ["-std=c++17", "-O1", "-w", "-I.", "-o", "attitude", "attitude.cpp", "Vecmat.cpp"], { cwd: work, stdio: "inherit" });
+  const unit = (q: number[]) => q.map((x) => x / Math.hypot(...q));
+  const QUATS = [
+    { q: unit([0.92736, 0.1, 0.2, 0.3]), p: [0.5, 2, -1.2] as V, omega: [0.001, -0.003, 0.002] as V },
+    { q: unit([0.2, -0.7, 0.4, 0.5]), p: [-3, 1, 7] as V, omega: [0.02, 0.01, -0.015] as V },
+    { q: [1, 0, 0, 0], p: [0, 1, 0] as V, omega: [0, 0, 0.0005] as V },
+  ];
+  const EULER = [
+    { inertia: [1_000, 2_000, 3_000] as V, torque: [10, -20, 5] as V, omega: [0.1, 0.02, -0.05] as V },
+    { inertia: [52_000, 52_000, 9_000] as V, torque: [0, 0, 0] as V, omega: [0.01, 0.03, 0.2] as V },
+    { inertia: [4.5e6, 9.1e5, 4.7e6] as V, torque: [1_200, 0, -800] as V, omega: [0.002, -0.004, 0.001] as V },
+  ];
+  const lines = [
+    ...QUATS.map((c) => ["q", c.q[1], c.q[3], c.q[2], c.q[0], ...swap(c.p), ...swap(c.omega)].join(" ")),
+    ...EULER.map((c) => ["e", ...swap(c.inertia), ...swap(c.torque), ...swap(c.omega)].join(" ")),
+  ];
+  const got = JSON.parse(execFileSync(join(work, "attitude"), { input: lines.join("\n"), encoding: "utf8" })) as { mul?: V; tmul?: V; rotated?: number[]; angularAcceleration?: V }[];
+  const attitude = {
+    source: `Orbiter, https://github.com/orbitersim/orbiter, commit ${commit}: Src/Orbiter/Vecmat.cpp (mul, tmul, Quaternion::Rotate) compiled unchanged, and RigidBody::EulerInv_full's body cut from Src/Orbiter/Rigidbody.cpp. Copyright (c) 2000-2026 Martin Schweiger, MIT licence`,
+    frame: "right-handed, z the pole (Orbiter's y and z swapped back; a quaternion [w, x, y, z] here is Orbiter's (qvx, qvy, qvz, qs) = (x, z, y, w))",
+    quaternions: QUATS.map((c, k) => {
+      const r = got[k]!.rotated!;
+      return { ...c, orbiter: { mul: swap(got[k]!.mul!), tmul: swap(got[k]!.tmul!), rotated: [r[3], r[0], r[2], r[1]] } };
+    }),
+    euler: EULER.map((c, k) => ({ ...c, orbiter: { angularAcceleration: swap(got[QUATS.length + k]!.angularAcceleration!) } })),
+  };
+  writeFileSync(join(root, "test", "data", "orbiter-attitude.json"), `${JSON.stringify(attitude, null, 1)}\n`);
+  console.log("wrote test/data/orbiter-attitude.json");
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
