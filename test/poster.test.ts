@@ -1,7 +1,7 @@
 // The poster is one sheet: the package's own craft at one scale, shortest first, and the ships in their own band.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cellOf, fitSheet, fleetKeys, laterNames, packRows, posterCraft, posterSvg, SHEETS } from "../demo/poster.ts";
+import { cellOf, fitSheet, heightLabel, fleetKeys, laterNames, packRows, posterCraft, posterSvg, SHEETS } from "../demo/poster.ts";
 
 test("the craft run from short to tall, and a row stays within the sheet", () => {
   const craft = posterCraft();
@@ -46,4 +46,15 @@ test("the poster is one coloured sheet, with one scale line and the fleet band",
   assert.deepEqual(poster.later, laterNames());
   const fitted = fitSheet(poster.width, poster.height, SHEETS.a1);
   assert.equal(fitted.height, SHEETS.a1.long);
+});
+
+test("a label carries the height and its unit, and the words that go with a figure stay for the card", () => {
+  const webb = posterCraft().find((one) => one.name === "James Webb Space Telescope");
+  assert.equal(webb?.height, "4.8 m");
+  assert.equal(heightLabel({ value: 146.3, source: "x", brief: "approximately" } as never), "146.3 m");
+  assert.equal(heightLabel({ value: null, source: null } as never), "No source");
+  for (const one of posterCraft()) assert.ok(one.height.length <= 12, `${one.name}: ${one.height}`);
+  // a cell is never narrower than the longest line of its label
+  const long = { ...posterCraft()[0], name: "Short", height: "123456789012 m" };
+  assert.ok(cellOf(long, 3.2) >= long.height.length * 4.6);
 });

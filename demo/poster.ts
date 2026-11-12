@@ -67,6 +67,12 @@ export interface PosterCraft {
   flight: string;
 }
 
+/** A craft's height for its label on the sheet: the number and its unit. What a figure says beside the number belongs on the craft's card, not under a drawing. A craft with no number gives the figure's own words. */
+export const heightLabel = (figure: Parameters<typeof figureWords>[0]): string => {
+  if (figure && figure.value !== null) return typeof figure.value === "number" ? `${figure.value} m` : figure.value;
+  return figureWords(figure, " m");
+};
+
 /** A first flight as a year, or the short note when there is no date. */
 const flightWords = (figure: { value: string | null; brief?: string }): string => {
   if (figure.value === null) return figure.brief ?? "";
@@ -97,7 +103,7 @@ export function posterCraft(): PosterCraft[] {
     const named = variantOf(rocket.id, rocket.defaultVariant);
     if (!named || !check({ rocket: rocket.id, variant: named.id }).ok) continue;
     const size = measure(build({ rocket: rocket.id, variant: named.id }));
-    craft.push({ key, name: rocket.name, maker: rocket.maker, metres: size.metres, widthM: size.widthM, height: figureWords(named.facts.height, " m"), flight: flightWords(named.firstFlight) });
+    craft.push({ key, name: rocket.name, maker: rocket.maker, metres: size.metres, widthM: size.widthM, height: heightLabel(named.facts.height), flight: flightWords(named.firstFlight) });
   }
   craft.sort((a, b) => a.metres - b.metres || a.name.localeCompare(b.name));
   return craft;
@@ -135,7 +141,7 @@ const wrapName = (name: string): string[] => {
 };
 
 /** A craft's cell on the sheet: its width at the scale, with a little room, and never narrower than its name or the least a cell may be. */
-export const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.max(...wrapName(craft.name).map((line) => line.length)) * 4.6);
+export const cellOf = (craft: PosterCraft, unit: number): number => Math.max(MIN_CELL, craft.widthM * unit + 4, Math.max(craft.height.length, ...wrapName(craft.name).map((line) => line.length)) * 4.6);
 
 /**
  * Rows of craft, shortest first, each row staying within the sheet. A row takes the next craft until the next one would pass the width.
