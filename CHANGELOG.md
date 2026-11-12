@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Parker Solar Probe** (MODULES-1182): detached pieces under 2 cm are removed from the painted model. The heat shield stays 2.4 m.
+
 ## [0.21.0] - 2026-11-12
 
 - **James Webb and Parker Solar Probe** (MODULES-1120): `rocket="jwst"` and `rocket="parker-solar-probe"`. The painted look is NASA's own model, fetched only when that look is asked for. Webb is scaled so the sunshield's long side is 21.197 m; Parker so the heat shield is 2.4 m. The line looks are this package's own plain shapes from the published sizes. Europa Clipper is not included: its page was not found, and the Europa Orbiter file is a different craft offered only as a printable part.
