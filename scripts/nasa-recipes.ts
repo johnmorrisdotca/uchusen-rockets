@@ -286,14 +286,9 @@ const GALILEO: NasaPart = { id: "craft", triangles: 5_000, error: 0.05, place: p
 // Pioneer. The high-gain antenna is already 2.74 of the file's units across, the sourced diameter, so the scale is 1.
 const PIONEER: NasaPart = { id: "craft", triangles: 4_000, error: 0.02, place: placer([0, -6.7781, 0], 1, 1, 0) };
 
-// New Horizons, NASA's print parts, each in its own frame, Y up. The dish rim is 4.1335 of the file's units across: scaled to the sourced 2.1 m.
-// The whole body (not the two print halves) stays. The antenna's base sits on the deck at (0.0339, 1.7, 0.6695). The RTG, turned so its length runs out along -X, meets the peg's shoulder at x -2.612.
-const NH_DISH = 4.133500180897276;
-const NH_SCALE = 2.1 / NH_DISH;
-const NH_BODY = "nasa-3d-resources/new-horizons/7399_05_rp_body.stl";
-const NH_ANTENNA = "nasa-3d-resources/new-horizons/7399_05_rp_antenna.stl";
-const NH_RTG = "nasa-3d-resources/new-horizons/7399_05_rp_rtg.stl";
-const NEW_HORIZONS: NasaPart = { id: "craft", triangles: 20_000, error: 0.008, place: placer([0, 0, 0], NH_SCALE, NH_SCALE, 0) };
+// New Horizons, file up +y, the dish on top. The high-gain antenna is 1.888 of the file's units across: scaled to the sourced 2.1 m. The file's clear cube (a box of 1 unit round the origin) is left out.
+const NEW_HORIZONS_SCALE = 2.1 / 1.888;
+const NEW_HORIZONS: NasaPart = { id: "craft", triangles: 6_000, error: 0.01, place: placer([0, -0.404, 0], NEW_HORIZONS_SCALE, NEW_HORIZONS_SCALE, 0) };
 
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
@@ -517,20 +512,17 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
   },
   {
     id: "new-horizons",
-    files: [NH_BODY, NH_ANTENNA, NH_RTG],
+    files: [`${FOLDER}/new-horizons.glb`],
     title: "New Horizons",
-    source: "https://science.nasa.gov/3d-resources/new-horizons/",
-    changes: "NASA's 3D-print model, assembled from the body, the antenna and the RTG; the body halves were not used; reduced from 22,214 triangles to 20,000; rescaled so the high-gain antenna is the sourced 2.1 m; one plain colour. It carried no mark to remove.",
+    source: "https://science.nasa.gov/resource/new-horizons-3d-model/",
+    changes: "its pictures left out and plain colours kept, so the flag one carried is removed; its clear box left out; reduced from 8,268 triangles; rescaled so the high-gain antenna is the sourced 2.1 m; the loose pieces under 7 cm left out. No lettering or logo is drawn.",
     parts: [NEW_HORIZONS],
-    partOf: () => NEW_HORIZONS,
-    moves: {
-      [NH_ANTENNA]: { at: [0.0339, 1.7, 0.6695] },
-      [NH_RTG]: { spin: [0, 0, 90], at: [-2.612, 1.35, 1.764] },
-    },
-    colours: { stl: [0.62, 0.64, 0.66] },
+    partOf: (_centre, material) => (material === "transparent" ? null : NEW_HORIZONS),
+    colours: { AO_dish: [0.78, 0.78, 0.76], AO_1: [0.7, 0.7, 0.7], foil_gold: [0.72, 0.48, 0.12], tex_01: [0.55, 0.55, 0.54], tex_02: [0.22, 0.22, 0.24] },
+    trimBelow: SPECK_FLOOR,
     looseWeld: true,
     freeBorders: true,
-    atlas: 64,
-    quality: 0.7,
+    atlas: 128,
+    quality: 0.62,
   },
 ];

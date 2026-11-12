@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **New Horizons** (MODULES-1120): `rocket="new-horizons"`. The painted look is NASA's own model (NASA Visualization Technology Applications and Development), fetched only when that look is asked for, with its pictures left out (one carried a flag) and plain colours in their place, scaled so the high-gain antenna is 2.1 m: 5,999 triangles, 92 KB. The line look is this package's own plain shape from the published body and antenna, and stands 2.2 m. It can be seen from straight above or below, and its country is the United States. Pioneer 11's launch date (1973-04-06) is now recorded and shown on the Pioneer variant. The reducer can read a binary STL, for a model that comes as print parts.
+
 ## [0.22.0] - 2026-11-12
 
 - **Cassini, Galileo and Pioneer** (MODULES-1120): `rocket="cassini"`, `rocket="galileo"` and `rocket="pioneer"`. The painted look is NASA's own model, fetched only when that look is asked for. Cassini is scaled so the high-gain antenna is 4 m. Galileo is scaled so its longest side is the 11 m magnetometer boom. Pioneer's antenna is already the sourced 2.74 m, and one model serves Pioneer 10 and 11. Psyche and Lucy are not included: their pages were not found.
