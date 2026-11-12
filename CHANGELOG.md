@@ -2,9 +2,12 @@
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-11-12
+
 - **The concept build budget holds work on CI** (MODULES-1134): `every concept builds inside the budget` failed on a shared runner at 3059 ms against 3000. On the Mac it still holds the time budget. Under `CI` it holds what does not vary, the pieces and triangles each concept builds (within 15 per cent), plus a cap of five times the budget on the time.
 
 - **The WebGL probe runs once per page, and only when a view is about to draw** (MODULES-1102): every element asked at connect, and every 3D view made another test context for the name of the renderer, each a few seconds of the main thread in software drawing, and in headless WebKit a load now and then stalled for minutes. The page now makes one test context, when the first element comes on screen, answers both questions from it (does WebGL work, does it draw in software) and lets it go at once. The hero says `3d` where WebGL works and `fallback` where it does not, as before; an element far off screen no longer asks, so it says `picture` until it nears. A test holds the count at one.
+- **The played-timeline freeze test counts the graphics card at rest** (MODULES-853). "Grid fins, legs and flaps" read 210 buffers before its forty rounds and 213 after in about one run in seven in the CI image. The three were the pad's smoke, one instanced draw kept for the flight, which reaches the card a frame or two after the first draw at ignition: a slow run moved on before it did, and a later round made it. The warm-up now holds at ignition until the count stands still, and both counts wait for the camera's glide and the left-behind craft to end. The allowance is unchanged; 15 of 15 in the CI image.
 
 ## [0.19.0] - 2026-11-11
 
