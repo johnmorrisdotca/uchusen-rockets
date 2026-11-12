@@ -139,6 +139,11 @@ await step("node-transfer", () => {
   if (!/^3854 m\/s, 14279 kg of propellant\nends 4 km from the circle, eccentricity 0\.0000$/.test(out)) throw new Error(`unexpected output: ${out}`);
 });
 
+await step("node-attitude", () => {
+  const out = execFileSync(process.execPath, [join(examples("node"), "attitude.mjs")], { cwd: usage, encoding: "utf8" }).trim();
+  if (out !== "stopped in 8.3 s with 0.17 kg of propellant") throw new Error(`unexpected output: ${out}`);
+});
+
 await step("typescript", () => {
   writeFileSync(join(examples("typescript"), "tsconfig.json"), JSON.stringify({ compilerOptions: { target: "ES2022", module: "esnext", moduleResolution: "bundler", strict: true, noEmit: true, lib: ["es2023", "dom", "dom.iterable"], types: [], skipLibCheck: true }, include: ["index.ts"] }));
   sh(process.execPath, [require.resolve("typescript/bin/tsc"), "-p", join(examples("typescript"), "tsconfig.json")], usage);
@@ -278,6 +283,7 @@ const FILES: Record<string, string[]> = {
   "node/server.mjs": ["docs/guides/typescript-and-node.md", "docs/guides/ja/typescript-and-node.md"],
   "node/orbit.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
   "node/transfer.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
+  "node/attitude.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
 };
 const normal = (text: string) => text.replace(/\r\n/g, "\n").trim();
 for (const [file, places] of everything ? Object.entries(FILES) : []) {

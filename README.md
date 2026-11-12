@@ -260,7 +260,7 @@ rocket.svg({ look: "thick", view: "below", show: "booster" }).startsWith("<svg")
 | `.../element` | `<uchusen-rocket>`, `<uchusen-lineup>` and `<uchusen-flight>`: load `three` only when a 3D view is wanted, and a painted model only when the painted look is | `three` for 3D |
 | `.../react` | A thin `<UchusenRocket>` wrapper | `react` |
 | `.../assets/*` | Ready files: `starship-v3.glb`, `starship-v3.svg`, `starship-v3-booster.thick.svg`, `parts/raptor-vacuum.glb`, `models/starship-v3-ship.glb` | Nothing |
-| `.../physics` | Flight physics: orbits from a position and a speed (`elementsOf`, `stateOf`), gravity from the bodies of a scene (`gravityAt`), a craft moved forward in time (`propagate`, `path`), the rocket equation (`deltaV`, `burnSeconds`, `massFlow`), burns flown or all at once (`flyBurn`, `flyPlan`, `impulse`) and transfers (`biElliptic`, `planeChange`, `nodes`, `crossings`). Ported in part from Orbiter (MIT), measured against JPL Horizons | Nothing |
+| `.../physics` | Flight physics: orbits from a position and a speed (`elementsOf`, `stateOf`), gravity from the bodies of a scene (`gravityAt`), a craft moved forward in time (`propagate`, `path`), the rocket equation (`deltaV`, `burnSeconds`, `massFlow`), burns flown or all at once (`flyBurn`, `flyPlan`, `impulse`) transfers (`biElliptic`, `planeChange`, `nodes`, `crossings`), and attitude with thrusters and the autopilot's modes (`stepCraft`, `fireFor`, `killRotation`, `holdDirection`). Ported in part from Orbiter (MIT), measured against JPL Horizons | Nothing |
 | `.../launches` | The launch log: 7,425 orbital launch attempts since 1957 (`launches`, `launchByTag`, `findLaunches`, `countLaunches`, `launchTotals`), each linked to this package's rocket where it is one (`LAUNCH_VEHICLE_LINKS`), in one data file of about 1.1 MB that only this entry loads. Credit GCAT, as [NOTICE.md](NOTICE.md) says | Nothing |
 
 ## To scale
@@ -410,7 +410,7 @@ Each guide has a Japanese twin in [docs/guides/ja](docs/guides/ja).
 | [Lit engines and flights](docs/guides/engines-and-flights.md) | Engines at full thrust, flights, what is sourced |
 | [Rockets to scale](docs/guides/scale-lineups.md) | `<uchusen-lineup>` and `lineupSvg` |
 | [Journey mode](docs/guides/journey.md) | Fly a rocket or a fleet ship to the Moon or a planet: windows, burns, the flip |
-| [Flight physics](docs/guides/flight-physics.md) | Orbits, gravity from the bodies of a scene, propagation, the rocket equation, burns and transfers, and how exact they are |
+| [Flight physics](docs/guides/flight-physics.md) | Orbits, gravity from the bodies of a scene, propagation, the rocket equation, burns, transfers, attitude and thrusters, and how exact they are |
 | [Put a rocket on your own site](docs/guides/embed-on-your-site.md) | Six ways, and the credit |
 | [React and other frameworks](docs/guides/react-and-frameworks.md) | React, Vue, Svelte, Angular |
 | [Bundlers and CDNs](docs/guides/bundlers-and-cdn.md) | unpkg, Vite, webpack |
@@ -429,7 +429,7 @@ Uchusen Rockets is made for learning, teaching, comparing and drawing. It is not
 
 - **Sizes.** A figure is as exact as its source, shown to the digits the source gives. Where sources disagree the page lists them side by side (Block 3's height has several), and a rocket announced but not built, such as Starship Block 4, shows its sizes as estimates.
 - **The journey.** The planets' positions are real, from NASA JPL's approximate orbit elements, good to about an arc minute (about 20,000 km at Mars). The trips are simple models (Hohmann transfers with patched conics, and flip-and-burn for the fleet ships), checked against the figures NASA prints (about 259 days to Mars), so they show what a trip costs, not what a mission would fly; a craft's burn length and turn times that no source gives are marked "est.".
-- **The flight physics.** Point masses and a body's J2 to J4, with no air and no push of sunlight yet: measured against JPL Horizons, the Moon after 28 days is within a kilometre and the ISS after 100 minutes within 0.2 km. Good for showing how a craft flies, not for navigating one.
+- **The flight physics.** Point masses and a body's J2 to J4, rigid-body turning with thrusters, and no air and no push of sunlight yet: measured against JPL Horizons, the Moon after 28 days is within a kilometre and the ISS after 100 minutes within 0.2 km. Good for showing how a craft flies, not for navigating one.
 - A rocket is only as good as its sources. A figure no source gives is blank, never estimated, and a blank is shown as one.
 - A flame's length and its shock diamonds, how parts move between flight phases, smoke and the ground falling away are pictures, not measurements.
 - A part with no licensed model is painted by this package's own code from photographs and sizes. It is a likeness, not a scan.

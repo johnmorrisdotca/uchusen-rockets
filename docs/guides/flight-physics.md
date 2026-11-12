@@ -2,12 +2,12 @@
 title: Flight physics
 section: how-to
 order: 8
-description: Orbits from a position and a speed, gravity from the bodies of a scene, a craft moved forward in time, the rocket equation, burns and transfers. Ported in part from Orbiter and measured against JPL Horizons.
+description: Orbits from a position and a speed, gravity from the bodies of a scene, a craft moved forward in time, the rocket equation, burns, transfers and turning with thrusters. Ported in part from Orbiter and measured against JPL Horizons.
 ---
 
-The `physics` entry is the arithmetic of flying a craft: what orbit a position and a speed make, the pull of the bodies around it, where it is after a while, what a burn costs, and how to fly from one orbit to another. It is pure (no DOM, no clock, no dependency), so it runs in Node, in a test or under your own page, and it works in SI units throughout: metres, seconds, kilograms, newtons. A gravitational parameter is in m^3/s^2, so the journey's `GM_KM3_S2` values are multiplied by `1e9`.
+The `physics` entry is the arithmetic of flying a craft: what orbit a position and a speed make, the pull of the bodies around it, where it is after a while, what a burn costs, how to fly from one orbit to another, and how the craft turns. It is pure (no DOM, no clock, no dependency), so it runs in Node, in a test or under your own page, and it works in SI units throughout: metres, seconds, kilograms, newtons. A gravitational parameter is in m^3/s^2, so the journey's `GM_KM3_S2` values are multiplied by `1e9`.
 
-Parts of it are ported from [Orbiter](https://github.com/orbitersim/orbiter), the open-source space flight simulator (MIT licence, Copyright (c) 2000-2026 Martin Schweiger); [Where it comes from](#where-it-comes-from) names each file. Burns and transfers are here; turning the craft with its thrusters, and the air, come in later releases.
+Parts of it are ported from [Orbiter](https://github.com/orbitersim/orbiter), the open-source space flight simulator (MIT licence, Copyright (c) 2000-2026 Martin Schweiger); [Where it comes from](#where-it-comes-from) names each file. Burns, transfers and turning the craft with its thrusters are here; the air comes in a later release.
 
 ## An orbit from a position and a speed
 
@@ -169,6 +169,56 @@ console.log("ends", Math.round(Math.abs(orbit.a - r2) / 1000), "km from the circ
 
 It prints `3854 m/s, 14279 kg of propellant` and `ends 4 km from the circle, eccentricity 0.0000`. A weaker engine burns longer, and more of each burn is off its point: with this craft's 91 kN engine the same plan ends 404 km short, with an eccentricity of 0.025, so a plan for a weak engine splits a long burn or corrects it afterwards.
 
+## Attitude and thrusters
+
+Which way a craft points is a quaternion `[w, x, y, z]` that turns the craft's own frame into the scene's (`rotateVector`, `unrotateVector`, `quatFromAxisAngle`, `turnBy`); its turn rate is in its own frame. `angularAcceleration` is Euler's equation for a craft with principal moments of inertia along its axes, `stepSpin` and `spinFor` turn it forward in time, and `stepCraft` moves its place and its attitude in one step, so that an engine pushing along the nose follows the turning nose (Orbiter's `RK4_LinAng`). `gravityGradientTorque` is the slow turn a body's gravity gives a long craft.
+
+A `Thruster` is a push at a point of the craft: `thrusterPush` gives the force, the torque (`position x force`) and the propellant of any levels, `torqueLimits` the largest torque about each axis each way (each thruster in the group of the axis it turns most, as Orbiter's attitude groups are), and `fireFor` the levels that give a wanted torque. The autopilot's modes are Orbiter's: `killRotation` stops a tumble (a tenth of the torque that would stop it in one control step, until the rate is below 1e-5 rad/s), and `holdDirection` turns the nose to a direction and keeps it there (a turn rate of at most 5 degrees a second, less within 20 degrees, each axis held to 40 per cent of its thrusters), rolling to a roof direction if one is given. A direction can be the orbit's own, from `directionOf` of the burns. The craft's nose is `[0, 1, 0]` unless you say, as this package's rockets stand along +y.
+
+```ts
+import { directionOf, fireFor, gravityAt, holdDirection, quatFromAxisAngle, rotateVector, stepCraft, torqueLimits, type Craft, type Thruster, type Vec3 } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+const inertia: Vec3 = [20_000, 6_000, 20_000];
+const thrusters: Thruster[] = [];
+for (const y of [4, -4]) for (const direction of [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]] as Vec3[]) thrusters.push({ position: [0, y, 0], direction, thrust: 445, exhaustSpeed: 2_800 });
+const limits = torqueLimits(thrusters);
+const earth = [{ gm: 3.986004418e14, position: [0, 0, 0] as const }];
+
+let craft: Craft = { t: 0, position: [6_778_000, 0, 0], velocity: [0, 7_669, 0], q: quatFromAxisAngle([0, 0, 1], -Math.PI / 2), omega: [0, 0, 0] };
+for (let k = 0; k < 600; k++) {
+  const prograde = directionOf("prograde", craft.position, craft.velocity);
+  const fired = fireFor(thrusters, holdDirection(craft, inertia, limits, 0.1, prograde));
+  craft = stepCraft(craft, 0.1, { inertia, acceleration: (_t, p) => gravityAt(p, earth), torque: () => fired.torque });
+}
+const nose = rotateVector(craft.q, [0, 1, 0]);
+const prograde = directionOf("prograde", craft.position, craft.velocity);
+console.log(((Math.acos(nose[0] * prograde[0] + nose[1] * prograde[1] + nose[2] * prograde[2]) * 180) / Math.PI).toFixed(2), "degrees from prograde after a minute");
+```
+
+Stopping a tumble, as a plain script (`examples/node/attitude.mjs`, run against the package as npm packs it):
+
+```js
+import { fireFor, killRotation, stepSpin, torqueLimits } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+// An 8 m craft standing along +y, with four 445 N thrusters at each end and two pairs for the roll, stops a tumble.
+const inertia = [20_000, 6_000, 20_000];
+const thrusters = [];
+for (const y of [4, -4]) for (const direction of [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]]) thrusters.push({ position: [0, y, 0], direction, thrust: 445, exhaustSpeed: 2_800 });
+for (const s of [1, -1]) thrusters.push({ position: [1.5, 0, 0], direction: [0, 0, s], thrust: 445, exhaustSpeed: 2_800 }, { position: [-1.5, 0, 0], direction: [0, 0, -s], thrust: 445, exhaustSpeed: 2_800 });
+const limits = torqueLimits(thrusters);
+
+let spin = { t: 0, q: [1, 0, 0, 0], omega: [0.05, -0.03, 0.02] };
+let propellant = 0;
+while (Math.hypot(...spin.omega) >= 1e-5) {
+  const fired = fireFor(thrusters, killRotation(spin, inertia, limits, 0.1));
+  propellant += fired.massFlow * 0.1;
+  spin = stepSpin(spin, 0.1, inertia, () => fired.torque);
+}
+console.log("stopped in", spin.t.toFixed(1), "s with", propellant.toFixed(2), "kg of propellant");
+```
+
+It prints `stopped in 8.3 s with 0.17 kg of propellant`.
+
 ## How exact it is
 
 Each figure below is a test, measured on 2026-11-11 against saved answers: the tests never call the network.
@@ -187,6 +237,12 @@ Each figure below is a test, measured on 2026-11-11 against saved answers: the t
 | A Hohmann transfer from a 28.5-degree orbit, its second burn turning the plane | The law of cosines | The equator's circle, inclination and eccentricity below 1e-9 |
 | A burn along the normal of Orbiter's estimate, speed times 5 degrees | The angle | 4.995 degrees |
 | Positions, speeds and times at five points of each of the six orbits | Orbiter's `PosVel_TA`, `Spd_TA` and `MeanAnomaly_from_TrueAnomaly`, compiled | The same to the millimetre |
+| Turning vectors by a quaternion, and Euler's equation | Orbiter's `mul`, `tmul` and `EulerInv_full`, compiled | The same to 1e-12 |
+| A body tumbling for 600 s about its unstable middle axis, no torque | What it must keep | Energy to 5e-14; angular momentum to 2.5e-7 at 0.01 s steps (the attitude step is second order, as Orbiter's is) |
+| A spinning body with two equal moments | The textbook wobble rate, (C - A) / A times the spin | The same to 1e-6 rad after 20 s |
+| A steady torque, or two thrusters as a couple | Rate t / I and angle t^2 / 2I | The same to 1e-12 |
+| Kill rotation of the 8 m craft from 0.05, 0.03 and 0.02 rad/s | Orbiter's 1e-5 rad/s | Stopped in 8.3 s, 0.17 kg of propellant |
+| Holding prograde in low orbit from 90 degrees off | The direction of the speed | Under 0.5 degrees after 32 s, then 0.26 degrees behind: the orbit's turn rate over the rate law's gain |
 
 What is left over is what each flight leaves out (the higher terms of a body's gravity, the air, the push of sunlight), not the integrator.
 
@@ -201,5 +257,6 @@ Ported from Orbiter, https://github.com/orbitersim/orbiter (MIT licence, Copyrig
 - `stateAtTrueAnomaly`, `timeToTrueAnomaly`: `Src/Orbiter/Element.cpp` (`PosVel_TA`, `MeanAnomaly_from_TrueAnomaly`).
 - `directionOf`, `impulse`, `burnStart`: the attitude modes of `Src/Orbiter/Vessel.cpp`, the burn timing of `Src/Orbiter/MfdAlign.cpp` and the burn of `Src/Orbiter/MfdTransfer.cpp`; `flyBurn` and `flyPlan` are written here on the propagator.
 - `speedChangeFor`, `crossings`: `Src/Orbiter/MfdTransfer.cpp`; `nodes`, `relativeInclination`: `Src/Orbiter/MfdAlign.cpp`. `biElliptic` and `planeChange` are written here.
+- `angularAcceleration`, `gravityGradientTorque`: `Src/Orbiter/Rigidbody.cpp` (`EulerInv_full`, `GetTorque`); `stepCraft`, `stepSpin`, `spinFor`: `Src/Orbiter/BodyIntegrator.cpp` (`RK4_LinAng`); the quaternions: `Src/Orbiter/Vecmat.cpp`; `thrusterPush`, `torqueLimits`, `fireFor`, `killRotation`, `holdDirection`: `Src/Orbiter/Vessel.cpp` (the thrusters' torque, `MaxAngularMoment` and the navcomp's modes).
 
 Each source file says what was changed. The answers the tests compare with are from JPL Horizons (NASA/JPL, public domain), saved by `scripts/fetch-orbit-reference.ts`, and from Orbiter's own code, by `scripts/orbiter-reference.ts`. [NOTICE.md](../../NOTICE.md) has the credits.

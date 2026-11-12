@@ -2,12 +2,12 @@
 title: 飛行の物理
 section: how-to
 order: 8
-description: 位置と速度から軌道を出し、場面の天体の重力を足し合わせ、機体を先の時刻へ進めます。ロケット方程式、噴射、軌道の乗り換えもあります。一部は Orbiter から移植し、JPL Horizons と比べて確かめています。
+description: 位置と速度から軌道を出し、場面の天体の重力を足し合わせ、機体を先の時刻へ進めます。ロケット方程式、噴射、軌道の乗り換え、スラスターで機体の向きを変える計算も入っています。一部は Orbiter から移植し、JPL Horizons と比べて確かめています。
 ---
 
-`physics` エントリーは、機体を飛ばすための計算です。位置と速度からどんな軌道になるか、まわりの天体がどれだけ引くか、しばらく後にどこにいるか、噴射にどれだけの推進剤がいるか、ある軌道から別の軌道へどう乗り換えるかを出します。純粋な計算で、DOM も時計も依存パッケージも使わないので、Node でもテストでも自分のページの中でも動きます。単位はすべて SI です（メートル、秒、キログラム、ニュートン）。重力パラメーター（GM）は m^3/s^2 で表すので、`journey` エントリーの `GM_KM3_S2` の値は `1e9` 倍して使います。
+`physics` エントリーは、機体を飛ばすための計算です。位置と速度からどんな軌道になるか、まわりの天体がどれだけ引くか、しばらく後にどこにいるか、噴射にどれだけの推進剤がいるか、ある軌道から別の軌道へどう乗り換えるか、機体がどう向きを変えるかを出します。純粋な計算で、DOM も時計も依存パッケージも使わないので、Node でもテストでも自分のページの中でも動きます。単位はすべて SI です（メートル、秒、キログラム、ニュートン）。重力パラメーター（GM）は m^3/s^2 で表すので、`journey` エントリーの `GM_KM3_S2` の値は `1e9` 倍して使います。
 
-一部は、オープンソースの宇宙飛行シミュレーター [Orbiter](https://github.com/orbitersim/orbiter) から移植しました（MIT ライセンス、Copyright (c) 2000-2026 Martin Schweiger）。どのファイルから来たかは、[出どころ](#出どころ)に書いてあります。噴射と軌道の乗り換えも入っています。スラスターで向きを変えることと、空気の影響は、このあとのリリースで加わります。
+一部は、オープンソースの宇宙飛行シミュレーター [Orbiter](https://github.com/orbitersim/orbiter) から移植しました（MIT ライセンス、Copyright (c) 2000-2026 Martin Schweiger）。どのファイルから来たかは、[出どころ](#出どころ)に書いてあります。噴射、軌道の乗り換え、スラスターで機体の向きを変えることは、もう入っています。空気の影響は、このあとのリリースで加わります。
 
 ## 位置と速度から軌道を出す
 
@@ -169,6 +169,56 @@ console.log("ends", Math.round(Math.abs(orbit.a - r2) / 1000), "km from the circ
 
 `3854 m/s, 14279 kg of propellant` と `ends 4 km from the circle, eccentricity 0.0000` が表示されます。エンジンが弱いと噴射が長くなり、それぞれの噴射のうち、予定の点から離れた部分が増えます。この機体の 91 kN のエンジンでは、同じ計画でも 404 km 足りずに終わり、離心率は 0.025 になります。そのため弱いエンジンでは、長い噴射をいくつかに分けるか、あとから直す計画にします。
 
+## 姿勢とスラスター
+
+機体がどちらを向いているかは、クォータニオン `[w, x, y, z]` で表します。これは機体自身の座標系を場面の座標系に回すものです（`rotateVector`、`unrotateVector`、`quatFromAxisAngle`、`turnBy`）。回転の速さは機体自身の座標系で表します。`angularAcceleration` は、機体の軸に沿った主慣性モーメントを持つ機体の、オイラーの運動方程式です。`stepSpin` と `spinFor` は機体の回転を時間に沿って進め、`stepCraft` は位置と姿勢を1つの刻みで一緒に進めます。そのため、機首の方向に押すエンジンの推力は、機首が回るのに合わせて向きを変えます（Orbiter の `RK4_LinAng`）。`gravityGradientTorque` は、天体の重力が細長い機体をゆっくり回そうとする力（重力傾度トルク）です。
+
+`Thruster` は、機体のある点で押すものです。`thrusterPush` は、各スラスターの出力をどう決めても、そのときの力、トルク（`position x force`）、使う推進剤を出します。`torqueLimits` は、それぞれの軸のまわりに、それぞれの向きで出せるいちばん大きなトルクを出します（各スラスターは、いちばん大きく回す軸のグループに入ります。Orbiter の姿勢制御のグループと同じ分け方です）。`fireFor` は、ほしいトルクを出すための各スラスターの出力を出します。自動操縦のモードは Orbiter と同じです。`killRotation` は回転を止めます（1回の制御の刻みで止めきるのに必要なトルクの10分の1をかけ、回転の速さが 1e-5 rad/s より小さくなるまでくり返します）。`holdDirection` は、機首をある向きに回してそのまま保ちます（回す速さは毎秒5度まで、目標から20度以内では遅くし、どの軸もスラスターの力の40パーセントまでしか使いません）。機体の上にしたい向き（屋根の向き）を渡すと、機体をロールさせてその向きに合わせます。向きには、「噴射」の節にある `directionOf` で出す、軌道から決まる向きも使えます。機首は、指定しなければ `[0, 1, 0]` です。このパッケージのロケットは +y の向きに立っているからです。
+
+```ts
+import { directionOf, fireFor, gravityAt, holdDirection, quatFromAxisAngle, rotateVector, stepCraft, torqueLimits, type Craft, type Thruster, type Vec3 } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+const inertia: Vec3 = [20_000, 6_000, 20_000];
+const thrusters: Thruster[] = [];
+for (const y of [4, -4]) for (const direction of [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]] as Vec3[]) thrusters.push({ position: [0, y, 0], direction, thrust: 445, exhaustSpeed: 2_800 });
+const limits = torqueLimits(thrusters);
+const earth = [{ gm: 3.986004418e14, position: [0, 0, 0] as const }];
+
+let craft: Craft = { t: 0, position: [6_778_000, 0, 0], velocity: [0, 7_669, 0], q: quatFromAxisAngle([0, 0, 1], -Math.PI / 2), omega: [0, 0, 0] };
+for (let k = 0; k < 600; k++) {
+  const prograde = directionOf("prograde", craft.position, craft.velocity);
+  const fired = fireFor(thrusters, holdDirection(craft, inertia, limits, 0.1, prograde));
+  craft = stepCraft(craft, 0.1, { inertia, acceleration: (_t, p) => gravityAt(p, earth), torque: () => fired.torque });
+}
+const nose = rotateVector(craft.q, [0, 1, 0]);
+const prograde = directionOf("prograde", craft.position, craft.velocity);
+console.log(((Math.acos(nose[0] * prograde[0] + nose[1] * prograde[1] + nose[2] * prograde[2]) * 180) / Math.PI).toFixed(2), "degrees from prograde after a minute");
+```
+
+機体の回転を止める、ふつうのスクリプトの例です（`examples/node/attitude.mjs`。npm が作るとおりのパッケージで実行しています）。
+
+```js
+import { fireFor, killRotation, stepSpin, torqueLimits } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+// An 8 m craft standing along +y, with four 445 N thrusters at each end and two pairs for the roll, stops a tumble.
+const inertia = [20_000, 6_000, 20_000];
+const thrusters = [];
+for (const y of [4, -4]) for (const direction of [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]]) thrusters.push({ position: [0, y, 0], direction, thrust: 445, exhaustSpeed: 2_800 });
+for (const s of [1, -1]) thrusters.push({ position: [1.5, 0, 0], direction: [0, 0, s], thrust: 445, exhaustSpeed: 2_800 }, { position: [-1.5, 0, 0], direction: [0, 0, -s], thrust: 445, exhaustSpeed: 2_800 });
+const limits = torqueLimits(thrusters);
+
+let spin = { t: 0, q: [1, 0, 0, 0], omega: [0.05, -0.03, 0.02] };
+let propellant = 0;
+while (Math.hypot(...spin.omega) >= 1e-5) {
+  const fired = fireFor(thrusters, killRotation(spin, inertia, limits, 0.1));
+  propellant += fired.massFlow * 0.1;
+  spin = stepSpin(spin, 0.1, inertia, () => fired.torque);
+}
+console.log("stopped in", spin.t.toFixed(1), "s with", propellant.toFixed(2), "kg of propellant");
+```
+
+`stopped in 8.3 s with 0.17 kg of propellant` が表示されます。
+
 ## どれくらい正確か
 
 下の数字はどれもテストで、2026-11-11 に、保存しておいた答えと比べて測りました。テストはネットワークを使いません。
@@ -187,6 +237,12 @@ console.log("ends", Math.round(Math.abs(orbit.a - r2) / 1000), "km from the circ
 | 傾き 28.5 度の軌道からのホーマン遷移。2回目の噴射で面も回す | 余弦定理 | 赤道の上の円に着き、傾きと離心率は 1e-9 より小さい |
 | Orbiter の見積もり（速度かける 5 度）の大きさで、面に垂直に噴射する | その角度 | 4.995 度 |
 | 6つの軌道それぞれの5つの点での位置、速さ、時刻 | Orbiter の `PosVel_TA`、`Spd_TA`、`MeanAnomaly_from_TrueAnomaly` をコンパイルしたもの | ミリメートルの単位まで同じ |
+| クォータニオンでベクトルを回すことと、オイラーの運動方程式 | Orbiter の `mul`、`tmul`、`EulerInv_full` をコンパイルしたもの | 1e-12 まで同じ |
+| 慣性モーメントが真ん中の、不安定な軸のまわりで、トルクなしで 600 秒回り続ける物体 | 保たれるべき量 | エネルギーは 5e-14 まで、角運動量は 0.01 秒の刻みで 2.5e-7 まで保たれる（姿勢を進める計算は、Orbiter と同じく2次です） |
+| 2つの慣性モーメントが等しい、回っている物体 | 教科書にある首ふりの速さ（回転の速さの (C - A) / A 倍） | 20 秒後に 1e-6 rad まで同じ |
+| 一定のトルク、または偶力になる2つのスラスター | 回転の速さ t / I と角度 t^2 / 2I | 1e-12 まで同じ |
+| 8 m の機体の回転を、0.05、0.03、0.02 rad/s から止める | Orbiter の基準 1e-5 rad/s | 8.3 秒で止まり、推進剤は 0.17 kg |
+| 低い軌道で、進行方向から 90 度ずれたところから始めて、進行方向を保つ | 速度の向き | 32 秒後には 0.5 度より小さくなり、そのあとは 0.26 度遅れてついていく（軌道が回る速さを、回す速さを決める式の係数で割った値） |
 
 残るずれは、それぞれの計算が入れていないもの（天体の重力の高次の項、空気、太陽の光が押す力）から来ています。計算の方法（積分のしかた）のせいではありません。
 
@@ -201,5 +257,6 @@ Orbiter（https://github.com/orbitersim/orbiter 、MIT ライセンス、Copyrig
 - `stateAtTrueAnomaly`、`timeToTrueAnomaly`：`Src/Orbiter/Element.cpp`（`PosVel_TA`、`MeanAnomaly_from_TrueAnomaly`）
 - `directionOf`、`impulse`、`burnStart`：`Src/Orbiter/Vessel.cpp` の姿勢のモード、`Src/Orbiter/MfdAlign.cpp` の噴射の時刻の決め方、`Src/Orbiter/MfdTransfer.cpp` の噴射。`flyBurn` と `flyPlan` は、時間を進める計算を使って、ここで新しく書いたものです
 - `speedChangeFor`、`crossings`：`Src/Orbiter/MfdTransfer.cpp`。`nodes`、`relativeInclination`：`Src/Orbiter/MfdAlign.cpp`。`biElliptic` と `planeChange` は、ここで新しく書いたものです
+- `angularAcceleration`、`gravityGradientTorque`：`Src/Orbiter/Rigidbody.cpp`（`EulerInv_full`、`GetTorque`）。`stepCraft`、`stepSpin`、`spinFor`：`Src/Orbiter/BodyIntegrator.cpp`（`RK4_LinAng`）。クォータニオン：`Src/Orbiter/Vecmat.cpp`。`thrusterPush`、`torqueLimits`、`fireFor`、`killRotation`、`holdDirection`：`Src/Orbiter/Vessel.cpp`（スラスターのトルク、`MaxAngularMoment`、自動操縦のモード）
 
 移植したどのソースファイルにも、何を変えたかが書いてあります。テストで比べる答えは、JPL Horizons（NASA/JPL、パブリックドメイン）から `scripts/fetch-orbit-reference.ts` で保存したものと、Orbiter 自身のコードから `scripts/orbiter-reference.ts` で作ったものです。クレジットは [NOTICE.md](../../../NOTICE.md) にあります。
