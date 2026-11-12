@@ -2,7 +2,7 @@
 import { ROCKETS, spaceSlots } from "../src/index.ts";
 
 /** Probes, telescopes and crewed craft: the vehicles that fly in space, not the launchers that lift them and not the stations. Add a new one here and every list follows. */
-export const SPACECRAFT: ReadonlySet<string> = new Set(["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz", "cassini", "galileo", "pioneer"]);
+export const SPACECRAFT: ReadonlySet<string> = new Set(["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz", "cassini", "galileo", "pioneer", "europa-clipper"]);
 
 /** Whether a craft is a spacecraft. */
 export const isSpacecraft = (id: string): boolean => SPACECRAFT.has(id);

@@ -225,6 +225,8 @@ Falcon Heavy's `test-flight` is the same vehicle as `falcon-heavy` with the firs
 
 `pioneer`: one model for Pioneer 10 and Pioneer 11. Pioneer 10 launched on 1972-03-02. The high-gain antenna is 2.74 m across and the magnetometer boom is 6.6 m, from NASA's spacecraft record. The file's antenna is already 2.74 m, so it is not scaled further, and the file stands 8.25 m. Its pictures are left out. Its line look uses the 2.74 m antenna and the 6.6 m boom.
 
+`europa-clipper`: launched on 2024-10-14 at 12:06 p.m. EDT. With its solar arrays deployed it spans more than 100 feet (about 30 m), and the high-gain antenna is 10 feet (3 m), from the mission page. Painted, it is NASA Visualization Technology Applications and Development's model, its pictures left out, scaled so the arrays span 30 m; at that scale the file stands 11.07 m. Its line look uses that span and the 3 m antenna. The page does not give one height for the whole spacecraft.
+
 `juno`: launched on 2011-08-05. The body is about 3.5 m high and wide, and the solar arrays give an overall width exceeding 20 m, from the mission page. Each array is 8.9 m by 2.65 m in the deployment-test caption, and the mission page says each extends about 9 m from the body. Painted, it is NASA's model scaled so the arrays' tip-to-tip is 20 m; at that scale the file stands 6.89 m. Its line look reaches that 20 m span, so each array is drawn 9.8 m from the body, and the antenna is drawn 3.46 m across from the model, because no source read here gives the antenna's diameter. No mark was on the model.
 
 ## Whose each one is

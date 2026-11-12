@@ -82,6 +82,7 @@ On 2026-11-12 Voyager and Juno were taken from the copies on https://github.com/
 | `cassini-craft.glb` | Cassini-Huygens (A) | https://science.nasa.gov/3d-resources/cassini/ | Its pictures left out and plain colours kept; reduced from 25,736 triangles; rescaled so the high-gain antenna is the sourced 4 m. It carried no mark to remove. 99 KB. Read 2026-11-12. |
 | `galileo-craft.glb` | Galileo | https://science.nasa.gov/3d-resources/galileo/ | Reduced from 13,414 triangles; rescaled so its longest side is the sourced 11 m magnetometer boom; plain colours kept. It carried no mark to remove. 70 KB. Read 2026-11-12. |
 | `pioneer-craft.glb` | Pioneer 10 | https://science.nasa.gov/3d-resources/pioneer/ | Its pictures left out and plain colours kept; reduced from 8,189 triangles; the high-gain antenna is already the sourced 2.74 m. One model for Pioneer 10 and 11. It carried no mark to remove. 74 KB. Read 2026-11-12. |
+| `europa-clipper-craft.glb` | Europa Clipper | https://science.nasa.gov/resource/europa-clipper-3d-model/ | NASA Visualization Technology Applications and Development (VTAD). Its pictures left out and plain colours kept, so no wordmark, logo or flag remains; reduced from 203,662 triangles to 14,942; rescaled so the solar arrays span the sourced about 30 m. 223 KB. Read 2026-11-12. The site says "All of these assets are free to download and use." |
 <!-- more NASA models -->
 
 ## Lettering faces (SIL Open Font License 1.1)

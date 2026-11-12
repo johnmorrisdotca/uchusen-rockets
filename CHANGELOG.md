@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Europa Clipper** (MODULES-1120): `rocket="europa-clipper"`. The painted look is NASA Visualization Technology Applications and Development's model, its pictures left out, fetched only when that look is asked for, and scaled so the solar arrays span about 30 m. The line look is this package's own plain shape from that span and the 3 m antenna.
+
 ## [0.22.0] - 2026-11-12
 
 - **Cassini, Galileo and Pioneer** (MODULES-1120): `rocket="cassini"`, `rocket="galileo"` and `rocket="pioneer"`. The painted look is NASA's own model, fetched only when that look is asked for. Cassini is scaled so the high-gain antenna is 4 m. Galileo is scaled so its longest side is the 11 m magnetometer boom. Pioneer's antenna is already the sourced 2.74 m, and one model serves Pioneer 10 and 11. Psyche and Lucy are not included: their pages were not found.

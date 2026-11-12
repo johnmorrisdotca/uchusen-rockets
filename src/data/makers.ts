@@ -61,6 +61,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   cassini: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-cassini" } },
   galileo: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-galileo" } },
   pioneer: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-pioneer-10" } },
+  "europa-clipper": { maker: "nasa", madeBy: { value: "NASA", source: "nasa-europa-clipper" } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-drone": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kyotori": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },

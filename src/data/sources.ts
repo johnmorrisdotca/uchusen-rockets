@@ -154,6 +154,7 @@ export const SOURCES = {
   "nasa-galileo": { title: "Galileo", publisher: "NASA", url: "https://science.nasa.gov/mission/galileo/", date: "2026-11-12", read: "direct" },
   "nasa-pioneer-10": { title: "Pioneer 10", publisher: "NASA", url: "https://science.nasa.gov/mission/pioneer-10/", date: "2026-11-12", read: "direct" },
   "nasa-pioneer-record": { title: "Pioneer 10 spacecraft details", publisher: "NASA", url: "https://web.archive.org/web/20100624002543/http://nssdc.gsfc.nasa.gov/nmc/spacecraftDisplay.do?id=1972-012A", date: "2026-11-12", read: "direct" },
+  "nasa-europa-clipper": { title: "Europa Clipper", publisher: "NASA", url: "https://science.nasa.gov/mission/europa-clipper/", date: "2026-11-12", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**
