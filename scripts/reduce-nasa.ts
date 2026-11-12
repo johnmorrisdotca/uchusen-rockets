@@ -18,6 +18,7 @@ import { MeshoptSimplifier } from "meshoptimizer";
 import { NASA_RECIPES, type NasaPart, type NasaRecipe, type PieceBox, type Rect } from "./nasa-recipes.ts";
 import { PART_RECIPES } from "./part-recipes.ts";
 import { piecesOf } from "./pieces.ts";
+import { applyMove, readBinaryStl } from "./read-stl.ts";
 import { skipsEmptyPart } from "./recipe-parts.ts";
 import { trimSpecks } from "./trim-specks.ts";
 import { weld } from "./weld.ts";
@@ -288,6 +289,45 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
   let inTris = 0;
   const dropped = new Map<string, number>();
   for (const file of [...recipe.files, ...(recipe.copies ?? []).map((copy) => copy.file)].filter((one, i, all) => all.indexOf(one) === i)) {
+    if (file.endsWith(".stl")) {
+      const read = readBinaryStl(new Uint8Array(readFileSync(join(sources, file))));
+      const move = recipe.moves?.[file];
+      const spin = move?.spin ?? [0, 0, 0];
+      const at = move?.at ?? [0, 0, 0];
+      const name = "stl";
+      if (!paints.has(name)) paints.set(name, { name, colour: recipe.colours?.stl ?? [0.72, 0.72, 0.74], image: null });
+      const count = read.positions.length / 9;
+      console.log(`  ${file}: ${count} triangles, a binary STL`);
+      for (let face = 0; face < count; face++) {
+        inTris++;
+        const p0 = [0, 1, 2].map((k) => [read.positions[face * 9 + k * 3], read.positions[face * 9 + k * 3 + 1], read.positions[face * 9 + k * 3 + 2]]);
+        const n0 = [0, 1, 2].map((k) => [read.normals[face * 9 + k * 3], read.normals[face * 9 + k * 3 + 1], read.normals[face * 9 + k * 3 + 2]]);
+        for (let k = 0; k < 3; k++) applyMove(p0[k], n0[k], spin, at);
+        const piece: PieceBox = { min: [0, 1, 2].map((k) => (p0[0][k] + p0[1][k] + p0[2][k]) / 3), max: [0, 1, 2].map((k) => (p0[0][k] + p0[1][k] + p0[2][k]) / 3), triangles: 1 };
+        for (const [p, n, t] of cut(p0, n0, [[0, 0], [0, 0], [0, 0]], recipe.maxTriangle ?? Infinity)) {
+          const centre = [0, 1, 2].map((k) => (p[0][k] + p[1][k] + p[2][k]) / 3);
+          const part = recipe.partOf(centre, name, "stl", file, piece);
+          if (!part) {
+            dropped.set(name, (dropped.get(name) ?? 0) + 1);
+            continue;
+          }
+          if (!parts.has(part.id)) parts.set(part.id, new Map());
+          const buckets = parts.get(part.id) as Map<string, Triangles>;
+          if (!buckets.has(name)) buckets.set(name, { positions: [], normals: [], uvs: [] });
+          const bucket = buckets.get(name) as Triangles;
+          for (let k = 0; k < 3; k++) {
+            const a = [p[k][0], p[k][1], p[k][2]];
+            const b = [...n[k]];
+            part.place(a, b);
+            const l = Math.hypot(b[0], b[1], b[2]) || 1;
+            bucket.positions.push(a[0], a[1], a[2]);
+            bucket.normals.push(b[0] / l, b[1] / l, b[2] / l);
+            bucket.uvs.push(t[k][0], t[k][1]);
+          }
+        }
+      }
+      continue;
+    }
     // a binary read: a picture a file names outside itself, which NASA's copies do not hold, is left out
     const doc = await io.readBinary(withoutOutsidePictures(new Uint8Array(readFileSync(join(sources, file)))));
     const nodes: GNode[] = [];
