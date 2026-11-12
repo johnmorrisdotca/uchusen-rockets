@@ -146,6 +146,9 @@ export const SOURCES = {
   "nasa-voyager": { title: "Voyager", publisher: "NASA", url: "https://science.nasa.gov/mission/voyager/", date: "2026-11-12", read: "direct" },
   "nasa-juno": { title: "Juno", publisher: "NASA", url: "https://science.nasa.gov/mission/juno/", date: "2026-11-12", read: "direct" },
   "nasa-juno-arrays": { title: "Juno solar panel deployment test", publisher: "NASA", url: "https://science.nasa.gov/photojournal/juno-solar-panel-deployment-test/", date: "2010-09-13", read: "direct" },
+  "nasa-webb-fact-sheet": { title: "James Webb Space Telescope fact sheet", publisher: "NASA", url: "https://science.nasa.gov/mission/webb/fact-sheet/", date: "2026-11-12", read: "direct" },
+  "nasa-parker-press-kit": { title: "Parker Solar Probe press kit, August 2018", publisher: "NASA", url: "https://www.nasa.gov/wp-content/uploads/2018/02/parkersolarprobe_presskit_august2018_final.pdf", date: "2018-08", read: "direct" },
+  "nasa-parker-shield": { title: "Parker Solar Probe Gets Its Revolutionary Heat Shield", publisher: "NASA", url: "https://www.nasa.gov/science-research/heliophysics/parker-solar-probe-gets-its-revolutionary-heat-shield/", date: "2017-09-25", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**

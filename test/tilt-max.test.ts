@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ROCKETS, variantOf } from "../src/index.ts";
 
-const SPACE = ["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "fleet-ship-03", "fleet-ship-ariake", "fleet-02"];
+const SPACE = ["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "fleet-ship-03", "fleet-ship-ariake", "fleet-02"];
 const GROUND = ["starship", "falcon-9", "falcon-heavy", "saturn-v", "space-shuttle", "sls", "new-glenn", "electron", "soyuz", "jupiter-c", "grasshopper", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"];
 
 test("every variant says how far its view may tip, and it is 45 or 90", () => {

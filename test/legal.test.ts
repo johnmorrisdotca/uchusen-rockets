@@ -146,6 +146,8 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "roadster-second-generation-2-car.glb": [1.067, 2],
     "voyager-craft.glb": [7.74, 12.46],
     "juno-craft.glb": [6.89, 18.36],
+    "jwst-craft.glb": [11.36, 21.2],
+    "parker-solar-probe-craft.glb": [2.2, 2.4],
   };
   for (const name of modelFiles) {
     assert.ok(statSync(join("models", name)).size < 8 * 1024 * 1024, name);
