@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The played-timeline freeze test counts the graphics card at rest** (MODULES-853). "Grid fins, legs and flaps" read 210 buffers before its forty rounds and 213 after in about one run in seven in the CI image. The three were the pad's smoke, one instanced draw kept for the flight, which reaches the card a frame or two after the first draw at ignition: a slow run moved on before it did, and a later round made it. The warm-up now holds at ignition until the count stands still, and both counts wait for the camera's glide and the left-behind craft to end. The allowance is unchanged; 15 of 15 in the CI image.
+
 ## [0.19.0] - 2026-11-11
 
 - **A tap on the build bar's Pause is no longer lost in Safari** (MODULES-1066): the playing bar redrew the button's icon and word every tenth of a second, and WebKit sends no click when the node a press began on has been replaced before the finger lifts. The bar now leaves a button, a text or the stills alone when a redraw would not change them. A test holds a press across redraws.

@@ -918,15 +918,24 @@ test.describe("a played timeline", () => {
       const was = await drawn(page);
       await seek(at);
       await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(was);
+      // the pad's smoke (one instanced draw: its corners, their order and the puffs' places, three buffers, kept for the flight) reaches the card a frame or two after the first draw at
+      // ignition; a slow run moved on before it did and first read 210 where the forty rounds, which do make it, end at 213. Held there until the count stands still, every run reads 213.
+      if (at === 0) await levelUsage(page);
     }
     await leave();
-    await settle(page, 500);
+    // at rest: the camera's glide over and the left-behind craft cleared (kept two seconds), then the count holds still
+    const atRest = async () => {
+      await expect.poll(() => canvasData(page, "moving"), { timeout: 30_000 }).not.toBe("true");
+      await expect.poll(() => canvasData(page, "ghost"), { timeout: 30_000 }).not.toBe("on");
+      await settle(page, 500);
+      return levelUsage(page);
+    };
+    const first = await atRest();
     await expectIdle(page);
-    const first = await levelUsage(page);
     const mark = await drawn(page);
     for (let i = 0; i < 40; i++) await round();
     await settle(page, 300);
-    const last = await levelUsage(page);
+    const last = await atRest();
     expect(last.contexts).toBe(1);
     expect(last.buffers).toBeLessThanOrEqual(first.buffers);
     expect(last.arrays).toBeLessThanOrEqual(first.arrays + 6);
