@@ -149,6 +149,11 @@ export const SOURCES = {
   "nasa-webb-fact-sheet": { title: "James Webb Space Telescope fact sheet", publisher: "NASA", url: "https://science.nasa.gov/mission/webb/fact-sheet/", date: "2026-11-12", read: "direct" },
   "nasa-parker-press-kit": { title: "Parker Solar Probe press kit, August 2018", publisher: "NASA", url: "https://www.nasa.gov/wp-content/uploads/2018/02/parkersolarprobe_presskit_august2018_final.pdf", date: "2018-08", read: "direct" },
   "nasa-parker-shield": { title: "Parker Solar Probe Gets Its Revolutionary Heat Shield", publisher: "NASA", url: "https://www.nasa.gov/science-research/heliophysics/parker-solar-probe-gets-its-revolutionary-heat-shield/", date: "2017-09-25", read: "direct" },
+  "nasa-cassini": { title: "Cassini", publisher: "NASA", url: "https://science.nasa.gov/mission/cassini/", date: "2026-11-12", read: "direct" },
+  "nasa-cassini-sheet": { title: "Cassini-Huygens spacecraft sheet", publisher: "NASA", url: "https://solarsystem.nasa.gov/system/downloadable_items/1943_spacecraft.pdf", date: "2026-11-12", read: "direct" },
+  "nasa-galileo": { title: "Galileo", publisher: "NASA", url: "https://science.nasa.gov/mission/galileo/", date: "2026-11-12", read: "direct" },
+  "nasa-pioneer-10": { title: "Pioneer 10", publisher: "NASA", url: "https://science.nasa.gov/mission/pioneer-10/", date: "2026-11-12", read: "direct" },
+  "nasa-pioneer-record": { title: "Pioneer 10 spacecraft details", publisher: "NASA", url: "https://web.archive.org/web/20100624002543/http://nssdc.gsfc.nasa.gov/nmc/spacecraftDisplay.do?id=1972-012A", date: "2026-11-12", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**

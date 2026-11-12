@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - **Demo: chikyu-earth 0.36** (MODULES-111): the Earth behind the rocket (the Background row, off by default) takes `@johnmorrisdotca/chikyu-earth` 0.36.0, still a dependency of the demo alone. Its optional star and city layers, which the demo never turns on, are left out of the demo's bundle. The option has a guide section in English and Japanese. The Earth's freeze tests (one frame request each per page frame, nothing drawn out of sight, contexts, graphics objects and memory flat over 50 changes, canvases inside the budget) pass on it.
+- **Cassini, Galileo and Pioneer** (MODULES-1120): `rocket="cassini"`, `rocket="galileo"` and `rocket="pioneer"`. The painted look is NASA's own model, fetched only when that look is asked for. Cassini is scaled so the high-gain antenna is 4 m. Galileo is scaled so its longest side is the 11 m magnetometer boom. Pioneer's antenna is already the sourced 2.74 m, and one model serves Pioneer 10 and 11. Psyche and Lucy are not included: their pages were not found.
 
 ## [0.21.0] - 2026-11-12
 

@@ -199,6 +199,9 @@ export const MODEL_CREDITS = {
   "nasa-juno": nasa("Juno (B)", "https://science.nasa.gov/3d-resources/juno-b/", "Reduced from 29,856 triangles; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove."),
   "nasa-jwst": nasa("James Webb Space Telescope (B)", "https://science.nasa.gov/3d-resources/james-webb-space-telescope-b/", "Reduced from 99,239 triangles; rescaled so the sunshield's long side is the sourced 21.197 m; plain colours kept. It carried no mark to remove."),
   "nasa-parker": nasa("Parker Solar Probe", "https://science.nasa.gov/3d-resources/parker-solar-probe/", "Its pictures left out and plain colours kept; reduced from 39,257 triangles; rescaled so the heat shield is the sourced 2.4 m. It carried no mark to remove."),
+  "nasa-cassini": nasa("Cassini-Huygens (A)", "https://science.nasa.gov/3d-resources/cassini/", "Its pictures left out and plain colours kept; reduced from 25,736 triangles; rescaled so the high-gain antenna is the sourced 4 m. It carried no mark to remove."),
+  "nasa-galileo": nasa("Galileo", "https://science.nasa.gov/3d-resources/galileo/", "Reduced from 13,414 triangles; rescaled so its longest side is the sourced 11 m magnetometer boom; plain colours kept. It carried no mark to remove."),
+  "nasa-pioneer": nasa("Pioneer 10", "https://science.nasa.gov/3d-resources/pioneer/", "Its pictures left out and plain colours kept; reduced from 8,189 triangles; the high-gain antenna is already the sourced 2.74 m. One model for Pioneer 10 and 11. It carried no mark to remove."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

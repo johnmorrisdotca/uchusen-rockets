@@ -27,6 +27,9 @@ const ROWS: readonly Row[] = [
   { rocket: "juno", variant: "juno", credit: "nasa-juno", files: ["juno-craft.glb"] },
   { rocket: "jwst", variant: "jwst", credit: "nasa-jwst", files: ["jwst-craft.glb"] },
   { rocket: "parker-solar-probe", variant: "parker-solar-probe", credit: "nasa-parker", files: ["parker-solar-probe-craft.glb"] },
+  { rocket: "cassini", variant: "cassini", credit: "nasa-cassini", files: ["cassini-craft.glb"] },
+  { rocket: "galileo", variant: "galileo", credit: "nasa-galileo", files: ["galileo-craft.glb"] },
+  { rocket: "pioneer", variant: "pioneer", credit: "nasa-pioneer", files: ["pioneer-craft.glb"] },
   // more models
 ];
 
@@ -62,13 +65,16 @@ for (const { rocket, variant, credit, files } of ROWS)
     for (const file of files) {
       const bytes = statSync(join("models", file)).size;
       assert.ok(bytes <= MAX_BYTES, file);
-      if (file === "voyager-craft.glb" || file === "juno-craft.glb" || file === "jwst-craft.glb" || file === "parker-solar-probe-craft.glb") assert.ok(bytes <= 400 * 1024, `${file} is ${(bytes / 1024).toFixed(0)} KB`);
+      if (file === "voyager-craft.glb" || file === "juno-craft.glb" || file === "jwst-craft.glb" || file === "parker-solar-probe-craft.glb" || file === "cassini-craft.glb" || file === "galileo-craft.glb" || file === "pioneer-craft.glb") assert.ok(bytes <= 400 * 1024, `${file} is ${(bytes / 1024).toFixed(0)} KB`);
     }
     // Voyager's antenna is the sourced 3.7 m, which is the file's Z. Juno's sourced 20 m is tip to tip; the file's height at that scale is 6.89 m.
     if (rocket === "voyager") assert.ok(Math.abs(glbSpan("voyager-craft.glb", 2) - 3.7) / 3.7 < 0.05);
     if (rocket === "juno") assert.ok(Math.abs(glbSpan("juno-craft.glb", 1) - 6.89) / 6.89 < 0.05);
     if (rocket === "jwst") assert.ok(Math.abs(glbSpan("jwst-craft.glb", 2) - 21.197) / 21.197 < 0.05);
     if (rocket === "parker-solar-probe") assert.ok(Math.abs(glbSpan("parker-solar-probe-craft.glb", 0) - 2.4) / 2.4 < 0.05);
+    if (rocket === "cassini") assert.ok(Math.abs(glbSpan("cassini-craft.glb", 1) - 11.64) / 11.64 < 0.05);
+    if (rocket === "galileo") assert.ok(Math.abs(glbSpan("galileo-craft.glb", 1) - 11) / 11 < 0.05);
+    if (rocket === "pioneer") assert.ok(Math.abs(glbSpan("pioneer-craft.glb", 1) - 8.25) / 8.25 < 0.05);
     const built = build({ rocket, variant });
     assert.ok(built.parts.every((part) => part.record.painted && part.pieces.length > 0));
     assert.ok(built.svg({ look: "line" }).startsWith("<svg"));

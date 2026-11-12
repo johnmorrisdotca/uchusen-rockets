@@ -270,6 +270,17 @@ const JWST: NasaPart = { id: "craft", triangles: 5_000, error: 0.12, place: plac
 const PARKER_SCALE = 2.4 / 5.748;
 const PARKER: NasaPart = { id: "craft", triangles: 5_000, error: 0.02, place: placer([0, -2.6316, 0], PARKER_SCALE, PARKER_SCALE, 0) };
 
+// Cassini (A). The high-gain antenna is 4.009 of the file's units across: scaled to the sourced 4 m.
+const CASSINI_SCALE = 4 / 4.009;
+const CASSINI: NasaPart = { id: "craft", triangles: 6_000, error: 0.06, place: placer([0, -8.2711, 0], CASSINI_SCALE, CASSINI_SCALE, 0) };
+
+// Galileo. Its longest side is 232.1289 of the file's units: scaled to the sourced 11 m magnetometer boom.
+const GALILEO_SCALE = 11 / 232.1289;
+const GALILEO: NasaPart = { id: "craft", triangles: 5_000, error: 0.05, place: placer([0, -45.4269, 0], GALILEO_SCALE, GALILEO_SCALE, 0) };
+
+// Pioneer. The high-gain antenna is already 2.74 of the file's units across, the sourced diameter, so the scale is 1.
+const PIONEER: NasaPart = { id: "craft", triangles: 4_000, error: 0.02, place: placer([0, -6.7781, 0], 1, 1, 0) };
+
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
     id: "space-shuttle-stack",
@@ -434,6 +445,56 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     parts: [PARKER],
     partOf: (_centre, material) => (material === "(none)" ? null : PARKER),
     colours: { foil_silver: [0.75, 0.75, 0.78], PSP: [0.82, 0.82, 0.84] },
+    looseWeld: true,
+    freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "cassini",
+    files: [`${FOLDER}/cassini-a.glb`],
+    title: "Cassini-Huygens (A)",
+    source: "https://science.nasa.gov/3d-resources/cassini/",
+    changes: "its pictures left out and plain colours kept; reduced from 25,736 triangles; rescaled so the high-gain antenna is the sourced 4 m. It carried no mark to remove.",
+    parts: [CASSINI],
+    partOf: (_centre, material) => (material === "(none)" ? null : CASSINI),
+    colours: { dish_AO: [0.75, 0.75, 0.72], foil_gold: [0.72, 0.48, 0.12], foil_gold_2: [0.72, 0.48, 0.12], tex_01: [0.55, 0.55, 0.52] },
+    looseWeld: true,
+    freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "galileo",
+    files: [`${FOLDER}/galileo.glb`],
+    title: "Galileo",
+    source: "https://science.nasa.gov/3d-resources/galileo/",
+    changes: "reduced from 13,414 triangles; rescaled so its longest side is the sourced 11 m magnetometer boom; plain colours kept. It carried no mark to remove.",
+    parts: [GALILEO],
+    partOf: () => GALILEO,
+    looseWeld: true,
+    freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "pioneer",
+    files: [`${FOLDER}/pioneer.glb`],
+    title: "Pioneer 10",
+    source: "https://science.nasa.gov/3d-resources/pioneer/",
+    changes: "its pictures left out and plain colours kept; reduced from 8,189 triangles; the high-gain antenna is already the sourced 2.74 m. One model for Pioneer 10 and 11. It carried no mark to remove.",
+    parts: [PIONEER],
+    partOf: (_centre, material) => (material === "(none)" ? null : PIONEER),
+    colours: {
+      dish_AO: [0.72, 0.72, 0.7],
+      Tex_black: [0.08, 0.08, 0.08],
+      other_AO: [0.6, 0.6, 0.58],
+      Pioneer_tex_01: [0.7, 0.7, 0.68],
+      pioneer_tex_02: [0.25, 0.25, 0.24],
+      foil_gold: [0.72, 0.48, 0.12],
+      foil_silver: [0.75, 0.75, 0.76],
+      RTG_AO_new: [0.35, 0.35, 0.33],
+    },
     looseWeld: true,
     freeBorders: true,
     atlas: 128,

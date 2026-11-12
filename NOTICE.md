@@ -79,6 +79,9 @@ On 2026-11-12 Voyager and Juno were taken from the copies on https://github.com/
 | `juno-craft.glb` | Juno (B) | https://science.nasa.gov/3d-resources/juno-b/ | Reduced from 29,856 triangles to 5,710; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove. 97 KB. |
 | `jwst-craft.glb` | James Webb Space Telescope (B) | https://science.nasa.gov/3d-resources/james-webb-space-telescope-b/ | Reduced from 99,239 triangles; rescaled so the sunshield's long side is the sourced 21.197 m; plain colours kept. It carried no mark to remove. 281 KB. Read 2026-11-12. The repository says "These assets are free and without copyright." |
 | `parker-solar-probe-craft.glb` | Parker Solar Probe | https://science.nasa.gov/3d-resources/parker-solar-probe/ | Its pictures left out and plain colours kept; reduced from 39,257 triangles; rescaled so the heat shield is the sourced 2.4 m. It carried no mark to remove. 88 KB. Read 2026-11-12. |
+| `cassini-craft.glb` | Cassini-Huygens (A) | https://science.nasa.gov/3d-resources/cassini/ | Its pictures left out and plain colours kept; reduced from 25,736 triangles; rescaled so the high-gain antenna is the sourced 4 m. It carried no mark to remove. 99 KB. Read 2026-11-12. |
+| `galileo-craft.glb` | Galileo | https://science.nasa.gov/3d-resources/galileo/ | Reduced from 13,414 triangles; rescaled so its longest side is the sourced 11 m magnetometer boom; plain colours kept. It carried no mark to remove. 70 KB. Read 2026-11-12. |
+| `pioneer-craft.glb` | Pioneer 10 | https://science.nasa.gov/3d-resources/pioneer/ | Its pictures left out and plain colours kept; reduced from 8,189 triangles; the high-gain antenna is already the sourced 2.74 m. One model for Pioneer 10 and 11. It carried no mark to remove. 74 KB. Read 2026-11-12. |
 <!-- more NASA models -->
 
 ## Lettering faces (SIL Open Font License 1.1)
