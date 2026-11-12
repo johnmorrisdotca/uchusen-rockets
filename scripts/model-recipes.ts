@@ -437,7 +437,11 @@ export const ROADSTER_RECIPES: ModelRecipe[] = [
     id: "roadster-second-generation-2",
     file: "roadster-second-generation-gmmichaelonearth/model.glb",
     changes: "Reduced from 552,876 triangles; the wheels' middle caps, which carry a mark, removed; its body's picture shrunk and its white made the first generation's red; rescaled to the sourced wheelbase; materials merged and renamed.",
-    extras: { title: "Roadster 2.0 (Will be enchanced soon)" },
+    extras: {
+      title: "Roadster 2.0 (Will be enchanced soon)",
+      author: "Michael (https://sketchfab.com/gmmichaelonearth); its wheels minchou19 (https://sketchfab.com/minchou19)",
+      wheels: "Roadster fly wheels (https://sketchfab.com/3d-models/tesla-roadster-fly-wheels-31a0476f5fd14fc282e799b8ae4ae4f3) by minchou19 (https://sketchfab.com/minchou19), licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+    },
     materials: r3Material,
     materialSpec: ROADSTER_PAINT,
     textures: { atlas: { from: "model_1_asset_0", maps: ["base"], size: 1024 } },
