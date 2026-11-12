@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-13
+
+- **Europa Clipper** (MODULES-1120): `rocket="europa-clipper"`. The painted look is NASA Visualization Technology Applications and Development's model, its pictures left out, fetched only when that look is asked for, and scaled so the solar arrays span about 30 m. The line look is this package's own plain shape from that span and the 3 m antenna.
+
 ## [0.24.0] - 2026-11-13
 
 - **Vulcan Centaur, built** (MODULES-167, the first of its list): `rocket="vulcan-centaur"`, variant `vc2s` (default), the form that flew first, on 2024-01-08, with two solid boosters and the standard fairing. Drawn by this package's code from the infobox's figures: 61.6 m whole, the first stage 33.3 m, the Centaur V 10.66 m (the low-orbit form; the high-energy form is 12.6 m), two GEM 63XL boosters 21.98 m by 1.62 m, the fairing 15.5 m, 5.4 m across. The adapter has no length in the source and is what the whole leaves (2.14 m, a blank figure). The boosters' place, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. It leaves `PLANNED_ROCKETS`, which now lists Ariane 6 alone; a new maker group `ula` (United Launch Alliance, with its country) holds it. Slots: `first-stage`, `srb-left`, `srb-right`, `second-stage`, `adapter`, `fairing`.

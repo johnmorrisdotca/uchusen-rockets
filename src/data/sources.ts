@@ -157,6 +157,7 @@ export const SOURCES = {
   "nasa-new-horizons": { title: "New Horizons", publisher: "NASA", url: "https://science.nasa.gov/mission/new-horizons/", date: "2026-11-12", read: "direct" },
   "nasa-new-horizons-press-kit": { title: "New Horizons launch press kit, January 2006 (the spacecraft's size)", publisher: "NASA", url: "https://pluto.jhuapl.edu/News-Center/Resources/Press-Kits/NHLaunchPressKit1_06.pdf", date: "2006-01", read: "direct" },
   "nasa-pioneer-record": { title: "Pioneer 10 spacecraft details", publisher: "NASA", url: "https://web.archive.org/web/20100624002543/http://nssdc.gsfc.nasa.gov/nmc/spacecraftDisplay.do?id=1972-012A", date: "2026-11-12", read: "direct" },
+  "nasa-europa-clipper": { title: "Europa Clipper", publisher: "NASA", url: "https://science.nasa.gov/mission/europa-clipper/", date: "2026-11-12", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**

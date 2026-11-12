@@ -89,6 +89,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Galileo | This package's plain shape, from the sourced height and magnetometer boom | NASA's model, scaled so its longest side is the 11 m boom: 4,857 triangles and 70 KB |
 | Pioneer | This package's plain shape, from the sourced antenna and magnetometer boom | NASA's model, its pictures left out, the antenna already 2.74 m: 3,992 triangles and 74 KB |
 | New Horizons | This package's plain shape, from the sourced body and antenna | NASA's model, its pictures left out, scaled so the antenna is 2.1 m: 5,999 triangles and 92 KB |
+| Europa Clipper | This package's plain shape, from the sourced span and antenna | NASA VTAD's model, its pictures left out, scaled so the arrays span about 30 m: 14,942 triangles and 223 KB |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.

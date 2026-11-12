@@ -70,6 +70,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   cassini: us("wikipedia-nasa", "Led by NASA with the Jet Propulsion Laboratory, with ESA and the Italian Space Agency; the Huygens probe is not in the model."),
   galileo: us("wikipedia-nasa", "Operated by NASA with the Jet Propulsion Laboratory."),
   pioneer: us("wikipedia-nasa", "Operated by NASA."),
+  "europa-clipper": us("wikipedia-nasa", "Operated by NASA with the Jet Propulsion Laboratory."),
   droneship: us("wikipedia-asds", "Based at Port Canaveral, the Port of Long Beach and the Port of Brownsville."),
   "landing-zone": us("wikipedia-lz", "At Cape Canaveral Space Force Station; Landing Zone 4 is at Vandenberg."),
   "launch-tower": us("wikipedia-starbase", "The tower at Starbase, Texas."),

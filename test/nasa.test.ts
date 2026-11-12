@@ -31,6 +31,7 @@ const ROWS: readonly Row[] = [
   { rocket: "galileo", variant: "galileo", credit: "nasa-galileo", files: ["galileo-craft.glb"] },
   { rocket: "pioneer", variant: "pioneer", credit: "nasa-pioneer", files: ["pioneer-craft.glb"] },
   { rocket: "new-horizons", variant: "new-horizons", credit: "nasa-new-horizons", files: ["new-horizons-craft.glb"] },
+  { rocket: "europa-clipper", variant: "europa-clipper", credit: "nasa-europa-clipper", files: ["europa-clipper-craft.glb"] },
   // more models
 ];
 
@@ -66,7 +67,7 @@ for (const { rocket, variant, credit, files } of ROWS)
     for (const file of files) {
       const bytes = statSync(join("models", file)).size;
       assert.ok(bytes <= MAX_BYTES, file);
-      if (file === "voyager-craft.glb" || file === "juno-craft.glb" || file === "jwst-craft.glb" || file === "parker-solar-probe-craft.glb" || file === "cassini-craft.glb" || file === "galileo-craft.glb" || file === "pioneer-craft.glb" || file === "new-horizons-craft.glb") assert.ok(bytes <= 400 * 1024, `${file} is ${(bytes / 1024).toFixed(0)} KB`);
+      if (file === "voyager-craft.glb" || file === "juno-craft.glb" || file === "jwst-craft.glb" || file === "parker-solar-probe-craft.glb" || file === "cassini-craft.glb" || file === "galileo-craft.glb" || file === "pioneer-craft.glb" || file === "new-horizons-craft.glb" || file === "europa-clipper-craft.glb") assert.ok(bytes <= 400 * 1024, `${file} is ${(bytes / 1024).toFixed(0)} KB`);
     }
     // Voyager's antenna is the sourced 3.7 m, which is the file's Z. Juno's sourced 20 m is tip to tip; the file's height at that scale is 6.89 m.
     if (rocket === "voyager") assert.ok(Math.abs(glbSpan("voyager-craft.glb", 2) - 3.7) / 3.7 < 0.05);
@@ -78,6 +79,7 @@ for (const { rocket, variant, credit, files } of ROWS)
     if (rocket === "pioneer") assert.ok(Math.abs(glbSpan("pioneer-craft.glb", 1) - 8.25) / 8.25 < 0.05);
     // The file stands 2.25 m at the antenna's sourced 2.1 m, against the press kit's 2.2 m from the fitting to the top of the dish.
     if (rocket === "new-horizons") assert.ok(Math.abs(glbSpan("new-horizons-craft.glb", 1) - 2.2) / 2.2 < 0.05);
+    if (rocket === "europa-clipper") assert.ok(Math.abs(glbSpan("europa-clipper-craft.glb", 0) - 30) / 30 < 0.05);
     const built = build({ rocket, variant });
     assert.ok(built.parts.every((part) => part.record.painted && part.pieces.length > 0));
     assert.ok(built.svg({ look: "line" }).startsWith("<svg"));

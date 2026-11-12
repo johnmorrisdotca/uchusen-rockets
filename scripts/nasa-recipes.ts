@@ -289,6 +289,10 @@ const PIONEER: NasaPart = { id: "craft", triangles: 4_000, error: 0.02, place: p
 // New Horizons, file up +y, the dish on top. The high-gain antenna is 1.888 of the file's units across: scaled to the sourced 2.1 m. The file's clear cube (a box of 1 unit round the origin) is left out.
 const NEW_HORIZONS_SCALE = 2.1 / 1.888;
 const NEW_HORIZONS: NasaPart = { id: "craft", triangles: 6_000, error: 0.01, place: placer([0, -0.404, 0], NEW_HORIZONS_SCALE, NEW_HORIZONS_SCALE, 0) };
+// Europa Clipper. The solar arrays already span 30.5004 of the file's units: scaled to the mission page's about 30 m. The lowest point is y -9.0107.
+const EUROPA_SPAN = 30.5004;
+const EUROPA_SCALE = 30 / EUROPA_SPAN;
+const EUROPA: NasaPart = { id: "craft", triangles: 8_000, error: 0.2, place: placer([0, -9.0107, 0], EUROPA_SCALE, EUROPA_SCALE, 0) };
 
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
@@ -519,6 +523,31 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     parts: [NEW_HORIZONS],
     partOf: (_centre, material) => (material === "transparent" ? null : NEW_HORIZONS),
     colours: { AO_dish: [0.78, 0.78, 0.76], AO_1: [0.7, 0.7, 0.7], foil_gold: [0.72, 0.48, 0.12], tex_01: [0.55, 0.55, 0.54], tex_02: [0.22, 0.22, 0.24] },
+    id: "europa-clipper",
+    files: [`${FOLDER}/clipper_spacecraft.glb`],
+    title: "Europa Clipper",
+    source: "https://science.nasa.gov/resource/europa-clipper-3d-model/",
+    changes: "its pictures left out and plain colours kept, so no wordmark, logo or flag remains; reduced from 203,662 triangles; rescaled so the solar arrays span the sourced about 30 m. It carried no mark to remove.",
+    parts: [EUROPA],
+    partOf: () => EUROPA,
+    colours: {
+      clipper_telecom: [0.72, 0.72, 0.74],
+      clipper_blanket_hard: [0.78, 0.78, 0.8],
+      clipper_blanket_hidable: [0.74, 0.74, 0.76],
+      clipper_blanket_soft: [0.7, 0.7, 0.72],
+      clipper_bus_exposed: [0.55, 0.55, 0.58],
+      clipper_e_themis: [0.42, 0.42, 0.44],
+      clipper_eis: [0.36, 0.36, 0.38],
+      clipper_europa_uvs: [0.48, 0.48, 0.5],
+      clipper_magnetometer: [0.62, 0.62, 0.64],
+      clipper_maspex: [0.4, 0.42, 0.45],
+      clipper_mise: [0.44, 0.44, 0.46],
+      clipper_pims: [0.5, 0.5, 0.52],
+      clipper_reason: [0.32, 0.32, 0.34],
+      clipper_solar_cells_chassis: [0.46, 0.46, 0.48],
+      clipper_solar_cells: [0.05, 0.08, 0.16],
+      clipper_suda: [0.5, 0.5, 0.52],
+    },
     trimBelow: SPECK_FLOOR,
     looseWeld: true,
     freeBorders: true,

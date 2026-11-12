@@ -28,6 +28,7 @@ import { NEW_HORIZONS_VARIANTS } from "./data/new-horizons.ts";
 import { CASSINI_VARIANTS } from "./data/cassini.ts";
 import { GALILEO_VARIANTS } from "./data/galileo.ts";
 import { PIONEER_VARIANTS } from "./data/pioneer.ts";
+import { EUROPA_VARIANTS } from "./data/europa.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
 import { TIANGONG_VARIANTS } from "./data/tiangong.ts";
 import { ROADSTER_VARIANTS } from "./data/roadster.ts";
@@ -105,7 +106,7 @@ export interface PlannedRocket {
 }
 
 /** Craft that fly in space: seen from any side, from straight above or below. Everything else stands on the ground or the sea, and keeps the ground in view. */
-const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons"]);
+const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper"]);
 
 /**
  * Whether a craft flies in space: the same ones that may be seen from straight above or below, including the fleet. A rocket or a place on the ground does not. On the compare page one of these stands on a marked plinth, so it is not read as a rocket on a pad.
@@ -168,6 +169,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   galileo: { id: "galileo", name: "Galileo", status: "built", ...MADE_BY["galileo"], variants: GALILEO_VARIANTS, defaultVariant: "galileo" },
   pioneer: { id: "pioneer", name: "Pioneer", status: "built", ...MADE_BY["pioneer"], variants: PIONEER_VARIANTS, defaultVariant: "pioneer" },
   "new-horizons": { id: "new-horizons", name: "New Horizons", status: "built", ...MADE_BY["new-horizons"], variants: NEW_HORIZONS_VARIANTS, defaultVariant: "new-horizons" },
+  "europa-clipper": { id: "europa-clipper", name: "Europa Clipper", status: "built", ...MADE_BY["europa-clipper"], variants: EUROPA_VARIANTS, defaultVariant: "europa-clipper" },
   droneship: { id: "droneship", name: "Drone ships", status: "built", ...MADE_BY["droneship"], variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", ...MADE_BY["landing-zone"], variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", ...MADE_BY["launch-tower"], variants: TOWER_VARIANTS, defaultVariant: "stack" },
