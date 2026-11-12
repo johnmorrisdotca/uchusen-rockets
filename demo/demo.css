@@ -256,3 +256,5 @@ body.demo main > header [data-help-switch] { display: none; }
   html[data-wide="on"] .jr { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "side" "panel"; }
   html[data-wide="on"] .jr-stage { aspect-ratio: 16 / 9; max-height: 80vh; width: min(100%, calc(80vh * 16 / 9)); margin-inline: auto; }
 }
+/* the flag in the hero sits at the bottom left: the folded ship picker lies across the stage's top */
+uchusen-rocket#hero::part(flag) { top: auto; bottom: 0.5rem; }
