@@ -872,7 +872,8 @@ test.describe("a played timeline", () => {
       await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(mark);
     }
     await leave();
-    // one fast round as well: a few buffers are made on the frame after a step, and a run that left the flight first read 244 where every other run reads 247 before and after the forty
+    // one fast round as well: a few buffers are made on the frame after a step, and a run that left the flight first read 244 where every other run reads 247 before and after the forty. One fast round was not always enough: a slow run still read 244, then 247 after the forty, so a second round is taken before the count.
+    await round();
     await round();
     await settle(page, 500);
     const first = await levelUsage(page);
