@@ -1,4 +1,4 @@
-// Flight physics: orbits from a position and a speed, gravity from the bodies of a scene, a craft moved forward in time, the rocket equation, burns and transfers, attitude and thrusters. Ported in part from Orbiter (MIT, see NOTICE.md). Pure: no DOM, no clock, no dependency. SI units: metres, seconds, kilograms.
+// Flight physics: orbits from a position and a speed, gravity from the bodies of a scene, a craft moved forward in time, the rocket equation, burns and transfers, attitude and thrusters, and the air. Ported in part from Orbiter (MIT, see NOTICE.md). Pure: no DOM, no clock, no dependency. SI units: metres, seconds, kilograms.
 export type { Vec3 } from "./vector.ts";
 export { eccentricAnomaly, elementsOf, stateAtTrueAnomaly, stateOf, timeToTrueAnomaly } from "./elements.ts";
 export type { Elements, StateVector } from "./elements.ts";
@@ -14,3 +14,5 @@ export { biElliptic, crossings, nodes, planeChange, relativeInclination, speedCh
 export type { Node } from "./transfers.ts";
 export { angularAcceleration, fireFor, gravityGradientTorque, holdDirection, killRotation, quatFromAxisAngle, rotateVector, spinFor, stepCraft, stepSpin, thrusterPush, torqueLimits, turnBy, unrotateVector } from "./attitude.ts";
 export type { Craft, CraftForces, Quat, Spin, Thruster, Torque, TorqueLimits } from "./attitude.ts";
+export { airVelocity, atmosphereAt, dragAcceleration, dynamicPressure, EARTH_ATMOSPHERE, MARS_ATMOSPHERE, machNumber, standardAtmosphere, VENUS_ATMOSPHERE } from "./atmosphere.ts";
+export type { Air, AtmosphereLayer, AtmosphereModel } from "./atmosphere.ts";
