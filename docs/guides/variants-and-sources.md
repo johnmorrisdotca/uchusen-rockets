@@ -65,7 +65,7 @@ for (const rocket of Object.values(ROCKETS).slice(0, 5)) console.log(rocket.id, 
 
 ## Deep-space craft
 
-Voyager and Juno fly in space, so the view can tip to 90 degrees. One Voyager model stands for both spacecraft. Its painted look is NASA's model, scaled so the high-gain antenna is 3.7 m; the line look is this package's own shape from the published antenna, bus, height and magnetometer boom. Juno's painted look is NASA's model scaled so the solar arrays span 20 m; the line look uses the published body, the 20 m span and the arrays' width.
+Voyager and Juno fly in space, so the view can tip to 90 degrees. One Voyager model stands for both spacecraft. Its painted look is NASA's model, scaled so the high-gain antenna is 3.7 m; the line look is this package's own shape from the published antenna, bus, height and magnetometer boom. Juno's painted look is NASA's model scaled so the solar arrays span 20 m; the line look uses the published body, the 20 m span and the arrays' width. James Webb's painted look is NASA's model, scaled so the sunshield's long side is 21.197 m. The line look uses that sunshield, 14.162 m wide, and the 6.5 m mirror. Parker Solar Probe's painted look is NASA's model, scaled so the heat shield is 2.4 m across. The line look uses the sourced 3 m height, the 1 m body and that shield.
 
 ## Why it is built this way
 

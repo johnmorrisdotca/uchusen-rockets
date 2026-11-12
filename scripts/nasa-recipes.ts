@@ -262,6 +262,14 @@ const VOYAGER: NasaPart = { id: "craft", triangles: 4_500, error: 0.04, place: p
 const JUNO_SCALE = 20 / 25.3437;
 const JUNO: NasaPart = { id: "craft", triangles: 6_000, error: 0.4, place: placer([0, -2.475, 0], JUNO_SCALE, JUNO_SCALE, 0) };
 
+// James Webb (B). The sunshield runs 20.996 of the file's units on its long side: scaled to the sourced 21.197 m. No picture.
+const JWST_SCALE = 21.197 / 20.996;
+const JWST: NasaPart = { id: "craft", triangles: 5_000, error: 0.12, place: placer([0, -3.161, 0], JWST_SCALE, JWST_SCALE, 0) };
+
+// Parker. The heat shield spans 5.748 of the file's units: scaled to the sourced 2.4 m. Its pictures are replaced with plain colours.
+const PARKER_SCALE = 2.4 / 5.748;
+const PARKER: NasaPart = { id: "craft", triangles: 5_000, error: 0.02, place: placer([0, -2.6316, 0], PARKER_SCALE, PARKER_SCALE, 0) };
+
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
     id: "space-shuttle-stack",
@@ -399,6 +407,33 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     changes: "reduced from 29,856 triangles; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove.",
     parts: [JUNO],
     partOf: () => JUNO,
+    looseWeld: true,
+    freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "jwst",
+    files: [`${FOLDER}/jwst-b.glb`],
+    title: "James Webb Space Telescope (B)",
+    source: "https://science.nasa.gov/3d-resources/james-webb-space-telescope-b/",
+    changes: "reduced from 99,239 triangles; rescaled so the sunshield's long side is the sourced 21.197 m; plain colours kept. It carried no mark to remove.",
+    parts: [JWST],
+    partOf: () => JWST,
+    looseWeld: true,
+    freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "parker-solar-probe",
+    files: [`${FOLDER}/parker.glb`],
+    title: "Parker Solar Probe",
+    source: "https://science.nasa.gov/3d-resources/parker-solar-probe/",
+    changes: "its pictures left out and plain colours kept; reduced from 39,257 triangles; rescaled so the heat shield is the sourced 2.4 m. It carried no mark to remove.",
+    parts: [PARKER],
+    partOf: (_centre, material) => (material === "(none)" ? null : PARKER),
+    colours: { foil_silver: [0.75, 0.75, 0.78], PSP: [0.82, 0.82, 0.84] },
     looseWeld: true,
     freeBorders: true,
     atlas: 128,

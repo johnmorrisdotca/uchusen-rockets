@@ -161,6 +161,8 @@ export const MODEL_CREDITS = {
   "nasa-grease-gun": nasa("Grease Gun", "https://science.nasa.gov/3d-resources/grease-gun/", "Scaled from millimetres to the drone's welding tool and given a welding nozzle of this package's own; its materials made into one picture. No mark was on it."),
   "nasa-voyager": nasa("Voyager Probe (A)", "https://science.nasa.gov/3d-resources/voyager-probe-a/", "The record's marked face removed; reduced from 29,911 triangles; rescaled so the high-gain antenna is the sourced 3.7 m; plain colours kept."),
   "nasa-juno": nasa("Juno (B)", "https://science.nasa.gov/3d-resources/juno-b/", "Reduced from 29,856 triangles; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove."),
+  "nasa-jwst": nasa("James Webb Space Telescope (B)", "https://science.nasa.gov/3d-resources/james-webb-space-telescope-b/", "Reduced from 99,239 triangles; rescaled so the sunshield's long side is the sourced 21.197 m; plain colours kept. It carried no mark to remove."),
+  "nasa-parker": nasa("Parker Solar Probe", "https://science.nasa.gov/3d-resources/parker-solar-probe/", "Its pictures left out and plain colours kept; reduced from 39,257 triangles; rescaled so the heat shield is the sourced 2.4 m. It carried no mark to remove."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

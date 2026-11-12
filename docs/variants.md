@@ -208,6 +208,10 @@ It is 27 parts in slots, each cut from NASA's model by where it stands and paint
 
 ## Juno
 
+`jwst`: launched on 2021-12-25. The sunshield is 21.197 m by 14.162 m and its layers span 4.8 m, and the primary mirror is about 6.5 m across, from the fact sheet. Painted, it is NASA's model scaled so the sunshield's long side is 21.197 m; at that scale the file stands 11.36 m, and the shield is shorter across than 14.162 m. Its line look draws the sunshield at the sourced size and the 6.5 m mirror, and stands 4.8 m, the fact sheet's figure for the layers. No mark was on the model.
+
+`parker-solar-probe`: the August 2018 press kit targets a launch on 2018-08-11. The spacecraft is about 3 m tall and about 1 m across below the cooling system. The heat shield is 8 feet (2.4 m) on the page about fitting it; the press kit says about 2.3 m. Painted, it is NASA's model scaled so the shield is 2.4 m; at that scale the file stands 2.20 m. Its pictures are left out. Its line look uses the 3 m height, the 1 m body and the 2.4 m shield. No mark is drawn.
+
 `juno`: launched on 2011-08-05. The body is about 3.5 m high and wide, and the solar arrays give an overall width exceeding 20 m, from the mission page. Each array is 8.9 m by 2.65 m in the deployment-test caption, and the mission page says each extends about 9 m from the body. Painted, it is NASA's model scaled so the arrays' tip-to-tip is 20 m; at that scale the file stands 6.89 m. Its line look reaches that 20 m span, so each array is drawn 9.8 m from the body, and the antenna is drawn 3.46 m across from the model, because no source read here gives the antenna's diameter. No mark was on the model.
 
 ## Whose each one is

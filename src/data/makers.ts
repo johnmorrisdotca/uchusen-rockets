@@ -55,6 +55,8 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   tiangong: { maker: "china", madeBy: { value: "China Manned Space Agency; its modules built by the China Academy of Space Technology", source: "wikipedia-tiangong" } },
   voyager: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-voyager" } },
   juno: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-juno" } },
+  jwst: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-webb-fact-sheet" } },
+  "parker-solar-probe": { maker: "nasa", madeBy: { value: "NASA", source: "nasa-parker-press-kit" } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-drone": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kyotori": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
