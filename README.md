@@ -144,6 +144,7 @@ embedCode({ rocket: "starship", variant: "v3", look: "line" }, "element").includ
 | `show` | `together`, `apart`, or a part: `booster`, `ship`, `first-stage`, `second-stage`, `fairing`, `trunk`, `capsule`, `centre`, `side-left`, `side-right`, and each rocket's own: `descent`, `ascent`, `csm`, `docking-module`, `soyuz`, `adapter`, `station`, `telescope` and the rest |
 | `look` | `line`, `thick`, `painted` |
 | `view` | `three-quarter`, `front`, `back`, `side`, `below` |
+| `sun` | The direction towards the Sun in the craft's own frame, three numbers (`sun="1, 0.2, -0.5"`): one light from there, the far side dark, as in space. Left out, the showroom light |
 
 Changing `look` keeps the angle. Changing `show` is an animated move, and a cut under reduced motion. Each part alone fills the frame and has its own listed size. Every look works for every variant and every choice of parts. Front is the windward, tiled side; back is the steel side.
 
