@@ -14,9 +14,10 @@ const listed = (page: Page) => page.locator('#rockets button:visible').allTextCo
 
 test("the Maker row and the Made by line read SPX for every fleet ship opened by address", async ({ page }) => {
   for (const id of SHIPS) {
-    await page.goto(`${URL}?rocket=${id}`);
-    expect(await pressed(page, "makers"), id).toEqual(["SPX"]);
-    await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i);
+    // A page's own `load` also waits for the pictures and files it asks for, and one load on a hosted runner took the whole 240 s of the test. What is read here is drawn by the page's script, so the test waits for that.
+    await page.goto(`${URL}?rocket=${id}`, { waitUntil: "domcontentloaded" });
+    await expect.poll(() => pressed(page, "makers"), { message: id, timeout: 60_000 }).toEqual(["SPX"]);
+    await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i, { timeout: 60_000 });
     await expect(page.locator("#facts")).not.toContainText("SpaceX");
   }
 });

@@ -57,7 +57,8 @@ test("the kit's sample modules are not craft to compare, and every part chip has
   for (const id of Object.keys(FLEET_KIT_ROCKETS)) for (const variant of ROCKETS[id].variants) await expect(page.locator(`[data-testid="compare-${id}:${variant.id}"]`)).toHaveCount(0);
   await expect(page.locator('[data-testid="compare-picks"], #compare-picks')).not.toContainText("Fleet kit");
   for (const rocket of ["fleet-02", "fleet-ship-ariake", "fleet-ship-03", "apollo-soyuz"]) {
-    await page.goto(`${URL}?rocket=${rocket}`);
+    await page.goto(`${URL}?rocket=${rocket}`, { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#shows button, #shows option").nth(1), rocket).toBeAttached({ timeout: 60_000 });
     const chips = await page.locator("#shows button, #shows option").allTextContents();
     expect(chips.length, rocket).toBeGreaterThan(1);
     for (const text of chips) expect(text, `${rocket}: "${text}"`).not.toMatch(/^[a-z0-9]+(-[a-z0-9]+)+$/);
@@ -66,7 +67,8 @@ test("the kit's sample modules are not craft to compare, and every part chip has
 
 test("a fleet ship's panel says Length, Beam and Height, and its maker plainly as SPX", async ({ page }) => {
   for (const rocket of ["fleet-ship-03", "fleet-02"]) {
-    await page.goto(`${URL}?rocket=${rocket}`);
+    await page.goto(`${URL}?rocket=${rocket}`, { waitUntil: "domcontentloaded" });
+    await expect(page.locator('#facts tr[data-row="Made by"] td'), rocket).toBeAttached({ timeout: 60_000 });
     const heads = await page.locator("#facts th").allTextContents();
     expect(heads.map((text) => text.trim().toLowerCase()), rocket).toEqual(expect.arrayContaining(["length", "beam", "height (stowed)"]));
     expect(heads.map((text) => text.trim().toLowerCase())).not.toContain("whole height");
