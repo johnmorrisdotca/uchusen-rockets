@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The WebGL probe runs once per page, and only when a view is about to draw** (MODULES-1102): every element asked at connect, and every 3D view made another test context for the name of the renderer, each a few seconds of the main thread in software drawing, and in headless WebKit a load now and then stalled for minutes. The page now makes one test context, when the first element comes on screen, answers both questions from it (does WebGL work, does it draw in software) and lets it go at once. The hero says `3d` where WebGL works and `fallback` where it does not, as before; an element far off screen no longer asks, so it says `picture` until it nears. A test holds the count at one.
+
 ## [0.19.0] - 2026-11-11
 
 - **A tap on the build bar's Pause is no longer lost in Safari** (MODULES-1066): the playing bar redrew the button's icon and word every tenth of a second, and WebKit sends no click when the node a press began on has been replaced before the finger lifts. The bar now leaves a button, a text or the stills alone when a redraw would not change them. A test holds a press across redraws.

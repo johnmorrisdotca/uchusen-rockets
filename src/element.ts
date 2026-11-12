@@ -24,6 +24,7 @@ import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
 import type { RocketViewer, ViewerFocus } from "./element/scene.ts";
 import { skyQuery, type SkyShown } from "./element/solarGroups.ts";
 import { Panel } from "./element/panel.ts";
+import { glProbe } from "./element/probe.ts";
 import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
 
@@ -116,25 +117,11 @@ const rocketSheet: { sheet: CSSStyleSheet | null } = { sheet: null };
 const lineupSheet: { sheet: CSSStyleSheet | null } = { sheet: null };
 const media = (query: string): boolean => typeof matchMedia === "function" && matchMedia(query).matches;
 
-let webgl: boolean | null = null;
-function webglWorks(): boolean {
-  if (webgl !== null) return webgl;
-  try {
-    const probe = document.createElement("canvas");
-    const gl = probe.getContext("webgl2") ?? probe.getContext("webgl");
-    webgl = Boolean(gl);
-    gl?.getExtension("WEBGL_lose_context")?.loseContext();
-  } catch {
-    webgl = false;
-  }
-  return webgl;
-}
-
+/** Why the 3D view is not wanted, from what is known without making a WebGL context. Whether WebGL works is asked once, when the first element comes on screen. */
 function whyNot(mode: string): string {
   if (mode === "drawing") return "off";
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   if (connection?.saveData || media("(prefers-reduced-data: reduce)")) return "reduced-data";
-  if (!webglWorks()) return "no-webgl";
   return "";
 }
 
@@ -176,6 +163,8 @@ export class UchusenRocket extends HTMLBase {
   private stateNow: RocketState = "picture";
   private shownAt = 0;
   private starting = false;
+  /** Whether this element has asked the page's WebGL answer since it started watching. */
+  private glAsked = false;
   private key = "";
   private driven: ViewChoice | null = null;
   private placeFrame = 0;
@@ -904,7 +893,8 @@ export class UchusenRocket extends HTMLBase {
 
   private startWatching(): void {
     this.watch?.disconnect();
-    const reason = whyNot(this.getAttribute("mode") ?? "auto");
+    let reason = whyNot(this.getAttribute("mode") ?? "auto");
+    this.glAsked = false;
     if (reason) {
       this.setState(reason === "off" ? "picture" : "fallback", reason);
       if (reason !== "off") this.emit("uchusen-fallback", { reason });
@@ -915,6 +905,16 @@ export class UchusenRocket extends HTMLBase {
         if (seen.isIntersecting && this.stale) this.place();
         if (seen.isIntersecting) this.kickFlight();
         if (reason) return;
+        if (seen.isIntersecting && !this.glAsked) {
+          // The probe makes a context, which software drawing takes seconds over: it waits until a view is about to draw, and is made once for the whole page.
+          this.glAsked = true;
+          if (!glProbe().works) {
+            reason = "no-webgl";
+            this.setState("fallback", reason);
+            this.emit("uchusen-fallback", { reason });
+            return;
+          }
+        }
         if (seen.isIntersecting) {
           this.shownAt ||= performance.now();
           window.clearTimeout(this.releaseTimer);

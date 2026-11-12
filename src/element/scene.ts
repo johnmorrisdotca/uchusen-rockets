@@ -75,6 +75,7 @@ import { placeNameLabels } from "./namePlace.ts";
 import { plinthGroup, type Footprint } from "./plinth.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
 import { ThrusterLayer } from "./thrusterLayer.ts";
+import { glProbe } from "./probe.ts";
 import { craftJets, endQuads, type Jet, type ThrusterMode } from "../thrusters.ts";
 
 /** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
@@ -142,15 +143,8 @@ const SIZE_EASE_MS = 800;
 
 const autoRotateOf = (spin: Spin): number => (spin.seconds <= 0 ? 0 : (60 / spin.seconds) * (spin.way === "cw" ? -1 : 1));
 
-/** A real graphics card keeps smooth edges. Software drawing spends the frame on them, and a heavy ship then misses a frame of the wait. */
-const smoothEdges = (): boolean => {
-  const canvas = document.createElement("canvas");
-  const gl = canvas.getContext("webgl2");
-  const info = gl?.getExtension("WEBGL_debug_renderer_info");
-  const name = info && gl ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
-  gl?.getExtension("WEBGL_lose_context")?.loseContext();
-  return !/swiftshader|llvmpipe|softpipe/i.test(name);
-};
+/** A real graphics card keeps smooth edges. Software drawing spends the frame on them, and a heavy ship then misses a frame of the wait. The page's one WebGL probe says which this is. */
+const smoothEdges = (): boolean => !glProbe().software;
 
 const LINE_VERTEX = /* glsl */ `
 varying vec3 vNormal;
