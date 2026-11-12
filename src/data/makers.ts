@@ -53,6 +53,8 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   iss: { maker: "nasa", madeBy: { value: "Its US segment built by NASA, ESA, JAXA and CSA, its Russian segment developed by Roscosmos", source: "wikipedia-iss" } },
   hubble: { maker: "nasa", madeBy: { value: "NASA's Great Observatories program; operated by STScI; built by Lockheed Martin and Perkin-Elmer", source: "wikipedia-hubble" } },
   tiangong: { maker: "china", madeBy: { value: "China Manned Space Agency; its modules built by the China Academy of Space Technology", source: "wikipedia-tiangong" } },
+  voyager: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-voyager" } },
+  juno: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-juno" } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-drone": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kyotori": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },

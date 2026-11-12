@@ -22,6 +22,8 @@ const CRAFT = [
   { rocket: "hubble", creator: "Cybertron B-127", files: 9, alone: "light-shield" },
   { rocket: "iss", creator: "NASA", files: 27, alone: "zvezda" },
   { rocket: "jupiter-c", creator: "NASA", files: 4, alone: "tub" },
+  { rocket: "voyager", creator: "NASA", files: 1, alone: "craft" },
+  { rocket: "juno", creator: "NASA", files: 1, alone: "craft" },
 ] as const;
 
 for (const craft of CRAFT)

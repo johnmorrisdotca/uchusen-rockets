@@ -159,6 +159,8 @@ export const MODEL_CREDITS = {
   "nasa-curiosity": nasa("Curiosity Rover (Detailed)", "https://science.nasa.gov/3d-resources/curiosity-rover-detailed/", "Only the arm's two links, its tool turret and a swivel kept, from NASA's printable parts (STL, no textures); painted by this package; moved and scaled to the drone's arms. No mark was on it."),
   "nasa-hete": nasa("High Energy Transient Explorer", "https://science.nasa.gov/3d-resources/high-energy-transient-explorer/", "Its body kept as the drone's equipment block, turned and scaled; its materials made into one picture with this package's own. No mark was on it."),
   "nasa-grease-gun": nasa("Grease Gun", "https://science.nasa.gov/3d-resources/grease-gun/", "Scaled from millimetres to the drone's welding tool and given a welding nozzle of this package's own; its materials made into one picture. No mark was on it."),
+  "nasa-voyager": nasa("Voyager Probe (A)", "https://science.nasa.gov/3d-resources/voyager-probe-a/", "The record's marked face removed; reduced from 29,911 triangles; rescaled so the high-gain antenna is the sourced 3.7 m; plain colours kept."),
+  "nasa-juno": nasa("Juno (B)", "https://science.nasa.gov/3d-resources/juno-b/", "Reduced from 29,856 triangles; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

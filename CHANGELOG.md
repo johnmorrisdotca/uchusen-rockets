@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Voyager and Juno** (MODULES-1120): `rocket="voyager"` is one model for both spacecraft, and `rocket="juno"` is the Jupiter orbiter. The painted look is NASA's own model, fetched only when that look is asked for. Voyager is scaled so the high-gain antenna is 3.7 m; Juno so the solar arrays span 20 m. The line looks are this package's own plain shapes from the published sizes. Both can be seen from straight above or below.
+
 ## [0.19.1] - 2026-11-12
 
 - **The concept build budget holds work on CI** (MODULES-1134): `every concept builds inside the budget` failed on a shared runner at 3059 ms against 3000. On the Mac it still holds the time budget. Under `CI` it holds what does not vary, the pieces and triangles each concept builds (within 15 per cent), plus a cap of five times the budget on the time.

@@ -202,6 +202,14 @@ It is 27 parts in slots, each cut from NASA's model by where it stands and paint
 
 `hubble`: 13.2 m by 4.2 m, launched on 1990-04-24, as nine parts in slots: `aft-shroud`, `equipment-section`, `forward-shell`, `light-shield` and `aperture-door` stack up the axis, `array-left` and `array-right` lie out from the forward shell along X, and `antenna-near` and `antenna-far` along Z. Its parts' lengths and its arrays' size have no figure in a source read here: they are the licensed model's, at the sourced length and width, each a blank with the model's figure in its note. Painted, it is Cybertron B-127's model with its wordmark and logos painted out and its door turned shut, one file a part; its line looks are this package's own plain shapes.
 
+## Voyager
+
+`voyager`: one model for Voyager 1 and Voyager 2, launched in 1977. The high-gain antenna is 3.7 m across, the bus about 1.8 m across, the spacecraft about 3.8 m from the reflector to the feet, and the magnetometer boom 13 m, all from NASA's questions page. Painted, it is NASA's model scaled so the antenna is 3.7 m; at that scale the file stands 7.74 m, because the booms rise past the dish. The record's marked face is left out. Its line look is this package's own plain shape. The 10 m antennas are not drawn: the page gives their length and not which way they point.
+
+## Juno
+
+`juno`: launched on 2011-08-05. The body is about 3.5 m high and wide, and the solar arrays give an overall width exceeding 20 m, from the mission page. Each array is 8.9 m by 2.65 m in the deployment-test caption, and the mission page says each extends about 9 m from the body. Painted, it is NASA's model scaled so the arrays' tip-to-tip is 20 m; at that scale the file stands 6.89 m. Its line look reaches that 20 m span, so each array is drawn 9.8 m from the body, and the antenna is drawn 3.46 m across from the model, because no source read here gives the antenna's diameter. No mark was on the model.
+
 ## Whose each one is
 
 Each row of `ROCKETS` has a `maker`, one of the keys of `MAKERS`, and `madeBy`, what its source says, with the companies that built it where the source names them. The demo lists rockets under their maker. A site has the maker `sites` and a blank `madeBy`: its maker has not been read.
