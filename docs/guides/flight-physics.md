@@ -2,12 +2,12 @@
 title: Flight physics
 section: how-to
 order: 8
-description: Orbits from a position and a speed, gravity from the bodies of a scene, a craft moved forward in time, the rocket equation, burns, transfers and turning with thrusters. Ported in part from Orbiter and measured against JPL Horizons.
+description: Orbits from a position and a speed, gravity from the bodies of a scene, a craft moved forward in time, the rocket equation, burns, transfers, turning with thrusters and the air. Ported in part from Orbiter and measured against JPL Horizons.
 ---
 
-The `physics` entry is the arithmetic of flying a craft: what orbit a position and a speed make, the pull of the bodies around it, where it is after a while, what a burn costs, how to fly from one orbit to another, and how the craft turns. It is pure (no DOM, no clock, no dependency), so it runs in Node, in a test or under your own page, and it works in SI units throughout: metres, seconds, kilograms, newtons. A gravitational parameter is in m^3/s^2, so the journey's `GM_KM3_S2` values are multiplied by `1e9`.
+The `physics` entry is the arithmetic of flying a craft: what orbit a position and a speed make, the pull of the bodies around it, where it is after a while, what a burn costs, how to fly from one orbit to another, how the craft turns, and what the air does to it. It is pure (no DOM, no clock, no dependency), so it runs in Node, in a test or under your own page, and it works in SI units throughout: metres, seconds, kilograms, newtons. A gravitational parameter is in m^3/s^2, so the journey's `GM_KM3_S2` values are multiplied by `1e9`.
 
-Parts of it are ported from [Orbiter](https://github.com/orbitersim/orbiter), the open-source space flight simulator (MIT licence, Copyright (c) 2000-2026 Martin Schweiger); [Where it comes from](#where-it-comes-from) names each file. Burns, transfers and turning the craft with its thrusters are here; the air comes in a later release.
+Parts of it are ported from [Orbiter](https://github.com/orbitersim/orbiter), the open-source space flight simulator (MIT licence, Copyright (c) 2000-2026 Martin Schweiger); [Where it comes from](#where-it-comes-from) names each file. Burns, transfers, turning the craft with its thrusters and the air are here.
 
 ## An orbit from a position and a speed
 
@@ -219,6 +219,38 @@ console.log("stopped in", spin.t.toFixed(1), "s with", propellant.toFixed(2), "k
 
 It prints `stopped in 8.3 s with 0.17 kg of propellant`.
 
+## The air
+
+`atmosphereAt(model, height)` gives the temperature, pressure, density and speed of sound at a height, from a layered model: `EARTH_ATMOSPHERE`, `MARS_ATMOSPHERE` and `VENUS_ATMOSPHERE` are Orbiter's 2006 models, number for number, each with no air above its limit (200 km, 100 km and 200 km). `standardAtmosphere(height)` is the 1976 U.S. Standard Atmosphere from 5 km below sea level to 86 km, worked from its defining constants. `airVelocity` is a craft's speed through air that turns with its planet, `dynamicPressure` and `machNumber` what Orbiter shows, and `dragAcceleration` the drag, against the craft's motion through the air, for a drag coefficient times area (`Cd A`) and a mass. A model's pressure is also what `thrustAt` takes for an engine in air.
+
+```ts
+import { airVelocity, atmosphereAt, dragAcceleration, dynamicPressure, EARTH_ATMOSPHERE, machNumber } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+const height = 40_000;
+const position = [6_378_137 + height, 0, 0] as const;
+const air = atmosphereAt(EARTH_ATMOSPHERE, height);
+const through = airVelocity(position, [0, 2_500, -1_000], [0, 0, 7.292115e-5]);
+const speed = Math.hypot(...through);
+console.log("Mach", machNumber(speed, air).toFixed(1), "at", height / 1000, "km;", (dynamicPressure(air.density, speed) / 1000).toFixed(1), "kPa");
+console.log("drag", Math.hypot(...dragAcceleration(air.density, through, 1.2 * 10, 5_000)).toFixed(1), "m/s^2 on a 5 t capsule");
+```
+
+The air at a few heights, as a plain script (`examples/node/air.mjs`, run against the package as npm packs it):
+
+```js
+import { atmosphereAt, EARTH_ATMOSPHERE, MARS_ATMOSPHERE, standardAtmosphere } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+// The air at a few heights: Orbiter's 2006 Earth beside the 1976 U.S. Standard Atmosphere, and Mars. Kelvin, pascals, kg/m^3.
+for (const height of [0, 11_000, 30_000]) {
+  const orbiter = atmosphereAt(EARTH_ATMOSPHERE, height);
+  const standard = standardAtmosphere(height);
+  console.log(height / 1000, "km:", orbiter.pressure.toFixed(0), "Pa (Orbiter),", standard.pressure.toFixed(0), "Pa (1976 standard)");
+}
+console.log("Mars at the surface:", atmosphereAt(MARS_ATMOSPHERE, 0).pressure, "Pa,", atmosphereAt(MARS_ATMOSPHERE, 0).density, "kg/m^3");
+```
+
+It prints the pressures beside each other, the same to 20 km and 1 per cent apart at 30 km, and Mars's 610 Pa.
+
 ## How exact it is
 
 Each figure below is a test, measured on 2026-11-11 against saved answers: the tests never call the network.
@@ -243,6 +275,10 @@ Each figure below is a test, measured on 2026-11-11 against saved answers: the t
 | A steady torque, or two thrusters as a couple | Rate t / I and angle t^2 / 2I | The same to 1e-12 |
 | Kill rotation of the 8 m craft from 0.05, 0.03 and 0.02 rad/s | Orbiter's 1e-5 rad/s | Stopped in 8.3 s, 0.17 kg of propellant |
 | Holding prograde in low orbit from 90 degrees off | The direction of the speed | Under 0.5 degrees after 32 s, then 0.26 degrees behind: the orbit's turn rate over the rate law's gain |
+| The Earth's, Mars's and Venus's air at 25 heights | Orbiter's own 2006 models, compiled | The same to 1e-12 |
+| The 1976 standard from its defining constants, at 0 to 60 km | Its printed Table I | Within its five figures: 4e-5 in pressure and density, 0.0005 K |
+| Orbiter's 2006 Earth | The 1976 standard | The same to 20 km; 3 per cent in pressure at 38 km, 17 per cent at 60 km |
+| A 100 kg body dropped from 30 km, `Cd A` 0.5 m^2 | Its terminal speed at 2 km | 63.0 against 62.4 m/s, still slowing as the air thickens |
 
 What is left over is what each flight leaves out (the higher terms of a body's gravity, the air, the push of sunlight), not the integrator.
 
@@ -258,5 +294,6 @@ Ported from Orbiter, https://github.com/orbitersim/orbiter (MIT licence, Copyrig
 - `directionOf`, `impulse`, `burnStart`: the attitude modes of `Src/Orbiter/Vessel.cpp`, the burn timing of `Src/Orbiter/MfdAlign.cpp` and the burn of `Src/Orbiter/MfdTransfer.cpp`; `flyBurn` and `flyPlan` are written here on the propagator.
 - `speedChangeFor`, `crossings`: `Src/Orbiter/MfdTransfer.cpp`; `nodes`, `relativeInclination`: `Src/Orbiter/MfdAlign.cpp`. `biElliptic` and `planeChange` are written here.
 - `angularAcceleration`, `gravityGradientTorque`: `Src/Orbiter/Rigidbody.cpp` (`EulerInv_full`, `GetTorque`); `stepCraft`, `stepSpin`, `spinFor`: `Src/Orbiter/BodyIntegrator.cpp` (`RK4_LinAng`); the quaternions: `Src/Orbiter/Vecmat.cpp`; `thrusterPush`, `torqueLimits`, `fireFor`, `killRotation`, `holdDirection`: `Src/Orbiter/Vessel.cpp` (the thrusters' torque, `MaxAngularMoment` and the navcomp's modes).
+- `atmosphereAt`, `EARTH_ATMOSPHERE`, `MARS_ATMOSPHERE`, `VENUS_ATMOSPHERE`: `Src/Celbody/Atmosphere/EarthAtm2006`, `MarsAtm2006` and `VenusAtm2006`; `airVelocity`, `dynamicPressure`, `machNumber`, `dragAcceleration`: `Src/Orbiter/Vesselbase.cpp`, `Planet.h` and `Vessel.cpp`. `standardAtmosphere` is written here from U.S. Standard Atmosphere, 1976 (NOAA, NASA and the U.S. Air Force, a U.S. Government work), its tables 2, 3 and 4.
 
 Each source file says what was changed. The answers the tests compare with are from JPL Horizons (NASA/JPL, public domain), saved by `scripts/fetch-orbit-reference.ts`, and from Orbiter's own code, by `scripts/orbiter-reference.ts`. [NOTICE.md](../../NOTICE.md) has the credits.

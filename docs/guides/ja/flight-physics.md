@@ -2,12 +2,12 @@
 title: 飛行の物理
 section: how-to
 order: 8
-description: 位置と速度から軌道を出し、場面の天体の重力を足し合わせ、機体を先の時刻へ進めます。ロケット方程式、噴射、軌道の乗り換え、スラスターで機体の向きを変える計算も入っています。一部は Orbiter から移植し、JPL Horizons と比べて確かめています。
+description: 位置と速度から軌道を出し、場面の天体の重力を足し合わせ、機体を先の時刻へ進めます。ロケット方程式、噴射、軌道の乗り換え、スラスターで機体の向きを変える計算、空気の計算も入っています。一部は Orbiter から移植し、JPL Horizons と比べて確かめています。
 ---
 
-`physics` エントリーは、機体を飛ばすための計算です。位置と速度からどんな軌道になるか、まわりの天体がどれだけ引くか、しばらく後にどこにいるか、噴射にどれだけの推進剤がいるか、ある軌道から別の軌道へどう乗り換えるか、機体がどう向きを変えるかを出します。純粋な計算で、DOM も時計も依存パッケージも使わないので、Node でもテストでも自分のページの中でも動きます。単位はすべて SI です（メートル、秒、キログラム、ニュートン）。重力パラメーター（GM）は m^3/s^2 で表すので、`journey` エントリーの `GM_KM3_S2` の値は `1e9` 倍して使います。
+`physics` エントリーは、機体を飛ばすための計算です。位置と速度からどんな軌道になるか、まわりの天体がどれだけ引くか、しばらく後にどこにいるか、噴射にどれだけの推進剤がいるか、ある軌道から別の軌道へどう乗り換えるか、機体がどう向きを変えるか、空気が機体にどう働くかを出します。純粋な計算で、DOM も時計も依存パッケージも使わないので、Node でもテストでも自分のページの中でも動きます。単位はすべて SI です（メートル、秒、キログラム、ニュートン）。重力パラメーター（GM）は m^3/s^2 で表すので、`journey` エントリーの `GM_KM3_S2` の値は `1e9` 倍して使います。
 
-一部は、オープンソースの宇宙飛行シミュレーター [Orbiter](https://github.com/orbitersim/orbiter) から移植しました（MIT ライセンス、Copyright (c) 2000-2026 Martin Schweiger）。どのファイルから来たかは、[出どころ](#出どころ)に書いてあります。噴射、軌道の乗り換え、スラスターで機体の向きを変えることは、もう入っています。空気の影響は、このあとのリリースで加わります。
+一部は、オープンソースの宇宙飛行シミュレーター [Orbiter](https://github.com/orbitersim/orbiter) から移植しました（MIT ライセンス、Copyright (c) 2000-2026 Martin Schweiger）。どのファイルから来たかは、[出どころ](#出どころ)に書いてあります。噴射、軌道の乗り換え、スラスターで機体の向きを変えること、空気の影響も、もう入っています。
 
 ## 位置と速度から軌道を出す
 
@@ -219,6 +219,38 @@ console.log("stopped in", spin.t.toFixed(1), "s with", propellant.toFixed(2), "k
 
 `stopped in 8.3 s with 0.17 kg of propellant` が表示されます。
 
+## 空気
+
+`atmosphereAt(model, height)` は、層に分けたモデルから、ある高さの温度、気圧、密度、音の速さを出します。`EARTH_ATMOSPHERE`、`MARS_ATMOSPHERE`、`VENUS_ATMOSPHERE` は Orbiter の 2006 年版のモデルで、数字もそのままです。それぞれ上限の高さ（200 km、100 km、200 km）より上には空気がありません。`standardAtmosphere(height)` は 1976 年の米国標準大気で、海面より 5 km 低いところから 86 km までを、その規格が決めた定数から計算します。`airVelocity` は、惑星と一緒に回る空気に対する機体の速さです。`dynamicPressure` と `machNumber` は Orbiter が表示する動圧とマッハ数、`dragAcceleration` は空気抵抗です。空気抵抗は、機体が空気に対して進む向きと逆向きにかかり、抗力係数と面積をかけた値（`Cd A`）と質量から出します。モデルの気圧は、空気の中のエンジンの推力を出す `thrustAt` にもそのまま渡せます。
+
+```ts
+import { airVelocity, atmosphereAt, dragAcceleration, dynamicPressure, EARTH_ATMOSPHERE, machNumber } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+const height = 40_000;
+const position = [6_378_137 + height, 0, 0] as const;
+const air = atmosphereAt(EARTH_ATMOSPHERE, height);
+const through = airVelocity(position, [0, 2_500, -1_000], [0, 0, 7.292115e-5]);
+const speed = Math.hypot(...through);
+console.log("Mach", machNumber(speed, air).toFixed(1), "at", height / 1000, "km;", (dynamicPressure(air.density, speed) / 1000).toFixed(1), "kPa");
+console.log("drag", Math.hypot(...dragAcceleration(air.density, through, 1.2 * 10, 5_000)).toFixed(1), "m/s^2 on a 5 t capsule");
+```
+
+いくつかの高さの空気を、ふつうのスクリプトで出す例です（`examples/node/air.mjs`。npm が作るとおりのパッケージで実行しています）。
+
+```js
+import { atmosphereAt, EARTH_ATMOSPHERE, MARS_ATMOSPHERE, standardAtmosphere } from "@johnmorrisdotca/uchusen-rockets/physics";
+
+// The air at a few heights: Orbiter's 2006 Earth beside the 1976 U.S. Standard Atmosphere, and Mars. Kelvin, pascals, kg/m^3.
+for (const height of [0, 11_000, 30_000]) {
+  const orbiter = atmosphereAt(EARTH_ATMOSPHERE, height);
+  const standard = standardAtmosphere(height);
+  console.log(height / 1000, "km:", orbiter.pressure.toFixed(0), "Pa (Orbiter),", standard.pressure.toFixed(0), "Pa (1976 standard)");
+}
+console.log("Mars at the surface:", atmosphereAt(MARS_ATMOSPHERE, 0).pressure, "Pa,", atmosphereAt(MARS_ATMOSPHERE, 0).density, "kg/m^3");
+```
+
+気圧が並んで表示されます。20 km までは同じで、30 km では 1 パーセント違います。火星は 610 Pa です。
+
 ## どれくらい正確か
 
 下の数字はどれもテストで、2026-11-11 に、保存しておいた答えと比べて測りました。テストはネットワークを使いません。
@@ -243,6 +275,10 @@ console.log("stopped in", spin.t.toFixed(1), "s with", propellant.toFixed(2), "k
 | 一定のトルク、または偶力になる2つのスラスター | 回転の速さ t / I と角度 t^2 / 2I | 1e-12 まで同じ |
 | 8 m の機体の回転を、0.05、0.03、0.02 rad/s から止める | Orbiter の基準 1e-5 rad/s | 8.3 秒で止まり、推進剤は 0.17 kg |
 | 低い軌道で、進行方向から 90 度ずれたところから始めて、進行方向を保つ | 速度の向き | 32 秒後には 0.5 度より小さくなり、そのあとは 0.26 度遅れてついていく（軌道が回る速さを、回す速さを決める式の係数で割った値） |
+| 地球、火星、金星の空気を、25 通りの高さで出す | Orbiter の 2006 年版のモデルをコンパイルしたもの | 1e-12 まで同じ |
+| 1976 年の標準大気を、規格が決めた定数から 0 から 60 km まで計算する | 規格に印刷されている表 I | 表にある5けたの範囲で同じ。気圧と密度は 4e-5 以内、温度は 0.0005 K 以内 |
+| Orbiter の 2006 年版の地球のモデル | 1976 年の標準大気 | 20 km までは同じ。気圧は 38 km で 3 パーセント、60 km で 17 パーセント違う |
+| 100 kg の物体を 30 km から落とす（`Cd A` は 0.5 m^2） | 2 km での終端速度 | 終端速度 62.4 m/s に対して 63.0 m/s。空気がだんだん濃くなるので、まだ遅くなっている途中です |
 
 残るずれは、それぞれの計算が入れていないもの（天体の重力の高次の項、空気、太陽の光が押す力）から来ています。計算の方法（積分のしかた）のせいではありません。
 
@@ -258,5 +294,6 @@ Orbiter（https://github.com/orbitersim/orbiter 、MIT ライセンス、Copyrig
 - `directionOf`、`impulse`、`burnStart`：`Src/Orbiter/Vessel.cpp` の姿勢のモード、`Src/Orbiter/MfdAlign.cpp` の噴射の時刻の決め方、`Src/Orbiter/MfdTransfer.cpp` の噴射。`flyBurn` と `flyPlan` は、時間を進める計算を使って、ここで新しく書いたものです
 - `speedChangeFor`、`crossings`：`Src/Orbiter/MfdTransfer.cpp`。`nodes`、`relativeInclination`：`Src/Orbiter/MfdAlign.cpp`。`biElliptic` と `planeChange` は、ここで新しく書いたものです
 - `angularAcceleration`、`gravityGradientTorque`：`Src/Orbiter/Rigidbody.cpp`（`EulerInv_full`、`GetTorque`）。`stepCraft`、`stepSpin`、`spinFor`：`Src/Orbiter/BodyIntegrator.cpp`（`RK4_LinAng`）。クォータニオン：`Src/Orbiter/Vecmat.cpp`。`thrusterPush`、`torqueLimits`、`fireFor`、`killRotation`、`holdDirection`：`Src/Orbiter/Vessel.cpp`（スラスターのトルク、`MaxAngularMoment`、自動操縦のモード）
+- `atmosphereAt`、`EARTH_ATMOSPHERE`、`MARS_ATMOSPHERE`、`VENUS_ATMOSPHERE`：`Src/Celbody/Atmosphere/EarthAtm2006`、`MarsAtm2006`、`VenusAtm2006`。`airVelocity`、`dynamicPressure`、`machNumber`、`dragAcceleration`：`Src/Orbiter/Vesselbase.cpp`、`Planet.h`、`Vessel.cpp`。`standardAtmosphere` は、1976 年の米国標準大気（U.S. Standard Atmosphere, 1976。NOAA、NASA、米国空軍が出したもので、米国政府の著作物）の表 2、3、4 をもとに、ここで新しく書いたものです
 
 移植したどのソースファイルにも、何を変えたかが書いてあります。テストで比べる答えは、JPL Horizons（NASA/JPL、パブリックドメイン）から `scripts/fetch-orbit-reference.ts` で保存したものと、Orbiter 自身のコードから `scripts/orbiter-reference.ts` で作ったものです。クレジットは [NOTICE.md](../../../NOTICE.md) にあります。
