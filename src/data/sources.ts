@@ -142,6 +142,10 @@ export const SOURCES = {
   "uchusen-fleet-ship-02": { title: "ISV 加美鳴 Kaminari, SPX-207, the Interstellar Heavy Transport: an original SPX fleet design (docs/fleet/ship-02.md)", publisher: "John Morris, uchusen-rockets", url: "https://github.com/johnmorrisdotca/uchusen-rockets/blob/main/docs/fleet/ship-02.md", date: "2026-11-04", read: "direct", licence: "MIT" },
   "uchusen-fleet-kaminari-concepts": { title: "ISV 加美鳴 Kaminari, SPX-207, with ISV Emiake and ISV Romaryū (docs/fleet/kaminari-concepts.md)", publisher: "John Morris, uchusen-rockets", url: "https://github.com/johnmorrisdotca/uchusen-rockets/blob/main/docs/fleet/kaminari-concepts.md", date: "2026-11-04", read: "direct", licence: "MIT" },
   "wikipedia-voyager-1": { title: "Voyager 1 (its speed leaving the Solar System, 61,602 km/h in 2013)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Voyager_1", date: "2026-11-04", read: "direct", licence: "CC BY-SA 4.0" },
+  "nasa-voyager-faq": { title: "Voyager frequently asked questions (how big it is)", publisher: "NASA", url: "https://science.nasa.gov/mission/voyager/frequently-asked-questions/", date: "2026-11-12", read: "direct" },
+  "nasa-voyager": { title: "Voyager", publisher: "NASA", url: "https://science.nasa.gov/mission/voyager/", date: "2026-11-12", read: "direct" },
+  "nasa-juno": { title: "Juno", publisher: "NASA", url: "https://science.nasa.gov/mission/juno/", date: "2026-11-12", read: "direct" },
+  "nasa-juno-arrays": { title: "Juno solar panel deployment test", publisher: "NASA", url: "https://science.nasa.gov/photojournal/juno-solar-panel-deployment-test/", date: "2010-09-13", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**

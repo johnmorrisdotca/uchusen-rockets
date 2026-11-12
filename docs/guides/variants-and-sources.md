@@ -85,6 +85,10 @@ for (const rocket of Object.values(ROCKETS).slice(0, 5)) console.log(rocket.id, 
 
 `PLANNED_ROCKETS` lists rockets with sourced facts and no shape yet.
 
+## Deep-space craft
+
+Voyager and Juno fly in space, so the view can tip to 90 degrees. One Voyager model stands for both spacecraft. Its painted look is NASA's model, scaled so the high-gain antenna is 3.7 m; the line look is this package's own shape from the published antenna, bus, height and magnetometer boom. Juno's painted look is NASA's model scaled so the solar arrays span 20 m; the line look uses the published body, the 20 m span and the arrays' width.
+
 ## Why it is built this way
 
 A drawing that looks right and is wrong by ten metres is worse than no drawing. Because a mesh and a drawing come from the same sourced numbers, they cannot disagree with each other or with the table beside them. See [Architecture](architecture.md).

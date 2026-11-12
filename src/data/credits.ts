@@ -195,6 +195,8 @@ export const MODEL_CREDITS = {
     licenceUrl: LICENCE_URL,
     changes: "Used as Michael's model has them, on its second-generation Roadster: their middle caps, which carry a mark, removed; reduced; rescaled with the car; materials merged and renamed.",
   },
+  "nasa-voyager": nasa("Voyager Probe (A)", "https://science.nasa.gov/3d-resources/voyager-probe-a/", "The record's marked face removed; reduced from 29,911 triangles; rescaled so the high-gain antenna is the sourced 3.7 m; plain colours kept."),
+  "nasa-juno": nasa("Juno (B)", "https://science.nasa.gov/3d-resources/juno-b/", "Reduced from 29,856 triangles; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

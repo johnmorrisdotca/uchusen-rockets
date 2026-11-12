@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Voyager and Juno** (MODULES-1120): `rocket="voyager"` is one model for both spacecraft, and `rocket="juno"` is the Jupiter orbiter. The painted look is NASA's own model, fetched only when that look is asked for. Voyager is scaled so the high-gain antenna is 3.7 m; Juno so the solar arrays span 20 m. The line looks are this package's own plain shapes from the published sizes. Both can be seen from straight above or below.
+
 ## [0.20.0] - 2026-11-12
 
 - **The air in the `physics` entry** (MODULES-1080, step 4 of 4 of MODULES-511): temperature, pressure, density and the speed of sound with height from layered models (`atmosphereAt`), with Orbiter's 2006 models of the Earth, Mars and Venus as data (`EARTH_ATMOSPHERE`, `MARS_ATMOSPHERE`, `VENUS_ATMOSPHERE`), the 1976 U.S. Standard Atmosphere to 86 km from its defining constants (`standardAtmosphere`), the speed through air that turns with its planet (`airVelocity`), `dynamicPressure`, `machNumber` and the drag (`dragAcceleration`). Ported in part from Orbiter's atmosphere modules, `Vesselbase.cpp`, `Planet.h` and `Vessel.cpp`. Tests hold the three models to Orbiter's own compiled code to 1e-12 and the standard to rows of its printed Table I within its five figures, show where Orbiter's Earth parts from the standard (3 per cent in pressure at 38 km), and drop a body to its terminal speed. The guide's new section in English and Japanese, and a Node example.

@@ -6,6 +6,7 @@ import { Document } from "@gltf-transform/core";
 import { piecesOf } from "../scripts/pieces.ts";
 import { skipsEmptyPart } from "../scripts/recipe-parts.ts";
 import { PointIndex } from "../scripts/point-index.ts";
+import { weld } from "../scripts/weld.ts";
 
 test("two points a hair apart are one, wherever the grid's edge falls between them", () => {
   const tolerance = 0.1;
@@ -72,4 +73,15 @@ test("a recipe part nothing falls in stops the run unless it is marked optional"
   assert.equal(skipsEmptyPart("iss", { id: "truss" }, true), false);
   // the run asks it for every part that has no triangles, and every part has a committed file today, so none is marked
   assert.match(readFileSync("scripts/reduce-nasa.ts", "utf8"), /skipsEmptyPart\(recipe\.id, part, false\)/);
+});
+
+test("a faceted pair of triangles welds to four vertices when normals may differ, and a different picture stays split", () => {
+  // two triangles of a quad, each face its own normal, the same picture coordinate
+  const positions = [0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0];
+  const normals = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1];
+  const uvs = [0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1];
+  assert.equal(weld(positions, normals, uvs, 1, [0, 0, 0]).positions.length / 3, 6);
+  assert.equal(weld(positions, normals, uvs, 1, [0, 0, 0], true).positions.length / 3, 4);
+  const other = [0, 0, 1, 0, 0, 1, 0.4, 0.4, 0.8, 0.8, 0.2, 0.6];
+  assert.equal(weld(positions, normals, other, 1, [0, 0, 0], true).positions.length / 3, 6);
 });
