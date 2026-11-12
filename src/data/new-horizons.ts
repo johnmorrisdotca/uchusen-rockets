@@ -18,7 +18,7 @@ export const NEW_HORIZONS_VARIANTS: readonly Variant[] = [
     firstWord: "Launched",
     firstFlight: { value: "2006-01-19", source: "nasa-new-horizons", note: "19:00:00 UT, from Cape Canaveral, Launch Complex 41." },
     slots: ["craft"],
-    note: "NASA's 3D-print model in the painted look, assembled from the body, the antenna and the RTG and scaled so the high-gain antenna is the sourced 2.1 m; at that scale the file stands 2.21 m. This package's own plain shape in the line looks, from the sourced body and that antenna. The line look stands 2.2 m and does not draw the RTG: the press kit names it and does not give its length. No mark was on the parts, and none is drawn.",
+    note: "NASA Visualization Technology Applications and Development's model in the painted look, the flag and the nameplates painted out, scaled so the high-gain antenna is the sourced 2.1 m; at that scale the file stands 2.25 m. This package's own plain shape in the line looks, from the sourced body and that antenna. The line look stands 2.2 m and does not draw the RTG: the press kit names it and does not give its length. No flag or nameplate is drawn.",
     facts: {
       height: NEW_HORIZONS_HEIGHT,
       diameter: { value: 2.7, source: KIT, note: "The primary structure is 2.7 meters (108 inches) at its widest." },

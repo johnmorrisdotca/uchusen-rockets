@@ -199,7 +199,7 @@ export const MODEL_CREDITS = {
   "nasa-juno": nasa("Juno (B)", "https://science.nasa.gov/3d-resources/juno-b/", "Reduced from 29,856 triangles; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove."),
   "nasa-jwst": nasa("James Webb Space Telescope (B)", "https://science.nasa.gov/3d-resources/james-webb-space-telescope-b/", "Reduced from 99,239 triangles; rescaled so the sunshield's long side is the sourced 21.197 m; plain colours kept. It carried no mark to remove."),
   "nasa-parker": nasa("Parker Solar Probe", "https://science.nasa.gov/3d-resources/parker-solar-probe/", "Its pictures left out and plain colours kept; reduced from 39,257 triangles; rescaled so the heat shield is the sourced 2.4 m. It carried no mark to remove."),
-  "nasa-new-horizons": nasa("New Horizons", "https://science.nasa.gov/3d-resources/new-horizons/", "NASA's 3D-print model, assembled from the body, the antenna and the RTG; the body halves were not used; reduced from 22,214 triangles to 20,000; rescaled so the high-gain antenna is the sourced 2.1 m; one plain colour. It carried no mark to remove."),
+  "nasa-new-horizons": nasa("New Horizons", "https://science.nasa.gov/resource/new-horizons-3d-model/", "The flag and the nameplates painted out of its picture; the helper cube left out; reduced from 8,280 triangles; rescaled so the high-gain antenna is the sourced 2.1 m."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

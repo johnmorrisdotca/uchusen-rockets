@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **New Horizons** (MODULES-1120): `rocket="new-horizons"`. The painted look is NASA's 3D-print model, assembled from the body, the antenna and the RTG, fetched only when that look is asked for, and scaled so the high-gain antenna is 2.1 m. The line look is this package's own plain shape from the published body and antenna, and stands 2.2 m. It can be seen from straight above or below.
+- **New Horizons** (MODULES-1120): `rocket="new-horizons"`. The painted look is NASA Visualization Technology Applications and Development's model, the flag and the nameplates painted out, fetched only when that look is asked for, and scaled so the high-gain antenna is 2.1 m. The line look is this package's own plain shape from the published body and antenna, and stands 2.2 m. It can be seen from straight above or below.
 
 ## [0.21.0] - 2026-11-12
 
