@@ -29,6 +29,7 @@ import { KYOTORI_SLOT_NAMES, KYOTORI_VARIANTS } from "./data/ship-kyotori.ts";
 import { DRONE_VARIANTS } from "./data/drone.ts";
 import { ARIAKE_VARIANTS, SHIP_03_INSET_ROCKET, SHIP_03_SLOT_NAMES, SHIP_03_VARIANTS } from "./data/ship-03.ts";
 import { MADE_BY, type MakerId } from "./data/makers.ts";
+import { countryOf, type CountryCode } from "./data/countries.ts";
 import type { Figure, Variant } from "./data/types.ts";
 import type { SourceId } from "./data/sources.ts";
 
@@ -66,6 +67,8 @@ export interface RocketEntry {
   maker: MakerId;
   /** Whose it is and who built it, as its source says, or a blank. */
   madeBy: Figure<string>;
+  /** Its country as an ISO 3166-1 alpha-2 code, as its source says, or a blank: none for a craft of several countries or an international body, or a ship of the SPX fleet. */
+  country: Figure<CountryCode>;
 }
 
 /**
@@ -87,6 +90,8 @@ export interface PlannedRocket {
   diameter: Figure;
   firstFlight: Figure<string>;
   source: SourceId;
+  /** Its country as an ISO 3166-1 alpha-2 code, as its source says, or a blank. */
+  country: Figure<CountryCode>;
 }
 
 /** Craft that fly in space: seen from any side, from straight above or below. Everything else stands on the ground or the sea, and keeps the ground in view. */
@@ -102,12 +107,12 @@ export function fliesInSpace(id: string): boolean {
   return IN_SPACE.has(id) || id in FLEET_KIT_ROCKETS || id.startsWith("fleet-");
 }
 
-/** Gives each variant its `view.tiltMax`: 90 degrees for a craft in space and the fleet, 45 for the rest. */
-function withTilt(rockets: Record<string, RocketEntry>): Record<string, RocketEntry> {
+/** Gives each variant its `view.tiltMax`: 90 degrees for a craft in space and the fleet, 45 for the rest. And each rocket its country. */
+function withTilt(rockets: Record<string, Omit<RocketEntry, "country">>): Record<string, RocketEntry> {
   return Object.fromEntries(
     Object.entries(rockets).map(([id, rocket]) => {
       const tiltMax = fliesInSpace(id) ? 90 : 45;
-      return [id, { ...rocket, variants: rocket.variants.map((variant) => ({ ...variant, view: { tiltMax } })) }];
+      return [id, { ...rocket, country: countryOf(id), variants: rocket.variants.map((variant) => ({ ...variant, view: { tiltMax } })) }];
     }),
   );
 }
@@ -174,10 +179,10 @@ const fig = (value: number, source: SourceId): Figure => ({ value, source });
  * console.log(PLANNED_ROCKETS.map((rocket) => rocket.name));
  * ```
  */
-export const PLANNED_ROCKETS: readonly PlannedRocket[] = [
+export const PLANNED_ROCKETS: readonly PlannedRocket[] = ([
   { id: "vulcan-centaur", name: "Vulcan Centaur", status: "planned", height: fig(61.6, "wikipedia-vulcan"), diameter: fig(5.4, "wikipedia-vulcan"), firstFlight: { value: "2024-01-08", source: "wikipedia-vulcan" }, source: "wikipedia-vulcan" },
   { id: "ariane-6", name: "Ariane 6", status: "planned", height: fig(63, "wikipedia-ariane-6"), diameter: fig(5.4, "wikipedia-ariane-6"), firstFlight: { value: "2024-07-09", source: "wikipedia-ariane-6" }, source: "wikipedia-ariane-6" },
-];
+] satisfies Omit<PlannedRocket, "country">[]).map((rocket) => ({ ...rocket, country: countryOf(rocket.id) }));
 
 /**
  * Finds a rocket's variant, with its sourced sizes.
