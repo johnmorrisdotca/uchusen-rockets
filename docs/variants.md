@@ -212,6 +212,12 @@ It is 27 parts in slots, each cut from NASA's model by where it stands and paint
 
 `parker-solar-probe`: the August 2018 press kit targets a launch on 2018-08-11. The spacecraft is about 3 m tall and about 1 m across below the cooling system. The heat shield is 8 feet (2.4 m) on the page about fitting it; the press kit says about 2.3 m. Painted, it is NASA's model scaled so the shield is 2.4 m; at that scale the file stands 2.20 m. Its pictures are left out. Its line look uses the 3 m height, the 1 m body and the 2.4 m shield. No mark is drawn.
 
+`cassini`: launched on 1997-10-15 with Huygens. The spacecraft is 6.8 m tall, the high-gain antenna is 4 m across, and the magnetometer boom is 11 m, from NASA's spacecraft sheet. Painted, it is NASA's model scaled so the antenna is 4 m; at that scale the file stands 11.64 m. Its pictures are left out. Its line look uses the 6.8 m height and the 4 m antenna.
+
+`galileo`: launched on 1989-10-18. It is 5.3 m high, and the magnetometer boom extends 11 m to one side, from the mission page. Painted, it is NASA's model scaled so its longest side is that 11 m boom; the file stands 11.00 m. Its line look uses the 5.3 m height and the 11 m boom. No mark was on the model.
+
+`pioneer`: one model for Pioneer 10 and Pioneer 11. Pioneer 10 launched on 1972-03-02. The high-gain antenna is 2.74 m across and the magnetometer boom is 6.6 m, from NASA's spacecraft record. The file's antenna is already 2.74 m, so it is not scaled further, and the file stands 8.25 m. Its pictures are left out. Its line look uses the 2.74 m antenna and the 6.6 m boom.
+
 `juno`: launched on 2011-08-05. The body is about 3.5 m high and wide, and the solar arrays give an overall width exceeding 20 m, from the mission page. Each array is 8.9 m by 2.65 m in the deployment-test caption, and the mission page says each extends about 9 m from the body. Painted, it is NASA's model scaled so the arrays' tip-to-tip is 20 m; at that scale the file stands 6.89 m. Its line look reaches that 20 m span, so each array is drawn 9.8 m from the body, and the antenna is drawn 3.46 m across from the model, because no source read here gives the antenna's diameter. No mark was on the model.
 
 ## Whose each one is

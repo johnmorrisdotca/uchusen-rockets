@@ -83,6 +83,9 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Juno | This package's plain shape, from the sourced body, span and array width | NASA's model, scaled so the arrays span 20 m: 5,710 triangles and 97 KB |
 | James Webb Space Telescope | This package's plain shape, from the sourced sunshield and the 6.5 m mirror | NASA's model, scaled so the sunshield's long side is 21.197 m: 18,599 triangles and 281 KB |
 | Parker Solar Probe | This package's plain shape, from the sourced height, body and heat shield | NASA's model, its pictures left out, scaled so the heat shield is 2.4 m: 4,948 triangles and 88 KB |
+| Cassini | This package's plain shape, from the sourced height and antenna | NASA's model, its pictures left out, scaled so the antenna is 4 m: 5,968 triangles and 99 KB |
+| Galileo | This package's plain shape, from the sourced height and magnetometer boom | NASA's model, scaled so its longest side is the 11 m boom: 4,857 triangles and 70 KB |
+| Pioneer | This package's plain shape, from the sourced antenna and magnetometer boom | NASA's model, its pictures left out, the antenna already 2.74 m: 3,992 triangles and 74 KB |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Cassini, Galileo and Pioneer** (MODULES-1120): `rocket="cassini"`, `rocket="galileo"` and `rocket="pioneer"`. The painted look is NASA's own model, fetched only when that look is asked for. Cassini is scaled so the high-gain antenna is 4 m. Galileo is scaled so its longest side is the 11 m magnetometer boom. Pioneer's antenna is already the sourced 2.74 m, and one model serves Pioneer 10 and 11. Psyche and Lucy are not included: their pages were not found.
 - **James Webb and Parker Solar Probe** (MODULES-1120): `rocket="jwst"` and `rocket="parker-solar-probe"`. The painted look is NASA's own model, fetched only when that look is asked for. Webb is scaled so the sunshield's long side is 21.197 m; Parker so the heat shield is 2.4 m. The line looks are this package's own plain shapes from the published sizes. Europa Clipper is not included: its page was not found, and the Europa Orbiter file is a different craft offered only as a printable part.
 - **Voyager and Juno** (MODULES-1120): `rocket="voyager"` is one model for both spacecraft, and `rocket="juno"` is the Jupiter orbiter. The painted look is NASA's own model, fetched only when that look is asked for. Voyager is scaled so the high-gain antenna is 3.7 m; Juno so the solar arrays span 20 m. The line looks are this package's own plain shapes from the published sizes. Both can be seen from straight above or below.
 
