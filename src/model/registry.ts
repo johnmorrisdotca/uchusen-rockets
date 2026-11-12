@@ -37,6 +37,10 @@ import { JUPITER_C_VARIANTS } from "../data/jupiterc.ts";
 import { JUPITER_C_BUILDS } from "./jupiterc.ts";
 import { ISS_VARIANTS } from "../data/iss.ts";
 import { ISS_BUILDS } from "./iss.ts";
+import { VOYAGER_VARIANTS } from "../data/voyager.ts";
+import { VOYAGER_BUILDS } from "./voyager.ts";
+import { JUNO_VARIANTS } from "../data/juno.ts";
+import { JUNO_BUILDS } from "./juno.ts";
 import { HUBBLE_VARIANTS } from "../data/hubble.ts";
 import { HUBBLE_BUILDS } from "./hubble.ts";
 import { TIANGONG_VARIANTS } from "../data/tiangong.ts";
@@ -183,8 +187,8 @@ entries.push(
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...TIANGONG_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS];
-const stacks: readonly StackBuild[] = [...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...TIANGONG_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS];
+const stackFacts = [...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...TIANGONG_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS, ...VOYAGER_VARIANTS, ...JUNO_VARIANTS];
+const stacks: readonly StackBuild[] = [...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...TIANGONG_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS, ...VOYAGER_BUILDS, ...JUNO_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);

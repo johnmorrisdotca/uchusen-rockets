@@ -1,6 +1,6 @@
 // NASA's own models: each stands at its sourced size, each part is painted by its own file and credited to NASA, and the line looks are this package's own plain shapes. Hubble is no longer NASA's model: see stations.test.ts.
 import assert from "node:assert/strict";
-import { statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { check, variantOf } from "../src/index.ts";
@@ -23,10 +23,31 @@ const ROWS: readonly Row[] = [
   { rocket: "mercury", variant: "friendship-7", credit: "nasa-friendship-7", files: ["mercury-capsule.glb"] },
   { rocket: "jupiter-c", variant: "jupiter-c", credit: "nasa-jupiter-c", files: ["jupiter-c-tail.glb", "jupiter-c-first-stage.glb", "jupiter-c-tub.glb", "jupiter-c-fourth-stage.glb"] },
   { rocket: "iss", variant: "iss", credit: "nasa-iss", files: ISS_FILES },
+  { rocket: "voyager", variant: "voyager", credit: "nasa-voyager", files: ["voyager-craft.glb"] },
+  { rocket: "juno", variant: "juno", credit: "nasa-juno", files: ["juno-craft.glb"] },
   // more models
 ];
 
 const MAX_BYTES = 2.7 * 1024 * 1024;
+
+/** One axis of a painted file, in metres, the same way the legal test reads a quantized mesh. */
+function glbSpan(file: string, axis: 0 | 1 | 2): number {
+  const bytes = new Uint8Array(readFileSync(join("models", file)));
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const length = view.getUint32(12, true);
+  const json = JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + length))) as { nodes: { mesh?: number; scale?: number[] }[]; meshes: { primitives: { attributes: { POSITION: number } }[] }[]; accessors: { min: number[]; max: number[]; normalized?: boolean }[] };
+  const node = json.nodes.find((one) => one.mesh !== undefined);
+  const scale = node?.scale?.[axis] ?? 1;
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const primitive of json.meshes[node?.mesh ?? 0].primitives) {
+    const accessor = json.accessors[primitive.attributes.POSITION];
+    const unit = accessor.normalized ? 32767 : 1;
+    lo = Math.min(lo, accessor.min[axis] / unit);
+    hi = Math.max(hi, accessor.max[axis] / unit);
+  }
+  return (hi - lo) * scale;
+}
 
 for (const { rocket, variant, credit, files } of ROWS)
   test(`${rocket}: NASA's model, credited, within its budget, and its own plain shapes in the line looks`, () => {
@@ -36,7 +57,14 @@ for (const { rocket, variant, credit, files } of ROWS)
     assert.equal(report.credits[0].creator, "NASA");
     assert.equal(report.credits[0].licence, "Public domain (NASA)");
     assert.ok(variantOf(rocket, variant)?.note);
-    for (const file of files) assert.ok(statSync(join("models", file)).size <= MAX_BYTES, file);
+    for (const file of files) {
+      const bytes = statSync(join("models", file)).size;
+      assert.ok(bytes <= MAX_BYTES, file);
+      if (file === "voyager-craft.glb" || file === "juno-craft.glb") assert.ok(bytes <= 400 * 1024, `${file} is ${(bytes / 1024).toFixed(0)} KB`);
+    }
+    // Voyager's antenna is the sourced 3.7 m, which is the file's Z. Juno's sourced 20 m is tip to tip; the file's height at that scale is 6.89 m.
+    if (rocket === "voyager") assert.ok(Math.abs(glbSpan("voyager-craft.glb", 2) - 3.7) / 3.7 < 0.05);
+    if (rocket === "juno") assert.ok(Math.abs(glbSpan("juno-craft.glb", 1) - 6.89) / 6.89 < 0.05);
     const built = build({ rocket, variant });
     assert.ok(built.parts.every((part) => part.record.painted && part.pieces.length > 0));
     assert.ok(built.svg({ look: "line" }).startsWith("<svg"));

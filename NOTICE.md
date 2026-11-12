@@ -46,6 +46,8 @@ NASA's models are from its 3D Resources, listed as the "NASA 3D Models" datasets
 
 The dataset addresses named below are the record of what each model is. Their download addresses now lead to https://science.nasa.gov/3d-resources/, which says its assets are mirrored on https://github.com/nasa/NASA-3D-Resources, and the files were read from there on 2026-11-02; where a dataset states a polygon count, the file's triangles match it or come within 4%.
 
+On 2026-11-12 Voyager and Juno were taken from the copies on https://github.com/nasa/NASA-3D-Resources, not from the 135 data.nasa.gov datasets the decision above covers. That repository's README says "These assets are free and without copyright." https://science.nasa.gov/3d-resources/ says "All of these assets are free to download and use. They are also mirrored on GitHub." and points at the NASA Images and Media Usage Guidelines. The same rules apply: NASA is credited as the source, and no logo, insignia, flag or lettering is in the files.
+
 | Files | Title | Dataset | What was changed |
 | --- | --- | --- | --- |
 | `space-shuttle-stack-orbiter.glb` | Shuttle (Hi-Res) | https://data.nasa.gov/dataset/nasa-3d-models-shuttle-hi-res | The agency mark, the flag, the country's name and the rest of the lettering painted out of its pictures; its open bay closed with its own doors and what was inside it left out; its engines put in place; reduced from 31,318 triangles, with its five engines 48,376, to 30,000; rescaled to the sourced length; stood upright; its materials made into one picture. |
@@ -61,6 +63,8 @@ The dataset addresses named below are the record of what each model is. Their do
 | `fleet-drone-repair-near.glb`, `fleet-drone-repair-far.glb` | Curiosity Rover (Detailed) | https://science.nasa.gov/3d-resources/curiosity-rover-detailed/ | The weld arm's two links and tool turret, from NASA's printable parts (STL, no textures, Parts.zip of that page); painted by this package; moved and scaled to the drone. No mark was on it. |
 | `fleet-drone-repair-near.glb`, `fleet-drone-repair-far.glb` | High Energy Transient Explorer | https://science.nasa.gov/3d-resources/high-energy-transient-explorer/ | The drone's equipment block on the saucer's rear: the whole body, turned and scaled; its materials made into one picture with this package's own. No mark was on it. |
 | `fleet-drone-repair-near.glb`, `fleet-drone-repair-far.glb` | Grease Gun | https://science.nasa.gov/3d-resources/grease-gun/ | The drone's welding tool, scaled from millimetres, with a welding nozzle of this package's own at its muzzle; its materials made into one picture. No mark was on it. |
+| `voyager-craft.glb` | Voyager Probe (A) | https://science.nasa.gov/3d-resources/voyager-probe-a/ | One model for Voyager 1 and Voyager 2. The record's marked face removed; reduced from 29,911 triangles to 4,529; rescaled so the high-gain antenna is the sourced 3.7 m; plain colours kept. 74 KB. |
+| `juno-craft.glb` | Juno (B) | https://science.nasa.gov/3d-resources/juno-b/ | Reduced from 29,856 triangles to 5,710; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove. 97 KB. |
 <!-- more NASA models -->
 
 ## Lettering faces (SIL Open Font License 1.1)

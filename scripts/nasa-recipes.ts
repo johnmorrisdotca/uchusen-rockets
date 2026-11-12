@@ -54,6 +54,8 @@ export interface NasaRecipe {
   rough?: number;
   /** Let free edges move: for a model whose pieces can take it. */
   freeBorders?: boolean;
+  /** Weld a place's vertices even when each face stored its own normal, so a flat-shaded file can be simplified. Picture seams stay split. */
+  looseWeld?: boolean;
   /** A triangle with a side of its box over this many of the file's units is cut up first, so a facet that runs the length of a hull falls where each piece of it stands. */
   maxTriangle?: number;
 }
@@ -251,6 +253,15 @@ function issPartOf(centre: readonly number[], piece: PieceBox): NasaPart | null 
   return ISS_PARTS.harmony;
 }
 
+// Voyager Probe (A), file up +y. The high-gain antenna is a disc of 0.100 in x and z: scaled to the sourced 3.7 m. The record's marked face is its own material and is left out. One model serves Voyager 1 and Voyager 2.
+// Turned so the long boom, which runs to +z in the file, lies across +x.
+const VOYAGER_SCALE = 3.7 / 0.1;
+const VOYAGER: NasaPart = { id: "craft", triangles: 4_500, error: 0.04, place: placer([0, -0.04972575, 0], VOYAGER_SCALE, VOYAGER_SCALE, 90) };
+
+// Juno (B), one mesh and no picture. The two farthest array tips are 25.3437 apart: scaled to the sourced 20 m span. It carries no mark.
+const JUNO_SCALE = 20 / 25.3437;
+const JUNO: NasaPart = { id: "craft", triangles: 6_000, error: 0.4, place: placer([0, -2.475, 0], JUNO_SCALE, JUNO_SCALE, 0) };
+
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
     id: "space-shuttle-stack",
@@ -366,5 +377,31 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     colours: { "lambert7SG.001": [0.28, 0.16, 0.05], "bendedtruss_blin.001": [0.5, 0.5, 0.5], "blinn1SG.001": [0.62, 0.62, 0.6], "blinn3SG.001": [0.55, 0.55, 0.53], "lambert3SG.001": [0.7, 0.7, 0.68], "anisotropic1SG.001": [0.45, 0.45, 0.46], "soyuz_blinn4SG.001": [0.5, 0.5, 0.48] },
     maxTriangle: 2,
     atlas: 256,
+  },
+  {
+    id: "voyager",
+    files: [`${FOLDER}/voyager-a.glb`],
+    title: "Voyager Probe (A)",
+    source: "https://science.nasa.gov/3d-resources/voyager-probe-a/",
+    changes: "the record's marked face removed; reduced from 29,911 triangles; rescaled so the high-gain antenna is the sourced 3.7 m; plain colours kept",
+    parts: [VOYAGER],
+    partOf: (_centre, material) => (material === "VoyagerDiskEmblem" ? null : VOYAGER),
+    looseWeld: true,
+    freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "juno",
+    files: [`${FOLDER}/juno-b.glb`],
+    title: "Juno (B)",
+    source: "https://science.nasa.gov/3d-resources/juno-b/",
+    changes: "reduced from 29,856 triangles; rescaled so the arrays' tip-to-tip is the sourced 20 m; plain colours kept. It carried no mark to remove.",
+    parts: [JUNO],
+    partOf: () => JUNO,
+    looseWeld: true,
+    freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
   },
 ];
