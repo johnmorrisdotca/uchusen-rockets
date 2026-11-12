@@ -29,6 +29,7 @@
 | `assets` | Where the painted models are | An address |
 | `label` | What a screen reader says | Words |
 | `sun` | Light it as in space: one light from the Sun, the far side dark, next to no fill | The direction towards the Sun in the craft's own frame (Y up, +Z its nose or windward side), as three numbers: `sun="1, 0.2, -0.5"`. Left out, or anything that is not three numbers, keeps the showroom light. `parseSun` reads it the same way |
+| `flags` | The rocket's country's flag in the picture's corner, beside the drawing and never on it | Present or absent; `off` is absent. The flags are `@johnmorrisdotca/hata`'s, an optional peer loaded only then: without it there is no flag and no error. A craft of several countries or an international body, and a ship of the SPX fleet, has none. `data-flag` is the code shown, or empty when there is none |
 
 **Front** is the windward, tiled side and **back** the steel side.
 

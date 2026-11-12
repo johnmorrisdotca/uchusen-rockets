@@ -47,6 +47,18 @@ console.log(v4?.status, figureWords(v4?.facts.height, " m"));
 
 ブロック4は発表されただけで造られていないため、高さは推定値として表示されます。実測した寸法と取り違えられることはありません。
 
+## 国と、必要なら国旗
+
+作られたロケットにも計画中のロケットにも `country` があります。これは数値で、値は ISO 3166-1 alpha-2 のコード（`US`、`RU`、`CN`）です。コードはそれぞれのロケットの記事から取りました。複数の国や国際機関のもの（アポロ・ソユーズ、ISS、ハッブル、Ariane 6）、出典に開発国が2つ書かれているもの（Electron）、それに SPX の船団の船には、コードがありません。値は `null` で、その理由は `note` に書いてあります。`MAKER_COUNTRIES` はメーカーのグループごとのコード、`COUNTRY_CODES` は ISO 3166-1 で決められているすべてのコードの一覧です。
+
+```ts
+import { countryOf, ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
+
+console.log(ROCKETS["falcon-9"]?.country.value, countryOf("iss").value, countryOf("iss").note);
+```
+
+要素に `flags` 属性を付けると、絵の隅、ロケットの横にロケットの国旗を出します。国旗をロケットに重ねて描くことはありません。国旗は `@johnmorrisdotca/hata` のもので、入れなくてもよい peer 依存です。入れておくと、国旗が初めて必要になったときに、要素が動的インポートで読み込みます。入れていなければ、要素はこれまでどおり描かれ、国旗もエラーも出ません。`setFlagLoader` を使うと、ページに出す国旗だけを読み込むモジュールなど、自分で用意したモジュールを渡せます。
+
 ## ステータス
 
 型式の `status` は `flown`、`announced`、`artist-model`、`test-vehicle`、`support` のいずれかです。実在の型式として表示されるロケットは、その型式に当てはまる部品だけを使います。部品を混ぜたものはカスタム構成であり、そう明記されます。

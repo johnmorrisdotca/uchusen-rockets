@@ -35,6 +35,9 @@ importers:
       '@johnmorrisdotca/chikyu-earth':
         specifier: 0.10.0
         version: 0.10.0(@johnmorrisdotca/kazoku-ui@0.32.0(three@0.186.1))(three@0.186.1)
+      '@johnmorrisdotca/hata':
+        specifier: 1.8.0
+        version: 1.8.0
       '@johnmorrisdotca/kazoku-ui':
         specifier: ^0.32.0
         version: 0.32.0(three@0.186.1)
@@ -575,6 +578,10 @@ packages:
   '@johnmorrisdotca/chizu@1.6.1':
     resolution: {integrity: sha512-h4FL4u99l4qKrZ1SPtQydC3PS3eswM8TZ0eH+wSCPchfZeW9CMfyNWjhXfx3EivDHIllfzC3e270PsKhj0ZYjg==}
     engines: {node: '>=22'}
+
+  '@johnmorrisdotca/hata@1.8.0':
+    resolution: {integrity: sha512-aT+aMt2hzH9qGp4WqFLagGbUzzzdJ0GGMYPwcrbhO3pUBtFX1aim0pKfyUrii59Aa22Fb+8M+bjLkFt2SkELqA==}
+    engines: {node: '>=24'}
 
   '@johnmorrisdotca/kazoku-ui@0.15.1':
     resolution: {integrity: sha512-vRsEPyrvJEattAkumncfifHpGo0pd0/KnmJXo0F9RRgc1l0qzdmAYjZYLln7hQWgrlk1tft6B2Umw3Z0llLatA==}
@@ -2583,6 +2590,8 @@ snapshots:
       three: 0.186.1
 
   '@johnmorrisdotca/chizu@1.6.1': {}
+
+  '@johnmorrisdotca/hata@1.8.0': {}
 
   '@johnmorrisdotca/kazoku-ui@0.15.1(three@0.186.1)':
     optionalDependencies:

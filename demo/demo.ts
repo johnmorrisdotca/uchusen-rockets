@@ -5,7 +5,7 @@ import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
 import { dockMenu, dockPlan } from "../src/model/fleet/docked.ts";
 import { motionNote, motionsOf } from "../src/model/fleet/motion.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
-import { setAssetBase, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
+import { setAssetBase, setFlagLoader, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
 import { downloadBlob, svgToPng } from "@johnmorrisdotca/kazoku-ui/save-image";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import "@johnmorrisdotca/kazoku-ui/wide-layout/define";
@@ -32,6 +32,7 @@ import { separationOf } from "../src/separation.ts";
 defineUchusenBuild();
 
 setAssetBase(new URL("assets/", document.baseURI).href);
+setFlagLoader(() => import("./flags.ts"));
 
 const byId = <T extends HTMLElement>(id: string): T => {
   const node = document.getElementById(id);

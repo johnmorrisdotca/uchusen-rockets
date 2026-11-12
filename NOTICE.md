@@ -139,6 +139,7 @@ Sizes are plain facts, each with its source in `src/data/sources.ts` and on the 
 | Wikipedia: Autonomous spaceport drone ship, Landing Zones 1 and 2, Vandenberg Space Launch Complex 4 (CC BY-SA 4.0, read 2026-11-02) | Deck and pad sizes and first dates. Facts only: no text is copied, and the marks on the real decks and pads are not drawn |
 | Federal Aviation Administration, Final Programmatic Environmental Assessment for Starship/Super Heavy at Boca Chica, June 2022, and Wikipedia: SpaceX Starbase (CC BY-SA 4.0, read 2026-11-02) | The tower's height and lightning rod, its nine sections, and first dates. Facts only |
 | © OpenStreetMap contributors, https://www.openstreetmap.org/copyright (ODbL 1.0), read 2026-11-02 through its Overpass API | Starbase's named places and outlines: two towers, tank farm, Megabunker, two Mega Bays, Starfactory, the Sanchez site, the sign, the village and City Hall, and the map's height tags, with the highway and coast near them. A handful of places, not a copy of the map |
+| Wikipedia: each rocket's own article named in its line of `src/data/countries.ts`, with SpaceX, NASA, Blue Origin and Rocket Lab (CC BY-SA 4.0, read 2026-11-11) | Each rocket's, maker's and site's country as an ISO 3166-1 alpha-2 code: the infobox's country of origin, country, location or headquarters. Facts only: no text is copied |
 | SatNews, 2026-05-14 | Grid fins, four to three and about 50% larger; about 1.5 m taller |
 | Gunter's Space Page | Version names, first flights by serial number; one set of sizes per family, not used for sizes |
 | NASASpaceflight, 2025-05-30, and Ars Technica, 2024-04-08 | Known through Wikipedia's citations; not read directly |
@@ -158,6 +159,7 @@ The published package has no runtime dependency of its own. These are peer depen
 | three | 0.186.1 (peer, >=0.170.0) | MIT | The 3D view |
 | @johnmorrisdotca/chikyu-earth | 0.5.0 | MIT | The demo's Earth, never in the package |
 | react | 19 (optional peer, >=18) | MIT | The React wrapper |
+| @johnmorrisdotca/hata | 1.8.0 (optional peer, >=1.8.0 <2) | MIT | The flags of the `flags` attribute, loaded only when a page asks for one |
 | react-dom | 19 | MIT | Testing the wrapper |
 | typescript | 5.9 | Apache-2.0 | The build |
 | esbuild | 0.25 | MIT | Bundling the demo |
@@ -168,7 +170,7 @@ The published package has no runtime dependency of its own. These are peer depen
 | meshoptimizer | 1.3.0 | MIT | Simplifying the models, by hand |
 | @types/node, @types/react, @types/react-dom, @types/three | 24, 19, 19, 0.186 | MIT | Types |
 
-The demo site bundles three and, on its check page, react and react-dom, each under the MIT licence.
+The demo site bundles three and, on its check page, react and react-dom, each under the MIT licence. It also bundles three flags from @johnmorrisdotca/hata (MIT): the 4:3 drawings of China, Russia and the United States, which hata takes from flag-icons (MIT).
 
 ## The demo's Earth
 

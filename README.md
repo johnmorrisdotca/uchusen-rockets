@@ -323,7 +323,7 @@ check({ rocket: "starship", variant: "v3" }).credits[0].licence; // "CC BY 4.0"
 
 All but Discovery and NASA's are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). NASA is named as the source of its models, as its guidelines ask, with no suggestion that it endorses this package, and no NASA logo, insignia, flag or lettering is shipped: [NOTICE.md](NOTICE.md) says what that rests on. Starship Blocks 1, 2 and 4 and the older Falcon 9s are painted by this package's own code: no model is stretched to stand in for another version.
 
-**No mesh or drawing carries a logo, a wordmark or a flag.** Rocket names appear only as plain descriptive words. All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. [NOTICE.md](NOTICE.md) names each source and what was taken from it.
+**No mesh or drawing carries a logo, a wordmark or a flag.** Rocket names appear only as plain descriptive words. The element's `flags` attribute can show a rocket's country flag in the corner of the picture, beside the drawing and never on it, from the optional peer `@johnmorrisdotca/hata` (see [Variants and sourced sizes](docs/guides/variants-and-sources.md)). All trademarks belong to their owners, and this project is not affiliated with or endorsed by SpaceX, NASA or any other maker or agency named here. [NOTICE.md](NOTICE.md) names each source and what was taken from it.
 
 ## Examples
 

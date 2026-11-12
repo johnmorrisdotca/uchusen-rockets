@@ -28,6 +28,7 @@ import { Panel } from "./element/panel.ts";
 import { glProbe } from "./element/probe.ts";
 import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
+import { flagSvg } from "./element/flag.ts";
 
 /**
  * What a `<uchusen-rocket>` is doing, as its `data-state` attribute says: `picture` (the drawing), `loading` (the 3D view is on its way), `3d`, `fallback` (no WebGL, so the drawing stays) or `error`.
@@ -68,6 +69,15 @@ export function setAssetBase(url: string): void {
 }
 const defaultBase = () => assetBase ?? new URL("./assets/", import.meta.url).href;
 
+/** A country's name in the page's language, or its code where the browser has no name for it. */
+function regionName(code: string, lang: string | null | undefined): string {
+  try {
+    return new Intl.DisplayNames([lang || "en"], { type: "region" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 const CSS = `
 :host { display: block; position: relative; color: inherit; }
 :host([hidden]) { display: none; }
@@ -94,6 +104,8 @@ const CSS = `
 .panel table { border-collapse: collapse; width: 100%; }
 .panel th, .panel td { text-align: left; padding: 0.15rem 0.4rem; border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent); vertical-align: top; }
 .panel p { margin: 0 0 0.5rem; }
+.flag { position: absolute; top: 0.5rem; left: 0.5rem; display: block; width: 1.5rem; aspect-ratio: 4 / 3; line-height: 0; pointer-events: none; box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 35%, transparent); }
+.flag svg { display: block; width: 100%; height: 100%; }
 .tilt { position: absolute; right: 0.5rem; bottom: 0.5rem; min-height: 2rem; padding: 0.25rem 0.75rem; border: 1px solid currentColor; border-radius: 1rem; background: transparent; color: inherit; font: inherit; font-size: 0.8rem; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .drawing, .canvas { filter: none !important; transition: opacity var(--uchusen-fade, 400ms) ease; }
@@ -143,7 +155,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "world-turn", "form", "sun"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "world-turn", "form", "sun", "flags"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -162,6 +174,8 @@ export class UchusenRocket extends HTMLBase {
   private builtNow: Built | null = null;
   private queued = false;
   private stateNow: RocketState = "picture";
+  /** What the flag in the corner is for: a country's code, "" for none, "off", or "-" before the first look. */
+  private flagKey = "-";
   private shownAt = 0;
   private starting = false;
   /** Whether this element has asked the page's WebGL answer since it started watching. */
@@ -357,7 +371,8 @@ export class UchusenRocket extends HTMLBase {
 
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
-    if (name === "scale") {
+    if (name === "flags") this.syncFlag();
+    else if (name === "scale") {
       this.viewer?.setScaleMode(after === "true");
       // `scale="true"` is the true-scale view. A number is a Kaminari size, which rebuilds the craft.
       if (after !== "true" && after !== "false") this.queue();
@@ -684,6 +699,7 @@ export class UchusenRocket extends HTMLBase {
     holder.className = "stage";
     picture.append(drawing, holder);
     root.appendChild(picture);
+    this.flagKey = "-";
     this.picture = picture;
     this.drawing = drawing;
     this.holder = holder;
@@ -749,6 +765,36 @@ export class UchusenRocket extends HTMLBase {
     if (CARRIERS.has(this.descriptionNow().rocket)) this.dataset.docked = this.dockedFine ? "full" : "coarse";
     else delete this.dataset.docked;
     this.dataset.custom = String(this.builtNow.report.custom);
+    this.syncFlag();
+  }
+
+  /** `flags`: the rocket's country's flag in the picture's corner, from hata (an optional peer) when the page has it. `data-flag` is the code shown, or empty once it is settled that none is; it is absent while one is loading or the attribute is off. */
+  private syncFlag(): void {
+    const picture = this.picture;
+    if (!picture) return;
+    const on = this.hasAttribute("flags") && this.getAttribute("flags") !== "off";
+    const code = on && this.builtNow ? (ROCKETS[this.descriptionNow().rocket]?.country.value ?? "") : "";
+    const key = on ? code : "off";
+    if (key === this.flagKey) return;
+    this.flagKey = key;
+    picture.querySelector(".flag")?.remove();
+    if (!on) return void delete this.dataset.flag;
+    if (!code) return void (this.dataset.flag = "");
+    delete this.dataset.flag;
+    void flagSvg(code).then((svg) => {
+      if (this.flagKey !== key || this.picture !== picture) return;
+      if (svg) {
+        const badge = document.createElement("span");
+        badge.className = "flag";
+        badge.setAttribute("part", "flag");
+        badge.setAttribute("role", "img");
+        badge.setAttribute("aria-label", regionName(code, this.closest("[lang]")?.getAttribute("lang")));
+        badge.innerHTML = svg;
+        badge.firstElementChild?.setAttribute("aria-hidden", "true");
+        picture.append(badge);
+      }
+      this.dataset.flag = svg ? code : "";
+    });
   }
 
   private async applyRocket(): Promise<void> {
@@ -1176,6 +1222,7 @@ export function defineUchusenRocket(): void {
 defineUchusenRocket();
 
 export { ROCKETS, UchusenFlight };
+export { setFlagLoader, type FlagSource } from "./element/flag.ts";
 export type { FlightWords } from "./flightbar.ts";
 
 declare global {
