@@ -27,6 +27,8 @@ console.log(LOOK_NAMES, LOOKS.thick.outline, cleanLook("glossy"));
 
 `cleanLook` turns anything from outside into a look's name, and gives the default for anything it does not know. The same is true of `cleanView` and `cleanShow`: a hostile or misspelt attribute draws the default and nothing else.
 
+A craft in space can be lit as it is there: `sun="1, 0.2, -0.5"`, the direction towards the Sun in the craft's own frame, gives one light from that side, the far side dark and next to no fill. Left out, the showroom light stays. `parseSun` reads the attribute, and anything that is not three numbers is no Sun.
+
 ## Views
 
 ![The booster from below: 33 engines in their rings, three grid fins and the long chines.](../images/booster-below.jpg)

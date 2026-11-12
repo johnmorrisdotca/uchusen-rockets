@@ -550,6 +550,34 @@ export class RocketViewer {
     this.wake();
   }
 
+  /** The direction towards the Sun, in the craft's own frame, when a page gives one; null keeps the showroom light. */
+  private sunFrom: Vector3 | null = null;
+
+  /** One light from the Sun's real direction, as in space: the far side dark, with at most a faint fill. Null puts the showroom light back. */
+  setSun(direction: readonly [number, number, number] | null): void {
+    const before = this.sunFrom;
+    this.sunFrom = direction ? new Vector3(...direction) : null;
+    this.canvas.dataset.sun = this.sunFrom ? "on" : "off";
+    if (before === this.sunFrom || (before && this.sunFrom && before.equals(this.sunFrom))) return;
+    this.nightSide();
+    this.aimKey();
+    this.wake();
+  }
+
+  /** The key light comes from the Sun when there is one, else from the showroom's upper front. */
+  private keyDirection(): Vector3 {
+    return (this.sunFrom ?? new Vector3(3, 5, 4)).clone().normalize();
+  }
+
+  private aimKey(): void {
+    if (this.shadows && this.built) {
+      this.fitShadow();
+      return;
+    }
+    this.sun.position.copy(this.sun.target.position).addScaledVector(this.keyDirection(), 7);
+    this.sun.target.updateMatrixWorld();
+  }
+
   /** Open space lets a craft leave the frame. Wrap, the older float, brings it back on the other side. */
   private edgesOpen = false;
 
@@ -1179,6 +1207,15 @@ export class RocketViewer {
   /** The Lit look of a named SPX ship is the night side. Daylight stays the default, so lamps glow in the sun, and a kit module stays in daylight. */
   private nightSide(): void {
     const night = this.shipNight && this.lightsMode !== "off" && this.glowOn;
+    if (this.sunFrom && !night) {
+      // in space there is one light: the Sun, a little stronger than the showroom's key, and next to nothing from anywhere else
+      this.sun.intensity = 2.4;
+      this.rim.intensity = 0;
+      this.fill.intensity = 0;
+      this.sky.intensity = 0.03;
+      this.scene.environmentIntensity = 0.06;
+      return;
+    }
     this.sun.intensity = night ? 0.16 : 1.6;
     this.rim.intensity = night ? 0.04 : 1.1;
     this.fill.intensity = night ? 0.03 : 0.35;
@@ -1667,7 +1704,7 @@ export class RocketViewer {
     const { min, max } = this.built.boundsOf(this.show);
     const centre = new Vector3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
     const radius = Math.max(1, Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) / 2);
-    const direction = new Vector3(3, 5, 4).normalize();
+    const direction = this.keyDirection();
     this.sun.position.copy(centre).addScaledVector(direction, radius * 2);
     this.sun.target.position.copy(centre);
     const shadow = this.sun.shadow;

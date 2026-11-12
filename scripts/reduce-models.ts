@@ -16,7 +16,7 @@ import { KHRONOS_EXTENSIONS } from "@gltf-transform/extensions";
 import { dedup, prune, quantize } from "@gltf-transform/functions";
 import { MeshoptSimplifier } from "meshoptimizer";
 import { chromium } from "@playwright/test";
-import { MODEL_RECIPES, type ModelRecipe, type Patch, type Piece, type RecipePart } from "./model-recipes.ts";
+import { MODEL_RECIPES, ROADSTER_RECIPES, type ModelRecipe, type Patch, type Piece, type RecipePart } from "./model-recipes.ts";
 import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
 const sources: string = process.env.UCHUSEN_MODEL_SOURCES ?? "";
@@ -131,6 +131,32 @@ function connectedPieces(prim: Primitive, node: GNode): Piece[] {
       }
   }
   return [...pieces.values()];
+}
+
+/** Each triangle's material from `split`, given its middle and its facing in the file's own units. */
+function splitTriangles(prim: Primitive, node: GNode, material: string, split: NonNullable<ModelRecipe["split"]>): Map<string, number[]> {
+  const pos = prim.getAttribute("POSITION");
+  const idx = prim.getIndices();
+  const out = new Map<string, number[]>();
+  if (!pos) return out;
+  const m = node.getWorldMatrix();
+  const el = [0, 0, 0];
+  const world = (i: number) => {
+    pos.getElement(i, el);
+    return [0, 1, 2].map((k) => m[k] * el[0] + m[4 + k] * el[1] + m[8 + k] * el[2] + m[12 + k]);
+  };
+  const count = Math.floor((idx ? idx.getCount() : pos.getCount()) / 3);
+  for (let t = 0; t < count; t++) {
+    const [a, b, c] = [0, 1, 2].map((k) => world(idx ? idx.getScalar(t * 3 + k) : t * 3 + k));
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const g = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    const len = Math.hypot(g[0], g[1], g[2]) || 1;
+    const name = split(material, [0, 1, 2].map((k) => (a[k] + b[k] + c[k]) / 3), [g[0] / len, g[1] / len, g[2] / len]);
+    if (!out.has(name)) out.set(name, []);
+    (out.get(name) as number[]).push(t);
+  }
+  return out;
 }
 
 /** Joins vertices that are the same to within a millimetre, so a simplifier sees one surface. */
@@ -253,6 +279,13 @@ async function runRecipe(recipe: ModelRecipe): Promise<void> {
         continue;
       }
       let part: RecipePart = recipe.partAt(sum / pos.getCount(), node.getName());
+      if (recipe.split) {
+        // one source material shared by two of ours: each triangle goes where its place and its facing say
+        const groups = new Map<string, number[]>();
+        for (const [name, triangles] of splitTriangles(prim, node, material, recipe.split)) groups.set(name, triangles);
+        for (const [name, triangles] of groups) take(putInto(part, name), prim, node, part.place, Boolean(recipe.textures?.[name]), triangles);
+        continue;
+      }
       if (recipe.wholeNodes || recipe.hidden) {
         const lo = [Infinity, Infinity, Infinity];
         const hi = [-Infinity, -Infinity, -Infinity];
@@ -320,7 +353,7 @@ async function runRecipe(recipe: ModelRecipe): Promise<void> {
       mesh.addPrimitive(prim);
     }
     // the licence's own record stays in the file
-    out.getRoot().getAsset().extras = { ...extras, changes: recipe.changes, part: partId };
+    out.getRoot().getAsset().extras = { ...extras, ...recipe.extras, changes: recipe.changes, part: partId };
     out.getRoot().getAsset().generator = "uchusen-rockets";
     await out.transform(dedup(), prune({ keepAttributes: true }), quantize({ quantizePosition: 14, quantizeNormal: 8, quantizeTexcoord: 12, pattern: /^(POSITION|NORMAL|TEXCOORD_0)$/ }));
     const file = join(outDir, `${recipe.id}-${partId}.glb`);
@@ -386,4 +419,4 @@ function textureOf(doc: Document, texture: Texture, size?: number, patches?: rea
   return size ? made.setImage(jpegOf(image, size)).setMimeType("image/jpeg") : made.setImage(image).setMimeType(texture.getMimeType());
 }
 
-for (const recipe of MODEL_RECIPES) if (!only || recipe.id === only) await runRecipe(recipe);
+for (const recipe of [...MODEL_RECIPES, ...ROADSTER_RECIPES]) if (!only || recipe.id === only) await runRecipe(recipe);

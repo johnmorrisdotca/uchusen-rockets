@@ -51,6 +51,16 @@ console.log(v4?.status, figureWords(v4?.facts.height, " m"));
 
 型式の `status` は `flown`、`announced`、`artist-model`、`test-vehicle`、`support` のいずれかです。実在の型式として表示されるロケットは、その型式に当てはまる部品だけを使います。部品を混ぜたものはカスタム構成であり、そう明記されます。
 
+## 一つの種類に三台の車：ロードスター
+
+`roadster` は「モデルには、描いているものの名前を付ける」という決まりの例です。三台は横一列に並んでいて、クリックで選びます。`first-generation` は実際に宇宙へ行った車で、運転席にはスターマンが座っています。`status: "flown"` です。`second-generation` の二つのモデルは `status: "announced"` です。2017年に試作車として発表されましたが、宇宙へは行っていません。そのことはメモにも書いてあります。どの車も出典のある数値に合わせて大きさを決めています。一台目は全長に、ほかの二台はホイールベースに合わせています。出典のない寸法は空欄のままです。
+
+```ts
+import { ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
+
+for (const variant of ROCKETS.roadster.variants) console.log(variant.id, variant.status, variant.facts.sizes?.Wheelbase?.value);
+```
+
 ## 何があるかを調べる
 
 `ROCKETS` は id をキーとするレコードです。各項目は型式を順に並べ、既定の型式を示します。

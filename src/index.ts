@@ -58,6 +58,7 @@ export { beaconLamp, dutyOf, lampFactor, lightMode, lightPool, sternLamp, workLa
 export type { Motion, MotionKind, MotionSpeed } from "./model/fleet/motion.ts";
 export { bellsOf, enginesWanted, FLAME_SETTLE_MS, pickBells, plumeLength, ringsOf } from "./engines.ts";
 export type { Bell } from "./engines.ts";
+export { parseSun } from "./sun.ts";
 export { OPTION_ATTRIBUTES, attributesFromOptions, optionsFromAttributes, rocketFromParams, rocketToParams } from "./attrs.ts";
 export type { RocketOptions } from "./attrs.ts";
 export { assetPathOf, CDN, EMBED_KINDS, SITE, THREE_VERSION, embedCode, embedNote, paintedCredit } from "./embed.ts";

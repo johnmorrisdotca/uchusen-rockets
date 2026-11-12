@@ -140,6 +140,10 @@ test("each painted model is under 8 MB and to its sourced size", () => {
     "tiangong-wentian.glb": [5.0, 18.16],
     "fleet-drone-repair-near.glb": [1.337, 1.048],
     "fleet-drone-repair-far.glb": [1.319, 1.029],
+    // each car is scaled to its sourced length or wheelbase; these are its heights at that scale, roof off for the first generation
+    "roadster-first-generation-car.glb": [1.067, 1.873],
+    "roadster-second-generation-car.glb": [1.137, 2],
+    "roadster-second-generation-2-car.glb": [1.067, 2],
   };
   for (const name of modelFiles) {
     assert.ok(statSync(join("models", name)).size < 8 * 1024 * 1024, name);

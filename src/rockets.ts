@@ -21,6 +21,7 @@ import { JUPITER_C_VARIANTS } from "./data/jupiterc.ts";
 import { ISS_VARIANTS } from "./data/iss.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
 import { TIANGONG_VARIANTS } from "./data/tiangong.ts";
+import { ROADSTER_VARIANTS } from "./data/roadster.ts";
 import { STARSHIP_VARIANTS } from "./data/starship.ts";
 import { FLEET_KIT_ROCKETS, FLEET_SLOT_NAMES } from "./data/fleet.ts";
 import { CONCEPT_SLOT_NAMES, KAMINARI_VARIANTS } from "./data/kaminari-concepts.ts";
@@ -90,7 +91,7 @@ export interface PlannedRocket {
 }
 
 /** Craft that fly in space: seen from any side, from straight above or below. Everything else stands on the ground or the sea, and keeps the ground in view. */
-const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong"]);
+const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster"]);
 
 /**
  * Whether a craft flies in space: the same ones that may be seen from straight above or below, including the fleet. A rocket or a place on the ground does not. On the compare page one of these stands on a marked plinth, so it is not read as a rocket on a pad.
@@ -143,6 +144,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "iss": { id: "iss", name: "International Space Station", status: "built", ...MADE_BY["iss"], variants: ISS_VARIANTS, defaultVariant: "iss" },
   "hubble": { id: "hubble", name: "Hubble Space Telescope", status: "built", ...MADE_BY["hubble"], variants: HUBBLE_VARIANTS, defaultVariant: "hubble" },
   tiangong: { id: "tiangong", name: "Tiangong 天宮", status: "built", ...MADE_BY["tiangong"], variants: TIANGONG_VARIANTS, defaultVariant: "tiangong" },
+  roadster: { id: "roadster", name: "Roadster", status: "built", ...MADE_BY["roadster"], variants: ROADSTER_VARIANTS, defaultVariant: "first-generation" },
   droneship: { id: "droneship", name: "Drone ships", status: "built", ...MADE_BY["droneship"], variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", ...MADE_BY["landing-zone"], variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
   "launch-tower": { id: "launch-tower", name: "Launch tower", status: "built", ...MADE_BY["launch-tower"], variants: TOWER_VARIANTS, defaultVariant: "stack" },
@@ -305,6 +307,8 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "arrays-p6": "Solar arrays on P6",
   "radiators-starboard": "Radiators, starboard",
   "radiators-port": "Radiators, port",
+  car: "The Roadster",
+  starman: "Starman",
   ground: "The ground and the road",
   pads: "The pads",
   "tank-farm": "The tank farm",
