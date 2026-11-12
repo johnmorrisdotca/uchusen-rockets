@@ -1,0 +1,180 @@
+{
+ "source": "Orbiter, https://github.com/orbitersim/orbiter, commit dabade2637e1ebbba9babeadabc187932c2c7ae7 2026-11-08: clbkParams of Src/Celbody/Atmosphere/EarthAtm2006, MarsAtm2006 and VenusAtm2006, cut unchanged and compiled. Copyright (c) 2000-2026 Martin Schweiger, MIT licence",
+ "air": [
+  {
+   "planet": "earth",
+   "altitude": -500,
+   "temperature": 291.4102550816183,
+   "pressure": 107477.98751556018,
+   "density": 1.2848956728597398
+  },
+  {
+   "planet": "earth",
+   "altitude": 0,
+   "temperature": 288.16,
+   "pressure": 101325,
+   "density": 1.225
+  },
+  {
+   "planet": "earth",
+   "altitude": 5000,
+   "temperature": 255.68548615827143,
+   "pressure": 54048.37598908862,
+   "density": 0.7364270707359263
+  },
+  {
+   "planet": "earth",
+   "altitude": 11000,
+   "temperature": 216.78323703660763,
+   "pressure": 22700.073696596522,
+   "density": 0.36479992634171116
+  },
+  {
+   "planet": "earth",
+   "altitude": 20000,
+   "temperature": 216.66,
+   "pressure": 5529.35523099648,
+   "density": 0.08891022811045449
+  },
+  {
+   "planet": "earth",
+   "altitude": 30000,
+   "temperature": 231.2381915666434,
+   "pressure": 1185.529094841143,
+   "density": 0.017861116410133552
+  },
+  {
+   "planet": "earth",
+   "altitude": 50000,
+   "temperature": 282.66,
+   "pressure": 87.85717877241196,
+   "density": 0.0010828500638736553
+  },
+  {
+   "planet": "earth",
+   "altitude": 70000,
+   "temperature": 209.58337614752972,
+   "pressure": 6.020011686154425,
+   "density": 0.00010006821288086617
+  },
+  {
+   "planet": "earth",
+   "altitude": 85000,
+   "temperature": 165.66,
+   "pressure": 0.36897097682855756,
+   "density": 0.000007759456342581131
+  },
+  {
+   "planet": "earth",
+   "altitude": 100000,
+   "temperature": 199.4785847340678,
+   "pressure": 0.021372278263966135,
+   "density": 3.7326042861552594e-7
+  },
+  {
+   "planet": "earth",
+   "altitude": 150000,
+   "temperature": 225.66,
+   "pressure": 0.000013819021338069321,
+   "density": 2.1334348951637453e-10
+  },
+  {
+   "planet": "mars",
+   "altitude": 0,
+   "temperature": 195,
+   "pressure": 610,
+   "density": 0.02
+  },
+  {
+   "planet": "mars",
+   "altitude": 1000,
+   "temperature": 197.49926273695635,
+   "pressure": 551.6781208168941,
+   "density": 0.0178589143215072
+  },
+  {
+   "planet": "mars",
+   "altitude": 3000,
+   "temperature": 200,
+   "pressure": 452.7317596026931,
+   "density": 0.014472563728530041
+  },
+  {
+   "planet": "mars",
+   "altitude": 8000,
+   "temperature": 192.03767010406366,
+   "pressure": 274.6996026666037,
+   "density": 0.009145439537161782
+  },
+  {
+   "planet": "mars",
+   "altitude": 16000,
+   "temperature": 180,
+   "pressure": 117.47171509973009,
+   "density": 0.004172460308972427
+  },
+  {
+   "planet": "mars",
+   "altitude": 25000,
+   "temperature": 172.77453058929638,
+   "pressure": 43.8491534082797,
+   "density": 0.001622605977955353
+  },
+  {
+   "planet": "mars",
+   "altitude": 50000,
+   "temperature": 165,
+   "pressure": 2.389071286500115,
+   "density": 0.00009257154597618045
+  },
+  {
+   "planet": "mars",
+   "altitude": 90000,
+   "temperature": 165,
+   "pressure": 0.024231120133726792,
+   "density": 9.389055337899537e-7
+  },
+  {
+   "planet": "venus",
+   "altitude": 0,
+   "temperature": 750,
+   "pressure": 9200000,
+   "density": 65
+  },
+  {
+   "planet": "venus",
+   "altitude": 20000,
+   "temperature": 570.5929009987088,
+   "pressure": 2209935.1031231834,
+   "density": 20.522957651038862
+  },
+  {
+   "planet": "venus",
+   "altitude": 45000,
+   "temperature": 357.816720136989,
+   "pressure": 171235.7665938702,
+   "density": 2.535832886583542
+  },
+  {
+   "planet": "venus",
+   "altitude": 65000,
+   "temperature": 230,
+   "pressure": 5899.674004926404,
+   "density": 0.13586205126542453
+  },
+  {
+   "planet": "venus",
+   "altitude": 80000,
+   "temperature": 207.60933096753993,
+   "pressure": 269.74966081793116,
+   "density": 0.006881957822501432
+  },
+  {
+   "planet": "venus",
+   "altitude": 120000,
+   "temperature": 180,
+   "pressure": 0.013582256872972397,
+   "density": 3.996661677474379e-7
+  }
+ ]
+}

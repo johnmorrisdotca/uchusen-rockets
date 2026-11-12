@@ -1,6 +1,7 @@
 // Writes test/data/orbiter-elements.json: what Orbiter's own Elements class (Src/Orbiter/Element.cpp, compiled unchanged) gives for a few
-// orbits, so test/physics-orbiter.test.ts can hold the port to it without Orbiter; and test/data/orbiter-attitude.json, from its quaternion
-// code and its Euler equation, for test/physics-attitude.test.ts. By hand, never in the build or CI:
+// orbits, so test/physics-orbiter.test.ts can hold the port to it without Orbiter; test/data/orbiter-attitude.json, from its quaternion
+// code and its Euler equation, for test/physics-attitude.test.ts; and test/data/orbiter-atmosphere.json, from its 2006 atmosphere
+// models, for test/physics-atmosphere.test.ts. By hand, never in the build or CI:
 //
 //   ORBITER_SOURCE=<a checkout of github.com/orbitersim/orbiter> node scripts/orbiter-reference.ts
 //
@@ -105,6 +106,25 @@ try {
   };
   writeFileSync(join(root, "test", "data", "orbiter-attitude.json"), `${JSON.stringify(attitude, null, 1)}\n`);
   console.log("wrote test/data/orbiter-attitude.json");
+
+  // The atmosphere: each 2006 model's clbkParams, cut unchanged and renamed to a free function.
+  const MODELS = [["earth", "EarthAtm2006", "EarthAtmosphere_2006"], ["mars", "MarsAtm2006", "MarsAtmosphere_2006"], ["venus", "VenusAtm2006", "VenusAtmosphere_2006"]] as const;
+  const bodies = MODELS.map(([planet, folder, cls]) => {
+    const text = readFileSync(join(source, "Src", "Celbody", "Atmosphere", folder, `${folder}.cpp`), "latin1");
+    const head = `bool ${cls}::clbkParams`;
+    const from = text.indexOf(head);
+    const close = text.indexOf("\n}\n", from);
+    if (from < 0 || close < 0) throw new Error(`${cls}::clbkParams not found`);
+    return `static bool ${planet}_params${text.slice(from + head.length, close + 3)}`;
+  });
+  writeFileSync(join(work, "atmosphere-bodies.inc"), bodies.join("\n"), "latin1");
+  copyFileSync(join(root, "scripts", "orbiter-reference", "atmosphere.cpp"), join(work, "atmosphere.cpp"));
+  execFileSync("c++", ["-std=c++17", "-O1", "-w", "-o", "atmosphere", "atmosphere.cpp"], { cwd: work, stdio: "inherit" });
+  const HEIGHTS: Record<string, number[]> = { earth: [-500, 0, 5_000, 11_000, 20_000, 30_000, 50_000, 70_000, 85_000, 100_000, 150_000], mars: [0, 1_000, 3_000, 8_000, 16_000, 25_000, 50_000, 90_000], venus: [0, 20_000, 45_000, 65_000, 80_000, 120_000] };
+  const asked = Object.entries(HEIGHTS).flatMap(([planet, heights]) => heights.map((h) => `${planet} ${h}`));
+  const air = JSON.parse(execFileSync(join(work, "atmosphere"), { input: asked.join("\n"), encoding: "utf8" })) as unknown[];
+  writeFileSync(join(root, "test", "data", "orbiter-atmosphere.json"), `${JSON.stringify({ source: `Orbiter, https://github.com/orbitersim/orbiter, commit ${commit}: clbkParams of Src/Celbody/Atmosphere/EarthAtm2006, MarsAtm2006 and VenusAtm2006, cut unchanged and compiled. Copyright (c) 2000-2026 Martin Schweiger, MIT licence`, air }, null, 1)}\n`);
+  console.log("wrote test/data/orbiter-atmosphere.json");
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
