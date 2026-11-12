@@ -34,22 +34,23 @@ test("search, kind and family narrow the same list", () => {
   assert.equal(familiesOf(rows, "fleet").includes("spacex"), false);
 });
 
-test("a lone probe or telescope is a spacecraft, in the ship picker and on the compare page, and a launcher or a station is not", () => {
+test("a probe, a telescope and a crewed craft are spacecraft, in the ship picker and on the compare page, and a launcher or a station is not", () => {
   const rows = pickerCatalogue();
-  for (const id of ["voyager", "juno", "jwst", "parker-solar-probe", "hubble"]) {
+  for (const id of ["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz"]) {
     assert.equal(pickerKind(id), "craft", id);
     assert.equal(kindOf(id), "craft", id);
     assert.equal(rows.find((row) => row.rocket === id)?.kind, "craft", id);
   }
-  for (const id of ["saturn-v", "starship", "dragon", "gemini"]) assert.equal(kindOf(id), "rocket", id);
+  for (const id of ["saturn-v", "starship", "falcon-9", "soyuz", "jupiter-c"]) assert.equal(kindOf(id), "rocket", id);
   assert.equal(pickerKind("iss"), "station");
   assert.equal(kindOf("iss"), "station");
   assert.deepEqual(pickerKinds(), ["rocket", "craft", "station", "fleet"]);
   // the Real rockets column holds no spacecraft
   assert.equal(filterCraft(rows, { kind: "rocket", family: "all", search: "" }).some((row) => isSpacecraft(row.rocket)), false);
-  assert.deepEqual(filterCraft(rows, { kind: "craft", family: "nasa", search: "" }).map((row) => row.rocket).sort(), ["hubble", "juno", "jwst", "parker-solar-probe", "voyager"]);
+  assert.deepEqual(filterCraft(rows, { kind: "craft", family: "nasa", search: "" }).map((row) => row.rocket).sort(), ["apollo-soyuz", "gemini", "hubble", "juno", "jwst", "lunar-module", "mercury", "parker-solar-probe", "voyager"]);
   assert.ok(familiesOf(rows, "craft").includes("nasa"));
-  assert.equal(familiesOf(rows, "craft").includes("spacex"), false);
+  assert.ok(familiesOf(rows, "craft").includes("spacex"), "Dragon");
+  assert.equal(familiesOf(rows, "craft").includes("china"), false);
 });
 
 test("only a craft with a launch stack that leaves it offers Launch stack and In space", () => {

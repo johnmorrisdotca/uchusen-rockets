@@ -1,11 +1,12 @@
-// Lone spacecraft (probes and telescopes) are their own kind: Real spacecraft in the ship picker, a Spacecraft row beside the Rocket row, no "Launch stack / In space" row for a craft with no stack, and each row named for what it measures.
+// Spacecraft (probes, telescopes and crewed craft) are their own kind: Real spacecraft in the ship picker, a Spacecraft row beside the Rocket row, no "Launch stack / In space" row for a craft with no stack, and each row named for what it measures.
 import { expect, test } from "@playwright/test";
+import { ROCKETS } from "../src/rockets.ts";
 import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";
-const SPACECRAFT = ["voyager", "juno", "jwst", "parker-solar-probe", "hubble"];
+const SPACECRAFT = ["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz"];
 
-test("the ship picker has a Real spacecraft kind that holds the probes and telescopes, and Real rockets holds none of them", async ({ page }) => {
+test("the ship picker has a Real spacecraft kind that holds the probes, telescopes and crewed craft, and Real rockets holds none of them", async ({ page }) => {
   await page.goto(URL);
   const picker = page.getByTestId("ship-picker");
   await expect(picker.getByTestId("pick-kind-craft")).toHaveText("Real spacecraft");
@@ -25,11 +26,11 @@ test("the Rocket row holds the launchers, and the spacecraft are in a row of the
   await foldPicker(page);
   await expect(page.getByTestId("craft-field")).toBeVisible();
   await expect(page.locator("#craft-title")).toHaveText("Spacecraft");
-  for (const id of ["voyager", "juno", "jwst", "parker-solar-probe", "hubble"]) await expect(page.locator(`#crafts [data-testid="rocket-${id}"]`)).toBeVisible();
+  for (const id of SPACECRAFT.filter((one) => ["nasa"].includes(ROCKETS[one].maker))) await expect(page.locator(`#crafts [data-testid="rocket-${id}"]`)).toBeVisible();
   await expect(page.locator('#rockets [data-testid="rocket-saturn-v"]')).toBeVisible();
   for (const id of SPACECRAFT) await expect(page.locator(`#rockets [data-testid="rocket-${id}"]`)).toHaveCount(0);
   // a maker with no spacecraft has no row
-  await page.locator('[data-testid="maker-spacex"]').click();
+  await page.locator('[data-testid="maker-blue-origin"]').click();
   await expect(page.getByTestId("craft-field")).toBeHidden();
   await page.locator('[data-testid="maker-nasa"]').click();
   await expect(page.getByTestId("craft-field")).toBeVisible();

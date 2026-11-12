@@ -2,10 +2,10 @@
 
 ## [Unreleased]
 
-- **Lone spacecraft are their own kind** (MODULES-1182): Voyager, Juno, James Webb, Parker Solar Probe and Hubble are under "Real spacecraft" in the ship picker (and on the compare page), no longer under "Real rockets" or, for Hubble, "Real stations"; the demo's Rocket row lists only the launchers, and the probes and telescopes have a Spacecraft row of their own under it.
+- **Spacecraft are their own kind** (MODULES-1182): Voyager, Juno, James Webb, Parker Solar Probe, Hubble, Dragon, Gemini, Mercury, the Apollo lunar module and Apollo and Soyuz are under "Real spacecraft" (JA 実在の宇宙機) in the ship picker and on the compare page, no longer under "Real rockets" or, for Hubble, "Real stations"; the demo's Rocket row lists only the launchers, and the spacecraft have a Spacecraft row (JA 宇宙機) of their own under it. The two Japanese station labels now agree: 実在の宇宙ステーション.
 - **No "Launch stack / In space" for a craft with no stack** (MODULES-1182): the Shown row is hidden on the demo and the compare page for a variant whose lower stages do not leave it (the lone spacecraft, the stations, Dragon).
 - **Parker's model has no loose specks** (MODULES-1182): the 209 connected pieces under 7 cm (1,582 of its 4,948 triangles) that floated round it as dots are left out of `parker-solar-probe-craft.glb`, now 59 KB. `scripts/trim-specks.ts` does it, and `reduce-nasa.ts` runs it for a recipe with `trimBelow`; the NOTICE row says so.
-- **Juno fills more of its frame** (MODULES-1182): a part may name `fitWidth`, the width the default fit holds. Juno's is 12 m, so its 3.5 m body is 91 to 113 pixels of a 640-pixel picture, from 54 to 72 when the 20 m arrays set the fit, and the outer arrays run off the edge until the reader zooms out. `Built.fitWidthOf(show)` reads it, and the drawing and the 3D view frame the same box.
+- **A part may name `fitWidth`** (MODULES-1182): the width the default fit holds, so a craft with long thin arrays or booms is not drawn small, and the outer parts run off the frame's edge. `Built.fitWidthOf(show)` reads it, and the drawing and the 3D view frame the same box. No built-in craft names one: Juno is shown whole.
 - **Webb's height row is named for what it is** (MODULES-1182): "Sunshield layers height" (JA サンシールド（5層）の高さ), not "Spacecraft height" for the sunshield's 4.8 m. A variant may name it with `heightLabel`, and the whole height figure says "the sunshield's layers, not the telescope".
 
 ## [0.21.0] - 2026-11-12

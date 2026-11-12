@@ -33,7 +33,7 @@ export function parseLayout(raw: string | null | undefined): PickerLayout {
   return "browser";
 }
 
-/** Which column a listed craft belongs in. A lone probe or telescope is a spacecraft. Sites and the stations sit with the stations. The fleet is its own column. */
+/** Which column a listed craft belongs in. A probe, a telescope or a crewed craft is a spacecraft. Sites and the stations sit with the stations. The fleet is its own column. */
 export function pickerKind(id: string): PickerKind {
   const maker = ROCKETS[id]?.maker;
   if (maker === "fleet" || id.startsWith("fleet-")) return "fleet";
