@@ -12,6 +12,8 @@ export interface StackPart {
   height: number;
   /** Metres, the widest as drawn. */
   diameter: number;
+  /** The widest the default fit holds, in metres, when arrays or booms reach several times past the body. */
+  fitWidth?: number;
   /** Where it mates: metres above its origin, and metres across there. */
   top?: readonly [number, number];
   bottom?: readonly [number, number];

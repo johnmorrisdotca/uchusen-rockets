@@ -57,6 +57,8 @@ export interface PartRecord {
   /** Metres, as drawn: equal to the sourced figure wherever there is one. */
   height: number;
   diameter: number;
+  /** The widest the default fit holds, in metres, when arrays or booms reach several times past the body: they run off the frame's edge so the body is not drawn small. Left out, the fit holds the whole part. */
+  fitWidth?: number;
   /** The sourced figures, blank where no source gives one. */
   sourced: { height: Figure; diameter: Figure };
   joints: { readonly top?: Joint; readonly bottom?: Joint };

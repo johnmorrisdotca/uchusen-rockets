@@ -1,9 +1,10 @@
 // The ship picker's data, apart from how it is drawn. layout is the one attribute that switches Card, Browser and Grid.
 import { figureWords, MAKERS, ROCKETS, variantOf, type MakerId } from "../src/index.ts";
+import { isSpacecraft } from "./craftKind.ts";
 import { isListed } from "./listed.ts";
 
-/** Real rockets, real stations, or the SPX fleet. */
-export type PickerKind = "rocket" | "station" | "fleet";
+/** Real rockets, real spacecraft, real stations, or the SPX fleet. */
+export type PickerKind = "rocket" | "craft" | "station" | "fleet";
 
 /** Card is concept A (the strip inside the Card window). Browser is concept B. Grid is concept C. */
 export type PickerLayout = "card" | "browser" | "grid";
@@ -19,7 +20,7 @@ export interface PickerCraft {
   fact: string;
 }
 
-const KINDS: readonly PickerKind[] = ["rocket", "station", "fleet"];
+const KINDS: readonly PickerKind[] = ["rocket", "craft", "station", "fleet"];
 
 /**
  * Reads the layout attribute. `strip` is Card. Anything else unknown is Browser, the layout John picked.
@@ -32,11 +33,12 @@ export function parseLayout(raw: string | null | undefined): PickerLayout {
   return "browser";
 }
 
-/** Which column a listed craft belongs in. Sites and the station sit with the stations. The fleet is its own column. */
+/** Which column a listed craft belongs in. A probe, a telescope or a crewed craft is a spacecraft. Sites and the stations sit with the stations. The fleet is its own column. */
 export function pickerKind(id: string): PickerKind {
   const maker = ROCKETS[id]?.maker;
   if (maker === "fleet" || id.startsWith("fleet-")) return "fleet";
-  if (maker === "sites" || id === "iss" || id === "hubble" || id === "tiangong") return "station";
+  if (isSpacecraft(id)) return "craft";
+  if (maker === "sites" || id === "iss" || id === "tiangong") return "station";
   return "rocket";
 }
 
@@ -82,7 +84,7 @@ export function familiesOf(rows: readonly PickerCraft[], kind: PickerKind | "all
   return seen;
 }
 
-/** The three kinds, in the order the column lists them. */
+/** The four kinds, in the order the column lists them. */
 export function pickerKinds(): readonly PickerKind[] {
   return KINDS;
 }

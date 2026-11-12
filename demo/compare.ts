@@ -3,6 +3,7 @@ import { BESIDE_MOST, LOOK_NAMES, MAKERS, ROCKETS, spaceLength, variantOf, type 
 import { setAssetBase, type UchusenRocket } from "../src/element.ts";
 import { createAddressState } from "@johnmorrisdotca/kazoku-ui/address-state";
 import type { ViewControlsElement } from "@johnmorrisdotca/kazoku-ui/view-controls/element";
+import { hasLaunchStack } from "./craftKind.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant } from "./sizes.ts";
 import { applyTurn, applyWorldTurn, companionsFor, paceFromStep, paceNamed, paceStep, paintThumbs, placeSky, setTurnPace, skyCredit, skyList, type SkyList } from "./sky.ts";
@@ -308,9 +309,10 @@ function renderGlass() {
 function renderPickers() {
   const editing = state.craft[state.editing];
   const listed = Object.values(ROCKETS).filter((rocket) => isListed(rocket.id));
-  const kinds: PickerKind[] = ["rocket", "station", "fleet"];
+  const kinds: PickerKind[] = ["rocket", "craft", "station", "fleet"];
+  const kindWord: Record<PickerKind, string> = { rocket: "cmpKindRocket", craft: "cmpKindCraft", station: "cmpKindStation", fleet: "cmpKindFleet" };
   byId("kinds").replaceChildren(
-    ...kinds.map((kind) => chip(say(kind === "rocket" ? "cmpKindRocket" : kind === "station" ? "cmpKindStation" : "cmpKindFleet"), `kind-${kind}`, () => pickKind(kind), kind === state.kind)),
+    ...kinds.map((kind) => chip(say(kindWord[kind]), `kind-${kind}`, () => pickKind(kind), kind === state.kind)),
   );
   const makers = (Object.keys(MAKERS) as MakerId[]).filter((maker) => listed.some((rocket) => rocket.maker === maker && kindOf(rocket.id) === state.kind));
   byId("makers").replaceChildren(...makers.map((maker) => chip(say(`maker_${maker}`), `maker-${maker}`, () => pickMaker(maker), maker === state.maker)));
@@ -347,6 +349,8 @@ function renderPickers() {
     chip(say("cmpStack"), "form-stack", () => pickForm("stack"), editing?.form !== "space"),
     chip(say("cmpSpace"), "form-space", () => pickForm("space"), editing?.form === "space"),
   );
+  // a lone craft has no stack that leaves it, so "Launch stack" and "In space" would be the same picture
+  (byId("forms").closest(".field") as HTMLElement).hidden = editing !== undefined && !hasLaunchStack(editing.rocket, editing.variant);
   byId("label-toggle").replaceChildren(
     chip(say("cmpLabelsOn"), "labels-on", () => pickLabels(true), state.labels),
     chip(say("cmpLabelsOff"), "labels-off", () => pickLabels(false), !state.labels),

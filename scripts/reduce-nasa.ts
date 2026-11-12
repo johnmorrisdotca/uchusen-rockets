@@ -19,6 +19,7 @@ import { NASA_RECIPES, type NasaPart, type NasaRecipe, type PieceBox, type Rect 
 import { PART_RECIPES } from "./part-recipes.ts";
 import { piecesOf } from "./pieces.ts";
 import { skipsEmptyPart } from "./recipe-parts.ts";
+import { trimSpecks } from "./trim-specks.ts";
 import { weld } from "./weld.ts";
 import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 
@@ -413,6 +414,10 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
     const credit = recipe.credit ?? { author: "NASA", license: "Public domain, NASA (https://www.nasa.gov/nasa-brand-center/images-and-media/)" };
     doc.getRoot().getAsset().extras = { title: recipe.title, author: credit.author, license: credit.license, source: recipe.source, changes: recipe.changes, part: part.id };
     await doc.transform(dedup(), prune({ keepAttributes: true }), quantize({ quantizePosition: 14, quantizeNormal: 8, quantizeTexcoord: 12, pattern: /^(POSITION|NORMAL|TEXCOORD_0)$/ }));
+    if (recipe.trimBelow) {
+      const trimmed = await trimSpecks(doc, recipe.trimBelow);
+      console.log(`  ${trimmed.pieces} loose pieces under ${recipe.trimBelow * 100} cm left out (${trimmed.triangles} triangles)`);
+    }
     const file = join(outDir, `${recipe.id}-${part.id}.glb`);
     writeFileSync(file, await io.writeBinary(doc));
     const sizes = hi.map((v, i) => (v - lo[i]).toFixed(2));

@@ -67,7 +67,7 @@ try {
 }
 ```
 
-`rocket.parts` holds each part's mesh and bounds, `rocket.placesOf(show)` says where each stands and `rocket.boundsOf(show)` how big the picture is.
+`rocket.parts` holds each part's mesh and bounds, `rocket.placesOf(show)` says where each stands and `rocket.boundsOf(show)` how big the picture is. `rocket.fitWidthOf(show)` is the width, in metres, that the default fit holds when a part names one, or `null` when the fit holds all of it: a craft with long thin arrays or booms can name one so its body is not drawn small, and the outer parts then run off the frame's edge. No built-in craft does, so each is shown whole. The drawing and the 3D view frame the same box.
 
 ## A part on its own
 

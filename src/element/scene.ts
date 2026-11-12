@@ -54,6 +54,7 @@ import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts
 import { dutyOf, lampFactor } from "../model/fleet/lights.ts";
 import { angleAt, slideAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
 import { type Angle, directionOf, easedDistance, easeInOut, FOV_DEG, frameFor, PICTURE_H, rolledUp, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
+import { fitBox } from "../fitBox.ts";
 import { LOOKS, type LookName } from "../looks.ts";
 import { pixelRatioFor } from "../pixels.ts";
 import { MATERIALS, type MaterialName, type MaterialSpec } from "../model/materials.ts";
@@ -1770,7 +1771,9 @@ export class RocketViewer {
 
   private framingFor(angle: Angle) {
     if (!this.built) throw new Error("nothing is loaded");
-    const { min, max } = this.boundsNow();
+    const whole = this.boundsNow();
+    // a craft whose arrays or booms reach far past its body is framed on the body and the first of them, so the body is not drawn small
+    const { min, max } = fitBox(whole.min, whole.max, this.clockNow ? null : this.built.fitWidthOf(this.show));
     return frameFor(min, max, angle, this.camera.aspect);
   }
 
