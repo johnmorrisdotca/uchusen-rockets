@@ -1,6 +1,6 @@
 // Pictures of the fleet's ships from the real model, in a real headless browser drawing in software: `node scripts/ship-01-render.ts <jobs.json> <folder>`. A job names a .glb the package made and a list of shots; each shot
 // is a camera (eye, target, field of view, size) and a look, painted (physically based materials, a key light with a shadow, an environment for the metal) or line (edges over a dark fill). One browser, one WebGL context,
-// the canvas kept to 4096 pixels a side and 6 megapixels, every geometry, material and texture disposed after each job. It starts a small server on port 7915 (or SHOTS_PORT) and stops it by the process it started.
+// the canvas kept to 4096 pixels a side and 6 megapixels, every geometry, material and texture disposed after each job. It starts a small server on port 8281 (or SHOTS_PORT) and stops it by the process it started.
 import { createServer } from "node:http";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -230,7 +230,7 @@ const server = createServer((request, response) => {
   }
   response.writeHead(404).end("no");
 });
-const port = Number(process.env.SHOTS_PORT ?? 7915);
+const port = Number(process.env.SHOTS_PORT ?? 8281);
 await new Promise<void>((ok) => server.listen(port, "127.0.0.1", ok));
 await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });

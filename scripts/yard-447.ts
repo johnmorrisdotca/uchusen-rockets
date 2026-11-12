@@ -1,4 +1,4 @@
-// The multi-bay yard: a hall, a spine and a dock side by side, each with a ship under way. `SHOTS_PORT=7934 node scripts/yard-447.ts <folder>`.
+// The multi-bay yard: a hall, a spine and a dock side by side, each with a ship under way. `SHOTS_PORT=8285 node scripts/yard-447.ts <folder>`.
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";

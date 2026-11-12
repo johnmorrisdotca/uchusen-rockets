@@ -2,7 +2,7 @@
 //
 //   node scripts/shots.ts <folder> <rocket> [variants] [shows] [looks] [views]
 //
-// Each comma list falls back to all of the rocket's. It starts the site's own server on 7902, takes the shots and stops it, by the process it started.
+// Each comma list falls back to all of the rocket's. It starts the site's own server on 8277, takes the shots and stops it, by the process it started.
 import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -20,7 +20,7 @@ const onlyShows = process.argv[5] ? process.argv[5].split(",") : null;
 const looks = list(6, ["line", "thick", "painted"]);
 const views = list(7, ["front", "back", "side", "below"]);
 mkdirSync(out, { recursive: true });
-const port = Number(process.env.SHOTS_PORT ?? 7902);
+const port = Number(process.env.SHOTS_PORT ?? 8277);
 const server = spawn("node", ["scripts/dev.ts"], { env: { ...process.env, PORT: String(port) }, stdio: "ignore" });
 await new Promise((resolve) => setTimeout(resolve, 700));
 await acquireBrowserLock();

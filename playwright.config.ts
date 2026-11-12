@@ -1,9 +1,9 @@
 // The demo's own tests: a real browser, real taps. `pnpm test:demo` builds the site and runs them.
-// The server is scripts/dev.ts on port 7901, at the site's real address /uchusen-rockets/: this package's block of ports is 7900 to 7999, and tests use 7901.
+// The server is scripts/dev.ts on port 8276, at the site's real address /uchusen-rockets/: this package's block of ports is 8275 to 8299, and tests use 8276.
 import { defineConfig, devices } from "@playwright/test";
 import { SOFTWARE_GL_ARGS } from "@johnmorrisdotca/kazoku-ui/testing";
 
-const port = Number(process.env.TEST_PORT ?? 7901);
+const port = Number(process.env.TEST_PORT ?? 8276);
 const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
 // Every WebGL page is drawn in software (SwiftShader), never on the machine's graphics card: a test run once panicked a Mac's graphics driver.
 const gl = { launchOptions: { args: [...SOFTWARE_GL_ARGS] } };

@@ -1,4 +1,4 @@
-// Pictures of the demo for the README, in a real headless browser: `pnpm screenshots [folder]`. It starts the site's own server on 7902, takes the shots and stops it.
+// Pictures of the demo for the README, in a real headless browser: `pnpm screenshots [folder]`. It starts the site's own server on 8277, takes the shots and stops it.
 // `pnpm screenshots --thumbnail` takes only the family's thumbnail, dark thumbnail and icon (scripts/family-thumbnail.mjs).
 // Chromium draws in software only (SwiftShader), never on the graphics card.
 import { spawn } from "node:child_process";
@@ -12,7 +12,7 @@ import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 const onlyThumbnail = process.argv.includes("--thumbnail");
 const out = process.argv.slice(2).find((arg) => !arg.startsWith("--")) ?? "docs/images";
 mkdirSync(out, { recursive: true });
-const port = 7902;
+const port = 8277;
 const server = spawn("node", ["scripts/dev.ts"], { env: { ...process.env, PORT: String(port) }, stdio: "ignore" });
 await new Promise((resolve) => setTimeout(resolve, 600));
 await acquireBrowserLock();

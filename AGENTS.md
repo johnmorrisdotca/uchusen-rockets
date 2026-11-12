@@ -41,7 +41,7 @@ This repo is one of the family of John Morris's npm packages. The rules every pa
 | Repo | `johnmorrisdotca/uchusen-rockets` |
 | Board | `modules` (Modules and misc; see the one-home table in spx-stats `docs/package-work.md`) |
 | Title prefix and `--area` | `uchusen-rockets` |
-| Ports | 7900 to 7999: 7900 the demo and dev, 7901 the tests, 7902 the picture scripts, 7903 and up anything else |
+| Ports | 8275 to 8299: 8275 the demo and dev, 8276 the tests, 8277 the picture scripts, 8278 and up anything else |
 | Checks before a push | `pnpm check`, `pnpm test:readme`, `pnpm test:demo` (`pnpm verify` runs all of them) |
 | Release | `release.yml` → `reusable-release.yml`; trusted publisher entry: `release.yml` |
 | Hand-off project | `uchusen-rockets` |

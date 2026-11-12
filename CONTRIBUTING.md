@@ -16,7 +16,7 @@ Thank you for helping. Bug reports, ideas and pull requests are all welcome. Bug
 - **Anything from outside is treated as text.** A new option that reaches markup has a test with a hostile value.
 - **Test what you change.** Tests sit in `test/` and `e2e/`. A rule you change has a test that would have caught it.
 - **Needs Node 22 or later** to use the package, and **22.18 or later** to work on it: the tests and scripts run TypeScript directly with Node's own type stripping. So the TypeScript uses only syntax that can be erased (`erasableSyntaxOnly`), `import type` for types and a `.ts` extension on every relative import.
-- **Ports.** This package owns local ports 7900 to 7999 and nothing outside them. The demo's server is on 7900 (`scripts/dev.ts`), the tests' on 7901 (`playwright.config.ts`; `TEST_PORT` names another), the picture scripts' on 7902, and any other server takes 7903 and up. Check with `lsof -iTCP:<port> -sTCP:LISTEN` first, and stop a server by its process id, never by name.
+- **Ports.** This package owns local ports 8275 to 8299 and nothing outside them. The demo's server is on 8275 (`scripts/dev.ts`), the tests' on 8276 (`playwright.config.ts`; `TEST_PORT` names another), the picture scripts' on 8277, and any other server takes 8278 and up. Check with `lsof -iTCP:<port> -sTCP:LISTEN` first, and stop a server by its process id, never by name.
 
 ## A new rocket
 
@@ -43,7 +43,7 @@ pnpm test:readme    # run every example of the README, the docs and the guides
 pnpm test:usage     # every way to use the package, from examples/, built and opened as npm packs it
 pnpm docs:check     # the reference site's checks: every export has a doc comment with an example, every guide has its Japanese twin's links
 pnpm docs:site      # make the documentation site into site/docs
-pnpm dev            # the demo on http://127.0.0.1:7900/uchusen-rockets/
+pnpm dev            # the demo on http://127.0.0.1:8275/uchusen-rockets/
 pnpm assets         # make dist/assets again
 pnpm models         # make models/ from the source models, by hand
 pnpm screenshots    # the pictures in docs/images

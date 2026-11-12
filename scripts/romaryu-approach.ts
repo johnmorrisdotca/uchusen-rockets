@@ -1,4 +1,4 @@
-// Two Miyamoto berthed on Romaryu, and a Dragon a few metres off the collar, nose toward the port, on a line of small lamps. `SHOTS_PORT=7933 node scripts/romaryu-approach.ts <folder>`.
+// Two Miyamoto berthed on Romaryu, and a Dragon a few metres off the collar, nose toward the port, on a line of small lamps. `SHOTS_PORT=8284 node scripts/romaryu-approach.ts <folder>`.
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";

@@ -1,7 +1,7 @@
 // The catalogue sheets of ISV Miyamoto, SPX-452, from the real model: `node scripts/ship-03-sheets.ts <folder>`. It builds the .glb files the ship's code makes (stowed, deployed, cutaway, exploded, each insets' sub-part, the engine
 // cards), draws them with scripts/ship-03-render.ts, and lays the pictures out with the numbers from `specs.ts` as nine sheets: a three-quarter view with callouts, the general arrangement (front, side and top at one scale
 // with a length ruler), the exploded assembly, the variants and the pods, the hull layers, the engine cards, the insets, and the specification with the decks and the legend. The title block is the one every sheet of the fleet has.
-// One browser at a time (the caller holds the lock); server ports 7903 (pictures) and 7905 (sheets).
+// One browser at a time (the caller holds the lock); server ports 8278 (pictures) and 8280 (sheets).
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";

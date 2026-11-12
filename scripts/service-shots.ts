@@ -1,5 +1,5 @@
 // Pictures of the service fittings, from the real model: `node scripts/service-shots.ts <folder>` writes the .glb files and jobs.json, which
-// `SHOTS_PORT=7943 node scripts/concept-render.ts <folder>/jobs.json <folder>/png` draws. Not part of the package.
+// `SHOTS_PORT=8286 node scripts/concept-render.ts <folder>/jobs.json <folder>/png` draws. Not part of the package.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";

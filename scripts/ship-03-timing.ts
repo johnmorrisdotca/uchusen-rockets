@@ -1,5 +1,5 @@
 // How long a visitor's browser takes to build Miyamoto: the compiled model is loaded into headless Chromium (software GL, one core's worth of work as on a laptop) and built at the coarse and the full level, measuring the
-// parts, the meshes and the .glb the viewer would hand to three.js. `node scripts/ship-03-timing.ts <folder with the compiled src>`; it serves on 7904 (or TIMING_PORT).
+// parts, the meshes and the .glb the viewer would hand to three.js. `node scripts/ship-03-timing.ts <folder with the compiled src>`; it serves on 8279 (or TIMING_PORT).
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
@@ -17,7 +17,7 @@ const server = createServer((request, response) => {
     response.writeHead(404).end("no");
   }
 });
-const port = Number(process.env.TIMING_PORT ?? 7904);
+const port = Number(process.env.TIMING_PORT ?? 8279);
 await new Promise<void>((ok) => server.listen(port, "127.0.0.1", ok));
 await acquireBrowserLock();
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });

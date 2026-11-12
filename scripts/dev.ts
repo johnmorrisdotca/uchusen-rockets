@@ -1,4 +1,4 @@
-// A tiny static server for the built site, at the same address it has on GitHub Pages: /uchusen-rockets/. Port 7900 is this package's own (7900 to 7999); PORT overrides it, and the tests' server is on 7901.
+// A tiny static server for the built site, at the same address it has on GitHub Pages: /uchusen-rockets/. Port 8275 is this package's own (8275 to 8299); PORT overrides it, and the tests' server is on 8276.
 // `pnpm dev` builds first. `/` redirects to the site.
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(fileURLToPath(import.meta.url), "..", "..", "site");
 const base = "/uchusen-rockets/";
-const port = Number(process.env.PORT ?? 7900);
+const port = Number(process.env.PORT ?? 8275);
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",

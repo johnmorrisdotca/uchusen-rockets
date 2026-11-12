@@ -1,6 +1,6 @@
 // The catalogue sheets of ISV Hanabusa, SPX-013, from the real model: `node scripts/ship-01-sheets.ts <folder>`. It builds the .glb files the ship's code makes (together, both ring orders, the section view, exploded, each inset's sub-part, the thruster cards),
 // draws them with scripts/ship-01-render.ts, and lays the pictures out with the numbers from `specs.ts` as eight sheets: a three-quarter view with callouts, the general arrangement (side, top, front and rear at one scale with a length ruler), the
-// exploded assembly, the variants, the hull layers, the thruster cards, the insets, and the specification with the decks and the legend. One browser at a time (the caller holds the lock); server ports 7915 (pictures) and 7916 (sheets).
+// exploded assembly, the variants, the hull layers, the thruster cards, the insets, and the specification with the decks and the legend. One browser at a time (the caller holds the lock); server ports 8281 (pictures) and 8282 (sheets).
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";

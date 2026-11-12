@@ -494,7 +494,7 @@ pnpm test:usage     # every way to use it (CDN, Vite, webpack, React, Vue, Svelt
 pnpm test:usage     # every way to use it (CDN, Vite, webpack, React, Vue, Svelte, Angular, iframe, TypeScript, Node), built and opened from the package as npm packs it
 pnpm docs:check     # the reference site's checks: every export documented, every example run
 pnpm test:demo      # the demo in a real browser
-pnpm dev            # the demo on http://127.0.0.1:7900/uchusen-rockets/
+pnpm dev            # the demo on http://127.0.0.1:8275/uchusen-rockets/
 pnpm screenshots    # the pictures in docs/images
 ```
 
