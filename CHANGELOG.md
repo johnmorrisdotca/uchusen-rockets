@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The concept build budget holds work on CI** (MODULES-1134): `every concept builds inside the budget` failed on a shared runner at 3059 ms against 3000. On the Mac it still holds the time budget. Under `CI` it holds what does not vary, the pieces and triangles each concept builds (within 15 per cent), plus a cap of five times the budget on the time.
+
 - **The WebGL probe runs once per page, and only when a view is about to draw** (MODULES-1102): every element asked at connect, and every 3D view made another test context for the name of the renderer, each a few seconds of the main thread in software drawing, and in headless WebKit a load now and then stalled for minutes. The page now makes one test context, when the first element comes on screen, answers both questions from it (does WebGL work, does it draw in software) and lets it go at once. The hero says `3d` where WebGL works and `fallback` where it does not, as before; an element far off screen no longer asks, so it says `picture` until it nears. A test holds the count at one.
 
 ## [0.19.0] - 2026-11-11
