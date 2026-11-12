@@ -949,16 +949,28 @@ test.describe("a played timeline", () => {
   test("changing variant in the middle of a flight ends it and gives back its flames", async ({ page }) => {
     await page.addInitScript(COUNT);
     test.setTimeout(240_000);
+    // A new variant is first drawn in this package's own paint, and its licensed model comes in after: when the model is already in by that first frame the paint is never drawn or uploaded, so a round reads
+    // 180 buffers fewer than when it is not, and which it is depends on how busy the machine is (a reading of 56 in the first rounds, 236 in a later one under load). The models are held back until the new
+    // variant's first frame is drawn, so every round takes the same way and reads the same.
+    let release = () => {};
+    let held: Promise<void> | null = null;
+    await page.route("**/models/*.glb", async (route) => {
+      if (held) await held;
+      await route.continue();
+    });
     await page.goto(URL);
     await pause(page);
     await reach3d(page);
     const round = async () => {
+      held = new Promise<void>((done) => (release = done));
       await rocket(page).evaluate((node) => (node as HTMLElement & { seek(p: number): void }).seek(5));
       await expect.poll(() => canvasData(page, "phase")).toBe("boostback");
       await press(page, "variant-v2");
       await expect.poll(async () => (await state(page)).active).toBe(false);
       await expect.poll(() => canvasData(page, "plumes")).toBe("0");
       await pressAndDraw(page, "variant-v3");
+      release();
+      held = null;
       await expect.poll(() => rocket(page).getAttribute("data-flight")).toBe("starship-flight-12");
       await expect(hero(page)).toHaveAttribute("data-painted", /^(model|code|mixed)$/, { timeout: 90_000 });
       await settle(page, 200);
