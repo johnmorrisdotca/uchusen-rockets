@@ -1,11 +1,12 @@
 // The compare page's picker: which kind a rocket belongs to, how many craft this device can draw, and a small painted picture from the rocket's own drawing.
 import { build } from "../src/build/index.ts";
 import { ROCKETS } from "../src/index.ts";
+import { isSpacecraft } from "./craftKind.ts";
 
 const thumbs = new Map<string, string>();
 
-/** Real rockets, real stations, or the SPX fleet. A site stays with the rockets so it can still be chosen. */
-export type PickerKind = "rocket" | "station" | "fleet";
+/** Real rockets, real spacecraft, real stations, or the SPX fleet. A site stays with the rockets so it can still be chosen. */
+export type PickerKind = "rocket" | "craft" | "station" | "fleet";
 
 /**
  * How many craft this device can draw at once, from its memory. Eight is the most. A small device stops at four.
@@ -26,6 +27,7 @@ export function craftBudget(): number {
 export function kindOf(rocketId: string): PickerKind {
   const maker = ROCKETS[rocketId]?.maker;
   if (maker === "fleet" || rocketId.startsWith("fleet-")) return "fleet";
+  if (isSpacecraft(rocketId)) return "craft";
   if (rocketId === "iss" || rocketId === "tiangong") return "station";
   return "rocket";
 }

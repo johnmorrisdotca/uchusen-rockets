@@ -11,6 +11,8 @@ const SPAN = JUNO_SPAN.value ?? 0;
 const TIP = SPAN / Math.sqrt(3);
 const PANEL = 2.65;
 const PANEL_Y = 1.7;
+/** The default fit holds the body and the first six metres of each array, not the whole 20 m span: the arrays are thin, and held whole they leave the body a seventh of the frame. */
+const FIT_WIDTH = 12;
 
 const craft = (): Piece[] => [
   tube("white", BODY_R, 0, BODY, { segs: 6, rings: [0.02, BODY - 0.02] }),
@@ -26,6 +28,6 @@ export const JUNO_BUILDS: readonly StackBuild[] = [
     rocket: "juno",
     variant: "juno",
     drawnFrom: "NASA's model for the painted look, scaled so the arrays span the sourced 20 m. This package's plain shape for the two line looks, from the sourced body, span and array width. No mark is drawn.",
-    parts: [{ slot: "craft", kind: "spacecraft", name: "Juno", height: BODY, diameter: SPAN, sourcedDiameter: JUNO_SPAN, painted: { file: "juno-craft.glb", credit: "nasa-juno" }, pieces: craft }],
+    parts: [{ slot: "craft", kind: "spacecraft", name: "Juno", height: BODY, diameter: SPAN, fitWidth: FIT_WIDTH, sourcedDiameter: JUNO_SPAN, painted: { file: "juno-craft.glb", credit: "nasa-juno" }, pieces: craft }],
   },
 ];

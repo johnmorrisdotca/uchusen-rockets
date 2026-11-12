@@ -12,7 +12,7 @@ const word = (key: string): string => {
   return chooser?.word(key) ?? (WORDS.en as Record<string, string>)[key] ?? key;
 };
 
-const KIND_KEY: Record<PickerKind, string> = { rocket: "pickerKindRocket", station: "pickerKindStation", fleet: "pickerKindFleet" };
+const KIND_KEY: Record<PickerKind, string> = { rocket: "pickerKindRocket", craft: "pickerKindCraft", station: "pickerKindStation", fleet: "pickerKindFleet" };
 
 export interface ShipChoice {
   rocket: string;

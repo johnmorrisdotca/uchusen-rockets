@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **Lone spacecraft are their own kind** (MODULES-1182): Voyager, Juno, James Webb, Parker Solar Probe and Hubble are under "Real spacecraft" in the ship picker (and on the compare page), no longer under "Real rockets" or, for Hubble, "Real stations"; the demo's Rocket row lists only the launchers, and the probes and telescopes have a Spacecraft row of their own under it.
+- **No "Launch stack / In space" for a craft with no stack** (MODULES-1182): the Shown row is hidden on the demo and the compare page for a variant whose lower stages do not leave it (the lone spacecraft, the stations, Dragon).
+- **Parker's model has no loose specks** (MODULES-1182): the 209 connected pieces under 7 cm (1,582 of its 4,948 triangles) that floated round it as dots are left out of `parker-solar-probe-craft.glb`, now 59 KB. `scripts/trim-specks.ts` does it, and `reduce-nasa.ts` runs it for a recipe with `trimBelow`; the NOTICE row says so.
+- **Juno fills more of its frame** (MODULES-1182): a part may name `fitWidth`, the width the default fit holds. Juno's is 12 m, so its 3.5 m body is 91 to 113 pixels of a 640-pixel picture, from 54 to 72 when the 20 m arrays set the fit, and the outer arrays run off the edge until the reader zooms out. `Built.fitWidthOf(show)` reads it, and the drawing and the 3D view frame the same box.
+- **Webb's height row is named for what it is** (MODULES-1182): "Sunshield layers height" (JA サンシールド（5層）の高さ), not "Spacecraft height" for the sunshield's 4.8 m. A variant may name it with `heightLabel`, and the whole height figure says "the sunshield's layers, not the telescope".
+
 ## [0.21.0] - 2026-11-12
 
 - **James Webb and Parker Solar Probe** (MODULES-1120): `rocket="jwst"` and `rocket="parker-solar-probe"`. The painted look is NASA's own model, fetched only when that look is asked for. Webb is scaled so the sunshield's long side is 21.197 m; Parker so the heat shield is 2.4 m. The line looks are this package's own plain shapes from the published sizes. Europa Clipper is not included: its page was not found, and the Europa Orbiter file is a different craft offered only as a printable part.

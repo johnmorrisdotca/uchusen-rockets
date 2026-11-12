@@ -1,6 +1,7 @@
 // What is taken from each of NASA's models, and how: where each part begins, how its triangles reach this package's convention, which marks are painted out and which materials are left out. Scales come from the sourced sizes.
 // Every mark was found by looking: at the file's pictures, then at the result from every side. These models are NASA's; no logo, insignia, flag or lettering is shipped.
 import { placer } from "./model-recipes.ts";
+import { SPECK_FLOOR } from "./trim-specks.ts";
 
 /** [x, y, width, height] as fractions of a picture, from its top left. */
 export type Rect = readonly [number, number, number, number];
@@ -56,6 +57,8 @@ export interface NasaRecipe {
   freeBorders?: boolean;
   /** Weld a place's vertices even when each face stored its own normal, so a flat-shaded file can be simplified. Picture seams stay split. */
   looseWeld?: boolean;
+  /** Leave out every loose piece of the finished part whose longest side is under this many metres (`scripts/trim-specks.ts`): the specks a reduced model floats round itself. */
+  trimBelow?: number;
   /** A triangle with a side of its box over this many of the file's units is cut up first, so a facet that runs the length of a hull falls where each piece of it stands. */
   maxTriangle?: number;
 }
@@ -430,10 +433,11 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     files: [`${FOLDER}/parker.glb`],
     title: "Parker Solar Probe",
     source: "https://science.nasa.gov/3d-resources/parker-solar-probe/",
-    changes: "its pictures left out and plain colours kept; reduced from 39,257 triangles; rescaled so the heat shield is the sourced 2.4 m. It carried no mark to remove.",
+    changes: "its pictures left out and plain colours kept; reduced from 39,257 triangles; rescaled so the heat shield is the sourced 2.4 m; the loose pieces under 7 cm left out, which floated round it as specks. It carried no mark to remove.",
     parts: [PARKER],
     partOf: (_centre, material) => (material === "(none)" ? null : PARKER),
     colours: { foil_silver: [0.75, 0.75, 0.78], PSP: [0.82, 0.82, 0.84] },
+    trimBelow: SPECK_FLOOR,
     looseWeld: true,
     freeBorders: true,
     atlas: 128,

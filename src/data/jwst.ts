@@ -14,9 +14,10 @@ export const JWST_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstFlight: { value: "2021-12-25", source: S, note: "12:20 UTC." },
     slots: ["craft"],
+    heightLabel: "Sunshield layers height",
     note: "NASA's model in the painted look, scaled so the sunshield's long side is the sourced 21.197 m; at that scale the file stands 11.36 m. The model's sunshield is shorter across than the sourced 14.162 m. This package's own plain shape in the line looks, from the sourced sunshield and the 6.5 m mirror. The line look's height is the fact sheet's 4.8 m for the sunshield's layers. No mark was on the model, and none is drawn.",
     facts: {
-      height: { value: 4.8, source: S, note: "The fact sheet's figure for the sunshield's five layers. NASA's model at the 21.197 m sunshield stands 11.36 m." },
+      height: { value: 4.8, source: S, brief: "the sunshield's layers, not the telescope", note: "The fact sheet's figure for the sunshield's five layers. NASA's model at the 21.197 m sunshield stands 11.36 m." },
       diameter: JWST_LONG,
       parts: { craft: { value: 4.8, source: S, note: "The sunshield's layers, as the fact sheet gives their height." } },
       engines: {},

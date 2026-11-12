@@ -13,6 +13,7 @@ import "@johnmorrisdotca/kazoku-ui/speed-buttons/define";
 import { bindStage, placeZoom } from "./viewBinder.ts";
 import "@johnmorrisdotca/kazoku-ui/embed-panel/define";
 import type { EmbedPanelElement } from "@johnmorrisdotca/kazoku-ui/embed-panel/element";
+import { hasLaunchStack, isSpacecraft } from "./craftKind.ts";
 import { isListed } from "./listed.ts";
 import { fleetSize, isFleetVariant, keyOf } from "./sizes.ts";
 import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
@@ -296,7 +297,8 @@ function factsFor(variant: Variant): HTMLElement[] {
     rows2.push(["Whole height", say("wholeHeight"), variant.facts.height]);
     // a ship of many modules has its heights in the apart view and its parts list, not a row each: the facts stay on the screen
     if (variant.slots.length <= 12) for (const slot of variant.slots) rows2.push([`${SLOT_NAMES[slot] ?? slot} height`, say("partHeight", { name: name(slot) }), variant.facts.parts[slot]]);
-  } else rows2.push([`${SLOT_NAMES[show] ?? show} height`, say("partHeight", { name: name(show) }), variant.facts.parts[show]]);
+  } else if (variant.heightLabel && variant.slots.length === 1 && show === variant.slots[0]) rows2.push([variant.heightLabel, knownWord("heightLabel", variant.heightLabel), variant.facts.parts[show]]);
+  else rows2.push([`${SLOT_NAMES[show] ?? show} height`, say("partHeight", { name: name(show) }), variant.facts.parts[show]]);
   if (!fleet || (show !== "together" && show !== "apart")) rows2.push(["Diameter", say("diameter"), variant.facts.diameter]);
   for (const [label, figure] of Object.entries(variant.facts.sizes ?? {})) rows2.push([label, knownWord("size", label), figure]);
   // a part with no engines of its own has no row for them
@@ -488,6 +490,8 @@ function renderMain() {
   press(byId("variants"), `variant-${state.variant}`);
   press(byId("looks"), `look-${state.look}`);
   press(byId("forms"), `form-${state.form}`);
+  // a lone craft has no stack that leaves it, so "Launch stack" and "In space" would be the same picture
+  (byId("forms").closest(".field") as HTMLElement).hidden = !hasLaunchStack(state.rocket, state.variant);
   press(byId("views"), `view-${state.view}`);
   drawSkyButtons();
   limitTilt(variant.view?.tiltMax ?? 45);
@@ -602,10 +606,15 @@ function renderMain() {
 function drawMakers() {
   press(byId("makers"), `maker-${state.maker}`);
   press(byId("rockets"), `rocket-${state.rocket}`);
-  for (const button of byId("rockets").querySelectorAll("button")) {
-    const id = (button.dataset.testid ?? "").replace("rocket-", "");
-    button.hidden = ROCKETS[id]?.maker !== state.maker || !isListed(id);
+  press(byId("crafts"), `rocket-${state.rocket}`);
+  // the lone spacecraft have their own row under the Rocket row, so a launcher is never mistaken for one
+  for (const group of [byId("rockets"), byId("crafts")]) {
+    for (const button of group.querySelectorAll("button")) {
+      const id = (button.dataset.testid ?? "").replace("rocket-", "");
+      button.hidden = ROCKETS[id]?.maker !== state.maker || !isListed(id);
+    }
   }
+  byId("craft-field").hidden = [...byId("crafts").querySelectorAll("button")].every((button) => button.hidden);
   // the address has the rocket, and the maker only when it is not that rocket's own
   address.set("maker", state.maker === ROCKETS[state.rocket].maker ? null : state.maker);
 }
@@ -677,7 +686,7 @@ let shipPicker: ShipPickerElement | undefined;
 const stageBox = document.querySelector<HTMLElement>(".stage-box .view-space");
 if (stageBox) shipPicker = mountShipPicker(stageBox, { rocket: state.rocket, variant: state.variant }, (choice) => pick(choice));
 byId("makers").append(...(Object.keys(MAKERS) as MakerId[]).map((maker) => chip(MAKERS[maker], `maker-${maker}`, () => pickMaker(maker), `maker_${maker}`)));
-byId("rockets").append(...Object.values(ROCKETS).map((rocket) => chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant }))));
+for (const rocket of Object.values(ROCKETS)) byId(isSpacecraft(rocket.id) ? "crafts" : "rockets").append(chip(rocket.name, `rocket-${rocket.id}`, () => pick({ rocket: rocket.id, variant: rocket.defaultVariant })));
 byId("forms").append(chip(WORDS.en.cmpStack, "form-stack", () => pick({ form: "stack" }), "cmpStack"), chip(WORDS.en.cmpSpace, "form-space", () => pick({ form: "space" }), "cmpSpace"));
 fillLooks(byId("looks"), state.look, (look) => pick({ look: look as LookName }));
 fillViews(byId("views"), state.view, (view) => pick({ view: view as ViewName }));

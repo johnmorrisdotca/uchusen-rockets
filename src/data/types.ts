@@ -179,6 +179,8 @@ export interface Variant {
   firstFlight: Figure<string>;
   /** The parts this variant has, in stacking order from the bottom. */
   slots: readonly string[];
+  /** What the height row measures when the variant is one part whose height is not the whole craft's: "Sunshield layers height". Left out, the row is named for the part. */
+  heightLabel?: string;
   facts: VariantFacts;
   /** A slot's part when it is not this variant's own: a part shared with another rocket. */
   partIds?: Readonly<Record<string, string>>;

@@ -10,6 +10,7 @@ import { DEFAULT_LOOK, type LookName } from "../looks.ts";
 import { detail, type DetailLevel } from "../model/detail.ts";
 import { dockedNow } from "../model/fleet/dockedState.ts";
 import { type PartMesh, boundsOf, boundsOfPieces, type Bounds, meshOf, type Piece } from "../model/pieces.ts";
+import { fitBox } from "../fitBox.ts";
 import { moved } from "../model/moves.ts";
 import { partEntry } from "../model/registry.ts";
 import { partIdOf, variantOf } from "../rockets.ts";
@@ -114,6 +115,8 @@ export interface Built {
   shows: readonly string[];
   /** The bounds of a choice of what to show, in metres, and with `lit` the flames of its engines at full thrust. */
   boundsOf(show?: string, lit?: boolean): Bounds;
+  /** The widest, in metres, the default fit holds for a choice of what to show, when a part names one (Juno's arrays run past it); null when the fit holds all of it. */
+  fitWidthOf(show?: string): number | null;
   /** Where each part stands for a choice of what to show. */
   placesOf(show?: string): { slot: string; at: Vec3; shown: boolean }[];
   /** The engines alight at full thrust for a choice of what to show: those the drawing has, of the parts whose engines a source tells of. */
@@ -263,6 +266,16 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
       }
     return { min, max };
   };
+  const fitWidthOf = (show?: string): number | null => {
+    if (others.length > 0) return null;
+    const shown = ownPlaces(show).filter((place) => place.shown).map((place) => (parts.find((part) => part.slot === place.slot) as BuiltPart).record);
+    return shown.some((record) => record.fitWidth !== undefined) ? Math.max(...shown.map((record) => record.fitWidth ?? record.diameter)) : null;
+  };
+  /** What the drawing is fitted to: the bounds, narrowed to the fit width where a part names one. The 3D view frames the same box. */
+  const fitOfShow = (show?: string, lit = false): Bounds => {
+    const whole = boundsOfShow(show, lit);
+    return fitBox(whole.min, whole.max, fitWidthOf(show));
+  };
   return {
     report,
     parts: own,
@@ -270,6 +283,7 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
     names: naming ? [craftName(naming.own, boundsOfPlaces(ownPlaces("together")).max[1]), ...naming.others] : [],
     shows: showsOf(slots),
     boundsOf: boundsOfShow,
+    fitWidthOf,
     placesOf,
     flamesOf,
     glb: () => toGlb(parts.map((part) => ({ name: part.slot, mesh: part.mesh, at: placesOf("together").find((place) => place.slot === part.slot)?.at ?? [0, 0, 0] }))),
@@ -278,7 +292,7 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
       const placed = only ? stackOf(only, frame) : placesOf(show);
       const places = placed.filter((place) => place.shown);
       // a flame drawn at full thrust is held in the picture; a count of engines is the timeline's, which has its own room
-      const cam = perspective(frame ?? boundsOfShow(show, engines === true), angle);
+      const cam = perspective(frame ?? fitOfShow(show, engines === true), angle);
       const ordered = places
         .map((place) => {
           const part = parts.find((p) => p.slot === place.slot) as BuiltPart;
