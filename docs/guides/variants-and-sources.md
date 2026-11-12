@@ -47,6 +47,18 @@ console.log(v4?.status, figureWords(v4?.facts.height, " m"));
 
 Block 4 is announced, not built, so its height reads as an estimate. A reader cannot take it for a measured size.
 
+## A country, and a flag if you want one
+
+Each rocket, built or planned, has `country`: a figure whose value is its ISO 3166-1 alpha-2 code (`US`, `RU`, `CN`), taken from its own article. A craft of several countries or an international body (Apollo and Soyuz, the ISS, Hubble, Ariane 6), one whose source names two countries of origin (Electron), and a ship of the SPX fleet have none: the value is `null` and its `note` says why. `MAKER_COUNTRIES` gives each maker group's code, and `COUNTRY_CODES` lists every code ISO 3166-1 assigns.
+
+```ts
+import { countryOf, ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
+
+console.log(ROCKETS["falcon-9"]?.country.value, countryOf("iss").value, countryOf("iss").note);
+```
+
+The element's `flags` attribute shows the rocket's flag in the corner of the picture, beside the drawing and never on it. The flags come from `@johnmorrisdotca/hata`, an optional peer: install it, and the element loads it with a dynamic import the first time a flag is needed. Without it the element draws as before, with no flag and no error. `setFlagLoader` hands over a module of your own, such as one that imports only the flags your page shows.
+
 ## Statuses
 
 A variant's `status` is `flown`, `announced`, `artist-model`, `test-vehicle` or `support`. A rocket labelled as a real version uses only parts true for it. Anything that mixes parts is a custom build and says so.

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Country codes, and flags as an option**: every rocket, built or planned, has `country`, a figure whose value is its ISO 3166-1 alpha-2 code (`US`, `RU`, `CN`) with the article it came from; `MAKER_COUNTRIES` gives each maker group's, `countryOf(id)` finds one and `COUNTRY_CODES` lists the 249 codes. Apollo and Soyuz, the ISS, Hubble, Ariane 6 and Electron (whose source names New Zealand and the United States), and the SPX fleet, have none, and the blank says why. The element's `flags` attribute shows the rocket's flag in the picture's corner, never on the drawing. The flags are `@johnmorrisdotca/hata`'s, a new optional peer loaded with a dynamic import only when a flag is wanted; without it the element draws as before, with no flag and no error. `setFlagLoader` hands over a page's own module. The demo shows flags.
+
 ## [0.19.0] - 2026-11-11
 
 - **A tap on the build bar's Pause is no longer lost in Safari** (MODULES-1066): the playing bar redrew the button's icon and word every tenth of a second, and WebKit sends no click when the node a press began on has been replaced before the finger lifts. The bar now leaves a button, a text or the stills alone when a redraw would not change them. A test holds a press across redraws.

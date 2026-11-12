@@ -28,6 +28,7 @@
 | `mode` | `drawing` keeps the drawing and never loads three.js | `auto`, `drawing` |
 | `assets` | Where the painted models are | An address |
 | `label` | What a screen reader says | Words |
+| `flags` | The rocket's country's flag in the picture's corner, beside the drawing and never on it | Present or absent; `off` is absent. The flags are `@johnmorrisdotca/hata`'s, an optional peer loaded only then: without it there is no flag and no error. A craft of several countries or an international body, and a ship of the SPX fleet, has none. `data-flag` is the code shown, or empty when there is none |
 
 **Front** is the windward, tiled side and **back** the steel side.
 
