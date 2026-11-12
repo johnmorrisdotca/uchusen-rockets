@@ -61,6 +61,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   iss: blank("Built and run by the space agencies of several countries.", "international"),
   hubble: blank("A NASA and ESA space telescope.", "international"),
   tiangong: { value: "CN", source: "wikipedia-tiangong" },
+  roadster: us("wikipedia-roadster-in-space"),
   droneship: us("wikipedia-asds", "Based at Port Canaveral, the Port of Long Beach and the Port of Brownsville."),
   "landing-zone": us("wikipedia-lz", "At Cape Canaveral Space Force Station; Landing Zone 4 is at Vandenberg."),
   "launch-tower": us("wikipedia-starbase", "The tower at Starbase, Texas."),
