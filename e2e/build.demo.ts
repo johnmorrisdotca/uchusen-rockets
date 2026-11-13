@@ -51,6 +51,8 @@ for (const url of WITHOUT_ORDER) {
     await foldPicker(page);
     // the row is hidden in the page's own markup until the page has chosen the ship, so "hidden" proves nothing before then: wait for the ship's facts, which the same step writes
     await expect(page.locator("#facts")).not.toBeEmpty();
+    // the Build tab is what the page offers or withholds: the field itself is also hidden inside a panel that is not open, so on its own it would pass for a ship that has an order
+    await expect(page.locator('[data-testid="panel-build"]')).toBeHidden();
     await expect(page.locator("#build-field")).toBeHidden();
   });
 }
