@@ -2120,6 +2120,7 @@ test.describe("the six pages that open moving", () => {
 
 test("picking one part costs one frame and then nothing is drawn", async ({ page }) => {
   await page.goto(`${URL}?rocket=iss&variant=iss&look=line&spin=off`);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
   await reach3d(page);
   await hero(page).evaluate((node) => node.setAttribute("spin", "off"));
   await expect.poll(async () => {

@@ -1,12 +1,11 @@
 // One part of a station can be picked out. The attribute is `part`, the property is `picked`, and a press sends `uchusen-part`.
 import { expect, test } from "@playwright/test";
 
-const URL = "/uchusen-rockets/?rocket=iss&variant=iss&look=line&spin=off";
+const URL = "/uchusen-rockets/element-check.html";
 
 test("part draws one module full and the rest dimmed, parts() names it, and a press says which", async ({ page }) => {
   await page.goto(URL);
-  const hero = page.locator('[data-testid="hero"]');
-  await hero.evaluate((node) => node.setAttribute("mode", "drawing"));
+  const hero = page.locator("#shared");
   await expect(hero).toHaveAttribute("data-state", "picture");
   const plain = await hero.evaluate((node) => node.shadowRoot?.querySelector(".drawing")?.innerHTML ?? "");
   expect(plain).not.toContain('opacity="0.28"');
