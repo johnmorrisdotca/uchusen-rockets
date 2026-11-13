@@ -77,6 +77,8 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   starbase: us("wikipedia-starbase"),
   "vulcan-centaur": us("wikipedia-vulcan"),
   "ariane-6": blank("Its source gives its origin as European multi-national.", "international"),
+  "atlas-v": us("wikipedia-atlas-v"),
+  "delta-iv-heavy": us("wikipedia-delta-iv-heavy"),
 };
 
 /**
@@ -95,6 +97,7 @@ export const MAKER_COUNTRIES: Readonly<Record<MakerId, Figure<CountryCode>>> = {
   "blue-origin": us("wikipedia-blue-origin"),
   "rocket-lab": us("wikipedia-rocket-lab", "Headquartered in Long Beach, California; founded in Auckland, New Zealand."),
   ula: us("wikipedia-vulcan", "The Vulcan Centaur infobox names United Launch Alliance as its manufacturer and the United States as its country of origin."),
+  europe: { value: "FR", source: "wikipedia-ariane-6", note: "The article's footnote says the lead manufacturer is in France. The rocket itself is European multi-national and has no one country, so the rockets stay blank." },
   russia: { value: "RU", source: "wikipedia-soyuz-2" },
   "us-army": us("wikipedia-jupiter-c"),
   china: { value: "CN", source: "wikipedia-tiangong" },

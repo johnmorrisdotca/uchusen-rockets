@@ -11,7 +11,7 @@ import { blank, type Figure } from "./types.ts";
  * console.log(MAKERS.spacex, Object.keys(MAKERS).length);
  * ```
  */
-export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", ula: "United Launch Alliance", russia: "Russia", "us-army": "US Army", china: "China", fleet: "SPX", sites: "Sites" } as const;
+export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", ula: "United Launch Alliance", europe: "Europe", russia: "Russia", "us-army": "US Army", china: "China", fleet: "SPX", sites: "Sites" } as const;
 /**
  * The id of a group in `MAKERS`.
  *
@@ -44,6 +44,9 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   sls: { maker: "nasa", madeBy: { value: "Used by NASA; built by Aerojet Rocketdyne, Boeing, Northrop Grumman and United Launch Alliance", source: "wikipedia-sls" } },
   "new-glenn": { maker: "blue-origin", madeBy: { value: "Blue Origin", source: "wikipedia-new-glenn" } },
   "vulcan-centaur": { maker: "ula", madeBy: { value: "United Launch Alliance", source: "wikipedia-vulcan" } },
+  "ariane-6": { maker: "europe", madeBy: { value: "ArianeGroup", source: "wikipedia-ariane-6" } },
+  "atlas-v": { maker: "ula", madeBy: { value: "United Launch Alliance", source: "wikipedia-atlas-v" } },
+  "delta-iv-heavy": { maker: "ula", madeBy: { value: "United Launch Alliance", source: "wikipedia-delta-iv-heavy" } },
   electron: { maker: "rocket-lab", madeBy: { value: "Rocket Lab", source: "wikipedia-electron" } },
   soyuz: { maker: "russia", madeBy: { value: "RKTs Progress, Russia", source: "wikipedia-soyuz-2" } },
   "lunar-module": { maker: "nasa", madeBy: { value: "Operated by NASA; built by Grumman", source: "wikipedia-lunar-module" } },
