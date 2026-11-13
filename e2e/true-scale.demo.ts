@@ -26,6 +26,8 @@ test("true scale shows the previous craft, then fits and returns to Fit", async 
   await page.getByTestId("maker-fleet").click();
   // The first hull (fleet-02, 1820 m) is opened by address and is not in the list. The listed Kaminari is fleet-kaminari, 1818 m.
   await page.getByTestId("rocket-fleet-kaminari").click();
+  // on a phone the buttons are below the stage, so the click scrolled the stage out of sight, where nothing is drawn and the canvas is let go: bring it back, and the switch can be seen to happen
+  await page.getByTestId("hero").scrollIntoViewIfNeeded();
   await expect.poll(async () => Number(await data(page, "scaleRatio")), { timeout: 30000 }).toBeGreaterThan(0);
   const ratio = Number(await data(page, "scaleRatio"));
   expect(Math.abs(ratio / (1820 / 110.64) - 1)).toBeLessThan(0.05);
