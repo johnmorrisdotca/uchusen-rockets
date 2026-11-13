@@ -93,3 +93,29 @@ test("ctrl and the wheel zooms the line-up and the page does not scroll", async 
   await expect.poll(() => page.getByTestId("cmp-lineup").locator("svg").evaluate((node) => (node as SVGElement).style.transform)).toContain("scale");
   expect(await page.evaluate(() => window.scrollY)).toBe(before);
 });
+
+test.describe("the line-up opens moving", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("the ships turn by themselves: the picture changes between two frames, and Turn is kept in the address", async ({ page }) => {
+    await page.goto(URL);
+    await foldPicker(page);
+    const lineup = page.getByTestId("cmp-lineup");
+    await expect(lineup).toHaveAttribute("data-count", "3", { timeout: 30_000 });
+    const first = await lineup.screenshot();
+    await expect.poll(async () => !(await lineup.screenshot()).equals(first), { timeout: 30_000 }).toBe(true);
+    await page.getByTestId("cmp-turn").click();
+    await expect(page).toHaveURL(/turn=0/);
+    await expect(page.getByTestId("cmp-turn")).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("with turn=0 in the address the ships stand still", async ({ page }) => {
+    await page.goto(`${URL}&turn=0`);
+    await foldPicker(page);
+    const lineup = page.getByTestId("cmp-lineup");
+    await expect(lineup).toHaveAttribute("data-count", "3", { timeout: 30_000 });
+    const first = await lineup.screenshot();
+    await page.waitForTimeout(1500);
+    expect((await lineup.screenshot()).equals(first)).toBe(true);
+  });
+});

@@ -73,3 +73,12 @@ test("pose stand puts the fleet upright in one row, at one scale, and the view t
   const mixed = lineupSvg({ items: [STARSHIP, ...STOOD, "person"], unit: 3.4, pose: "stand", filter: "fleet", fit: FRAME });
   assert.deepEqual(mixed.items.map((item) => item.key), STOOD, "the fleet filter still leaves out rockets and the person");
 });
+
+test("turn adds degrees to the view: 0 is the view as named, another angle draws another picture, and a nonsense value is 0", () => {
+  const items = [MIYAMOTO, STARSHIP];
+  const named = lineupSvg({ items, unit: 3, pose: "stand", view: "three-quarter" }).svg;
+  assert.equal(lineupSvg({ items, unit: 3, pose: "stand", view: "three-quarter", turn: 0 }).svg, named);
+  assert.equal(lineupSvg({ items, unit: 3, pose: "stand", view: "three-quarter", turn: Number.NaN }).svg, named);
+  assert.notEqual(lineupSvg({ items, unit: 3, pose: "stand", view: "three-quarter", turn: 40 }).svg, named);
+  assert.equal(lineupSvg({ items: [STARSHIP], unit: 3, view: "front", turn: 90 }).svg, lineupSvg({ items: [STARSHIP], unit: 3, view: "side" }).svg);
+});

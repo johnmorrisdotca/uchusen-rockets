@@ -60,6 +60,8 @@ if (lineupPage) {
   // The wide stage stays in the page, hidden. It still wears the view mark.
   const parked = document.getElementById("hero");
   if (parked instanceof HTMLElement) bindStage(parked, () => {});
+  // the parked stage is not shown on this layout: its bar's auto-turn has nothing to turn
+  (document.getElementById("view-bar") as ViewControlsElement | null)?.pause?.();
   await import("./fleet-compare.ts");
 } else {
 const hero = byId<UchusenRocket>("hero");

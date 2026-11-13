@@ -2,7 +2,7 @@
 import { BESIDE_NAME } from "../beside.ts";
 import { build, type Built, drawnPieces } from "./index.ts";
 import { check } from "../fit.ts";
-import { axesOf, cleanView, directionOf, VIEWS, type ViewName } from "../framing.ts";
+import { type Angle, axesOf, cleanView, directionOf, VIEWS, type ViewName } from "../framing.ts";
 import { DEFAULT_LOOK, LOOKS, type LookName } from "../looks.ts";
 import { type Camera, defsOf, drawPart, orthographic } from "../draw/svg.ts";
 import { MATERIALS } from "../model/materials.ts";
@@ -111,6 +111,8 @@ export interface LineupOptions {
   fit?: { width?: number; height?: number };
   /** `stand` draws each fleet ship upright in the row, beside the others, at the same scale, and `view` turns it. Left out, a fleet ship lies in its own band, as it always has. */
   pose?: "stand";
+  /** Degrees added to the view's turn about the ship's own upright axis, so a standing ship can be drawn at any angle and not only the named views. 0 (the default) is the view as named. A nonsense value is 0. */
+  turn?: number;
 }
 
 const isFleet = (key: string): boolean => key.startsWith("fleet-");
@@ -200,7 +202,9 @@ export function lyingCamera(axis: "x" | "y", b: Bounds, x0: number, baseY: numbe
 
 function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number, squeeze = 1): { svg: string; items: LineupItem[]; real: LineupItem[]; width: number; height: number } {
   const { items, look = DEFAULT_LOOK, view = "front", ruler = true, labels = true } = options;
-  const angle = VIEWS[cleanView(view)];
+  const turn = Number.isFinite(options.turn) ? (options.turn as number) : 0;
+  const turned = (named: Angle): Angle => (turn === 0 ? named : { az: named.az + turn, el: named.el });
+  const angle = turned(VIEWS[cleanView(view)]);
   const known: { key: string; built?: Built; compare?: CompareId; height: number; width: number; label: string }[] = [];
   for (const raw of items) {
     const key = raw.trim();
@@ -242,7 +246,7 @@ function draw(options: LineupOptions, fleetKeys: readonly string[], unit: number
     else if (item.built) {
       const show = options.show && item.built.shows.includes(options.show) ? options.show : item.built.shows[0];
       const faced = cleanView(view) === "front" ? variantOf(item.key.split(":")[0], item.key.split(":")[1])?.lineupView : undefined;
-      const facing = faced ? VIEWS[faced] : angle;
+      const facing = faced ? turned(VIEWS[faced]) : angle;
       const cam = orthographic(facing, unit, cx, base);
       const places = item.built.placesOf(show).filter((place) => place.shown);
       const { forward } = axesOf(directionOf(facing));

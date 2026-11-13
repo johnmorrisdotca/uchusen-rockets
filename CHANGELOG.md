@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The line-up opens turning** (MODULES-818): the ships turn about their upright axis, 12 degrees a second (a turn in half a minute), drawn 10 times a second. A Turn button is kept in the address (`turn=0` holds it). `<uchusen-lineup>` and `lineupSvg` take `turn`, degrees added to the view's angle.
+
 - **The compare page opens turning** (MODULES-818): the craft turns on load with the view bar's `autoplay` (5 degrees a second, for a minute, idle out of sight, as on the first page); reduced motion gets a still view.
 
 - **The yard opens turning** (MODULES-818): the view bar's `autoplay` (5 degrees a second, for a minute, idle out of sight, as on the first page), so the yard turns on load; reduced motion gets a still view. A turn is drawn at most 30 times a second.
