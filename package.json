@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/uchusen-rockets",
-  "version": "0.27.2",
+  "version": "0.28.0",
   "description": "Uchusen Rockets 宇宙船: line drawings and 3D views of rockets, as a web component. Every variant with its own sourced sizes, a typed way to assemble a rocket from parts, stack and separate. No logos. three.js is a peer dependency.",
   "keywords": [
     "rocket",

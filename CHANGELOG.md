@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-13
+
 - **Mercury-Redstone names its capsule** : the launch-vehicle article, read 2026-11-13, names what it carries as the Mercury spacecraft. That name is `facts.more.payload` on variant `redstone`, with the source and the date. The capsule drawn is still the Friendship 7 part, and that part's file is unchanged.
 
 - **Pick out one part** (MODULES-1252): `part="zarya"` on `uchusen-rocket` draws that part at full strength and the rest dimmed. The string property is `picked`, because `part` is HTML's own token list. `parts()` gives each part's id, English and Japanese names, and the launch date and length when a source gives them. A press sends `uchusen-part` with `{ id }`. Nothing is drawn at rest: the change costs one frame.
@@ -9,6 +11,8 @@
 - **LAGEOS-1**: `rocket="lageos"`, variant `lageos-1`. A sphere 0.60 m across, launch mass 406.965 kg, from the article's infobox read on 2026-11-13. The article's body also gives 400 kg and 411 kg for the two satellites; the infobox figure is the one kept. NASA's mission page, read the same day, gives the launch date 1976-05-04 and a round 900-pound figure, and does not give the diameter. The retroreflectors are not drawn: the article gives 426 of them and not their size. Both looks are this package's own sphere. No name or mark is drawn. Maker `nasa`, country the United States. Slot: `craft`.
 
 - **Starlink** (MODULES-1238): `rocket="starlink"`, variants `v1-5` and `v2-mini` (default). The operator's filing of 4 October 2022 names the forms F9-1 and F9-2. The article read on 2026-11-13 identifies those with v1.5 and v2 mini. v1.5 has a bus 2.8 m by 1.3 m, one solar array 8.1 m by 2.8 m, a debris-assessment mass of 303 kg (the article says about 295 kg) and first flew 2021-01-24. v2 mini has a bus 4.1 m by 2.7 m, two solar arrays each 12.8 m by 4.1 m, a debris-assessment mass of 800 kg and first flew 2023-02-27. Thickness, overall height and any stowed size stay blank: no source gives them, and the craft type has no pose, so only the deployed form is drawn. Both looks are this package's own plates, 0.1 m thick, that thinness judged from photographs. No name or mark is drawn. Maker `spacex`, country the United States. Slot: `craft`.
+
+- **The journey Play chip keeps the word of its state** (test and demo): the label took its word again from a language change with the key of the wrong state. It now carries the key of the state it is in, and the chip keeps `data-on` rather than `aria-pressed` for the look of playing, as in 0.27.1. A `webkit-desk` test project (1280 by 900, no touch) joins the others.
 
 ## [0.27.2] - 2026-11-13
 
