@@ -2,7 +2,13 @@
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-11-13
+
 - **Still holds the first page's view turn too** (MODULES-1226): the view bar's `autoplay` went on whatever the Earth's pace, so with `spin=still` the craft kept turning for a minute, as the compare page's did (fixed in 0.26.0). Now the page opened Still, or with less motion asked for, does not start the turn, choosing Still stops it, and leaving Still starts it again (unless less motion is asked for or it was already stopped). The freeze group checks the frame count is flat in each case.
+
+- **The Mercury-Redstone's capsule part is named for it**: the part was the Friendship 7 record, so the vehicle's list named a flight it did not make. It is now the Mercury spacecraft, a record of its own that is true for the Redstone only; the Friendship 7 record is unchanged.
+
+- **Pause and Play keep their changing name and do not say pressed** (MODULES-1271): the Pause button on the swarm and beam pages and the Play chip on the journey page change their name (Pause, Play), and also carried `aria-pressed`, which a screen reader announced twice. The name carries the state now; `data-on` is only its look.
 
 ## [0.27.0] - 2026-11-13
 
