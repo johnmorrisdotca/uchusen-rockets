@@ -1,4 +1,4 @@
-// Starlink v1.5 and v2 mini: the filing's bus, arrays and debris-software mass. A size the filing does not give stays blank.
+// Starlink F9-1 and F9-2: the filing's bus, arrays and debris-software mass. A size the filing does not give stays blank.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { build } from "../src/build/index.ts";
@@ -6,9 +6,9 @@ import { PLANNED_ROCKETS, ROCKETS, variantOf } from "../src/index.ts";
 
 const bus = (id: string) => variantOf("starlink", id);
 
-test("v1.5 is one array and v2 mini is two, from the filing, and the thickness and the whole height stay blank", () => {
-  const v15 = bus("v1-5");
-  const mini = bus("v2-mini");
+test("F9-1 is one array and F9-2 is two, from the filing, and the thickness and the whole height stay blank", () => {
+  const v15 = bus("f9-1");
+  const mini = bus("f9-2");
   assert.ok(v15 && mini);
   assert.equal(v15.facts.sizes?.["Bus length"]?.value, 2.8);
   assert.equal(v15.facts.sizes?.["Bus width"]?.value, 1.3);
@@ -32,8 +32,8 @@ test("v1.5 is one array and v2 mini is two, from the filing, and the thickness a
 });
 
 test("the drawing is the filing's plates, one wing or two, and the code-made mesh stays small", () => {
-  const v15 = build({ rocket: "starlink", variant: "v1-5" });
-  const mini = build({ rocket: "starlink", variant: "v2-mini" });
+  const v15 = build({ rocket: "starlink", variant: "f9-1" });
+  const mini = build({ rocket: "starlink", variant: "f9-2" });
   const span = (built: ReturnType<typeof build>) => built.boundsOf("together").max[0] - built.boundsOf("together").min[0];
   const tall = (built: ReturnType<typeof build>) => built.boundsOf("together").max[1] - built.boundsOf("together").min[1];
   assert.ok(Math.abs(span(v15) - (1.3 + 8.1)) < 0.02);

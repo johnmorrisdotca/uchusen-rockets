@@ -184,7 +184,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   pioneer: { id: "pioneer", name: "Pioneer", status: "built", ...MADE_BY["pioneer"], variants: PIONEER_VARIANTS, defaultVariant: "pioneer" },
   "new-horizons": { id: "new-horizons", name: "New Horizons", status: "built", ...MADE_BY["new-horizons"], variants: NEW_HORIZONS_VARIANTS, defaultVariant: "new-horizons" },
   "europa-clipper": { id: "europa-clipper", name: "Europa Clipper", status: "built", ...MADE_BY["europa-clipper"], variants: EUROPA_VARIANTS, defaultVariant: "europa-clipper" },
-  starlink: { id: "starlink", name: "Starlink", status: "built", ...MADE_BY["starlink"], variants: STARLINK_VARIANTS, defaultVariant: "v2-mini" },
+  starlink: { id: "starlink", name: "Starlink", status: "built", ...MADE_BY["starlink"], variants: STARLINK_VARIANTS, defaultVariant: "f9-2" },
   lageos: { id: "lageos", name: "LAGEOS-1", status: "built", ...MADE_BY["lageos"], variants: LAGEOS_VARIANTS, defaultVariant: "lageos-1" },
   droneship: { id: "droneship", name: "Drone ships", status: "built", ...MADE_BY["droneship"], variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", ...MADE_BY["landing-zone"], variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },

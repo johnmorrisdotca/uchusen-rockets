@@ -31,14 +31,14 @@ const craft = (busLength: number, busWidth: number, arrayLength: number, arrayWi
 export const STARLINK_BUILDS: readonly StackBuild[] = [
   {
     rocket: "starlink",
-    variant: "v2-mini",
+    variant: "f9-2",
     drawnFrom: DRAWN,
-    parts: [{ slot: "craft", kind: "spacecraft", name: "Starlink v2 mini", height: 4.1, diameter: 2.7 + 12.8 * 2, pieces: craft(4.1, 2.7, 12.8, 4.1, 2) }],
+    parts: [{ slot: "craft", kind: "spacecraft", name: "Starlink F9-2", height: 4.1, diameter: 2.7 + 12.8 * 2, pieces: craft(4.1, 2.7, 12.8, 4.1, 2) }],
   },
   {
     rocket: "starlink",
-    variant: "v1-5",
+    variant: "f9-1",
     drawnFrom: DRAWN,
-    parts: [{ slot: "craft", kind: "spacecraft", name: "Starlink v1.5", height: 2.8, diameter: 1.3 + 8.1, pieces: craft(2.8, 1.3, 8.1, 2.8, 1) }],
+    parts: [{ slot: "craft", kind: "spacecraft", name: "Starlink F9-1", height: 2.8, diameter: 1.3 + 8.1, pieces: craft(2.8, 1.3, 8.1, 2.8, 1) }],
   },
 ];

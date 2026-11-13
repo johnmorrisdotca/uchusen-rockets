@@ -4,15 +4,15 @@ import { test } from "node:test";
 import { build } from "../src/build/index.ts";
 import { PLANNED_ROCKETS, ROCKETS, variantOf } from "../src/index.ts";
 
-test("LAGEOS-1 keeps the infobox diameter and mass, and the body's other masses", () => {
+test("LAGEOS-1 keeps the ILRS page's diameter, mass, reflector count and launch date", () => {
   const craft = variantOf("lageos", "lageos-1");
   assert.ok(craft);
   assert.equal(craft.facts.diameter.value, 0.6);
   assert.equal(craft.facts.height.value, 0.6);
   assert.equal(craft.facts.parts.craft?.value, 0.6);
   assert.equal(craft.facts.more.mass?.value, 406.965);
-  assert.equal(craft.facts.more.mass?.source, "wikipedia-lageos");
-  assert.deepEqual(craft.facts.more.mass?.others?.map((other) => other.value).sort(), [400, 411]);
+  assert.equal(craft.facts.more.mass?.source, "ilrs-lageos-1");
+  assert.equal(craft.facts.more.mass?.others, undefined, "no other mass: the page gives one");
   assert.equal(craft.firstFlight?.value, "1976-05-04");
   assert.equal(craft.facts.more.reflectors?.value, 426);
   assert.equal(ROCKETS.lageos.maker, "nasa");
