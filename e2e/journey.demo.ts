@@ -684,24 +684,24 @@ test.describe("every view opens moving", () => {
     await open(page, `${URL}&look=line`);
     const route = page.getByTestId("route");
     const first = await route.screenshot();
-    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("play")).toHaveAttribute("data-on", "");
     await expect.poll(async () => !(await route.screenshot()).equals(first), { timeout: 30_000 }).toBe(true);
   });
 
   test("reduced motion keeps the trip still, with Play ready", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await open(page, `${URL}&look=line`);
-    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByTestId("play")).not.toHaveAttribute("data-on");
     await expectStillPicture(page, () => page.getByTestId("route").screenshot(), "the trip stays still");
   });
 
   test("a held address stays held: Pause is written to it, and the trip stays still on a reload", async ({ page }) => {
     await open(page, `${URL}&look=line`);
     await page.getByTestId("play").click();
-    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByTestId("play")).not.toHaveAttribute("data-on");
     await expect(page).toHaveURL(/play=0/);
     await page.reload();
-    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByTestId("play")).not.toHaveAttribute("data-on");
     await expectStillPicture(page, () => page.getByTestId("route").screenshot(), "the held trip stays still");
   });
 });
