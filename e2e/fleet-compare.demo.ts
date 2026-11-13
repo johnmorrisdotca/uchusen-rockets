@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { foldPicker } from "./picker.ts";
+import { expectStillPicture } from "./still.ts";
 
 const URL = "/uchusen-rockets/compare.html?layout=lineup";
 
@@ -115,9 +116,7 @@ test.describe("the line-up opens moving", () => {
     await foldPicker(page);
     const lineup = page.getByTestId("cmp-lineup");
     await expect(lineup).toHaveAttribute("data-count", "3", { timeout: 30_000 });
-    const first = await lineup.screenshot();
-    await page.waitForTimeout(1500);
-    expect((await lineup.screenshot()).equals(first)).toBe(true);
+    await expectStillPicture(page, () => lineup.screenshot(), "the ships stand still");
   });
 
   test("with turn=0 in the address the ships stand still", async ({ page }) => {
@@ -125,8 +124,6 @@ test.describe("the line-up opens moving", () => {
     await foldPicker(page);
     const lineup = page.getByTestId("cmp-lineup");
     await expect(lineup).toHaveAttribute("data-count", "3", { timeout: 30_000 });
-    const first = await lineup.screenshot();
-    await page.waitForTimeout(1500);
-    expect((await lineup.screenshot()).equals(first)).toBe(true);
+    await expectStillPicture(page, () => lineup.screenshot(), "the ships stand still");
   });
 });

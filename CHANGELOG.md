@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Tests that a page is still wait on the page** (CI fix): the yard's reduced-motion test, and eight like it (beam, swarm, line-up, journey, compare camera, the rings), took one picture, waited a fixed time and took another, so a slow runner that was still settling (a model arriving, a first frame) failed it. They now poll until two readings a second apart agree, or the draw count stops rising, and fail only if the page keeps moving. Tests only: `e2e/still.ts`.
+
 ## [0.26.0] - 2026-11-13
 
 - **Still holds the compare page's view turn too** (MODULES-818): the view bar's `autoplay` went on the page whatever the Earth's pace, so with `spin=still` the Earth held and the craft kept turning for a minute. Now the page opened Still, or with less motion asked for, does not start the turn, choosing Still stops it, and leaving Still starts it again (unless less motion is asked for or it was already stopped). The freeze group checks the frame count is flat in each case.

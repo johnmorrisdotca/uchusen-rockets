@@ -1,6 +1,7 @@
 // The fleet ships' moving parts: with Motion on the rings of Hanabusa turn, drawn at most thirty times a second; with it off, or for a reader who asked for reduced motion, they stand still and nothing draws; out of sight or on a hidden
 // tab nothing draws either. The Motion choice is kept in the address.
 import { expect as plainExpect, type Page, test } from "@playwright/test";
+import { expectFlatCount } from "./still.ts";
 
 const expect = plainExpect.configure({ timeout: 60_000 });
 const ROOT = "/uchusen-rockets/";
@@ -66,10 +67,8 @@ test.describe("motion on", () => {
       Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    await page.waitForTimeout(600);
+    await expectFlatCount(page, () => drawn(page), "a hidden tab draws nothing");
     const mark = await drawn(page);
-    await page.waitForTimeout(1500);
-    expect(await drawn(page)).toBe(mark);
     await page.evaluate(() => {
       Object.defineProperty(document, "hidden", { configurable: true, get: () => false });
       document.dispatchEvent(new Event("visibilitychange"));
@@ -99,7 +98,7 @@ test.describe("reduced motion", () => {
   test("asked to move, a reader who wants reduced motion still sees the rings still", async ({ page }) => {
     await stand(page, "&motion=on");
     await expect(hero(page)).toHaveAttribute("data-motion", "off");
-    await page.waitForTimeout(1500);
+    await expectFlatCount(page, () => drawn(page), "the rings stay still");
     expect(await canvasData(page, "motionAngle")).toBe("");
   });
 });

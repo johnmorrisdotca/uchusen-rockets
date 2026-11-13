@@ -1,5 +1,6 @@
 // The beam page draws the carry in both looks, and the reduced-motion picture is the dotted one.
 import { expect, test } from "@playwright/test";
+import { expectStillPicture } from "./still.ts";
 
 const URL = "/uchusen-rockets/beam.html";
 
@@ -34,8 +35,6 @@ test.describe("the beam page opens moving", () => {
     await page.goto(URL);
     const carry = page.getByTestId("beam-carry");
     await expect(carry.locator("[data-ring]").first()).toBeAttached();
-    const first = await carry.screenshot();
-    await page.waitForTimeout(1500);
-    expect((await carry.screenshot()).equals(first)).toBe(true);
+    await expectStillPicture(page, () => carry.screenshot(), "the carrying beam stays still");
   });
 });

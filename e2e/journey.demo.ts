@@ -2,6 +2,7 @@
 // browser's own style, nothing scrolls sideways. The line views draw with no WebGL and ask for no frame while nothing moves. The painted side view is the one context, and leaving it lets that context go.
 import { expect, test, type Page } from "@playwright/test";
 import { foldPicker } from "./picker.ts";
+import { expectStillPicture } from "./still.ts";
 
 const URL = "/uchusen-rockets/journey.html?date=2026-11-04";
 
@@ -687,9 +688,7 @@ test.describe("every view opens moving", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await open(page, `${URL}&look=line`);
     await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
-    const first = await page.getByTestId("route").screenshot();
-    await page.waitForTimeout(1500);
-    expect((await page.getByTestId("route").screenshot()).equals(first)).toBe(true);
+    await expectStillPicture(page, () => page.getByTestId("route").screenshot(), "the trip stays still");
   });
 
   test("a held address stays held: Pause is written to it, and the trip stays still on a reload", async ({ page }) => {
@@ -699,8 +698,6 @@ test.describe("every view opens moving", () => {
     await expect(page).toHaveURL(/play=0/);
     await page.reload();
     await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
-    const held = await page.getByTestId("route").screenshot();
-    await page.waitForTimeout(1500);
-    expect((await page.getByTestId("route").screenshot()).equals(held)).toBe(true);
+    await expectStillPicture(page, () => page.getByTestId("route").screenshot(), "the held trip stays still");
   });
 });

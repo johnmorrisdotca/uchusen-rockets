@@ -1,5 +1,6 @@
 // The compare page camera: the choice is kept, open space is the default, wrap returns to the free camera, and follow selected waits until a craft is marked.
 import { expect, test } from "@playwright/test";
+import { expectStillPicture } from "./still.ts";
 
 const URL = "/uchusen-rockets/compare.html?with=none";
 
@@ -193,8 +194,6 @@ test.describe("the compare page opens moving", () => {
     await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
     const hero = page.locator("#hero");
     await expect(hero).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
-    const first = await hero.screenshot();
-    await page.waitForTimeout(2500);
-    expect((await hero.screenshot()).equals(first)).toBe(true);
+    await expectStillPicture(page, () => hero.screenshot(), "the view stays still");
   });
 });

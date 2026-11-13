@@ -1,5 +1,6 @@
 // The yard page: the whole yard, a jump to each bay, day and night, the free spine leaving and coming back, and the build player for the chosen bay.
 import { expect, test } from "@playwright/test";
+import { expectStillPicture } from "./still.ts";
 
 // A trace is kept when a yard test fails, so a pause that did not hold says what the page did (MODULES-896).
 test.use({ trace: "retain-on-failure" });
@@ -173,7 +174,5 @@ test("a reader who asked for less motion gets a still yard", async ({ page }) =>
   const stage = page.getByTestId("yard-stage");
   await expect(stage).toHaveAttribute("data-ready", "yes", { timeout: 60_000 });
   const picture = page.getByTestId("yard-view");
-  const first = await picture.screenshot();
-  await page.waitForTimeout(2000);
-  expect((await picture.screenshot()).equals(first)).toBe(true);
+  await expectStillPicture(page, () => picture.screenshot(), "the yard stays still");
 });

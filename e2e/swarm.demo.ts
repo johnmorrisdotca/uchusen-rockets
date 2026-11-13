@@ -1,6 +1,7 @@
 // The swarm page draws the path, and the ship view hides what is not built yet and puts the drones in the scene.
 import { writeFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { expectStillPicture } from "./still.ts";
 
 const COUNT = () => {
   type Ctx = (WebGLRenderingContext | WebGL2RenderingContext) & { isContextLost(): boolean };
@@ -217,8 +218,6 @@ test.describe("the swarm page opens moving", () => {
     await page.goto("/uchusen-rockets/swarm.html");
     const map = page.getByTestId("swarm-map");
     await expect(map.locator("[data-drone]").first()).toBeVisible();
-    const first = await map.screenshot();
-    await page.waitForTimeout(1500);
-    expect((await map.screenshot()).equals(first)).toBe(true);
+    await expectStillPicture(page, () => map.screenshot(), "the drones stay in their boxes");
   });
 });
