@@ -1758,3 +1758,304 @@ test("the embed page given background=earth draws the lit rocket, loads nothing 
   await settle(page, 1500);
   expect(await count()).toBe(from);
 });
+
+// ------------------------------------------------------------- the six pages that open moving (MODULES-818)
+// Journey, yard, compare, the fleet line-up, swarm and beam each open moving. Each is held to the family's rule: while it moves it draws at most 30 times a second and asks for one frame a scheduler, once it has stopped it draws
+// nothing, out of sight and on a hidden tab it draws nothing, and the graphics card holds no more at the end than at the start. The pages that are not a WebGL view are counted by what they draw: WebGL draws and 2D canvas
+// drawing (a frame's worth counts once) and, where a page moves an SVG, the batches of changes to what `watch` names.
+const PACE = () => {
+  const pace = { renders: 0, watched: 0, crowded: 0 };
+  let limit = 1;
+  let current: number | null = null;
+  let last = "";
+  let at = -1;
+  let inFrame = 0;
+  const mark = () => {
+    const key = current === null ? `n${performance.now()}` : `f${current}`;
+    if (key === last) return;
+    last = key;
+    pace.renders++;
+  };
+  const frame = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = (callback) =>
+    frame((time) => {
+      if (time !== at) {
+        at = time;
+        inFrame = 0;
+      }
+      if (++inFrame === limit + 1) pace.crowded++;
+      current = time;
+      try {
+        callback(time);
+      } finally {
+        // the changes this frame made are delivered to observers in a microtask after it, still in this frame; the next task is not
+        setTimeout(() => {
+          if (current === time) current = null;
+        }, 0);
+      }
+    });
+  for (const proto of [WebGLRenderingContext.prototype, WebGL2RenderingContext.prototype] as unknown as Record<string, (...args: unknown[]) => unknown>[]) {
+    for (const name of ["drawElements", "drawArrays", "drawElementsInstanced", "drawArraysInstanced"]) {
+      const original = proto[name];
+      if (!original) continue;
+      proto[name] = function (this: unknown, ...args: unknown[]) {
+        mark();
+        return original.apply(this, args);
+      };
+    }
+  }
+  for (const name of ["clearRect", "fillRect", "strokeRect", "drawImage", "fill", "stroke", "fillText"]) {
+    const proto = CanvasRenderingContext2D.prototype as unknown as Record<string, (...args: unknown[]) => unknown>;
+    const original = proto[name];
+    proto[name] = function (this: unknown, ...args: unknown[]) {
+      mark();
+      return original.apply(this, args);
+    };
+  }
+  const watching = new MutationObserver(() => {
+    pace.watched++;
+    mark();
+  });
+  const watch = (selector: string) => {
+    const node = document.querySelector(selector);
+    if (!node) throw new Error(`nothing to watch at ${selector}`);
+    const options = { attributes: true, characterData: true, childList: true, subtree: true };
+    watching.observe(node, options);
+    if (node.shadowRoot) watching.observe(node.shadowRoot, options);
+  };
+  Object.assign(window, { __pace: pace, __watch: watch, __forget: (most: number) => {
+      pace.crowded = 0;
+      limit = most;
+    } });
+};
+type Pace = { renders: number; watched: number; crowded: number; now: number };
+const paceOf = (page: Page) =>
+  page.evaluate(() => {
+    const pace = (window as unknown as { __pace: Pace }).__pace;
+    return { renders: pace.renders, watched: pace.watched, crowded: pace.crowded, now: performance.now() };
+  });
+const watching = (page: Page, selector: string) => page.evaluate((one) => (window as unknown as { __watch(selector: string): void }).__watch(one), selector);
+const forget = (page: Page, most: number) => page.evaluate((limit) => (window as unknown as { __forget(most: number): void }).__forget(limit), most);
+/** A frame in which anything drew, or a watched thing changed, counts once. */
+const movedOf = (pace: Pace) => pace.renders;
+/** The page counted from before any script runs: what it asks of the graphics card, and what it draws. */
+const counted = async (page: Page) => {
+  await page.addInitScript(COUNT);
+  await page.addInitScript(PACE);
+};
+/**
+ * While it moves: it draws, at most `ceiling` times a second, and asks for at most `schedulers` frames in a page frame: each loop that runs on its own (the page's, the view bar's where it turns the view, and the family help's, which coalesces its redraw of the titles to one a frame). The stretch is
+ * `frames` page frames long, not a set time, and its length is read from the page's own clock, so a slow machine measures a longer stretch and not a different rate.
+ */
+const expectPaced = async (page: Page, { schedulers, ceiling = 30, frames = 120 }: { schedulers: number; ceiling?: number; frames?: number }) => {
+  await forget(page, schedulers);
+  const from = { usage: await usage(page), pace: await paceOf(page) };
+  await expect.poll(async () => (await usage(page)).pageFrames - from.usage.pageFrames, { timeout: 120_000 }).toBeGreaterThanOrEqual(frames);
+  const to = { usage: await usage(page), pace: await paceOf(page) };
+  const seconds = (to.pace.now - from.pace.now) / 1000;
+  const moved = movedOf(to.pace) - movedOf(from.pace);
+  expect(moved, "it draws while it moves").toBeGreaterThan(0);
+  expect(moved, `drawn ${moved} times in ${seconds.toFixed(1)} s`).toBeLessThanOrEqual(Math.ceil(ceiling * seconds) + 1);
+  expect(to.usage.asked - from.usage.asked, "frames asked for").toBeLessThanOrEqual(schedulers * (to.usage.pageFrames - from.usage.pageFrames) + schedulers + 4);
+  // a page that schedules twice crowds nearly every frame; a one-off (the page's own redraw of a label, a chunk loading) may crowd a few
+  expect(to.pace.crowded, `frames that ran more than ${schedulers} callbacks`).toBeLessThanOrEqual(3);
+};
+/** Once it has stopped: whatever was already on its way is drawn, and then nothing is, and no frame is asked for. `frames` allows the few a loop that polls (everyFrame) asks for while it waits. */
+const expectStill = async (page: Page, { asked = 2 }: { asked?: number } = {}) => {
+  await expect
+    .poll(async () => {
+      const mark = movedOf(await paceOf(page));
+      await settle(page, 1000);
+      return movedOf(await paceOf(page)) - mark;
+    }, { timeout: 90_000 })
+    .toBe(0);
+  const from = { usage: await usage(page), pace: await paceOf(page) };
+  await settle(page, 2500);
+  const to = { usage: await usage(page), pace: await paceOf(page) };
+  expect(movedOf(to.pace) - movedOf(from.pace), "drawn after it stopped").toBe(0);
+  expect(to.usage.asked - from.usage.asked, "frames asked for after it stopped").toBeLessThanOrEqual(asked);
+};
+const scrollAway = (page: Page) =>
+  page.evaluate(() => {
+    const spacer = document.createElement("div");
+    spacer.style.height = "8000px";
+    document.body.append(spacer);
+    window.scrollTo(0, 7000);
+  });
+/** Out of sight and on a hidden tab it draws nothing, and when it is back it moves again. `still` says what stopped it (a page that polls is allowed a few frame requests while it waits). */
+const expectUnseen = async (page: Page, options: { asked?: number } = {}) => {
+  const moving = async () => {
+    const mark = movedOf(await paceOf(page));
+    await expect.poll(async () => movedOf(await paceOf(page)), { timeout: 60_000 }).toBeGreaterThan(mark);
+  };
+  await moving();
+  await scrollAway(page);
+  await expectStill(page, options);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await moving();
+  await hideTab(page, true);
+  await expectStill(page, options);
+  await hideTab(page, false);
+  await moving();
+};
+/** Contexts and graphics objects at the end are no more than at the start. */
+const expectFlat = (start: Usage, end: Usage) => {
+  expect(end.contexts).toBeLessThanOrEqual(start.contexts);
+  for (const kind of ["buffers", "arrays", "textures", "programs", "framebuffers"] as const) expect(end[kind], kind).toBeLessThanOrEqual(start[kind]);
+};
+/** The bar's own turn has ended (it takes `data-turning` off the bar), for the page given `autoplay-for` of a few seconds in place of its minute: the page's own setting, changed in the page's markup as it is served. */
+const shortened = async (page: Page, file: string, seconds: number) => {
+  await page.route(`**/${file}`, async (route) => {
+    const response = await route.fetch();
+    const text = await response.text();
+    if (!text.includes('autoplay-for="60"')) throw new Error(`${file} no longer carries autoplay-for="60"`);
+    await route.fulfill({ response, body: text.replace('autoplay-for="60"', `autoplay-for="${seconds}"`) });
+  });
+};
+
+test.describe("the six pages that open moving", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  const JOURNEY = "/uchusen-rockets/journey.html?date=2026-11-04&look=line";
+  const journeyPlaying = (page: Page) => expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "true");
+
+  test("journey: the trip plays at most 30 draws a second from its one frame loop, then Pause and play=0 leave nothing drawn, and it is still out of sight and on a hidden tab", async ({ page }) => {
+    test.setTimeout(240_000);
+    await counted(page);
+    await page.goto(JOURNEY);
+    await foldPicker(page);
+    await journeyPlaying(page);
+    await watching(page, "#jr-picture");
+    const start = await levelUsage(page);
+    await expectPaced(page, { schedulers: 2 });
+    await expectUnseen(page);
+    await page.getByTestId("play").click();
+    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    await expectStill(page);
+    expectFlat(start, await levelUsage(page));
+    // held in the address, it opens still, and nothing is drawn from the first frame
+    await page.goto(`${JOURNEY}&play=0`);
+    await foldPicker(page);
+    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    await expectStill(page);
+  });
+
+  /** The bar's own turn, held by its Pause and let go by its Play, which turns for the page's `autoplay-for`. */
+  const barPlay = (page: Page) => bar(page).evaluate((node) => (node as HTMLElement & { play(): void }).play());
+  const turning = (page: Page) => expect(bar(page)).toHaveAttribute("data-turning", "", { timeout: 60_000 });
+  const turned = (page: Page) => expect(bar(page)).not.toHaveAttribute("data-turning", "", { timeout: 90_000 });
+  /** A page whose autoplay is cut to a few seconds in its markup: it ends by itself at load, draws nothing then, and the Play that follows ends the same way, with the graphics card holding no more than before. */
+  const endsByItself = async (page: Page, file: string, ready: () => Promise<void>) => {
+    await counted(page);
+    await shortened(page, file, 3);
+    await ready();
+    await turned(page);
+    await expectStill(page);
+    await pause(page);
+    const start = await levelUsage(page);
+    await barPlay(page);
+    await turning(page);
+    await turned(page);
+    await expectStill(page);
+    expectFlat(start, await levelUsage(page));
+  };
+
+  const YARD = "/uchusen-rockets/yard.html";
+  const yardReady = async (page: Page) => {
+    await page.goto(YARD);
+    await expect(page.getByTestId("yard-stage")).toHaveAttribute("data-ready", "yes", { timeout: 90_000 });
+  };
+
+  test("yard: it turns at most 30 draws a second from the bar's loop and the page's one, and nothing is drawn out of sight or on a hidden tab", async ({ page }) => {
+    test.setTimeout(300_000);
+    await counted(page);
+    await yardReady(page);
+    await turning(page);
+    await expectPaced(page, { schedulers: 2 });
+    await expectUnseen(page);
+  });
+
+  test("yard: nothing is drawn once the autoplay ends (cut to 3 s), at load or after Play, and the graphics card holds no more", async ({ page }) => {
+    test.setTimeout(300_000);
+    await endsByItself(page, "yard.html", () => yardReady(page));
+  });
+
+  const COMPARE = "/uchusen-rockets/compare.html?rocket=space-shuttle&variant=stack&with=none&background=none&picker=off";
+  const compareReady = async (page: Page) => {
+    await page.goto(COMPARE);
+    await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+    await reach3d(page);
+  };
+
+  test("compare: the craft turns at most 30 draws a second from the bar's loop and the hero's one, and nothing is drawn out of sight or on a hidden tab", async ({ page }) => {
+    test.setTimeout(300_000);
+    await counted(page);
+    await compareReady(page);
+    await turning(page);
+    await expectPaced(page, { schedulers: 2 });
+    await expectUnseen(page);
+  });
+
+  test("compare: nothing is drawn once the autoplay ends (cut to 3 s), at load or after Play, and the graphics card holds no more", async ({ page }) => {
+    test.setTimeout(300_000);
+    await endsByItself(page, "compare.html", () => compareReady(page));
+  });
+
+  const LINEUP = "/uchusen-rockets/compare.html?layout=lineup";
+  const lineupReady = async (page: Page, address: string) => {
+    await page.goto(address);
+    await foldPicker(page);
+    await expect(page.getByTestId("cmp-lineup")).toHaveAttribute("data-count", "3", { timeout: 60_000 });
+    await watching(page, "#lineup");
+  };
+
+  test("fleet line-up: the row turns at most 10 draws a second, turn=0 draws nothing, and it is still out of sight and on a hidden tab", async ({ page }) => {
+    test.setTimeout(240_000);
+    await counted(page);
+    await lineupReady(page, LINEUP);
+    const start = await levelUsage(page);
+    await expectPaced(page, { schedulers: 1, ceiling: 10 });
+    // the loop that turns it polls a frame at a time and draws only when a tenth of a second has passed: out of sight it asks for none
+    await expectUnseen(page);
+    await page.getByTestId("cmp-turn").click();
+    await expect(page).toHaveURL(/turn=0/);
+    await expectStill(page);
+    expectFlat(start, await levelUsage(page));
+    await page.goto(`${LINEUP}&turn=0`);
+    await lineupReady(page, `${LINEUP}&turn=0`);
+    await expectStill(page);
+  });
+
+  const SWARM = "/uchusen-rockets/swarm.html";
+  const BEAM = "/uchusen-rockets/beam.html";
+
+  test("swarm: the drones run at most 30 draws a second from one frame loop, and nothing is drawn out of sight, on a hidden tab or once reduced motion is asked for", async ({ page }) => {
+    test.setTimeout(240_000);
+    await counted(page);
+    await page.goto(SWARM);
+    await expect(page.getByTestId("swarm-map").locator("[data-drone]").first()).toBeVisible();
+    await watching(page, "#swarm-map");
+    const start = await levelUsage(page);
+    await expectPaced(page, { schedulers: 1 });
+    await expectUnseen(page);
+    // the page has no pause control: the reader's own switch for less motion is its stop, and it works while the page runs
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expectStill(page);
+    expectFlat(start, await levelUsage(page));
+  });
+
+  test("beam: the rings run at most 30 draws a second from one frame loop, and nothing is drawn out of sight, on a hidden tab or once reduced motion is asked for", async ({ page }) => {
+    test.setTimeout(240_000);
+    await counted(page);
+    await page.goto(BEAM);
+    await expect(page.getByTestId("beam-carry").locator("[data-ring]").first()).toBeAttached();
+    await watching(page, "#beam-carry");
+    const start = await levelUsage(page);
+    await expectPaced(page, { schedulers: 1 });
+    await expectUnseen(page);
+    // the page has no pause control: the reader's own switch for less motion is its stop, and it works while the page runs
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expectStill(page);
+    expectFlat(start, await levelUsage(page));
+  });
+});
