@@ -4,6 +4,8 @@
 
 - **Mercury-Redstone names its capsule** : the launch-vehicle article, read 2026-11-13, names what it carries as the Mercury spacecraft. That name is `facts.more.payload` on variant `redstone`, with the source and the date. The capsule drawn is still the Friendship 7 part, and that part's file is unchanged.
 
+- **Pick out one part** (MODULES-1252): `part="zarya"` on `uchusen-rocket` draws that part at full strength and the rest dimmed. The string property is `picked`, because `part` is HTML's own token list. `parts()` gives each part's id, English and Japanese names, and the launch date and length when a source gives them. A press sends `uchusen-part` with `{ id }`. Nothing is drawn at rest: the change costs one frame.
+
 ## [0.27.2] - 2026-11-13
 
 - **The fleet kit walk is split and the variant-change count settles** (MODULES-1288): test-only, no change to the package. `e2e/freeze.demo.ts` ran the whole fleet kit as one test (about 40 minutes against its 45-minute limit); with no `FLEET_PART` set it is now five tests, each a fifth of the ships with the same assertions (CI still sets `FLEET_PART`). "changing variant in the middle of a flight" reads each count once it holds still and keeps its own baseline, so a busy machine no longer reads 236 against 185.

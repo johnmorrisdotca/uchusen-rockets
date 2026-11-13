@@ -124,6 +124,11 @@ const pageOf = (file: string) => readFileSync(file, "utf8");
 await acquireBrowserLock();
 const browser = await chromium.launch({ args: [...SOFTWARE_GL_ARGS] });
 
+await step("node-part", () => {
+  const out = execFileSync(process.execPath, [join(examples("node"), "part.mjs")], { cwd: usage, encoding: "utf8" }).trim();
+  if (out !== "Zarya ザーリャ 1998-11-20 12.56 true") throw new Error(`unexpected output: ${out}`);
+});
+
 await step("node", () => {
   const out = execFileSync(process.execPath, [join(examples("node"), "server.mjs")], { cwd: usage, encoding: "utf8" }).trim();
   if (!/^true 69\.8 m, from \S/.test(out)) throw new Error(`unexpected output: ${out}`);
@@ -287,6 +292,7 @@ const FILES: Record<string, string[]> = {
   "angular/rocket-view.component.ts": ["docs/guides/react-and-frameworks.md", "docs/guides/ja/react-and-frameworks.md"],
   "typescript/index.ts": ["docs/guides/typescript-and-node.md", "docs/guides/ja/typescript-and-node.md"],
   "node/server.mjs": ["docs/guides/typescript-and-node.md", "docs/guides/ja/typescript-and-node.md"],
+  "node/part.mjs": ["docs/guides/looks-views-and-parts.md", "docs/guides/ja/looks-views-and-parts.md"],
   "node/orbit.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
   "node/transfer.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],
   "node/attitude.mjs": ["docs/guides/flight-physics.md", "docs/guides/ja/flight-physics.md"],

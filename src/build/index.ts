@@ -92,6 +92,8 @@ export interface SvgOptions {
   only?: readonly string[];
   /** The bounds the picture is fitted to, from another build's `boundsOf`: parts drawn with it keep the scale of the whole rocket they came from. */
   frame?: Bounds;
+  /** One part drawn at full strength, the rest dimmed. A slot id, such as `zarya`. Empty or left out, nothing is dimmed. */
+  part?: string;
 }
 
 /**
@@ -302,7 +304,7 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
     placesOf,
     flamesOf,
     glb: () => toGlb(parts.map((part) => ({ name: part.slot, mesh: part.mesh, at: placesOf("together").find((place) => place.slot === part.slot)?.at ?? [0, 0, 0] }))),
-    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false, moves, only, frame } = {}) => {
+    svg: ({ look = DEFAULT_LOOK, view = DEFAULT_VIEW, show, engines = false, moves, only, frame, part = "" } = {}) => {
       const angle = typeof view === "string" ? VIEWS[cleanView(view)] : view;
       const placed = only ? stackOf(only, frame) : placesOf(show);
       const places = placed.filter((place) => place.shown);
@@ -321,15 +323,13 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
         : engines
         ? (only ? flamesAt(placed, true) : flamesOf(show)).filter((bell) => places.some((place) => place.slot === bell.slot))
         : [];
-      return wrap(
-        ordered
-          .map(({ place, part }) => drawPart(moved(drawnPieces(part, together), moves?.[part.slot] ?? {}), place.at, cam, look) + plumeMarkup(flames.filter((bell) => bell.slot === place.slot), place.at, cam, look, part.slot, part.flame))
-          .join(""),
-        look,
-        PICTURE_W,
-        PICTURE_H,
-        report.label,
-      );
+      const body = ordered
+        .map(({ place, part: drawn }) => {
+          const markup = drawPart(moved(drawnPieces(drawn, together), moves?.[drawn.slot] ?? {}), place.at, cam, look) + plumeMarkup(flames.filter((bell) => bell.slot === place.slot), place.at, cam, look, drawn.slot, drawn.flame);
+          return part ? `<g data-slot="${place.slot}" opacity="${place.slot === part ? "1" : "0.28"}">${markup}</g>` : markup;
+        })
+        .join("");
+      return wrap(body, look, PICTURE_W, PICTURE_H, report.label);
     },
   };
 }

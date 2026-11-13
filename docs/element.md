@@ -61,6 +61,8 @@ A flight, where a page gives one for the variant, plays from a script or from [`
 </script>
 ```
 
+`element.picked` is the slot drawn at full strength (the attribute is `part`, for example `part="zarya"`), and the other parts are dimmed. `element.parts()` lists each part's id, English name, Japanese name, and the launch date and length when a source gives them. A press on a part sends `uchusen-part` with `{ id }`. Setting it asks for one frame and then nothing is drawn.
+
 `element.drive({ yaw, tilt, zoom, panX, panY })` takes what the controls report: `yaw` and `tilt` in degrees, `zoom` (1 is the whole rocket in the picture; held to 0.25 to 8) and the pan in pixels. Each is optional and must be a finite number, or what was stays. The first call hands over: the element's own drag, wheel, keys and spin stand down, `data-driven` is set, and the 3D view and the drawing both follow, so it works with no WebGL too. `drive(null)` takes the hands back.
 
 - The turn and tip are from the angle `view` names: yaw 0 and tilt 0 is that view. Dragging right makes `yaw` larger, which carries the camera to the left; a larger `tilt` lowers it. To go to another view, set `view` and give the controls `set({ yaw: 0, tilt: 0 })`.
