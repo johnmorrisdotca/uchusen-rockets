@@ -133,17 +133,20 @@ const FROM = (variant: string) =>
 /** Where the payload stands in Falcon Heavy: 0.8 m above where its fairing begins (the fairing's sourced 13.1 m under the 70 m top), clear of the fairing's walls. The 0.8 m is a placing, not a figure. */
 export const FALCON_HEAVY_PAYLOAD_Y = 70 - 13.1 + 0.8;
 
+/** Falcon Heavy's test flight, its payload slot holding the chosen car and Starman. The first is as it flew; the second generation's two are what-ifs, as their variants say. */
+const flightBuild = (car: string): StackBuild => ({
+  rocket: "falcon-heavy",
+  variant: car === "first-generation" ? ROADSTER_FLIGHT.id : `${ROADSTER_FLIGHT.id}-${car}`,
+  drawnFrom: `Antonio_Adams's low-poly Falcon Heavy and ${car === "first-generation" ? "the 86 guy's" : car === "second-generation" ? "metarex.4d's" : "Michael's, with minchou19's wheels,"} Roadster for the painted look, this package's plain shapes for the line looks. Starman is this package's own in every look.`,
+  parts: [
+    // the same vehicle as Falcon Heavy's own, on its first flight: its centre core is its own part here, so the test flight is reached from its own foot
+    { slot: "centre", kind: "first-stage", name: "Falcon Heavy centre core, with its upper stage and fairing", height: 70, diameter: 5.2, sourcedDiameter: blank("3.7 m the core; 5.2 m the fairing."), painted: { file: "falcon-heavy-falcon-heavy-centre.glb", credit: "antonio-falcon-heavy" }, pieces: () => centreCore(70, 1.85) },
+    carPart(car, { x: 0, z: 0, y: FALCON_HEAVY_PAYLOAD_Y }),
+    starmanPart(car, { x: 0, z: 0, y: FALCON_HEAVY_PAYLOAD_Y }),
+  ],
+});
+
 export const ROADSTER_BUILDS: readonly StackBuild[] = [
   ...Object.keys(ROADSTER_DRAWS).map((variant) => ({ rocket: "roadster", variant, drawnFrom: FROM(variant), parts: [carPart(variant), starmanPart(variant, { x: 0, z: 0 })] })),
-  {
-    rocket: "falcon-heavy",
-    variant: ROADSTER_FLIGHT.id,
-    drawnFrom: "Antonio_Adams's low-poly Falcon Heavy and the 86 guy's Roadster for the painted look, this package's plain shapes for the line looks. Starman is this package's own in every look.",
-    parts: [
-      // the same vehicle as Falcon Heavy's own, on its first flight: its centre core is its own part here, so the test flight is reached from its own foot
-      { slot: "centre", kind: "first-stage", name: "Falcon Heavy centre core, with its upper stage and fairing", height: 70, diameter: 5.2, sourcedDiameter: blank("3.7 m the core; 5.2 m the fairing."), painted: { file: "falcon-heavy-falcon-heavy-centre.glb", credit: "antonio-falcon-heavy" }, pieces: () => centreCore(70, 1.85) },
-      carPart("first-generation", { x: 0, z: 0, y: FALCON_HEAVY_PAYLOAD_Y }),
-      starmanPart("first-generation", { x: 0, z: 0, y: FALCON_HEAVY_PAYLOAD_Y }),
-    ],
-  },
+  ...Object.keys(ROADSTER_DRAWS).map((car) => flightBuild(car)),
 ];

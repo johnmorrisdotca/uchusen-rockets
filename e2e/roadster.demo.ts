@@ -123,3 +123,41 @@ test("in space the car is lit from the Sun's side: from one side, then from the 
   const showroom = await tilt(page);
   expect(showroom.mean).toBeGreaterThan(Math.max(one.mean, other.mean) * 1.2);
 });
+
+test("Falcon Heavy takes any of the three cars: a second-generation car is fetched when it is chosen, says it has not flown, and is given back", async ({ page, browserName }, info) => {
+  test.skip(browserName !== "chromium" || info.project.name !== "chromium-desk", "the GPU count is read in desk Chromium only");
+  await page.addInitScript(COUNT);
+  const fetched: string[] = [];
+  page.on("request", (request) => {
+    const name = /models\/(roadster-[a-z0-9-]+\.glb)$/.exec(request.url())?.[1];
+    if (name) fetched.push(name);
+  });
+  const problems: string[] = [];
+  page.on("pageerror", (error) => problems.push(error.message));
+  await page.goto("/uchusen-rockets/?rocket=falcon-heavy&variant=test-flight&look=painted");
+  const hero = page.getByTestId("hero");
+  const canvas = hero.locator("canvas");
+  await expect(canvas).toHaveAttribute("data-painted", "mixed", { timeout: 60_000 });
+  expect(fetched).toEqual(["roadster-first-generation-car.glb"]);
+  const first = await live(page);
+  // the payload slot's three cars sit in the one row of variants, with the plain Falcon Heavy
+  for (const id of ["falcon-heavy", "test-flight", "test-flight-second-generation", "test-flight-second-generation-2"]) await expect(page.getByTestId(`variant-${id}`)).toBeVisible();
+  for (const car of ["second-generation", "second-generation-2"]) {
+    const id = `test-flight-${car}`;
+    const arrived = page.waitForResponse((response) => response.url().endsWith(`models/roadster-${car}-car.glb`));
+    await page.getByTestId(`variant-${id}`).click();
+    await expect(hero).toHaveAttribute("variant", id);
+    await arrived;
+    await expect(canvas).toHaveAttribute("data-painted", "mixed", { timeout: 60_000 });
+    // the car that has not flown is named as not flown
+    await expect(page.getByTestId(`variant-${id}`)).toContainText(/not flown/i);
+  }
+  expect(fetched).toEqual(["roadster-first-generation-car.glb", "roadster-second-generation-car.glb", "roadster-second-generation-2-car.glb"]);
+  await page.getByTestId("variant-test-flight").click();
+  await expect(hero).toHaveAttribute("variant", "test-flight");
+  await expect(canvas).toHaveAttribute("data-painted", "mixed", { timeout: 60_000 });
+  // back on the first car, what the other two took is given back
+  await expect.poll(async () => (await live(page)).Buffer).toBeLessThanOrEqual(first.Buffer);
+  await expect.poll(async () => (await live(page)).Texture).toBeLessThanOrEqual(first.Texture);
+  expect(problems).toEqual([]);
+});

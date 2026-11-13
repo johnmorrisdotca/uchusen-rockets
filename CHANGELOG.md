@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Any of the three Roadsters in Falcon Heavy's payload slot** (MODULES-1040): Falcon Heavy has two more variants, `test-flight-second-generation` and `test-flight-second-generation-2`: the test flight's vehicle with the second-generation car (metarex.4d's model, or Michael's with minchou19's wheels) and Starman in the fairing. Both are `status: "announced"` and say in their name, note and first-flight line that neither the car nor the vehicle has flown; they have no flight timeline, and `form="space"` shows the chosen car alone. `test-flight` is unchanged, with the first generation as it flew. The cars' sizes, credits and files are the Roadster's own, each fetched only when it is chosen.
+
 ## [0.23.0] - 2026-11-12
 
 - **New Horizons** (MODULES-1120): `rocket="new-horizons"`. The painted look is NASA's own model (NASA Visualization Technology Applications and Development), fetched only when that look is asked for, with its pictures left out (one carried a flag) and plain colours in their place, scaled so the high-gain antenna is 2.1 m: 5,999 triangles, 92 KB. The line look is this package's own plain shape from the published body and antenna, and stands 2.2 m. It can be seen from straight above or below, and its country is the United States. Pioneer 11's launch date (1973-04-06) is now recorded and shown on the Pioneer variant. The reducer can read a binary STL, for a model that comes as print parts.

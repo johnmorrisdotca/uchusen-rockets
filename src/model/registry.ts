@@ -226,6 +226,13 @@ for (const build of stacks)
     });
   }
 
+// Falcon Heavy's test flight with a second-generation Roadster: its side boosters are the same pieces and the same painted model as Falcon Heavy's own, one record each so a painted model stays true to the two versions at most
+for (const id of ["test-flight-second-generation", "test-flight-second-generation-2"])
+  for (const side of ["left", "right"]) {
+    const home = entries.find((entry) => entry.record.id === `falcon-heavy-falcon-heavy-side-${side}`);
+    if (home) entries.push({ record: { ...home.record, id: `falcon-heavy-${id}-side-${side}`, trueTo: [id] }, pieces: home.pieces });
+  }
+
 // the other modules for Ship 02's hardpoints: each stands in the same slot and place as the standard one, and is true for the variants that use it
 for (const alt of SHIP_02_ALTERNATES) {
   const home = entries.find((entry) => entry.record.id === `fleet-02-fleet-02-${alt.like}`);
