@@ -26,27 +26,34 @@ test("the build row is on a ship with an order, and a still keeps the place", as
   await expect(bar.getByTestId("build-now")).toContainText(day(0.6));
 });
 
-test("the row is on for each ship with an order, and off for a ship without one", async ({ page }) => {
-  const shown = [
-    "/uchusen-rockets/?rocket=fleet-ship-ariake&variant=ariake",
-    "/uchusen-rockets/?rocket=fleet-ship-01&variant=hanabusa",
-    "/uchusen-rockets/?rocket=fleet-kaminari&variant=fleet-kaminari",
-    "/uchusen-rockets/?rocket=fleet-emiake&variant=fleet-emiake",
-    "/uchusen-rockets/?rocket=fleet-romaryu&variant=fleet-romaryu",
-  ];
-  for (const url of shown) {
+const WITH_ORDER = [
+  "/uchusen-rockets/?rocket=fleet-ship-ariake&variant=ariake",
+  "/uchusen-rockets/?rocket=fleet-ship-01&variant=hanabusa",
+  "/uchusen-rockets/?rocket=fleet-kaminari&variant=fleet-kaminari",
+  "/uchusen-rockets/?rocket=fleet-emiake&variant=fleet-emiake",
+  "/uchusen-rockets/?rocket=fleet-romaryu&variant=fleet-romaryu",
+];
+const WITHOUT_ORDER = ["/uchusen-rockets/?rocket=fleet-kyotori&variant=kyotori", "/uchusen-rockets/?rocket=fleet-02&variant=fleet-02"];
+
+// One test a ship: each is a full page load, and seven of them in one test spent the whole test's time on a slow runner.
+for (const url of WITH_ORDER) {
+  test(`the row is on for ${new URL(url, "http://x").searchParams.get("rocket")}, a ship with an order`, async ({ page }) => {
     await page.goto(url);
     await foldPicker(page);
     await page.locator('[data-testid="panel-build"]').click();
     await expect(page.locator("#build-field")).toBeVisible();
     await expect(page.locator("uchusen-build").getByTestId("build-play")).toBeDisabled();
-  }
-  for (const url of ["/uchusen-rockets/?rocket=fleet-kyotori&variant=kyotori", "/uchusen-rockets/?rocket=fleet-02&variant=fleet-02"]) {
+  });
+}
+for (const url of WITHOUT_ORDER) {
+  test(`the row is off for ${new URL(url, "http://x").searchParams.get("rocket")}, a ship without an order`, async ({ page }) => {
     await page.goto(url);
     await foldPicker(page);
+    // the row is hidden in the page's own markup until the page has chosen the ship, so "hidden" proves nothing before then: wait for the ship's facts, which the same step writes
+    await expect(page.locator("#facts")).not.toBeEmpty();
     await expect(page.locator("#build-field")).toBeHidden();
-  }
-});
+  });
+}
 
 test.describe("the build plays", () => {
   test.use({ reducedMotion: "no-preference" });
