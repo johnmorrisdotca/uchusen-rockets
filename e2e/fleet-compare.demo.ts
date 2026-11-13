@@ -109,6 +109,17 @@ test.describe("the line-up opens moving", () => {
     await expect(page.getByTestId("cmp-turn")).toHaveAttribute("aria-pressed", "false");
   });
 
+  test("reduced motion keeps the ships still", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(URL);
+    await foldPicker(page);
+    const lineup = page.getByTestId("cmp-lineup");
+    await expect(lineup).toHaveAttribute("data-count", "3", { timeout: 30_000 });
+    const first = await lineup.screenshot();
+    await page.waitForTimeout(1500);
+    expect((await lineup.screenshot()).equals(first)).toBe(true);
+  });
+
   test("with turn=0 in the address the ships stand still", async ({ page }) => {
     await page.goto(`${URL}&turn=0`);
     await foldPicker(page);

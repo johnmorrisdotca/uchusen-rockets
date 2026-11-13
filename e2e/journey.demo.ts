@@ -683,6 +683,15 @@ test.describe("every view opens moving", () => {
     await expect.poll(async () => !(await route.screenshot()).equals(first), { timeout: 30_000 }).toBe(true);
   });
 
+  test("reduced motion keeps the trip still, with Play ready", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page, `${URL}&look=line`);
+    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    const first = await page.getByTestId("route").screenshot();
+    await page.waitForTimeout(1500);
+    expect((await page.getByTestId("route").screenshot()).equals(first)).toBe(true);
+  });
+
   test("a held address stays held: Pause is written to it, and the trip stays still on a reload", async ({ page }) => {
     await open(page, `${URL}&look=line`);
     await page.getByTestId("play").click();
