@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The swarm page opens moving** (MODULES-818): the drones run their legs in to the slots and back, 8 seconds a round. 30 frames a second at most, nothing drawn out of sight or on a hidden tab, still for reduced motion.
+
 - **The line-up opens turning** (MODULES-818): the ships turn about their upright axis, 12 degrees a second (a turn in half a minute), drawn 10 times a second. A Turn button is kept in the address (`turn=0` holds it). `<uchusen-lineup>` and `lineupSvg` take `turn`, degrees added to the view's angle.
 
 - **The compare page opens turning** (MODULES-818): the craft turns on load with the view bar's `autoplay` (5 degrees a second, for a minute, idle out of sight, as on the first page); reduced motion gets a still view.

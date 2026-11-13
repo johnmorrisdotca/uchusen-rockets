@@ -1,6 +1,7 @@
 // One moment of the Miyamoto build: a box for each drone, on a lane outside the hull, with the last leg running in to the slot.
 import { buildOf, playFrame } from "../src/buildPlay.ts";
 import { approachPath, pathClears, swarmCount, swarmJobs, type HullBox } from "../src/swarm.ts";
+import { everyFrame } from "./loop.ts";
 import { bindStage, placeZoom } from "./viewBinder.ts";
 import { WORDS } from "./words.js";
 
@@ -78,3 +79,34 @@ const caption = document.getElementById("swarm-now");
 if (caption && frame) caption.textContent = say("swarmNow", { day: Math.round(frame.day), drones: count, slots });
 const stage = document.getElementById("swarm-stage");
 if (stage && host) bindStage(stage, (detail) => placeZoom(host, detail), { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8", testid: "view-bar" });
+
+// The page opens moving: each drone runs its approach, out of its box, along the lane and in to its slot, then goes back to the box. Two or three seconds a leg is slow enough to follow. Still for reduced motion.
+if (host) {
+  const drones = [...host.querySelectorAll<SVGRectElement>("[data-drone]")];
+  const legs = [...host.querySelectorAll<SVGPolylineElement>("[data-leg]")].map((leg) => (leg.getAttribute("points") ?? "").split(" ").map((pair) => pair.split(",").map(Number) as [number, number]));
+  const CYCLE = 8000;
+  const along = (leg: [number, number][], u: number): [number, number] => {
+    const lengths = leg.slice(1).map((point, i) => Math.hypot(point[0] - leg[i][0], point[1] - leg[i][1]));
+    let rest = u * lengths.reduce((a, b) => a + b, 0);
+    for (const [i, length] of lengths.entries()) {
+      if (rest <= length || i === lengths.length - 1) {
+        const k = length === 0 ? 0 : Math.min(1, rest / length);
+        return [leg[i][0] + (leg[i + 1][0] - leg[i][0]) * k, leg[i][1] + (leg[i + 1][1] - leg[i][1]) * k];
+      }
+      rest -= length;
+    }
+    return leg[0];
+  };
+  everyFrame(host, (ms) => {
+    drones.forEach((drone, index) => {
+      const leg = legs[index];
+      if (!leg || leg.length < 2) return;
+      const phase = ((ms / CYCLE) + index / Math.max(1, drones.length)) % 1;
+      // out and back: 0 to 1 is the run in, 1 to 0 the run home
+      const u = phase < 0.5 ? phase * 2 : 2 - phase * 2;
+      const [x, y] = along(leg, u);
+      drone.setAttribute("x", String(Math.round((x - 4) * 100) / 100));
+      drone.setAttribute("y", String(Math.round((y - 4) * 100) / 100));
+    });
+  });
+}
