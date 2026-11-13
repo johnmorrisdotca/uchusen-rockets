@@ -39,10 +39,10 @@ test("the ones with none: several countries or an international body, a source w
   assert.equal(countryOf("nothing").value, null);
 });
 
-test("every maker has a code with a source, but the SPX fleet and the sites, which have none", () => {
+test("every maker has a code with a source, but the SPX fleet, the sites and Europe, which have none", () => {
   for (const maker of Object.keys(MAKERS) as MakerId[]) {
     const { value, source } = MAKER_COUNTRIES[maker];
-    if (maker === "fleet" || maker === "sites") assert.equal(value, null, maker);
+    if (maker === "fleet" || maker === "sites" || maker === "europe") assert.equal(value, null, maker);
     else assert.ok(value && (COUNTRY_CODES as readonly string[]).includes(value) && source && source in SOURCES, maker);
   }
   assert.deepEqual(Object.keys(MAKER_COUNTRIES).sort(), Object.keys(MAKERS).sort());

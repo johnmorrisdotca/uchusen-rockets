@@ -85,7 +85,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
 };
 
 /**
- * Each maker group's country as an ISO 3166-1 alpha-2 code with its source. The SPX fleet is this package's own design, and the sites are a group of places, not one maker: both are blank.
+ * Each maker group's country as an ISO 3166-1 alpha-2 code with its source. The SPX fleet is this package's own design, the sites are a group of places, and Europe is an international group, not one country: all three are blank.
  *
  * @example
  * ```ts
@@ -100,7 +100,7 @@ export const MAKER_COUNTRIES: Readonly<Record<MakerId, Figure<CountryCode>>> = {
   "blue-origin": us("wikipedia-blue-origin"),
   "rocket-lab": us("wikipedia-rocket-lab", "Headquartered in Long Beach, California; founded in Auckland, New Zealand."),
   ula: us("wikipedia-vulcan", "The Vulcan Centaur infobox names United Launch Alliance as its manufacturer and the United States as its country of origin."),
-  europe: { value: "FR", source: "wikipedia-ariane-6", note: "The article's footnote says the lead manufacturer is in France. The rocket itself is European multi-national and has no one country, so the rockets stay blank." },
+  europe: blank("An international group of countries, not one maker: the rocket's own country is blank for the same reason.", "international"),
   russia: { value: "RU", source: "wikipedia-soyuz-2" },
   "us-army": us("wikipedia-jupiter-c"),
   china: { value: "CN", source: "wikipedia-tiangong" },

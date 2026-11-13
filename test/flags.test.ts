@@ -9,6 +9,7 @@ const ALL = [...Object.values(ROCKETS), ...PLANNED_ROCKETS];
 
 test("hata has a flag for every code given, and the demo's few flags cover them all", async () => {
   const codes = [...new Set([...ALL.map((rocket) => rocket.country.value), ...Object.values(MAKER_COUNTRIES).map((one) => one.value)].filter((code) => code !== null))];
+  // Europe is an international group and carries no flag, so France does not appear
   assert.deepEqual(codes.sort(), ["CN", "JP", "RU", "US"]);
   for (const code of codes) {
     assert.match((await flag(code, { shape: "4:3" })) ?? "", /^<svg/, code);
