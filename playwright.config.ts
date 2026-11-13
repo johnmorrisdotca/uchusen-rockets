@@ -33,5 +33,7 @@ export default defineConfig({
     { name: "chromium-phone", use: { ...devices["Desktop Chrome"], ...phone, ...gl } },
     // WebKit on a desktop viewport with touch: `isMobile` is Chromium's to honour.
     { name: "webkit-phone", use: { ...devices["Desktop Safari"], viewport: phone.viewport, hasTouch: true }, testIgnore: webkitPages },
+    // WebKit has no software switch. A desk viewport, the same 1280 by 900 as chromium-desk, with no touch.
+    { name: "webkit-desk", use: { ...devices["Desktop Safari"], viewport: { width: 1280, height: 900 } }, testIgnore: webkitPages },
   ],
 });
