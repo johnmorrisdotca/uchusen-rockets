@@ -9,27 +9,28 @@ const SHIPS = ["fleet-ship-01", "fleet-kyotori", "fleet-ship-03", "fleet-ship-ar
 const LISTED = ["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"] as const;
 const names = LISTED.map((id) => ROCKETS[id].name);
 
-const pressed = (page: Page, group: string) => page.locator(`#${group} button[aria-pressed="true"]`).allTextContents();
 const listed = (page: Page) => page.locator('#rockets button:visible').allTextContents();
 
-test("the Maker row and the Made by line read SPX for every fleet ship opened by address", async ({ page }) => {
-  for (const id of SHIPS) {
-    // A page's own `load` also waits for the pictures and files it asks for, and one load on a hosted runner took the whole 240 s of the test. What is read here is drawn by the page's script, so the test waits for that.
-    await page.goto(`${URL}?rocket=${id}`, { waitUntil: "domcontentloaded" });
-    await expect.poll(() => pressed(page, "makers"), { message: id, timeout: 60_000 }).toEqual(["SPX"]);
-    await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i, { timeout: 60_000 });
+/** The Maker row's pressed button, waited for: the row is built after the page's load event, so a read straight after `goto` or a click can come before it holds this ship. */
+const makerIsSpx = (page: Page) => expect(page.locator('#makers button[aria-pressed="true"]')).toHaveText(["SPX"], { timeout: 30_000 });
+
+for (const id of SHIPS) {
+  test(`the Maker row and the Made by line read SPX for ${id} opened by address`, async ({ page }) => {
+    await page.goto(`${URL}?rocket=${id}`);
+    await makerIsSpx(page);
+    await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i);
     await expect(page.locator("#facts")).not.toContainText("SpaceX");
-  }
-});
+  });
+}
 
 test("the Maker row and the Made by line read SPX for every fleet ship chosen from the list", async ({ page }) => {
   await page.goto(URL);
   for (const id of SHIPS) {
     await page.locator('[data-testid="maker-fleet"]').click();
     await page.locator(`[data-testid="rocket-${id}"]`).click();
-    expect(await pressed(page, "makers"), id).toEqual(["SPX"]);
-    await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i);
-    await expect(page.locator("#facts")).not.toContainText("SpaceX");
+    await makerIsSpx(page);
+    await expect(page.locator("#facts"), id).toContainText(/Made by\s*SPX/i);
+    await expect(page.locator("#facts"), id).not.toContainText("SpaceX");
   }
 });
 
