@@ -166,6 +166,8 @@ export const SOURCES = {
   "nasa-europa-clipper": { title: "Europa Clipper", publisher: "NASA", url: "https://science.nasa.gov/mission/europa-clipper/", date: "2026-11-12", read: "direct" },
   "spacex-gen2-dimensions": { title: "Exhibit B, satellite dimensions and debris-assessment outputs, letter of 4 October 2022 on IBFS File Nos. SAT-LOA-20200526-00055 and SAT-AMD-20210818-00105", publisher: "Space Exploration Holdings, LLC", url: "https://planet4589.org/astro/starsim/papers/StarGen2.pdf", date: "2022-10-04", read: "direct" },
   "wikipedia-starlink": { title: "Starlink", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Starlink", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
+  "nasa-lageos": { title: "LAGEOS", publisher: "NASA", url: "https://science.nasa.gov/mission/lageos/", date: "2026-11-13", read: "direct" },
+  "wikipedia-lageos": { title: "LAGEOS", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/LAGEOS", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 
 /**
