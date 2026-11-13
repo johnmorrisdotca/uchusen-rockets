@@ -155,7 +155,11 @@ test("leaving the Moon for the Earth is rated for Saturn V and can be played; Fa
 test("Play counts down, flies, flips, brakes and ends on a summary; the numbers move and the clocks run", async ({ page }) => {
   const found = problems(page);
   await open(page, `${URL}&craft=saturn-v&to=moon&speed=4`);
+  await expect(page.getByTestId("play")).not.toHaveAttribute("aria-pressed");
   await page.getByTestId("play").click();
+  // the name (Pause, Play) says what a press does, so the chip does not also say pressed: that would be read twice
+  await expect(page.getByTestId("play")).toHaveAttribute("data-on", "");
+  await expect(page.getByTestId("play")).not.toHaveAttribute("aria-pressed");
   await expect(page.getByTestId("phase")).toHaveText("MAIN ENGINE PREHEATING");
   await expect(page.getByTestId("preheat")).toBeVisible();
   await expect(page.getByTestId("ignition")).toBeVisible({ timeout: 8000 });

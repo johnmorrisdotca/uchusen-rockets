@@ -1206,7 +1206,8 @@ function frame(ts: number): void {
 function syncPlay(): void {
   const button = byId("play");
   const word = playing ? say("jPause") : playhead >= total ? say("jAgain") : say("jPlay");
-  button.setAttribute("aria-pressed", String(playing));
+  // the name says what a press does (Pause, Play, Fly it again), so it is not also a toggle: aria-pressed on top would be read twice. `data-on` is only the look of playing
+  button.toggleAttribute("data-on", playing);
   setText(byId("play-label"), word);
   byId("play-icon").setAttribute("d", playing ? PAUSE_ICON : PLAY_ICON);
   button.toggleAttribute("disabled", !trip.verdict.playable);
