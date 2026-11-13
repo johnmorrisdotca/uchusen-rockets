@@ -9,6 +9,7 @@ import { SHUTTLE_VARIANTS } from "./data/shuttle.ts";
 import { SLS_VARIANTS } from "./data/sls.ts";
 import { NEW_GLENN_VARIANTS } from "./data/newglenn.ts";
 import { ELECTRON_VARIANTS } from "./data/electron.ts";
+import { VULCAN_VARIANTS } from "./data/vulcan.ts";
 import { SOYUZ_VARIANTS } from "./data/soyuz.ts";
 import { DRONESHIP_VARIANTS, LANDING_ZONE_VARIANTS } from "./data/landing.ts";
 import { TOWER_VARIANTS } from "./data/tower.ts";
@@ -148,6 +149,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "sls": { id: "sls", name: "Space Launch System", status: "built", ...MADE_BY["sls"], variants: SLS_VARIANTS, defaultVariant: "block-1" },
   "new-glenn": { id: "new-glenn", name: "New Glenn", status: "built", ...MADE_BY["new-glenn"], variants: NEW_GLENN_VARIANTS, defaultVariant: "7x2" },
   "electron": { id: "electron", name: "Electron", status: "built", ...MADE_BY["electron"], variants: ELECTRON_VARIANTS, defaultVariant: "electron" },
+  "vulcan-centaur": { id: "vulcan-centaur", name: "Vulcan Centaur", status: "built", ...MADE_BY["vulcan-centaur"], variants: VULCAN_VARIANTS, defaultVariant: "vc2s" },
   "soyuz": { id: "soyuz", name: "Soyuz", status: "built", ...MADE_BY["soyuz"], variants: SOYUZ_VARIANTS, defaultVariant: "soyuz-2" },
   "lunar-module": { id: "lunar-module", name: "Apollo lunar module", status: "built", ...MADE_BY["lunar-module"], variants: LUNAR_MODULE_VARIANTS, defaultVariant: "lunar-module" },
   "apollo-soyuz": { id: "apollo-soyuz", name: "Apollo and Soyuz", status: "built", ...MADE_BY["apollo-soyuz"], variants: APOLLO_SOYUZ_VARIANTS, defaultVariant: "apollo-soyuz" },
@@ -198,7 +200,6 @@ const fig = (value: number, source: SourceId): Figure => ({ value, source });
  * ```
  */
 export const PLANNED_ROCKETS: readonly PlannedRocket[] = ([
-  { id: "vulcan-centaur", name: "Vulcan Centaur", status: "planned", height: fig(61.6, "wikipedia-vulcan"), diameter: fig(5.4, "wikipedia-vulcan"), firstFlight: { value: "2024-01-08", source: "wikipedia-vulcan" }, source: "wikipedia-vulcan" },
   { id: "ariane-6", name: "Ariane 6", status: "planned", height: fig(63, "wikipedia-ariane-6"), diameter: fig(5.4, "wikipedia-ariane-6"), firstFlight: { value: "2024-07-09", source: "wikipedia-ariane-6" }, source: "wikipedia-ariane-6" },
 ] satisfies Omit<PlannedRocket, "country">[]).map((rocket) => ({ ...rocket, country: countryOf(rocket.id) }));
 

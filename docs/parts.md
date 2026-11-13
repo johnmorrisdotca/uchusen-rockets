@@ -66,6 +66,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Discovery | This package's own orbiter | The Smithsonian's scan, under CC0, with its marks painted out, 73,707 triangles and 2.6 MB |
 | Space Shuttle | This package's code, from sourced sizes; the orbiter's outline and the gaps judged from photographs | NASA's models, with their marks painted out: orbiter 30,000 triangles and 842 KB, tank 6,326 and 153 KB, booster 4,136 and 123 KB |
 | Space Launch System | This package's code, from sourced sizes; the upper stage's and the abort tower's lengths are what the whole leaves | This package's code. No model is used, and no name, flag or mark is drawn |
+| Vulcan Centaur | This package's code, from sourced sizes; the adapter is what the whole leaves, and the engines, the boosters' place and the paint are judged from photographs | This package's code. No model is used, and no name or mark is drawn |
 | New Glenn | This package's code, from sourced sizes; the fairing is what the whole leaves, and the legs, strakes and paint are judged from photographs | This package's code. No model is used, and no name or mark is drawn |
 | Electron | This package's code, from sourced sizes; the metre the sources leave over is drawn as an interstage | This package's code. No model is used, and no name or mark is drawn |
 | Soyuz-2 | This package's code, from sourced sizes; the waist, the boosters' lean, the fairing and the paint judged from photographs | This package's code. No model is used, and no name or mark is drawn |

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Vulcan Centaur, built** (MODULES-167, the first of its list): `rocket="vulcan-centaur"`, variant `vc2s` (default), the form that flew first, on 2024-01-08, with two solid boosters and the standard fairing. Drawn by this package's code from the infobox's figures: 61.6 m whole, the first stage 33.3 m, the Centaur V 10.66 m (the low-orbit form; the high-energy form is 12.6 m), two GEM 63XL boosters 21.98 m by 1.62 m, the fairing 15.5 m, 5.4 m across. The adapter has no length in the source and is what the whole leaves (2.14 m, a blank figure). The boosters' place, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. It leaves `PLANNED_ROCKETS`, which now lists Ariane 6 alone; a new maker group `ula` (United Launch Alliance, with its country) holds it. Slots: `first-stage`, `srb-left`, `srb-right`, `second-stage`, `adapter`, `fairing`.
+
 - **Any of the three Roadsters in Falcon Heavy's payload slot** (MODULES-1040): Falcon Heavy has two more variants, `test-flight-second-generation` and `test-flight-second-generation-2`: the test flight's vehicle with the second-generation car (metarex.4d's model, or Michael's with minchou19's wheels) and Starman in the fairing. Both are `status: "announced"` and say in their name, note and first-flight line that neither the car nor the vehicle has flown; they have no flight timeline, and `form="space"` shows the chosen car alone. `test-flight` is unchanged, with the first generation as it flew. The cars' sizes, credits and files are the Roadster's own, each fetched only when it is chosen.
 
 ## [0.23.0] - 2026-11-12

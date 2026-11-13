@@ -108,6 +108,14 @@ No source read here says where the parts stand against each other, so the gaps a
 
 No source read here gives the upper stage or the abort tower a length, so they share what the whole leaves.
 
+## Vulcan Centaur
+
+| Variant | Whole | First stage | Centaur V | Booster | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `vc2s` | 61.6 m | 33.3 m | 10.66 m | 21.98 m, two, 1.62 m across | 15.5 m | 5.4 m | 2024-01-08 |
+
+The VC2S is the form that flew first: two solid boosters and the standard fairing. The article gives the Centaur V as 10.66 m in its low-orbit form and 12.6 m in its high-energy form, and the 10.66 m is drawn. It gives no length for the adapter between the Centaur and the fairing, so that is what the whole leaves (2.14 m). The boosters stand against the core, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. The no-booster, four-booster and six-booster forms and the long fairing (67.3 m) are not listed.
+
 ## New Glenn
 
 | Variant | Whole | First stage | Second stage | Across | First flew |
@@ -257,4 +265,4 @@ flight5.variant; // "v1"
 
 ## Still to come
 
-`PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Vulcan Centaur and Ariane 6.
+`PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Ariane 6.

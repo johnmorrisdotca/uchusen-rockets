@@ -622,7 +622,8 @@ test("the sources and the credits are on the page, and the page says no one endo
   for (const name of ["Clarence365", "clarence365", "MartianDays", "Stanley Creative", "KUBAHA", "ProgressTH", "Antonio_Adams", "Echo_3"]) await expect(credits).toContainText(name);
   await expect(page.locator("#legal")).toContainText("not affiliated with or endorsed by SpaceX");
   await press(page, "more-planned");
-  await expect(page.locator('[data-testid="planned"]')).toContainText("Vulcan");
+  await expect(page.locator('[data-testid="planned"]')).toContainText("Ariane");
+  await expect(page.locator('[data-testid="planned"]')).not.toContainText("Vulcan");
   await expect(page.locator('[data-testid="planned"]')).not.toContainText("Falcon 9");
 });
 
@@ -702,7 +703,7 @@ test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited 
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toContainText("Smithsonian Institution");
   await expect(credit).toContainText("CC0 1.0");
-  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
+  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
     await press(page, `maker-${ROCKETS[id].maker}`);
     await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
   }
