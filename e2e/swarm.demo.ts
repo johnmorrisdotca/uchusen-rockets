@@ -233,9 +233,8 @@ test.describe("the swarm page opens moving", () => {
     await expect(pause).toHaveAttribute("aria-pressed", "false");
     await expect(pause).toHaveText("Play");
     await expect(page).toHaveURL(/play=0/);
+    await expectStillPicture(page, async () => Buffer.from(await map.innerHTML()), "held, the page draws nothing");
     const held = await map.innerHTML();
-    await page.waitForTimeout(1500);
-    expect(await map.innerHTML()).toBe(held);
     await pause.click();
     await expect(pause).toHaveAttribute("aria-pressed", "true");
     await expect(page).not.toHaveURL(/play=0/);
@@ -248,9 +247,8 @@ test.describe("the swarm page opens moving", () => {
     const pause = page.getByTestId("swarm-pause");
     await expect(map.locator("[data-drone]").first()).toBeVisible();
     await expect(pause).toHaveAttribute("aria-pressed", "false");
+    await expectStillPicture(page, async () => Buffer.from(await map.innerHTML()), "held, the page draws nothing");
     const held = await map.innerHTML();
-    await page.waitForTimeout(1500);
-    expect(await map.innerHTML()).toBe(held);
     await pause.click();
     await expect.poll(async () => (await map.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
   });

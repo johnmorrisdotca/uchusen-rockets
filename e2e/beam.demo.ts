@@ -52,9 +52,8 @@ test.describe("the beam page opens moving", () => {
     await expect(pause).toHaveAttribute("aria-pressed", "false");
     await expect(pause).toHaveText("Play");
     await expect(page).toHaveURL(/play=0/);
+    await expectStillPicture(page, async () => Buffer.from(await carry.innerHTML()), "held, the page draws nothing");
     const held = await carry.innerHTML();
-    await page.waitForTimeout(1500);
-    expect(await carry.innerHTML()).toBe(held);
     await pause.click();
     await expect(pause).toHaveAttribute("aria-pressed", "true");
     await expect(page).not.toHaveURL(/play=0/);
@@ -70,9 +69,8 @@ test.describe("the beam page opens moving", () => {
     // on a phone the carrying beam can start below the fold, and a page draws nothing out of sight
     await carry.scrollIntoViewIfNeeded();
     await expect(pause).toHaveAttribute("aria-pressed", "false");
+    await expectStillPicture(page, async () => Buffer.from(await carry.innerHTML()), "held, the page draws nothing");
     const held = await carry.innerHTML();
-    await page.waitForTimeout(1500);
-    expect(await carry.innerHTML()).toBe(held);
     await pause.click();
     await carry.scrollIntoViewIfNeeded();
     await expect.poll(async () => (await carry.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
