@@ -24,7 +24,7 @@ test("the craft run from short to tall, and a row stays within the sheet", () =>
 
 test("a rocket with no shape is named to add later, and Hanabusa is named only until the package has the ship", () => {
   const later = laterNames();
-  assert.ok(later.includes("Vulcan Centaur"));
+  assert.ok(!later.includes("Vulcan Centaur"), "Vulcan Centaur has its shape now");
   assert.ok(later.includes("Ariane 6"));
   const hasShip = fleetKeys().some((key) => key.startsWith("fleet-ship-01:"));
   assert.equal(later.includes("Hanabusa, SPX-013"), !hasShip);
@@ -41,7 +41,7 @@ test("the poster is one coloured sheet, with one scale line and the fleet band",
   assert.match(poster.svg, /SPX fleet, at 1\/\d+ the scale above/);
   assert.match(poster.svg, /#dad8d0/);
   assert.match(poster.svg, /#d17a3c/);
-  assert.match(poster.svg, /To add later: .*Vulcan Centaur/);
+  assert.match(poster.svg, /To add later: .*Ariane 6/);
   assert.ok(poster.height > poster.width);
   assert.deepEqual(poster.later, laterNames());
   const fitted = fitSheet(poster.width, poster.height, SHEETS.a1);

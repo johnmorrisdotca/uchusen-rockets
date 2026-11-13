@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, statSync } from "node:fs";
 import { test } from "node:test";
-import { check, parseSun, ROCKETS, spaceSlots, variantOf } from "../src/index.ts";
+import { check, flightOf, parseSun, ROCKETS, spaceSlots, variantOf } from "../src/index.ts";
 import { build } from "../src/build/index.ts";
 
 test("three cars in one kind: the first flew, the two of the second generation did not and say so", () => {
@@ -65,6 +65,42 @@ test("Falcon Heavy's test flight carries the first car and Starman in its fairin
   assert.ok((car?.strapOn?.y ?? 0) > 56.9 && (car?.strapOn?.y ?? 0) < 70 - 4);
   assert.deepEqual(spaceSlots("falcon-heavy", variantOf("falcon-heavy", "test-flight")?.slots ?? []), ["car", "starman"]);
   assert.equal(spaceSlots("falcon-heavy", variantOf("falcon-heavy", "falcon-heavy")?.slots ?? []), null);
+});
+
+test("any of the three cars can ride in Falcon Heavy's payload slot; the two that have not flown say so", () => {
+  const rides = ["test-flight", "test-flight-second-generation", "test-flight-second-generation-2"];
+  assert.deepEqual(ROCKETS["falcon-heavy"].variants.map((variant) => variant.id), ["falcon-heavy", ...rides]);
+  const files: Record<string, string> = { "test-flight": "first-generation", "test-flight-second-generation": "second-generation", "test-flight-second-generation-2": "second-generation-2" };
+  for (const id of rides) {
+    const report = check({ rocket: "falcon-heavy", variant: id });
+    assert.ok(report.ok && !report.custom, id);
+    const car = report.parts.find(({ slot }) => slot === "car")?.part;
+    assert.equal(car?.painted?.file, `roadster-${files[id]}-car.glb`, id);
+    assert.ok((car?.strapOn?.y ?? 0) > 56.9 && (car?.strapOn?.y ?? 0) < 70 - 4, id);
+    assert.deepEqual(spaceSlots("falcon-heavy", variantOf("falcon-heavy", id)?.slots ?? []), ["car", "starman"], id);
+    const variant = variantOf("falcon-heavy", id);
+    assert.equal(variant?.status, id === "test-flight" ? "flown" : "announced", id);
+    if (id !== "test-flight") {
+      assert.match(variant?.note ?? "", /has flown|have flown|Neither this car nor this vehicle has flown/);
+      assert.match(variant?.name ?? "", /not flown/);
+      assert.match(variant?.firstFlight.brief ?? "", /not flown/);
+    }
+  }
+  const credits = check({ rocket: "falcon-heavy", variant: "test-flight-second-generation-2" }).credits.map((credit) => credit.id).sort();
+  assert.deepEqual(credits, ["antonio-falcon-heavy", "gmmichaelonearth-roadster", "minchou19-wheels"]);
+  // a flight that did not happen has no timeline to play
+  for (const id of ["test-flight-second-generation", "test-flight-second-generation-2"]) assert.equal(flightOf("falcon-heavy", id), null, id);
+});
+
+test("each car in Falcon Heavy stands inside the fairing, clear of its walls, with Starman in it", () => {
+  for (const id of ["test-flight", "test-flight-second-generation", "test-flight-second-generation-2"]) {
+    const built = build({ rocket: "falcon-heavy", variant: id });
+    const car = built.parts.find((part) => part.slot === "car")?.bounds;
+    const man = built.parts.find((part) => part.slot === "starman")?.bounds;
+    assert.ok(car && man, id);
+    assert.ok(Math.max(Math.abs(car.min[0]), car.max[0], Math.abs(car.min[2]), car.max[2]) < 2.6, `${id}: inside the 5.2 m fairing`);
+    for (const c of [0, 2]) assert.ok(man.min[c] >= car.min[c] && man.max[c] <= car.max[c], `${id} axis ${c}`);
+  }
 });
 
 test("the Sun is three numbers, made one long; anything else is no Sun", () => {

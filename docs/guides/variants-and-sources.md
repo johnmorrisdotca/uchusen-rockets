@@ -65,7 +65,7 @@ A variant's `status` is `flown`, `announced`, `artist-model`, `test-vehicle` or 
 
 ## One kind, three cars: the Roadster
 
-`roadster` shows that a model is labelled as what it shows. Its three variants are chosen in one row. `first-generation` is the car that flew, with Starman at the wheel, `status: "flown"`. The two `second-generation` models are `status: "announced"`: shown as a prototype in 2017 and never flown, and their notes say so. Each is scaled to a sourced figure, the first to its length and the others to their wheelbase, and a size no source gives stays blank.
+`roadster` shows that a model is labelled as what it shows. Its three variants are chosen in one row. `first-generation` is the car that flew, with Starman at the wheel, `status: "flown"`. The two `second-generation` models are `status: "announced"`: shown as a prototype in 2017 and never flown, and their notes say so. Each is scaled to a sourced figure, the first to its length and the others to their wheelbase, and a size no source gives stays blank. Falcon Heavy takes any of the three in its payload slot: `test-flight` carries the first, as it flew, and `test-flight-second-generation` and `test-flight-second-generation-2` carry the others, `status: "announced"` and named as not flown, with no flight to play.
 
 ```ts
 import { ROCKETS } from "@johnmorrisdotca/uchusen-rockets";

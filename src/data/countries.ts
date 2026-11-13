@@ -93,6 +93,7 @@ export const MAKER_COUNTRIES: Readonly<Record<MakerId, Figure<CountryCode>>> = {
   nasa: us("wikipedia-nasa"),
   "blue-origin": us("wikipedia-blue-origin"),
   "rocket-lab": us("wikipedia-rocket-lab", "Headquartered in Long Beach, California; founded in Auckland, New Zealand."),
+  ula: us("wikipedia-vulcan", "The Vulcan Centaur infobox names United Launch Alliance as its manufacturer and the United States as its country of origin."),
   russia: { value: "RU", source: "wikipedia-soyuz-2" },
   "us-army": us("wikipedia-jupiter-c"),
   china: { value: "CN", source: "wikipedia-tiangong" },

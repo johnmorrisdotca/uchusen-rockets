@@ -108,6 +108,14 @@ No source read here says where the parts stand against each other, so the gaps a
 
 No source read here gives the upper stage or the abort tower a length, so they share what the whole leaves.
 
+## Vulcan Centaur
+
+| Variant | Whole | First stage | Centaur V | Booster | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `vc2s` | 61.6 m | 33.3 m | 10.66 m | 21.98 m, two, 1.62 m across | 15.5 m | 5.4 m | 2024-01-08 |
+
+The VC2S is the form that flew first: two solid boosters and the standard fairing. The article gives the Centaur V as 10.66 m in its low-orbit form and 12.6 m in its high-energy form, and the 10.66 m is drawn. It gives no length for the adapter between the Centaur and the fairing, so that is what the whole leaves (2.14 m). The boosters stand against the core, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. The no-booster, four-booster and six-booster forms and the long fairing (67.3 m) are not listed.
+
 ## New Glenn
 
 | Variant | Whole | First stage | Second stage | Across | First flew |
@@ -209,6 +217,8 @@ It is 27 parts in slots, each cut from NASA's model by where it stands and paint
 `second-generation` and `second-generation-2`: two models of the second generation, by two authors, the second with a third author's wheels. It was shown as a prototype on 2017-11-16 and has not been produced or flown. Its article gives only its wheelbase, 2,825 mm, and its width as about 2,000 mm: each model is scaled to the wheelbase, and its length and height are the model's. They are painted the first generation's red under the same materials, so the three compare under one light, and Starman sits in them for comparison only. metarex.4d's model has no picture: its lamps, glass and wheels are modelled, each in one of the shared materials. Michael's body is one baked picture, its white made the shared red, on minchou19's modelled wheels.
 
 Falcon Heavy's `test-flight` is the same vehicle as `falcon-heavy` with the first-generation car and Starman in its `car` and `starman` slots, standing level inside the fairing. The car was mounted inclined above its payload adapter; the adapter is not drawn. Together the fairing hides them, as it did; apart they stand beside the cores, and `form="space"` shows the two alone. In space the car stayed on the upper stage, which the painted model has as one shell with the centre core, so it is not drawn there.
+
+The payload slot takes any of the three Roadsters. `test-flight-second-generation` and `test-flight-second-generation-2` are the same vehicle with a second-generation car and Starman in it, `status: "announced"`, named and noted as not flown: the second generation was shown as a prototype and has not been produced, so these are comparisons and not flights, and they have no flight timeline. The cars keep their own sourced sizes and credits, and `form="space"` shows the chosen car alone. The car's orbit round the Sun (0.98613 to 1.6637 astronomical units, once in 1.525 years) belongs to the first generation alone, because only it flew.
 ## Voyager
 
 `voyager`: one model for Voyager 1 and Voyager 2, launched in 1977. The high-gain antenna is 3.7 m across, the bus about 1.8 m across, the spacecraft about 3.8 m from the reflector to the feet, and the magnetometer boom 13 m, all from NASA's questions page. Painted, it is NASA's model scaled so the antenna is 3.7 m; at that scale the file stands 7.74 m, because the booms rise past the dish. The record's marked face is left out. Its line look is this package's own plain shape. The 10 m antennas are not drawn: the page gives their length and not which way they point.
@@ -255,4 +265,4 @@ flight5.variant; // "v1"
 
 ## Still to come
 
-`PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Vulcan Centaur and Ariane 6.
+`PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Ariane 6.

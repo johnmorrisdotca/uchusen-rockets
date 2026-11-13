@@ -1,7 +1,7 @@
 // The rockets drawn wholly by this package's code: each is drawn to its sourced height, its engines are the sourced count, and each part has the record every part has.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { check, figureWords, FLIGHT_LOG, flightLogOf, MODEL_CREDITS, partEntry, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
+import { check, figureWords, FLIGHT_LOG, flightLogOf, MODEL_CREDITS, partEntry, PLANNED_ROCKETS, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
 import type { Piece } from "../src/model/pieces.ts";
 import { build, buildPart } from "../src/build/index.ts";
 
@@ -73,6 +73,7 @@ const WHOLE_HEIGHTS: readonly (readonly [string, string, number])[] = [
   ["sls", "block-1", 98.15],
   ["new-glenn", "7x2", 98],
   ["electron", "electron", 18],
+  ["vulcan-centaur", "vc2s", 61.6],
   ["soyuz", "soyuz-2", 46.3],
 ];
 
@@ -85,6 +86,7 @@ test("each rocket's parts add up to its sourced whole, and its engines are the s
   assert.equal(partEntry("sls-block-1-first-stage")?.record.height, 64.6);
   assert.equal(partEntry("sls-block-1-srb-left")?.record.height, 53.95);
   assert.equal(bells("new-glenn-7x2-first-stage"), 7);
+  assert.equal(bells("vulcan-centaur-vc2s-first-stage"), 2);
   assert.equal(bells("electron-electron-first-stage"), 9);
   assert.equal(bells("electron-electron-second-stage"), 1);
   assert.equal(bells("soyuz-soyuz-2-first-stage"), 4);
@@ -194,4 +196,25 @@ test("no code-made rocket is labelled as a custom build, and each comes apart an
       const built = build({ rocket: rocket.id, variant: variant.id });
       for (const show of built.shows) assert.ok(built.boundsOf(show).max[1] > 0, `${variant.id} ${show}`);
     }
+});
+
+test("Vulcan Centaur VC2S: the infobox's stages and boosters, the adapter what the whole leaves, no longer only planned", () => {
+  const vulcan = variantOf("vulcan-centaur", "vc2s");
+  assert.equal(vulcan?.status, "flown");
+  assert.equal(vulcan?.firstFlight.value, "2024-01-08");
+  assert.deepEqual(vulcan?.slots, ["first-stage", "srb-left", "srb-right", "second-stage", "adapter", "fairing"]);
+  const heights = (id: string) => partEntry(`vulcan-centaur-vc2s-${id}`)?.record.height;
+  assert.equal(heights("first-stage"), 33.3);
+  assert.equal(heights("second-stage"), 10.66);
+  assert.equal(heights("fairing"), 15.5);
+  assert.equal(heights("srb-left"), 21.98);
+  assert.equal(partEntry("vulcan-centaur-vc2s-srb-left")?.record.diameter, 1.62);
+  assert.ok(Math.abs((heights("adapter") ?? 0) - (61.6 - 33.3 - 10.66 - 15.5)) < 1e-9);
+  assert.equal(vulcan?.facts.parts.adapter.value, null, "no source gives the adapter's length");
+  const report = check({ rocket: "vulcan-centaur", variant: "vc2s" });
+  assert.ok(report.ok && !report.custom);
+  assert.deepEqual(report.credits, [], "drawn wholly by this package's code");
+  assert.ok(!PLANNED_ROCKETS.some((rocket) => rocket.id === "vulcan-centaur"));
+  assert.equal(ROCKETS["vulcan-centaur"].maker, "ula");
+  assert.equal(ROCKETS["vulcan-centaur"].country.value, "US");
 });

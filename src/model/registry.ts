@@ -19,6 +19,8 @@ import { NEW_GLENN_VARIANTS } from "../data/newglenn.ts";
 import { NEW_GLENN_BUILDS } from "./newglenn.ts";
 import { ELECTRON_VARIANTS } from "../data/electron.ts";
 import { ELECTRON_BUILDS } from "./electron.ts";
+import { VULCAN_VARIANTS } from "../data/vulcan.ts";
+import { VULCAN_BUILDS } from "./vulcan.ts";
 import { SOYUZ_VARIANTS } from "../data/soyuz.ts";
 import { SOYUZ_BUILDS } from "./soyuz.ts";
 import { DRONESHIP_VARIANTS, LANDING_ZONE_VARIANTS } from "../data/landing.ts";
@@ -201,8 +203,8 @@ entries.push(
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...ROADSTER_VARIANTS, ...FALCON_HEAVY_VARIANTS, ...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...TIANGONG_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS, ...VOYAGER_VARIANTS, ...JUNO_VARIANTS, ...JWST_VARIANTS, ...PARKER_VARIANTS, ...CASSINI_VARIANTS, ...GALILEO_VARIANTS, ...PIONEER_VARIANTS, ...NEW_HORIZONS_VARIANTS];
-const stacks: readonly StackBuild[] = [...ROADSTER_BUILDS, ...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...TIANGONG_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS, ...VOYAGER_BUILDS, ...JUNO_BUILDS, ...JWST_BUILDS, ...PARKER_BUILDS, ...CASSINI_BUILDS, ...GALILEO_BUILDS, ...PIONEER_BUILDS, ...NEW_HORIZONS_BUILDS];
+const stackFacts = [...ROADSTER_VARIANTS, ...FALCON_HEAVY_VARIANTS, ...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...TIANGONG_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...VULCAN_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS, ...VOYAGER_VARIANTS, ...JUNO_VARIANTS, ...JWST_VARIANTS, ...PARKER_VARIANTS, ...CASSINI_VARIANTS, ...GALILEO_VARIANTS, ...PIONEER_VARIANTS, ...NEW_HORIZONS_VARIANTS];
+const stacks: readonly StackBuild[] = [...ROADSTER_BUILDS, ...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...TIANGONG_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...VULCAN_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS, ...VOYAGER_BUILDS, ...JUNO_BUILDS, ...JWST_BUILDS, ...PARKER_BUILDS, ...CASSINI_BUILDS, ...GALILEO_BUILDS, ...PIONEER_BUILDS, ...NEW_HORIZONS_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);
@@ -224,6 +226,13 @@ for (const build of stacks)
       },
       pieces: part.pieces,
     });
+  }
+
+// Falcon Heavy's test flight with a second-generation Roadster: its side boosters are the same pieces and the same painted model as Falcon Heavy's own, one record each so a painted model stays true to the two versions at most
+for (const id of ["test-flight-second-generation", "test-flight-second-generation-2"])
+  for (const side of ["left", "right"]) {
+    const home = entries.find((entry) => entry.record.id === `falcon-heavy-falcon-heavy-side-${side}`);
+    if (home) entries.push({ record: { ...home.record, id: `falcon-heavy-${id}-side-${side}`, trueTo: [id] }, pieces: home.pieces });
   }
 
 // the other modules for Ship 02's hardpoints: each stands in the same slot and place as the standard one, and is true for the variants that use it

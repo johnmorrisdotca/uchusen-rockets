@@ -65,7 +65,7 @@ console.log(ROCKETS["falcon-9"]?.country.value, countryOf("iss").value, countryO
 
 ## 一つの種類に三台の車：ロードスター
 
-`roadster` は「モデルには、描いているものの名前を付ける」という決まりの例です。三台は横一列に並んでいて、クリックで選びます。`first-generation` は実際に宇宙へ行った車で、運転席にはスターマンが座っています。`status: "flown"` です。`second-generation` の二つのモデルは `status: "announced"` です。2017年に試作車として発表されましたが、宇宙へは行っていません。そのことはメモにも書いてあります。どの車も出典のある数値に合わせて大きさを決めています。一台目は全長に、ほかの二台はホイールベースに合わせています。出典のない寸法は空欄のままです。
+`roadster` は「モデルには、描いているものの名前を付ける」という決まりの例です。三台は横一列に並んでいて、クリックで選びます。`first-generation` は実際に宇宙へ行った車で、運転席にはスターマンが座っています。`status: "flown"` です。`second-generation` の二つのモデルは `status: "announced"` です。2017年に試作車として発表されましたが、宇宙へは行っていません。そのことはメモにも書いてあります。どの車も出典のある数値に合わせて大きさを決めています。一台目は全長に、ほかの二台はホイールベースに合わせています。出典のない寸法は空欄のままです。Falcon Heavy は、ペイロードの枠に三台のどれでも載せられます。`test-flight` は実際に飛んだ一台目を載せ、`test-flight-second-generation` と `test-flight-second-generation-2` はほかの二台を載せます。この二つは `status: "announced"` で、名前にも「飛んでいない」と書いてあり、再生できるフライトはありません。
 
 ```ts
 import { ROCKETS } from "@johnmorrisdotca/uchusen-rockets";

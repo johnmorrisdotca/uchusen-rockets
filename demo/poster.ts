@@ -24,6 +24,7 @@ const MARK: Record<MakerId, string> = {
   nasa: "#3e6eae",
   "blue-origin": "#2f7f9e",
   "rocket-lab": "#a6843c",
+  ula: "#7a6fb3",
   russia: "#a14a4a",
   "us-army": "#5d7348",
   china: "#8a3b3b",

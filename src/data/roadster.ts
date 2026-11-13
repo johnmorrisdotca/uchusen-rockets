@@ -76,5 +76,7 @@ export const ROADSTER_FLIGHT = {
   name: "Test flight, with the Roadster",
   firstFlight: { value: "2018-02-06", source: SPACE, note: "20:45 UTC, FH-001, from Kennedy LC-39A." } as Figure<string>,
   note: "The test flight's payload: the Roadster, with Starman at the wheel, on the upper stage inside the fairing. Together, the fairing hides them, as it did; apart, or in space, they show. The car was mounted inclined above its payload adapter; here it stands level where the fairing begins, and the adapter is not drawn. In space the upper stage it stayed on is not drawn either: in the painted model it is one shell with the centre core.",
+  /** The note on the test flight with a second-generation car in the payload slot: a what-if, since neither the car nor the vehicle has flown. */
+  notFlownNote: "The test flight's vehicle with a second-generation Roadster and Starman in the payload slot, standing level inside the fairing. Neither this car nor this vehicle has flown: the second generation was shown as a prototype and has not been produced, so this is a comparison and not a flight. The real test flight carried the first generation. In space, the car stays on the upper stage, which is not drawn.",
   payload: { car: blank("The car's own height is in the Roadster's facts."), starman: STARMAN },
 } as const;

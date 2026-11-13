@@ -144,6 +144,19 @@ const FALCON_HEAVY: Variant = {
   },
 };
 
+/** Falcon Heavy's test flight with one of the second-generation Roadsters in the payload slot: a car that has not flown, so the vehicle is a what-if and says so. */
+const withSecondGeneration = (car: "second-generation" | "second-generation-2"): Variant => ({
+  ...FALCON_HEAVY,
+  id: `${ROADSTER_FLIGHT.id}-${car}`,
+  name: `Test flight, with the ${car === "second-generation" ? "second-generation" : "second-generation (another model)"} Roadster, not flown`,
+  status: "announced",
+  firstWord: "Shown",
+  firstFlight: { value: "2017-11-16", source: "wikipedia-roadster-second-generation", brief: "shown, not flown", note: "The car was shown as a prototype on this date. This vehicle has not flown, and neither has the car." },
+  slots: ["centre", "side-left", "side-right", "car", "starman"],
+  note: `${ROADSTER_FLIGHT.notFlownNote} ${FALCON_HEAVY.note}`,
+  facts: { ...FALCON_HEAVY.facts, parts: { ...FALCON_HEAVY.facts.parts, ...ROADSTER_FLIGHT.payload } },
+});
+
 export const FALCON_HEAVY_VARIANTS: readonly Variant[] = [
   FALCON_HEAVY,
   {
@@ -156,4 +169,6 @@ export const FALCON_HEAVY_VARIANTS: readonly Variant[] = [
     note: `${ROADSTER_FLIGHT.note} ${FALCON_HEAVY.note}`,
     facts: { ...FALCON_HEAVY.facts, parts: { ...FALCON_HEAVY.facts.parts, ...ROADSTER_FLIGHT.payload } },
   },
+  withSecondGeneration("second-generation"),
+  withSecondGeneration("second-generation-2"),
 ];
