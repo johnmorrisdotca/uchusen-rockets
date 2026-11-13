@@ -151,3 +151,29 @@ test.describe("the build keeps moving while it plays", () => {
     await expect.poll(built, { timeout: 45_000 }).toBeGreaterThan(0);
   });
 });
+
+test.describe("the yard opens moving", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("the yard turns by itself: its picture changes between two frames", async ({ page }) => {
+    test.skip(test.info().project.name !== "chromium-desk", "WebGL is drawn on the desk");
+    await page.goto(URL);
+    const stage = page.getByTestId("yard-stage");
+    await expect(stage).toHaveAttribute("data-ready", "yes", { timeout: 60_000 });
+    const picture = page.getByTestId("yard-view");
+    const first = await picture.screenshot();
+    await expect.poll(async () => !(await picture.screenshot()).equals(first), { timeout: 30_000 }).toBe(true);
+  });
+});
+
+test("a reader who asked for less motion gets a still yard", async ({ page }) => {
+  test.skip(test.info().project.name !== "chromium-desk", "WebGL is drawn on the desk");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(URL);
+  const stage = page.getByTestId("yard-stage");
+  await expect(stage).toHaveAttribute("data-ready", "yes", { timeout: 60_000 });
+  const picture = page.getByTestId("yard-view");
+  const first = await picture.screenshot();
+  await page.waitForTimeout(2000);
+  expect((await picture.screenshot()).equals(first)).toBe(true);
+});
