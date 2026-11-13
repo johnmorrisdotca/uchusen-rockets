@@ -458,7 +458,7 @@ variantOf("starship", "2019").facts.diameter.value; // null
 
 ## How to cite
 
-> Morris, J. (2026). *Uchusen Rockets* (version 0.28.0) [Computer software]. https://github.com/johnmorrisdotca/uchusen-rockets
+> Morris, J. (2026). *Uchusen Rockets* (version 0.29.0) [Computer software]. https://github.com/johnmorrisdotca/uchusen-rockets
 
 GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff) and gives BibTeX and APA. Cite the version you used (`npm ls @johnmorrisdotca/uchusen-rockets`), and credit the people behind the models and the numbers: [NOTICE.md](NOTICE.md) says who made each one and under what terms.
 
