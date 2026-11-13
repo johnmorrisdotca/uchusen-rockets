@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use Uchusen Rockets in your work, please cite it as below, and credit the models and numbers it draws on (NOTICE.md)."
 title: "Uchusen Rockets"
 type: software
-version: 0.23.0
-date-released: "2026-11-12"
+version: 0.24.0
+date-released: "2026-11-13"
 authors:
   - family-names: Morris
     given-names: John
