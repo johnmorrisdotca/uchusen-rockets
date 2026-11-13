@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Pick out one part** (MODULES-1252): `part="zarya"` on `uchusen-rocket` draws that part at full strength and the rest dimmed. The string property is `picked`, because `part` is HTML's own token list. `parts()` gives each part's id, English and Japanese names, and the launch date and length when a source gives them. A press sends `uchusen-part` with `{ id }`. Nothing is drawn at rest: the change costs one frame.
+
 ## [0.27.0] - 2026-11-13
 
 - **Ariane 6, built** (MODULES-167): `rocket="ariane-6"`, variants `a62` (default) and `a64`. Both are the article's one height, 63 m, and 5.4 m across. They do not differ in height: the 62 has two P120C boosters and the 64 has four, and the masses are about 530 t and about 860 t. The short fairing is 14 m (the long one is 20 m, and the same section also says 11 m, or 18 m with the cone). Neither liquid stage has a length, so they are one part, what the 63 m leaves (49 m, a blank figure), and the Vinci is not drawn apart. The P120C is 13.5 m by 3.4 m. The 62 first flew 2024-07-09. The article says the 64 first flew in February 2026 and does not give the day. The long fairing and the P160C (14.5 m) are not listed. The boosters' place, the engine's size and the paint are judged from photographs, and no name or mark is drawn. It leaves `PLANNED_ROCKETS`, which is now empty. A new maker group `europe` holds it. The rocket's country stays blank, European multi-national, and so does the group's: it is an international group and carries no flag. Slots: `first-stage`, `srb-left`, `srb-right`, and on the 64 also `srb-near` and `srb-far`, and `fairing`.
