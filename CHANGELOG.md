@@ -4,6 +4,8 @@
 
 ## [0.26.0] - 2026-11-13
 
+- **Still holds the compare page's view turn too** (MODULES-818): the view bar's `autoplay` went on the page whatever the Earth's pace, so with `spin=still` the Earth held and the craft kept turning for a minute. Now the page opened Still, or with less motion asked for, does not start the turn, choosing Still stops it, and leaving Still starts it again (unless less motion is asked for or it was already stopped). The freeze group checks the frame count is flat in each case.
+
 - **The line-up asks for no frames while it stands still** (MODULES-818): with `turn=0` or Turn pressed off, the demo's frame loop rests and asks for none, where it had polled every frame. Turn on wakes it. `demo/loop.ts`'s `everyFrame` lets a step return `false` to rest and returns a `wake` function.
 
 - **The beam page opens moving** (MODULES-818): the carrying beam's rings run from the drone to the part, 2.5 seconds a ring's gap; the line and reduced-motion pictures stay still. 30 frames a second at most, nothing drawn out of sight, still for reduced motion.

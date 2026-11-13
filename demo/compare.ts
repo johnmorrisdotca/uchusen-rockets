@@ -70,6 +70,13 @@ const address = createAddressState({ defaults: { rocket: "starship", variant: "v
 setTurnPace(paceNamed(address.get("spin")));
 const turnButtons = byId<HTMLElement & { value: number }>("turn-pace");
 turnButtons.value = paceStep(paceNamed(address.get("spin")));
+// Still means nothing moves: the view bar's auto-turn (`autoplay`) is held with the Earth's. It does not start on a page opened Still or with less motion asked for, it stops when the reader chooses Still, and it starts again on leaving Still, unless less motion is asked for or the reader had stopped it.
+const lessMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let turnWanted = bar.hasAttribute("autoplay") && !lessMotion;
+if (paceNamed(address.get("spin")) === "still" || lessMotion) {
+  bar.removeAttribute("autoplay");
+  bar.pause?.();
+}
 turnButtons.addEventListener("kazoku-speedchange", (event) => {
   const detail = (event as CustomEvent<{ value: number; reason: string }>).detail;
   if (detail?.reason !== "user") return;
@@ -77,6 +84,13 @@ turnButtons.addEventListener("kazoku-speedchange", (event) => {
   setTurnPace(pace);
   address.set("spin", pace === "slow" ? null : pace);
   applyTurn(document);
+  if (pace === "still") {
+    turnWanted = turnWanted || Boolean(bar.state?.turning);
+    bar.pause?.();
+  } else if (turnWanted && !lessMotion) {
+    turnWanted = false;
+    bar.play?.();
+  }
 });
 
 const known = (rocket: string | null | undefined, variant: string | null | undefined): Omit<Craft, "form"> | null => {
