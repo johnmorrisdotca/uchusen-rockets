@@ -128,6 +128,8 @@ export interface ViewerOptions {
   onFlight?: () => void;
   /** Tells the page the view was drawn, so labels that follow a part can move with it. */
   onDraw?: () => void;
+  /** A short press on a part: the slot under the pointer. */
+  onSlot?: (slot: string) => void;
   /** The Earth and Moon are in the scene, at their true sizes, so a metre and a planet can share one picture. */
   orbit?: boolean;
 }
@@ -340,6 +342,8 @@ export class RocketViewer {
   private visible = false;
   private lastActive = performance.now();
   private needsDraw = true;
+  /** The slot drawn at full strength, or null when every part is full. */
+  private highlighted: string | null = null;
   private pose: { from: { target: Vector3; offset: Vector3 }; to: { target: Vector3; offset: Vector3 }; elapsed: number; clock: number; ms: number; moveParts: boolean; log: boolean; capped: boolean } | null = null;
   /** Frames taken during a log camera ease, so a test can see the move rather than a jump. */
   private easeSteps = 0;
@@ -695,6 +699,35 @@ export class RocketViewer {
     if (!changed) return;
     if (this.built) this.fitPlinths();
     this.placeBeside();
+    this.wake();
+  }
+
+  /** One part at full strength and the rest dimmed. Null or "" draws every part full, and asks for one frame. */
+  highlight(slot: string | null): void {
+    const picked = slot || null;
+    if (this.highlighted === picked) return;
+    this.highlighted = picked;
+    for (const part of this.parts) {
+      const dim = Boolean(picked) && part.slot !== picked;
+      part.holder.traverse((node) => {
+        const mesh = node as Mesh;
+        const current = mesh.material;
+        if (!current) return;
+        const list = Array.isArray(current) ? current : [current];
+        const next = list.map((one) => {
+          const material = one.userData.highlightCopy ? one : one.clone();
+          if (!material.userData.ownOpacity) material.userData.ownOpacity = { opacity: one.opacity, transparent: one.transparent, depthWrite: one.depthWrite };
+          material.userData.highlightCopy = true;
+          const own = material.userData.ownOpacity as { opacity: number; transparent: boolean; depthWrite: boolean };
+          material.transparent = dim || own.transparent;
+          material.opacity = dim ? own.opacity * 0.28 : own.opacity;
+          material.depthWrite = dim ? false : own.depthWrite;
+          material.needsUpdate = true;
+          return material;
+        });
+        mesh.material = Array.isArray(current) ? next : next[0];
+      });
+    }
     this.wake();
   }
 
@@ -3223,6 +3256,7 @@ export class RocketViewer {
     if (!slot) return;
     this.canvas.dataset.slot = slot;
     this.canvas.dispatchEvent(new CustomEvent("uchusen-slot", { detail: slot, bubbles: true }));
+    this.options.onSlot?.(slot);
   }
 
   /** The named part under the pointer, walking from the hit face up to the part's holder. */

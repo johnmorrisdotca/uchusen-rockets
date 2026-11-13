@@ -20,6 +20,7 @@ import { besideCraft } from "./beside.ts";
 import { canScale, scalePercent } from "./concepts.ts";
 import { cleanShow } from "./layout.ts";
 import { cleanLook, type LookName } from "./looks.ts";
+import { partsOf, type PartInfo } from "./partList.ts";
 import { ROCKETS, SLOT_NAMES } from "./rockets.ts";
 import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
 import type { RocketViewer, ViewerFocus } from "./element/scene.ts";
@@ -155,7 +156,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "world-turn", "form", "sun", "flags"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "world-turn", "form", "sun", "flags", "part"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -197,6 +198,22 @@ export class UchusenRocket extends HTMLBase {
   private flightSeen: string | null = null;
 
   /** What is showing now. */
+  /** The slot drawn at full strength, such as `zarya`. Empty when every part is full. Setting it asks for one frame and leaves the rest dimmed. The attribute is `part`; this property is not named `part` because that name is HTML's own token list. */
+  get picked(): string {
+    return this.getAttribute("part") ?? "";
+  }
+
+  set picked(value: string) {
+    if (value) this.setAttribute("part", value);
+    else this.removeAttribute("part");
+  }
+
+  /** Each part of the craft on screen: its id, English and Japanese names, and the launch date and size where the data has them. */
+  parts(): PartInfo[] {
+    const variant = this.getAttribute("variant");
+    return partsOf(this.getAttribute("rocket") ?? "starship", variant ?? undefined);
+  }
+
   get state(): RocketState {
     return this.stateNow;
   }
@@ -371,6 +388,13 @@ export class UchusenRocket extends HTMLBase {
 
   attributeChangedCallback(name: string, before: string | null, after: string | null): void {
     if (before === after) return;
+    if (name === "part") {
+      this.drawn.key = "";
+      this.redraw();
+      this.viewer?.highlight(after || null);
+      this.emit("uchusen-part", { id: after ?? "" });
+      return;
+    }
     if (name === "flags") this.syncFlag();
     else if (name === "scale") {
       this.viewer?.setScaleMode(after === "true");
@@ -702,6 +726,10 @@ export class UchusenRocket extends HTMLBase {
     this.flagKey = "-";
     this.picture = picture;
     this.drawing = drawing;
+    drawing.addEventListener("click", (event) => {
+      const slot = (event.target as Element | null)?.closest?.("[data-slot]")?.getAttribute("data-slot");
+      if (slot) this.picked = slot;
+    });
     this.holder = holder;
     this.startWatching();
   }
@@ -724,11 +752,12 @@ export class UchusenRocket extends HTMLBase {
     const lit = flying ? (media("(prefers-reduced-motion: reduce)") ? false : flying.burns) : this.engineLights();
     // the angles the 3D view has now, to 5 degrees: the drawing changes a few times a phase, not once a frame
     const moves = flying ? Object.fromEntries(Object.entries(flying.poses).flatMap(([slot, pose]) => { const turned = Object.entries(pose.moves).map(([name, angle]) => [name, Math.round(angle / 5) * 5] as const).filter(([, angle]) => angle !== 0); return turned.length ? [[slot, Object.fromEntries(turned)]] : []; })) : undefined;
-    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}|${flying ? flying.index : ""}|${JSON.stringify(lit)}|${JSON.stringify(moves ?? {})}`;
+    const part = this.getAttribute("part") ?? "";
+    const key = `${this.key}|${look}|${show}|${from.az.toFixed(2)}|${from.el.toFixed(2)}|${label}|${flying ? flying.index : ""}|${JSON.stringify(lit)}|${JSON.stringify(moves ?? {})}|${part}`;
     let node = this.drawing.firstElementChild;
     if (key !== this.drawn.key || !node) {
       const template = document.createElement("template");
-      template.innerHTML = this.builtNow.svg({ look, show, view: from, engines: lit, ...(moves ? { moves } : {}) });
+      template.innerHTML = this.builtNow.svg({ look, show, view: from, engines: lit, ...(moves ? { moves } : {}), ...(part ? { part } : {}) });
       node = template.content.firstElementChild;
       if (!node) return;
       node.setAttribute("aria-label", label);
@@ -1026,6 +1055,9 @@ export class UchusenRocket extends HTMLBase {
         },
         onFlight: () => this.noteFlight(!this.clock?.playing),
         onDraw: () => this.dispatchEvent(new CustomEvent("uchusen-draw")),
+        onSlot: (slot) => {
+          this.picked = slot;
+        },
         orbit: this.hasAttribute("world"),
       });
       this.viewer = made;
@@ -1054,6 +1086,7 @@ export class UchusenRocket extends HTMLBase {
       made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
       if (this.inspectNow) made.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
       made.setLeave(...this.leaveNow());
+      made.highlight(this.getAttribute("part"));
       this.lightViewer(made);
       this.applyFrame();
       made.setSpin(this.spin());

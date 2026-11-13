@@ -2117,3 +2117,22 @@ test.describe("the six pages that open moving", () => {
     await expectStill(page);
   });
 });
+
+test("picking one part costs one frame and then nothing is drawn", async ({ page }) => {
+  await page.goto(`${URL}?rocket=iss&variant=iss&look=line&spin=off`);
+  await reach3d(page);
+  await hero(page).evaluate((node) => node.setAttribute("spin", "off"));
+  await expect.poll(async () => {
+    const mark = await drawn(page);
+    await settle(page, 1000);
+    return (await drawn(page)) - mark;
+  }, { timeout: 60_000 }).toBe(0);
+  const before = await drawn(page);
+  await hero(page).evaluate((node) => node.setAttribute("part", "zarya"));
+  await expect.poll(async () => (await drawn(page)) - before, { timeout: 10_000 }).toBeGreaterThan(0);
+  const used = (await drawn(page)) - before;
+  expect(used).toBeLessThanOrEqual(2);
+  const mark = await drawn(page);
+  await settle(page, 1500);
+  expect(await drawn(page)).toBe(mark);
+});

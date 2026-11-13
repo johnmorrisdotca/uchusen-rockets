@@ -90,6 +90,24 @@ const attributes = attributesFromOptions({ rocket: "falcon-heavy", look: "thick"
 console.log(attributes, optionsFromAttributes((name) => attributes[name] ?? null));
 ```
 
+## Pick out one part
+
+`part="zarya"` draws that part at full strength and the rest dimmed. The property is `picked` (HTML already uses `part` for its own token list). `parts()` gives each part's id, its English and Japanese names, and the launch date and length when a source gives them. A press sends `uchusen-part`, whose detail is `{ id }`. Nothing is drawn at rest: the change costs one frame.
+
+```js
+import { partsOf } from "@johnmorrisdotca/uchusen-rockets";
+import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+
+const zarya = partsOf("iss").find((part) => part.id === "zarya");
+const svg = build({ rocket: "iss", variant: "iss" }).svg({ look: "line", part: "zarya" });
+const picked = svg.includes('data-slot="zarya" opacity="1"') && svg.includes('opacity="0.28"');
+console.log(`${zarya.name} ${zarya.nameJa} ${zarya.launched} ${zarya.height} ${picked}`);
+```
+
+```html
+<uchusen-rocket rocket="iss" variant="iss" part="zarya"></uchusen-rocket>
+```
+
 ## Read the state from a script
 
 `element.state` is `picture`, `loading`, `3d`, `fallback` or `error`, and `element.angle` is the current `{ az, el }`. The element sends `uchusen-ready`, `uchusen-change`, `uchusen-painted`, `uchusen-fallback` and `uchusen-error` events. See the [element reference](api:element.UchusenRocket).

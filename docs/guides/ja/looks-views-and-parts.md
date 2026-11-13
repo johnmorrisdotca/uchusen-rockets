@@ -90,6 +90,24 @@ const attributes = attributesFromOptions({ rocket: "falcon-heavy", look: "thick"
 console.log(attributes, optionsFromAttributes((name) => attributes[name] ?? null));
 ```
 
+## 一つの部品を選ぶ
+
+`part="zarya"` はその部品をそのままの強さで描き、残りを薄くします。プロパティは `picked` です（`part` は HTML 自身のトークン列が使っています）。`parts()` は各部品の id、英語名と日本語名、出典があるときの打上げ日と長さを返します。押すと `uchusen-part` が飛び、detail は `{ id }` です。止まっているときは何も描かず、変更は1フレームです。
+
+```js
+import { partsOf } from "@johnmorrisdotca/uchusen-rockets";
+import { build } from "@johnmorrisdotca/uchusen-rockets/build";
+
+const zarya = partsOf("iss").find((part) => part.id === "zarya");
+const svg = build({ rocket: "iss", variant: "iss" }).svg({ look: "line", part: "zarya" });
+const picked = svg.includes('data-slot="zarya" opacity="1"') && svg.includes('opacity="0.28"');
+console.log(`${zarya.name} ${zarya.nameJa} ${zarya.launched} ${zarya.height} ${picked}`);
+```
+
+```html
+<uchusen-rocket rocket="iss" variant="iss" part="zarya"></uchusen-rocket>
+```
+
 ## 状態をスクリプトから読む
 
 `element.state` は `picture`、`loading`、`3d`、`fallback`、`error` のいずれかで、`element.angle` は現在の `{ az, el }` です。要素は `uchusen-ready`、`uchusen-change`、`uchusen-painted`、`uchusen-fallback`、`uchusen-error` のイベントを発行します。[要素のリファレンス](api:element.UchusenRocket)を見てください。

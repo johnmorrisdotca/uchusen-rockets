@@ -1,5 +1,7 @@
 // The pure core: the rockets and their variants with sourced sizes, the parts and how they fit, the camera rule, the looks and the layout. No three.js, no DOM.
 export { PLANNED_ROCKETS, ROCKETS, partIdOf, SLOT_NAMES, variantOf } from "./rockets.ts";
+export { partsOf } from "./partList.ts";
+export type { PartInfo } from "./partList.ts";
 export type { PlannedRocket, RocketEntry, RocketStatus } from "./rockets.ts";
 export { blank, figureWords } from "./data/types.ts";
 export type { Disagreement, Figure, Variant, VariantFacts, VariantStatus } from "./data/types.ts";
