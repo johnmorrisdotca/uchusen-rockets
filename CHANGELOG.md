@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.27.2] - 2026-11-13
+
+- **The fleet kit walk is split and the variant-change count settles** (MODULES-1288): test-only, no change to the package. `e2e/freeze.demo.ts` ran the whole fleet kit as one test (about 40 minutes against its 45-minute limit); with no `FLEET_PART` set it is now five tests, each a fifth of the ships with the same assertions (CI still sets `FLEET_PART`). "changing variant in the middle of a flight" reads each count once it holds still and keeps its own baseline, so a busy machine no longer reads 236 against 185.
+
 ## [0.27.1] - 2026-11-13
 
 - **Still holds the first page's view turn too** (MODULES-1226): the view bar's `autoplay` went on whatever the Earth's pace, so with `spin=still` the craft kept turning for a minute, as the compare page's did (fixed in 0.26.0). Now the page opened Still, or with less motion asked for, does not start the turn, choosing Still stops it, and leaving Still starts it again (unless less motion is asked for or it was already stopped). The freeze group checks the frame count is flat in each case.
