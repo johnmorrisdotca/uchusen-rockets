@@ -116,6 +116,14 @@ No source read here gives the upper stage or the abort tower a length, so they s
 
 The VC2S is the form that flew first: two solid boosters and the standard fairing. The article gives the Centaur V as 10.66 m in its low-orbit form and 12.6 m in its high-energy form, and the 10.66 m is drawn. It gives no length for the adapter between the Centaur and the fairing, so that is what the whole leaves (2.14 m). The boosters stand against the core, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. The no-booster, four-booster and six-booster forms and the long fairing (67.3 m) are not listed.
 
+## Mercury-Redstone
+
+| Variant | Whole | Booster | Capsule | Escape tower | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `redstone` | 25.41 m (83.38 feet) | not given: what the 25.41 m leaves after the spacecraft's 7.9 m, 17.51 m | 3.3 m, the existing Mercury capsule | not given: what 7.9 m leaves after 3.3 m, 4.6 m | 1.78 m (5.83 feet) | 1960-11-21 |
+
+The launch-vehicle article gives the whole, the diameter, one Rocketdyne A-7 and the payload as the Mercury spacecraft, and no stage length. The capsule is the part already drawn for Friendship 7. The spacecraft's article gives 3.3 m without the tower and 7.9 m with it. The launch-vehicle article does not say whether 25.41 m includes that spacecraft, and the drawing takes it as included. The black and white bands and the engine's size are judged from photographs. The fins have no size in a source read here, so they are not drawn, and no name or mark is drawn. Jupiter-C's numbers are not used.
+
 ## New Glenn
 
 | Variant | Whole | First stage | Second stage | Across | First flew |

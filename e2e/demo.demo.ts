@@ -613,6 +613,16 @@ test("the sections under the rocket are one at a time, in a row of tabs, and the
   expect(problems).toEqual([]);
 });
 
+test("Mercury-Redstone is in the picker under NASA and names its sourced height", async ({ page }) => {
+  await page.goto(URL);
+  await foldPicker(page);
+  await press(page, "maker-nasa");
+  await expect(page.locator('[data-testid="rocket-mercury-redstone"]')).toBeVisible();
+  await press(page, "rocket-mercury-redstone");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("25.41 m");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("1.78 m");
+});
+
 test("the sources and the credits are on the page, and the page says no one endorsed it", async ({ page }) => {
   await page.goto(URL);
   await foldPicker(page);
@@ -703,7 +713,7 @@ test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited 
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toContainText("Smithsonian Institution");
   await expect(credit).toContainText("CC0 1.0");
-  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
+  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "mercury-redstone", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
     await press(page, `maker-${ROCKETS[id].maker}`);
     await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
   }

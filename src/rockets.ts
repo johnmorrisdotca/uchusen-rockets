@@ -18,6 +18,7 @@ import { LUNAR_MODULE_VARIANTS } from "./data/lunarmodule.ts";
 import { APOLLO_SOYUZ_VARIANTS } from "./data/apollosoyuz.ts";
 import { GEMINI_VARIANTS } from "./data/gemini.ts";
 import { MERCURY_VARIANTS } from "./data/mercury.ts";
+import { MERCURY_REDSTONE_VARIANTS } from "./data/mercuryredstone.ts";
 import { JUPITER_C_VARIANTS } from "./data/jupiterc.ts";
 import { ISS_VARIANTS } from "./data/iss.ts";
 import { VOYAGER_VARIANTS } from "./data/voyager.ts";
@@ -157,6 +158,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "gemini": { id: "gemini", name: "Gemini", status: "built", ...MADE_BY["gemini"], variants: GEMINI_VARIANTS, defaultVariant: "gemini" },
   "mercury": { id: "mercury", name: "Mercury", status: "built", ...MADE_BY["mercury"], variants: MERCURY_VARIANTS, defaultVariant: "friendship-7" },
   "jupiter-c": { id: "jupiter-c", name: "Jupiter-C", status: "built", ...MADE_BY["jupiter-c"], variants: JUPITER_C_VARIANTS, defaultVariant: "jupiter-c" },
+  "mercury-redstone": { id: "mercury-redstone", name: "Mercury-Redstone", status: "built", ...MADE_BY["mercury-redstone"], variants: MERCURY_REDSTONE_VARIANTS, defaultVariant: "redstone" },
   "iss": { id: "iss", name: "International Space Station", status: "built", ...MADE_BY["iss"], variants: ISS_VARIANTS, defaultVariant: "iss" },
   "hubble": { id: "hubble", name: "Hubble Space Telescope", status: "built", ...MADE_BY["hubble"], variants: HUBBLE_VARIANTS, defaultVariant: "hubble" },
   tiangong: { id: "tiangong", name: "Tiangong 天宮", status: "built", ...MADE_BY["tiangong"], variants: TIANGONG_VARIANTS, defaultVariant: "tiangong" },

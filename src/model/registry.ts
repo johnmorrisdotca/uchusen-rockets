@@ -35,6 +35,8 @@ import { GEMINI_VARIANTS } from "../data/gemini.ts";
 import { GEMINI_BUILDS } from "./gemini.ts";
 import { MERCURY_VARIANTS } from "../data/mercury.ts";
 import { MERCURY_BUILDS } from "./mercury.ts";
+import { MERCURY_REDSTONE_VARIANTS } from "../data/mercuryredstone.ts";
+import { MERCURY_REDSTONE_BUILDS } from "./mercuryredstone.ts";
 import { JUPITER_C_VARIANTS } from "../data/jupiterc.ts";
 import { JUPITER_C_BUILDS } from "./jupiterc.ts";
 import { ISS_VARIANTS } from "../data/iss.ts";
@@ -205,8 +207,8 @@ entries.push(
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Rockets drawn wholly by this package's code, from their tables
 
-const stackFacts = [...ROADSTER_VARIANTS, ...FALCON_HEAVY_VARIANTS, ...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...TIANGONG_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...VULCAN_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS, ...VOYAGER_VARIANTS, ...JUNO_VARIANTS, ...JWST_VARIANTS, ...PARKER_VARIANTS, ...CASSINI_VARIANTS, ...GALILEO_VARIANTS, ...PIONEER_VARIANTS, ...NEW_HORIZONS_VARIANTS, ...EUROPA_VARIANTS];
-const stacks: readonly StackBuild[] = [...ROADSTER_BUILDS, ...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...TIANGONG_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...VULCAN_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS, ...VOYAGER_BUILDS, ...JUNO_BUILDS, ...JWST_BUILDS, ...PARKER_BUILDS, ...CASSINI_BUILDS, ...GALILEO_BUILDS, ...PIONEER_BUILDS, ...NEW_HORIZONS_BUILDS, ...EUROPA_BUILDS];
+const stackFacts = [...ROADSTER_VARIANTS, ...FALCON_HEAVY_VARIANTS, ...DRONE_VARIANTS, ...HUBBLE_VARIANTS, ...ISS_VARIANTS, ...TIANGONG_VARIANTS, ...JUPITER_C_VARIANTS, ...MERCURY_VARIANTS, ...MERCURY_REDSTONE_VARIANTS, ...GEMINI_VARIANTS, ...APOLLO_SOYUZ_VARIANTS, ...LUNAR_MODULE_VARIANTS, ...STARBASE_VARIANTS, ...DRAGON_VARIANTS, ...TOWER_VARIANTS, ...DRONESHIP_VARIANTS, ...LANDING_ZONE_VARIANTS, ...SOYUZ_VARIANTS, ...NEW_GLENN_VARIANTS, ...ELECTRON_VARIANTS, ...VULCAN_VARIANTS, ...SLS_VARIANTS, ...FALCON_1_VARIANTS, ...SATURN_V_VARIANTS, ...SHUTTLE_VARIANTS, ...SHIP_02_VARIANTS, ...VOYAGER_VARIANTS, ...JUNO_VARIANTS, ...JWST_VARIANTS, ...PARKER_VARIANTS, ...CASSINI_VARIANTS, ...GALILEO_VARIANTS, ...PIONEER_VARIANTS, ...NEW_HORIZONS_VARIANTS, ...EUROPA_VARIANTS];
+const stacks: readonly StackBuild[] = [...ROADSTER_BUILDS, ...DRONE_BUILDS, ...HUBBLE_BUILDS, ...ISS_BUILDS, ...TIANGONG_BUILDS, ...JUPITER_C_BUILDS, ...MERCURY_BUILDS, ...MERCURY_REDSTONE_BUILDS, ...GEMINI_BUILDS, ...APOLLO_SOYUZ_BUILDS, ...LUNAR_MODULE_BUILDS, ...STARBASE_BUILDS, ...DRAGON_INSIDE_BUILDS, ...TOWER_BUILDS, ...DRONESHIP_BUILDS, ...LANDING_ZONE_BUILDS, ...SOYUZ_BUILDS, ...NEW_GLENN_BUILDS, ...ELECTRON_BUILDS, ...VULCAN_BUILDS, ...SLS_BUILDS, ...FALCON_1_BUILDS, ...SATURN_V_BUILDS, ...SHUTTLE_BUILDS, ...SHIP_02_BUILDS, ...VOYAGER_BUILDS, ...JUNO_BUILDS, ...JWST_BUILDS, ...PARKER_BUILDS, ...CASSINI_BUILDS, ...GALILEO_BUILDS, ...PIONEER_BUILDS, ...NEW_HORIZONS_BUILDS, ...EUROPA_BUILDS];
 for (const build of stacks)
   for (const part of build.parts) {
     const { height, diameter } = facts(stackFacts, build.variant, part.slot);
@@ -230,6 +232,18 @@ for (const build of stacks)
       pieces: part.pieces,
     });
   }
+
+// Mercury-Redstone reuses the capsule already drawn for Friendship 7. The capsule's own file stays as it is: this only lets that one part mate in the launch vehicle, and names the vehicle among the versions the part is true for.
+{
+  const capsule = entries.find((entry) => entry.record.id === "mercury-friendship-7-capsule");
+  if (capsule) {
+    capsule.record.trueTo = [...capsule.record.trueTo, "redstone"];
+    capsule.record.joints = {
+      bottom: { kind: STAGE, y: 0, diameter: 1.78 },
+      top: { kind: STAGE, y: capsule.record.height, diameter: 1.8 },
+    };
+  }
+}
 
 // Falcon Heavy's test flight with a second-generation Roadster: its side boosters are the same pieces and the same painted model as Falcon Heavy's own, one record each so a painted model stays true to the two versions at most
 for (const id of ["test-flight-second-generation", "test-flight-second-generation-2"])

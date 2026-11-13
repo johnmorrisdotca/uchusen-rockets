@@ -74,6 +74,7 @@ const WHOLE_HEIGHTS: readonly (readonly [string, string, number])[] = [
   ["new-glenn", "7x2", 98],
   ["electron", "electron", 18],
   ["vulcan-centaur", "vc2s", 61.6],
+  ["mercury-redstone", "redstone", 25.41],
   ["soyuz", "soyuz-2", 46.3],
 ];
 
@@ -196,6 +197,22 @@ test("no code-made rocket is labelled as a custom build, and each comes apart an
       const built = build({ rocket: rocket.id, variant: variant.id });
       for (const show of built.shows) assert.ok(built.boundsOf(show).max[1] > 0, `${variant.id} ${show}`);
     }
+});
+
+test("Mercury-Redstone carries the existing capsule and stands 25.41 m", () => {
+  const v = variantOf("mercury-redstone", "redstone");
+  assert.equal(v?.facts.height.value, 25.41);
+  assert.equal(v?.facts.diameter.value, 1.78);
+  assert.equal(v?.facts.parts["first-stage"]?.value, null);
+  assert.equal(v?.facts.parts["escape-tower"]?.value, null);
+  assert.equal(v?.partIds?.capsule, "mercury-friendship-7-capsule");
+  assert.equal(partEntry("mercury-friendship-7-capsule")?.record.height, 3.3);
+  assert.equal(bells("mercury-redstone-redstone-first-stage"), 1);
+  const report = check({ rocket: "mercury-redstone", variant: "redstone" });
+  assert.ok(report.ok && !report.custom, report.issues.map((issue) => issue.message).join(" "));
+  assert.equal(report.size?.height, 25.41);
+  assert.equal(ROCKETS["mercury-redstone"]?.maker, "nasa");
+  assert.equal(ROCKETS["mercury-redstone"]?.country.value, "US");
 });
 
 test("Vulcan Centaur VC2S: the infobox's stages and boosters, the adapter what the whole leaves, no longer only planned", () => {
