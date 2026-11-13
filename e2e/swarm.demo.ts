@@ -226,17 +226,19 @@ test.describe("the swarm page opens moving", () => {
     const map = page.getByTestId("swarm-map");
     const pause = page.getByTestId("swarm-pause");
     await expect(map.locator("[data-drone]").first()).toBeVisible();
-    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect(pause).toHaveAttribute("data-on", "");
+    // the name (Pause, Play) says what a press does, so the button does not also say pressed: that would be read twice
+    await expect(pause).not.toHaveAttribute("aria-pressed");
     await expect(pause).toHaveText("Pause");
     await pause.focus();
     await page.keyboard.press("Enter");
-    await expect(pause).toHaveAttribute("aria-pressed", "false");
+    await expect(pause).not.toHaveAttribute("data-on");
     await expect(pause).toHaveText("Play");
     await expect(page).toHaveURL(/play=0/);
     await expectStillPicture(page, async () => Buffer.from(await map.innerHTML()), "held, the page draws nothing");
     const held = await map.innerHTML();
     await pause.click();
-    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect(pause).toHaveAttribute("data-on", "");
     await expect(page).not.toHaveURL(/play=0/);
     await expect.poll(async () => (await map.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
   });
@@ -246,7 +248,7 @@ test.describe("the swarm page opens moving", () => {
     const map = page.getByTestId("swarm-map");
     const pause = page.getByTestId("swarm-pause");
     await expect(map.locator("[data-drone]").first()).toBeVisible();
-    await expect(pause).toHaveAttribute("aria-pressed", "false");
+    await expect(pause).not.toHaveAttribute("data-on");
     await expectStillPicture(page, async () => Buffer.from(await map.innerHTML()), "held, the page draws nothing");
     const held = await map.innerHTML();
     await pause.click();

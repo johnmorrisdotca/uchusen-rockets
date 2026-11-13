@@ -45,17 +45,19 @@ test.describe("the beam page opens moving", () => {
     await expect(carry.locator("[data-ring]").first()).toBeAttached();
     // on a phone the carrying beam can start below the fold, and a page draws nothing out of sight
     await carry.scrollIntoViewIfNeeded();
-    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect(pause).toHaveAttribute("data-on", "");
+    // the name (Pause, Play) says what a press does, so the button does not also say pressed: that would be read twice
+    await expect(pause).not.toHaveAttribute("aria-pressed");
     await expect(pause).toHaveText("Pause");
     await pause.focus();
     await page.keyboard.press("Enter");
-    await expect(pause).toHaveAttribute("aria-pressed", "false");
+    await expect(pause).not.toHaveAttribute("data-on");
     await expect(pause).toHaveText("Play");
     await expect(page).toHaveURL(/play=0/);
     await expectStillPicture(page, async () => Buffer.from(await carry.innerHTML()), "held, the page draws nothing");
     const held = await carry.innerHTML();
     await pause.click();
-    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect(pause).toHaveAttribute("data-on", "");
     await expect(page).not.toHaveURL(/play=0/);
     await carry.scrollIntoViewIfNeeded();
     await expect.poll(async () => (await carry.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
@@ -68,7 +70,7 @@ test.describe("the beam page opens moving", () => {
     await expect(carry.locator("[data-ring]").first()).toBeAttached();
     // on a phone the carrying beam can start below the fold, and a page draws nothing out of sight
     await carry.scrollIntoViewIfNeeded();
-    await expect(pause).toHaveAttribute("aria-pressed", "false");
+    await expect(pause).not.toHaveAttribute("data-on");
     await expectStillPicture(page, async () => Buffer.from(await carry.innerHTML()), "held, the page draws nothing");
     const held = await carry.innerHTML();
     await pause.click();
