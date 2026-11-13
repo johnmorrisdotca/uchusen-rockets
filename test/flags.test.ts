@@ -9,7 +9,7 @@ const ALL = [...Object.values(ROCKETS), ...PLANNED_ROCKETS];
 
 test("hata has a flag for every code given, and the demo's few flags cover them all", async () => {
   const codes = [...new Set([...ALL.map((rocket) => rocket.country.value), ...Object.values(MAKER_COUNTRIES).map((one) => one.value)].filter((code) => code !== null))];
-  assert.deepEqual(codes.sort(), ["CN", "RU", "US"]);
+  assert.deepEqual(codes.sort(), ["CN", "JP", "RU", "US"]);
   for (const code of codes) {
     assert.match((await flag(code, { shape: "4:3" })) ?? "", /^<svg/, code);
     assert.match((await demoFlag(code)) ?? "", /^<svg/, `the demo has ${code}`);

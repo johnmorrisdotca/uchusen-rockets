@@ -116,6 +116,23 @@ No source read here gives the upper stage or the abort tower a length, so they s
 
 The VC2S is the form that flew first: two solid boosters and the standard fairing. The article gives the Centaur V as 10.66 m in its low-orbit form and 12.6 m in its high-energy form, and the 10.66 m is drawn. It gives no length for the adapter between the Centaur and the fairing, so that is what the whole leaves (2.14 m). The boosters stand against the core, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. The no-booster, four-booster and six-booster forms and the long fairing (67.3 m) are not listed.
 
+## H3
+
+| Variant | Whole | First stage | Second stage | Boosters | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `22s` | 57 m, short fairing | 37 m, two LE-9 | 12 m, one LE-5B-3 | two SRB-3, 15 m, 2.5 m across | not given: what the 57 m leaves, 8 m | 5.27 m | 2023-03-07 |
+| `24l` | 63 m, long fairing | 37 m, two LE-9 | 12 m, one LE-5B-3 | four SRB-3, 15 m, 2.5 m across | not given: what the 63 m leaves, 14 m | 5.27 m | 2025-10-26 |
+
+The stage blocks give lengths and no diameters, so the vehicle's 5.27 m is drawn. The fairing has no length of its own. The 30S, the 22L and the wide fairing are not listed. The boosters' place, the engine sizes and the paint are judged from photographs, and no name or mark is drawn.
+
+## Long March 5
+
+| Variant | Whole | First stage | Boosters | Second stage | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `cz-5` | 56.97 m, the standard height | 33.16 m, 5 m across, two YF-77 | four, 27.6 m, 3.35 m across, two YF-100 each | 11.54 m, 5 m across, two YF-75D | not given: what the standard whole leaves, 12.27 m | 5 m | 2016-11-03 |
+
+The extended fairing is 63.2 m, and the CZ-5B has no second stage. Neither is listed. The boosters' place, the engine sizes and the paint are judged from photographs, and no name or mark is drawn.
+
 ## New Glenn
 
 | Variant | Whole | First stage | Second stage | Across | First flew |

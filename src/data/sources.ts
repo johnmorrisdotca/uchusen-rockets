@@ -84,6 +84,8 @@ export const SOURCES = {
   "wikipedia-soyuz-2": { title: "Soyuz-2 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Soyuz-2", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-vulcan": { title: "Vulcan Centaur (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Vulcan_Centaur", date: "2026-11-12", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-ariane-6": { title: "Ariane 6 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Ariane_6", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-h3": { title: "H3", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/H3_(rocket)", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-long-march-5": { title: "Long March 5", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Long_March_5", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-spacex": { title: "SpaceX (the infobox: its headquarters)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/SpaceX", date: "2026-11-11", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-nasa": { title: "NASA (the infobox and first lines: an agency of the United States government)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/NASA", date: "2026-11-11", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-blue-origin": { title: "Blue Origin (the infobox: its headquarters)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Blue_Origin", date: "2026-11-11", read: "direct", licence: "CC BY-SA 4.0" },

@@ -74,6 +74,9 @@ const WHOLE_HEIGHTS: readonly (readonly [string, string, number])[] = [
   ["new-glenn", "7x2", 98],
   ["electron", "electron", 18],
   ["vulcan-centaur", "vc2s", 61.6],
+  ["h3", "22s", 57],
+  ["h3", "24l", 63],
+  ["long-march-5", "cz-5", 56.97],
   ["soyuz", "soyuz-2", 46.3],
 ];
 
@@ -196,6 +199,29 @@ test("no code-made rocket is labelled as a custom build, and each comes apart an
       const built = build({ rocket: rocket.id, variant: variant.id });
       for (const show of built.shows) assert.ok(built.boundsOf(show).max[1] > 0, `${variant.id} ${show}`);
     }
+});
+
+test("H3-22S, H3-24L and Long March 5 are the sourced stacks", () => {
+  const s = variantOf("h3", "22s");
+  const l = variantOf("h3", "24l");
+  assert.equal(s?.facts.height.value, 57);
+  assert.equal(l?.facts.height.value, 63);
+  assert.equal(s?.facts.parts["first-stage"]?.value, 37);
+  assert.equal(s?.facts.parts["second-stage"]?.value, 12);
+  assert.equal(s?.facts.parts["fairing"]?.value, null);
+  assert.equal(s?.facts.parts["srb-left"]?.value, 15);
+  assert.equal(l?.facts.parts["srb-far"]?.value, 15);
+  const cz = variantOf("long-march-5", "cz-5");
+  assert.equal(cz?.facts.height.value, 56.97);
+  assert.equal(cz?.facts.parts["first-stage"]?.value, 33.16);
+  assert.equal(cz?.facts.parts["second-stage"]?.value, 11.54);
+  assert.equal(cz?.facts.parts["fairing"]?.value, null);
+  assert.equal(bells("h3-22s-first-stage"), 2);
+  assert.equal(bells("h3-22s-second-stage"), 1);
+  assert.equal(bells("long-march-5-cz-5-first-stage"), 2);
+  assert.equal(check({ rocket: "h3", variant: "22s" }).size?.height, 57);
+  assert.equal(check({ rocket: "h3", variant: "24l" }).size?.height, 63);
+  assert.equal(check({ rocket: "long-march-5", variant: "cz-5" }).size?.height, 56.97);
 });
 
 test("Vulcan Centaur VC2S: the infobox's stages and boosters, the adapter what the whole leaves, no longer only planned", () => {

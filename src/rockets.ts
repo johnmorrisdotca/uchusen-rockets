@@ -10,6 +10,8 @@ import { SLS_VARIANTS } from "./data/sls.ts";
 import { NEW_GLENN_VARIANTS } from "./data/newglenn.ts";
 import { ELECTRON_VARIANTS } from "./data/electron.ts";
 import { VULCAN_VARIANTS } from "./data/vulcan.ts";
+import { H3_VARIANTS } from "./data/h3.ts";
+import { LONG_MARCH_5_VARIANTS } from "./data/longmarch5.ts";
 import { SOYUZ_VARIANTS } from "./data/soyuz.ts";
 import { DRONESHIP_VARIANTS, LANDING_ZONE_VARIANTS } from "./data/landing.ts";
 import { TOWER_VARIANTS } from "./data/tower.ts";
@@ -151,6 +153,8 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "new-glenn": { id: "new-glenn", name: "New Glenn", status: "built", ...MADE_BY["new-glenn"], variants: NEW_GLENN_VARIANTS, defaultVariant: "7x2" },
   "electron": { id: "electron", name: "Electron", status: "built", ...MADE_BY["electron"], variants: ELECTRON_VARIANTS, defaultVariant: "electron" },
   "vulcan-centaur": { id: "vulcan-centaur", name: "Vulcan Centaur", status: "built", ...MADE_BY["vulcan-centaur"], variants: VULCAN_VARIANTS, defaultVariant: "vc2s" },
+  h3: { id: "h3", name: "H3", status: "built", ...MADE_BY["h3"], variants: H3_VARIANTS, defaultVariant: "22s" },
+  "long-march-5": { id: "long-march-5", name: "Long March 5", status: "built", ...MADE_BY["long-march-5"], variants: LONG_MARCH_5_VARIANTS, defaultVariant: "cz-5" },
   "soyuz": { id: "soyuz", name: "Soyuz", status: "built", ...MADE_BY["soyuz"], variants: SOYUZ_VARIANTS, defaultVariant: "soyuz-2" },
   "lunar-module": { id: "lunar-module", name: "Apollo lunar module", status: "built", ...MADE_BY["lunar-module"], variants: LUNAR_MODULE_VARIANTS, defaultVariant: "lunar-module" },
   "apollo-soyuz": { id: "apollo-soyuz", name: "Apollo and Soyuz", status: "built", ...MADE_BY["apollo-soyuz"], variants: APOLLO_SOYUZ_VARIANTS, defaultVariant: "apollo-soyuz" },
@@ -276,6 +280,8 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   "external-tank": "External tank",
   "srb-left": "Solid rocket booster, left",
   "srb-right": "Solid rocket booster, right",
+  "srb-near": "Solid rocket booster, near",
+  "srb-far": "Solid rocket booster, far",
   orbiter: "Orbiter",
   "upper-stage": "Upper stage",
   "descent": "Descent stage",
