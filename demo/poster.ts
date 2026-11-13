@@ -28,6 +28,7 @@ const MARK: Record<MakerId, string> = {
   europe: "#2f6f8a",
   russia: "#a14a4a",
   "us-army": "#5d7348",
+  ussr: "#6a5a4a",
   china: "#8a3b3b",
   japan: "#8a3d4a",
   fleet: "#8a7048",
