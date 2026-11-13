@@ -116,6 +116,31 @@ No source read here gives the upper stage or the abort tower a length, so they s
 
 The VC2S is the form that flew first: two solid boosters and the standard fairing. The article gives the Centaur V as 10.66 m in its low-orbit form and 12.6 m in its high-energy form, and the 10.66 m is drawn. It gives no length for the adapter between the Centaur and the fairing, so that is what the whole leaves (2.14 m). The boosters stand against the core, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. The no-booster, four-booster and six-booster forms and the long fairing (67.3 m) are not listed.
 
+## Ariane 6
+
+| Variant | Whole | Liquid stages | Boosters | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `a62` | 63 m | not given apart: what the whole leaves under the fairing, 49 m | two P120C, 13.5 m, 3.4 m across | short, 14 m | 5.4 m | 2024-07-09 |
+| `a64` | 63 m | the same 49 m | four P120C, 13.5 m, 3.4 m across | short, 14 m | 5.4 m | February 2026, the day not given |
+
+The article gives one height, 63 m. The 62 and the 64 do not differ in it. They differ by booster count, two or four, and by mass, about 530 t and about 860 t. It gives neither the lower stage nor the upper stage a length, so they are drawn as one part and the Vinci is not drawn apart. The short fairing is 14 m; the long one is 20 m, and the same section also says the long fairing is 11 m, or 18 m with the cone. The short one is drawn. The long fairing and the P160C (14.5 m, first launched 17 June 2026) are not listed. The boosters' place, the engine's size and the paint are judged from photographs, and no name or mark is drawn.
+
+## Atlas V
+
+| Variant | Whole | Common core | Centaur III | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `401` | not given for this form; the parts add to 54.14 m | 32.46 m, 3.81 m across | 12.68 m, 3.05 m across | original 9 m, 4.2 m across | 3.81 m | 2002-08-21 |
+
+The infobox says up to 58.3 m, the family's height, not the 401's, so this form's height is blank. The 401 is no solid boosters and one RL10. No interstage length is given, so the narrowing is drawn inside the Centaur's length and the fairing's flare inside its 9 m. The 10 m and 11 m fairings, the 5.4 m fairings (20.7 m, 23.4 m and 26.5 m) and the forms with boosters or two RL10 engines are not listed. The article does not say which fairing length the first flight used; the original 9 m is drawn. Engine sizes and paint are judged from photographs, and no name or mark is drawn.
+
+## Delta IV Heavy
+
+| Variant | Whole | Each core | Second stage | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `heavy` | 70.7 m | 40.8 m, three, 5.1 m across, 15.3 m over the three | 13.7 m | not given: what the whole leaves, 16.2 m | 5.1 m | 2004-12-21 |
+
+The second stage's diameter, 5.1 m, is the Delta IV article's 5 m DCSS; the Heavy article gives the length 13.7 m and the same empty mass, 3490 kg, and does not restate the diameter. The Delta IV article also says the DCSS is 12 m in general. The side cores stand against the centre. Engine sizes and the orange paint are judged from photographs, and no name or mark is drawn. The Medium forms are not listed.
+
 ## New Glenn
 
 | Variant | Whole | First stage | Second stage | Across | First flew |
@@ -265,4 +290,4 @@ flight5.variant; // "v1"
 
 ## Still to come
 
-`PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape: Ariane 6.
+`PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape. It is empty: Ariane 6 now has a shape.

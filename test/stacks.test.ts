@@ -74,6 +74,9 @@ const WHOLE_HEIGHTS: readonly (readonly [string, string, number])[] = [
   ["new-glenn", "7x2", 98],
   ["electron", "electron", 18],
   ["vulcan-centaur", "vc2s", 61.6],
+  ["ariane-6", "a62", 63],
+  ["ariane-6", "a64", 63],
+  ["delta-iv-heavy", "heavy", 70.7],
   ["soyuz", "soyuz-2", 46.3],
 ];
 
@@ -196,6 +199,36 @@ test("no code-made rocket is labelled as a custom build, and each comes apart an
       const built = build({ rocket: rocket.id, variant: variant.id });
       for (const show of built.shows) assert.ok(built.boundsOf(show).max[1] > 0, `${variant.id} ${show}`);
     }
+});
+
+test("Ariane 6, Atlas V 401 and Delta IV Heavy are the sourced stacks, and leave the planned list", () => {
+  const a62 = variantOf("ariane-6", "a62");
+  const a64 = variantOf("ariane-6", "a64");
+  assert.equal(a62?.facts.height.value, 63);
+  assert.equal(a64?.facts.height.value, 63);
+  assert.equal(a62?.facts.parts["fairing"]?.value, 14);
+  assert.equal(a62?.facts.parts["first-stage"]?.value, null);
+  assert.equal(a62?.facts.parts["srb-left"]?.value, 13.5);
+  assert.equal(a64?.facts.parts["srb-far"]?.value, 13.5);
+  const atlas = variantOf("atlas-v", "401");
+  assert.equal(atlas?.facts.parts["first-stage"]?.value, 32.46);
+  assert.equal(atlas?.facts.parts["second-stage"]?.value, 12.68);
+  assert.equal(atlas?.facts.parts["fairing"]?.value, 9);
+  const heavy = variantOf("delta-iv-heavy", "heavy");
+  assert.equal(heavy?.facts.height.value, 70.7);
+  assert.equal(heavy?.facts.parts["first-stage"]?.value, 40.8);
+  assert.equal(heavy?.facts.parts["second-stage"]?.value, 13.7);
+  assert.equal(heavy?.facts.parts["fairing"]?.value, null);
+  assert.equal(bells("ariane-6-a62-first-stage"), 1);
+  assert.equal(bells("atlas-v-401-first-stage"), 1);
+  assert.equal(bells("atlas-v-401-second-stage"), 1);
+  assert.equal(bells("delta-iv-heavy-heavy-first-stage"), 1);
+  assert.equal(bells("delta-iv-heavy-heavy-second-stage"), 1);
+  assert.equal(check({ rocket: "ariane-6", variant: "a62" }).size?.height, 63);
+  assert.equal(check({ rocket: "delta-iv-heavy", variant: "heavy" }).size?.height, 70.7);
+  assert.equal(check({ rocket: "atlas-v", variant: "401" }).size?.height, 54.14);
+  assert.equal(ROCKETS["ariane-6"]?.status, "built");
+  assert.equal(PLANNED_ROCKETS.some((rocket) => rocket.id === "ariane-6"), false);
 });
 
 test("Vulcan Centaur VC2S: the infobox's stages and boosters, the adapter what the whole leaves, no longer only planned", () => {

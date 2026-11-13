@@ -10,6 +10,9 @@ test("the poster shows the rockets, the fleet and what is still to add, and the 
   await expect(poster).toContainText("SPX-207");
   await expect(poster).toContainText("To add later");
   await expect(poster).toContainText("Ariane 6");
+  await expect(poster).toContainText("Atlas V");
+  await expect(poster).toContainText("Delta IV Heavy");
+  await expect(poster).not.toContainText("To add later: Ariane");
   const wide = () => poster.locator("svg").evaluate((node) => node.getBoundingClientRect().width);
   const before = await wide();
   const bar = page.locator('kazoku-view-controls[for="poster-stage"]');

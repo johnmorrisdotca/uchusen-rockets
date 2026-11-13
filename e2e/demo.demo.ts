@@ -487,7 +487,8 @@ test("the page itself is in Japanese when asked, and the language picker switche
   await expect(page.locator("#builder-title")).toHaveText("部品から組み立てる");
   await expect(text("builder-report")).toContainText("描いた高さは");
   await press(page, "more-planned");
-  await expect(text("planned")).toContainText("出典：");
+  await expect(page.locator("#planned-title")).toHaveText("これから");
+  await expect(text("planned")).toHaveText("");
   await press(page, "more-sources");
   await expect(page.locator("#sources-title")).toHaveText("出どころ");
   await expect(page.locator("#legal")).toContainText("関係なく");
@@ -613,6 +614,24 @@ test("the sections under the rocket are one at a time, in a row of tabs, and the
   expect(problems).toEqual([]);
 });
 
+test("Ariane 6, Atlas V and Delta IV Heavy are in the picker under their makers", async ({ page }) => {
+  await page.goto(URL);
+  await foldPicker(page);
+  await press(page, "maker-europe");
+  await expect(page.locator('[data-testid="rocket-ariane-6"]')).toBeVisible();
+  await press(page, "rocket-ariane-6");
+  await expect(page.locator('[data-testid="variant-a62"]')).toBeVisible();
+  await expect(page.locator('[data-testid="variant-a64"]')).toBeVisible();
+  await expect(page.locator('[data-testid="facts"]')).toContainText("63 m");
+  await press(page, "maker-ula");
+  await expect(page.locator('[data-testid="rocket-atlas-v"]')).toBeVisible();
+  await expect(page.locator('[data-testid="rocket-delta-iv-heavy"]')).toBeVisible();
+  await press(page, "rocket-atlas-v");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("32.46 m");
+  await press(page, "rocket-delta-iv-heavy");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("70.7 m");
+});
+
 test("the sources and the credits are on the page, and the page says no one endorsed it", async ({ page }) => {
   await page.goto(URL);
   await foldPicker(page);
@@ -622,7 +641,9 @@ test("the sources and the credits are on the page, and the page says no one endo
   for (const name of ["Clarence365", "clarence365", "MartianDays", "Stanley Creative", "KUBAHA", "ProgressTH", "Antonio_Adams", "Echo_3"]) await expect(credits).toContainText(name);
   await expect(page.locator("#legal")).toContainText("not affiliated with or endorsed by SpaceX");
   await press(page, "more-planned");
-  await expect(page.locator('[data-testid="planned"]')).toContainText("Ariane");
+  await expect(page.locator("#planned-title")).toHaveText("Still to come");
+  await expect(page.locator('[data-testid="planned"]')).toHaveText("");
+  await expect(page.locator('[data-testid="planned"]')).not.toContainText("Ariane");
   await expect(page.locator('[data-testid="planned"]')).not.toContainText("Vulcan");
   await expect(page.locator('[data-testid="planned"]')).not.toContainText("Falcon 9");
 });
@@ -703,7 +724,7 @@ test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited 
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toContainText("Smithsonian Institution");
   await expect(credit).toContainText("CC0 1.0");
-  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
+  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-6", "atlas-v", "delta-iv-heavy", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
     await press(page, `maker-${ROCKETS[id].maker}`);
     await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
   }
