@@ -29,7 +29,7 @@ test("the drawing is the sphere alone, not the antenna span", () => {
   assert.ok(Math.abs(span - 0.152) < 0.005);
   assert.ok(Math.abs(tall - 0.152) < 0.005);
   assert.ok(span < 0.3);
-  assert.equal(built.parts[0]?.pieces.some((piece) => piece.kind === "strut"), false);
+  assert.ok(built.parts[0]?.pieces.every((piece) => piece.kind === "lathe"));
   assert.equal(built.parts[0]?.record.painted, null);
   assert.ok(built.glb().bytes.length < 600 * 1024);
   assert.equal(built.flamesOf("together").length, 0);
