@@ -20,6 +20,8 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   const earth = page.locator('[data-testid="earth"]');
   const note = page.locator('[data-testid="orbit-altitude"]');
   const moons = page.locator('[data-testid="sky-moons"]');
+  // the page's clock is the test's from the first load: installed before the page, it runs as time does until it is paused below, so no frame of the ease is the machine's to skip
+  await page.clock.install();
   await page.goto(`${URL}?background=earth`);
   await page.locator('[data-testid="panel-background"]').click();
   await expect(note).toHaveAttribute("data-km", "400");
@@ -27,16 +29,21 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBeNull();
   await expect(moons).toBeHidden();
 
-  // the page's clock is held and driven by the test, a tenth of a second at a time, so the easing is read the same on a machine that draws a frame a second. Left running it flows by itself, and a stall of 800 ms on a slow runner finishes the ease before the first reading.
-  await page.clock.install();
+  // the ease's values are recorded in the page as each is published, and the test reads the record: a read between two frames sees one value or the last, whatever the machine's speed
+  await earth.evaluate((node) => {
+    const record: number[] = [Number(node.getAttribute("data-orbit-open"))];
+    (window as unknown as { __ease: number[] }).__ease = record;
+    new MutationObserver(() => record.push(Number(node.getAttribute("data-orbit-open")))).observe(node, { attributes: true, attributeFilter: ["data-orbit-open"] });
+  });
+  // the clock is held and driven by the test, a tenth of a second at a time, so the easing is read the same on a machine that draws a frame a second
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.locator('[data-testid="orbit-10000"]').evaluate((button) => (button as HTMLButtonElement).click());
   await expect(earth).toHaveAttribute("data-orbit-moving", "1");
-  const values: number[] = [Number(await earth.getAttribute("data-orbit-open"))];
-  for (let step = 0; step < 40 && (await earth.getAttribute("data-orbit-moving")) === "1"; step += 1) {
+  for (let step = 0; step < 40; step += 1) {
     await page.clock.runFor(100);
-    values.push(Number(await earth.getAttribute("data-orbit-open")));
+    if ((await earth.getAttribute("data-orbit-moving")) !== "1") break;
   }
+  const values = await page.evaluate(() => (window as unknown as { __ease: number[] }).__ease.slice());
   await page.clock.resume();
   await expect.poll(async () => earth.getAttribute("data-orbit-moving")).toBe("0");
   const open = await earth.getAttribute("data-orbit-open");
