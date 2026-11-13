@@ -169,3 +169,32 @@ test("a body marker moves the pivot, the paths can hide, and the days play", asy
   await page.getByTestId("cmp-play").click();
   await expect(page.getByTestId("cmp-play")).toHaveAttribute("aria-pressed", "false");
 });
+
+test.describe("the compare page opens moving", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("the craft turns by itself: its picture changes between two frames", async ({ page }) => {
+    test.skip(test.info().project.name !== "chromium-desk", "WebGL is drawn on the desk");
+    test.setTimeout(180_000);
+    // the picker is off, as it floats over the view; the Space Shuttle is not the same from every side, as a round rocket is, so a turn shows
+    await page.goto("/uchusen-rockets/compare.html?rocket=space-shuttle&variant=stack&with=none&background=none&picker=off");
+    await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+    const hero = page.locator("#hero");
+    await expect(hero).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+    const first = await hero.screenshot();
+    await expect.poll(async () => !(await hero.screenshot()).equals(first), { timeout: 30_000 }).toBe(true);
+  });
+
+  test("reduced motion keeps the craft still", async ({ page }) => {
+    test.skip(test.info().project.name !== "chromium-desk", "WebGL is drawn on the desk");
+    test.setTimeout(180_000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/uchusen-rockets/compare.html?rocket=space-shuttle&variant=stack&with=none&background=none&picker=off");
+    await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+    const hero = page.locator("#hero");
+    await expect(hero).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+    const first = await hero.screenshot();
+    await page.waitForTimeout(2500);
+    expect((await hero.screenshot()).equals(first)).toBe(true);
+  });
+});

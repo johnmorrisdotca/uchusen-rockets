@@ -110,6 +110,8 @@ const choice = {
   base: todayUtc(),
 };
 if (choice.to === choice.from) choice.to = choice.from === "earth" ? "mars" : "earth";
+/** The trip opens playing, unless the address holds it (`play=0` or `speed=0`, which a reader's Pause writes) or the reader asked for less motion. */
+let held = query.get("play") === "0" || query.get("speed") === "0";
 let speed: PlaySpeed = [0.5, 1, 2, 4].includes(Number(query.get("speed"))) ? (Number(query.get("speed")) as PlaySpeed) : 1;
 const speedButtons = byId<HTMLElement & { value: number }>("speeds");
 speedButtons.value = speed;
@@ -132,6 +134,7 @@ function writeAddress(): void {
   if (choice.size === "true") next.set("size", "true");
   if (choice.hold) next.set("hold", "1");
   if (speed !== 1) next.set("speed", String(speed));
+  if (held) next.set("play", "0");
   for (const key of ["picker", "picker-at", "layout", "wide"]) {
     const kept = new URLSearchParams(location.search).get(key);
     if (kept !== null) next.set(key, kept);
@@ -395,6 +398,7 @@ function change(next: Partial<{ from: string; to: string; craft: string; when: n
   playhead = 0;
   hideSummary();
   start();
+  autoplay();
 }
 
 function setView(view: JourneyView): void {
@@ -1211,6 +1215,10 @@ function syncPlay(): void {
 
 function play(): void {
   if (!trip.verdict.playable) return;
+  if (held) {
+    held = false;
+    writeAddress();
+  }
   if (playhead >= total) {
     playhead = 0;
     hideSummary();
@@ -1220,7 +1228,12 @@ function play(): void {
   syncPlay();
   if (!raf) raf = requestAnimationFrame(frame);
 }
-function pause(): void {
+/** Pauses. A reader's Pause is held in the address, so a reload stays still. */
+function pause(byReader = false): void {
+  if (byReader && !held) {
+    held = true;
+    writeAddress();
+  }
   playing = false;
   syncPlay();
   if (raf) cancelAnimationFrame(raf);
@@ -1228,6 +1241,11 @@ function pause(): void {
 }
 function stop(): void {
   pause();
+}
+/** Every view opens moving: the trip plays from the start at the first speed step (1x, a trip of about a minute), unless held or the reader prefers reduced motion. */
+function autoplay(): void {
+  if (held || reduced() || !trip.verdict.playable || trip.phases.length === 0 || playhead >= total) return;
+  play();
 }
 
 function start(): void {
@@ -1280,7 +1298,7 @@ function start(): void {
   if (!ok) drawSky(0, false, 0);
 }
 
-byId("play").addEventListener("click", () => (playing ? pause() : play()));
+byId("play").addEventListener("click", () => (playing ? pause(true) : play()));
 byId("summary-close").addEventListener("click", () => hideSummary());
 byId("summary-open").addEventListener("click", () => showSummary());
 byId("leave-earth").addEventListener("click", () => change({ from: "earth" }));
@@ -1300,7 +1318,7 @@ byId("no-brake").addEventListener("click", () => {
   draw(true);
 });
 byId("restart").addEventListener("click", () => {
-  pause();
+  pause(true);
   playhead = 0;
   skyOffset = 0;
   hideSummary();
@@ -1321,7 +1339,7 @@ byId("copy").addEventListener("click", () => {
 });
 byId<HTMLInputElement>("scrub").addEventListener("input", (event) => {
   const was = playing;
-  if (was) pause();
+  if (was) pause(true);
   playhead = (Number((event.target as HTMLInputElement).value) / 1000) * total;
   hideSummary();
   syncPlay();
@@ -1382,3 +1400,4 @@ if (Number.isFinite(seek) && seek > 0 && trip.verdict.playable) {
   draw(true);
   if (playhead >= total) showSummary();
 }
+autoplay();

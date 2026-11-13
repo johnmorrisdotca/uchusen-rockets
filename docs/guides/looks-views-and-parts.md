@@ -49,6 +49,10 @@ The demo's view bar shows the zoom between the minus and plus buttons (1Ã—, 2.4Ã
 
 The Wide button (or the T key) gives the view the whole width of the page, 16:9 and no taller than 80% of the window, and moves the side panel below it as a row of boxes. It is on every demo page that has a side panel (the rocket, the fleet record, the yard, the journey, the code builder and the embed page). The choice is kept in the address as `?wide=on` and on this device, and a phone, which is one column already, hides the button.
 
+## Every demo view opens moving
+
+The demo's views open moving, at the first speed where the motion can be seen, and stand still for a reader who asked for reduced motion. Nothing is drawn out of sight or on a hidden tab, and no view asks for more than 30 frames a second. The journey plays its trip from the start at 1x, with the date and day running; its Pause is kept in the address as `play=0`, and `speed=0` in a link holds it. The yard and the compare page turn their craft with the view bar's auto-turn (`autoplay`, 5 degrees a second, for a minute, as on the first page). The line-up turns its ships about their upright axis, 12 degrees a second, with a Turn button kept in the address as `turn=0`; `<uchusen-lineup turn="40">` draws a row at any angle. On the swarm page the drones run their legs in to their slots and back, and on the beam page the carrying beam's rings run down to the part; the line and the reduced-motion pictures stay as they are named.
+
 ## The Earth behind the rocket, in the demo
 
 The demo's Background row is None by default. Choose Earth and the rocket floats in front of the turning Earth, as it would look in orbit. The choice is kept in the address (`?background=earth`). It belongs to the demo page: the embed page and the code the demo copies carry the rocket alone, and say so, and nothing of it is in the published package.

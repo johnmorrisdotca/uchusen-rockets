@@ -200,3 +200,25 @@ test("fleet builder pictures", async ({ page }, info) => {
     }
   }
 });
+
+test.describe("the swarm page opens moving", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("the drones run their legs: the map changes between two frames", async ({ page }) => {
+    await page.goto("/uchusen-rockets/swarm.html");
+    const map = page.getByTestId("swarm-map");
+    await expect(map.locator("[data-drone]").first()).toBeVisible();
+    const first = await map.screenshot();
+    await expect.poll(async () => !(await map.screenshot()).equals(first), { timeout: 30_000 }).toBe(true);
+  });
+
+  test("reduced motion keeps the drones in their boxes", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/uchusen-rockets/swarm.html");
+    const map = page.getByTestId("swarm-map");
+    await expect(map.locator("[data-drone]").first()).toBeVisible();
+    const first = await map.screenshot();
+    await page.waitForTimeout(1500);
+    expect((await map.screenshot()).equals(first)).toBe(true);
+  });
+});

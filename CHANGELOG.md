@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+- **The line-up asks for no frames while it stands still** (MODULES-818): with `turn=0` or Turn pressed off, the demo's frame loop rests and asks for none, where it had polled every frame. Turn on wakes it. `demo/loop.ts`'s `everyFrame` lets a step return `false` to rest and returns a `wake` function.
+
+- **The beam page opens moving** (MODULES-818): the carrying beam's rings run from the drone to the part, 2.5 seconds a ring's gap; the line and reduced-motion pictures stay still. 30 frames a second at most, nothing drawn out of sight, still for reduced motion.
+
+- **The swarm page opens moving** (MODULES-818): the drones run their legs in to the slots and back, 8 seconds a round. 30 frames a second at most, nothing drawn out of sight or on a hidden tab, still for reduced motion.
+
+- **The line-up opens turning** (MODULES-818): the ships turn about their upright axis, 12 degrees a second (a turn in half a minute), drawn 10 times a second. A Turn button is kept in the address (`turn=0` holds it). `<uchusen-lineup>` and `lineupSvg` take `turn`, degrees added to the view's angle.
+
+- **The compare page opens turning** (MODULES-818): the craft turns on load with the view bar's `autoplay` (5 degrees a second, for a minute, idle out of sight, as on the first page); reduced motion gets a still view.
+
+- **The yard opens turning** (MODULES-818): the view bar's `autoplay` (5 degrees a second, for a minute, idle out of sight, as on the first page), so the yard turns on load; reduced motion gets a still view. A turn is drawn at most 30 times a second.
+
+- **The journey opens playing** (MODULES-818): the trip plays from the start at 1x, the first speed step (a trip of about a minute), with the date and day running, as John's rule of 2026-11-10 says every view moves on load. A reader who asked for reduced motion gets a still view with Play ready. Pause is kept in the address as `play=0`; `speed=0` or `play=0` in a link opens it held; a link naming `t`, `speed` or a date works as before.
+
 ## [0.25.0] - 2026-11-13
 
 - **Europa Clipper** (MODULES-1120): `rocket="europa-clipper"`. The painted look is NASA Visualization Technology Applications and Development's model, its pictures left out, fetched only when that look is asked for, and scaled so the solar arrays span about 30 m. The line look is this package's own plain shape from that span and the 3 m antenna. Its default frame holds the whole painted model, which stands 11 m with its boom and reaches 17.5 m deep: a part can now name the box its painted model fills (`reach`), as the plain shape is far smaller. A speck test covers its loose pieces (none under 7 cm), and the whole-by-default test covers it with Juno.

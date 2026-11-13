@@ -420,6 +420,8 @@ document.querySelector<HTMLButtonElement>("[data-testid=yard-build]")!.addEventL
   poke();
 });
 
+// The yard opens turning (the controls' `autoplay`, 5 degrees a second, a minute, and idle out of sight). The bar reports every animation frame; a turn is drawn at most 30 times a second.
+let lastAuto = 0;
 bindStage(canvas, (detail) => {
   choice = {
     yaw: detail.yaw ?? choice.yaw,
@@ -429,6 +431,11 @@ bindStage(canvas, (detail) => {
     panY: detail.panY ?? choice.panY,
     ...(detail.roll === undefined ? {} : { roll: detail.roll }),
   };
+  if (detail.reason === "auto") {
+    const now = performance.now();
+    if (now - lastAuto < 33) return;
+    lastAuto = now;
+  }
   poke();
 });
 
