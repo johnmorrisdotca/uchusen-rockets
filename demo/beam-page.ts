@@ -8,6 +8,7 @@ import { MATERIALS } from "../src/model/materials.ts";
 import { boundsOfPieces } from "../src/model/pieces.ts";
 import { box, rng } from "../src/model/fleet/ship-02/adapter.ts";
 import { container } from "../src/model/fleet/ship-02/cargo.ts";
+import { everyFrame } from "./loop.ts";
 import { bindStage, placeZoom } from "./viewBinder.ts";
 
 detail.level = "coarse";
@@ -42,3 +43,24 @@ picture("beam-dotted", "painted", beamLight(from, to, 0.4, 6, cam, "painted", "s
 const stage = document.getElementById("beam-stage");
 const row = document.getElementById("beam-row");
 if (stage && row) bindStage(stage, (view) => placeZoom(row, view), { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8", testid: "view-bar" });
+
+// The page opens moving: the carrying beam's rings run from the drone down to the part, one ring's gap in 2.5 seconds, so the beam reads as drawing the part up. The line and reduced-motion pictures are what they are called, and stay still; a reader who asked for less motion gets the carrying beam still too.
+const carry = document.getElementById("beam-carry");
+const rings = carry ? [...carry.querySelectorAll<SVGEllipseElement>("[data-ring]")] : [];
+const core = carry?.querySelector("[data-core]")?.getAttribute("d")?.match(/-?[\d.]+/g)?.map(Number);
+if (carry && rings.length > 1 && core && core.length >= 4) {
+  const gap: [number, number] = [(core[2] - core[0]) / (rings.length + 1), (core[3] - core[1]) / (rings.length + 1)];
+  // a ring comes in at the drone as the last one goes out at the part
+  const entering = rings[0].cloneNode(true) as SVGEllipseElement;
+  rings[0].before(entering);
+  const all = [entering, ...rings];
+  all[0].setAttribute("data-ring-new", "1");
+  everyFrame(carry, (ms) => {
+    const f = (ms / 2500) % 1;
+    all.forEach((ring, i) => {
+      const shift = i === 0 ? f - 1 : f;
+      ring.setAttribute("transform", `translate(${(gap[0] * shift).toFixed(2)} ${(gap[1] * shift).toFixed(2)})`);
+      ring.setAttribute("opacity", String(i === 0 ? f : i === all.length - 1 ? 1 - f : 1));
+    });
+  });
+}

@@ -14,3 +14,27 @@ test("the beam page shows the light, the line and the dotted line on a dark grou
   await expect(page.getByTestId("beam-dotted").locator("[data-beam=still]")).toBeVisible();
   await expect(page.getByTestId("beam-carry").locator("[data-ring]").first()).toBeVisible();
 });
+
+test.describe("the beam page opens moving", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("the carrying beam's rings run to the part: its picture changes between two frames, and the others stay still", async ({ page }) => {
+    await page.goto(URL);
+    const carry = page.getByTestId("beam-carry");
+    await expect(carry.locator("[data-ring]").first()).toBeAttached();
+    const first = await carry.screenshot();
+    const line = await page.getByTestId("beam-line").screenshot();
+    await expect.poll(async () => !(await carry.screenshot()).equals(first), { timeout: 30_000 }).toBe(true);
+    expect((await page.getByTestId("beam-line").screenshot()).equals(line)).toBe(true);
+  });
+
+  test("reduced motion keeps the carrying beam still", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(URL);
+    const carry = page.getByTestId("beam-carry");
+    await expect(carry.locator("[data-ring]").first()).toBeAttached();
+    const first = await carry.screenshot();
+    await page.waitForTimeout(1500);
+    expect((await carry.screenshot()).equals(first)).toBe(true);
+  });
+});
