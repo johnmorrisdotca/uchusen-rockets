@@ -317,6 +317,8 @@ function factsFor(variant: Variant): HTMLElement[] {
   for (const [label, figure] of Object.entries(variant.facts.sizes ?? {})) rows2.push([label, knownWord("size", label), figure]);
   // a part with no engines of its own has no row for them
   for (const slot of show === "together" || show === "apart" ? variant.slots : [show]) if (variant.facts.engines[slot]) rows2.push([`${SLOT_NAMES[slot] ?? slot} engines`, say("partEngines", { name: name(slot) }), variant.facts.engines[slot]]);
+  const payload = variant.facts.more.payload;
+  if (payload?.value) rows2.push(["Payload", say("payload"), payload]);
   rows2.push([variant.firstWord ?? "First flew", knownWord("first", variant.firstWord ?? "First flew"), variant.firstFlight]);
   if (ROCKETS[variant.rocket].madeBy.value !== null) rows2.push(["Made by", say("madeBy"), ROCKETS[variant.rocket].madeBy]);
   const table = el("table", { className: "sizes" });

@@ -258,6 +258,14 @@ test("H3-22S, H3-24L and Long March 5 are the sourced stacks", () => {
   assert.equal(check({ rocket: "long-march-5", variant: "cz-5" }).size?.height, 56.97);
 });
 
+test("Mercury-Redstone names the capsule the article says it carries", () => {
+  const name = variantOf("mercury-redstone", "redstone")?.facts.more.payload;
+  assert.equal(name?.value, "Mercury spacecraft");
+  assert.equal(name?.source, "wikipedia-mercury-redstone");
+  assert.equal(name?.date, "2026-11-13");
+  assert.equal(SOURCES["wikipedia-mercury-redstone"].date, "2026-11-13");
+});
+
 test("Mercury-Redstone carries the existing capsule and stands 25.41 m", () => {
   const v = variantOf("mercury-redstone", "redstone");
   assert.equal(v?.facts.height.value, 25.41);

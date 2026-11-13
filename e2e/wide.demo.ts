@@ -93,7 +93,7 @@ test("Wide draws the rocket again at the new size", async ({ page }) => {
 });
 
 test("on a phone the toggle is hidden and Wide changes nothing: one column, no sideways scroll", async ({ page }) => {
-  test.skip(test.info().project.name === "chromium-desk", "A phone");
+  test.skip(test.info().project.name.endsWith("desk"), "A phone");
   for (const shape of SHAPES) {
     await page.goto(`${BASE}${shape.page}?wide=on&picker=off`);
     await expect(page.getByTestId("wide")).toBeHidden();

@@ -704,4 +704,29 @@ test.describe("every view opens moving", () => {
     await expect(page.getByTestId("play")).not.toHaveAttribute("data-on");
     await expectStillPicture(page, () => page.getByTestId("route").screenshot(), "the held trip stays still");
   });
+
+  test("the play label says what a press will do, and data-on says what is on", async ({ page }) => {
+    await open(page, `${URL}&look=line`);
+    const play = page.getByTestId("play");
+    const label = page.locator("#play-label");
+    const refill = () => page.evaluate(() => {
+      const word = (window as unknown as { uchusenLanguage?: { word(key: string): string | undefined } }).uchusenLanguage?.word;
+      if (!word) return;
+      document.querySelectorAll("[data-say]").forEach((el) => {
+        const text = word((el as HTMLElement).dataset.say ?? "");
+        if (text !== undefined) el.textContent = text;
+      });
+    });
+    await expect(play).toHaveAttribute("data-on", "");
+    await expect(label).toHaveText("Pause");
+    await refill();
+    await expect(play).toHaveAttribute("data-on", "");
+    await expect(label).toHaveText("Pause");
+    await play.click();
+    await expect(play).not.toHaveAttribute("data-on");
+    await expect(label).toHaveText("Play");
+    await refill();
+    await expect(play).not.toHaveAttribute("data-on");
+    await expect(label).toHaveText("Play");
+  });
 });

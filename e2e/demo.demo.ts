@@ -820,7 +820,7 @@ test("the painted Falcon 9 second stage shows this package's own nozzle when it 
 });
 
 test("no sideways scroll at a phone's width, and controls big enough for a finger", async ({ page }, info) => {
-  test.skip(info.project.name === "chromium-desk", "A phone's width");
+  test.skip(info.project.name.endsWith("desk"), "A phone's width");
   await page.goto(URL);
   await foldPicker(page);
   const width = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]);
@@ -837,8 +837,8 @@ test("no sideways scroll at a phone's width, and controls big enough for a finge
   }
 });
 
-test("a tap turns the look on a phone, and the drawing follows with no WebGL", async ({ page, browserName }, info) => {
-  test.skip(browserName !== "webkit" && info.project.name !== "chromium-phone", "A phone");
+test("a tap turns the look on a phone, and the drawing follows with no WebGL", async ({ page }, info) => {
+  test.skip(!info.project.name.endsWith("phone"), "A phone");
   await page.goto(URL);
   await foldPicker(page);
   await page.locator('[data-testid="look-thick"]').tap();
