@@ -11,7 +11,7 @@ import { blank, type Figure } from "./types.ts";
  * console.log(MAKERS.spacex, Object.keys(MAKERS).length);
  * ```
  */
-export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", ula: "United Launch Alliance", europe: "Europe", japan: "Japan", russia: "Russia", "us-army": "US Army", nrl: "Naval Research Laboratory", china: "China", fleet: "SPX", sites: "Sites" } as const;
+export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", ula: "United Launch Alliance", europe: "Europe", japan: "Japan", russia: "Russia", "us-army": "US Army", nrl: "Naval Research Laboratory", "okb-1": "OKB-1", china: "China", fleet: "SPX", sites: "Sites" } as const;
 /**
  * The id of a group in `MAKERS`.
  *
@@ -73,6 +73,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   starlink: { maker: "spacex", madeBy: { value: "SpaceX", source: "wikipedia-starlink" } },
   lageos: { maker: "nasa", madeBy: { value: "NASA", source: "wikipedia-lageos", note: "The infobox names NASA as the manufacturer of LAGEOS-1." } },
   "vanguard-1": { maker: "nrl", madeBy: { value: "Naval Research Laboratory", source: "wikipedia-vanguard-1", note: "The infobox names the Naval Research Laboratory as the manufacturer and the operator." } },
+  "sputnik-1": { maker: "okb-1", madeBy: { value: "OKB-1", source: "wikipedia-sputnik-1", note: "The infobox names OKB-1 as the manufacturer and the operator." } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-drone": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kyotori": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },

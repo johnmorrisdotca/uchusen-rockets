@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Sputnik 1**: `rocket="sputnik-1"`, variant `sputnik-1`. A sphere 58 cm across, launch mass 83.6 kg, from the article's infobox read on 2026-11-13. The design paragraph's 585 mm is kept beside it. Antenna parts of 2.4 m and 2.9 m are not drawn: the article does not give their angle. The 2 mm shell and the 1 mm heat shield are not drawn as layers. Both looks are this package's own sphere. No name or mark is drawn. A new maker group `okb-1`. The country is left blank: the Soviet Union is not an ISO 3166-1 code in this list. Slot: `craft`.
+
 - **Vanguard 1**: `rocket="vanguard-1"`, variant `vanguard-1`. A sphere 152 mm across, launch mass 1.46 kg, from the article's infobox read on 2026-11-13. The body's six inches (150 mm) is kept beside it. Six antennas, each 30 cm by 0.8 cm, span 0.91 m and are not drawn: the article does not give their angle. Both looks are this package's own sphere. No name or mark is drawn. A new maker group `nrl` (Naval Research Laboratory). Country the United States. Slot: `craft`.
 
 - **LAGEOS-1**: `rocket="lageos"`, variant `lageos-1`. A sphere 0.60 m across, launch mass 406.965 kg, from the article's infobox read on 2026-11-13. The article's body also gives 400 kg and 411 kg for the two satellites; the infobox figure is the one kept. NASA's mission page, read the same day, gives the launch date 1976-05-04 and a round 900-pound figure, and does not give the diameter. The retroreflectors are not drawn: the article gives 426 of them and not their size. Both looks are this package's own sphere. No name or mark is drawn. Maker `nasa`, country the United States. Slot: `craft`.

@@ -169,6 +169,7 @@ export const SOURCES = {
   "nasa-lageos": { title: "LAGEOS", publisher: "NASA", url: "https://science.nasa.gov/mission/lageos/", date: "2026-11-13", read: "direct" },
   "wikipedia-lageos": { title: "LAGEOS", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/LAGEOS", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-vanguard-1": { title: "Vanguard 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Vanguard_1", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-sputnik-1": { title: "Sputnik 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Sputnik_1", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 
 /**

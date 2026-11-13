@@ -99,6 +99,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Starlink, v1.5 and v2 mini | This package's own plates, from the filing's bus and array sizes; the 0.1 m thickness judged from photographs | The same plates. No separate model file |
 | LAGEOS-1 | This package's own sphere, the article's 0.60 m diameter. The retroreflectors are not drawn: their size is not given | The same sphere. No separate model file |
 | Vanguard 1 | This package's own sphere, the article's 152 mm diameter. The six antennas are not drawn: their angle is not given | The same sphere. No separate model file |
+| Sputnik 1 | This package's own sphere, the article's 58 cm diameter. The antennas are not drawn: their angle is not given | The same sphere. No separate model file |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
