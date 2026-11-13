@@ -164,6 +164,8 @@ export const SOURCES = {
   "nasa-new-horizons-press-kit": { title: "New Horizons launch press kit, January 2006 (the spacecraft's size)", publisher: "NASA", url: "https://pluto.jhuapl.edu/News-Center/Resources/Press-Kits/NHLaunchPressKit1_06.pdf", date: "2006-01", read: "direct" },
   "nasa-pioneer-record": { title: "Pioneer 10 spacecraft details", publisher: "NASA", url: "https://web.archive.org/web/20100624002543/http://nssdc.gsfc.nasa.gov/nmc/spacecraftDisplay.do?id=1972-012A", date: "2026-11-12", read: "direct" },
   "nasa-europa-clipper": { title: "Europa Clipper", publisher: "NASA", url: "https://science.nasa.gov/mission/europa-clipper/", date: "2026-11-12", read: "direct" },
+  "spacex-gen2-dimensions": { title: "Exhibit B, satellite dimensions and debris-assessment outputs, letter of 4 October 2022 on IBFS File Nos. SAT-LOA-20200526-00055 and SAT-AMD-20210818-00105", publisher: "Space Exploration Holdings, LLC", url: "https://planet4589.org/astro/starsim/papers/StarGen2.pdf", date: "2022-10-04", read: "direct" },
+  "wikipedia-starlink": { title: "Starlink", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Starlink", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
 } as const satisfies Record<string, Source>;
 
 /**
