@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The compare page opens turning** (MODULES-818): the craft turns on load with the view bar's `autoplay` (5 degrees a second, for a minute, idle out of sight, as on the first page); reduced motion gets a still view.
+
 - **The yard opens turning** (MODULES-818): the view bar's `autoplay` (5 degrees a second, for a minute, idle out of sight, as on the first page), so the yard turns on load; reduced motion gets a still view. A turn is drawn at most 30 times a second.
 
 - **The journey opens playing** (MODULES-818): the trip plays from the start at 1x, the first speed step (a trip of about a minute), with the date and day running, as John's rule of 2026-11-10 says every view moves on load. A reader who asked for reduced motion gets a still view with Play ready. Pause is kept in the address as `play=0`; `speed=0` or `play=0` in a link opens it held; a link naming `t`, `speed` or a date works as before.
