@@ -36,7 +36,7 @@ test("search, kind and family narrow the same list", () => {
 
 test("a probe, a telescope and a crewed craft are spacecraft, in the ship picker and on the compare page, and a launcher or a station is not", () => {
   const rows = pickerCatalogue();
-  for (const id of ["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper"]) {
+  for (const id of ["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "starlink", "lageos"]) {
     assert.equal(pickerKind(id), "craft", id);
     assert.equal(kindOf(id), "craft", id);
     assert.equal(rows.find((row) => row.rocket === id)?.kind, "craft", id);
@@ -47,7 +47,7 @@ test("a probe, a telescope and a crewed craft are spacecraft, in the ship picker
   assert.deepEqual(pickerKinds(), ["rocket", "craft", "station", "fleet"]);
   // the Real rockets column holds no spacecraft
   assert.equal(filterCraft(rows, { kind: "rocket", family: "all", search: "" }).some((row) => isSpacecraft(row.rocket)), false);
-  assert.deepEqual(filterCraft(rows, { kind: "craft", family: "nasa", search: "" }).map((row) => row.rocket).sort(), ["apollo-soyuz", "cassini", "europa-clipper", "galileo", "gemini", "hubble", "juno", "jwst", "lunar-module", "mercury", "new-horizons", "parker-solar-probe", "pioneer", "voyager"]);
+  assert.deepEqual(filterCraft(rows, { kind: "craft", family: "nasa", search: "" }).map((row) => row.rocket).sort(), ["apollo-soyuz", "cassini", "europa-clipper", "galileo", "gemini", "hubble", "juno", "jwst", "lageos", "lunar-module", "mercury", "new-horizons", "parker-solar-probe", "pioneer", "voyager"]);
   assert.ok(familiesOf(rows, "craft").includes("nasa"));
   assert.ok(familiesOf(rows, "craft").includes("spacex"), "Dragon");
   assert.equal(familiesOf(rows, "craft").includes("china"), false);

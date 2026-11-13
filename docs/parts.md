@@ -96,6 +96,8 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Pioneer | This package's plain shape, from the sourced antenna and magnetometer boom | NASA's model, its pictures left out, the antenna already 2.74 m: 3,992 triangles and 74 KB |
 | New Horizons | This package's plain shape, from the sourced body and antenna | NASA's model, its pictures left out, scaled so the antenna is 2.1 m: 5,999 triangles and 92 KB |
 | Europa Clipper | This package's plain shape, from the sourced span and antenna | NASA VTAD's model, its pictures left out, scaled so the arrays span about 30 m: 14,942 triangles and 223 KB |
+| Starlink, v1.5 and v2 mini | This package's own plates, from the filing's bus and array sizes; the 0.1 m thickness judged from photographs | The same plates. No separate model file |
+| LAGEOS-1 | This package's own sphere, the article's 0.60 m diameter. The retroreflectors are not drawn: their size is not given | The same sphere. No separate model file |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
 Parts belong to one interface, so one rocket can use another's: Falcon 9 `block-5-dragon-2` is Block 5's own stages and Dragon 2's own capsule and trunk, joined at their joints, and its credits name both authors.
