@@ -167,6 +167,9 @@ export const SOURCES = {
   "spacex-gen2-dimensions": { title: "Exhibit B, satellite dimensions and debris-assessment outputs, letter of 4 October 2022 on IBFS File Nos. SAT-LOA-20200526-00055 and SAT-AMD-20210818-00105", publisher: "Space Exploration Holdings, LLC, filed with the Federal Communications Commission", url: "https://licensing.fcc.gov/myibfs/", date: "2022-10-04", read: "direct" },
   "nasa-lageos": { title: "LAGEOS", publisher: "NASA", url: "https://science.nasa.gov/mission/lageos/", date: "2026-11-13", read: "direct" },
   "ilrs-lageos-1": { title: "LAGEOS-1 general information", publisher: "International Laser Ranging Service, NASA Goddard Space Flight Center", url: "https://ilrs.gsfc.nasa.gov/missions/satellite_missions/current_missions/lag1_general.html", date: "2026-11-13", read: "direct" },
+  "nasa-history-sputnik-chronology": { title: "Sputnik chronology", publisher: "NASA History Office", url: "https://www.nasa.gov/history/sputnik/chronology.html", date: "2026-11-13", read: "direct" },
+  "nasa-history-sputnik-launius": { title: "Sputnik and the Origins of the Space Age, by Roger D. Launius", publisher: "NASA History Office", url: "https://www.nasa.gov/history/sputnik/sputorig.html", date: "2026-11-13", read: "direct" },
+  "nasa-history-sputnik-harford": { title: "Korolev's Triple Play: Sputniks 1, 2, and 3, by James Harford", publisher: "NASA History Office", url: "https://www.nasa.gov/history/sputnik/harford.html", date: "2026-11-13", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**

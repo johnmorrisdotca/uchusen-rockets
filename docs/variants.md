@@ -293,6 +293,8 @@ The payload slot takes any of the three Roadsters. `test-flight-second-generatio
 
 `lageos`: one form, `lageos-1`. A sphere 60 cm across, mass 406.965 kg, 426 retroreflectors (fused silica glass, four of germanium), launched 1976-05-04, from the International Laser Ranging Service's page for the satellite, read 2026-11-13. NASA's mission page, read the same day, lists the same launch date for the pair and says "900-pound golf balls", a round figure, and gives no diameter. The retroreflectors are not drawn: the page gives their number and not their size. Both looks are this package's own sphere. No name or mark is drawn. Slot: `craft`.
 
+`sputnik-1`: one form, `sputnik-1`. A sphere 0.5588 m (22 inches) across, mass 83.6 kg, launched 1957-10-04, from NASA's history pages (the Sputnik chronology and the accounts by Roger Launius and James Harford, read 2026-11-13). Another NASA account quotes a 23-inch sphere (0.5842 m); the 22 inches is the one kept. Launius gives four whip antennae and no length or angle for them, so none is drawn. The country is blank: the Soviet Union is not one of the codes this package lists.
+
 `juno`: launched on 2011-08-05. The body is about 3.5 m high and wide, and the solar arrays give an overall width exceeding 20 m, from the mission page. Each array is 8.9 m by 2.65 m in the deployment-test caption, and the mission page says each extends about 9 m from the body. Painted, it is NASA's model scaled so the arrays' tip-to-tip is 20 m; at that scale the file stands 6.89 m. Its line look reaches that 20 m span, so each array is drawn 9.8 m from the body, and the antenna is drawn 3.46 m across from the model, because no source read here gives the antenna's diameter. No mark was on the model.
 
 ## Whose each one is

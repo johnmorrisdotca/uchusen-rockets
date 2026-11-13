@@ -36,7 +36,7 @@ test("search, kind and family narrow the same list", () => {
 
 test("a probe, a telescope and a crewed craft are spacecraft, in the ship picker and on the compare page, and a launcher or a station is not", () => {
   const rows = pickerCatalogue();
-  for (const id of ["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "starlink", "lageos"]) {
+  for (const id of ["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "starlink", "lageos", "sputnik-1"]) {
     assert.equal(pickerKind(id), "craft", id);
     assert.equal(kindOf(id), "craft", id);
     assert.equal(rows.find((row) => row.rocket === id)?.kind, "craft", id);

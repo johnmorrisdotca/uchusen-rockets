@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **Sputnik 1**: `rocket="sputnik-1"`, variant `sputnik-1`. A sphere 0.5588 m (22 inches) across, launch mass 83.6 kg, launched 1957-10-04, from NASA's history pages (the Sputnik chronology and the accounts by Roger Launius and James Harford, read 2026-11-13). Another NASA account quotes 23 inches (0.5842 m); the 22 is kept and the 23 recorded beside it. The four whip antennae have no length or angle on those pages and are not drawn. Both looks are this package's own sphere. The maker is the USSR (new maker group, JA ソ連), as NASA's chronology names it, and the country is blank: the Soviet Union is not an ISO 3166-1 code in this list.
+- **Fleet demo test** (MODULES-1327): the Maker-row check of `e2e/fleet-demo.demo.ts` waits for the row instead of reading it once after the page loads, and the walk over the seven fleet ships is one test a ship, so a slow runner no longer fails it.
+
 ## [0.28.0] - 2026-11-13
 
 - **Mercury-Redstone names its capsule** : the launch-vehicle article, read 2026-11-13, names what it carries as the Mercury spacecraft. That name is `facts.more.payload` on variant `redstone`, with the source and the date. The capsule drawn is still the Friendship 7 part, and that part's file is unchanged.

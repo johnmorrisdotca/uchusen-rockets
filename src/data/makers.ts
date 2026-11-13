@@ -11,7 +11,7 @@ import { blank, type Figure } from "./types.ts";
  * console.log(MAKERS.spacex, Object.keys(MAKERS).length);
  * ```
  */
-export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", ula: "United Launch Alliance", europe: "Europe", japan: "Japan", russia: "Russia", "us-army": "US Army", china: "China", fleet: "SPX", sites: "Sites" } as const;
+export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", ula: "United Launch Alliance", europe: "Europe", japan: "Japan", russia: "Russia", "us-army": "US Army", ussr: "USSR", china: "China", fleet: "SPX", sites: "Sites" } as const;
 /**
  * The id of a group in `MAKERS`.
  *
@@ -72,6 +72,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   "europa-clipper": { maker: "nasa", madeBy: { value: "NASA", source: "nasa-europa-clipper" } },
   starlink: { maker: "spacex", madeBy: { value: "Space Exploration Holdings, LLC", source: "spacex-gen2-dimensions", note: "The filer of the sizes' letter, the operator's company." } },
   lageos: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-lageos", note: "NASA's own mission page for LAGEOS, as for the other NASA craft here: it says the satellites are NASA's and does not say who built them." } },
+  "sputnik-1": { maker: "ussr", madeBy: { value: "USSR", source: "nasa-history-sputnik-chronology", note: "NASA's chronology lists Sputnik 1 as a launch of the USSR. It names no design bureau." } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-drone": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kyotori": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
