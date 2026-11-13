@@ -161,13 +161,16 @@ function made(id: string, k = 1) {
   const entry = partEntry(id);
   if (!entry) throw new Error(`There is no part "${id}".`);
   const pieces = k === 1 ? entry.pieces() : scalePieces(entry.pieces(), k);
+  const reach = entry.record.reach;
+  // the painted model's box, when it reaches past the shape the pieces draw
+  const reached = (box: Bounds): Bounds => (reach ? { min: [0, 1, 2].map((i) => Math.min(box.min[i], reach.min[i] * k)) as Vec3, max: [0, 1, 2].map((i) => Math.max(box.max[i], reach.max[i] * k)) as Vec3 } : box);
   if (pieces.length > HEAVY_PIECES) {
-    const heavy = { pieces, bounds: boundsOfPieces(pieces), get mesh() { return meshOf(pieces); } };
+    const heavy = { pieces, bounds: reached(boundsOfPieces(pieces)), get mesh() { return meshOf(pieces); } };
     remember(key, heavy);
     return heavy;
   }
   const mesh = meshOf(pieces);
-  const result = { pieces, mesh, bounds: boundsOf(mesh) };
+  const result = { pieces, mesh, bounds: reached(boundsOf(mesh)) };
   remember(key, result);
   return result;
 }

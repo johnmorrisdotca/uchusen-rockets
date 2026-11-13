@@ -4,7 +4,7 @@
 
 ## [0.25.0] - 2026-11-13
 
-- **Europa Clipper** (MODULES-1120): `rocket="europa-clipper"`. The painted look is NASA Visualization Technology Applications and Development's model, its pictures left out, fetched only when that look is asked for, and scaled so the solar arrays span about 30 m. The line look is this package's own plain shape from that span and the 3 m antenna.
+- **Europa Clipper** (MODULES-1120): `rocket="europa-clipper"`. The painted look is NASA Visualization Technology Applications and Development's model, its pictures left out, fetched only when that look is asked for, and scaled so the solar arrays span about 30 m. The line look is this package's own plain shape from that span and the 3 m antenna. Its default frame holds the whole painted model, which stands 11 m with its boom and reaches 17.5 m deep: a part can now name the box its painted model fills (`reach`), as the plain shape is far smaller. A speck test covers its loose pieces (none under 7 cm), and the whole-by-default test covers it with Juno.
 
 ## [0.24.0] - 2026-11-13
 

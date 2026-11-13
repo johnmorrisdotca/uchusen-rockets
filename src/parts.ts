@@ -59,6 +59,8 @@ export interface PartRecord {
   diameter: number;
   /** The widest the default fit holds, in metres, when arrays or booms reach several times past the body: they run off the frame's edge so the body is not drawn small. Left out, the fit holds the whole part. */
   fitWidth?: number;
+  /** The box the painted model fills when it reaches past the plain shape, so the default frame holds the painted craft whole. Metres, as drawn. */
+  reach?: { min: readonly [number, number, number]; max: readonly [number, number, number] };
   /** The sourced figures, blank where no source gives one. */
   sourced: { height: Figure; diameter: Figure };
   joints: { readonly top?: Joint; readonly bottom?: Joint };

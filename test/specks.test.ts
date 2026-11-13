@@ -1,4 +1,4 @@
-// Parker's painted model has no loose specks, and the trimming that took them out finds the rest of the painted craft untouched.
+// Parker's and Europa Clipper's painted models have no loose specks, and the trimming that took them out finds the rest of the painted craft untouched.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -12,13 +12,17 @@ const metresPerUnit = (doc: Awaited<ReturnType<typeof read>>) => {
   return Math.hypot(m[0], m[1], m[2]);
 };
 
-test("Parker's painted model has no connected piece under the speck floor", async () => {
-  const doc = await read("parker-solar-probe-craft.glb");
-  const primitive = doc.getRoot().listMeshes()[0].listPrimitives()[0];
-  const pieces = loosePiecesOf(primitive, metresPerUnit(doc));
-  assert.ok(pieces.length > 20, "the craft is still whole");
-  const smallest = Math.min(...pieces.map((piece) => piece.size));
-  assert.ok(smallest >= SPECK_FLOOR, `the smallest piece is ${(smallest * 100).toFixed(1)} cm, under the ${SPECK_FLOOR * 100} cm floor`);
+test("each trimmed painted model has no connected piece under the speck floor", async (t) => {
+  for (const [file, minPieces] of [["parker-solar-probe-craft.glb", 20], ["europa-clipper-craft.glb", 100]] as const) {
+    await t.test(file, async () => {
+      const doc = await read(file);
+      const primitive = doc.getRoot().listMeshes()[0].listPrimitives()[0];
+      const pieces = loosePiecesOf(primitive, metresPerUnit(doc));
+      assert.ok(pieces.length > minPieces, "the craft is still whole");
+      const smallest = Math.min(...pieces.map((piece) => piece.size));
+      assert.ok(smallest >= SPECK_FLOOR, `the smallest piece is ${(smallest * 100).toFixed(1)} cm, under the ${SPECK_FLOOR * 100} cm floor`);
+    });
+  }
 });
 
 test("trimming a model that has no specks changes nothing, and one with a speck loses only the speck", async () => {

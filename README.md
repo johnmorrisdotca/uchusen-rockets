@@ -326,8 +326,8 @@ check({ rocket: "starship", variant: "v3" }).credits[0].licence; // "CC BY 4.0"
 | Cassini | Cassini-Huygens (A) | [NASA](https://science.nasa.gov/3d-resources/) | [3D Resources](https://science.nasa.gov/3d-resources/cassini/) | Pictures left out, reduced, rescaled so the antenna is 4 m. Public domain |
 | Galileo | Galileo | [NASA](https://science.nasa.gov/3d-resources/) | [3D Resources](https://science.nasa.gov/3d-resources/galileo/) | Reduced, rescaled so its longest side is the 11 m boom. Public domain |
 | Pioneer | Pioneer 10 | [NASA](https://science.nasa.gov/3d-resources/) | [3D Resources](https://science.nasa.gov/3d-resources/pioneer/) | Pictures left out, the antenna already 2.74 m. One model for Pioneer 10 and 11. Public domain |
-| New Horizons | New Horizons 3D Model | [NASA](https://science.nasa.gov/3d-resources/) | [Resource](https://science.nasa.gov/resource/new-horizons-3d-model/) | Pictures left out (one carried a flag), reduced, rescaled so the antenna is 2.1 m. Public domain, `europa-clipper` |
-| Europa Clipper | Europa Clipper | [NASA VTAD](https://science.nasa.gov/resource/europa-clipper-3d-model/) | [3D model](https://science.nasa.gov/resource/europa-clipper-3d-model/) | Pictures left out, reduced, rescaled so the arrays span about 30 m. Public domain |
+| New Horizons | New Horizons 3D Model | [NASA](https://science.nasa.gov/3d-resources/) | [Resource](https://science.nasa.gov/resource/new-horizons-3d-model/) | Pictures left out (one carried a flag), reduced, rescaled so the antenna is 2.1 m. Public domain |
+| Europa Clipper | Europa Clipper | [NASA VTAD](https://science.nasa.gov/resource/europa-clipper-3d-model/) | [3D model](https://science.nasa.gov/resource/europa-clipper-3d-model/) | Pictures left out, reduced, rescaled so the arrays span about 30 m, loose pieces under 7 cm left out. Public domain |
 <!-- more NASA models -->
 
 All but Discovery and NASA's are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). NASA is named as the source of its models, as its guidelines ask, with no suggestion that it endorses this package, and no NASA logo, insignia, flag or lettering is shipped: [NOTICE.md](NOTICE.md) says what that rests on. Starship Blocks 1, 2 and 4 and the older Falcon 9s are painted by this package's own code: no model is stretched to stand in for another version.
@@ -458,7 +458,7 @@ variantOf("starship", "2019").facts.diameter.value; // null
 
 ## How to cite
 
-> Morris, J. (2026). *Uchusen Rockets* (version 0.24.0) [Computer software]. https://github.com/johnmorrisdotca/uchusen-rockets
+> Morris, J. (2026). *Uchusen Rockets* (version 0.25.0) [Computer software]. https://github.com/johnmorrisdotca/uchusen-rockets
 
 GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff) and gives BibTeX and APA. Cite the version you used (`npm ls @johnmorrisdotca/uchusen-rockets`), and credit the people behind the models and the numbers: [NOTICE.md](NOTICE.md) says who made each one and under what terms.
 

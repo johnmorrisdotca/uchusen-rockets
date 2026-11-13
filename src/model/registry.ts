@@ -220,6 +220,7 @@ for (const build of stacks)
         height: part.height,
         diameter: part.diameter,
         ...(part.fitWidth === undefined ? {} : { fitWidth: part.fitWidth }),
+        ...(part.reach === undefined ? {} : { reach: part.reach }),
         sourced: { height, diameter: part.sourcedDiameter ?? diameter },
         joints: { ...(part.top ? { top: { kind: STAGE, y: part.top[0], diameter: part.top[1] } } : {}), ...(part.bottom ? { bottom: { kind: STAGE, y: part.bottom[0], diameter: part.bottom[1] } } : {}) },
         ...(part.place ? { strapOn: part.place } : {}),

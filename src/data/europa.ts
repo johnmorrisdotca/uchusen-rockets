@@ -18,9 +18,9 @@ export const EUROPA_VARIANTS: readonly Variant[] = [
     firstWord: "Launched",
     firstFlight: { value: "2024-10-14", source: S, note: "12:06 p.m. EDT, from Kennedy LC-39A." },
     slots: ["craft"],
-    note: "NASA Visualization Technology Applications and Development's model in the painted look, its pictures left out and plain colours kept, scaled so the solar arrays span the sourced about 30 m; at that scale the file stands 11.07 m. This package's own plain shape in the line looks, from that span and the 3 m antenna. The page does not give one height for the whole spacecraft.",
+    note: "NASA Visualization Technology Applications and Development's model in the painted look, its pictures left out and plain colours kept, scaled so the solar arrays span the sourced about 30 m; at that scale the file stands 10.98 m. This package's own plain shape in the line looks, from that span and the 3 m antenna. The page does not give one height for the whole spacecraft.",
     facts: {
-      height: { value: 3, source: S, note: "The high-gain antenna. The page does not give one height for the whole spacecraft. NASA's model at the 30 m span stands 11.07 m." },
+      height: { value: 3, source: S, note: "The high-gain antenna. The page does not give one height for the whole spacecraft. NASA's model at the 30 m span stands 10.98 m." },
       diameter: EUROPA_SPAN,
       parts: { craft: EUROPA_DISH },
       engines: {},

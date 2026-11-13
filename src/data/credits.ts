@@ -203,7 +203,7 @@ export const MODEL_CREDITS = {
   "nasa-galileo": nasa("Galileo", "https://science.nasa.gov/3d-resources/galileo/", "Reduced from 13,414 triangles; rescaled so its longest side is the sourced 11 m magnetometer boom; plain colours kept. It carried no mark to remove."),
   "nasa-pioneer": nasa("Pioneer 10", "https://science.nasa.gov/3d-resources/pioneer/", "Its pictures left out and plain colours kept; reduced from 8,189 triangles; the high-gain antenna is already the sourced 2.74 m. One model for Pioneer 10 and 11. It carried no mark to remove."),
   "nasa-new-horizons": nasa("New Horizons 3D Model", "https://science.nasa.gov/resource/new-horizons-3d-model/", "By NASA Visualization Technology Applications and Development (VTAD). Its pictures, one of which carried a flag, replaced by plain colours, so the flag is removed; its clear box left out; reduced from 8,268 triangles; rescaled so the high-gain antenna is the sourced 2.1 m; the loose pieces under 7 cm left out."),
-  "nasa-europa-clipper": nasa("Europa Clipper", "https://science.nasa.gov/resource/europa-clipper-3d-model/", "Its pictures left out and plain colours kept, so no wordmark, logo or flag remains; reduced from 203,662 triangles; rescaled so the solar arrays span the sourced about 30 m. It carried no mark to remove."),
+  "nasa-europa-clipper": nasa("Europa Clipper", "https://science.nasa.gov/resource/europa-clipper-3d-model/", "Its pictures left out and plain colours kept, so no wordmark, logo or flag remains; reduced from 203,662 triangles; rescaled so the solar arrays span the sourced about 30 m; the loose pieces under 7 cm left out. It carried no mark to remove."),
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

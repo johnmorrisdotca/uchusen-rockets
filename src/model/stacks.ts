@@ -14,6 +14,8 @@ export interface StackPart {
   diameter: number;
   /** The widest the default fit holds, in metres, when arrays or booms reach several times past the body. */
   fitWidth?: number;
+  /** The box the painted look's model fills, when it reaches past the plain shape: the default frame holds it too, so the painted craft is whole. The corners, metres, as drawn. */
+  reach?: { min: readonly [number, number, number]; max: readonly [number, number, number] };
   /** Where it mates: metres above its origin, and metres across there. */
   top?: readonly [number, number];
   bottom?: readonly [number, number];
