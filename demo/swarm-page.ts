@@ -1,7 +1,7 @@
 // One moment of the Miyamoto build: a box for each drone, on a lane outside the hull, with the last leg running in to the slot.
 import { buildOf, playFrame } from "../src/buildPlay.ts";
 import { approachPath, pathClears, swarmCount, swarmJobs, type HullBox } from "../src/swarm.ts";
-import { everyFrame } from "./loop.ts";
+import { playable } from "./pause.ts";
 import { bindStage, placeZoom } from "./viewBinder.ts";
 import { WORDS } from "./words.js";
 
@@ -80,7 +80,7 @@ if (caption && frame) caption.textContent = say("swarmNow", { day: Math.round(fr
 const stage = document.getElementById("swarm-stage");
 if (stage && host) bindStage(stage, (detail) => placeZoom(host, detail), { flat: true, theme: "dark", controls: "basic", zoomMin: "0.25", zoomMax: "8", testid: "view-bar" });
 
-// The page opens moving: each drone runs its approach, out of its box, along the lane and in to its slot, then goes back to the box. Two or three seconds a leg is slow enough to follow. Still for reduced motion.
+// The page opens moving, with a Pause button (kept in the address as `play=0`): each drone runs its approach, out of its box, along the lane and in to its slot, then goes back to the box. Two or three seconds a leg is slow enough to follow. Still for reduced motion, with Play ready.
 if (host) {
   const drones = [...host.querySelectorAll<SVGRectElement>("[data-drone]")];
   const legs = [...host.querySelectorAll<SVGPolylineElement>("[data-leg]")].map((leg) => (leg.getAttribute("points") ?? "").split(" ").map((pair) => pair.split(",").map(Number) as [number, number]));
@@ -97,7 +97,8 @@ if (host) {
     }
     return leg[0];
   };
-  everyFrame(host, (ms) => {
+  const controls = document.getElementById("swarm-controls");
+  if (controls) playable(host, controls, "swarm-pause", (ms) => {
     drones.forEach((drone, index) => {
       const leg = legs[index];
       if (!leg || leg.length < 2) return;

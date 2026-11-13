@@ -2061,7 +2061,7 @@ test.describe("the six pages that open moving", () => {
   const SWARM = "/uchusen-rockets/swarm.html";
   const BEAM = "/uchusen-rockets/beam.html";
 
-  test("swarm: the drones run at most 30 draws a second from one frame loop, and nothing is drawn out of sight, on a hidden tab or once reduced motion is asked for", async ({ page }) => {
+  test("swarm: the drones run at most 30 draws a second from one frame loop, and Pause, play=0 or reduced motion leave nothing drawn and no frame asked for; it is still out of sight and on a hidden tab", async ({ page }) => {
     test.setTimeout(240_000);
     await counted(page);
     await page.goto(SWARM);
@@ -2070,13 +2070,26 @@ test.describe("the six pages that open moving", () => {
     const start = await levelUsage(page);
     await expectPaced(page, { schedulers: 1 });
     await expectUnseen(page);
-    // the page has no pause control: the reader's own switch for less motion is its stop, and it works while the page runs
+    // Pause rests the loop: nothing is drawn and no frame is asked for, play=0 is in the address, and Play runs it again
+    await page.getByTestId("swarm-pause").click();
+    await expect(page).toHaveURL(/play=0/);
+    await expectStill(page);
+    expectFlat(start, await levelUsage(page));
+    await page.getByTestId("swarm-pause").click();
+    await expectPaced(page, { schedulers: 1 });
+    // the reader's own switch for less motion stops it too, while it runs
     await page.emulateMedia({ reducedMotion: "reduce" });
     await expectStill(page);
     expectFlat(start, await levelUsage(page));
+    // held in the address, it opens still, and nothing is drawn from the first frame
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(`${SWARM}?play=0`);
+    await expect(page.getByTestId("swarm-pause")).toHaveAttribute("aria-pressed", "false");
+    await watching(page, "#swarm-map");
+    await expectStill(page);
   });
 
-  test("beam: the rings run at most 30 draws a second from one frame loop, and nothing is drawn out of sight, on a hidden tab or once reduced motion is asked for", async ({ page }) => {
+  test("beam: the rings run at most 30 draws a second from one frame loop, and Pause, play=0 or reduced motion leave nothing drawn and no frame asked for; it is still out of sight and on a hidden tab", async ({ page }) => {
     test.setTimeout(240_000);
     await counted(page);
     await page.goto(BEAM);
@@ -2085,9 +2098,22 @@ test.describe("the six pages that open moving", () => {
     const start = await levelUsage(page);
     await expectPaced(page, { schedulers: 1 });
     await expectUnseen(page);
-    // the page has no pause control: the reader's own switch for less motion is its stop, and it works while the page runs
+    // Pause rests the loop: nothing is drawn and no frame is asked for, play=0 is in the address, and Play runs it again
+    await page.getByTestId("beam-pause").click();
+    await expect(page).toHaveURL(/play=0/);
+    await expectStill(page);
+    expectFlat(start, await levelUsage(page));
+    await page.getByTestId("beam-pause").click();
+    await expectPaced(page, { schedulers: 1 });
+    // the reader's own switch for less motion stops it too, while it runs
     await page.emulateMedia({ reducedMotion: "reduce" });
     await expectStill(page);
     expectFlat(start, await levelUsage(page));
+    // held in the address, it opens still, and nothing is drawn from the first frame
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(`${BEAM}?play=0`);
+    await expect(page.getByTestId("beam-pause")).toHaveAttribute("aria-pressed", "false");
+    await watching(page, "#beam-carry");
+    await expectStill(page);
   });
 });

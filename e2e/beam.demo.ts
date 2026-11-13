@@ -37,4 +37,67 @@ test.describe("the beam page opens moving", () => {
     await expect(carry.locator("[data-ring]").first()).toBeAttached();
     await expectStillPicture(page, () => carry.screenshot(), "the carrying beam stays still");
   });
+
+  test("Pause holds the rings and the address, Play runs them again", async ({ page }) => {
+    await page.goto(URL);
+    const carry = page.getByTestId("beam-carry");
+    const pause = page.getByTestId("beam-pause");
+    await expect(carry.locator("[data-ring]").first()).toBeAttached();
+    // on a phone the carrying beam can start below the fold, and a page draws nothing out of sight
+    await carry.scrollIntoViewIfNeeded();
+    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect(pause).toHaveText("Pause");
+    await pause.focus();
+    await page.keyboard.press("Enter");
+    await expect(pause).toHaveAttribute("aria-pressed", "false");
+    await expect(pause).toHaveText("Play");
+    await expect(page).toHaveURL(/play=0/);
+    const held = await carry.innerHTML();
+    await page.waitForTimeout(1500);
+    expect(await carry.innerHTML()).toBe(held);
+    await pause.click();
+    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect(page).not.toHaveURL(/play=0/);
+    await carry.scrollIntoViewIfNeeded();
+    await expect.poll(async () => (await carry.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
+  });
+
+  test("play=0 opens held, and Play runs it", async ({ page }) => {
+    await page.goto(`${URL}?play=0`);
+    const carry = page.getByTestId("beam-carry");
+    const pause = page.getByTestId("beam-pause");
+    await expect(carry.locator("[data-ring]").first()).toBeAttached();
+    // on a phone the carrying beam can start below the fold, and a page draws nothing out of sight
+    await carry.scrollIntoViewIfNeeded();
+    await expect(pause).toHaveAttribute("aria-pressed", "false");
+    const held = await carry.innerHTML();
+    await page.waitForTimeout(1500);
+    expect(await carry.innerHTML()).toBe(held);
+    await pause.click();
+    await carry.scrollIntoViewIfNeeded();
+    await expect.poll(async () => (await carry.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
+  });
+
+  test("the button names its state in Japanese", async ({ page }) => {
+    await page.goto(`${URL}?lang=ja`);
+    const pause = page.getByTestId("beam-pause");
+    await expect(pause).toHaveText("一時停止");
+    await pause.click();
+    await expect(pause).toHaveText("再生");
+  });
+
+  test("reduced motion opens held with Play ready, and Play runs it", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(URL);
+    const carry = page.getByTestId("beam-carry");
+    const pause = page.getByTestId("beam-pause");
+    await expect(carry.locator("[data-ring]").first()).toBeAttached();
+    // on a phone the carrying beam can start below the fold, and a page draws nothing out of sight
+    await carry.scrollIntoViewIfNeeded();
+    await expect(pause).toHaveText("Play");
+    const held = await carry.innerHTML();
+    await pause.click();
+    await carry.scrollIntoViewIfNeeded();
+    await expect.poll(async () => (await carry.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
+  });
 });

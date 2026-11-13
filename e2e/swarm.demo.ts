@@ -220,4 +220,58 @@ test.describe("the swarm page opens moving", () => {
     await expect(map.locator("[data-drone]").first()).toBeVisible();
     await expectStillPicture(page, () => map.screenshot(), "the drones stay in their boxes");
   });
+
+  test("Pause holds the drones and the address, Play runs them again", async ({ page }) => {
+    await page.goto("/uchusen-rockets/swarm.html");
+    const map = page.getByTestId("swarm-map");
+    const pause = page.getByTestId("swarm-pause");
+    await expect(map.locator("[data-drone]").first()).toBeVisible();
+    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect(pause).toHaveText("Pause");
+    await pause.focus();
+    await page.keyboard.press("Enter");
+    await expect(pause).toHaveAttribute("aria-pressed", "false");
+    await expect(pause).toHaveText("Play");
+    await expect(page).toHaveURL(/play=0/);
+    const held = await map.innerHTML();
+    await page.waitForTimeout(1500);
+    expect(await map.innerHTML()).toBe(held);
+    await pause.click();
+    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect(page).not.toHaveURL(/play=0/);
+    await expect.poll(async () => (await map.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
+  });
+
+  test("play=0 opens held, and Play runs it", async ({ page }) => {
+    await page.goto("/uchusen-rockets/swarm.html?play=0");
+    const map = page.getByTestId("swarm-map");
+    const pause = page.getByTestId("swarm-pause");
+    await expect(map.locator("[data-drone]").first()).toBeVisible();
+    await expect(pause).toHaveAttribute("aria-pressed", "false");
+    const held = await map.innerHTML();
+    await page.waitForTimeout(1500);
+    expect(await map.innerHTML()).toBe(held);
+    await pause.click();
+    await expect.poll(async () => (await map.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
+  });
+
+  test("the button names its state in Japanese", async ({ page }) => {
+    await page.goto("/uchusen-rockets/swarm.html?lang=ja");
+    const pause = page.getByTestId("swarm-pause");
+    await expect(pause).toHaveText("一時停止");
+    await pause.click();
+    await expect(pause).toHaveText("再生");
+  });
+
+  test("reduced motion opens held with Play ready, and Play runs it", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/uchusen-rockets/swarm.html");
+    const map = page.getByTestId("swarm-map");
+    const pause = page.getByTestId("swarm-pause");
+    await expect(map.locator("[data-drone]").first()).toBeVisible();
+    await expect(pause).toHaveText("Play");
+    const held = await map.innerHTML();
+    await pause.click();
+    await expect.poll(async () => (await map.innerHTML()) !== held, { timeout: 30_000 }).toBe(true);
+  });
 });
