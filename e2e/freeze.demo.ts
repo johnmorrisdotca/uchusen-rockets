@@ -2033,6 +2033,35 @@ test.describe("the six pages that open moving", () => {
     await expectStill(page);
   });
 
+  const FIRST = "/uchusen-rockets/?rocket=saturn-v&variant=saturn-v&background=none&panel=background";
+
+  test("first page: Still holds the view bar's turn, at load and when chosen, and the turn comes back on leaving Still", async ({ page }) => {
+    test.setTimeout(300_000);
+    await counted(page);
+    // opened Still: the bar never turns, and nothing is drawn
+    await page.goto(`${FIRST}&spin=still`);
+    await reach3d(page);
+    await expect(bar(page)).not.toHaveAttribute("data-turning", "");
+    await expectStill(page);
+    // leaving Still lets it turn, and choosing Still stops it again
+    const pace = page.getByTestId("turn-pace");
+    await pace.getByRole("button", { name: "1", exact: true }).click();
+    await turning(page);
+    await pace.getByRole("button", { name: "0", exact: true }).click();
+    await expect(bar(page)).not.toHaveAttribute("data-turning", "");
+    await expectStill(page);
+  });
+
+  test("first page: reduced motion holds the view bar's turn at load, and the page draws nothing once it has settled", async ({ page }) => {
+    test.setTimeout(300_000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await counted(page);
+    await page.goto(FIRST);
+    await reach3d(page);
+    await expect(bar(page)).not.toHaveAttribute("data-turning", "");
+    await expectStill(page);
+  });
+
   const LINEUP = "/uchusen-rockets/compare.html?layout=lineup";
   const lineupReady = async (page: Page, address: string) => {
     await page.goto(address);
