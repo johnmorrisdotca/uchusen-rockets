@@ -264,8 +264,11 @@ test("Mercury-Redstone carries the existing capsule and stands 25.41 m", () => {
   assert.equal(v?.facts.diameter.value, 1.78);
   assert.equal(v?.facts.parts["first-stage"]?.value, null);
   assert.equal(v?.facts.parts["escape-tower"]?.value, null);
-  assert.equal(v?.partIds?.capsule, "mercury-friendship-7-capsule");
-  assert.equal(partEntry("mercury-friendship-7-capsule")?.record.height, 3.3);
+  assert.equal(v?.partIds?.capsule, "mercury-redstone-capsule");
+  assert.equal(partEntry("mercury-redstone-capsule")?.record.height, 3.3);
+  assert.equal(partEntry("mercury-redstone-capsule")?.record.name, "Mercury spacecraft", "named for the vehicle it is in, not for Friendship 7");
+  assert.deepEqual(partEntry("mercury-redstone-capsule")?.record.trueTo, ["redstone"]);
+  assert.equal(partEntry("mercury-friendship-7-capsule")?.record.name, "Mercury spacecraft, Friendship 7");
   assert.equal(bells("mercury-redstone-redstone-first-stage"), 1);
   const report = check({ rocket: "mercury-redstone", variant: "redstone" });
   assert.ok(report.ok && !report.custom, report.issues.map((issue) => issue.message).join(" "));

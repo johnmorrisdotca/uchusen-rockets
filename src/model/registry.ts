@@ -243,15 +243,23 @@ for (const build of stacks)
     });
   }
 
-// Mercury-Redstone reuses the capsule already drawn for Friendship 7. The capsule's own file stays as it is: this only lets that one part mate in the launch vehicle, and names the vehicle among the versions the part is true for.
+// Mercury-Redstone reuses the capsule already drawn for Friendship 7, as a record of its own so that the part is named for the vehicle it is in (the Mercury spacecraft), not for a flight it did not make. The capsule's own record and file stay as they are: this one mates in the launch vehicle, and is true for it alone.
 {
   const capsule = entries.find((entry) => entry.record.id === "mercury-friendship-7-capsule");
   if (capsule) {
-    capsule.record.trueTo = [...capsule.record.trueTo, "redstone"];
-    capsule.record.joints = {
-      bottom: { kind: STAGE, y: 0, diameter: 1.78 },
-      top: { kind: STAGE, y: capsule.record.height, diameter: 1.8 },
-    };
+    entries.push({
+      record: {
+        ...capsule.record,
+        id: "mercury-redstone-capsule",
+        name: "Mercury spacecraft",
+        trueTo: ["redstone"],
+        joints: {
+          bottom: { kind: STAGE, y: 0, diameter: 1.78 },
+          top: { kind: STAGE, y: capsule.record.height, diameter: 1.8 },
+        },
+      },
+      pieces: capsule.pieces,
+    });
   }
 }
 

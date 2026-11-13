@@ -13,7 +13,7 @@ export const MERCURY_REDSTONE_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstFlight: { value: "1960-11-21", source: S, note: "The article's first launch. It counts that launch as the one failure. Freedom 7, the first crewed Mercury, flew later and is not this date." },
     slots: ["first-stage", "capsule", "escape-tower"],
-    partIds: { capsule: "mercury-friendship-7-capsule" },
+    partIds: { capsule: "mercury-redstone-capsule" },
     note: "The launch vehicle with the Mercury spacecraft in its payload slot, the same capsule the Mercury entry already draws. The article gives the whole as 25.41 m and does not say that figure leaves the spacecraft out, so the spacecraft and its tower are taken as inside it. The booster is what 25.41 m leaves after the spacecraft's 7.9 m with its tower, and the tower is what 7.9 m leaves after the capsule's 3.3 m. The stage block gives no length of its own. Jupiter-C's numbers are not used. The black and white bands and the engine's size are judged from photographs. The fins have no size in a source read here, so they are not drawn, and no name or mark is drawn.",
     facts: {
       height: m(25.41, S, { note: "83.38 feet, which the article shows as 25.41 m." }),
