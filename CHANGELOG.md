@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Still holds the first page's view turn too** (MODULES-1226): the view bar's `autoplay` went on whatever the Earth's pace, so with `spin=still` the craft kept turning for a minute, as the compare page's did (fixed in 0.26.0). Now the page opened Still, or with less motion asked for, does not start the turn, choosing Still stops it, and leaving Still starts it again (unless less motion is asked for or it was already stopped). The freeze group checks the frame count is flat in each case.
+
 - **The swarm and beam pages have a Pause button** (MODULES-1206, WCAG 2.2.2): a Pause / Play button under each, keyboard reachable, with `aria-pressed` and a label that say the state, in English and Japanese. Paused, the page draws nothing and asks for no frame (its loop rests until Play); Play goes on from where it stopped. It is kept in the address as `play=0`. Reduced motion still opens held, now with Play ready. `demo/loop.ts`'s `everyFrame` takes an optional third argument, whether the reader has pressed Play, that lets a page run under reduced motion.
 
 ## [0.26.0] - 2026-11-13
