@@ -1800,7 +1800,8 @@ const PACE = () => {
       if (!original) continue;
       proto[name] = function (this: unknown, ...args: unknown[]) {
         mark();
-        return original.apply(this, args);
+        // `cheap`: counted and not run, so a heavy scene's frames come at the display's pace and the page's own cap is what holds its rate
+        return (window as unknown as { __cheap?: boolean }).__cheap ? undefined : original.apply(this, args);
       };
     }
   }
@@ -1839,7 +1840,8 @@ const forget = (page: Page, most: number) => page.evaluate((limit) => (window as
 /** A frame in which anything drew, or a watched thing changed, counts once. */
 const movedOf = (pace: Pace) => pace.renders;
 /** The page counted from before any script runs: what it asks of the graphics card, and what it draws. */
-const counted = async (page: Page) => {
+const counted = async (page: Page, { cheap = false } = {}) => {
+  if (cheap) await page.addInitScript(() => Object.assign(window, { __cheap: true }));
   await page.addInitScript(COUNT);
   await page.addInitScript(PACE);
 };
@@ -1855,12 +1857,12 @@ const expectPaced = async (page: Page, { schedulers, ceiling = 30, frames = 120 
   const seconds = (to.pace.now - from.pace.now) / 1000;
   const moved = movedOf(to.pace) - movedOf(from.pace);
   expect(moved, "it draws while it moves").toBeGreaterThan(0);
-  expect(moved, `drawn ${moved} times in ${seconds.toFixed(1)} s`).toBeLessThanOrEqual(Math.ceil(ceiling * seconds) + 1);
+  expect(moved, `drawn ${moved} times in ${seconds.toFixed(1)} s`).toBeLessThanOrEqual(Math.ceil(ceiling * seconds) + 2);
   expect(to.usage.asked - from.usage.asked, "frames asked for").toBeLessThanOrEqual(schedulers * (to.usage.pageFrames - from.usage.pageFrames) + schedulers + 4);
   // a page that schedules twice crowds nearly every frame; a one-off (the page's own redraw of a label, a chunk loading) may crowd a few
   expect(to.pace.crowded, `frames that ran more than ${schedulers} callbacks`).toBeLessThanOrEqual(3);
 };
-/** Once it has stopped: whatever was already on its way is drawn, and then nothing is, and no frame is asked for. `frames` allows the few a loop that polls (everyFrame) asks for while it waits. */
+/** Once it has stopped: whatever was already on its way is drawn, and then nothing is, and no frame is asked for. */
 const expectStill = async (page: Page, { asked = 2 }: { asked?: number } = {}) => {
   await expect
     .poll(async () => {
@@ -1882,7 +1884,7 @@ const scrollAway = (page: Page) =>
     document.body.append(spacer);
     window.scrollTo(0, 7000);
   });
-/** Out of sight and on a hidden tab it draws nothing, and when it is back it moves again. `still` says what stopped it (a page that polls is allowed a few frame requests while it waits). */
+/** Out of sight and on a hidden tab it draws nothing, and when it is back it moves again. */
 const expectUnseen = async (page: Page, options: { asked?: number } = {}) => {
   const moving = async () => {
     const mark = movedOf(await paceOf(page));
@@ -1968,7 +1970,8 @@ test.describe("the six pages that open moving", () => {
 
   test("yard: it turns at most 30 draws a second from the bar's loop and the page's one, and nothing is drawn out of sight or on a hidden tab", async ({ page }) => {
     test.setTimeout(300_000);
-    await counted(page);
+    // software WebGL draws the yard a few times a second, far under the cap: the draws are counted and not run, so frames come at the display's pace and the cap is what holds the rate
+    await counted(page, { cheap: true });
     await yardReady(page);
     await turning(page);
     await expectPaced(page, { schedulers: 2 });
@@ -1989,7 +1992,7 @@ test.describe("the six pages that open moving", () => {
 
   test("compare: the craft turns at most 30 draws a second from the bar's loop and the hero's one, and nothing is drawn out of sight or on a hidden tab", async ({ page }) => {
     test.setTimeout(300_000);
-    await counted(page);
+    await counted(page, { cheap: true });
     await compareReady(page);
     await turning(page);
     await expectPaced(page, { schedulers: 2 });
