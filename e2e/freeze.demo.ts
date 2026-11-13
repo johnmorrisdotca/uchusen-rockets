@@ -2033,7 +2033,7 @@ test.describe("the six pages that open moving", () => {
     await expectStill(page);
   });
 
-  const FIRST = "/uchusen-rockets/?rocket=saturn-v&variant=saturn-v&background=none";
+  const FIRST = "/uchusen-rockets/?rocket=saturn-v&variant=saturn-v&background=none&panel=background";
 
   test("first page: Still holds the view bar's turn, at load and when chosen, and the turn comes back on leaving Still", async ({ page }) => {
     test.setTimeout(300_000);
