@@ -2146,3 +2146,43 @@ test.describe("the six pages that open moving", () => {
     await expectStill(page);
   });
 });
+
+// The fleet kit with less motion asked for. The first page's view bar no longer turns by itself then (MODULES-1226), and the camera's ease to a new craft is skipped, so nothing but the change itself supplies a frame: choosing a ship at rest must draw it, once at least, and then nothing is drawn while it stays.
+test.describe("the fleet kit with less motion asked for", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("choosing a fleet ship draws it, one frame or more after each change, and nothing is drawn while it rests", async ({ page }) => {
+    test.setTimeout(10 * 60_000);
+    await page.addInitScript(COUNT);
+    await page.goto(URL);
+    await reach3d(page);
+    await expect(bar(page)).not.toHaveAttribute("data-turning", "");
+    await press(page, "look-painted");
+    await hero(page).evaluate((node) =>
+      node.addEventListener("uchusen-change", (event) => {
+        const variant = (event as CustomEvent<{ report: { variant?: { rocket: string; id: string } } }>).detail.report.variant;
+        const state = window as unknown as { __in: string; __inFrame: number };
+        state.__in = `${variant?.rocket}/${variant?.id}`;
+        state.__inFrame = Number(node.shadowRoot?.querySelector("canvas")?.dataset.frames ?? 0);
+      }),
+    );
+    const ships = Object.values(ROCKETS).filter((rocket) => !real(rocket) && ["fleet-ship-01", "fleet-02", "fleet-tanks"].includes(rocket.id));
+    expect(ships.map((rocket) => rocket.id)).toContain("fleet-ship-01");
+    for (const rocket of ships) {
+      const variant = rocket.variants[0]!;
+      await press(page, `rocket-${rocket.id}`);
+      await press(page, `variant-${variant.id}`);
+      await expect(hero(page)).toHaveAttribute("data-variant", variant.id);
+      await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+      await expect.poll(() => page.evaluate(() => (window as unknown as { __in?: string }).__in), { timeout: 90_000 }).toBe(`${rocket.id}/${variant.id}`);
+      const frame = await page.evaluate(() => (window as unknown as { __inFrame: number }).__inFrame);
+      // the change itself is drawn: a frame after the one the change event was told of
+      await expect.poll(() => drawn(page), { timeout: 30_000, message: `${rocket.id}: no frame was drawn after the change` }).toBeGreaterThan(frame);
+      // and then it rests: the count of frames does not move
+      await settle(page, 1500);
+      const rested = await drawn(page);
+      await settle(page, 2500);
+      expect(await drawn(page), `${rocket.id}: drawn while at rest`).toBe(rested);
+    }
+  });
+});
