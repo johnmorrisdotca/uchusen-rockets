@@ -4,7 +4,7 @@ import { ROCKETS } from "../src/rockets.ts";
 import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";
-const SPACECRAFT = ["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "starlink", "lageos"];
+const SPACECRAFT = ["voyager", "juno", "jwst", "parker-solar-probe", "hubble", "dragon", "gemini", "mercury", "lunar-module", "apollo-soyuz", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "starlink", "lageos", "vanguard-1"];
 
 test("the ship picker has a Real spacecraft kind that holds the probes, telescopes and crewed craft, and Real rockets holds none of them", async ({ page }) => {
   await page.goto(URL);
