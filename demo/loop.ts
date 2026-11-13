@@ -3,12 +3,12 @@
 /**
  * Calls `step(ms)` about 30 times a second, ms being the time since the loop first ran. Nothing is asked for out of sight, on a hidden tab, or with reduced motion.
  * @param host The element whose being on screen keeps the loop going.
- * @param step Draws the picture at that time.
- * @returns Whether a loop was started (false for reduced motion).
+ * @param step Draws the picture at that time. It returns `false` when there is nothing to draw (the page is still): the loop then asks for no more frames until `wake` is called.
+ * @returns `wake`, which starts a rested loop again, or `null` when no loop was started (reduced motion).
  */
-export function everyFrame(host: Element, step: (ms: number) => void): boolean {
+export function everyFrame(host: Element, step: (ms: number) => boolean | void): (() => void) | null {
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  if (reduced.matches) return false;
+  if (reduced.matches) return null;
   let seen = true;
   let raf = 0;
   let begun = 0;
@@ -16,11 +16,15 @@ export function everyFrame(host: Element, step: (ms: number) => void): boolean {
   const tick = (now: number): void => {
     raf = 0;
     if (!seen || document.hidden || reduced.matches) return;
-    raf = requestAnimationFrame(tick);
     if (begun === 0) begun = now;
-    if (now - last < 33) return;
+    if (now - last < 33) {
+      raf = requestAnimationFrame(tick);
+      return;
+    }
     last = now;
-    step(now - begun);
+    // a step that has nothing to draw lets the loop rest: no frame is asked for until `wake`
+    if (step(now - begun) === false) return;
+    raf = requestAnimationFrame(tick);
   };
   const wake = (): void => {
     if (seen && !document.hidden && !raf && !reduced.matches) raf = requestAnimationFrame(tick);
@@ -38,5 +42,5 @@ export function everyFrame(host: Element, step: (ms: number) => void): boolean {
     wake();
   });
   wake();
-  return true;
+  return wake;
 }

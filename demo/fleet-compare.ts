@@ -93,6 +93,9 @@ const cell = (text: string, testid: string): HTMLTableCellElement => {
 /** The row opens turning, unless the address says `turn=0` or the reader asked for less motion. */
 const turning = (): boolean => address.get("turn") !== "0" && !matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/** Wakes the turn's loop when Turn is pressed on: the loop rests, asking for no frame, while the row stands still. */
+let wakeTurn: (() => void) | null = null;
+
 const draw = (): void => {
   const view = chosen();
   const look = looked();
@@ -109,6 +112,7 @@ const draw = (): void => {
   byId("cmp-views").replaceChildren(chip(say("cmpTurn"), "cmp-turn", turning(), () => {
     address.set("turn", turning() ? "0" : null);
     draw();
+    wakeTurn?.();
   }), ...VIEWS.map((one) => chip(say(`view_${one.replaceAll("-", "_")}`), `cmp-view-${one}`, one === view, () => {
     address.set("view", one);
     draw();
@@ -165,8 +169,9 @@ window.addEventListener("resize", () => byId("lineup").setAttribute("fit", fitOf
 // The row turns about the ships' upright axis, 12 degrees a second, so a full turn takes half a minute. Each picture is the whole row drawn again, so it asks for a frame 10 times a second, never out of sight and never on a hidden tab.
 const TURN_DEGREES_A_SECOND = 12;
 let lastTurn = 0;
-everyFrame(byId("cmp-view"), (ms) => {
-  if (!turning() || ms - lastTurn < 100) return;
+wakeTurn = everyFrame(byId("cmp-view"), (ms) => {
+  if (!turning()) return false;
+  if (ms - lastTurn < 100) return;
   lastTurn = ms;
   byId("lineup").setAttribute("turn", String(Math.round(((ms / 1000) * TURN_DEGREES_A_SECOND) % 360)));
 });
