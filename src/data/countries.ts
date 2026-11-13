@@ -57,6 +57,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   "apollo-soyuz": blank("Flown by NASA and the Soviet space program together.", "two countries"),
   gemini: us("wikipedia-gemini"),
   mercury: us("wikipedia-mercury"),
+  "mercury-redstone": us("wikipedia-mercury-redstone"),
   "jupiter-c": us("wikipedia-jupiter-c"),
   iss: blank("Built and run by the space agencies of several countries.", "international"),
   hubble: blank("A NASA and ESA space telescope.", "international"),

@@ -30,6 +30,7 @@ test("a rocket with no shape is named to add later, and Hanabusa is named only u
   assert.equal(later.includes("Delta IV Heavy"), false);
   assert.equal(later.includes("H3"), false);
   assert.equal(later.includes("Long March 5"), false);
+  assert.equal(later.includes("Mercury-Redstone"), false);
   const hasShip = fleetKeys().some((key) => key.startsWith("fleet-ship-01:"));
   assert.equal(later.includes("Hanabusa, SPX-013"), !hasShip);
 });

@@ -104,6 +104,7 @@ export const SOURCES = {
   "wikipedia-soyuz-7k-tm": { title: "Soyuz 7K-TM (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Soyuz_7K-TM", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-gemini": { title: "Project Gemini", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Project_Gemini", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-mercury": { title: "Mercury spacecraft", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Mercury_spacecraft", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-mercury-redstone": { title: "Mercury-Redstone Launch Vehicle", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Mercury-Redstone_Launch_Vehicle", date: "2026-11-13", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-jupiter-c": { title: "Jupiter-C (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Jupiter-C", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-iss": { title: "International Space Station (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/International_Space_Station", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-hubble": { title: "Hubble Space Telescope (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Hubble_Space_Telescope", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },

@@ -158,6 +158,14 @@ The stage blocks give lengths and no diameters, so the vehicle's 5.27 m is drawn
 
 The extended fairing is 63.2 m, and the CZ-5B has no second stage. Neither is listed. The boosters' place, the engine sizes and the paint are judged from photographs, and no name or mark is drawn.
 
+## Mercury-Redstone
+
+| Variant | Whole | Booster | Capsule | Escape tower | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `redstone` | 25.41 m (83.38 feet) | not given: what the 25.41 m leaves after the spacecraft's 7.9 m, 17.51 m | 3.3 m, the existing Mercury capsule | not given: what 7.9 m leaves after 3.3 m, 4.6 m | 1.78 m (5.83 feet) | 1960-11-21 |
+
+The launch-vehicle article gives the whole, the diameter, one Rocketdyne A-7 and the payload as the Mercury spacecraft, and no stage length. The capsule is the part already drawn for Friendship 7. The spacecraft's article gives 3.3 m without the tower and 7.9 m with it. The launch-vehicle article does not say whether 25.41 m includes that spacecraft, and the drawing takes it as included. The black and white bands and the engine's size are judged from photographs. The fins have no size in a source read here, so they are not drawn, and no name or mark is drawn. Jupiter-C's numbers are not used.
+
 ## New Glenn
 
 | Variant | Whole | First stage | Second stage | Across | First flew |

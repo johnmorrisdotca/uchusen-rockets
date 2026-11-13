@@ -55,6 +55,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   "apollo-soyuz": { maker: "nasa", madeBy: { value: "Operated by NASA and the Soviet space program; Apollo built by North American Rockwell, Soyuz by NPO Energia", source: "wikipedia-apollo-soyuz" } },
   gemini: { maker: "nasa", madeBy: { value: "NASA; its capsule built by McDonnell Aircraft", source: "wikipedia-gemini" } },
   mercury: { maker: "nasa", madeBy: { value: "NASA; built by McDonnell Aircraft", source: "wikipedia-mercury" } },
+  "mercury-redstone": { maker: "nasa", madeBy: { value: "Chrysler Corporation", source: "wikipedia-mercury-redstone" } },
   "jupiter-c": { maker: "us-army", madeBy: { value: "Designed by the US Army Ballistic Missile Agency; built by Chrysler", source: "wikipedia-jupiter-c" } },
   iss: { maker: "nasa", madeBy: { value: "Its US segment built by NASA, ESA, JAXA and CSA, its Russian segment developed by Roscosmos", source: "wikipedia-iss" } },
   roadster: { maker: "spacex", madeBy: { value: "Launched by SpaceX on Falcon Heavy's test flight", source: "wikipedia-roadster-in-space" } },
