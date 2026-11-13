@@ -27,9 +27,11 @@ test("each orbit step sets the altitude, the camera eases, and the address round
   await expect.poll(() => new globalThis.URL(page.url()).searchParams.get("orbit")).toBeNull();
   await expect(moons).toBeHidden();
 
-  // the page's clock is driven by the test, a tenth of a second at a time, so the easing is read the same on a machine that draws a frame a second
+  // the page's clock is held and driven by the test, a tenth of a second at a time, so the easing is read the same on a machine that draws a frame a second. Left running it flows by itself, and a stall of 800 ms on a slow runner finishes the ease before the first reading.
   await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.locator('[data-testid="orbit-10000"]').evaluate((button) => (button as HTMLButtonElement).click());
+  await expect(earth).toHaveAttribute("data-orbit-moving", "1");
   const values: number[] = [Number(await earth.getAttribute("data-orbit-open"))];
   for (let step = 0; step < 40 && (await earth.getAttribute("data-orbit-moving")) === "1"; step += 1) {
     await page.clock.runFor(100);
