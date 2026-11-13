@@ -2084,7 +2084,7 @@ test.describe("the six pages that open moving", () => {
     // held in the address, it opens still, and nothing is drawn from the first frame
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(`${SWARM}?play=0`);
-    await expect(page.getByTestId("swarm-pause")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByTestId("swarm-pause")).not.toHaveAttribute("data-on");
     await watching(page, "#swarm-map");
     await expectStill(page);
   });
@@ -2112,7 +2112,7 @@ test.describe("the six pages that open moving", () => {
     // held in the address, it opens still, and nothing is drawn from the first frame
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(`${BEAM}?play=0`);
-    await expect(page.getByTestId("beam-pause")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByTestId("beam-pause")).not.toHaveAttribute("data-on");
     await watching(page, "#beam-carry");
     await expectStill(page);
   });
