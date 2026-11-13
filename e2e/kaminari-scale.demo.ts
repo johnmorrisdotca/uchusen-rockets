@@ -7,6 +7,14 @@ const URL = "/uchusen-rockets/";
 const is3d = (browserName: string) => browserName === "chromium";
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
 const slider = (page: Page) => page.locator('[data-testid="kscale"]');
+/**
+ * Open the page and go on at DOMContentLoaded, as the fleet tests do. A page's own `load` also waits for every picture and file it asks for, and one load on a hosted WebKit runner took the whole 240 s of this test (the last page, after 135 others). What is read here
+ * is drawn by the page's script, so the test waits for that: the hero is given its craft by the same step that shows or hides the slider. `hidden` is also true of a slider that is not drawn yet, so without this wait a "hidden" check would pass on a blank page.
+ */
+const open = async (page: Page, query: string, rocket: string) => {
+  await page.goto(`${URL}${query}`, { waitUntil: "domcontentloaded" });
+  await expect(hero(page)).toHaveAttribute("rocket", rocket, { timeout: 60_000 });
+};
 const param = (page: Page, name: string) => new globalThis.URL(page.url()).searchParams.get(name);
 const stopTurn = (page: Page) => page.locator('[data-testid="view-bar"]').evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 const reach3d = async (page: Page) => {
@@ -30,11 +38,11 @@ test("the size slider: offered to the concepts only, 60 to 100 in steps of 5, in
   page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
   page.on("pageerror", (error) => problems.push(error.message));
   // a craft that is not a concept has no slider
-  await page.goto(`${URL}?rocket=saturn-v`);
+  await open(page, "?rocket=saturn-v", "saturn-v");
   await expect(slider(page)).toBeHidden();
   await expect(hero(page)).not.toHaveAttribute("scale", /.*/);
 
-  await page.goto(`${URL}?rocket=fleet-kaminari&variant=fleet-kaminari`);
+  await open(page, "?rocket=fleet-kaminari&variant=fleet-kaminari", "fleet-kaminari");
   await expect(slider(page)).toBeVisible();
   await expect(slider(page)).toHaveAttribute("min", "60");
   await expect(slider(page)).toHaveAttribute("max", "100");
@@ -85,17 +93,17 @@ test("the size slider: offered to the concepts only, 60 to 100 in steps of 5, in
   }
 
   // a reload keeps it, and a size between two steps lands on the nearest
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(slider(page)).toHaveValue("85");
   await expect(hero(page)).toHaveAttribute("scale", "85");
-  await page.goto(`${URL}?rocket=fleet-romaryu&variant=fleet-romaryu&kscale=73`);
+  await open(page, "?rocket=fleet-romaryu&variant=fleet-romaryu&kscale=73", "fleet-romaryu");
   await expect(slider(page)).toHaveValue("75");
   await expect(hero(page)).toHaveAttribute("scale", "75");
-  await page.goto(`${URL}?rocket=fleet-emiake&variant=fleet-emiake&kscale=nonsense`);
+  await open(page, "?rocket=fleet-emiake&variant=fleet-emiake&kscale=nonsense", "fleet-emiake");
   await expect(slider(page)).toHaveValue("100");
 
   // the size goes with the choice to another concept, and goes away with a craft that has none
-  await page.goto(`${URL}?rocket=fleet-kaminari&variant=fleet-kaminari&kscale=70`);
+  await open(page, "?rocket=fleet-kaminari&variant=fleet-kaminari&kscale=70", "fleet-kaminari");
   await page.locator('[data-testid="rocket-fleet-emiake"]').click();
   await expect(slider(page)).toHaveValue("70");
   await expect(hero(page)).toHaveAttribute("scale", "70");
@@ -104,7 +112,7 @@ test("the size slider: offered to the concepts only, 60 to 100 in steps of 5, in
   await expect(slider(page)).toBeHidden();
   await expect(hero(page)).not.toHaveAttribute("scale", /.*/);
   // the shipped Kaminari has none: it is not a concept
-  await page.goto(`${URL}?rocket=fleet-02`);
+  await open(page, "?rocket=fleet-02", "fleet-02");
   await expect(slider(page)).toBeHidden();
   expect(problems).toEqual([]);
 });

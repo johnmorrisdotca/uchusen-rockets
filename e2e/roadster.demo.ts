@@ -22,6 +22,22 @@ const COUNT = () => {
   Object.assign(window, { __live: live });
 };
 const live = (page: Page) => page.evaluate(() => ({ ...(window as unknown as { __live: { Buffer: number; Texture: number } }).__live }));
+/**
+ * The count once it has stopped moving: three readings half a second apart agree. "painted" is said when the shaders are built, before the frame that uploads the car's buffers and pictures is drawn, so a count taken the moment it is said can be
+ * short by what that frame makes (254 buffers and 6 pictures where 266 and 15 follow within a second). The count the car is given back to is the settled one; a leak does not settle lower than it began, so the comparison after still catches it.
+ */
+const settled = async (page: Page) => {
+  let before = await live(page);
+  let still = 0;
+  for (let tries = 0; tries < 40; tries++) {
+    await page.waitForTimeout(500);
+    const now = await live(page);
+    still = now.Buffer === before.Buffer && now.Texture === before.Texture ? still + 1 : 0;
+    if (still === 3) return now;
+    before = now;
+  }
+  return before;
+};
 
 test("each car's model loads only when it is chosen, and the one before is freed", async ({ page, browserName }, info) => {
   // one counter of the GPU's buffers for the whole page: read in software Chromium at a desk's width only, as the freeze test does
@@ -40,7 +56,7 @@ test("each car's model loads only when it is chosen, and the one before is freed
   // the car is a licensed model and Starman this package's own, so the painted picture is mixed once the model is in
   await expect(canvas).toHaveAttribute("data-painted", "mixed", { timeout: 60_000 });
   expect(fetched).toEqual([`roadster-${CARS[0]}-car.glb`]);
-  const first = await live(page);
+  const first = await settled(page);
   // the three choices sit in one row
   for (const car of CARS) await expect(page.getByTestId(`variant-${car}`)).toBeVisible();
   for (const car of [CARS[1], CARS[2]]) {
@@ -139,7 +155,7 @@ test("Falcon Heavy takes any of the three cars: a second-generation car is fetch
   const canvas = hero.locator("canvas");
   await expect(canvas).toHaveAttribute("data-painted", "mixed", { timeout: 60_000 });
   expect(fetched).toEqual(["roadster-first-generation-car.glb"]);
-  const first = await live(page);
+  const first = await settled(page);
   // the payload slot's three cars sit in the one row of variants, with the plain Falcon Heavy
   for (const id of ["falcon-heavy", "test-flight", "test-flight-second-generation", "test-flight-second-generation-2"]) await expect(page.getByTestId(`variant-${id}`)).toBeVisible();
   for (const car of ["second-generation", "second-generation-2"]) {
