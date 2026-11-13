@@ -2190,6 +2190,7 @@ test.describe("the fleet kit with less motion asked for", () => {
       expect(await drawn(page), `${rocket.id}: drawn while at rest`).toBe(rested);
     }
   });
+});
 
 test("picking one part costs one frame and then nothing is drawn", async ({ page }) => {
   await page.goto(`${URL}?rocket=iss&variant=iss&look=line&spin=off`);
