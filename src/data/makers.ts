@@ -11,7 +11,7 @@ import { blank, type Figure } from "./types.ts";
  * console.log(MAKERS.spacex, Object.keys(MAKERS).length);
  * ```
  */
-export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", ula: "United Launch Alliance", europe: "Europe", russia: "Russia", "us-army": "US Army", china: "China", fleet: "SPX", sites: "Sites" } as const;
+export const MAKERS = { spacex: "SpaceX", nasa: "NASA", "blue-origin": "Blue Origin", "rocket-lab": "Rocket Lab", ula: "United Launch Alliance", europe: "Europe", japan: "Japan", russia: "Russia", "us-army": "US Army", china: "China", fleet: "SPX", sites: "Sites" } as const;
 /**
  * The id of a group in `MAKERS`.
  *
@@ -47,6 +47,8 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   "ariane-6": { maker: "europe", madeBy: { value: "ArianeGroup", source: "wikipedia-ariane-6" } },
   "atlas-v": { maker: "ula", madeBy: { value: "United Launch Alliance", source: "wikipedia-atlas-v" } },
   "delta-iv-heavy": { maker: "ula", madeBy: { value: "United Launch Alliance", source: "wikipedia-delta-iv-heavy" } },
+  h3: { maker: "japan", madeBy: { value: "Mitsubishi Heavy Industries", source: "wikipedia-h3" } },
+  "long-march-5": { maker: "china", madeBy: { value: "CALT", source: "wikipedia-long-march-5", note: "The infobox links that short name to the China Academy of Launch Vehicle Technology." } },
   electron: { maker: "rocket-lab", madeBy: { value: "Rocket Lab", source: "wikipedia-electron" } },
   soyuz: { maker: "russia", madeBy: { value: "RKTs Progress, Russia", source: "wikipedia-soyuz-2" } },
   "lunar-module": { maker: "nasa", madeBy: { value: "Operated by NASA; built by Grumman", source: "wikipedia-lunar-module" } },

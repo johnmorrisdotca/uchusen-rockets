@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { ROCKETS, variantOf } from "../src/index.ts";
 
 const SPACE = ["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "fleet-ship-03", "fleet-ship-ariake", "fleet-02"];
-const GROUND = ["starship", "falcon-9", "falcon-heavy", "saturn-v", "space-shuttle", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-6", "atlas-v", "delta-iv-heavy", "soyuz", "jupiter-c", "grasshopper", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"];
+const GROUND = ["starship", "falcon-9", "falcon-heavy", "saturn-v", "space-shuttle", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-6", "atlas-v", "delta-iv-heavy", "h3", "long-march-5", "soyuz", "jupiter-c", "grasshopper", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"];
 
 test("every variant says how far its view may tip, and it is 45 or 90", () => {
   for (const rocket of Object.values(ROCKETS)) for (const variant of rocket.variants) assert.ok([45, 90].includes(variant.view?.tiltMax ?? 0), `${rocket.id} ${variant.id}`);

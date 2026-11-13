@@ -141,6 +141,23 @@ The infobox says up to 58.3 m, the family's height, not the 401's, so this form'
 
 The second stage's diameter, 5.1 m, is the Delta IV article's 5 m DCSS; the Heavy article gives the length 13.7 m and the same empty mass, 3490 kg, and does not restate the diameter. The Delta IV article also says the DCSS is 12 m in general. The side cores stand against the centre. Engine sizes and the orange paint are judged from photographs, and no name or mark is drawn. The Medium forms are not listed.
 
+## H3
+
+| Variant | Whole | First stage | Second stage | Boosters | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `22s` | 57 m, short fairing | 37 m, two LE-9 | 12 m, one LE-5B-3 | two SRB-3, 15 m, 2.5 m across | not given: what the 57 m leaves, 8 m | 5.27 m | 2023-03-07 |
+| `24l` | 63 m, long fairing | 37 m, two LE-9 | 12 m, one LE-5B-3 | four SRB-3, 15 m, 2.5 m across | not given: what the 63 m leaves, 14 m | 5.27 m | 2025-10-26 |
+
+The stage blocks give lengths and no diameters, so the vehicle's 5.27 m is drawn. The fairing has no length of its own. The 30S, the 22L and the wide fairing are not listed. The boosters' place, the engine sizes and the paint are judged from photographs, and no name or mark is drawn.
+
+## Long March 5
+
+| Variant | Whole | First stage | Boosters | Second stage | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `cz-5` | 56.97 m, the standard height | 33.16 m, 5 m across, two YF-77 | four, 27.6 m, 3.35 m across, two YF-100 each | 11.54 m, 5 m across, two YF-75D | not given: what the standard whole leaves, 12.27 m | 5 m | 2016-11-03 |
+
+The extended fairing is 63.2 m, and the CZ-5B has no second stage. Neither is listed. The boosters' place, the engine sizes and the paint are judged from photographs, and no name or mark is drawn.
+
 ## New Glenn
 
 | Variant | Whole | First stage | Second stage | Across | First flew |

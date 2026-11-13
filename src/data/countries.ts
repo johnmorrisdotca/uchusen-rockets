@@ -76,6 +76,8 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   "launch-tower": us("wikipedia-starbase", "The tower at Starbase, Texas."),
   starbase: us("wikipedia-starbase"),
   "vulcan-centaur": us("wikipedia-vulcan"),
+  h3: { value: "JP", source: "wikipedia-h3" },
+  "long-march-5": { value: "CN", source: "wikipedia-long-march-5" },
   "ariane-6": blank("Its source gives its origin as European multi-national.", "international"),
   "atlas-v": us("wikipedia-atlas-v"),
   "delta-iv-heavy": us("wikipedia-delta-iv-heavy"),
@@ -101,6 +103,7 @@ export const MAKER_COUNTRIES: Readonly<Record<MakerId, Figure<CountryCode>>> = {
   russia: { value: "RU", source: "wikipedia-soyuz-2" },
   "us-army": us("wikipedia-jupiter-c"),
   china: { value: "CN", source: "wikipedia-tiangong" },
+  japan: { value: "JP", source: "wikipedia-h3", note: "The H3 infobox names Japan as its country of origin." },
   fleet: blank("The SPX fleet is this package's own design.", "none"),
   sites: blank("A group of places, not one maker.", "none"),
 };

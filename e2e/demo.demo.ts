@@ -632,6 +632,21 @@ test("Ariane 6, Atlas V and Delta IV Heavy are in the picker under their makers"
   await expect(page.locator('[data-testid="facts"]')).toContainText("70.7 m");
 });
 
+test("H3 and Long March 5 are in the picker under their makers", async ({ page }) => {
+  await page.goto(URL);
+  await foldPicker(page);
+  await press(page, "maker-japan");
+  await expect(page.locator('[data-testid="rocket-h3"]')).toBeVisible();
+  await press(page, "rocket-h3");
+  await expect(page.locator('[data-testid="variant-22s"]')).toBeVisible();
+  await expect(page.locator('[data-testid="variant-24l"]')).toBeVisible();
+  await expect(page.locator('[data-testid="facts"]')).toContainText("57 m");
+  await press(page, "maker-china");
+  await expect(page.locator('[data-testid="rocket-long-march-5"]')).toBeVisible();
+  await press(page, "rocket-long-march-5");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("56.97 m");
+});
+
 test("the sources and the credits are on the page, and the page says no one endorsed it", async ({ page }) => {
   await page.goto(URL);
   await foldPicker(page);
@@ -724,7 +739,7 @@ test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited 
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toContainText("Smithsonian Institution");
   await expect(credit).toContainText("CC0 1.0");
-  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-6", "atlas-v", "delta-iv-heavy", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
+  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-6", "atlas-v", "delta-iv-heavy", "h3", "long-march-5", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
     await press(page, `maker-${ROCKETS[id].maker}`);
     await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
   }
