@@ -670,3 +670,28 @@ test("on a phone the view buttons, the zoom controls and the folded ship picker 
     expect(crossing(await boxes()), `braking, ${width} px`).toEqual([]);
   }
 });
+
+test.describe("every view opens moving", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  // The route carries no planet, which turns by itself on the origin too: only the trip's own play moves it.
+  test("the trip plays by itself, and its route changes between two frames", async ({ page }) => {
+    await open(page, `${URL}&look=line`);
+    const route = page.getByTestId("route");
+    const first = await route.screenshot();
+    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(async () => !(await route.screenshot()).equals(first), { timeout: 30_000 }).toBe(true);
+  });
+
+  test("a held address stays held: Pause is written to it, and the trip stays still on a reload", async ({ page }) => {
+    await open(page, `${URL}&look=line`);
+    await page.getByTestId("play").click();
+    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    await expect(page).toHaveURL(/play=0/);
+    await page.reload();
+    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    const held = await page.getByTestId("route").screenshot();
+    await page.waitForTimeout(1500);
+    expect((await page.getByTestId("route").screenshot()).equals(held)).toBe(true);
+  });
+});

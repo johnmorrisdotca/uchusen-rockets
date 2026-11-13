@@ -82,7 +82,7 @@ console.log(duration(258.8 * 86_400));
 
 ## What the page draws
 
-One 2D canvas for the stars, SVG for the map and the route, and the package's own line drawing of the craft turned on its side: no WebGL, so the page makes no context to let go. It asks for a frame only while a trip plays and the page is on screen, at most 30 a second. The address keeps the choices (`?from=earth&to=mars&craft=falcon-heavy`).
+One 2D canvas for the stars, SVG for the map and the route, and the package's own line drawing of the craft turned on its side: no WebGL, so the page makes no context to let go. It asks for a frame only while a trip plays and the page is on screen, at most 30 a second. The address keeps the choices (`?from=earth&to=mars&craft=falcon-heavy`). The page opens playing, from the start, at 1x (the first speed step: a trip of about a minute), with the date and day running; a reader who asked for reduced motion gets a still view with Play ready. Pause is kept in the address as `play=0`, and `speed=0` or `play=0` in a link opens it held.
 
 ## What is left after each burn
 
