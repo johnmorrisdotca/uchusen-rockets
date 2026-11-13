@@ -32,7 +32,8 @@ export function playable(host: Element, controls: HTMLElement, testid: string, d
     button.dataset.say = key;
     const chooser = (window as unknown as { uchusenLanguage?: { word(key: string): string | undefined } }).uchusenLanguage;
     button.textContent = chooser?.word(key) ?? (playing ? "Pause" : "Play");
-    button.setAttribute("aria-pressed", String(playing));
+    // the name says what a press does (Pause, Play), so the button is not also a toggle: aria-pressed on top would be read twice. `data-on` is only the look of the playing state
+    button.toggleAttribute("data-on", playing);
   };
   show();
   controls.append(button);
