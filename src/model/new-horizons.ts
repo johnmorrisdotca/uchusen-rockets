@@ -14,11 +14,13 @@ const craft = (): Piece[] => [
   { kind: "lathe", material: "engine-pale", segs: 28, body: true, outline: true, profile: [[0.28, BODY_H], [DISH, 1.15], [DISH, 1.4], [0.12, H]] },
 ];
 
+// The painted model (new-horizons-craft.glb) stands past this plain shape: this is the box it fills, measured from the file, metres as drawn. The default frame holds it, so the painted craft is whole in every view; the drawing and the sizes keep the plain shape.
+const REACH = { min: [-1.35, 0, -1.19], max: [1.43, 2.26, 2.13] } as const;
 export const NEW_HORIZONS_BUILDS: readonly StackBuild[] = [
   {
     rocket: "new-horizons",
     variant: "new-horizons",
     drawnFrom: "NASA's model for the painted look, its pictures left out and scaled so the antenna is the sourced 2.1 m. This package's plain shape for the two line looks, from the sourced body and antenna. The RTG is not drawn: the press kit names it and does not give its length. No mark is drawn.",
-    parts: [{ slot: "craft", kind: "spacecraft", name: "New Horizons", height: H, diameter: WIDE, sourcedDiameter: { value: WIDE, source: "nasa-new-horizons-press-kit", note: "The primary structure is 2.7 m at its widest. The antenna is 2.1 m." }, painted: { file: "new-horizons-craft.glb", credit: "nasa-new-horizons" }, pieces: craft }],
+    parts: [{ slot: "craft", kind: "spacecraft", name: "New Horizons", height: H, diameter: WIDE, sourcedDiameter: { value: WIDE, source: "nasa-new-horizons-press-kit", note: "The primary structure is 2.7 m at its widest. The antenna is 2.1 m." }, reach: REACH, painted: { file: "new-horizons-craft.glb", credit: "nasa-new-horizons" }, pieces: craft }],
   },
 ];

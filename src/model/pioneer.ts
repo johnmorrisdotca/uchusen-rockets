@@ -12,11 +12,13 @@ const craft = (): Piece[] => [
   strut("engine-pale", [0, 0.9, 0], [0, H, 0], 0.08, 0.08),
 ];
 
+// The painted model (pioneer-craft.glb) stands past this plain shape: this is the box it fills, measured from the file, metres as drawn. The default frame holds it, so the painted craft is whole in every view; the drawing and the sizes keep the plain shape.
+const REACH = { min: [-2.26, 0, -1.28], max: [2.26, 8.25, 1.27] } as const;
 export const PIONEER_BUILDS: readonly StackBuild[] = [
   {
     rocket: "pioneer",
     variant: "pioneer",
     drawnFrom: "NASA's model for the painted look. The high-gain antenna is already the sourced 2.74 m, and its pictures are left out. This package's plain shape for the two line looks, from the sourced antenna and magnetometer boom. One model serves Pioneer 10 and 11. No mark is drawn.",
-    parts: [{ slot: "craft", kind: "spacecraft", name: "Pioneer", height: H, diameter: DISH * 2, sourcedDiameter: PIONEER_DISH, painted: { file: "pioneer-craft.glb", credit: "nasa-pioneer" }, pieces: craft }],
+    parts: [{ slot: "craft", kind: "spacecraft", name: "Pioneer", height: H, diameter: DISH * 2, sourcedDiameter: PIONEER_DISH, reach: REACH, painted: { file: "pioneer-craft.glb", credit: "nasa-pioneer" }, pieces: craft }],
   },
 ];

@@ -19,11 +19,13 @@ const craft = (): Piece[] => [
   strut("engine-pale", [BUS, 1.15, 0], [BUS + BOOM, 1.15, 0], 0.14, 0.14),
 ];
 
+// The painted model (voyager-craft.glb) stands past this plain shape: this is the box it fills, measured from the file, metres as drawn. The default frame holds it, so the painted craft is whole in every view; the drawing and the sizes keep the plain shape.
+const REACH = { min: [-3.83, -0.01, -1.85], max: [8.63, 7.74, 1.85] } as const;
 export const VOYAGER_BUILDS: readonly StackBuild[] = [
   {
     rocket: "voyager",
     variant: "voyager",
     drawnFrom: "NASA's model for the painted look, scaled so the antenna is the sourced 3.7 m, with the record's marked face left out. This package's plain shape for the two line looks, from the sourced antenna, bus, height and magnetometer boom. No name or flag is drawn.",
-    parts: [{ slot: "craft", kind: "spacecraft", name: "Voyager", height: H, diameter: WIDE, sourcedDiameter: { value: WIDE, source: "nasa-voyager-faq", note: "The bus's radius, the 13 m magnetometer boom and the antenna's radius, added. The antenna itself is 3.7 m." }, painted: { file: "voyager-craft.glb", credit: "nasa-voyager" }, pieces: craft }],
+    parts: [{ slot: "craft", kind: "spacecraft", name: "Voyager", height: H, diameter: WIDE, sourcedDiameter: { value: WIDE, source: "nasa-voyager-faq", note: "The bus's radius, the 13 m magnetometer boom and the antenna's radius, added. The antenna itself is 3.7 m." }, reach: REACH, painted: { file: "voyager-craft.glb", credit: "nasa-voyager" }, pieces: craft }],
   },
 ];

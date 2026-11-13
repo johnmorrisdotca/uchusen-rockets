@@ -5,6 +5,7 @@
 ## [0.25.0] - 2026-11-13
 
 - **Europa Clipper** (MODULES-1120): `rocket="europa-clipper"`. The painted look is NASA Visualization Technology Applications and Development's model, its pictures left out, fetched only when that look is asked for, and scaled so the solar arrays span about 30 m. The line look is this package's own plain shape from that span and the 3 m antenna. Its default frame holds the whole painted model, which stands 11 m with its boom and reaches 17.5 m deep: a part can now name the box its painted model fills (`reach`), as the plain shape is far smaller. A speck test covers its loose pieces (none under 7 cm), and the whole-by-default test covers it with Juno.
+- **Painted spacecraft whole in every view** (MODULES-1197): the default 3D frame was taken from the plain line shape, so a painted NASA model that is taller or deeper than it was cut off from the side or front (Cassini ran to 4 times the frame's edge; also Galileo, Pioneer, Voyager, Parker, New Horizons, a little of Juno, Grasshopper and the Jupiter-C tail). Each now names the box its painted model fills (`reach`, measured from the file). `reach` widens only the 3D view's frame (`Built.frameOf`): the drawing, the sizes, the poster and the compare page keep the plain shape, Europa Clipper's included. A test walks every rocket and variant that has a painted model and fails when any of its vertices is outside the default frame in any view.
 
 ## [0.24.0] - 2026-11-13
 

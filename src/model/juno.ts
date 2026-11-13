@@ -21,11 +21,13 @@ const craft = (): Piece[] => [
   }),
 ];
 
+// The painted model (juno-craft.glb) stands past this plain shape: this is the box it fills, measured from the file, metres as drawn. The default frame holds it, so the painted craft is whole in every view; the drawing and the sizes keep the plain shape.
+const REACH = { min: [-12.37, -0.01, -9.09], max: [5.93, 6.89, 9.01] } as const;
 export const JUNO_BUILDS: readonly StackBuild[] = [
   {
     rocket: "juno",
     variant: "juno",
     drawnFrom: "NASA's model for the painted look, scaled so the arrays span the sourced 20 m. This package's plain shape for the two line looks, from the sourced body, span and array width. No mark is drawn.",
-    parts: [{ slot: "craft", kind: "spacecraft", name: "Juno", height: BODY, diameter: SPAN, sourcedDiameter: JUNO_SPAN, painted: { file: "juno-craft.glb", credit: "nasa-juno" }, pieces: craft }],
+    parts: [{ slot: "craft", kind: "spacecraft", name: "Juno", height: BODY, diameter: SPAN, sourcedDiameter: JUNO_SPAN, reach: REACH, painted: { file: "juno-craft.glb", credit: "nasa-juno" }, pieces: craft }],
   },
 ];

@@ -61,6 +61,8 @@ export interface BuiltPart {
   pieces: readonly Piece[];
   mesh: PartMesh;
   bounds: Bounds;
+  /** The box the painted model fills when it reaches past the pieces' bounds (the record's `reach`, as drawn). The default 3D frame holds it; the drawing, the poster and the compare page do not read it. */
+  reach?: Bounds;
   /** The colour of this part's flame, from what a page says its engine burns; `neutral` when none read here says. */
   flame: FlameKind;
   /** Which craft standing beside the rocket this part belongs to (0 is the first); left out for the rocket's own parts. */
@@ -115,6 +117,8 @@ export interface Built {
   shows: readonly string[];
   /** The bounds of a choice of what to show, in metres, and with `lit` the flames of its engines at full thrust. */
   boundsOf(show?: string, lit?: boolean): Bounds;
+  /** What the 3D view's default frame holds for a choice of what to show: `boundsOf`, widened to the box any painted model of a shown part fills. The drawing, the poster and the compare page use `boundsOf` and are not changed by it. */
+  frameOf(show?: string, lit?: boolean): Bounds;
   /** The widest, in metres, the default fit holds for a choice of what to show, when a part names one (Juno's arrays run past it); null when the fit holds all of it. */
   fitWidthOf(show?: string): number | null;
   /** Where each part stands for a choice of what to show. */
@@ -140,10 +144,10 @@ export interface Built {
 export const HEAVY_PIECES = 2000;
 
 // Bound retained geometry when a page visits many of the large fleet models.
-const memo = new Map<string, { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }>();
+const memo = new Map<string, { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds; reach?: Bounds }>();
 // A carrier's docked whole ships (its "miyamoto-" slots) are made at the docked level; every other part keeps its key, so building them in full makes nothing else again.
 const memoKey = (id: string, k: number) => `${detail.level}${id.includes("-miyamoto-") ? `:${detail.docked}` : ""}/${dockedNow.spec ?? "-"}/${id}${k === 1 ? "" : `@${k}`}`;
-const remember = (key: string, value: { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds }) => {
+const remember = (key: string, value: { pieces: readonly Piece[]; readonly mesh: PartMesh; bounds: Bounds; reach?: Bounds }) => {
   memo.set(key, value);
   if (memo.size > 128) {
     const oldest = memo.keys().next();
@@ -161,16 +165,16 @@ function made(id: string, k = 1) {
   const entry = partEntry(id);
   if (!entry) throw new Error(`There is no part "${id}".`);
   const pieces = k === 1 ? entry.pieces() : scalePieces(entry.pieces(), k);
-  const reach = entry.record.reach;
-  // the painted model's box, when it reaches past the shape the pieces draw
-  const reached = (box: Bounds): Bounds => (reach ? { min: [0, 1, 2].map((i) => Math.min(box.min[i], reach.min[i] * k)) as Vec3, max: [0, 1, 2].map((i) => Math.max(box.max[i], reach.max[i] * k)) as Vec3 } : box);
+  // the painted model's box, when it reaches past the shape the pieces draw: kept apart from `bounds`, which the drawing, the poster and the compare page size by
+  const named = entry.record.reach;
+  const reach: Bounds | undefined = named ? { min: named.min.map((v) => v * k) as Vec3, max: named.max.map((v) => v * k) as Vec3 } : undefined;
   if (pieces.length > HEAVY_PIECES) {
-    const heavy = { pieces, bounds: reached(boundsOfPieces(pieces)), get mesh() { return meshOf(pieces); } };
+    const heavy = { pieces, bounds: boundsOfPieces(pieces), reach, get mesh() { return meshOf(pieces); } };
     remember(key, heavy);
     return heavy;
   }
   const mesh = meshOf(pieces);
-  const result = { pieces, mesh, bounds: reached(boundsOf(mesh)) };
+  const result = { pieces, mesh, bounds: boundsOf(mesh), reach };
   remember(key, result);
   return result;
 }
@@ -203,7 +207,7 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
   const drawing = only && listed.length > 0 && listed.every(({ part }) => part.strapOn) ? listed.map(({ slot, part }) => ({ slot, part: { ...part, strapOn: undefined } })) : listed;
   const own: BuiltPart[] = drawing.map(({ slot, part }) => {
     const one = made(part.id, k);
-    return { slot, record: part, pieces: one.pieces, get mesh() { return one.mesh; }, bounds: one.bounds, flame: flameKindOf(part) };
+    return { slot, record: part, pieces: one.pieces, get mesh() { return one.mesh; }, bounds: one.bounds, ...(one.reach ? { reach: one.reach } : {}), flame: flameKindOf(part) };
   });
   const slots = own.map((part) => part.slot);
   // the first craft beside is "beside-", the next "beside-3-" and so on, so two of one rocket never share a slot
@@ -212,16 +216,17 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
   // what is drawn: the rocket's parts, then the ones beside it
   const parts: BuiltPart[] = [...own, ...beside];
   const ownPlaces = (show?: string) => placesFor(drawing, cleanShow(show, slots), (part) => widthOf(part.id, k));
-  const boundsOfPlaces = (places: { slot: string; at: Vec3; shown: boolean }[]): Bounds => {
+  const boundsOfPlaces = (places: { slot: string; at: Vec3; shown: boolean }[], reached = false): Bounds => {
     const min: Vec3 = [Infinity, Infinity, Infinity];
     const max: Vec3 = [-Infinity, -Infinity, -Infinity];
     for (const place of places) {
       if (!place.shown) continue;
-      const { bounds } = parts.find((part) => part.slot === place.slot) as BuiltPart;
-      for (let c = 0; c < 3; c++) {
-        min[c] = Math.min(min[c], bounds.min[c] + place.at[c]);
-        max[c] = Math.max(max[c], bounds.max[c] + place.at[c]);
-      }
+      const part = parts.find((one) => one.slot === place.slot) as BuiltPart;
+      for (const box of reached && part.reach ? [part.bounds, part.reach] : [part.bounds])
+        for (let c = 0; c < 3; c++) {
+          min[c] = Math.min(min[c], box.min[c] + place.at[c]);
+          max[c] = Math.max(max[c], box.max[c] + place.at[c]);
+        }
     }
     return { min, max };
   };
@@ -274,7 +279,13 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
     const shown = ownPlaces(show).filter((place) => place.shown).map((place) => (parts.find((part) => part.slot === place.slot) as BuiltPart).record);
     return shown.some((record) => record.fitWidth !== undefined) ? Math.max(...shown.map((record) => record.fitWidth ?? record.diameter)) : null;
   };
-  /** What the drawing is fitted to: the bounds, narrowed to the fit width where a part names one. The 3D view frames the same box. */
+  const frameOfShow = (show?: string, lit = false): Bounds => {
+    const whole = boundsOfShow(show, lit);
+    if (!own.some((part) => part.reach)) return whole;
+    const reached = boundsOfPlaces(ownPlaces(show), true);
+    return { min: [0, 1, 2].map((c) => Math.min(whole.min[c], reached.min[c])) as Vec3, max: [0, 1, 2].map((c) => Math.max(whole.max[c], reached.max[c])) as Vec3 };
+  };
+  /** What the drawing is fitted to: the bounds, narrowed to the fit width where a part names one. The 3D view's frame is this box too, widened by `frameOf` to a painted model's reach. */
   const fitOfShow = (show?: string, lit = false): Bounds => {
     const whole = boundsOfShow(show, lit);
     return fitBox(whole.min, whole.max, fitWidthOf(show));
@@ -286,6 +297,7 @@ function assembled(report: FitReport, others: readonly Built[] = [], naming?: { 
     names: naming ? [craftName(naming.own, boundsOfPlaces(ownPlaces("together")).max[1]), ...naming.others] : [],
     shows: showsOf(slots),
     boundsOf: boundsOfShow,
+    frameOf: frameOfShow,
     fitWidthOf,
     placesOf,
     flamesOf,

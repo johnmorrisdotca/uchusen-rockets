@@ -42,7 +42,7 @@ export const JUPITER_C_BUILDS: readonly StackBuild[] = [
     variant: "jupiter-c",
     drawnFrom: FROM,
     parts: [
-      { slot: "tail", kind: "tail", name: "Tail unit with its four fins, Jupiter-C", height: TAIL, diameter: R * 2 + 1.1, top: [TAIL, R * 2], sourcedDiameter: FINS_WIDE, painted: painted("tail"), pieces: tail },
+      { slot: "tail", kind: "tail", name: "Tail unit with its four fins, Jupiter-C", height: TAIL, diameter: R * 2 + 1.1, top: [TAIL, R * 2], sourcedDiameter: FINS_WIDE, reach: { min: [-1.48, -0.01, -1.48], max: [1.47, 3.1, 1.47] }, painted: painted("tail"), pieces: tail },
       { slot: "first-stage", kind: "first-stage", name: "Redstone first stage, Jupiter-C", height: BODY, diameter: R * 2, bottom: [0, R * 2], top: [BODY, TUB_R * 2], sourcedDiameter: JUPITER_C_WIDE, painted: painted("first-stage"), pieces: body },
       { slot: "tub", kind: "second-stage", name: "Spinning tub with stages 2 and 3, Jupiter-C", height: TUB, diameter: TUB_R * 2, bottom: [TUB_NEST, TUB_R * 2], top: [TUB, TOP_R * 2], sourcedDiameter: TUB_WIDE, painted: painted("tub"), pieces: tub },
       { slot: "fourth-stage", kind: "fourth-stage", name: "Fourth stage with Explorer 1, Jupiter-C", height: TOP, diameter: TOP_R * 2, bottom: [TOP_NEST, TOP_R * 2], sourcedDiameter: TOP_WIDE, painted: painted("fourth-stage"), pieces: top },

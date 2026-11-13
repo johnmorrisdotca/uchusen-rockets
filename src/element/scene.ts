@@ -1450,7 +1450,7 @@ export class RocketViewer {
   /** What is showing, with the flames when they are lit, so a flame is never cut off at the foot of the picture. */
   private litBounds() {
     const built = this.built as Built;
-    return this.lit === "full" ? built.boundsOf(this.show, true) : built.boundsOf(this.show);
+    return this.lit === "full" ? built.frameOf(this.show, true) : built.frameOf(this.show);
   }
 
   /** What the picture must hold: all of a flight while one is on. */
