@@ -1919,7 +1919,7 @@ test.describe("the six pages that open moving", () => {
   test.use({ reducedMotion: "no-preference" });
 
   const JOURNEY = "/uchusen-rockets/journey.html?date=2026-11-04&look=line";
-  const journeyPlaying = (page: Page) => expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "true");
+  const journeyPlaying = (page: Page) => expect(page.getByTestId("play")).toHaveAttribute("data-on", "");
 
   test("journey: the trip plays at most 30 draws a second from its one frame loop, then Pause and play=0 leave nothing drawn, and it is still out of sight and on a hidden tab", async ({ page }) => {
     test.setTimeout(240_000);
@@ -1932,13 +1932,13 @@ test.describe("the six pages that open moving", () => {
     await expectPaced(page, { schedulers: 2 });
     await expectUnseen(page);
     await page.getByTestId("play").click();
-    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByTestId("play")).not.toHaveAttribute("data-on");
     await expectStill(page);
     expectFlat(start, await levelUsage(page));
     // held in the address, it opens still, and nothing is drawn from the first frame
     await page.goto(`${JOURNEY}&play=0`);
     await foldPicker(page);
-    await expect(page.getByTestId("play")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByTestId("play")).not.toHaveAttribute("data-on");
     await expectStill(page);
   });
 
