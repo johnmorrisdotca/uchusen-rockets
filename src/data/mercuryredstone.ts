@@ -24,7 +24,10 @@ export const MERCURY_REDSTONE_VARIANTS: readonly Variant[] = [
         "escape-tower": blank("No source read here gives the tower's length: the spacecraft's article gives 7.9 m with the tower and 3.3 m without it, and their difference, 4.6 m, is drawn."),
       },
       engines: { "first-stage": { value: "1 Rocketdyne A-7", source: S } },
-      more: { mass: { value: "30000 kg", source: S, note: "The article shows 66,000 lb as 30,000 kg." } },
+      more: {
+        mass: { value: "30000 kg", source: S, note: "The article shows 66,000 lb as 30,000 kg." },
+        payload: { value: "Mercury spacecraft", source: S, date: "2026-11-13", note: "The article names what this launch vehicle carries. The capsule drawn here is that spacecraft, the part already drawn for Friendship 7." },
+      },
       sizes: {},
     },
   },
