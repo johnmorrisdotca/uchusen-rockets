@@ -213,7 +213,7 @@ const press = (group: HTMLElement, chosen: string) => {
 
 /** One row of modules for each hardpoint the ship can change. The choice stays in the address. */
 function drawSwaps(): void {
-  const mounts = mountsOf(state.rocket);
+  const mounts = mountsOf(state.rocket, state.variant);
   byId("swap-field").hidden = mounts.length === 0;
   const box = byId("swaps");
   box.replaceChildren();

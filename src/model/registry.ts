@@ -95,7 +95,7 @@ import { SHIP_01_ENTRIES, SHIP_01_INSET_ENTRIES } from "./ship-01.ts";
 import { KYOTORI_ENTRIES } from "./ship-kyotori.ts";
 import { SHIP_03_ENTRIES, SHIP_03_INSET_ENTRIES } from "./ship-03.ts";
 import { CONCEPT_ENTRIES } from "./kaminari-concepts.ts";
-import { hardpointEntries, insetEntries, kitEntries, SAMPLE_SHIPS, shipParts } from "./fleet/kit.ts";
+import { hardpointEntries, insetEntries, kitEntries, kitSwaps, SAMPLE_SHIPS, shipParts, type KitSwaps } from "./fleet/kit.ts";
 import { CONCEPT_FACES, conceptHull, miyamotoHull } from "./fleet/markingSets.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
@@ -298,7 +298,15 @@ entries.push(
 
 // The fleet kit: each module alone, with its cutaway, and the sample ships
 entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_01_ENTRIES, ...KYOTORI_ENTRIES, ...SHIP_01_INSET_ENTRIES, ...SHIP_03_ENTRIES, ...SHIP_03_INSET_ENTRIES, ...CONCEPT_ENTRIES);
-for (const id of ["hauler"]) entries.push(...shipParts(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 }, "fleet-samples", id).entries);
+/** The kit sample ships' mounts, by variant id: every place another module of the kit can stand in, by collar. */
+export const SAMPLE_SWAPS: Readonly<Record<string, KitSwaps>> = {};
+for (const id of ["hauler"]) {
+  const made = shipParts(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 }, "fleet-samples", id);
+  entries.push(...made.entries);
+  const swaps = kitSwaps(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 });
+  (SAMPLE_SWAPS as Record<string, KitSwaps>)[id] = swaps;
+  entries.push(...hardpointEntries(swaps.alternates, {}, (like) => made.entries.find((entry) => entry.record.id === `fleet-samples-${id}-${like}`)));
+}
 entries.push(...Object.keys(CONCEPT_FACES).flatMap((id) => [...conceptHull(id), ...miyamotoHull(id)]));
 
 /**
