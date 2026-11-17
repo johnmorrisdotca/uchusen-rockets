@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+- **Small craft (ATC): the crew shuttle and the cargo tug** (MODULES-418): rocket `fleet-atc`, variants `crew-shuttle` and `cargo-tug`, built from the kit's collars and detail in `src/model/fleet/craft/` with round tubes, a spec card each, a lineage line (Dragon, Orion and the Apollo service module; the ISS robot arms and the Shuttle's MMU) and a `CARRIES` table of the ships that carry them. The shuttle (15.9 by 7.0 by 6.8 m, class M collar) has a cutaway of its cabin; the tug (18.2 by 14.5 by 12.0 m, class L collar) mates a container's end frame. The names and registry numbers are one map (`ATC_NAMES`) of placeholders until they are given. The hangar doors are read from the ships' tables (`doorOf` for Miyamoto's bays, `HANGAR_DOOR` for Kaminari's dorsal hangar) and a test holds each craft to a 1 m margin in them; another holds each craft's collar to the class its carrier's port records. See `docs/fleet/craft.md`.
+
+- **Small craft (ATC): the rescue cutter** (MODULES-418): variant `rescue-cutter` of `fleet-atc`, an 18.9 m long white-and-orange cabin with two decks of stretcher cots (a cutaway shows them), a 1.4 m side lock, a tow hook and a class M collar, lineage the Soyuz descent module as a lifeboat and Dragon's capsule and trunk. The craft now share labelled sections, a propulsion card drawn on its own (blank thrust: no source) and a hull-layer shell at ten times its thickness (two small-craft stacks, `CRAFT_STACKS`, apart from the ships' `HULL_STACKS`), each with an inset; the survey lander and drone and the EVA pod follow, each as its own commit.
+
+- **Small craft (ATC): the survey lander** (MODULES-418): variant `survey-lander`, an eight-sided descent stage in gold foil on four splayed legs (9.4 m across the pads) under a round ascent cabin, with a sample arm, a dish and a class S collar; lineage the Apollo Lunar Module.
+
+- **Small craft (ATC): the survey drone, on a card of its own** (MODULES-418): variant `survey-drone`, a 1.65 m round instrument body with a boom, a dish and four cold-gas pods, held by a cradle clamp bar and with no docking collar (`collar` is `null`). Drawn as its own card apart from the lander; merging the two is John's call and one table row.
+
+- **Small craft (ATC): the EVA work pod** (MODULES-418): variant `eva-pod`, a one-person pod 4 m long with a round cab (a cutaway shows the seat), a window ring, two folded three-segment arms, a tool tray, four thruster quads in a frame of round tubes and a class S collar; lineage the Shuttle's Manned Maneuvering Unit and the ISS robot arms. With it all six craft of the family are built.
+
+- **Small craft (ATC): the docking scene and the review-gate renders** (MODULES-418): `fleet/scene.ts` and `sceneBounds.ts` put two Miyamoto ships off Kaminari's dock with the six craft flying between their hangar doors on lanes that clear every part (a pure `tripAt`), held by `test/fleet-scene.test.ts`; `scripts/craft-render.ts` draws the views, 10 m close-ups, Starship Block 3 frames, cards, sheets, the family and the scene from the real model.
+
 ## [0.31.0] - 2026-11-17
 
 - **The parts gallery leaves out stand-in parts** (MODULES-1495): a kit ship's stand-in for another module (`SWAP_STAND_INS`) ships no picture of its own, so the demo's parts gallery no longer asks for one; the module it stands in for keeps its own tile.

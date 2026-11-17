@@ -5,8 +5,8 @@ import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";
 const SHIPS = ["fleet-ship-01", "fleet-kyotori", "fleet-ship-03", "fleet-ship-ariake", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"] as const;
-/** What the Rocket row lists for SPX, in the registry's order: the ships, and the repair drone. Kit boxes stay off it. */
-const LISTED = ["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"] as const;
+/** What the Rocket row lists for SPX, in the registry's order: the ships, the small craft, and the repair drone. Kit boxes stay off it. */
+const LISTED = ["fleet-ship-01", "fleet-kyotori", "fleet-atc", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"] as const;
 const names = LISTED.map((id) => ROCKETS[id].name);
 
 const listed = (page: Page) => page.locator('#rockets button:visible').allTextContents();

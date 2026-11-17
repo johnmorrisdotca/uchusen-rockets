@@ -13,7 +13,7 @@ import { mountShipPicker, type ShipPickerElement } from "./pickerView.ts";
 
 setAssetBase(new URL("assets/", document.baseURI).href);
 
-const FIRST = ["fleet-ship-01", "fleet-ship-03", "fleet-kaminari", "fleet-emiake", "fleet-romaryu", "fleet-ship-ariake", "fleet-kyotori", "fleet-drone"];
+const FIRST = ["fleet-ship-01", "fleet-ship-03", "fleet-kaminari", "fleet-emiake", "fleet-romaryu", "fleet-ship-ariake", "fleet-kyotori", "fleet-drone", "fleet-atc"];
 const fleetShip = (id: string) => id in ROCKETS && isListed(id) && ROCKETS[id].maker === "fleet";
 const ships = () => {
   const rest = Object.keys(ROCKETS).filter((id) => fleetShip(id) && !FIRST.includes(id));

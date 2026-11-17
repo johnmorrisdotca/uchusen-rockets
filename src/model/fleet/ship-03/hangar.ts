@@ -2,7 +2,7 @@
 // starboard shoulder, the outer wall. Pure: no three.js and no DOM.
 import { moving } from "../motion.ts";
 import { cub, HULL_STACKS, ibeam, type Piece, pipeRun, rng, rod, roundStrut } from "./adapter.ts";
-import { type BayId, BAYS, bayBox } from "./dims.ts";
+import { type BayId, BAYS, bayBox, doorOf } from "./dims.ts";
 import { dressedFace, pipe, wallShells } from "./hulls.ts";
 import { along, bolts, conduit, type Face, faceOf, frame, hazard, ladder, lamp, on, pt, rail, stencil, WHITE } from "./faces.ts";
 import { exteriorSaddles, starshipBay } from "./service.ts";
@@ -84,9 +84,10 @@ export function hangar(which: Side | BayId, cut: boolean, detail = 1, seed?: str
   const T = 1.4;
   const out: Piece[] = [];
   const o = { seed, scheme: WHITE, detail, density: 0.34, blanket: true };
-  const openLow = z0 + 5;
-  const openHigh = z1 - 7;
-  const openY: [number, number] = [y0 + 12, y1 - 12];
+  const door0 = doorOf(bay);
+  const openLow = door0.z[0];
+  const openHigh = door0.z[1];
+  const openY: [number, number] = [door0.y[0], door0.y[1]];
   const outer = side === "starboard" ? x1 : x0;
   // the structural shell as slabs: floor, roof, end walls, the inner wall, and the outer wall in four strips round the bay door
   const slab = (xr: [number, number], yr: [number, number], zr: [number, number]) => cub("hull-grey-dark", xr, yr, zr, { only: undefined });

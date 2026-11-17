@@ -56,7 +56,7 @@ export interface Spec {
   /** Pull the modules apart along y: extra metres between each module, in order. */
   explode?: number;
   /** Extra registry parts to stand in the scene: their id and where. */
-  extra?: { id: string; at: [number, number, number] }[];
+  extra?: { id: string; at: [number, number, number]; /** Turn the part so its own +Y points this way (a craft in flight). */ along?: [number, number, number] }[];
   /** Wire boxes standing for ships not modelled here (size and centre, ship space). */
   ghosts?: { size: [number, number, number]; at: [number, number, number]; color: string }[];
   /** Points to project to pixels, in ship space. */
@@ -210,6 +210,7 @@ export function shoot(spec: Spec): { dataUrl: string; pxPerMetre: number; triang
     }
     const placed = g.clone();
     placed.position.set(...e.at);
+    if (e.along) placed.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(...e.along).normalize());
     root.add(placed);
   }
   scene.add(root);

@@ -47,6 +47,7 @@ import { CONCEPT_SLOT_NAMES, KAMINARI_VARIANTS } from "./data/kaminari-concepts.
 import { SHIP_01_INSET_ROCKET, SHIP_01_SLOT_NAMES, SHIP_01_VARIANTS } from "./data/ship-01.ts";
 import { KYOTORI_SLOT_NAMES, KYOTORI_VARIANTS } from "./data/ship-kyotori.ts";
 import { DRONE_VARIANTS } from "./data/drone.ts";
+import { ATC_SLOT_NAMES, ATC_VARIANTS } from "./data/atc.ts";
 import { ARIAKE_VARIANTS, SHIP_03_INSET_ROCKET, SHIP_03_SLOT_NAMES, SHIP_03_VARIANTS } from "./data/ship-03.ts";
 import { MADE_BY, type MakerId } from "./data/makers.ts";
 import { countryOf, type CountryCode } from "./data/countries.ts";
@@ -194,6 +195,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   ...Object.fromEntries(Object.entries(FLEET_KIT_ROCKETS).map(([id, rocket]) => [id, { id, name: rocket.name, status: "built" as const, ...MADE_BY["fleet-kit"], variants: rocket.variants, defaultVariant: rocket.variants[0].id }])),
   "fleet-ship-01": { id: "fleet-ship-01", name: "ISV 花房 Hanabusa, SPX-013", status: "built", ...MADE_BY["fleet-ship-01"], variants: SHIP_01_VARIANTS, defaultVariant: "hanabusa" },
   "fleet-kyotori": { id: "fleet-kyotori", name: "ISV 鏡鳥 Kyotori, SPX-045", status: "built", ...MADE_BY["fleet-kyotori"], variants: KYOTORI_VARIANTS, defaultVariant: "kyotori" },
+  "fleet-atc": { id: "fleet-atc", name: "SPX small craft (ATC)", status: "built", ...MADE_BY["fleet-atc"], variants: ATC_VARIANTS, defaultVariant: "crew-shuttle" },
   "fleet-drone": { id: "fleet-drone", name: "SPX repair drone", status: "built", ...MADE_BY["fleet-drone"], variants: DRONE_VARIANTS, defaultVariant: "repair-drone" },
   "fleet-insets-ship-01": { id: "fleet-insets-ship-01", name: SHIP_01_INSET_ROCKET.name, status: "built", ...MADE_BY["fleet-ship-01"], variants: SHIP_01_INSET_ROCKET.variants, defaultVariant: SHIP_01_INSET_ROCKET.variants[0].id },
   "fleet-ship-03": { id: "fleet-ship-03", name: "ISV 宮本 Miyamoto, SPX-452", status: "built", ...MADE_BY["fleet-ship-03"], variants: SHIP_03_VARIANTS, defaultVariant: "miyamoto" },
@@ -274,6 +276,7 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   ...KYOTORI_SLOT_NAMES,
   ...SHIP_03_SLOT_NAMES,
   drone: "Repair drone",
+  ...ATC_SLOT_NAMES,
   booster: "Super Heavy",
   ship: "Ship",
   "first-stage": "First stage",

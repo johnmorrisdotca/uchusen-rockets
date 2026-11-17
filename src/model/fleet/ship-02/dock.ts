@@ -2,17 +2,16 @@
 // frame for craft up to 90 m, tool arms and fuel-transfer booms. Inside (separate): a parked craft in its cradle, machine tools, robot arms, a stores racks aisle.
 import { dockedCraft } from "../docked.ts";
 import { PLATE, closeDetail, beam, box, collar, cyl, facesOf, hatch, hazard, lights, mast, onFace, pipe, plating, polar, revolve, ring, rng, span, stencil, vent, type MaterialName, type Piece } from "./adapter.ts";
-import { SPINE } from "./dims.ts";
+import { HANGAR, SPINE } from "./dims.ts";
 
-const L = 140;
+const L = HANGAR.depth;
 
 export function dockPieces(): Piece[] {
   const r = rng(2090);
   const out: Piece[] = [];
   const h = SPINE.half;
   // dorsal hangar: z from 22 to 92, x from -62 to 62, whole length: an open cage with posts, roof beams, plated back wall and two big door leaves swung open at the bow end
-  const hz0 = 22;
-  const hz1 = 92;
+  const [hz0, hz1] = HANGAR.z;
   for (const x of [-62, -31, 0, 31, 62]) for (const y of [0, 46, 94, L - 2]) out.push(span("hull-grey", x - 1.5, x + 1.5, y, y + 2, hz0, hz1, false));
   for (const x of [-62, 62]) for (const y of [0, 46, 94, L - 4]) out.push(span("hull-grey", x - 1.5, x + 1.5, y, y + 4, hz0, hz1, false));
   for (const x of [-62, -31, 0, 31, 62]) for (const z of [hz0 + 1.5, hz1 - 1.5]) out.push(span("hull-grey", x - 1.5, x + 1.5, 0, L, z - 1.5, z + 1.5, false));
