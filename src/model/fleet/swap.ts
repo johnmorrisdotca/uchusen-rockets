@@ -58,7 +58,19 @@ export function fitsMount(mount: Pick<SwapMount, "collar">, choice: Pick<SwapCho
   return mount.collar === undefined || mates(mount.collar, choice.collar);
 }
 
-/** The mount with only the modules that mate with it. */
+/**
+ * The mount with only the modules that mate with it.
+ *
+ * @param mount The mount.
+ * @returns The same mount without the choices whose collar does not mate.
+ * @example
+ * ```ts
+ * import { matingOnly } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const mount = matingOnly({ slot: "pod", name: "Pod", collar: "L", choices: [{ id: "a", part: "a", name: "A", collar: "L" }, { id: "b", part: "b", name: "B", collar: "M" }] });
+ * console.log(mount.choices.length);
+ * ```
+ */
 export function matingOnly(mount: SwapMount): SwapMount {
   return { ...mount, choices: mount.choices.filter((one) => fitsMount(mount, one)) };
 }
@@ -105,7 +117,17 @@ export function swapCandidates(list: ShipList, index: number): KitModule[] {
   return Object.values(KIT).filter((one) => one.id !== own.id && one.kind === own.kind && one.length === own.length && (below === undefined ? one.bottom === undefined : mates(below, one.bottom)) && (above === undefined ? one.top === undefined : mates(above, one.top)));
 }
 
-/** A kit ship's mounts and the registry alternates that stand in them. */
+/**
+ * A kit ship's mounts and the registry alternates that stand in them.
+ *
+ * @example
+ * ```ts
+ * import { kitSwaps, SAMPLE_SHIPS, type KitSwaps } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const swaps: KitSwaps = kitSwaps("demo", SAMPLE_SHIPS.hauler);
+ * console.log(swaps.mounts[0]?.slot);
+ * ```
+ */
 export interface KitSwaps {
   mounts: readonly SwapMount[];
   alternates: readonly Hardpoint[];
