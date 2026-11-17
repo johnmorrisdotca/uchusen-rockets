@@ -52,3 +52,39 @@ test("container: the same input is the same bytes, another seed is not, and coar
   const coarse = box.pieces({ level: "coarse" });
   assert.ok(coarse.length > 8 && coarse.length < box.pieces().length / 10, `${coarse.length} coarse pieces`);
 });
+
+const tankOf = (radius: number, length: number, extra = {}) => SIZED.tank({ radius, length, mass: 1000, propellant: 20000, ...extra });
+
+test("tank: a radius outside 8 to 60 m or a length under four radii or over 600 m throws and says which limit", () => {
+  for (const radius of [7.9, 60.1, Number.NaN]) assert.throws(() => tankOf(radius, 400), /in radius/, String(radius));
+  assert.throws(() => tankOf(20, 79), /4 radii/);
+  assert.throws(() => tankOf(20, 601), /m long/);
+  assert.doesNotThrow(() => tankOf(8, 32));
+  assert.doesNotThrow(() => tankOf(60, 600));
+});
+
+test("tank: it is the size it says, tail at y = 0 and nose at y = its length, and the cutaway adds what is inside", () => {
+  for (const [radius, length] of [[40, 440], [20, 200], [12, 90]] as const) {
+    const tank = tankOf(radius, length);
+    assert.equal(tank.length, length);
+    const b = boundsOf(meshOf(tank.pieces()));
+    // the vent stacks on the domes stand a fifth of the radius clear of them
+    assert.ok(Math.abs(b.min[1]) < radius / 5 + 1 && Math.abs(b.max[1] - length) < radius / 5 + 1, `${radius}x${length}: y ${b.min[1]} to ${b.max[1]}`);
+    const [x] = size(tank.pieces());
+    assert.ok(x >= 2 * radius && x < 2.3 * radius, `${x} across for ${2 * radius}`);
+    assert.ok(tank.pieces({ cutaway: true }).length > tank.pieces().length, "the propellant and pumps");
+  }
+});
+
+test("tank: detail scales with the length (rings, valve houses, hatches) and the radius (every fitting)", () => {
+  const short = tankOf(20, 200).pieces();
+  const long = tankOf(20, 400).pieces();
+  assert.ok(long.length > short.length * 1.1, `${long.length} pieces against ${short.length}: more of each along the barrel`);
+  const narrow = size(tankOf(10, 100).pieces());
+  const wide = size(tankOf(20, 200).pieces());
+  assert.ok(Math.abs(wide[0] / narrow[0] - 2) < 0.1 && Math.abs(wide[1] / narrow[1] - 2) < 0.1, "twice the size");
+  assert.equal(json(tankOf(20, 200).pieces({ seed: "a" })), json(tankOf(20, 200).pieces({ seed: "a" })));
+  assert.notEqual(json(tankOf(20, 200).pieces({ seed: "a" })), json(tankOf(20, 200).pieces({ seed: "b" })));
+  const braced = tankOf(20, 200, { brace: { distance: 60, half: 9 } }).pieces();
+  assert.ok(braced.length > short.length, "four braces to the spine at each cradle ring");
+});

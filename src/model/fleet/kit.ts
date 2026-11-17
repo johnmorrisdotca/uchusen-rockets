@@ -23,7 +23,7 @@ export type { FleetColour } from "./palette.ts";
 export type { Livery, LiveryName, RoomKind, RoomSpec, SeparationOptions } from "./detail.ts";
 export { BUILDERS, KIT } from "./modules.ts";
 export { SIZED, SIZED_LIMITS } from "./sized.ts";
-export type { ContainerSize, SizedBase } from "./sized.ts";
+export type { ContainerSize, SizedBase, TankSize } from "./sized.ts";
 export { BUILD_BUDGET_MS, isCoarse } from "./levels.ts";
 export { INSETS } from "./insets.ts";
 export type { Inset, InsetPart } from "./insets.ts";

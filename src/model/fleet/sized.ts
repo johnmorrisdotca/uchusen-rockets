@@ -2,6 +2,7 @@
 // drawn from the same numbers and the same detail as the ship that first needed it. A size outside a part's limits throws a RangeError that names the limit. The standard modules in `modules.ts` are not touched. Pure: no three.js and no DOM.
 import { type CollarClass } from "./collars.ts";
 import { checkContainer, containerPieces, CONTAINER_LIMITS } from "./heavy/container.ts";
+import { checkTank, tankInsidePieces, tankPieces, TANK_LIMITS, type TankBrace } from "./heavy/tank.ts";
 import { isCoarse } from "./levels.ts";
 import { rng as solidRng } from "./solids.ts";
 import type { KitModule, ModuleOptions } from "./types.ts";
@@ -43,6 +44,32 @@ export interface ContainerSize extends SizedBase {
   cold?: boolean;
 }
 
+/**
+ * A heavy propellant tank's size: its radius and its length along the spine, in metres.
+ *
+ * @example
+ * ```ts
+ * import { SIZED, type TankSize } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const size: TankSize = { radius: 40, length: 440, mass: 6000, propellant: 100000 };
+ * console.log(SIZED.tank(size).width);
+ * ```
+ */
+export interface TankSize extends SizedBase {
+  /** Metres from the axis to the wall, 8 to 60. */
+  radius: number;
+  /** Metres from the tail of the aft dome to the nose of the forward one: 4 radii to 600. */
+  length: number;
+  /** Propellant it holds when full, in tonnes. */
+  propellant: number;
+  /** The angle from +z towards +x that the feed manifold faces. Left out: +z. */
+  toward?: number;
+  /** The tank's number, in lettering on its flat. */
+  label?: string;
+  /** A spine to brace the cradle rings to: how far it is and how wide. Left out: no braces. */
+  brace?: TankBrace;
+}
+
 const NO_COLLAR: { top?: CollarClass; bottom?: CollarClass } = {};
 
 /** A heavy container: Kaminari's box, at any size from 15 m across. Its pieces stand with the middle of the base on the origin, the length up Y, and its outward faces on +X and +Z. */
@@ -72,6 +99,33 @@ function container(size: ContainerSize): KitModule {
   };
 }
 
+/** A heavy tank: Kaminari's domed drum with its cradle rings, manifold, valve houses and hatches, at any radius from 8 m. With `cutaway` the propellant, baffle rings and pumps show inside. */
+function tank(size: TankSize): KitModule {
+  checkTank(size.radius, size.length);
+  const id = size.id ?? `tank-${size.radius}x${size.length}`;
+  return {
+    id,
+    name: size.name ?? `Tank, ${2 * size.radius} m across, ${size.length} m`,
+    kind: "tank",
+    note: `A heavy propellant tank ${2 * size.radius} m across and ${size.length} m long, domed at both ends: banded insulation, cradle rings, a feed manifold, vent stacks, valve houses, access hatches and service lettering, all growing with its size.`,
+    mass: size.mass,
+    propellant: size.propellant,
+    length: size.length,
+    width: 2 * size.radius,
+    depth: 2 * size.radius,
+    ...NO_COLLAR,
+    ports: [],
+    ancestor: "the Saturn V S-IC and the Space Shuttle external tank: banded insulation, cradle rings and a feed line up the side, at heavy-lift size",
+    inside: true,
+    livery: "industrial",
+    pieces: (options: ModuleOptions = {}) => {
+      const outer = tankPieces(size, { seed: seedOf(`${options.seed ?? ""}/${id}`), ...(size.toward !== undefined ? { toward: size.toward } : {}), ...(size.label ? { label: size.label } : {}), ...(size.brace ? { brace: size.brace } : {}) });
+      const made = options.cutaway ? [...outer, ...tankInsidePieces(size, [0, 0], solidRng(seedOf(`${options.seed ?? ""}/${id}/inside`)))] : outer;
+      return options.level === "coarse" ? made.filter(isCoarse) : made;
+    },
+  };
+}
+
 /**
  * The resizable kit parts: each takes its size in metres and returns a `KitModule`. A size outside the part's limits throws a RangeError that names the limit.
  *
@@ -83,7 +137,7 @@ function container(size: ContainerSize): KitModule {
  * console.log(box.name, box.length, box.pieces({ level: "coarse" }).length);
  * ```
  */
-export const SIZED = { container } as const;
+export const SIZED = { container, tank } as const;
 
 /** The limits of each resizable part, in metres, as a ship's table can read them. */
-export const SIZED_LIMITS = { container: CONTAINER_LIMITS } as const;
+export const SIZED_LIMITS = { container: CONTAINER_LIMITS, tank: TANK_LIMITS } as const;
