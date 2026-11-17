@@ -7,7 +7,7 @@ const IDS = ["mercury", "venus", "earth", "moon", "mars", "jupiter", "saturn", "
 const stops: Stop[] = [
   ...IDS.map((id) => {
     const facts = BODIES[id];
-    return { id, name: facts.name, kind: facts.kind, ...(facts.parent ? { parent: facts.parent } : {}), radiusKm: facts.radiusKm, colour: facts.colour };
+    return { id, name: facts.name, kind: facts.kind as Stop["kind"], ...(facts.parent ? { parent: facts.parent } : {}), radiusKm: facts.radiusKm, colour: facts.colour };
   }),
   { id: "beyond", name: { en: "Past the solar system", ja: "太陽系の外" }, kind: "beyond", radiusKm: 0, colour: "#9fb4d4" },
 ];
