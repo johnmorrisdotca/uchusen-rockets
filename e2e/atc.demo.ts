@@ -9,7 +9,7 @@ test.beforeEach(async ({ page, browserName }) => {
   if (rate > 1 && browserName === "chromium") await (await page.context().newCDPSession(page)).send("Emulation.setCPUThrottlingRate", { rate });
 });
 
-for (const [variant, id] of [["crew-shuttle", "crew-shuttle"]] as const) {
+for (const [variant, id] of [["crew-shuttle", "crew-shuttle"], ["cargo-tug", "cargo-tug"]] as const) {
   test(`${variant} opens by address, made by SPX, with its name from the map`, async ({ page }) => {
     await page.goto(`${URL}?rocket=fleet-atc&variant=${variant}`);
     await expect(page.locator("#facts")).toContainText(/Made by\s*SPX/i, { timeout: 30_000 });
@@ -17,3 +17,9 @@ for (const [variant, id] of [["crew-shuttle", "crew-shuttle"]] as const) {
     await expect(page.locator("#facts")).not.toContainText("SpaceX");
   });
 }
+
+test("the other variant is one tap away on the same rocket", async ({ page }) => {
+  await page.goto(`${URL}?rocket=fleet-atc&variant=crew-shuttle`);
+  await page.locator('[data-testid="variant-cargo-tug"]').click();
+  await expect(page).toHaveURL(/variant=cargo-tug/);
+});
