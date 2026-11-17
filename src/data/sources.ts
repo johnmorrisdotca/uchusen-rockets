@@ -185,6 +185,8 @@ export const SOURCES = {
   "collectspace-spacelab": { title: "Spacelab: Space Shuttle Flew Europe's First Space Module 30 Years Ago", publisher: "Space.com (by Robert Pearlman, collectSPACE)", url: "https://www.space.com/23796-spacelab-space-shuttle-30-years-anniversary.html", date: "2013-12-02", read: "direct" },
   "nasa-explorer-1-fast-facts": { title: "Explorer 1 Fast Facts", publisher: "NASA", url: "https://www.nasa.gov/missions/explorer/explorer-1-fast-facts/", date: "2026-11-17", read: "direct" },
   "wikipedia-explorer-1": { title: "Explorer 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Explorer_1", date: "2026-11-17", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-vanguard-1": { title: "Vanguard 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Vanguard_1", date: "2026-11-17", read: "direct", licence: "CC BY-SA 4.0" },
+  "nasa-vanguard-satellite-1958": { title: "Vanguard Satellite, 1958", publisher: "NASA", url: "https://www.nasa.gov/image-article/vanguard-satellite-1958/", date: "2026-11-17", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**
