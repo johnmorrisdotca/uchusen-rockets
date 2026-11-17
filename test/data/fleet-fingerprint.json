@@ -1,0 +1,2799 @@
+{
+ "kaminari": {
+  "spine": {
+   "pieces": 1858,
+   "triangles": 35260,
+   "bounds": [
+    -20.8,
+    -2.1,
+    -20.8,
+    20.8,
+    1760,
+    20.8
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "halo-beacon",
+    "halo-port",
+    "halo-starboard",
+    "halo-stern",
+    "halo-strobe",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "f732fc283c9428f2ac6d2ea8"
+  },
+  "drive": {
+   "pieces": 78807,
+   "triangles": 1003492,
+   "bounds": [
+    -172.79,
+    87.5,
+    -65.6,
+    172.79,
+    226,
+    65.6
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "9004b84b76676cbe25355e16"
+  },
+  "drive-engines": {
+   "pieces": 456,
+   "triangles": 67392,
+   "bounds": [
+    -140.5,
+    -4,
+    -67.5,
+    140.5,
+    153.3,
+    67.5
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "coolant",
+    "copper",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-orange",
+    "hull-white"
+   ],
+   "hash": "72cde4a90a5582f7238f392a"
+  },
+  "verniers": {
+   "pieces": 704,
+   "triangles": 59616,
+   "bounds": [
+    -180.58,
+    -1.66,
+    -64.57,
+    180.58,
+    91.3,
+    72.57
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "coolant",
+    "copper",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "3e58874ae91084b4cad192f7"
+  },
+  "header-tanks": {
+   "pieces": 155,
+   "triangles": 9732,
+   "bounds": [
+    -163.5,
+    68.82,
+    -100.8,
+    164.07,
+    168,
+    100.8
+   ],
+   "materials": [
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "f3c02131533c7e0d24b756fb"
+  },
+  "reactor": {
+   "pieces": 499,
+   "triangles": 7128,
+   "bounds": [
+    -125,
+    -4,
+    -102.4,
+    125,
+    145.91,
+    102.4
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-red"
+   ],
+   "hash": "8d051961dfc31e2dae2d0574"
+  },
+  "shadow-shield": {
+   "pieces": 132,
+   "triangles": 2272,
+   "bounds": [
+    -136.73,
+    0,
+    -136.73,
+    136.73,
+    20,
+    136.73
+   ],
+   "materials": [
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "9d431cead106258d3b9d091c"
+  },
+  "propellant-lines": {
+   "pieces": 386,
+   "triangles": 7344,
+   "bounds": [
+    -178.97,
+    174,
+    -90.14,
+    178.97,
+    698.32,
+    91.52
+   ],
+   "materials": [
+    "coolant",
+    "copper",
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "ea3d2e3e7d017968de0b4017"
+  },
+  "tank-1": {
+   "pieces": 430,
+   "triangles": 10968,
+   "bounds": [
+    -102.88,
+    -8,
+    -102.3,
+    43.6,
+    448,
+    43.6
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "482a39e65087e9146666250e"
+  },
+  "tank-2": {
+   "pieces": 436,
+   "triangles": 11040,
+   "bounds": [
+    -43.6,
+    -8,
+    -102.88,
+    102.3,
+    448,
+    43.6
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "1db3e26f880968930859c9ef"
+  },
+  "tank-3": {
+   "pieces": 436,
+   "triangles": 11040,
+   "bounds": [
+    -102.3,
+    -8,
+    -43.6,
+    43.6,
+    448,
+    102.88
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "3099d2c367716774fdea56f9"
+  },
+  "tank-4": {
+   "pieces": 434,
+   "triangles": 11016,
+   "bounds": [
+    -43.6,
+    -8,
+    -43.6,
+    102.88,
+    448,
+    102.3
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "3ec4ebc96ac102c3318fbeeb"
+  },
+  "radiator-starboard": {
+   "pieces": 871,
+   "triangles": 11796,
+   "bounds": [
+    101,
+    -0.5,
+    -4.75,
+    457,
+    561.7,
+    4.75
+   ],
+   "materials": [
+    "coolant",
+    "dark",
+    "engine-metal",
+    "halo-starboard",
+    "halo-stern",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-yellow",
+    "lamp-red"
+   ],
+   "hash": "0b9807b3836b397c45ece4e5"
+  },
+  "radiator-port": {
+   "pieces": 873,
+   "triangles": 11820,
+   "bounds": [
+    -457,
+    -0.5,
+    -4.75,
+    -101,
+    561.7,
+    4.75
+   ],
+   "materials": [
+    "coolant",
+    "dark",
+    "engine-metal",
+    "halo-beacon",
+    "halo-port",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-yellow",
+    "lamp-red"
+   ],
+   "hash": "cba322692ad08999a7ef645b"
+  },
+  "radiators-stowed": {
+   "pieces": 116,
+   "triangles": 1392,
+   "bounds": [
+    -31.2,
+    0,
+    -47.4,
+    31.2,
+    240,
+    47.4
+   ],
+   "materials": [
+    "coolant",
+    "dark",
+    "hull-grey",
+    "hull-orange",
+    "hull-yellow"
+   ],
+   "hash": "55b278adbdbec8c0854216be"
+  },
+  "pod": {
+   "pieces": 373,
+   "triangles": 7956,
+   "bounds": [
+    -16.5,
+    0,
+    -45,
+    16.5,
+    128.6,
+    16.5
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "glass",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "99f107e3bab140f8adeb627d"
+  },
+  "pod-ventral": {
+   "pieces": 149,
+   "triangles": 3964,
+   "bounds": [
+    -25.8,
+    0,
+    -26.8,
+    25.8,
+    121.6,
+    45
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "cd0203cc47bdad1342057ab9"
+  },
+  "tip-port": {
+   "pieces": 19,
+   "triangles": 888,
+   "bounds": [
+    -30,
+    -20,
+    -11,
+    10.72,
+    60.9,
+    11
+   ],
+   "materials": [
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "dd96ff053a02028828d76cff"
+  },
+  "tip-starboard": {
+   "pieces": 19,
+   "triangles": 888,
+   "bounds": [
+    -30,
+    -20,
+    -11,
+    10.72,
+    60.9,
+    11
+   ],
+   "materials": [
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "dd96ff053a02028828d76cff"
+  },
+  "cargo-1": {
+   "pieces": 15448,
+   "triangles": 336208,
+   "bounds": [
+    -76.18,
+    -1.95,
+    -76.18,
+    76.18,
+    138.2,
+    76.18
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "f319b559fad5127fc8b718e6"
+  },
+  "cargo-2": {
+   "pieces": 15539,
+   "triangles": 337300,
+   "bounds": [
+    -76.18,
+    -1.95,
+    -76.18,
+    76.18,
+    138.2,
+    76.18
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "fe994252021f9e82456a788f"
+  },
+  "cargo-3": {
+   "pieces": 15526,
+   "triangles": 337144,
+   "bounds": [
+    -76.18,
+    -1.97,
+    -76.18,
+    76.18,
+    138.2,
+    76.18
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "e3f589be0e15e1eaafed3ea5"
+  },
+  "cargo-4": {
+   "pieces": 15341,
+   "triangles": 334924,
+   "bounds": [
+    -76.18,
+    -1.94,
+    -76.18,
+    76.18,
+    138.2,
+    76.18
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "e7d97c4242510dc1c722da42"
+  },
+  "dock": {
+   "pieces": 25423,
+   "triangles": 331892,
+   "bounds": [
+    -159.7,
+    -18.5,
+    -90,
+    159.7,
+    166.5,
+    112
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "9cafa7db1d71a99f98c8ba0e"
+  },
+  "farm": {
+   "pieces": 291,
+   "triangles": 7592,
+   "bounds": [
+    -77.22,
+    -1,
+    -76.93,
+    77.22,
+    80.39,
+    76.93
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "glass",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "ac51ccf29a9b2c23da25b4ec"
+  },
+  "habitat-a": {
+   "pieces": 1053,
+   "triangles": 28548,
+   "bounds": [
+    -192,
+    -1.2,
+    -192,
+    192,
+    37.2,
+    192
+   ],
+   "materials": [
+    "blanket",
+    "coolant",
+    "copper",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow",
+    "lamp-blue"
+   ],
+   "hash": "e1e352dfad4e1ba29305189d"
+  },
+  "habitat-b": {
+   "pieces": 1058,
+   "triangles": 28608,
+   "bounds": [
+    -192,
+    -1.2,
+    -192,
+    192,
+    37.2,
+    192
+   ],
+   "materials": [
+    "blanket",
+    "coolant",
+    "copper",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "hull-grey",
+    "hull-white",
+    "hull-yellow",
+    "lamp-blue"
+   ],
+   "hash": "debefc8f0714c1a50525415b"
+  },
+  "command": {
+   "pieces": 359,
+   "triangles": 6816,
+   "bounds": [
+    -54.96,
+    -3.2,
+    -55,
+    54.87,
+    68,
+    55.01
+   ],
+   "materials": [
+    "black",
+    "copper",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "glass",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "c99d2dde50d577f597a0715e"
+  },
+  "attitude-thrusters": {
+   "pieces": 36,
+   "triangles": 688,
+   "bounds": [
+    -39.65,
+    37,
+    -39.65,
+    39.65,
+    47,
+    39.65
+   ],
+   "materials": [
+    "bell",
+    "dark"
+   ],
+   "hash": "17e714aebcf88804b13e3918"
+  },
+  "shield": {
+   "pieces": 2283,
+   "triangles": 43096,
+   "bounds": [
+    -205,
+    0,
+    -205,
+    205,
+    60.6,
+    205
+   ],
+   "materials": [
+    "black",
+    "copper",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "glass",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-yellow",
+    "lamp-blue",
+    "lamp-red"
+   ],
+   "hash": "d01728bfce833012a114ea79"
+  },
+  "reactor-inside": {
+   "pieces": 212,
+   "triangles": 24600,
+   "bounds": [
+    -88.2,
+    5.03,
+    -91,
+    88.2,
+    140,
+    91
+   ],
+   "materials": [
+    "concrete",
+    "coolant",
+    "copper",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "020a11041d38fca0a4cea642"
+  },
+  "tank-inside": {
+   "pieces": 228,
+   "triangles": 17456,
+   "bounds": [
+    -118.8,
+    6,
+    -118.8,
+    118.8,
+    424,
+    118.8
+   ],
+   "materials": [
+    "coolant",
+    "dark",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "hull-grey"
+   ],
+   "hash": "f492cea5e25f00e49d89d8ec"
+  },
+  "cargo-inside": {
+   "pieces": 1740,
+   "triangles": 40080,
+   "bounds": [
+    -71.99,
+    5,
+    -76,
+    73.6,
+    524,
+    76
+   ],
+   "materials": [
+    "blanket",
+    "coolant",
+    "dark",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "858513db3cf332219702f564"
+  },
+  "dock-hangar": {
+   "pieces": 17,
+   "triangles": 644,
+   "bounds": [
+    -32,
+    4,
+    31,
+    32,
+    112,
+    66.1
+   ],
+   "materials": [
+    "bell",
+    "hull-grey",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow"
+   ],
+   "hash": "141e666b8ff8a70425257a20"
+  },
+  "dock-works": {
+   "pieces": 180,
+   "triangles": 3120,
+   "bounds": [
+    -61,
+    12,
+    -80,
+    61,
+    126,
+    -22
+   ],
+   "materials": [
+    "blanket",
+    "coolant",
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-orange",
+    "hull-yellow",
+    "lamp-blue"
+   ],
+   "hash": "8bec0ccc730a4093861a35a9"
+  },
+  "farm-terrace-1": {
+   "pieces": 168,
+   "triangles": 3000,
+   "bounds": [
+    -42,
+    12,
+    -42,
+    42,
+    65.5,
+    42
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "588badb823a1dd5caf7363c5"
+  },
+  "farm-terrace-2": {
+   "pieces": 168,
+   "triangles": 3000,
+   "bounds": [
+    -53,
+    12,
+    -53,
+    53,
+    65.5,
+    53
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "3d60c102f3fbf8d400b3846e"
+  },
+  "farm-terrace-3": {
+   "pieces": 168,
+   "triangles": 3000,
+   "bounds": [
+    -64,
+    12,
+    -64,
+    64,
+    65.5,
+    64
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "553e86eafe5594ecff7f9065"
+  },
+  "habitat-a-deck-1": {
+   "pieces": 147,
+   "triangles": 4132,
+   "bounds": [
+    -158.2,
+    1.24,
+    -158.2,
+    158.2,
+    12.8,
+    158.2
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "hull-grey",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "4b7d85358b8b62ccd0119397"
+  },
+  "habitat-a-deck-2": {
+   "pieces": 140,
+   "triangles": 4560,
+   "bounds": [
+    -166.2,
+    12.24,
+    -166.2,
+    166.2,
+    23.8,
+    166.2
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "hull-grey",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-yellow",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "f11b33c8c025aa0a6aaaa8ac"
+  },
+  "habitat-a-deck-3": {
+   "pieces": 131,
+   "triangles": 3836,
+   "bounds": [
+    -174.2,
+    23.24,
+    -174.2,
+    174.2,
+    34.8,
+    174.2
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "hull-grey",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "3d1ea7fefb48aa86c4313b1a"
+  },
+  "habitat-b-deck-1": {
+   "pieces": 147,
+   "triangles": 4132,
+   "bounds": [
+    -158.2,
+    1.24,
+    -158.2,
+    158.2,
+    12.8,
+    158.2
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "hull-grey",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "4b7d85358b8b62ccd0119397"
+  },
+  "habitat-b-deck-2": {
+   "pieces": 140,
+   "triangles": 4560,
+   "bounds": [
+    -166.2,
+    12.24,
+    -166.2,
+    166.2,
+    23.8,
+    166.2
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "hull-grey",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-yellow",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "f11b33c8c025aa0a6aaaa8ac"
+  },
+  "habitat-b-deck-3": {
+   "pieces": 131,
+   "triangles": 3836,
+   "bounds": [
+    -174.2,
+    23.24,
+    -174.2,
+    174.2,
+    34.8,
+    174.2
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "hull-grey",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "lamp-blue",
+    "plant"
+   ],
+   "hash": "3d1ea7fefb48aa86c4313b1a"
+  },
+  "command-bridge": {
+   "pieces": 54,
+   "triangles": 836,
+   "bounds": [
+    -35.11,
+    26,
+    -35.11,
+    35.11,
+    31.7,
+    35.11
+   ],
+   "materials": [
+    "dark",
+    "engine-metal",
+    "hull-grey",
+    "hull-orange",
+    "lamp-blue"
+   ],
+   "hash": "162e3c86d84b3df180e4c2f8"
+  },
+  "command-crew": {
+   "pieces": 145,
+   "triangles": 1756,
+   "bounds": [
+    -35.11,
+    12,
+    -35.11,
+    35.11,
+    17.5,
+    35.11
+   ],
+   "materials": [
+    "blanket",
+    "concrete",
+    "coolant",
+    "dark",
+    "hull-white"
+   ],
+   "hash": "85a2751cefcae9e1c738c8e3"
+  },
+  "command-medbay": {
+   "pieces": 18,
+   "triangles": 352,
+   "bounds": [
+    -15.8,
+    5,
+    -27.5,
+    24.2,
+    11,
+    -12.5
+   ],
+   "materials": [
+    "coolant",
+    "hull-grey",
+    "hull-white"
+   ],
+   "hash": "86bd2d8426ff2e6bbe633cd1"
+  }
+ },
+ "miyamoto": {
+  "drive": {
+   "pieces": 975,
+   "triangles": 64090,
+   "bounds": [
+    -45.47,
+    -0.05,
+    -23.49,
+    45.47,
+    58,
+    23.49
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coil",
+    "coolant",
+    "copper",
+    "engine-metal",
+    "engine-pale",
+    "gold",
+    "halo-stern",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "light-pool",
+    "nav-white",
+    "panel-dark"
+   ]
+  },
+  "engineering": {
+   "pieces": 1869,
+   "triangles": 58814,
+   "bounds": [
+    -13.74,
+    -0.23,
+    -13.66,
+    13.78,
+    32.23,
+    15
+   ],
+   "materials": [
+    "beacon",
+    "black",
+    "blanket",
+    "blanket-worn",
+    "coolant",
+    "copper",
+    "flood",
+    "foil",
+    "gold",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-red",
+    "light-pool",
+    "lines",
+    "nav-green",
+    "nav-red",
+    "nav-white",
+    "panel-dark",
+    "pipe-steel",
+    "strobe"
+   ]
+  },
+  "fuel-aft": {
+   "pieces": 3731,
+   "triangles": 118584,
+   "bounds": [
+    -35.51,
+    -1.05,
+    -23.51,
+    72.52,
+    81.05,
+    22.55
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "fuel",
+    "glass",
+    "gold",
+    "halo-starboard",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark"
+   ]
+  },
+  "fuel-fore": {
+   "pieces": 3962,
+   "triangles": 127232,
+   "bounds": [
+    -35.51,
+    -1.05,
+    -42,
+    35.51,
+    81.05,
+    13.4
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark"
+   ]
+  },
+  "habitat": {
+   "pieces": 2908,
+   "triangles": 95720,
+   "bounds": [
+    -72.52,
+    0,
+    -14.08,
+    14.06,
+    52,
+    22.55
+   ],
+   "materials": [
+    "beacon",
+    "black",
+    "blanket",
+    "blanket-worn",
+    "coolant",
+    "copper",
+    "flood",
+    "foil",
+    "halo-port",
+    "halo-strobe",
+    "halo-window",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "light-pool",
+    "lines",
+    "nav-green",
+    "nav-red",
+    "nav-white",
+    "panel-dark",
+    "pipe-steel",
+    "strobe",
+    "window"
+   ]
+  },
+  "command": {
+   "pieces": 1791,
+   "triangles": 38772,
+   "bounds": [
+    -39.9,
+    -3.46,
+    -18.1,
+    39.9,
+    48.11,
+    25.27
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "copper",
+    "engine-pale",
+    "glass",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark",
+    "plant",
+    "red"
+   ]
+  },
+  "bow": {
+   "pieces": 1023,
+   "triangles": 20652,
+   "bounds": [
+    -20.36,
+    0,
+    -19.4,
+    19.75,
+    30,
+    19.4
+   ],
+   "materials": [
+    "beacon",
+    "bell-inside",
+    "black",
+    "coil",
+    "flood",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white-worn",
+    "hull-yellow",
+    "ink-worn",
+    "kapton",
+    "lamp-amber",
+    "lamp-blue",
+    "light-pool",
+    "panel-dark"
+   ]
+  },
+  "drive-cutaway": {
+   "pieces": 861,
+   "triangles": 53230,
+   "bounds": [
+    -45.47,
+    -0.05,
+    -23.49,
+    43.6,
+    58,
+    23.49
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coil",
+    "coolant",
+    "copper",
+    "engine-metal",
+    "engine-pale",
+    "gold",
+    "halo-stern",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "light-pool",
+    "nav-white",
+    "panel-dark"
+   ]
+  },
+  "engineering-cutaway": {
+   "pieces": 1962,
+   "triangles": 62030,
+   "bounds": [
+    -13.76,
+    -0.23,
+    -13.64,
+    13.49,
+    32.23,
+    15
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "blanket-worn",
+    "coil",
+    "coolant",
+    "copper",
+    "core",
+    "deck",
+    "foam",
+    "foil",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "pipe-steel",
+    "tile-plain"
+   ]
+  },
+  "fuel-aft-cutaway": {
+   "pieces": 3830,
+   "triangles": 119212,
+   "bounds": [
+    -35.51,
+    -1.05,
+    -23.51,
+    72.52,
+    81.05,
+    22.55
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "deck",
+    "engine-metal",
+    "foam",
+    "frost",
+    "fuel",
+    "glass",
+    "gold",
+    "halo-starboard",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark",
+    "tile-plain"
+   ]
+  },
+  "fuel-fore-cutaway": {
+   "pieces": 4061,
+   "triangles": 127860,
+   "bounds": [
+    -35.51,
+    -1.05,
+    -42,
+    32.98,
+    81.05,
+    13.4
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "deck",
+    "engine-metal",
+    "foam",
+    "frost",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark",
+    "tile-plain"
+   ]
+  },
+  "habitat-cutaway": {
+   "pieces": 2322,
+   "triangles": 81922,
+   "bounds": [
+    -72.52,
+    0,
+    -13.56,
+    14.06,
+    55,
+    22.55
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "blanket-worn",
+    "coolant",
+    "copper",
+    "deck",
+    "foam",
+    "foil",
+    "fuel",
+    "glass",
+    "gold",
+    "halo-port",
+    "halo-strobe",
+    "halo-window",
+    "hazard",
+    "hull-blue",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "light-pool",
+    "lines",
+    "panel-dark",
+    "pipe-steel",
+    "plant",
+    "tile-plain",
+    "window"
+   ]
+  },
+  "command-cutaway": {
+   "pieces": 1017,
+   "triangles": 40704,
+   "bounds": [
+    -39.9,
+    -3.46,
+    -18.1,
+    39.9,
+    48,
+    25.27
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "copper",
+    "deck",
+    "engine-pale",
+    "foam",
+    "glass",
+    "hazard",
+    "hull-blue",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark",
+    "plant",
+    "red",
+    "tile-plain"
+   ]
+  },
+  "bow-cutaway": {
+   "pieces": 701,
+   "triangles": 14348,
+   "bounds": [
+    -20.36,
+    0,
+    -19.4,
+    7.36,
+    30,
+    19.4
+   ],
+   "materials": [
+    "beacon",
+    "bell-inside",
+    "black",
+    "coil",
+    "flood",
+    "foam",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white-worn",
+    "hull-yellow",
+    "ink-worn",
+    "kapton",
+    "lamp-amber",
+    "lamp-blue",
+    "light-pool",
+    "panel-dark"
+   ]
+  },
+  "hangar-starboard": {
+   "pieces": 5779,
+   "triangles": 88812,
+   "bounds": [
+    -38.22,
+    -1.71,
+    -1.17,
+    53.97,
+    100.79,
+    30
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "hangar-port": {
+   "pieces": 6299,
+   "triangles": 92608,
+   "bounds": [
+    -53.97,
+    -1.99,
+    -1.17,
+    38.23,
+    97.7,
+    30.1
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "hangar-starboard-cutaway": {
+   "pieces": 4764,
+   "triangles": 74364,
+   "bounds": [
+    -38.22,
+    -1.71,
+    -1.17,
+    53.97,
+    100.79,
+    30
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "foam",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "hangar-port-cutaway": {
+   "pieces": 5940,
+   "triangles": 88012,
+   "bounds": [
+    -53.97,
+    -1.99,
+    -1.17,
+    38.23,
+    97.7,
+    30.1
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "drive-ariake": {
+   "pieces": 2412,
+   "triangles": 95658,
+   "bounds": [
+    -45.47,
+    -0.05,
+    -23.49,
+    45.47,
+    58,
+    23.49
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coil",
+    "coolant",
+    "copper",
+    "engine-metal",
+    "engine-pale",
+    "halo-stern",
+    "hazard",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow",
+    "lamp-amber",
+    "light-pool",
+    "nav-white",
+    "panel-dark",
+    "tile"
+   ]
+  },
+  "drive-ariake-cutaway": {
+   "pieces": 2033,
+   "triangles": 79206,
+   "bounds": [
+    -45.47,
+    -0.05,
+    -23.49,
+    43.6,
+    58,
+    23.49
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coil",
+    "coolant",
+    "copper",
+    "engine-metal",
+    "engine-pale",
+    "halo-stern",
+    "hazard",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-yellow",
+    "lamp-amber",
+    "light-pool",
+    "nav-white",
+    "panel-dark",
+    "tile"
+   ]
+  },
+  "habitat-ariake": {
+   "pieces": 2956,
+   "triangles": 99426,
+   "bounds": [
+    -72.52,
+    0,
+    -14.08,
+    14.06,
+    52,
+    22.55
+   ],
+   "materials": [
+    "beacon",
+    "black",
+    "blanket",
+    "blanket-worn",
+    "coolant",
+    "copper",
+    "flood",
+    "foil",
+    "halo-port",
+    "halo-strobe",
+    "halo-window",
+    "hazard",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "light-pool",
+    "lines",
+    "nav-green",
+    "nav-red",
+    "nav-white",
+    "panel-dark",
+    "pipe-steel",
+    "strobe",
+    "window"
+   ]
+  },
+  "habitat-ariake-cutaway": {
+   "pieces": 2237,
+   "triangles": 81088,
+   "bounds": [
+    -72.52,
+    0,
+    -13.67,
+    14.06,
+    55,
+    22.55
+   ],
+   "materials": [
+    "black",
+    "blanket",
+    "blanket-worn",
+    "coolant",
+    "copper",
+    "deck",
+    "foam",
+    "foil",
+    "fuel",
+    "glass",
+    "gold",
+    "halo-port",
+    "halo-strobe",
+    "halo-window",
+    "hazard",
+    "hull-blue",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "light-pool",
+    "lines",
+    "panel-dark",
+    "pipe-steel",
+    "plant",
+    "tile-plain",
+    "window",
+    "wood"
+   ]
+  },
+  "command-ariake": {
+   "pieces": 2243,
+   "triangles": 58652,
+   "bounds": [
+    -39.9,
+    -3.46,
+    -18.1,
+    39.9,
+    48.11,
+    49.12
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "engine-pale",
+    "glass",
+    "hazard",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark",
+    "plant",
+    "red"
+   ]
+  },
+  "bow-ariake": {
+   "pieces": 1883,
+   "triangles": 26108,
+   "bounds": [
+    -18.92,
+    -0.11,
+    -20.92,
+    19.12,
+    28.55,
+    21.05
+   ],
+   "materials": [
+    "beacon",
+    "bell-inside",
+    "black",
+    "copper",
+    "flood",
+    "glass",
+    "hazard",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white-worn",
+    "hull-yellow",
+    "ink-worn",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "light-pool",
+    "panel-dark"
+   ]
+  },
+  "hangar-starboard-ariake": {
+   "pieces": 5913,
+   "triangles": 90124,
+   "bounds": [
+    -38.22,
+    -1.95,
+    -1.17,
+    53.97,
+    101.44,
+    29.71
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "hangar-port-ariake": {
+   "pieces": 6070,
+   "triangles": 88604,
+   "bounds": [
+    -53.97,
+    -0.79,
+    -1.17,
+    38.23,
+    97.85,
+    29.84
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "hangar-starboard-fore-ariake": {
+   "pieces": 6203,
+   "triangles": 90500,
+   "bounds": [
+    -38.22,
+    -1.68,
+    -1.17,
+    53.97,
+    96.79,
+    29.78
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "hangar-port-aft-ariake": {
+   "pieces": 5886,
+   "triangles": 89548,
+   "bounds": [
+    -53.97,
+    -1.62,
+    -1.17,
+    38.23,
+    100.79,
+    30.05
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "shield-collar": {
+   "pieces": 3233,
+   "triangles": 44636,
+   "bounds": [
+    -30.79,
+    -3.17,
+    -30.79,
+    30.79,
+    22,
+    30.79
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "gold",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "lamp-amber",
+    "lines",
+    "panel-dark",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "collar-none": {
+   "pieces": 19,
+   "triangles": 1004,
+   "bounds": [
+    -11.77,
+    0,
+    -11.8,
+    11.77,
+    1.3,
+    12.2
+   ],
+   "materials": [
+    "hull-grey",
+    "hull-grey-dark",
+    "lamp-amber"
+   ]
+  },
+  "shield-collar-ariake": {
+   "pieces": 569,
+   "triangles": 14616,
+   "bounds": [
+    -30.79,
+    -3.17,
+    -30.79,
+    30.79,
+    22,
+    30.79
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "lamp-amber",
+    "panel-dark",
+    "tile"
+   ]
+  },
+  "pod-relay": {
+   "pieces": 812,
+   "triangles": 1832,
+   "bounds": [
+    -10.79,
+    4.21,
+    12.3,
+    11.06,
+    55.79,
+    55.82
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark"
+   ]
+  },
+  "pod-relief": {
+   "pieces": 743,
+   "triangles": 1832,
+   "bounds": [
+    -10.4,
+    3.8,
+    12.3,
+    10.4,
+    56.15,
+    28.25
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark"
+   ]
+  },
+  "pod-survey": {
+   "pieces": 529,
+   "triangles": 1832,
+   "bounds": [
+    -10.4,
+    4,
+    12.3,
+    31.5,
+    56.15,
+    28.78
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "glass",
+    "hazard",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark"
+   ]
+  },
+  "array-stowed": {
+   "pieces": 481,
+   "triangles": 10996,
+   "bounds": [
+    7.33,
+    0,
+    5.28,
+    31.45,
+    120,
+    18.55
+   ],
+   "materials": [
+    "coil",
+    "coolant",
+    "copper",
+    "foil",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-white",
+    "hull-yellow",
+    "kapton",
+    "lamp-amber",
+    "lamp-blue",
+    "panel-dark"
+   ]
+  },
+  "array-deployed": {
+   "pieces": 4341,
+   "triangles": 6192,
+   "bounds": [
+    7.33,
+    0,
+    -20.09,
+    74.22,
+    120,
+    18.55
+   ],
+   "materials": [
+    "coil",
+    "coolant",
+    "copper",
+    "gold",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-white",
+    "hull-yellow",
+    "kapton",
+    "lamp-amber",
+    "lamp-red",
+    "pipe-steel"
+   ]
+  },
+  "radiators-dorsal-stowed": {
+   "pieces": 343,
+   "triangles": 4140,
+   "bounds": [
+    -12.5,
+    -0.4,
+    13.2,
+    12.5,
+    60.4,
+    22.22
+   ],
+   "materials": [
+    "black",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark",
+    "radiator"
+   ]
+  },
+  "radiators-dorsal-deployed": {
+   "pieces": 434,
+   "triangles": 18120,
+   "bounds": [
+    -62.74,
+    -0.18,
+    14,
+    62.74,
+    60.18,
+    42.4
+   ],
+   "materials": [
+    "coolant",
+    "copper",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-white",
+    "hull-white-worn",
+    "lamp-amber",
+    "radiator",
+    "radiator-hot"
+   ]
+  },
+  "radiators-ventral-stowed": {
+   "pieces": 325,
+   "triangles": 3924,
+   "bounds": [
+    -12.5,
+    -0.4,
+    -22.2,
+    12.5,
+    60.4,
+    -13.2
+   ],
+   "materials": [
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-red",
+    "panel-dark",
+    "radiator"
+   ]
+  },
+  "radiators-ventral-deployed": {
+   "pieces": 462,
+   "triangles": 19768,
+   "bounds": [
+    -62.74,
+    -0.18,
+    -48.4,
+    62.74,
+    60.18,
+    -14
+   ],
+   "materials": [
+    "coolant",
+    "copper",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-white",
+    "hull-white-worn",
+    "lamp-amber",
+    "radiator",
+    "radiator-hot"
+   ]
+  },
+  "hangar-port-ariake-moved": {
+   "pieces": 6070,
+   "triangles": 88604,
+   "bounds": [
+    -53.97,
+    -0.79,
+    -1.17,
+    38.23,
+    97.85,
+    29.84
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "hangar-port-aft-ariake-moved": {
+   "pieces": 5886,
+   "triangles": 89548,
+   "bounds": [
+    -53.97,
+    -1.62,
+    -1.17,
+    38.23,
+    100.79,
+    30.05
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "black",
+    "coolant",
+    "copper",
+    "dark",
+    "deck",
+    "engine-metal",
+    "engine-pale",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-blue",
+    "hull-dawn",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "lines",
+    "panel-dark",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "fuel-aft-inboard": {
+   "pieces": 3727,
+   "triangles": 118408,
+   "bounds": [
+    -31.51,
+    -1.05,
+    -23.51,
+    72.52,
+    81.05,
+    22.55
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "fuel",
+    "glass",
+    "gold",
+    "halo-starboard",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark"
+   ]
+  },
+  "fuel-fore-inboard": {
+   "pieces": 3838,
+   "triangles": 120768,
+   "bounds": [
+    -31.51,
+    -1.05,
+    -42,
+    31.51,
+    81.05,
+    13.4
+   ],
+   "materials": [
+    "black",
+    "coolant",
+    "copper",
+    "fuel",
+    "glass",
+    "gold",
+    "hazard",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-orange-worn",
+    "hull-white",
+    "hull-white-worn",
+    "hull-yellow",
+    "lamp-amber",
+    "lamp-blue",
+    "lamp-red",
+    "panel-dark"
+   ]
+  },
+  "exterior-load": {
+   "pieces": 80,
+   "triangles": 11584,
+   "bounds": [
+    70.9,
+    0,
+    3.77,
+    107.4,
+    52.1,
+    12.82
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "dark",
+    "engine-metal",
+    "lines",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "stack-berth-keel": {
+   "pieces": 88,
+   "triangles": 11680,
+   "bounds": [
+    -8.1,
+    0.7,
+    -36.55,
+    8.1,
+    107.3,
+    -27.45
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "copper",
+    "dark",
+    "engine-metal",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "lines",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  },
+  "stack-berth-port": {
+   "pieces": 88,
+   "triangles": 11680,
+   "bounds": [
+    -24.1,
+    0.7,
+    -4.55,
+    -7.9,
+    107.3,
+    4.55
+   ],
+   "materials": [
+    "bell",
+    "bell-inside",
+    "copper",
+    "dark",
+    "engine-metal",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "lines",
+    "soot",
+    "steel",
+    "tile",
+    "tile-plain"
+   ]
+  }
+ }
+}
