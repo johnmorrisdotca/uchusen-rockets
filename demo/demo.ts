@@ -3,6 +3,7 @@ import { builderState, check, flightOf, MAKERS, type MakerId, embedCode, embedNo
 import { besideBounds, besideLayout, craftName } from "../src/beside.ts";
 import { canScale, SCALE_PERCENT, scalePercent } from "../src/concepts.ts";
 import { dockMenu, dockPlan } from "../src/model/fleet/docked.ts";
+import { SWAP_STAND_INS } from "../src/model/registry.ts";
 import { motionNote, motionsOf } from "../src/model/fleet/motion.ts";
 import { PICTURE_H, PICTURE_W } from "../src/framing.ts";
 import { setAssetBase, setFlagLoader, type UchusenLineup, type UchusenRocket } from "../src/element.ts";
@@ -1132,8 +1133,9 @@ renderBuilder();
 
 // ------------------------------------------------------------- the parts alone
 const assets = new URL("assets/", document.baseURI).href;
+// a stand-in for a module on a kit ship is that module's own part drawn in another place: the module has its tile, the stand-in ships no picture
 const gallery = () =>
-  PART_ENTRIES.filter(({ record }) => record.trueTo.length === 0).map(({ record }) =>
+  PART_ENTRIES.filter(({ record }) => record.trueTo.length === 0 && !SWAP_STAND_INS.has(record.id)).map(({ record }) =>
     el(
       "figure",
       { className: "tile" },
