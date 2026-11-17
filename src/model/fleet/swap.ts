@@ -51,7 +51,7 @@ export interface SwapMount {
  * ```ts
  * import { fitsMount } from "@johnmorrisdotca/uchusen-rockets";
  *
- * console.log(fitsMount({ slot: "pod", name: "Pod", collar: "L", choices: [] }, { id: "a", part: "a", name: "A", collar: "M" }));
+ * console.log(fitsMount({ collar: "L" }, { collar: "M" }));
  * ```
  */
 export function fitsMount(mount: Pick<SwapMount, "collar">, choice: Pick<SwapChoice, "collar">): boolean {
