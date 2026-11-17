@@ -12,6 +12,8 @@
 
 - **Small craft (ATC): the EVA work pod** (MODULES-418): variant `eva-pod`, a one-person pod 4 m long with a round cab (a cutaway shows the seat), a window ring, two folded three-segment arms, a tool tray, four thruster quads in a frame of round tubes and a class S collar; lineage the Shuttle's Manned Maneuvering Unit and the ISS robot arms. With it all six craft of the family are built.
 
+- **Small craft (ATC): the docking scene and the review-gate renders** (MODULES-418): `fleet/scene.ts` and `sceneBounds.ts` put two Miyamoto ships off Kaminari's dock with the six craft flying between their hangar doors on lanes that clear every part (a pure `tripAt`), held by `test/fleet-scene.test.ts`; `scripts/craft-render.ts` draws the views, 10 m close-ups, Starship Block 3 frames, cards, sheets, the family and the scene from the real model.
+
 ## [0.31.0] - 2026-11-17
 
 - **Fleet ships swap modules by collar and show their assembly** (MODULES-415): a module is offered for a hardpoint, port or place only when its collar mates with the mount's (`fitsMount`, `swapCandidates`, `kitSwaps`), so the kit's sample ship swaps cargo containers, engines, habitat rings and pods, the first design keeps its pod and tip mounts, and Kyotori's four class ships swap their class part; the choice stays in the address as `swap=<slot>:<id>`. The assembly player now has an order for the first design (`fleet-02`), every Kyotori variant and the kit's sample ship (`kitAssembly`), and a step can carry its own `title` for the flight's name. The Modules field is one wrapping row of buttons.
