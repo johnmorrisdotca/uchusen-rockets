@@ -13,7 +13,7 @@ import { PORTS as KYOTORI } from "../src/model/fleet/ship-kyotori/docking.ts";
 
 const built = ATC_IDS.filter((id) => ATC[id]);
 /** The craft built so far: the family grows one commit at a time, and this line says how far. */
-const EXPECT: AtcId[] = ["crew-shuttle", "cargo-tug", "rescue-cutter", "survey-lander"];
+const EXPECT: AtcId[] = ["crew-shuttle", "cargo-tug", "rescue-cutter", "survey-lander", "survey-drone"];
 
 test("the doors are the ships' own: Miyamoto's rescue bay 76 by 16 m, survey bay 72 by 16 m, Kaminari's dorsal hangar 121 by 64 m", () => {
   assert.deepEqual([doorOf("starboard-aft").wide, doorOf("starboard-aft").high], [76, 16]);

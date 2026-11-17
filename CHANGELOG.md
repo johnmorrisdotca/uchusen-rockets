@@ -8,6 +8,8 @@
 
 - **Small craft (ATC): the survey lander** (MODULES-418): variant `survey-lander`, an eight-sided descent stage in gold foil on four splayed legs (9.4 m across the pads) under a round ascent cabin, with a sample arm, a dish and a class S collar; lineage the Apollo Lunar Module.
 
+- **Small craft (ATC): the survey drone, on a card of its own** (MODULES-418): variant `survey-drone`, a 1.65 m round instrument body with a boom, a dish and four cold-gas pods, held by a cradle clamp bar and with no docking collar (`collar` is `null`). Drawn as its own card apart from the lander; merging the two is John's call and one table row.
+
 ## [0.31.0] - 2026-11-17
 
 - **Fleet ships swap modules by collar and show their assembly** (MODULES-415): a module is offered for a hardpoint, port or place only when its collar mates with the mount's (`fitsMount`, `swapCandidates`, `kitSwaps`), so the kit's sample ship swaps cargo containers, engines, habitat rings and pods, the first design keeps its pod and tip mounts, and Kyotori's four class ships swap their class part; the choice stays in the address as `swap=<slot>:<id>`. The assembly player now has an order for the first design (`fleet-02`), every Kyotori variant and the kit's sample ship (`kitAssembly`), and a step can carry its own `title` for the flight's name. The Modules field is one wrapping row of buttons.

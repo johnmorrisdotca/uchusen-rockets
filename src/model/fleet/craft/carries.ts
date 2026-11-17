@@ -36,6 +36,9 @@ export const CARRIES: readonly Carry[] = [
   { craft: "survey-lander", ship: "fleet-ship-03", shipName: "SPX-03 Miyamoto", where: "survey bay, in one of three small cradles" },
   { craft: "survey-lander", ship: "fleet-ship-01", shipName: "SPX-01 Hanabusa", where: "crew port, S class", port: portOf(HANABUSA, "crew-s") },
   { craft: "survey-lander", ship: "fleet-kyotori", shipName: "Kyotori", where: "hub small-craft port 1", port: portOf(KYOTORI, "hub-0") },
+  { craft: "survey-drone", ship: "fleet-ship-03", shipName: "SPX-03 Miyamoto", where: "survey bay, on a cradle clamp" },
+  { craft: "survey-drone", ship: "fleet-ship-ariake", shipName: "Ariake", where: "survey bay, on a cradle clamp" },
+  { craft: "survey-drone", ship: "fleet-02", shipName: "SPX-207 Kaminari", where: "dorsal hangar, on a cradle clamp" },
 ];
 
 /** The rows of one craft. */

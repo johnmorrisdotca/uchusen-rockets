@@ -7,6 +7,7 @@ import { carriedBy, type Carry } from "./carries.ts";
 import { type Envelope, envelopeOf, tightest } from "./clearance.ts";
 import { ATC_IDS, ATC_NAMES, type AtcId } from "./names.ts";
 import { CUTTER, cutterPieces } from "./cutter.ts";
+import { dronePieces } from "./drone.ts";
 import { LANDER, landerPieces } from "./lander.ts";
 import { SHUTTLE, shuttlePieces } from "./shuttle.ts";
 import { TUG, tugPieces } from "./tug.ts";
@@ -45,6 +46,7 @@ export const ATC: Readonly<Partial<Record<AtcId, Atc>>> = {
   "crew-shuttle": make("crew-shuttle", "Carries people between ships and to orbit", "M", true, SHUTTLE.nose, "SpaceX Dragon (capsule and trunk), NASA Orion with the European Service Module, and the Apollo service module's reaction-control quads", shuttlePieces),
   "rescue-cutter": make("rescue-cutter", "Rescue bay craft and lifeboat: two decks of stretcher bays, a side lock and a tow hook", "M", true, CUTTER.nose, "The Soyuz descent module as a lifeboat, SpaceX Dragon's capsule and trunk, and Orion with the European Service Module, drawn long", cutterPieces),
   "survey-lander": make("survey-lander", "Lands on small bodies to survey and take samples", "S", false, LANDER.nose, "The Apollo Lunar Module: an eight-sided descent stage on four legs under a round ascent cabin", landerPieces),
+  "survey-drone": make("survey-drone", "Flies survey runs from a cradle and returns to it", null, false, null, "The package's own survey probes (Voyager's instrument boom, Cassini's high-gain dish), scaled down to a free-flying drone", dronePieces),
   "cargo-tug": make("cargo-tug", "Moves a 22 by 22 by 40 m container between a cargo station and a hangar or port", "L", false, TUG.nose, "The ISS's Canadarm2 and Dextre robot arms, and the Shuttle's Manned Maneuvering Unit as a free-flying work pack, scaled up", tugPieces),
 };
 
