@@ -74,6 +74,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   lageos: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-lageos", note: "NASA's own mission page for LAGEOS, as for the other NASA craft here: it says the satellites are NASA's and does not say who built them." } },
   "sputnik-1": { maker: "ussr", madeBy: { value: "USSR", source: "nasa-history-sputnik-chronology", note: "NASA's chronology lists Sputnik 1 as a launch of the USSR. It names no design bureau." } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
+  "fleet-atc": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-drone": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-kyotori": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-ship-03": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },

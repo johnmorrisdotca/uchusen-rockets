@@ -24,6 +24,12 @@ export const STATION = {
 /** The four tanks stand in the corners of the cross: this far from the axis in x and z. */
 export const TANK = { offset: 80, radius: 40, bodyFrom: 20, bodyTo: 420 } as const;
 
+/** The dorsal hangar: a cage 124 m across (x -62 to 62), 70 m high (z 22 to 92) and 140 m deep, its posts and beams 3 m square. */
+export const HANGAR = { x: 62, z: [22, 92], depth: 140, post: 3 } as const;
+
+/** What a craft can pass: between the posts across and between the floor and roof beams up. */
+export const HANGAR_DOOR = { wide: 2 * HANGAR.x - HANGAR.post, high: HANGAR.z[1] - HANGAR.z[0] - 2 * HANGAR.post } as const;
+
 /** Containers: 22 m by 22 m by 40 m, two by two by three in a cell, four cells to a station. */
 export const CONTAINER = { across: 22, long: 40 } as const;
 

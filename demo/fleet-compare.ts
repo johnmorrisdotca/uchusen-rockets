@@ -12,7 +12,7 @@ import { bindStage, placeZoom } from "./viewBinder.ts";
 
 defineUchusenRocket();
 
-const FIRST = ["fleet-ship-01", "fleet-ship-03", "fleet-kaminari", "fleet-emiake", "fleet-romaryu", "fleet-ship-ariake", "fleet-kyotori", "fleet-drone"];
+const FIRST = ["fleet-ship-01", "fleet-ship-03", "fleet-kaminari", "fleet-emiake", "fleet-romaryu", "fleet-ship-ariake", "fleet-kyotori", "fleet-drone", "fleet-atc"];
 const DEFAULT_SHIPS = "fleet-ship-01,fleet-ship-03,fleet-kaminari";
 const VIEWS = ["front", "side", "three-quarter", "below"] as const;
 type View = (typeof VIEWS)[number];
