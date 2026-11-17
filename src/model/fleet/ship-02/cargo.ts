@@ -1,51 +1,16 @@
 // One cargo station: four cells in the corners of the cross, each a frame holding twelve containers (two by two by three), and the clamps that tie the frame to the spine. A container is 22 m by 22 m by 40 m,
 // with corner castings, corrugation, a door end with lock rods, wear patches and its own number. The inside of the containers is a separate part for the cutaway.
 import { detail } from "../../detail.ts";
-import { PLATE, ibeam, pipeOn, beam, box, forDrawing, facesOf, hazard, hatch, lights, onFace, pipe, plating, rng, span, stencil, type MaterialName, type Piece, type Rng, vent } from "./adapter.ts";
+import { PLATE, ibeam, beam, box, forDrawing, facesOf, hazard, hatch, lights, pipe, plating, rng, span, stencil, type MaterialName, type Piece, type Rng, vent } from "./adapter.ts";
+import { containerPieces } from "../heavy/container.ts";
 import { CONTAINER, SPINE, STATION } from "./dims.ts";
 
 const L = STATION.cargo.length;
-// colour kept small and functional: the cargo is white and grey (foil and blanket), with the odd cream, and a stripe only where something has to be found
-const LIVERY: readonly MaterialName[] = ["hull-white", "hull-white", "hull-white", "hull-white", "hull-grey", "hull-white-worn", "hull-white-worn", "hull-grey"];
 
-/** One container, centre (cx, cy, cz); `ox` and `oz` are the directions that face outward from the spine, so those faces get the detail. */
+/** One container, centre (cx, cy, cz); `ox` and `oz` are the directions that face outward from the spine, so those faces get the detail. The kit draws it (`../heavy/container.ts`); this ship asks for its own size. */
 export function container(cx: number, cy: number, cz: number, ox: 1 | -1, oz: 1 | -1, r: Rng, id: string, band: MaterialName): Piece[] {
-  const out: Piece[] = [];
-  const w = CONTAINER.across - 0.4;
-  const l = CONTAINER.long - 0.8;
-  const base = r.pick(LIVERY);
-  out.push(box(base, [cx, cy, cz], [w, l, w], false));
-  // corner castings
-  for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) out.push(box("dark", [cx + (sx * (w - 2)) / 2, cy + (sy * (l - 2)) / 2, cz + (sz * (w - 2)) / 2], [2.2, 2.2, 2.2]));
-  const fx = facesOf([cx, cy, cz], [w, l, w], [ox > 0 ? "x+" : "x-", oz > 0 ? "z+" : "z-", "y-", "y+"]);
-  // corrugation on the two outward long faces: ribs across the width
-  for (const f of fx.slice(0, 2)) {
-    const n = 9;
-    for (let i = 0; i < n; i++) out.push(onFace(i % 2 ? "dark" : base, f, 0, -f.b + 3 + ((i + 0.5) * (2 * f.b - 6)) / n, f.a * 2 - 4.4, 1.2, 0.6, 0.02));
-    out.push(onFace(band, f, 0, f.b * 0.55, f.a * 2 - 3, 4.2, 0.35, 0.65));
-    if (r.chance(0.5)) out.push(onFace("hull-orange-worn", f, r.range(-f.a * 0.5, f.a * 0.5), r.range(-f.b * 0.5, f.b * 0.5), r.range(3, 7), r.range(3, 9), 0.2, 0.7));
-  }
-  out.push(...stencil(fx[0], id, 0, -f0(fx[0]), 2.8, "hull-white", 0.7));
-  // up close: on each outward face a pair of conduits with clamps, a recessed panel with a bolted border, a vent grille, a power receptacle with its yellow cap and a pair of lifting eyes
-  for (const f of detail.level === "coarse" ? [] : fx.slice(0, 2)) {
-    for (const ta of [-f.a * 0.62, f.a * 0.62]) {
-      out.push(...pipeOn(f, ta, -f.b + 3, ta, f.b - 3, 0.38, "coolant", 6, 0.5));
-      for (let k = -3; k <= 3; k++) out.push(onFace("black", f, ta, k * (f.b * 0.28), 1.5, 0.9, 1.0, 1.0));
-    }
-    out.push(onFace("dark", f, 0, -f.b * 0.35, f.a * 0.7, f.b * 0.28, 0.5, 0.9), onFace("engine-metal", f, 0, -f.b * 0.35, f.a * 0.72, 0.25, 0.7, 0.9), onFace("engine-metal", f, 0, -f.b * 0.35 - f.b * 0.14, f.a * 0.72, 0.25, 0.7, 0.9), onFace("engine-metal", f, 0, -f.b * 0.35 + f.b * 0.14, f.a * 0.72, 0.25, 0.7, 0.9));
-    for (let k = 0; k < 6; k++) out.push(onFace("black", f, -f.a * 0.3 + k * f.a * 0.12, -f.b * 0.35 + f.b * 0.14, 0.4, 0.4, 0.9, 0.9), onFace("black", f, -f.a * 0.3 + k * f.a * 0.12, -f.b * 0.35 - f.b * 0.14, 0.4, 0.4, 0.9, 0.9));
-    out.push(...vent(f, f.a * 0.3, f.b * 0.1, f.a * 0.45, 2.6, 4, 0.9));
-    out.push(onFace("dark", f, -f.a * 0.3, f.b * 0.1, 2.6, 2.6, 1.0, 0.9), onFace("hull-yellow", f, -f.a * 0.3, f.b * 0.1, 1.6, 1.6, 0.5, 1.8), onFace("engine-metal", f, -f.a * 0.3, f.b * 0.1 + 1.9, 2.8, 0.5, 0.8, 0.9));
-    for (const sa of [-1, 1]) out.push(onFace("engine-metal", f, sa * (f.a - 1.8), f.b - 1.8, 1.2, 1.2, 1.1, 1.0), onFace("black", f, sa * (f.a - 1.8), f.b - 1.8, 0.6, 0.6, 1.4, 1.0));
-  }
-  // the door end: two leaves, four lock rods and their cams, hinges
-  const door = fx[2];
-  out.push(onFace("dark", door, -door.a / 2, 0, door.a - 0.6, door.b * 2 - 2, 0.5, 0.02), onFace("dark", door, door.a / 2, 0, door.a - 0.6, door.b * 2 - 2, 0.5, 0.02));
-  for (const q of [-8, -3, 3, 8]) out.push(onFace("engine-metal", door, q, 0, 0.5, door.b * 2 - 3, 0.7, 0.4), onFace("hull-yellow", door, q, -door.b + 4, 1.1, 1.1, 0.9, 0.4));
-  out.push(onFace("hull-yellow", fx[3], 0, 0, 5, 5, 0.3, 0.05));
-  return out;
+  return containerPieces(CONTAINER, [cx, cy, cz], ox, oz, r, id, band, detail.level !== "coarse");
 }
-const f0 = (f: { b: number }) => f.b * 0.3;
 
 /** A cell frame at the corner (sx, sz): posts, ring beams at the four levels and the clamp arms to the spine. The cell spans 24..74 from the axis in x and z. */
 function cellFrame(sx: 1 | -1, sz: 1 | -1, r: Rng): Piece[] {
