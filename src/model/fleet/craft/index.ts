@@ -7,6 +7,7 @@ import { carriedBy, type Carry } from "./carries.ts";
 import { type Envelope, envelopeOf, tightest } from "./clearance.ts";
 import { ATC_NAMES, type AtcId } from "./names.ts";
 import { shuttlePieces } from "./shuttle.ts";
+import { tugPieces } from "./tug.ts";
 
 export { ATC_IDS, ATC_NAMES } from "./names.ts";
 export type { AtcId, AtcName } from "./names.ts";
@@ -38,6 +39,7 @@ const make = (id: AtcId, role: string, collar: CollarClass, crewed: boolean, anc
 /** The craft built so far, by id. */
 export const ATC: Readonly<Partial<Record<AtcId, Atc>>> = {
   "crew-shuttle": make("crew-shuttle", "Carries people between ships and to orbit", "M", true, "SpaceX Dragon (capsule and trunk), NASA Orion with the European Service Module, and the Apollo service module's reaction-control quads", shuttlePieces),
+  "cargo-tug": make("cargo-tug", "Moves a 22 by 22 by 40 m container between a cargo station and a hangar or port", "L", false, "The ISS's Canadarm2 and Dextre robot arms, and the Shuttle's Manned Maneuvering Unit as a free-flying work pack, scaled up", tugPieces),
 };
 
 /** A craft's one-line spec rows for a card: size, collar, the tightest door, who carries it. */

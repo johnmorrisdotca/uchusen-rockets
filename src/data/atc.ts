@@ -20,9 +20,10 @@ const inspector = (id: AtcId, slot: string, sections: Inspector["sections"], not
 });
 
 const shuttle = ATC["crew-shuttle"];
-if (!shuttle) throw new Error("ATC craft are missing");
+const tug = ATC["cargo-tug"];
+if (!shuttle || !tug) throw new Error("ATC craft are missing");
 
-/** The variants built so far: the crew shuttle. */
+/** The two variants built so far: the crew shuttle and the cargo tug. */
 export const ATC_VARIANTS: readonly Variant[] = [
   {
     id: "crew-shuttle",
@@ -48,5 +49,29 @@ export const ATC_VARIANTS: readonly Variant[] = [
     ),
     view: { tiltMax: 90 },
     facts: { height: fiction(metres(shuttle.envelope.long)), diameter: fiction(metres(Math.max(shuttle.envelope.across, shuttle.envelope.deep))), parts: { shuttle: fiction(metres(shuttle.envelope.long)), "shuttle-inside": fiction(metres(shuttle.envelope.long)) }, engines: {}, more: {} },
+  },
+  {
+    id: "cargo-tug",
+    rocket: "fleet-atc",
+    name: ATC_NAMES["cargo-tug"].name,
+    status: "fictional",
+    firstWord: "Designed",
+    firstFlight: blank<string>(FICTION, "Planned: not yet flown"),
+    slots: ["tug"],
+    note: `${tug.role}. A square-truss keel with a class L collar at the nose, two tanks, two grapple arms and a thruster block.`,
+    inspector: inspector(
+      "cargo-tug",
+      "tug",
+      [
+        { id: "collar", name: "Docking collar, class L", job: "Mates a container's end frame and the L ports of the ships", slot: "tug", at: at(0, 18, 0), inside: false },
+        { id: "arms", name: "Grapple arms", job: "Two three-segment arms folded along the keel, for the clamps and the cell frames", slot: "tug", at: at(3, 11, 1), inside: false },
+        { id: "tanks", name: "Propellant tanks", job: "Two domed tanks on saddle straps", slot: "tug", at: at(4.9, 9, 0), inside: false },
+        { id: "keel", name: "Keel truss", job: "Square truss of round chords and diagonals that carries every load", slot: "tug", at: at(0, 9, 0), inside: false },
+        { id: "thrusters", name: "Thruster block", job: "Four engines and four quads at the tail", slot: "tug", at: at(0, 1, 0), inside: false },
+      ],
+      { propulsion: ["Four engines and four thruster quads."], construction: [`A round-tube truss and two tanks. Descends from ${tug.ancestor}.`], history: [], equipment: ["Class L docking collar.", "Two grapple arms.", "Two radiator panels."] },
+    ),
+    view: { tiltMax: 90 },
+    facts: { height: fiction(metres(tug.envelope.long)), diameter: fiction(metres(Math.max(tug.envelope.across, tug.envelope.deep))), parts: { tug: fiction(metres(tug.envelope.long)) }, engines: {}, more: {} },
   },
 ];

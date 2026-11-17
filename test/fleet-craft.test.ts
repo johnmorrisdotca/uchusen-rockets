@@ -4,6 +4,7 @@ import { check, ROCKETS } from "../src/index.ts";
 import { collar, COLLARS, mates } from "../src/model/fleet/collars.ts";
 import { ATC, ATC_IDS, ATC_NAMES, CARRIES, DOORS, DOOR_MARGIN, envelopeOf, specRows, spareOf } from "../src/model/fleet/craft/index.ts";
 import { SHUTTLE } from "../src/model/fleet/craft/shuttle.ts";
+import { TUG } from "../src/model/fleet/craft/tug.ts";
 import { HANGAR_DOOR } from "../src/model/fleet/ship-02/dims.ts";
 import { doorOf } from "../src/model/fleet/ship-03/dims.ts";
 import { PORTS as HANABUSA } from "../src/model/fleet/ship-01/docking.ts";
@@ -19,7 +20,7 @@ test("the doors are the ships' own: Miyamoto's rescue bay 76 by 16 m, survey bay
 });
 
 test("every craft built passes every hangar door with a metre to spare on each side, in either turn", () => {
-  assert.deepEqual(built, ["crew-shuttle"]);
+  assert.deepEqual(built, ["crew-shuttle", "cargo-tug"]);
   for (const id of built) {
     const craft = ATC[id];
     assert.ok(craft);
@@ -32,7 +33,7 @@ test("every craft built passes every hangar door with a metre to spare on each s
 });
 
 test("a craft's docking collar is in its pieces, on its nose, and mates every port that carries it", () => {
-  const nose = { "crew-shuttle": SHUTTLE.nose } as const;
+  const nose = { "crew-shuttle": SHUTTLE.nose, "cargo-tug": TUG.nose } as const;
   for (const id of built) {
     const craft = ATC[id];
     assert.ok(craft);
@@ -49,6 +50,7 @@ test("a craft's docking collar is in its pieces, on its nose, and mates every po
     }
   }
   assert.equal(COLLARS.M.outer, 6);
+  assert.equal(COLLARS.L.outer, 12);
 });
 
 test("each craft has its name from the one map, a role, a lineage and a spec card that reads them", () => {
@@ -67,17 +69,20 @@ test("each craft has its name from the one map, a role, a lineage and a spec car
   assert.throws(() => specRows("eva-pod"), RangeError);
 });
 
-test("the shuttle opens for a cutaway; every build is the same twice", () => {
+test("the shuttle opens for a cutaway and the tug does not need one; every build is the same twice", () => {
   const shuttle = ATC["crew-shuttle"];
-  assert.ok(shuttle?.crewed);
+  const tug = ATC["cargo-tug"];
+  assert.ok(shuttle && tug);
+  assert.ok(shuttle.crewed && !tug.crewed);
   assert.ok(shuttle.pieces({ cutaway: true }).length > shuttle.pieces().length + 100);
   assert.equal(JSON.stringify(shuttle.pieces({ cutaway: true })), JSON.stringify(shuttle.pieces({ cutaway: true })));
+  assert.equal(JSON.stringify(tug.pieces()), JSON.stringify(tug.pieces()));
 });
 
 test("the craft are one rocket of the fleet and the fit report is clean for each", () => {
   assert.ok(ROCKETS["fleet-atc"]);
   assert.equal(ROCKETS["fleet-atc"].maker, "fleet");
-  for (const variant of ["crew-shuttle"]) {
+  for (const variant of ["crew-shuttle", "cargo-tug"]) {
     const report = check({ rocket: "fleet-atc", variant });
     assert.ok(report.ok, JSON.stringify(report.issues));
   }
