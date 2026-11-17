@@ -32,8 +32,11 @@ const WITH_ORDER = [
   "/uchusen-rockets/?rocket=fleet-kaminari&variant=fleet-kaminari",
   "/uchusen-rockets/?rocket=fleet-emiake&variant=fleet-emiake",
   "/uchusen-rockets/?rocket=fleet-romaryu&variant=fleet-romaryu",
+  "/uchusen-rockets/?rocket=fleet-kyotori&variant=kyotori",
+  "/uchusen-rockets/?rocket=fleet-02&variant=fleet-02",
+  "/uchusen-rockets/?rocket=fleet-samples&variant=hauler",
 ];
-const WITHOUT_ORDER = ["/uchusen-rockets/?rocket=fleet-kyotori&variant=kyotori", "/uchusen-rockets/?rocket=fleet-02&variant=fleet-02"];
+const WITHOUT_ORDER = ["/uchusen-rockets/?rocket=fleet-drone&variant=repair-drone"];
 
 // One test a ship: each is a full page load, and seven of them in one test spent the whole test's time on a slow runner.
 for (const url of WITH_ORDER) {
