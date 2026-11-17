@@ -7,7 +7,7 @@ import { SECTIONS } from "../src/model/fleet/ship-02/sections.ts";
 import { DRY_T, LENGTH, MASS_T } from "../src/model/fleet/ship-02/dims.ts";
 import { SHIP_02_SLOTS } from "../src/model/fleet/ship-02/index.ts";
 import { meshOf, boundsOf } from "../src/model/pieces.ts";
-import { check, MAKERS, partEntry, ROCKETS, variantOf } from "../src/index.ts";
+import { BUILD_BUDGET_MS, check, MAKERS, partEntry, ROCKETS, variantOf } from "../src/index.ts";
 
 const near = (a: number, b: number, tolerance: number, what: string) => assert.ok(Math.abs(a - b) <= tolerance, `${what}: ${a} against ${b}`);
 
@@ -236,14 +236,14 @@ test("Download 3D model: the full-detail .glb is made on demand, opens, and its 
   assert.ok(part.bytes.byteLength > 1000 && part.triangles > 0);
 });
 
-test("the build budget: the first picture in a second and full detail in three, with the coarse level a fraction of the fine", async () => {
+test("the build budget (the kit's BUILD_BUDGET_MS): the first picture and full detail of the whole ship, with the coarse level a fraction of the fine", async () => {
   const { build } = await import("../src/build/index.ts");
   // a warm run in Node is several times quicker than a cold page, and these limits are the page's own, so they are held with room to spare
   const t0 = performance.now();
   const coarse = build({ rocket: "fleet-02" }, { detail: "coarse" });
   const drawing = coarse.svg({ look: "line" });
   const first = performance.now() - t0;
-  assert.ok(first < 1000, `the first picture took ${Math.round(first)} ms`);
+  assert.ok(first < BUILD_BUDGET_MS.coarse, `the first picture took ${Math.round(first)} ms`);
   assert.ok(drawing.length < 80 * 1024);
   const t1 = performance.now();
   const coarseGlb = coarse.glb();
@@ -253,7 +253,7 @@ test("the build budget: the first picture in a second and full detail in three, 
   const fine = build({ rocket: "fleet-02" }, { detail: "full" });
   const fineGlb = fine.glb();
   const fineMs = performance.now() - t2;
-  assert.ok(fineMs < 3000, `full detail took ${Math.round(fineMs)} ms`);
+  assert.ok(fineMs < BUILD_BUDGET_MS.fine, `full detail took ${Math.round(fineMs)} ms`);
   // the far view carries the structure and the larger detail only
   assert.ok(coarseGlb.triangles < fineGlb.triangles / 3, `${coarseGlb.triangles} coarse against ${fineGlb.triangles} fine`);
   assert.ok(coarseGlb.triangles < 600_000 && coarseGlb.bytes.byteLength < 20_000_000);
