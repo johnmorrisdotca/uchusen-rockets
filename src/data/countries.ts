@@ -74,6 +74,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   "europa-clipper": us("wikipedia-nasa", "Operated by NASA with the Jet Propulsion Laboratory."),
   starlink: us("spacex-gen2-dimensions", "The sizes are from a filing with the United States' Federal Communications Commission by the operator, a company of the United States."),
   lageos: us("nasa-lageos", "NASA's mission page for LAGEOS, a United States mission."),
+  "explorer-1": us("nasa-explorer-1-fast-facts", "NASA's page for the first United States satellite."),
   "sputnik-1": blank("NASA's chronology names the USSR. The Soviet Union is not one of the ISO 3166-1 codes this package lists.", "Soviet Union"),
   droneship: us("wikipedia-asds", "Based at Port Canaveral, the Port of Long Beach and the Port of Brownsville."),
   "landing-zone": us("wikipedia-lz", "At Cape Canaveral Space Force Station; Landing Zone 4 is at Vandenberg."),
