@@ -16,6 +16,7 @@ import type { KitModule, ModuleOptions, ShipList, ShipPlace } from "./types.ts";
 export { COLLARS, COLLAR_CLASSES, collar, mates } from "./collars.ts";
 export type { CollarClass, CollarSpec } from "./collars.ts";
 export * as DETAIL from "./detail.ts";
+export * as SOLIDS from "./solids.ts";
 export { LIVERY, ROOMS } from "./detail.ts";
 export { FLEET_PALETTE } from "./palette.ts";
 export type { FleetColour } from "./palette.ts";
