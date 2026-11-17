@@ -6,6 +6,8 @@
 
 - **Small craft (ATC): the rescue cutter** (MODULES-418): variant `rescue-cutter` of `fleet-atc`, an 18.9 m long white-and-orange cabin with two decks of stretcher cots (a cutaway shows them), a 1.4 m side lock, a tow hook and a class M collar, lineage the Soyuz descent module as a lifeboat and Dragon's capsule and trunk. The craft now share labelled sections, a propulsion card drawn on its own (blank thrust: no source) and a hull-layer shell at ten times its thickness (two small-craft stacks, `CRAFT_STACKS`, apart from the ships' `HULL_STACKS`), each with an inset; the survey lander and drone and the EVA pod follow, each as its own commit.
 
+- **Small craft (ATC): the survey lander** (MODULES-418): variant `survey-lander`, an eight-sided descent stage in gold foil on four splayed legs (9.4 m across the pads) under a round ascent cabin, with a sample arm, a dish and a class S collar; lineage the Apollo Lunar Module.
+
 ## [0.31.0] - 2026-11-17
 
 - **Fleet ships swap modules by collar and show their assembly** (MODULES-415): a module is offered for a hardpoint, port or place only when its collar mates with the mount's (`fitsMount`, `swapCandidates`, `kitSwaps`), so the kit's sample ship swaps cargo containers, engines, habitat rings and pods, the first design keeps its pod and tip mounts, and Kyotori's four class ships swap their class part; the choice stays in the address as `swap=<slot>:<id>`. The assembly player now has an order for the first design (`fleet-02`), every Kyotori variant and the kit's sample ship (`kitAssembly`), and a step can carry its own `title` for the flight's name. The Modules field is one wrapping row of buttons.
