@@ -2,9 +2,11 @@
 // drawn from the same numbers and the same detail as the ship that first needed it. A size outside a part's limits throws a RangeError that names the limit. The standard modules in `modules.ts` are not touched. Pure: no three.js and no DOM.
 import { type CollarClass } from "./collars.ts";
 import { checkContainer, containerPieces, CONTAINER_LIMITS } from "./heavy/container.ts";
+import { checkRing, RING_LIMITS, ringInsidePieces, ringPieces } from "./heavy/ring.ts";
 import { checkTank, tankInsidePieces, tankPieces, TANK_LIMITS, type TankBrace } from "./heavy/tank.ts";
 import { isCoarse } from "./levels.ts";
 import { rng as solidRng } from "./solids.ts";
+import type { MaterialName } from "../materials.ts";
 import type { KitModule, ModuleOptions } from "./types.ts";
 
 /** A number from a string, the same each time: the seed of a module's generator. */
@@ -70,6 +72,26 @@ export interface TankSize extends SizedBase {
   brace?: TankBrace;
 }
 
+/**
+ * A heavy habitat ring's size: the radius from its axis to the middle of its section, and the section's size, in metres.
+ *
+ * @example
+ * ```ts
+ * import { SIZED, type RingSize } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const size: RingSize = { major: 165, tube: 36, mass: 85000 };
+ * console.log(SIZED.habitatRing(size).width);
+ * ```
+ */
+export interface RingSize extends SizedBase {
+  /** Metres from the axis to the middle of the section: 2.5 sections to 400. */
+  major: number;
+  /** The section's size, square, in metres: 4 to 60. It is also the ring's length along its axis. */
+  tube: number;
+  /** The colour of its rim bands. Left out: orange. */
+  tone?: MaterialName;
+}
+
 const NO_COLLAR: { top?: CollarClass; bottom?: CollarClass } = {};
 
 /** A heavy container: Kaminari's box, at any size from 15 m across. Its pieces stand with the middle of the base on the origin, the length up Y, and its outward faces on +X and +Z. */
@@ -126,6 +148,35 @@ function tank(size: TankSize): KitModule {
   };
 }
 
+/** A heavy habitat ring: Kaminari's spinning torus with six spokes to a hub, window cells, rim bands and fins, at any size from a 4 m section. With `cutaway` the three decks show inside. */
+function habitatRing(size: RingSize): KitModule {
+  checkRing(size.major, size.tube);
+  const id = size.id ?? `ring-${size.major}x${size.tube}`;
+  const reach = 2 * (size.major + size.tube / 2);
+  return {
+    id,
+    name: size.name ?? `Habitat ring, ${size.major} m radius`,
+    kind: "habitat",
+    note: `A rotating habitat ring ${size.major} m from its axis to the middle of a ${size.tube} m section, on a hub with six spokes: window cells, rim bands, radiator fins and service collars, all growing with its section.`,
+    mass: size.mass,
+    propellant: 0,
+    length: size.tube,
+    width: reach,
+    depth: reach,
+    ...NO_COLLAR,
+    ports: [],
+    ancestor: "the Stanford torus and the 2001 wheel station: a spinning ring on spokes, with the floor on the rim",
+    inside: true,
+    livery: "industrial",
+    pieces: (options: ModuleOptions = {}) => {
+      const seed = seedOf(`${options.seed ?? ""}/${id}`);
+      const outer = ringPieces(size, size.tone ?? "hull-orange", solidRng(seed));
+      const made = options.cutaway ? [...outer, ...ringInsidePieces(size, 0, undefined, solidRng(seed + 1))] : outer;
+      return options.level === "coarse" ? made.filter(isCoarse) : made;
+    },
+  };
+}
+
 /**
  * The resizable kit parts: each takes its size in metres and returns a `KitModule`. A size outside the part's limits throws a RangeError that names the limit.
  *
@@ -137,7 +188,7 @@ function tank(size: TankSize): KitModule {
  * console.log(box.name, box.length, box.pieces({ level: "coarse" }).length);
  * ```
  */
-export const SIZED = { container, tank } as const;
+export const SIZED = { container, tank, habitatRing } as const;
 
 /** The limits of each resizable part, in metres, as a ship's table can read them. */
-export const SIZED_LIMITS = { container: CONTAINER_LIMITS, tank: TANK_LIMITS } as const;
+export const SIZED_LIMITS = { container: CONTAINER_LIMITS, tank: TANK_LIMITS, habitatRing: RING_LIMITS } as const;

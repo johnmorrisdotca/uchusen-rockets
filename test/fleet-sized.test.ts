@@ -88,3 +88,36 @@ test("tank: detail scales with the length (rings, valve houses, hatches) and the
   const braced = tankOf(20, 200, { brace: { distance: 60, half: 9 } }).pieces();
   assert.ok(braced.length > short.length, "four braces to the spine at each cradle ring");
 });
+
+const ringOf = (major: number, tube: number, extra = {}) => SIZED.habitatRing({ major, tube, mass: 5000, ...extra });
+
+test("habitat ring: a section outside 4 to 60 m or a radius under 2.5 sections or over 400 m throws and says which limit", () => {
+  for (const tube of [3.9, 60.1, Number.NaN]) assert.throws(() => ringOf(165, tube), /section is/, String(tube));
+  assert.throws(() => ringOf(89, 36), /2\.5 sections/);
+  assert.throws(() => ringOf(401, 36), /from its axis/);
+  assert.doesNotThrow(() => ringOf(10, 4));
+  assert.doesNotThrow(() => ringOf(400, 60));
+});
+
+test("habitat ring: it is the size it says, its axis up Y from 0 to its section, and the cutaway adds the decks", () => {
+  for (const [major, tube] of [[165, 36], [60, 12], [30, 8]] as const) {
+    const ring = ringOf(major, tube);
+    assert.equal(ring.length, tube);
+    const [x, y, z] = size(ring.pieces());
+    const reach = 2 * (major + tube / 2);
+    assert.ok(x >= reach && x < reach + 0.6 * tube && z >= reach && z < reach + 0.6 * tube, `${major}: ${x} by ${z} for ${reach}`);
+    assert.ok(y >= tube - 0.1 && y < tube * 1.3, `${y} high for ${tube}`);
+    assert.ok(ring.pieces({ cutaway: true }).length > ring.pieces().length + 100, "three decks of blocks");
+  }
+});
+
+test("habitat ring: detail scales with the circumference (window cells keep their size) and the section (every fitting)", () => {
+  const ten = ringOf(120, 12).pieces();
+  const twenty = ringOf(240, 12).pieces();
+  assert.ok(twenty.length > ten.length * 1.6, `${twenty.length} pieces against ${ten.length}: twice the circumference, twice the cells`);
+  const small = ringOf(60, 12).pieces();
+  const big = ringOf(120, 24).pieces();
+  assert.ok(Math.abs(big.length / small.length - 1) < 0.1, "the same ring at twice the size has the same cells, each twice as big");
+  assert.equal(json(ringOf(60, 12).pieces({ seed: "a" })), json(ringOf(60, 12).pieces({ seed: "a" })));
+  assert.notEqual(json(ringOf(60, 12).pieces({ seed: "a" })), json(ringOf(60, 12).pieces({ seed: "b" })));
+});
