@@ -9,6 +9,7 @@ import { ATC_IDS, ATC_NAMES, type AtcId } from "./names.ts";
 import { CUTTER, cutterPieces } from "./cutter.ts";
 import { dronePieces } from "./drone.ts";
 import { LANDER, landerPieces } from "./lander.ts";
+import { POD, podPieces } from "./pod.ts";
 import { SHUTTLE, shuttlePieces } from "./shuttle.ts";
 import { TUG, tugPieces } from "./tug.ts";
 
@@ -47,6 +48,7 @@ export const ATC: Readonly<Partial<Record<AtcId, Atc>>> = {
   "rescue-cutter": make("rescue-cutter", "Rescue bay craft and lifeboat: two decks of stretcher bays, a side lock and a tow hook", "M", true, CUTTER.nose, "The Soyuz descent module as a lifeboat, SpaceX Dragon's capsule and trunk, and Orion with the European Service Module, drawn long", cutterPieces),
   "survey-lander": make("survey-lander", "Lands on small bodies to survey and take samples", "S", false, LANDER.nose, "The Apollo Lunar Module: an eight-sided descent stage on four legs under a round ascent cabin", landerPieces),
   "survey-drone": make("survey-drone", "Flies survey runs from a cradle and returns to it", null, false, null, "The package's own survey probes (Voyager's instrument boom, Cassini's high-gain dish), scaled down to a free-flying drone", dronePieces),
+  "eva-pod": make("eva-pod", "A one-person work pod for repairs outside a ship", "S", true, POD.nose, "The Shuttle's Manned Maneuvering Unit, and the ISS robot arms Canadarm2 and Dextre, as a pod with arms", podPieces),
   "cargo-tug": make("cargo-tug", "Moves a 22 by 22 by 40 m container between a cargo station and a hangar or port", "L", false, TUG.nose, "The ISS's Canadarm2 and Dextre robot arms, and the Shuttle's Manned Maneuvering Unit as a free-flying work pack, scaled up", tugPieces),
 };
 
