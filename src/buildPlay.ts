@@ -2,6 +2,10 @@
 import { emiakeBuild, kaminariBuild, romaryuBuild } from "./model/fleet/kaminari-concepts/buildOrder.ts";
 import { hanabusaBuild } from "./model/fleet/ship-01/buildOrder.ts";
 import { buildSteps } from "./model/fleet/ship-03/buildOrder.ts";
+import { ship02Build } from "./model/fleet/ship-02/buildOrder.ts";
+import { kyotoriBuild } from "./model/fleet/ship-kyotori/buildOrder.ts";
+import { kitAssembly } from "./model/fleet/assembly.ts";
+import { SAMPLE_SHIPS } from "./model/fleet/kit.ts";
 
 /**
  * Story seconds that pass in one real second. 1 is real time. 86400 is one story day a second. 100000 is the fastest step.
@@ -30,6 +34,8 @@ export interface PlayStep {
   slot: string;
   start: number;
   days: number;
+  /** The flight's name in plain words. Left out: the player's own title for the slot. A theme sets it. */
+  title?: string;
 }
 
 /**
@@ -59,6 +65,10 @@ const stepsOf = (variant: string): readonly PlayStep[] | undefined => {
   if (variant === "fleet-kaminari") return kaminariBuild();
   if (variant === "fleet-emiake" || variant === "fleet-emiake-deployed") return emiakeBuild();
   if (variant === "fleet-romaryu") return romaryuBuild();
+  if (variant === "fleet-02" || variant === "fleet-02-survey" || variant === "fleet-02-tanker" || variant === "fleet-02-rescue") return ship02Build();
+  const kyotori = kyotoriBuild(variant);
+  if (kyotori) return kyotori;
+  if (variant === "hauler") return kitAssembly("fleet-samples-hauler", SAMPLE_SHIPS.hauler);
   if (variant.startsWith("miyamoto")) return buildSteps("miyamoto");
   if (variant.startsWith("ariake")) return buildSteps("ariake");
   return undefined;
@@ -293,7 +303,7 @@ export function flightNow(steps: readonly PlayStep[], at: number): { n: number; 
   const started = order.filter((step) => step.start <= frame.day + 1e-9);
   const going = started.filter((step) => frame.going.includes(step.slot));
   const current = (going.length > 0 ? going : started).at(-1) ?? order[0];
-  return { n: order.indexOf(current) + 1, slot: current.slot, title: flightTitle(current.slot) };
+  return { n: order.indexOf(current) + 1, slot: current.slot, title: current.title ?? flightTitle(current.slot) };
 }
 
 /**

@@ -71,7 +71,7 @@ export { assetPathOf, CDN, EMBED_KINDS, SITE, THREE_VERSION, embedCode, embedNot
 export type { EmbedKind, EmbedSettings } from "./embed.ts";
 export { COMPANIES, COMPANY_KINDS, companyOf } from "./model/fleet/company.ts";
 export type { Company, CompanyShip, CrewSpace } from "./model/fleet/company.ts";
-export { assemble, BUILDERS, hardpointEntries, ringDecks, SIZED, SIZED_LIMITS, BUILD_BUDGET_MS, COLLAR_CLASSES, COLLARS, designation, FLEET_MAKER, fitsMount, INSETS, isCoarse, KIT, kitSwaps, LIVERY, mates, matingOnly, ROOMS, SAMPLE_SHIPS, shipLevels, shipParts, shipPieces, swapCandidates, swapsFor, timeBuild } from "./model/fleet/kit.ts";
+export { assemble, BUILDERS, hardpointEntries, ringDecks, SIZED, SIZED_LIMITS, BUILD_BUDGET_MS, COLLAR_CLASSES, COLLARS, designation, FLEET_MAKER, fitsMount, INSETS, isCoarse, KIT, kitAssembly, KIT_STEP_DAYS, kitSwaps, LIVERY, mates, matingOnly, ROOMS, SAMPLE_SHIPS, shipLevels, shipParts, shipPieces, swapCandidates, swapsFor, timeBuild } from "./model/fleet/kit.ts";
 export type { Assembly, BuildTime, CollarClass, CollarSpec, ContainerSize, Hardpoint, RingSize, Inset, InsetPart, KitModule, Livery, LiveryName, ModuleKind, ModuleOptions, Placed, Port, RoomKind, RoomSpec, SeparationOptions, ShipIssue, ShipList, ShipParts, ShipPlace, SizedBase, SwapChoice, SwapMount, KitSwaps, TankSize, TrussSize, WingSize } from "./model/fleet/kit.ts";
 export { ENGINE_CARDS, engineTable, G0, performanceOf, PROXIMA_LY, rocketSpeed, trip } from "./model/fleet/engines.ts";
 export type { EngineCard, EngineRole, EngineRow, Performance, Trip } from "./model/fleet/engines.ts";

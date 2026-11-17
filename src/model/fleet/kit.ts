@@ -26,6 +26,7 @@ export { ringDecks, SIZED, SIZED_LIMITS } from "./sized.ts";
 export type { ContainerSize, RingSize, SizedBase, TankSize, TrussSize, WingSize } from "./sized.ts";
 export { BUILD_BUDGET_MS, isCoarse } from "./levels.ts";
 export { INSETS } from "./insets.ts";
+export { KIT_STEP_DAYS, kitAssembly } from "./assembly.ts";
 export { fitsMount, kitSwaps, matingOnly, swapCandidates } from "./swap.ts";
 export type { KitSwaps, SwapChoice, SwapMount } from "./swap.ts";
 export type { Inset, InsetPart } from "./insets.ts";
