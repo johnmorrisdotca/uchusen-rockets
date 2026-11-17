@@ -47,7 +47,7 @@ import { CONCEPT_SLOT_NAMES, KAMINARI_VARIANTS } from "./data/kaminari-concepts.
 import { SHIP_01_INSET_ROCKET, SHIP_01_SLOT_NAMES, SHIP_01_VARIANTS } from "./data/ship-01.ts";
 import { KYOTORI_SLOT_NAMES, KYOTORI_VARIANTS } from "./data/ship-kyotori.ts";
 import { DRONE_VARIANTS } from "./data/drone.ts";
-import { ATC_VARIANTS } from "./data/atc.ts";
+import { ATC_SLOT_NAMES, ATC_VARIANTS } from "./data/atc.ts";
 import { ARIAKE_VARIANTS, SHIP_03_INSET_ROCKET, SHIP_03_SLOT_NAMES, SHIP_03_VARIANTS } from "./data/ship-03.ts";
 import { MADE_BY, type MakerId } from "./data/makers.ts";
 import { countryOf, type CountryCode } from "./data/countries.ts";
@@ -276,9 +276,7 @@ export const SLOT_NAMES: Readonly<Record<string, string>> = {
   ...KYOTORI_SLOT_NAMES,
   ...SHIP_03_SLOT_NAMES,
   drone: "Repair drone",
-  shuttle: "Crew shuttle",
-  "shuttle-inside": "Crew shuttle, cabin",
-  tug: "Cargo tug",
+  ...ATC_SLOT_NAMES,
   booster: "Super Heavy",
   ship: "Ship",
   "first-stage": "First stage",
