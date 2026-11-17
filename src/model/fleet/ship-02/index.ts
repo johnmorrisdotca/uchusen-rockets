@@ -4,12 +4,13 @@ import { type Piece, shifted, turned } from "./adapter.ts";
 import { cargoInside, cargoPieces } from "./cargo.ts";
 import { attitudePieces, commandInside, commandPieces } from "./command.ts";
 import { dockInside, dockPieces } from "./dock.ts";
-import { DRIVE, LENGTH, STATION, TANK } from "./dims.ts";
+import { DRIVE, HABITAT, LENGTH, STATION, TANK } from "./dims.ts";
 import { driveEngines, drivePieces, nozzle, vernier, vernierPieces } from "./drive.ts";
 import { headerPieces } from "./headers.ts";
 import { relayTip, tugTip } from "./tips.ts";
 import { farmInside, farmPieces } from "./farm.ts";
-import { habitatInside, habitatPieces } from "./habitat.ts";
+import { habitatPieces } from "./habitat.ts";
+import { ringDecks } from "../sized.ts";
 import { linesPieces } from "./lines.ts";
 import { podCargo, podSettlement, podSurvey, podTanker, POD } from "./pod.ts";
 import { reactorInside, reactorPieces, shadowShieldPieces } from "./reactor.ts";
@@ -54,8 +55,10 @@ const cargo = Array.from({ length: STATION.cargo.count }, (_, i): Ship02Slot => 
 
 const S = (slot: string, name: string, kind: PartKind, at: readonly [number, number, number], height: number, diameter: number, pieces: () => Piece[], inside = false): Ship02Slot => ({ slot, name, kind, at, height, diameter, inside, pieces });
 const deckSlots: Ship02Slot[] = [];
+// one part to a deck of each ring: the kit's per-deck parts at this ring's size, each with the seed the ring's decks have always had
+const RING = { major: HABITAT.radius, tube: HABITAT.tube, mass: 0 } as const;
 for (const [ring_, y] of [["a", STATION.habitatA.y], ["b", STATION.habitatB.y]] as const)
-  for (const deck of [1, 2, 3]) deckSlots.push(S(`habitat-${ring_}-deck-${deck}`, `Habitat ring ${ring_.toUpperCase()}, deck ${deck} (${["homes", "streets", "parks"][deck - 1]}), inside`, "deck", [0, y, 0], 40, 400, () => shifted(habitatInside(0, deck - 1), 0, 0, 0), true));
+  ringDecks(RING, ["homes", "streets", "parks"], 2040).forEach((deck, i) => deckSlots.push(S(`habitat-${ring_}-deck-${i + 1}`, `Habitat ring ${ring_.toUpperCase()}, ${deck.name.replace(/^.*?, deck/, "deck")}`, "deck", [0, y, 0], 40, 400, () => deck.pieces(), true)));
 void deckSlots;
 
 export const SHIP_02_SLOTS: readonly Ship02Slot[] = [

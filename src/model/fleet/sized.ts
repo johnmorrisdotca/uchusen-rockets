@@ -280,6 +280,45 @@ function radiatorWing(size: WingSize): KitModule {
 }
 
 /**
+ * One part for each deck of a heavy habitat ring, each showing only the inside of its deck, so a viewer can show a deck alone. The ring's cutaway has all three together.
+ *
+ * @param size The ring's size, as `SIZED.habitatRing` takes it.
+ * @param names What each of the three decks is called, from the outside in.
+ * @param seed The seed of the generator each deck builds with. Left out: from the ring's id.
+ * @returns Three modules, `<ring id>-deck-1` to `-3`, each with its inside pieces only.
+ * @example
+ * ```ts
+ * import { ringDecks } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const decks = ringDecks({ major: 60, tube: 12, mass: 5000 }, ["homes", "streets", "parks"]);
+ * console.log(decks.map((deck) => deck.name));
+ * ```
+ */
+export function ringDecks(size: RingSize, names: readonly [string, string, string] = ["deck 1", "deck 2", "deck 3"], seed?: number): KitModule[] {
+  checkRing(size.major, size.tube);
+  const base = size.id ?? `ring-${size.major}x${size.tube}`;
+  return names.map((name, i): KitModule => ({
+    id: `${base}-deck-${i + 1}`,
+    name: `${size.name ?? `Habitat ring, ${size.major} m radius`}, deck ${i + 1} (${name}), inside`,
+    kind: "habitat",
+    note: `Deck ${i + 1} of the ring (${name}): its floor, blocks, parks and lamp strip, shown on its own.`,
+    mass: 0,
+    propellant: 0,
+    length: size.tube,
+    width: 2 * (size.major + size.tube / 2),
+    depth: 2 * (size.major + size.tube / 2),
+    ports: [],
+    ancestor: "the Stanford torus: a floor, blocks and parks on the inside of a ring",
+    inside: true,
+    livery: "industrial",
+    pieces: (options: ModuleOptions = {}) => {
+      const made = ringInsidePieces(size, 0, i, solidRng(seed ?? seedOf(`${options.seed ?? ""}/${base}/${i}`)));
+      return options.level === "coarse" ? made.filter(isCoarse) : made;
+    },
+  }));
+}
+
+/**
  * The resizable kit parts: each takes its size in metres and returns a `KitModule`. A size outside the part's limits throws a RangeError that names the limit.
  *
  * @example

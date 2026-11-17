@@ -22,7 +22,7 @@ export { FLEET_PALETTE } from "./palette.ts";
 export type { FleetColour } from "./palette.ts";
 export type { Livery, LiveryName, RoomKind, RoomSpec, SeparationOptions } from "./detail.ts";
 export { BUILDERS, KIT } from "./modules.ts";
-export { SIZED, SIZED_LIMITS } from "./sized.ts";
+export { ringDecks, SIZED, SIZED_LIMITS } from "./sized.ts";
 export type { ContainerSize, RingSize, SizedBase, TankSize, TrussSize, WingSize } from "./sized.ts";
 export { BUILD_BUDGET_MS, isCoarse } from "./levels.ts";
 export { INSETS } from "./insets.ts";
@@ -338,6 +338,52 @@ export function swapsFor(id: string): KitModule[] {
   const own = KIT[id];
   if (!own?.slot) return [];
   return Object.values(KIT).filter((one) => one.id !== id && one.slot === own.slot && one.top === own.top && one.bottom === own.bottom && one.length === own.length);
+}
+
+/**
+ * A module a ship offers for a hardpoint: another part for the same slot and place as the standard one.
+ *
+ * @example
+ * ```ts
+ * import type { Hardpoint } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const survey: Hardpoint = { id: "demo-pod-survey", name: "Pod mount: survey pod", like: "pod", pieces: () => [] };
+ * console.log(survey.like);
+ * ```
+ */
+export interface Hardpoint {
+  /** The alternate's part id. */
+  id: string;
+  name: string;
+  /** The standard part's slot it stands in for. */
+  like: string;
+  pieces: () => Piece[];
+}
+
+/**
+ * The registry entries for a ship's hardpoint alternates: each stands in the same slot and place as the standard part it is `like`, and is true for the variants that use it. A variant is the same ship with other modules in its hardpoints, named by
+ * a table of slot to alternate id.
+ *
+ * @param alternates The other modules for the ship's hardpoints.
+ * @param variants Each named variant's table: the slot to the alternate id that stands in it.
+ * @param home Finds the standard part of a slot, by the slot's name.
+ * @returns One entry for each alternate whose standard part exists.
+ * @example
+ * ```ts
+ * import { hardpointEntries } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const entries = hardpointEntries([], {}, () => undefined);
+ * console.log(entries.length);
+ * ```
+ */
+export function hardpointEntries(alternates: readonly Hardpoint[], variants: Readonly<Record<string, Readonly<Record<string, string>>>>, home: (slot: string) => KitEntry | undefined): KitEntry[] {
+  const out: KitEntry[] = [];
+  for (const alt of alternates) {
+    const standard = home(alt.like);
+    const users = Object.entries(variants).filter(([, parts]) => Object.values(parts).includes(alt.id)).map(([id]) => id);
+    if (standard) out.push({ record: { ...standard.record, id: alt.id, name: alt.name, trueTo: users }, pieces: alt.pieces });
+  }
+  return out;
 }
 
 /** The registry's entries for the system insets: one part for each numbered sub-part, placed in its inset's assembly. */

@@ -95,7 +95,7 @@ import { SHIP_01_ENTRIES, SHIP_01_INSET_ENTRIES } from "./ship-01.ts";
 import { KYOTORI_ENTRIES } from "./ship-kyotori.ts";
 import { SHIP_03_ENTRIES, SHIP_03_INSET_ENTRIES } from "./ship-03.ts";
 import { CONCEPT_ENTRIES } from "./kaminari-concepts.ts";
-import { insetEntries, kitEntries, SAMPLE_SHIPS, shipParts } from "./fleet/kit.ts";
+import { hardpointEntries, insetEntries, kitEntries, SAMPLE_SHIPS, shipParts } from "./fleet/kit.ts";
 import { CONCEPT_FACES, conceptHull, miyamotoHull } from "./fleet/markingSets.ts";
 import { boosterPieces, flap, gridFin, raptor, shipPieces, STARSHIP_DRAWS } from "./starship.ts";
 
@@ -277,11 +277,7 @@ for (const id of ["test-flight-second-generation", "test-flight-second-generatio
   }
 
 // the other modules for Ship 02's hardpoints: each stands in the same slot and place as the standard one, and is true for the variants that use it
-for (const alt of SHIP_02_ALTERNATES) {
-  const home = entries.find((entry) => entry.record.id === `fleet-02-fleet-02-${alt.like}`);
-  const users = Object.entries(SHIP_02_VARIANT_PARTS).filter(([, parts]) => Object.values(parts).includes(alt.id)).map(([id]) => id);
-  if (home) entries.push({ record: { ...home.record, id: alt.id, name: alt.name, trueTo: users }, pieces: alt.pieces });
-}
+entries.push(...hardpointEntries(SHIP_02_ALTERNATES, SHIP_02_VARIANT_PARTS, (like) => entries.find((entry) => entry.record.id === `fleet-02-fleet-02-${like}`)));
 
 // two engines of Ship 02, each modelled on its own for its card: the main drive's fusion torch nozzle and a vernier cluster
 for (const card of SHIP_02_CARDS) entries.push({ record: { id: card.id, kind: "engine", name: card.name, rocket: "fleet-02", trueTo: [], height: card.height, diameter: card.diameter, sourced: { height: { value: card.height, source: "uchusen-fleet-ship-02" }, diameter: { value: card.diameter, source: "uchusen-fleet-ship-02" } }, joints: {}, painted: null, drawnFrom: "This package's own fictional design: see docs/fleet/ship-02.md." }, pieces: card.pieces });

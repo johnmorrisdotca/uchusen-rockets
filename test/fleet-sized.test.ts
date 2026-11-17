@@ -1,7 +1,7 @@
 // The resizable kit parts: the size in metres is the input, the limits are named, a part is the size it says, and its detail scales with it.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SIZED, SIZED_LIMITS } from "../src/index.ts";
+import { BUILD_BUDGET_MS, hardpointEntries, ringDecks, SIZED, SIZED_LIMITS } from "../src/index.ts";
 import { boundsOf, meshOf, type Piece } from "../src/model/pieces.ts";
 
 const size = (pieces: Piece[]) => {
@@ -178,4 +178,44 @@ test("radiator wing: its reach is the panels and the root, its sections follow t
   assert.ok(folded.pieces().length < 100 && size(folded.pieces())[0] >= 60 && size(folded.pieces())[0] < 64, "a stack of six panels 60 m wide");
   assert.equal(json(wing.pieces({ seed: "a" })), json(wing.pieces({ seed: "a" })));
   assert.notEqual(json(wing.pieces({ seed: "a" })), json(wing.pieces({ seed: "b" })));
+});
+
+test("ring decks: a part for each deck of a ring, named from the outside in, each its own inside and none the same", () => {
+  const decks = ringDecks({ major: 60, tube: 12, mass: 1, id: "demo-ring" }, ["homes", "streets", "parks"]);
+  assert.deepEqual(decks.map((d) => d.id), ["demo-ring-deck-1", "demo-ring-deck-2", "demo-ring-deck-3"]);
+  assert.ok(decks[1].name.includes("deck 2 (streets)"));
+  const lists = decks.map((d) => d.pieces());
+  for (const list of lists) assert.ok(list.length > 30, "a deck is more than a floor");
+  assert.equal(new Set(lists.map(json)).size, 3, "three different decks");
+  assert.ok(lists.every((list) => list.length < ringOf(60, 12).pieces({ cutaway: true }).length), "one deck is less than the ring");
+  assert.throws(() => ringDecks({ major: 10, tube: 12, mass: 1 }), /2\.5 sections/);
+});
+
+test("hardpoints: an alternate stands in its standard part's slot, is true for the variants that use it, and is left out when there is no standard part", () => {
+  const home = { record: { id: "ship-pod", name: "Pod", trueTo: ["ship"] }, pieces: () => [] } as unknown as Parameters<typeof hardpointEntries>[2] extends (s: string) => infer R ? NonNullable<R> : never;
+  const alts = [{ id: "ship-pod-survey", name: "Pod: survey", like: "pod", pieces: () => [] }, { id: "ship-lone", name: "Lone", like: "none", pieces: () => [] }];
+  const out = hardpointEntries(alts, { "ship-survey": { pod: "ship-pod-survey" }, "ship-other": { pod: "ship-pod" } }, (slot) => (slot === "pod" ? home : undefined));
+  assert.equal(out.length, 1);
+  assert.equal(out[0].record.id, "ship-pod-survey");
+  assert.deepEqual(out[0].record.trueTo, ["ship-survey"]);
+  assert.equal(out[0].record.name, "Pod: survey");
+});
+
+test("budget: each resizable part at the size Kaminari uses is built coarse within a second and fine within three, and coarse is a fraction of fine", () => {
+  const parts = [
+    SIZED.container({ across: 22, long: 40, mass: 1 }),
+    SIZED.tank({ radius: 40, length: 440, mass: 1, propellant: 1 }),
+    SIZED.habitatRing({ major: 165, tube: 36, mass: 1 }),
+    SIZED.trussSpine({ square: 36, bay: 24, length: 1760, mass: 1 }),
+    SIZED.radiatorWing({ length: 560, panelWidth: 56, panels: 6, mass: 1 }),
+  ];
+  for (const part of parts) {
+    // the best of three: a busy machine's one slow run is not a slow build
+    const best = (level: "coarse" | "fine") => Math.min(...[0, 1, 2].map(() => { const t = performance.now(); meshOf(part.pieces({ level })); return performance.now() - t; }));
+    const coarse = best("coarse");
+    const fine = best("fine");
+    assert.ok(coarse <= BUILD_BUDGET_MS.coarse, `${part.id}: coarse ${coarse.toFixed(0)} ms`);
+    assert.ok(fine <= BUILD_BUDGET_MS.fine, `${part.id}: fine ${fine.toFixed(0)} ms`);
+    assert.ok(part.pieces({ level: "coarse" }).length < part.pieces().length / 2, `${part.id}: the coarse level is a fraction of the fine`);
+  }
 });
