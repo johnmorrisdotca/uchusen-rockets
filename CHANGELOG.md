@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Journey: the Moon to the Earth no longer depends on where the Moon happens to be** (MODULES-550). With wakusei-planets 0.61.0 the Moon's distance changed by a few hundred kilometres and Saturn V's return came out at 85.7 hours, not 72: the aim search stepped a degree at a time and then bisected as if the coast grew steadily with the aim, which it does not, so across the Moon's distances (356,500 to 406,700 km) it landed between 65 and 78 hours and on 17 November 2026 and on the dates of Apollo 8, 10, 15 and 16 it was 80, 87, 76 and 70. Now every aim from 110 to 165 degrees is tried in steps of 0.05 and the best kept. A craft with a real mission to follow (Saturn V: Apollo 12's 71 h 55 min from the trans-Earth burn to the entry interface, Apollo Flight Journal) takes the return closest to that, 72 hours to within 0.2 at every distance and on every Apollo date; any other craft (Orion) takes the cheapest burn, which is about 830 m/s and about four days. Orion's verdict line still says it is not this three-day return, and its reasons now name the days of its own return. Tests: `test/journey-lunar.test.ts` (the Moon's whole range of distances; the cheapest burn) and `test/journey-trip.test.ts` (the Apollo dates).
+
 ## [0.31.0] - 2026-11-17
 
 - **The parts gallery leaves out stand-in parts** (MODULES-1495): a kit ship's stand-in for another module (`SWAP_STAND_INS`) ships no picture of its own, so the demo's parts gallery no longer asks for one; the module it stands in for keeps its own tile.

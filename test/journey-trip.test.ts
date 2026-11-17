@@ -294,6 +294,16 @@ test("the Moon to the Earth with Saturn V is the Apollo return: rated, about 1 k
   near(Math.hypot(end.positionKm[0], end.positionKm[1], end.positionKm[2]), 6378 + 122, 200, "entry radius, km");
 });
 
+test("Saturn V's return flown on the dates Apollo flew it, with the Moon where wakusei-planets puts it, is the 72 hours of Apollo 12", () => {
+  // Apollo 12: lift-off 16:22 UTC on 14 November 1969, trans-Earth burn at 172:27:16 ground elapsed time (20:49:16 UTC on the 21st), entry interface at 244:22:18, which is 71 h 55 min after the burn. Apollo Flight Journal, Apollo 12 days 1, 7 and 10.
+  // Apollo 11: burn at 135:23:42, splashdown at 195:18:35 (Apollo Flight Journal day 6; NASA's mission overview): 59 h 55 min, not 72. The page flies Apollo 12's coast for Saturn V, so only Apollo 12's date is compared with the record.
+  const apollo12 = planTrip(S, craftOf("saturn-v")!, "moon", "earth", Date.UTC(1969, 10, 21, 20, 49, 16));
+  near(apollo12.ballistic!.transitS / 3600, 71 + 55 / 60, 0.3, "hours from the burn to the entry interface");
+  for (const date of [Date.UTC(1968, 11, 25, 6, 10), Date.UTC(1969, 6, 22, 4, 55), Date.UTC(1971, 7, 5, 21, 22), Date.UTC(1972, 11, 17, 2, 35)]) {
+    near(planTrip(S, craftOf("saturn-v")!, "moon", "earth", date).ballistic!.transitS / 3600, 72, 0.2, `hours on ${new Date(date).toISOString()}`);
+  }
+});
+
 test("Orion's return is rated from Artemis I, and the line says that flight was not this three-day path", () => {
   const trip = planTrip(S, craftOf("sls")!, "moon", "earth", NOW);
   assert.equal(trip.verdict.level, "rated");
