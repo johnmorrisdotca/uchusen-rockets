@@ -9,6 +9,8 @@ export { MAKERS } from "./data/makers.ts";
 export type { MakerId } from "./data/makers.ts";
 export { COUNTRY_CODES, countryOf, MAKER_COUNTRIES } from "./data/countries.ts";
 export type { CountryCode } from "./data/countries.ts";
+export { ESA_MEMBER_STATES, FORMER_COUNTRY_CODES, partnersOf, ROCKET_PARTNERS } from "./data/partners.ts";
+export type { Partner, PartnerCode, PartnerGroup, PartnerWords } from "./data/partners.ts";
 export { FLIGHT_LOG, flightLogOf } from "./data/flight-log.ts";
 export type { LoggedFlight } from "./data/flight-log.ts";
 export { moved, movingGroupsOf } from "./model/moves.ts";
