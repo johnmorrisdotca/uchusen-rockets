@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Small craft (ATC): the crew shuttle** (MODULES-418): rocket `fleet-atc`, variant `crew-shuttle`, built from the kit's class M collar and detail in `src/model/fleet/craft/` with round tubes, a cabin cutaway, a spec card, a lineage line (Dragon, Orion and the Apollo service module) and a `CARRIES` table of the ships that carry it. 15.9 by 7.0 by 6.8 m. The names and registry numbers are one map (`ATC_NAMES`) of placeholders until they are given. The hangar doors are read from the ships' tables (`doorOf` for Miyamoto's bays, `HANGAR_DOOR` for Kaminari's dorsal hangar) and a test holds each craft to a 1 m margin in them; another holds its collar to the class each carrier's port records. See `docs/fleet/craft.md`.
+
 ## [0.31.0] - 2026-11-17
 
 - **Fleet ships swap modules by collar and show their assembly** (MODULES-415): a module is offered for a hardpoint, port or place only when its collar mates with the mount's (`fitsMount`, `swapCandidates`, `kitSwaps`), so the kit's sample ship swaps cargo containers, engines, habitat rings and pods, the first design keeps its pod and tip mounts, and Kyotori's four class ships swap their class part; the choice stays in the address as `swap=<slot>:<id>`. The assembly player now has an order for the first design (`fleet-02`), every Kyotori variant and the kit's sample ship (`kitAssembly`), and a step can carry its own `title` for the flight's name. The Modules field is one wrapping row of buttons.

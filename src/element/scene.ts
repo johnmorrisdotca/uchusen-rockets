@@ -80,7 +80,7 @@ import { glProbe } from "./probe.ts";
 import { craftJets, endQuads, type Jet, type ThrusterMode } from "../thrusters.ts";
 
 /** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
-const NIGHT_SHIPS = new Set(["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-ship-03", "fleet-ship-ariake", "fleet-02", "fleet-02-original", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"]);
+const NIGHT_SHIPS = new Set(["fleet-ship-01", "fleet-kyotori", "fleet-drone", "fleet-atc", "fleet-ship-03", "fleet-ship-ariake", "fleet-02", "fleet-02-original", "fleet-kaminari", "fleet-emiake", "fleet-romaryu"]);
 
 /** Pipes, blankets and lamp housings. Below this shorter screen side they alias, so a small fleet ship draws its hull without them. Engine coils and plumes stay at every size. */
 const FITTING = new Set(["pipe-steel", "blanket", "blanket-worn", "lamp-amber", "lamp-red", "lamp-blue"]);

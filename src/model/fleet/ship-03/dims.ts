@@ -45,6 +45,17 @@ export type BayId = keyof typeof BAYS;
 /** The box of a bay: its side's range across and up, at its own stations. */
 export const bayBox = (id: BayId) => ({ ...HANGAR[BAYS[id].side], y: BAYS[id].y });
 
+/** A hangar's bay door, in metres: it stands in the outer wall, 12 m in from each end of the bay, 5 m above the floor and 7 m under the roof. */
+export const DOOR = { end: 12, sill: 5, lintel: 7 } as const;
+
+/** The clear opening of a bay's door: along the hull and up, with the box range it fills. Craft that fly out of the bay have to fit this. */
+export function doorOf(id: BayId): { wide: number; high: number; y: readonly [number, number]; z: readonly [number, number] } {
+  const box = bayBox(id);
+  const y = [box.y[0] + DOOR.end, box.y[1] - DOOR.end] as const;
+  const z = [box.z[0] + DOOR.sill, box.z[1] - DOOR.lintel] as const;
+  return { wide: y[1] - y[0], high: z[1] - z[0], y, z };
+}
+
 /** Miyamoto's solar array: ten bays along the starboard side (the corner Ariake fills with a hangar box), a root beam at x = 26, z = 14 on stand-offs to the spine, a mast and two gold blankets to each bay. Stowed, each bay folds into a canister; deployed, a mast 56 m long carries a blanket 5.4 m wide and 54 m long to each side of it, the wing turned 35 degrees about the root to face the star. */
 export const ARRAY = { y: [216, 336], bays: 10, pitch: 12, root: { x: 26, z: 14 }, mast: 56, blanket: { wide: 5.4, long: 54 }, tilt: 35 } as const;
 /** The cell area of the array in square metres: ten bays, two blankets each. */
