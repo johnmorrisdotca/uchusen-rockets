@@ -121,3 +121,61 @@ test("habitat ring: detail scales with the circumference (window cells keep thei
   assert.equal(json(ringOf(60, 12).pieces({ seed: "a" })), json(ringOf(60, 12).pieces({ seed: "a" })));
   assert.notEqual(json(ringOf(60, 12).pieces({ seed: "a" })), json(ringOf(60, 12).pieces({ seed: "b" })));
 });
+
+const trussOf = (square: number, bay: number, length: number) => SIZED.trussSpine({ square, bay, length, mass: 100 });
+
+test("truss spine: a width outside 3 to 60 m, a bay outside a quarter to twice the width or a length under one bay or over 3,000 m throws and says which limit", () => {
+  for (const square of [2.9, 60.1, Number.NaN]) assert.throws(() => trussOf(square, 24, 240), /m square/, String(square));
+  assert.throws(() => trussOf(36, 8, 240), /bay is/);
+  assert.throws(() => trussOf(36, 73, 240), /bay is/);
+  assert.throws(() => trussOf(36, 24, 23), /one bay/);
+  assert.throws(() => trussOf(36, 24, 3001), /one bay/);
+  assert.doesNotThrow(() => trussOf(3, 2, 2));
+  assert.doesNotThrow(() => trussOf(60, 48, 3000));
+});
+
+test("truss spine: it is the length and width it says, and its bays and fittings scale", () => {
+  const spine = trussOf(36, 24, 240);
+  assert.equal(spine.length, 240);
+  const [x, y, z] = size(spine.pieces());
+  assert.ok(x >= 36 && x < 36 + 8 && z >= 36 && z < 36 + 8, `${x} by ${z}`);
+  assert.ok(y >= 240 - 1 && y < 240 + 6, `${y} long`);
+  const longer = trussOf(36, 24, 480).pieces();
+  assert.ok(longer.length > spine.pieces().length * 1.8, "twice the bays, twice the pieces");
+  const wider = size(trussOf(18, 12, 240).pieces());
+  assert.ok(Math.abs(x / wider[0] - 2) < 0.4, "half the width is half the chords and rails");
+  assert.equal(json(spine.pieces({ seed: "a" })), json(spine.pieces({ seed: "a" })));
+  assert.notEqual(json(spine.pieces({ seed: "a" })), json(spine.pieces({ seed: "b" })));
+});
+
+const wingOf = (length: number, panelWidth: number, panels: number, extra = {}) => SIZED.radiatorWing({ length, panelWidth, panels, mass: 100, ...extra });
+
+test("radiator wing: a panel outside 8 to 120 m, a panel count outside 1 to 12 or a boom under four panels' widths or over 1,500 m throws and says which limit", () => {
+  for (const panelWidth of [7.9, 120.1, Number.NaN]) assert.throws(() => wingOf(560, panelWidth, 6), /panel is/, String(panelWidth));
+  for (const panels of [0, 13, 2.5]) assert.throws(() => wingOf(560, 56, panels), /panels/, String(panels));
+  assert.throws(() => wingOf(200, 56, 6), /boom/);
+  assert.throws(() => wingOf(1501, 56, 6), /boom/);
+  assert.doesNotThrow(() => wingOf(32, 8, 1));
+  assert.doesNotThrow(() => wingOf(1500, 120, 12));
+});
+
+test("radiator wing: its reach is the panels and the root, its sections follow the boom and its fittings follow the panel; it can fold, and turn to the other side", () => {
+  const wing = wingOf(560, 56, 6);
+  const [x, y] = size(wing.pieces());
+  assert.ok(x > 6 * 56 && x < 6 * 58 + 60, `${x} out`);
+  assert.ok(Math.abs(y - 560) < 4, `${y} long`);
+  assert.ok(wingOf(1120, 56, 6).pieces().length > wing.pieces().length * 1.8, "twice the boom, twice the sections");
+  const big = wingOf(1120, 112, 6).pieces();
+  const middle = (pieces: Piece[]) => {
+    const t = pieces.flatMap((p) => (p.kind === "plate" ? [p.thickness] : [])).sort((a, b) => a - b);
+    return t[Math.floor(t.length / 2)];
+  };
+  assert.ok(middle(big) > middle(wing.pieces()) * 1.6, "twice the panel, twice as thick the tubes and ribs");
+  assert.ok(Math.abs(big.length / wing.pieces().length - 1) < 0.1, "the same wing at twice the size has the same sections");
+  const port = boundsOf(meshOf(wingOf(560, 56, 6, { side: -1 }).pieces()));
+  assert.ok(port.max[0] <= 0.5 && port.min[0] < -300, "the port wing reaches to -x");
+  const folded = wingOf(240, 56, 6, { folded: true });
+  assert.ok(folded.pieces().length < 100 && size(folded.pieces())[0] >= 60 && size(folded.pieces())[0] < 64, "a stack of six panels 60 m wide");
+  assert.equal(json(wing.pieces({ seed: "a" })), json(wing.pieces({ seed: "a" })));
+  assert.notEqual(json(wing.pieces({ seed: "a" })), json(wing.pieces({ seed: "b" })));
+});

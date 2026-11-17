@@ -2,6 +2,8 @@
 // drawn from the same numbers and the same detail as the ship that first needed it. A size outside a part's limits throws a RangeError that names the limit. The standard modules in `modules.ts` are not touched. Pure: no three.js and no DOM.
 import { type CollarClass } from "./collars.ts";
 import { checkContainer, containerPieces, CONTAINER_LIMITS } from "./heavy/container.ts";
+import { checkTruss, TRUSS_LIMITS, trussPieces } from "./heavy/truss.ts";
+import { checkWing, stowedPieces, WING_LIMITS, wingPieces } from "./heavy/wing.ts";
 import { checkRing, RING_LIMITS, ringInsidePieces, ringPieces } from "./heavy/ring.ts";
 import { checkTank, tankInsidePieces, tankPieces, TANK_LIMITS, type TankBrace } from "./heavy/tank.ts";
 import { isCoarse } from "./levels.ts";
@@ -92,6 +94,52 @@ export interface RingSize extends SizedBase {
   tone?: MaterialName;
 }
 
+/**
+ * A heavy truss spine's size: its width (square) and the pitch of its bays, and its length along the axis, in metres.
+ *
+ * @example
+ * ```ts
+ * import { SIZED, type TrussSize } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const size: TrussSize = { square: 36, bay: 24, length: 1760, mass: 62000 };
+ * console.log(SIZED.trussSpine(size).length);
+ * ```
+ */
+export interface TrussSize extends SizedBase {
+  /** Metres across, in x and z: 3 to 60. */
+  square: number;
+  /** Metres from one frame to the next: 2 to 48, and a quarter to twice the width. */
+  bay: number;
+  /** Metres along the axis: one bay to 3,000. */
+  length: number;
+}
+
+/**
+ * A heavy radiator wing's size: the boom's length, a panel's width and the number of panels, in metres.
+ *
+ * @example
+ * ```ts
+ * import { SIZED, type WingSize } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const size: WingSize = { length: 560, panelWidth: 56, panels: 6, mass: 15000 };
+ * console.log(SIZED.radiatorWing(size).width);
+ * ```
+ */
+export interface WingSize extends SizedBase {
+  /** Metres along the boom: four panel widths to 1,500. */
+  length: number;
+  /** Metres across one panel: 8 to 120. */
+  panelWidth: number;
+  /** How many panels hang from the boom: 1 to 12. */
+  panels: number;
+  /** Metres from the axis to the boom. Left out: 44 m at a 56 m panel, and in proportion. */
+  root?: number;
+  /** Which side the wing reaches to: +1 for +x, -1 for -x. Left out: +1. */
+  side?: 1 | -1;
+  /** The same panels folded into a stack on a short arm, `length` long. */
+  folded?: boolean;
+}
+
 const NO_COLLAR: { top?: CollarClass; bottom?: CollarClass } = {};
 
 /** A heavy container: Kaminari's box, at any size from 15 m across. Its pieces stand with the middle of the base on the origin, the length up Y, and its outward faces on +X and +Z. */
@@ -177,6 +225,60 @@ function habitatRing(size: RingSize): KitModule {
   };
 }
 
+/** A heavy truss spine: Kaminari's square truss with chords, bay frames, turning diagonals, nodes, trays and rails, at any width from 3 m. */
+function trussSpine(size: TrussSize): KitModule {
+  checkTruss(size.square, size.bay, size.length);
+  const id = size.id ?? `truss-${size.square}x${size.length}`;
+  return {
+    id,
+    name: size.name ?? `Truss spine, ${size.square} m square, ${size.length} m`,
+    kind: "truss",
+    note: `An open truss spine ${size.square} m square and ${size.length} m long in ${size.bay} m bays: four chords, a frame at each bay, diagonals that turn bay by bay, joint nodes, and on each face a cable tray, a pipe pair with clamps and a service rail.`,
+    mass: size.mass,
+    propellant: 0,
+    length: size.length,
+    width: size.square,
+    depth: size.square,
+    ...NO_COLLAR,
+    ports: [],
+    ancestor: "the International Space Station's integrated truss: square bays with diagonal braces, trays and rails along each face",
+    inside: false,
+    livery: "industrial",
+    pieces: (options: ModuleOptions = {}) => {
+      const made = trussPieces(size, solidRng(seedOf(`${options.seed ?? ""}/${id}`)));
+      return options.level === "coarse" ? made.filter(isCoarse) : made;
+    },
+  };
+}
+
+/** A heavy radiator wing: Kaminari's boom with its hinged panels of tube rows, ribs and knuckles, at any panel width from 8 m, or the same panels folded. */
+function radiatorWing(size: WingSize): KitModule {
+  checkWing(size.length, size.panelWidth, size.panels);
+  const id = size.id ?? `radiator-wing-${size.panels}x${size.panelWidth}x${size.length}${size.folded ? "-folded" : ""}`;
+  const root = size.root ?? (size.panelWidth * 44) / 56;
+  const reach = root + 3 + size.panels * (size.panelWidth + 2);
+  return {
+    id,
+    name: size.name ?? (size.folded ? `Radiator pack, folded, ${size.length} m` : `Radiator wing, ${size.panels} panels of ${size.panelWidth} m`),
+    kind: "radiator",
+    note: size.folded ? `Six radiator panels ${size.panelWidth} m wide folded into a stack ${size.length} m long, held by latch brackets on a short arm.` : `A radiator wing of ${size.panels} hinged panels, each ${size.panelWidth} m wide, on a ${size.length} m boom: tube rows, ribs, hinge knuckles and a lit tip.`,
+    mass: size.mass,
+    propellant: 0,
+    length: size.length,
+    width: size.folded ? size.panelWidth : reach,
+    depth: size.folded ? size.panelWidth : size.panelWidth / 8,
+    ...NO_COLLAR,
+    ports: [],
+    ancestor: "the International Space Station's photovoltaic radiators and the Shuttle's radiator panels: deployed flat panels of coolant tubes on a boom",
+    inside: false,
+    livery: "industrial",
+    pieces: (options: ModuleOptions = {}) => {
+      const made = size.folded ? stowedPieces({ width: size.panelWidth, length: size.length }) : wingPieces({ ...size, root }, size.side ?? 1, solidRng(seedOf(`${options.seed ?? ""}/${id}`)));
+      return options.level === "coarse" ? made.filter(isCoarse) : made;
+    },
+  };
+}
+
 /**
  * The resizable kit parts: each takes its size in metres and returns a `KitModule`. A size outside the part's limits throws a RangeError that names the limit.
  *
@@ -188,7 +290,7 @@ function habitatRing(size: RingSize): KitModule {
  * console.log(box.name, box.length, box.pieces({ level: "coarse" }).length);
  * ```
  */
-export const SIZED = { container, tank, habitatRing } as const;
+export const SIZED = { container, tank, habitatRing, trussSpine, radiatorWing } as const;
 
 /** The limits of each resizable part, in metres, as a ship's table can read them. */
-export const SIZED_LIMITS = { container: CONTAINER_LIMITS, tank: TANK_LIMITS, habitatRing: RING_LIMITS } as const;
+export const SIZED_LIMITS = { container: CONTAINER_LIMITS, tank: TANK_LIMITS, habitatRing: RING_LIMITS, trussSpine: TRUSS_LIMITS, radiatorWing: WING_LIMITS } as const;
