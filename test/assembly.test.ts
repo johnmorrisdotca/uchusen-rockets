@@ -13,7 +13,7 @@ const endOf = (steps: readonly BuildStep[], slot: string): number => {
 };
 
 test("the first design builds every slot of every variant once, from the spine, in the nine years of her bible", () => {
-  for (const id of ["fleet-02", "fleet-02-survey", "fleet-02-tanker", "fleet-02-rescue"]) {
+  for (const id of ["fleet-02", "fleet-02-survey", "fleet-02-tanker", "fleet-02-arrays", "fleet-02-rescue"]) {
     const steps = buildOf(id) as BuildStep[] | undefined;
     assert.ok(steps, id);
     const slots = variantOf("fleet-02", id)?.slots ?? [];

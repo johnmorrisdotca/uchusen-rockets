@@ -14,6 +14,8 @@
 
 - **Small craft (ATC): the docking scene and the review-gate renders** (MODULES-418): `fleet/scene.ts` and `sceneBounds.ts` put two Miyamoto ships off Kaminari's dock with the six craft flying between their hangar doors on lanes that clear every part (a pure `tripAt`), held by `test/fleet-scene.test.ts`; `scripts/craft-render.ts` draws the views, 10 m close-ups, Starship Block 3 frames, cards, sheets, the family and the scene from the real model.
 
+- **The first Kaminari's drive mended, as a variant** (MODULES-437): `fleet-02-arrays` ("first design, thruster arrays", at `fleet-02` and `fleet-02-original`) swaps the eight scaled-up torch bells (LESSONS 29) for eight rings of seven magnetic-nozzle thrusters, 56 in all, inside the old bells' footprint, with the first design's thrust divided over them and a propulsion card for one thruster. The original variants are unchanged. The beam, the new name and number and the ship's role wait for John.
+
 ## [0.31.0] - 2026-11-17
 
 - **The parts gallery leaves out stand-in parts** (MODULES-1495): a kit ship's stand-in for another module (`SWAP_STAND_INS`) ships no picture of its own, so the demo's parts gallery no longer asks for one; the module it stands in for keeps its own tile.

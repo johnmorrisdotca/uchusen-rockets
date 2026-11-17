@@ -5,6 +5,8 @@ import { cargoInside, cargoPieces } from "./cargo.ts";
 import { attitudePieces, commandInside, commandPieces } from "./command.ts";
 import { dockInside, dockPieces } from "./dock.ts";
 import { DRIVE, HABITAT, LENGTH, STATION, TANK } from "./dims.ts";
+import { thrusterSize } from "../kaminari-concepts/drive.ts";
+import { ARRAY, driveArrays, thrusterCard } from "./arrays.ts";
 import { driveEngines, drivePieces, nozzle, vernier, vernierPieces } from "./drive.ts";
 import { headerPieces } from "./headers.ts";
 import { relayTip, tugTip } from "./tips.ts";
@@ -108,18 +110,21 @@ export const SHIP_02_ALTERNATES = [
   { id: "fleet-02-pod-ventral-rescue", name: "Ventral pod mount: rescue pod", like: "pod-ventral", pieces: () => turned(podSettlement(), Math.PI) },
   { id: "fleet-02-tip-port-tug", name: "Wing-tip mount, port: tug", like: "tip-port", pieces: () => tugTip() },
   { id: "fleet-02-tip-starboard-tug", name: "Wing-tip mount, starboard: tug", like: "tip-starboard", pieces: () => tugTip() },
+  { id: "fleet-02-drive-engines-arrays", name: "Main drive: 56 magnetic-nozzle thrusters in eight rings of seven", like: "drive-engines", pieces: driveArrays },
 ] as const;
 
 /** The named variants: the same ship with other modules in its hardpoints. Each lists the alternate part for a slot; every other slot is the standard one. */
 export const SHIP_02_VARIANT_PARTS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   "fleet-02-survey": { pod: "fleet-02-pod-survey", "pod-ventral": "fleet-02-pod-ventral-lab" },
   "fleet-02-tanker": { pod: "fleet-02-pod-tanker", "tip-port": "fleet-02-tip-port-tug", "tip-starboard": "fleet-02-tip-starboard-tug" },
+  "fleet-02-arrays": { "drive-engines": "fleet-02-drive-engines-arrays" },
   "fleet-02-rescue": { "pod-ventral": "fleet-02-pod-ventral-rescue", "tip-port": "fleet-02-tip-port-tug", "tip-starboard": "fleet-02-tip-starboard-tug" },
 };
 
 /** The two engines drawn on their own, for the propulsion cards. */
 export const SHIP_02_CARDS = [
   { id: "fleet-02-nozzle-main", name: "Fusion torch nozzle, main drive (one of eight)", height: 135, diameter: 56, pieces: () => nozzle(0, 0, 0, DRIVE.exit, DRIVE.throat, DRIVE.length) },
+  { id: "fleet-02-thruster-array", name: "Magnetic-nozzle thruster, main drive of the arrays variant (one of 56)", height: thrusterSize(ARRAY.s).up + thrusterSize(ARRAY.s).down, diameter: 2 * thrusterSize(ARRAY.s).radius, pieces: thrusterCard },
   { id: "fleet-02-vernier-cluster", name: "Vernier cluster, manoeuvring (one of four)", height: 80, diameter: 30, pieces: () => vernier(0, 0, 0) },
 ] as const;
 

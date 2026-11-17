@@ -1,7 +1,8 @@
 // ISV 加美鳴 Kaminari, SPX-207, the Interstellar Heavy Transport, as data. Its status stays "fictional" in the data (the .glb exemption keys on it) and is shown nowhere; every figure names the design bible (docs/fleet/ship-02.md) as its source and
 // none is a measurement of anything real. Sizes are the model's own; the numbers of the voyage are worked out in src/model/fleet/ship-02/journey.ts.
 import { type Figure, type Inspector, type Variant } from "./types.ts";
-import { LENGTH } from "../model/fleet/ship-02/dims.ts";
+import { ARRAY, THRUSTERS } from "../model/fleet/ship-02/arrays.ts";
+import { DRIVE, LENGTH } from "../model/fleet/ship-02/dims.ts";
 import { SHIP_02_SLOTS, SHIP_02_VARIANT_PARTS } from "../model/fleet/ship-02/index.ts";
 import { SECTIONS } from "../model/fleet/ship-02/sections.ts";
 import { DECKS, ENGINE_CARDS, HULL_STACK_RING, INSETS, NOTES, SPEC } from "../model/fleet/ship-02/specs.ts";
@@ -96,7 +97,26 @@ const STANDARD: Variant = {
 const NAMES: Readonly<Record<string, [string, string]>> = {
   "fleet-02-survey": ["ISV 加美鳴 Kaminari, first design, survey configuration", "Survey pod on the dorsal mount, laboratory pod underneath, relay masts on the wing tips: the same ship for mapping a system."],
   "fleet-02-tanker": ["ISV 加美鳴 Kaminari, first design, tanker configuration", "Tanker pod on the dorsal mount, cargo pod underneath, a tug on each wing tip: the same ship for fuelling a station."],
+  "fleet-02-arrays": ["ISV 加美鳴 Kaminari, first design, thruster arrays", "The first hull with its drive mended (MODULES-437, LESSONS 29): the eight scaled-up torch bells give way to eight rings of seven magnetic-nozzle thrusters each, 56 in all. Everything else is the first design's."],
   "fleet-02-rescue": ["ISV 加美鳴 Kaminari, first design, rescue configuration", "Settlement pod as a refuge on the dorsal mount, rescue pod underneath, a tug on each wing tip: the same ship for an evacuation."],
+};
+
+/** The arrays variant's panel: the drive's labels stand where the thrusters are, and its words say thrusters, not bells. */
+const ARRAYS_WORDS: Readonly<Record<string, [string, string]>> = {
+  feed: ["Thruster feed lines", "A feed line to each of the seven thrusters of a ring"],
+  chambers: ["Plasma chambers", "Helicon antenna and coils over each thruster's nozzle"],
+  coils: ["Field coils", "Five separate rings grow in radius down each thruster, shaping the exhaust"],
+  "main-drive": ["Main drive", "56 magnetic-nozzle thrusters in eight rings of seven"],
+  shutters: ["Thruster arrays", "Seven thrusters in each of the eight torch places"],
+};
+const ARRAYS_INSPECTOR: Inspector = {
+  ...INSPECTOR,
+  sections: INSPECTOR.sections.map((x) => (x.slot === "drive-engines" ? { ...x, name: ARRAYS_WORDS[x.id]?.[0] ?? x.name, job: ARRAYS_WORDS[x.id]?.[1] ?? x.job, at: [x.at[0], ARRAY.plane - 18 + (x.at[1] / 150) * 36, x.at[2]] as const } : x)),
+  spec: INSPECTOR.spec.map(([k, v]): [string, string] => {
+    if (k === "Drive") return [k, `FTD, Fusion Torch Drive, ${THRUSTERS} magnetic-nozzle thrusters in ${DRIVE.nozzles} arrays`];
+    if (k === ENGINE_CARDS[0].name) return [k, `${THRUSTERS} x ${((ENGINE_CARDS[0].thrustEachN * ENGINE_CARDS[0].count) / THRUSTERS / 1e6).toLocaleString("en-US", { maximumFractionDigits: 2 })} MN (the first design's thrust divided over the thrusters), Isp ${Math.round(ENGINE_CARDS[0].isp).toLocaleString("en-US")} s`];
+    return [k, v];
+  }),
 };
 
 const STANDARD_PARTS = Object.fromEntries(SHIP_02_SLOTS.map((s) => [s.slot, `fleet-02-fleet-02-${s.slot}`]));
@@ -109,6 +129,7 @@ export const SHIP_02_VARIANTS: readonly Variant[] = [
     name: NAMES[id][0],
     note: NAMES[id][1],
     partIds: { ...STANDARD_PARTS, ...swaps },
+    ...(id === "fleet-02-arrays" ? { inspector: ARRAYS_INSPECTOR, facts: { ...STANDARD.facts, engines: { "drive-engines": wording("56 magnetic-nozzle thrusters, 4 vernier clusters", "Eight rings of seven; the first design's thrust divided over them.") } } } : {}),
   })),
 ];
 
