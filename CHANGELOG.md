@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-11-17
+
 - **Fleet ships swap modules by collar and show their assembly** (MODULES-415): a module is offered for a hardpoint, port or place only when its collar mates with the mount's (`fitsMount`, `swapCandidates`, `kitSwaps`), so the kit's sample ship swaps cargo containers, engines, habitat rings and pods, the first design keeps its pod and tip mounts, and Kyotori's four class ships swap their class part; the choice stays in the address as `swap=<slot>:<id>`. The assembly player now has an order for the first design (`fleet-02`), every Kyotori variant and the kit's sample ship (`kitAssembly`), and a step can carry its own `title` for the flight's name. The Modules field is one wrapping row of buttons.
 
 - **The kit takes Kaminari's large parts as resizable modules** (MODULES-412): `SIZED.container`, `SIZED.tank`, `SIZED.habitatRing`, `SIZED.trussSpine` and `SIZED.radiatorWing` take their size in metres (limits in `SIZED_LIMITS`, a RangeError names the one broken), and every fitting and count scales with it. `ringDecks` gives a ring a part for each deck and `hardpointEntries` makes the registry entries for a ship's alternate modules and its variants. ISV Kaminari draws its containers, tanks, rings, spine and wings from them; its pieces are unchanged to 0.1 mm and its renders, at four fixed cameras, differ by 0.0000 per cent of pixels. The face-plating shapes Kaminari's parts used moved to the kit's `fleet/solids.ts`. Miyamoto is not moved yet.
