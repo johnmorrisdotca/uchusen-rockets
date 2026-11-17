@@ -300,11 +300,14 @@ entries.push(
 entries.push(...kitEntries(groupOf), ...insetEntries(), ...SHIP_01_ENTRIES, ...KYOTORI_ENTRIES, ...SHIP_01_INSET_ENTRIES, ...SHIP_03_ENTRIES, ...SHIP_03_INSET_ENTRIES, ...CONCEPT_ENTRIES);
 /** The kit sample ships' mounts, by variant id: every place another module of the kit can stand in, by collar. */
 export const SAMPLE_SWAPS: Readonly<Record<string, KitSwaps>> = {};
+/** The ids of the parts that exist only to stand in another module's place on a kit ship. The module itself ships as its own part, so these ship no file of their own. */
+export const SWAP_STAND_INS: ReadonlySet<string> = new Set();
 for (const id of ["hauler"]) {
   const made = shipParts(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 }, "fleet-samples", id);
   entries.push(...made.entries);
   const swaps = kitSwaps(`fleet-samples-${id}`, SAMPLE_SHIPS[id], { detail: 0.25 });
   (SAMPLE_SWAPS as Record<string, KitSwaps>)[id] = swaps;
+  for (const alternate of swaps.alternates) (SWAP_STAND_INS as Set<string>).add(alternate.id);
   entries.push(...hardpointEntries(swaps.alternates, {}, (like) => made.entries.find((entry) => entry.record.id === `fleet-samples-${id}-${like}`)));
 }
 entries.push(...Object.keys(CONCEPT_FACES).flatMap((id) => [...conceptHull(id), ...miyamotoHull(id)]));

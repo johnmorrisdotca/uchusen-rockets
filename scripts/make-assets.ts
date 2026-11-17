@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { build, buildPart } from "../src/build/index.ts";
-import { PART_ENTRIES } from "../src/model/registry.ts";
+import { PART_ENTRIES, SWAP_STAND_INS } from "../src/model/registry.ts";
 import { DEFAULT_LOOK, LOOK_NAMES, type LookName } from "../src/looks.ts";
 import { ROCKETS } from "../src/rockets.ts";
 
@@ -65,7 +65,7 @@ for (const rocket of Object.values(ROCKETS)) {
   }
 }
 for (const { record } of PART_ENTRIES) {
-  if (record.trueTo.length) continue;
+  if (record.trueTo.length || SWAP_STAND_INS.has(record.id)) continue;
   const part = buildPart(record.id);
   writeMesh(join(out, "parts", `${record.id}.glb`), part.glb().bytes, record.rocket.startsWith("fleet-") ? FLEET_PART_LIMIT : MESH_LIMIT);
   meshes++;
