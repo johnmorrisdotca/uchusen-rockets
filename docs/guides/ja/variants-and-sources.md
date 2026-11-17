@@ -57,6 +57,14 @@ import { countryOf, ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
 console.log(ROCKETS["falcon-9"]?.country.value, countryOf("iss").value, countryOf("iss").note);
 ```
 
+`country` は1つの国、またはなしです。参加したすべての国は `partnersOf(id)` で得られます。各パートナーには、`country` のコード（ISO 3166-1 のコード、またはソ連の `SUHH` のように hata が国旗を描ける旧国のコード）、`contribution.en` と `contribution.ja` に書かれた貢献の内容、そして `source` があります。スペースシャトルのパートナーは、米国、カナダ（カナダアーム）、それにスペースラブを担った10か国です。ISS には5つのパートナーと、NASA が挙げる ESA の国々があります。アポロ・ソユーズには `US` と `SUHH` があります。国が1つのロケットでは、パートナーも1つで、貢献の内容は「開発国」です。ESA を通じた貢献では、各国に `via` が付きます。`via.named` が false のときは、読んだページに、その機体へどの国が出資したかが書かれていないため、国は今日の ESA 加盟国（`ESA_MEMBER_STATES`）になっています。正確に示したいときは、ESA という1つのグループとして表示してください。
+
+```ts
+import { partnersOf } from "@johnmorrisdotca/uchusen-rockets";
+
+for (const partner of partnersOf("space-shuttle").slice(0, 2)) console.log(partner.country, partner.contribution.ja, partner.source);
+```
+
 要素に `flags` 属性を付けると、絵の隅、ロケットの横にロケットの国旗を出します。国旗をロケットに重ねて描くことはありません。国旗は `@johnmorrisdotca/hata` のもので、入れなくてもよい peer 依存です。入れておくと、国旗が初めて必要になったときに、要素が動的インポートで読み込みます。入れていなければ、要素はこれまでどおり描かれ、国旗もエラーも出ません。`setFlagLoader` を使うと、ページに出す国旗だけを読み込むモジュールなど、自分で用意したモジュールを渡せます。
 
 ## ステータス

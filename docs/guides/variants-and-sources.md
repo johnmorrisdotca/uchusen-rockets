@@ -57,6 +57,14 @@ import { countryOf, ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
 console.log(ROCKETS["falcon-9"]?.country.value, countryOf("iss").value, countryOf("iss").note);
 ```
 
+`country` is one country, or none. Every country that took part is `partnersOf(id)`: each partner has a `country` code (an ISO 3166-1 code, or a former country's code that hata draws, such as `SUHH` for the Soviet Union), what it contributed in `contribution.en` and `contribution.ja`, and its `source`. The Space Shuttle has the United States, Canada (Canadarm) and the ten countries of Spacelab; the ISS has its five partners and the ESA countries NASA lists; Apollo and Soyuz have `US` and `SUHH`. A rocket with one country has one partner, "Its country of origin". Where ESA is the contributor the countries carry `via`: when `via.named` is false they are ESA's Member States today (`ESA_MEMBER_STATES`), because the pages read do not say which states paid for that craft, so show them as one group if you want to be exact.
+
+```ts
+import { partnersOf } from "@johnmorrisdotca/uchusen-rockets";
+
+for (const partner of partnersOf("space-shuttle").slice(0, 2)) console.log(partner.country, partner.contribution.en, partner.source);
+```
+
 The element's `flags` attribute shows the rocket's flag in the corner of the picture, beside the drawing and never on it. The flags come from `@johnmorrisdotca/hata`, an optional peer: install it, and the element loads it with a dynamic import the first time a flag is needed. Without it the element draws as before, with no flag and no error. `setFlagLoader` hands over a module of your own, such as one that imports only the flags your page shows.
 
 ## Statuses
