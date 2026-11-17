@@ -70,6 +70,10 @@ body:not(.embed) uchusen-rocket { display: block; aspect-ratio: var(--uchusen-as
 .panel-group[hidden] { display: none; }
 .field h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 0.35rem; font-weight: 600; }
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+#swaps { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; }
+.swap-mount { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.swap-name { font-size: 0.82rem; color: var(--muted); }
+.swap-mount[data-picked="on"] .swap-name { color: var(--ink); font-weight: 700; }
 .docked-port { align-self: center; min-width: 9rem; color: var(--muted); font-size: 0.85rem; }
 .chip { min-height: 44px; padding: 0.35rem 0.8rem; border-radius: 10px; border: 1px solid var(--line); background: var(--raised); color: var(--ink); font: inherit; font-size: 0.92rem; cursor: pointer; }
 .chip[aria-pressed="true"], .chip[data-on] { background: #1c3556; border-color: var(--accent); color: #fff; }

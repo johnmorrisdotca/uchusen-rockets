@@ -43,6 +43,7 @@ const AFTER: readonly (readonly [string, string])[] = [
  * ```
  */
 export function ship02Build(): BuildStep[] {
-  const names = new Map(SHIP_02_SLOTS.map((one) => [one.slot, one.name]));
+  // a mount's flight is the mount, whichever module is in it
+  const names = new Map(SHIP_02_SLOTS.map((one) => [one.slot, one.name.replace(/: .*$/, "")]));
   return buildSpan(SHIP_02_BUILD_DAYS, KEEL, AFTER.map(([slot, after]) => ({ slot, after })), (slot) => `fleet-02-fleet-02-${slot}`, (slot) => names.get(slot));
 }

@@ -211,7 +211,7 @@ const press = (group: HTMLElement, chosen: string) => {
   for (const button of group.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.testid === chosen));
 };
 
-/** One row of modules for each hardpoint the ship can change. The choice stays in the address. */
+/** The modules of every hardpoint and port the ship can change, in one wrapping row of buttons: each mount's name, then its modules. The choice stays in the address. */
 function drawSwaps(): void {
   const mounts = mountsOf(state.rocket, state.variant);
   byId("swap-field").hidden = mounts.length === 0;
@@ -219,19 +219,24 @@ function drawSwaps(): void {
   box.replaceChildren();
   if (mounts.length === 0) return;
   const chosen = chosenSwap(state.rocket, state.variant, address.get("swap"));
+  const known = (key: string) => key in (WORDS.en as Record<string, string>);
   for (const mount of mounts) {
-    const row = el("div", { className: "chips" });
-    row.dataset.slot = mount.slot;
-    row.setAttribute("role", "group");
-    row.setAttribute("aria-label", say(`swapSlot_${mount.slot}`));
+    const group = el("div", { className: "swap-mount" });
+    group.dataset.slot = mount.slot;
+    group.setAttribute("role", "group");
+    const nameKey = `swapSlot_${mount.slot}`;
+    const name = known(nameKey) ? say(nameKey) : mount.name;
+    group.setAttribute("aria-label", name);
+    group.append(el("span", { className: "swap-name", textContent: name }));
     for (const one of mount.choices) {
-      row.append(chip(one.name, `swap-${mount.slot}-${one.id}`, () => {
+      const key = `swap_${one.id}`;
+      group.append(chip(one.name, `swap-${mount.slot}-${one.id}`, () => {
         address.set("swap", swapQuery(state.rocket, state.variant, { ...chosen, [mount.slot]: one.id }));
         renderMain();
-      }, `swap_${one.id}`));
+      }, known(key) ? key : undefined));
     }
-    press(row, `swap-${mount.slot}-${chosen[mount.slot]}`);
-    box.append(row);
+    press(group, `swap-${mount.slot}-${chosen[mount.slot]}`);
+    box.append(group);
   }
 }
 
@@ -560,6 +565,7 @@ function renderMain() {
   const built = buildOf(state.variant) ?? null;
   const buildBar = byId<UchusenBuild>("build-bar");
   byId("build-field").hidden = built === null;
+  flightTitles();
   const showProgress = (at: number) => {
     address.set("build", at > 0 ? "on" : null);
     address.set("at", at > 0 ? at.toFixed(4) : null);
@@ -1196,8 +1202,13 @@ function setWords() {
     rate: say("buildRate"),
     flight: say("buildFlight"),
   };
+  flightTitles();
+}
+/** The page's names for flights, in the reader's language. A step that carries its own title (the kit ships, the first design, Kyotori) keeps it: the table is the generic one. */
+function flightTitles() {
+  const own = new Set((buildOf(state.variant) ?? []).filter((step) => step.title !== undefined).map((step) => step.slot));
   const titles: Record<string, string> = {};
-  for (const key of Object.keys(WORDS.en)) if (key.startsWith("flight_")) titles[key.slice("flight_".length)] = say(key);
+  for (const key of Object.keys(WORDS.en)) if (key.startsWith("flight_") && !own.has(key.slice("flight_".length))) titles[key.slice("flight_".length)] = say(key);
   byId<UchusenBuild>("build-bar").titles = titles;
 }
 function speak() {
