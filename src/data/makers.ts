@@ -74,6 +74,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   lageos: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-lageos", note: "NASA's own mission page for LAGEOS, as for the other NASA craft here: it says the satellites are NASA's and does not say who built them." } },
   "vanguard-1": { maker: "us-navy", madeBy: { value: "Naval Research Laboratory", source: "wikipedia-vanguard-1", note: "The article names the United States Naval Research Laboratory as the satellite's builder under Project Vanguard." } },
   "explorer-1": { maker: "nasa", madeBy: { value: "Jet Propulsion Laboratory", source: "wikipedia-explorer-1", note: "The article's infobox names the Jet Propulsion Laboratory as the manufacturer; NASA's fast-facts page is NASA's own page for the mission." } },
+  skylab: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-nssdca-skylab", note: "NASA's catalogue page names NASA's Office of Manned Space Flight as the funding agency. The contractors are not recorded here." } },
   "sputnik-1": { maker: "ussr", madeBy: { value: "USSR", source: "nasa-history-sputnik-chronology", note: "NASA's chronology lists Sputnik 1 as a launch of the USSR. It names no design bureau." } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-drone": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },

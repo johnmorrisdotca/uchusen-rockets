@@ -18,6 +18,7 @@ test("the ship picker has a Real spacecraft kind that holds the probes, telescop
   for (const id of SPACECRAFT) await expect(picker.getByTestId(`pick-${id}`)).toHaveCount(0);
   await picker.getByTestId("pick-kind-station").click();
   await expect(picker.getByTestId("pick-iss")).toBeVisible();
+  await expect(picker.getByTestId("pick-skylab")).toBeVisible();
   await expect(picker.getByTestId("pick-hubble")).toHaveCount(0);
 });
 

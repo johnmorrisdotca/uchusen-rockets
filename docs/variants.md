@@ -325,6 +325,8 @@ flight5.date; // "2024-10-13"
 flight5.variant; // "v1"
 ```
 
+`skylab`: one form, `skylab`. The cluster as launched: an orbital workshop 14.66 m long and 6.70 m across, an airlock module 5.36 m long, a multiple docking adapter 5.27 m long and 3.04 m across and a telescope mount 4.05 m by 3.35 m, from the table "General characteristics of the Skylab cluster" in NASA SP-400, Skylab, Our First Space Station, chapter 2. The launch date 1973-05-14 and the mass 90607 kg are NASA's catalogue page for 1973-027A (SP-400's first chapter says "nearly 100 tons"). Both pages were read 2026-11-17. The height, 25.29 m, is the sum of the workshop, the airlock module and the docking adapter, this package's own and not a NASA figure. The drawing is three tubes; the airlock shroud's other diameters (1.67 and 6.70 m, no lengths given), the telescope mount (at 90 degrees to the long axis, no place given) and the solar wings (no size read) are not drawn. Both looks are this package's own tubes. No name or mark is drawn. Maker `nasa` (the funding agency; the contractors are not recorded), country the United States. Slot: `craft`.
+
 ## Still to come
 
 `PLANNED_ROCKETS` lists rockets with no mesh yet, with sourced facts and no shape. It is empty: Ariane 6 now has a shape.

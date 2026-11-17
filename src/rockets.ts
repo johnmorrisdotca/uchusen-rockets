@@ -38,6 +38,7 @@ import { EUROPA_VARIANTS } from "./data/europa.ts";
 import { STARLINK_VARIANTS } from "./data/starlink.ts";
 import { LAGEOS_VARIANTS } from "./data/lageos.ts";
 import { EXPLORER_VARIANTS } from "./data/explorer.ts";
+import { SKYLAB_VARIANTS } from "./data/skylab.ts";
 import { VANGUARD_VARIANTS } from "./data/vanguard.ts";
 import { SPUTNIK_VARIANTS } from "./data/sputnik.ts";
 import { HUBBLE_VARIANTS } from "./data/hubble.ts";
@@ -117,7 +118,7 @@ export interface PlannedRocket {
 }
 
 /** Craft that fly in space: seen from any side, from straight above or below. Everything else stands on the ground or the sea, and keeps the ground in view. */
-const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "starlink", "lageos", "explorer-1", "vanguard-1", "sputnik-1"]);
+const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "starlink", "lageos", "explorer-1", "vanguard-1", "skylab", "sputnik-1"]);
 
 /**
  * Whether a craft flies in space: the same ones that may be seen from straight above or below, including the fleet. A rocket or a place on the ground does not. On the compare page one of these stands on a marked plinth, so it is not read as a rocket on a pad.
@@ -191,6 +192,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   lageos: { id: "lageos", name: "LAGEOS-1", status: "built", ...MADE_BY["lageos"], variants: LAGEOS_VARIANTS, defaultVariant: "lageos-1" },
   "explorer-1": { id: "explorer-1", name: "Explorer 1", status: "built", ...MADE_BY["explorer-1"], variants: EXPLORER_VARIANTS, defaultVariant: "explorer-1" },
   "vanguard-1": { id: "vanguard-1", name: "Vanguard 1", status: "built", ...MADE_BY["vanguard-1"], variants: VANGUARD_VARIANTS, defaultVariant: "vanguard-1" },
+  skylab: { id: "skylab", name: "Skylab", status: "built", ...MADE_BY.skylab, variants: SKYLAB_VARIANTS, defaultVariant: "skylab" },
   "sputnik-1": { id: "sputnik-1", name: "Sputnik 1", status: "built", ...MADE_BY["sputnik-1"], variants: SPUTNIK_VARIANTS, defaultVariant: "sputnik-1" },
   droneship: { id: "droneship", name: "Drone ships", status: "built", ...MADE_BY["droneship"], variants: DRONESHIP_VARIANTS, defaultVariant: "ocisly" },
   "landing-zone": { id: "landing-zone", name: "Landing zones", status: "built", ...MADE_BY["landing-zone"], variants: LANDING_ZONE_VARIANTS, defaultVariant: "lz-1" },
