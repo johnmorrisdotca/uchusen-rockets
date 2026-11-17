@@ -7,6 +7,7 @@ import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { LOOK_NAMES, PART_ENTRIES, ROCKETS } from "../src/index.ts";
+import { SWAP_STAND_INS } from "../src/model/registry.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { name: string; version: string; main: string; types: string; files: string[]; dependencies?: Record<string, string>; exports: Record<string, string | Record<string, string>> };
@@ -60,6 +61,8 @@ for (const rocket of Object.values(ROCKETS))
   }
 for (const { record } of PART_ENTRIES) {
   if (record.painted && !inTarball.has(`dist/assets/models/${record.painted.file}`)) fail(`no painted ${record.painted.file}`);
+  // a stand-in for a module on a kit ship is that module's own part, drawn in another place: it ships no file
+  if (SWAP_STAND_INS.has(record.id)) continue;
   if (!record.trueTo.length && !inTarball.has(`dist/assets/parts/${record.id}.glb`)) fail(`no part ${record.id}.glb`);
   if (!record.trueTo.length && !inTarball.has(`dist/assets/parts/${record.id}.svg`)) fail(`no part ${record.id}.svg`);
 }
