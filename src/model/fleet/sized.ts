@@ -18,7 +18,17 @@ function seedOf(text: string): number {
   return h >>> 0;
 }
 
-/** What every resizable part is asked for besides its size: the name it goes by and its mass. A figure names its source, so the mass is the ship's to give. */
+/**
+ * What every resizable part is asked for besides its size: the name it goes by and its mass. A figure names its source, so the mass is the ship's to give.
+ *
+ * @example
+ * ```ts
+ * import { SIZED, type SizedBase } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * const base: SizedBase = { id: "my-box", name: "My box", mass: 900 };
+ * console.log(SIZED.container({ ...base, across: 22, long: 40 }).name);
+ * ```
+ */
 export interface SizedBase {
   /** The module's id. Left out: `<kind>-<size>`. */
   id?: string;
@@ -331,5 +341,14 @@ export function ringDecks(size: RingSize, names: readonly [string, string, strin
  */
 export const SIZED = { container, tank, habitatRing, trussSpine, radiatorWing } as const;
 
-/** The limits of each resizable part, in metres, as a ship's table can read them. */
+/**
+ * The limits of each resizable part, in metres, as a ship's table can read them: `[least, greatest]` for each size.
+ *
+ * @example
+ * ```ts
+ * import { SIZED_LIMITS } from "@johnmorrisdotca/uchusen-rockets";
+ *
+ * console.log(SIZED_LIMITS.container.across, SIZED_LIMITS.tank.radius);
+ * ```
+ */
 export const SIZED_LIMITS = { container: CONTAINER_LIMITS, tank: TANK_LIMITS, habitatRing: RING_LIMITS, trussSpine: TRUSS_LIMITS, radiatorWing: WING_LIMITS } as const;
