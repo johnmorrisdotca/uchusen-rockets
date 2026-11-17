@@ -281,3 +281,13 @@ How it stays inside the budget:
 - **Download 3D model** always builds the full level, whatever is on screen.
 
 `test/ship-02.test.ts` fails if the first picture takes over 1 s, the coarse mesh over 1.5 s or full detail over 3 s in Node, or if the coarse level stops being under a third of the fine one.
+
+## The drive, mended: the thruster-arrays variant (MODULES-437)
+
+John likes this hull and asked for it to be revisited: what was wrong was the drive (eight chemical-rocket bells, 50 m across the lip, blown up to fleet size: LESSONS 29) and the beam. The hull stays as it was; a variant, `fleet-02-arrays` ("first design, thruster arrays", at `fleet-02` and `fleet-02-original`), swaps one part, `drive-engines`:
+
+- Each of the eight torch places (four columns by two rows, as before) holds a ring of seven magnetic-nozzle thrusters, one on the axis and six round it at 14.5 m, 56 in all. A thruster is the kit concepts' `mnThruster` at scale 1.9 (`src/model/fleet/ship-02/arrays.ts`): a plasma chamber with a helicon antenna, superconducting coils, and a nozzle that is five separate field-coil rings, no bell. The array reaches 21.5 m from its axis, inside the old bell's 25 m lip. The thrusters hang from the drive raft's underside, so the stern is shorter by the old bells' 96 m.
+- The thrust is the first design's thrust divided over the 56, worked out from the engine card, not typed. It is a design figure of this package, with no source, as the first design's own are. The spec rows and labels of the variant name thrusters, not bells; the standard variant keeps its words.
+- A propulsion card for one thruster stands on its own (`fleet-02-thruster-array`).
+
+Not done, because it needs John: the beam (410 m at the bow shield, 910 m with the wings out: slim it, or keep it and say why), the new name and registry number (a placeholder until he gives them), and the ship's own role in the fleet. The pinned geometry of the original is untouched.

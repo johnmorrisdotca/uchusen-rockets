@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The first Kaminari's drive mended, as a variant** (MODULES-437): `fleet-02-arrays` ("first design, thruster arrays", at `fleet-02` and `fleet-02-original`) swaps the eight scaled-up torch bells (LESSONS 29) for eight rings of seven magnetic-nozzle thrusters, 56 in all, inside the old bells' footprint, with the first design's thrust divided over them and a propulsion card for one thruster. The original variants are unchanged. The beam, the new name and number and the ship's role wait for John.
+
 ## [0.31.0] - 2026-11-17
 
 - **Fleet ships swap modules by collar and show their assembly** (MODULES-415): a module is offered for a hardpoint, port or place only when its collar mates with the mount's (`fitsMount`, `swapCandidates`, `kitSwaps`), so the kit's sample ship swaps cargo containers, engines, habitat rings and pods, the first design keeps its pod and tip mounts, and Kyotori's four class ships swap their class part; the choice stays in the address as `swap=<slot>:<id>`. The assembly player now has an order for the first design (`fleet-02`), every Kyotori variant and the kit's sample ship (`kitAssembly`), and a step can carry its own `title` for the flight's name. The Modules field is one wrapping row of buttons.
