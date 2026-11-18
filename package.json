@@ -99,6 +99,16 @@
       "import": "./dist/launches/source.js",
       "default": "./dist/launches/source.js"
     },
+    "./sites": {
+      "types": "./dist/sites/index.d.ts",
+      "import": "./dist/sites/index.js",
+      "default": "./dist/sites/index.js"
+    },
+    "./sites/source": {
+      "types": "./dist/sites/source.d.ts",
+      "import": "./dist/sites/source.js",
+      "default": "./dist/sites/source.js"
+    },
     "./assets/*": "./dist/assets/*",
     "./package.json": "./package.json"
   },
