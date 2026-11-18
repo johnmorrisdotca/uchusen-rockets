@@ -4,7 +4,7 @@ import type { BodySource, Stop } from "./bodies.ts";
 import { AU_KM, C, DAY_S, G0, GM_KM3_S2, PARKING_ALTITUDE_KM, PERIOD_DAYS } from "./constants.ts";
 import type { BallisticCraft, CapacityKind, ContinuousCraft, Craft, Quantity } from "./crafts.ts";
 import { swingAt, swingPoint, type Swing } from "./assist.ts";
-import { ENTRY_ALTITUDE_KM, atmosphereReturn, conicPoint, leaveForPlanet, type Conic } from "./lunar.ts";
+import { APOLLO_RETURN_S, ENTRY_ALTITUDE_KM, atmosphereReturn, conicPoint, leaveForPlanet, type Conic } from "./lunar.ts";
 import { accelerating, circularSpeed, escapeBurn, flipAndBurn, hohmann, transferPoint, wrapPi } from "./physics.ts";
 
 /** The kinds of phase a trip is made of: the countdown, the climb, the burns, the coast, the turn round, the braking and the arrival. */
@@ -446,7 +446,7 @@ function planMoon(source: BodySource, craft: BallisticCraft, to: string, departM
   let conic: Conic | undefined;
   let entry = false;
   if (home) {
-    const back = atmosphereReturn(muEarth, muMoon, rMoon, rLlo, stopOf(source, "earth").radiusKm + ENTRY_ALTITUDE_KM, lon(moonNow));
+    const back = atmosphereReturn(muEarth, muMoon, rMoon, rLlo, stopOf(source, "earth").radiusKm + ENTRY_ALTITUDE_KM, lon(moonNow), craft.id === "saturn-v" ? APOLLO_RETURN_S : undefined);
     mu = muEarth;
     r1 = rMoon;
     r2 = stopOf(source, "earth").radiusKm + ENTRY_ALTITUDE_KM;
@@ -543,7 +543,7 @@ function planMoon(source: BodySource, craft: BallisticCraft, to: string, departM
     verdict = { level: "rated", line, because, playable: true };
   } else if (home && craft.id === "sls") {
     const line = "Rated: Orion flew home on Artemis I, from a distant retrograde orbit, not this three-day return.";
-    because.push(`This plan is a three-day return from low lunar orbit, a ${Math.round(depMs).toLocaleString("en-US")} m/s burn. Artemis I came home from a distant retrograde orbit, which is a different path.`);
+    because.push(`This plan is the cheapest return from low lunar orbit that meets the atmosphere, about ${Math.round(transitS / 86400)} days, a ${Math.round(depMs).toLocaleString("en-US")} m/s burn. Artemis I came home from a distant retrograde orbit, which is a different path.`);
     because.push(`Orion can change its speed by ${Math.round(dvAvailable ?? 0).toLocaleString("en-US")} m/s, which covers this burn.`);
     verdict = { level: "rated", line, because, playable: true };
   } else if (flyby) {

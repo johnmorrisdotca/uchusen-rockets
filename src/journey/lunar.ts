@@ -3,8 +3,8 @@ import { circularSpeed, escapeBurn, hohmann, kepler } from "./physics.ts";
 
 /** How high above the Earth the faster return is aimed, kilometres: 400,000 feet, the entry interface Apollo used. */
 export const ENTRY_ALTITUDE_KM = 122;
-/** The coast the faster return is solved for, seconds: 72 hours, Apollo 12's predicted time from the trans-Earth burn to splashdown. */
-const RETURN_S = 72 * 3600;
+/** The coast Saturn V's return is solved for, seconds: 72 hours. Apollo 12's trans-Earth burn was at 172:27:16 ground elapsed time and its entry interface at 244:22:18, 71 h 55 min later (Apollo Flight Journal, Apollo 12 days 7 and 10). */
+export const APOLLO_RETURN_S = 72 * 3600;
 
 /**
  * A coast about one body that is not the half-ellipse `transferPoint` draws: its semi-major axis and eccentricity, the true anomaly at departure, the longitude of periapsis, and which way the anomaly grows.
@@ -91,7 +91,7 @@ function timeTo(muEarth: number, orbit: Ellipse, rStop: number): number | null {
 }
 
 /** The excess speed that puts periapsis on `rEntry` for one aim angle. Periapsis is not monotone in the excess, and a large excess is a hyperbola, so the search samples the bound range and bisects each crossing. When two crossings exist, the one whose coast is nearer 72 hours wins. */
-function excessFor(muEarth: number, rMoon: number, rEntry: number, deg: number): { vInf: number; orbit: Ellipse } | null {
+function excessFor(muEarth: number, rMoon: number, rEntry: number, deg: number, targetS?: number): { vInf: number; orbit: Ellipse } | null {
   const sample = (v: number): Ellipse | null => ellipseAt(muEarth, rMoon, v, deg);
   const steps: { v: number; orbit: Ellipse }[] = [];
   for (let v = 0.35; v <= 2.2; v += 0.05) {
@@ -120,44 +120,63 @@ function excessFor(muEarth: number, rMoon: number, rEntry: number, deg: number):
     if (!orbit) continue;
     const transit = timeTo(muEarth, orbit, rEntry);
     if (transit === null) continue;
-    const miss = Math.abs(transit - RETURN_S);
+    const miss = targetS === undefined ? (lo + hi) / 2 : Math.abs(transit - targetS);
     if (!best || miss < best.miss) best = { vInf: (lo + hi) / 2, orbit, miss };
   }
   return best ? { vInf: best.vInf, orbit: best.orbit } : null;
 }
 
+/** Aim angles tried for the return, degrees from the Moon's direction of motion, and the step between them. */
+const AIM_FROM = 110;
+const AIM_TO = 165;
+const AIM_STEP = 0.05;
+
 /**
- * The faster return the page flies: leave a circular lunar orbit so the coast meets the atmosphere in {@link RETURN_S} seconds. The burn comes out near 1 km/s, which is Apollo's trans-Earth injection.
+ * The return the page flies: leave a circular lunar orbit so the coast meets the atmosphere at the entry interface. With a flight time from a real mission (`targetS`) the aim is the one whose coast is closest to it; without one it is the one that costs the least burn.
+ * Transit time is not monotone in the aim, so every aim is tried and the best kept, not found by bisecting from a coarse guess.
  * @param muEarth The Earth's gravitational parameter, km^3/s^2.
  * @param muMoon The Moon's gravitational parameter, km^3/s^2.
  * @param rMoonKm The Moon's distance from the Earth's centre, km.
  * @param rLloKm The parking orbit's radius from the Moon's centre, km.
  * @param rEntryKm The radius of the entry interface from the Earth's centre, km.
  * @param moonLon The Moon's longitude in the Earth's frame, radians.
+ * @param targetS The coast of a real mission, seconds, or undefined for the cheapest burn.
  * @returns The burn (km/s), the coast, and the conic that draws it.
  */
-export function atmosphereReturn(muEarth: number, muMoon: number, rMoonKm: number, rLloKm: number, rEntryKm: number, moonLon: number): { dvKmS: number; vInfKmS: number; transitS: number; parkSpeed: number; burnEndSpeed: number; entrySpeed: number; conic: Conic } {
-  let best: { deg: number; vInf: number; orbit: Ellipse; transit: number; miss: number } | null = null;
-  for (let deg = 110; deg <= 165; deg += 1) {
-    const hit = excessFor(muEarth, rMoonKm, rEntryKm, deg);
+export function atmosphereReturn(muEarth: number, muMoon: number, rMoonKm: number, rLloKm: number, rEntryKm: number, moonLon: number, targetS?: number): { dvKmS: number; vInfKmS: number; transitS: number; parkSpeed: number; burnEndSpeed: number; entrySpeed: number; conic: Conic } {
+  const cost = (c: { vInf: number; transit: number }): number => (targetS === undefined ? c.vInf : Math.abs(c.transit - targetS));
+  let best: { deg: number; vInf: number; orbit: Ellipse; transit: number } | null = null;
+  for (let deg = AIM_FROM; deg <= AIM_TO + 1e-9; deg += AIM_STEP) {
+    const hit = excessFor(muEarth, rMoonKm, rEntryKm, deg, targetS);
     if (!hit) continue;
     const transit = timeTo(muEarth, hit.orbit, rEntryKm);
     if (transit === null) continue;
-    const miss = Math.abs(transit - RETURN_S);
-    if (!best || miss < best.miss) best = { deg, vInf: hit.vInf, orbit: hit.orbit, transit, miss };
+    const found = { deg, vInf: hit.vInf, orbit: hit.orbit, transit };
+    if (!best || cost(found) < cost(best)) best = found;
   }
-  if (!best) throw new Error("No three-day return from this lunar distance.");
-  // Bisect the aim so the coast is 72 hours, holding periapsis on the entry interface.
-  let lo = Math.max(110, best.deg - 4);
-  let hi = Math.min(165, best.deg + 4);
-  for (let i = 0; i < 24; i += 1) {
-    const mid = (lo + hi) / 2;
-    const hit = excessFor(muEarth, rMoonKm, rEntryKm, mid);
-    const transit = hit ? timeTo(muEarth, hit.orbit, rEntryKm) : null;
-    if (!hit || transit === null) break;
-    best = { deg: mid, vInf: hit.vInf, orbit: hit.orbit, transit, miss: Math.abs(transit - RETURN_S) };
-    if (transit > RETURN_S) lo = mid;
-    else hi = mid;
+  if (!best) throw new Error("No return from this lunar distance.");
+  if (targetS !== undefined) {
+    // Between two neighbouring aims the coast does move one way, so bisect it onto the flight time.
+    let lo = Math.max(AIM_FROM, best.deg - AIM_STEP);
+    let hi = Math.min(AIM_TO, best.deg + AIM_STEP);
+    const at = (deg: number): number | null => {
+      const hit = excessFor(muEarth, rMoonKm, rEntryKm, deg, targetS);
+      return hit ? timeTo(muEarth, hit.orbit, rEntryKm) : null;
+    };
+    const loT = at(lo);
+    const hiT = at(hi);
+    if (loT !== null && hiT !== null && (loT - targetS) * (hiT - targetS) <= 0) {
+      for (let i = 0; i < 30; i += 1) {
+        const mid = (lo + hi) / 2;
+        const hit = excessFor(muEarth, rMoonKm, rEntryKm, mid, targetS);
+        const transit = hit ? timeTo(muEarth, hit.orbit, rEntryKm) : null;
+        if (!hit || transit === null) break;
+        const found = { deg: mid, vInf: hit.vInf, orbit: hit.orbit, transit };
+        if (cost(found) < cost(best)) best = found;
+        if ((transit - targetS) * (loT - targetS) > 0) lo = mid;
+        else hi = mid;
+      }
+    }
   }
   const dv = escapeBurn(muMoon, rLloKm, best.vInf);
   const park = circularSpeed(muMoon, rLloKm);

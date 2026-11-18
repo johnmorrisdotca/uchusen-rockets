@@ -167,7 +167,7 @@
     "@johnmorrisdotca/chikyu-earth": "0.36.0",
     "@johnmorrisdotca/hata": "1.8.0",
     "@johnmorrisdotca/kazoku-ui": "^0.32.0",
-    "@johnmorrisdotca/wakusei-planets": "0.17.1",
+    "@johnmorrisdotca/wakusei-planets": "0.61.0",
     "@playwright/test": "1.64.0",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@types/node": "24.10.1",
