@@ -17,6 +17,7 @@ export { moved, movingGroupsOf } from "./model/moves.ts";
 export { PROPELLANTS, propellantOf } from "./data/propellants.ts";
 export type { EnginePropellant, FlameKind } from "./data/propellants.ts";
 export { SOURCES } from "./data/sources.ts";
+export { FUTURE_STAGE_LENGTHS, type FutureRocketLengths } from "./data/future-lengths.ts";
 export type { Source, SourceId } from "./data/sources.ts";
 export { creditLine, MODEL_CREDITS } from "./data/credits.ts";
 export type { CreditId, ModelCredit } from "./data/credits.ts";
