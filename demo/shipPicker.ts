@@ -28,7 +28,7 @@ export function kindOf(rocketId: string): PickerKind {
   const maker = ROCKETS[rocketId]?.maker;
   if (maker === "fleet" || rocketId.startsWith("fleet-")) return "fleet";
   if (isSpacecraft(rocketId)) return "craft";
-  if (rocketId === "iss" || rocketId === "tiangong") return "station";
+  if (rocketId === "iss" || rocketId === "tiangong" || rocketId === "skylab") return "station";
   return "rocket";
 }
 

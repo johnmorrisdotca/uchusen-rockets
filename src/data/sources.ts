@@ -187,6 +187,8 @@ export const SOURCES = {
   "wikipedia-explorer-1": { title: "Explorer 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Explorer_1", date: "2026-11-17", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-vanguard-1": { title: "Vanguard 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Vanguard_1", date: "2026-11-17", read: "direct", licence: "CC BY-SA 4.0" },
   "nasa-vanguard-satellite-1958": { title: "Vanguard Satellite, 1958", publisher: "NASA", url: "https://www.nasa.gov/image-article/vanguard-satellite-1958/", date: "2026-11-17", read: "direct" },
+  "nasa-nssdca-skylab": { title: "Skylab, NSSDCA/COSPAR ID 1973-027A", publisher: "NASA", url: "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1973-027A", date: "2026-11-17", read: "direct" },
+  "nasa-sp-400-chapter-2": { title: "Skylab, Our First Space Station (NASA SP-400), chapter 2", publisher: "NASA", url: "https://www.nasa.gov/wp-content/uploads/static/history/SP-400/ch2.htm", date: "2026-11-17", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**

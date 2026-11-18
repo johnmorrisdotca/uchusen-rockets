@@ -44,6 +44,8 @@ test("a probe, a telescope and a crewed craft are spacecraft, in the ship picker
   for (const id of ["saturn-v", "starship", "falcon-9", "soyuz", "jupiter-c"]) assert.equal(kindOf(id), "rocket", id);
   assert.equal(pickerKind("iss"), "station");
   assert.equal(kindOf("iss"), "station");
+  assert.equal(pickerKind("skylab"), "station");
+  assert.equal(kindOf("skylab"), "station");
   assert.deepEqual(pickerKinds(), ["rocket", "craft", "station", "fleet"]);
   // the Real rockets column holds no spacecraft
   assert.equal(filterCraft(rows, { kind: "rocket", family: "all", search: "" }).some((row) => isSpacecraft(row.rocket)), false);

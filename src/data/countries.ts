@@ -75,6 +75,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   starlink: us("spacex-gen2-dimensions", "The sizes are from a filing with the United States' Federal Communications Commission by the operator, a company of the United States."),
   lageos: us("nasa-lageos", "NASA's mission page for LAGEOS, a United States mission."),
   "vanguard-1": us("wikipedia-vanguard-1", "The article names the United States Naval Research Laboratory, of the United States Navy."),
+  skylab: us("nasa-nssdca-skylab", "NASA's catalogue page names the Office of Manned Space Flight of NASA as the funding agency, of the United States."),
   "explorer-1": us("nasa-explorer-1-fast-facts", "NASA's page for the first United States satellite."),
   "sputnik-1": blank("NASA's chronology names the USSR. The Soviet Union is not one of the ISO 3166-1 codes this package lists.", "Soviet Union"),
   droneship: us("wikipedia-asds", "Based at Port Canaveral, the Port of Long Beach and the Port of Brownsville."),
