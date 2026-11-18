@@ -183,6 +183,10 @@ export const SOURCES = {
   "esa-ariane-6-cooperation": { title: "Ariane 6: a European cooperation (the participating states)", publisher: "European Space Agency", url: "https://www.esa.int/articles/about-us/directorates/space-transportation/ariane/ariane-6-a-european-cooperation", date: "2024-01-30", read: "direct" },
   "wikipedia-cassini-huygens": { title: "Cassini–Huygens (its lead and its sections on NASA and JPL, ESA and ASI)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Cassini%E2%80%93Huygens", date: "2026-11-16", read: "direct", licence: "CC BY-SA 4.0" },
   "collectspace-spacelab": { title: "Spacelab: Space Shuttle Flew Europe's First Space Module 30 Years Ago", publisher: "Space.com (by Robert Pearlman, collectSPACE)", url: "https://www.space.com/23796-spacelab-space-shuttle-30-years-anniversary.html", date: "2013-12-02", read: "direct" },
+  "nasa-explorer-1-fast-facts": { title: "Explorer 1 Fast Facts", publisher: "NASA", url: "https://www.nasa.gov/missions/explorer/explorer-1-fast-facts/", date: "2026-11-17", read: "direct" },
+  "wikipedia-explorer-1": { title: "Explorer 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Explorer_1", date: "2026-11-17", read: "direct", licence: "CC BY-SA 4.0" },
+  "wikipedia-vanguard-1": { title: "Vanguard 1", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Vanguard_1", date: "2026-11-17", read: "direct", licence: "CC BY-SA 4.0" },
+  "nasa-vanguard-satellite-1958": { title: "Vanguard Satellite, 1958", publisher: "NASA", url: "https://www.nasa.gov/image-article/vanguard-satellite-1958/", date: "2026-11-17", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**

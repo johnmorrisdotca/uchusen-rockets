@@ -98,6 +98,8 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Europa Clipper | This package's plain shape, from the sourced span and antenna | NASA VTAD's model, its pictures left out, scaled so the arrays span about 30 m: 14,942 triangles and 223 KB |
 | Starlink, F9-1 and F9-2 | This package's own plates, from the filing's bus and array sizes; the 0.1 m thickness judged from photographs | The same plates. No separate model file |
 | LAGEOS-1 | This package's own sphere, the article's 0.60 m diameter. The retroreflectors are not drawn: their size is not given | The same sphere. No separate model file |
+| Explorer 1 | This package's own tube and cone, NASA's 203 cm by 15.9 cm; the cone's 0.3 m is judged from photographs. The whip antennas are not drawn: their length is not given | The same tube and cone. No separate model file |
+| Vanguard 1 | This package's own sphere, the article's 152 mm diameter. The antennas are not drawn: their angles are not given | The same sphere. No separate model file |
 | Sputnik 1 | This package's own sphere, the 22-inch diameter in NASA's history account. The antennas are not drawn: their length and angle are not given | The same sphere. No separate model file |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 
