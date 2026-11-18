@@ -29,8 +29,8 @@ A launch has these fields. A value GCAT does not have is `null` (or absent, for 
 | `date`, `time`, `utc`, `ms` | The UTC date (`1957-10-04`), the UTC time (`19:28:34`, or `20:45` where GCAT has no seconds, or `null`), both as an ISO string, and the milliseconds since 1970. `approximate` is true where GCAT marks the date or time as uncertain. |
 | `vehicle`, `variant`, `family` | The vehicle as GCAT names it (`Falcon 9`, `Sputnik 8K71PS`), its variant where it has one, and GCAT's name for its family (`R-7`, `Falcon9`). |
 | `rocket`, `rocketVariant` | The id of this package's rocket the vehicle is, and its variant id: see "Link to the rockets" below. Otherwise `null`. |
-| `site`, `pad` | The launch site (`{ code: "NIIP-5", name: "Baikonur" }`) and the pad as GCAT writes it (`LC1`). |
-| `agency`, `country` | The organization that launched (`{ code: "SPX", name: "SpaceX" }`) and its country as GCAT gives it (`{ code: "SU", name: "USSR" }`): the country of the day, so a Baikonur launch of 1957 is the USSR's and one of 2020 is Russia's. |
+| `site`, `pad` | The launch site (`{ code: "NIIP-5", name: "Baikonur", iso: null }`) and the pad as GCAT writes it (`LC1`). `site.iso` is the ISO 3166-1 code of the state GCAT credits the site to: see "ISO country codes" below. |
+| `agency`, `country` | The organization that launched (`{ code: "SPX", name: "SpaceX", iso: "US" }`) and its country as GCAT gives it (`{ code: "SU", name: "USSR", iso: null }`): the country of the day, so a Baikonur launch of 1957 is the USSR's and one of 2020 is Russia's. `iso` is the ISO 3166-1 alpha-2 code: see below. |
 | `flight` | GCAT's name for the flight or mission (`Apollo 11`, `Tesla Roadster`). |
 | `payloads`, `payloadCount` | The names of the payloads, at most the first eight, and how many there were in all. A constellation launch has a `payloadCount` of 60 and eight names. |
 | `outcome`, `score` | `success`, `partial` or `failure`. A `partial` launch has GCAT's score. |
@@ -87,6 +87,19 @@ import { ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
 const soyuz = LAUNCH_VEHICLE_LINKS.filter((link) => link.rocket === "soyuz");
 console.log(ROCKETS["soyuz"]?.name, "has", soyuz.length, "linked vehicles and", findLaunches({ rocket: "soyuz" }).length, "launches");
 ```
+
+## ISO country codes
+
+`iso` on a launch's `site`, `agency` and `country` is the ISO 3166-1 alpha-2 code (`US`, `FR`, `JP`, `GB`, `DE`) of the state GCAT gives that site or organization, typed one code at a time from GCAT's `StateCode` columns (`orgs.tsv` for the organizations, `sites.tsv` for the sites; both read on 2026-11-18). `GCAT_STATE_ISO` is the table (GCAT's state code to the ISO code) and `GCAT_SITE_STATE` gives each site's GCAT state code, so a page can show or override the pairing. It is `null` where there is no code to give:
+
+- **International bodies and flags of convenience**: ESA (`I-ESA`) and ELDO (`I-ELDO`), and Sea Launch's Cayman Islands flag (`CYM`).
+- **States that no longer exist**: the USSR (`SU`), which has no current ISO 3166-1 code, and the Trust Territory of the Pacific Islands (`TTPI`, Kwajalein), which GCAT dates 1947 to 1979. A Soviet-era launch is not given Russia's code.
+- **A part of a country with no code of its own**: the Canary Islands (`ESCN`, Gando).
+- **Two entries GCAT itself marks as doubtful** (`TYSC?` and `KVR?`), which have no state.
+
+Kourou's state in GCAT is French Guiana (`GUF`), which has its own code, `GF`; its launches by Arianespace, a French organization, have `agency.iso` `FR` and `site.iso` `GF`.
+
+The code is the **operator's** state, as GCAT has it, and not where the site is on the map: Baikonur's `GIK-5` is `RU`, as GCAT gives it, though the site is in Kazakhstan.
 
 ## What was decided
 

@@ -29,8 +29,8 @@ console.log(LAUNCH_LOG_SOURCE.credit, "release", LAUNCH_LOG_SOURCE.release);
 | `date`、`time`、`utc`、`ms` | UTC の日付（`1957-10-04`）、UTC の時刻（`19:28:34`。GCAT に秒がなければ `20:45`、時刻がなければ `null`）、その2つをつないだ ISO 文字列、1970年からのミリ秒です。GCAT が日付か時刻を不確かとしているときは、`approximate` が true になります。 |
 | `vehicle`、`variant`、`family` | GCAT での機体名（`Falcon 9`、`Sputnik 8K71PS`）、あれば型式、GCAT でのファミリー名（`R-7`、`Falcon9`）です。 |
 | `rocket`、`rocketVariant` | その機体にあたる、このパッケージのロケットの id と型式の id です。下の「ロケットに結び付ける」を見てください。なければ `null` です。 |
-| `site`、`pad` | 射場（`{ code: "NIIP-5", name: "Baikonur" }`）と、GCAT の書き方の射点（`LC1`）です。 |
-| `agency`、`country` | 打ち上げた組織（`{ code: "SPX", name: "SpaceX" }`）と、GCAT の示すその国（`{ code: "SU", name: "USSR" }`）です。当時の国なので、1957年のバイコヌール発はソ連、2020年のものはロシアです。 |
+| `site`、`pad` | 射場（`{ code: "NIIP-5", name: "Baikonur", iso: null }`）と、GCAT の書き方の射点（`LC1`）です。`site.iso` は、GCAT がその射場の国としている ISO 3166-1 コードです。下の「ISO の国コード」を見てください。 |
+| `agency`、`country` | 打ち上げた組織（`{ code: "SPX", name: "SpaceX", iso: "US" }`）と、GCAT の示すその国（`{ code: "SU", name: "USSR", iso: null }`）です。当時の国なので、1957年のバイコヌール発はソ連、2020年のものはロシアです。`iso` は ISO 3166-1 の2文字コードです（下の「ISO の国コード」を見てください）。 |
 | `flight` | GCAT でのフライトまたはミッションの名前（`Apollo 11`、`Tesla Roadster`）です。 |
 | `payloads`、`payloadCount` | ペイロード名（最初の8つまで）と、全部の数です。コンステレーションの打ち上げでは `payloadCount` が 60 で、名前は8つです。 |
 | `outcome`、`score` | `success`、`partial`、`failure` のどれかです。`partial` には GCAT の評点が付きます。 |
@@ -87,6 +87,19 @@ import { ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
 const soyuz = LAUNCH_VEHICLE_LINKS.filter((link) => link.rocket === "soyuz");
 console.log(ROCKETS["soyuz"]?.name, "has", soyuz.length, "linked vehicles and", findLaunches({ rocket: "soyuz" }).length, "launches");
 ```
+
+## ISO の国コード
+
+打ち上げの `site`、`agency`、`country` にある `iso` は、GCAT がその射場や組織の国としている ISO 3166-1 の2文字コード（`US`、`FR`、`JP`、`GB`、`DE`）です。GCAT の `StateCode` 列（組織は `orgs.tsv`、射場は `sites.tsv`。どちらも2026年11月18日に読み込みました）から、1つずつ手で入力しました。`GCAT_STATE_ISO` は GCAT の国コードから ISO コードへの対応表、`GCAT_SITE_STATE` は各射場の GCAT の国コードで、ページはこの対応を表示したり、上書きしたりできます。次の場合は、与えるコードがないので `iso` が `null` になります。
+
+- **国際機関と便宜置籍。** ESA（`I-ESA`）、ELDO（`I-ELDO`）、シーランチのケイマン諸島籍（`CYM`）。
+- **今はない国。** ソ連（`SU`。今の ISO 3166-1 コードはありません）と、太平洋諸島信託統治領（`TTPI`。クェゼリン。GCAT では 1947年から1979年）。ソ連時代の打ち上げにロシアのコードは付けません。
+- **国の一部で、独自のコードがないもの。** カナリア諸島（`ESCN`。ガンドー）。
+- **GCAT 自身が不確かとする2件。** `TYSC?` と `KVR?` で、国の指定がありません。
+
+GCAT はクールーの国をフランス領ギアナ（`GUF`）としていて、これには独自のコード `GF` があります。フランスの組織であるアリアンスペースによる打ち上げは、`agency.iso` が `FR`、`site.iso` が `GF` です。
+
+コードは、GCAT が示す**運用している国**のもので、射場が地図上のどこにあるかではありません。バイコヌールの `GIK-5` は、射場がカザフスタンにありますが、GCAT では `RU` です。
 
 ## 決めたこと
 

@@ -187,8 +187,9 @@ test("the source is credited as its licence asks, in NOTICE.md, with the day it 
 
 test("the log is a sub-path of its own: one data file, no import from the rest of the package, and nothing else imports it", () => {
   const imports = (file: string) => [...readFileSync(file, "utf8").matchAll(/^(?:import|export)[^"\n]*from "([^"]+)"/gm)].map((match) => match[1] as string);
-  for (const file of ["src/launches/index.ts", "src/launches/links.ts", "src/launches/data.ts", "src/launches/source.ts"]) for (const from of imports(file)) assert.match(from, /^\.\/(data|links|index|source)\.ts$/, `${file} imports ${from}`);
+  for (const file of ["src/launches/index.ts", "src/launches/links.ts", "src/launches/data.ts", "src/launches/iso.ts", "src/launches/source.ts"]) for (const from of imports(file)) assert.match(from, /^\.\/(data|iso|links|index|source)\.ts$/, `${file} imports ${from}`);
   assert.deepEqual(imports("src/launches/data.ts"), []);
+  assert.deepEqual(imports("src/launches/iso.ts"), [], "the code tables are data only");
   assert.deepEqual(imports("src/launches/source.ts"), [], "reading the credit loads no data");
   assert.ok(statSync("src/launches/source.ts").size < 4096);
   const size = statSync("src/launches/data.ts").size;
@@ -213,4 +214,61 @@ test("the rows are shared, so they are frozen", () => {
 test("an escape trajectory's apogee is GCAT's round 150000 km, and a perigee can be negative", () => {
   assert.equal(launches().filter((launch) => launch.orbit?.apogeeKm === 150000).length, 207);
   assert.equal(launches().filter((launch) => (launch.orbit?.perigeeKm ?? 0) < 0).length, 13);
+});
+
+test("every state GCAT gives a launch and every site in the log has an ISO 3166-1 code, or a reason for none, and the codes are two capital letters", async () => {
+  const { GCAT_SITE_STATE, GCAT_STATE_ISO } = await import("../src/launches/index.ts");
+  const states = new Set<string>();
+  const sites = new Set<string>();
+  for (const launch of launches()) {
+    sites.add(launch.site.code);
+    if (launch.country) states.add(launch.country.code);
+  }
+  assert.equal(sites.size, 65);
+  assert.equal(states.size, 20);
+  for (const code of sites) assert.ok(code in GCAT_SITE_STATE, `site ${code} has no state entry`);
+  for (const code of Object.values(GCAT_SITE_STATE)) if (code !== null) assert.ok(code in GCAT_STATE_ISO, `site state ${code} has no ISO entry`);
+  for (const code of states) assert.ok(code in GCAT_STATE_ISO, `state ${code} has no ISO entry`);
+  for (const [state, iso] of Object.entries(GCAT_STATE_ISO)) assert.ok(iso === null || /^[A-Z]{2}$/.test(iso), `${state}: ${iso}`);
+  assert.deepEqual(Object.entries(GCAT_STATE_ISO).filter(([, iso]) => iso === null).map(([state]) => state).sort(), ["CYM", "ESCN", "I-ELDO", "I-ESA", "SU", "TTPI"]);
+  assert.equal(new Set(Object.values(GCAT_STATE_ISO).filter((iso) => iso !== null)).size, Object.values(GCAT_STATE_ISO).filter((iso) => iso !== null).length, "no two states share a code");
+});
+
+test("the ISO codes of a launch's site, agency and country: GCAT's own state codes, typed one by one", () => {
+  const sputnik = launches()[0] as Launch;
+  assert.deepEqual({ site: sputnik.site.iso, agency: sputnik.agency.iso, country: sputnik.country?.iso }, { site: null, agency: null, country: null }, "the USSR has no current code (SU), and neither has its site");
+  const spacex = launches().find((launch) => launch.agency.code === "SPX" && launch.site.code === "CC") as Launch;
+  assert.equal(spacex.site.iso, "US");
+  assert.equal(spacex.agency.iso, "US");
+  assert.equal(spacex.country?.iso, "US");
+  const kourou = launches().find((launch) => launch.site.code === "CSG" && launch.agency.code === "AE") as Launch;
+  assert.deepEqual({ site: kourou.site.iso, agency: kourou.agency.iso }, { site: "GF", agency: "FR" }, "Kourou is French Guiana (GF); Arianespace is French (FR)");
+  const esa = launches().find((launch) => launch.agency.code === "ESA") as Launch;
+  assert.deepEqual({ agency: esa.agency.iso, country: esa.country?.iso }, { agency: null, country: null }, "ESA is an international body");
+  const seaLaunch = launches().find((launch) => launch.agency.code === "SEALC") as Launch;
+  assert.equal(seaLaunch.country?.code, "CYM");
+  assert.equal(seaLaunch.country?.iso, null);
+  const japan = launches().find((launch) => launch.agency.code === "JAXA") as Launch;
+  assert.equal(japan.agency.iso, "JP");
+  const uk = launches().find((launch) => launch.agency.code === "RAE") as Launch;
+  assert.equal(uk.agency.iso, "GB");
+  const noCountry = launches().find((launch) => launch.country === null);
+  if (noCountry) assert.equal(noCountry.agency.iso, null);
+});
+
+test("an agency written A/B takes the country of its first organization that has one, and its ISO code is that country's", () => {
+  const joint = launches().find((launch) => launch.agency.code === "ESA/AE") as Launch;
+  assert.equal(joint.country?.code, "I-ESA");
+  assert.equal(joint.agency.iso, null);
+  const split = launches().find((launch) => launch.agency.code === "MICOM/WRE") as Launch;
+  assert.equal(split.country?.code, "US");
+  assert.equal(split.agency.iso, "US");
+});
+
+test("the ISO codes are frozen with the rest of the launch", () => {
+  const first = launches()[0] as Launch;
+  assert.ok(Object.isFrozen(first.site));
+  assert.throws(() => {
+    (first.site as { iso: string | null }).iso = "XX";
+  }, TypeError);
 });
