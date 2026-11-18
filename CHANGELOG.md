@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-11-18
+
 - **Sourced stage lengths for Ariane 5, the N1 and the Titan II GLV, kept as data** (MODULES-1239). `FUTURE_STAGE_LENGTHS` holds them, each figure naming its source (six new entries in `SOURCES`), a blank where none gives it, and `others` where sources differ; none of the three is drawn, listed in `ROCKETS` or offered by the builder yet. Ariane 5 (Wikipedia's stage infoboxes): boosters 31.6 m, core 23.8 m, the EPS 3.4 m and the ESC 4.711 m, the whole a range of 46 to 52 m, the fairing blank. N1 (RussianSpaceWeb's per-stage pages): Block A 30.090 m, B 20.461 m, V 11.51 m, G 7.91 m, D 5.5 m (Wikipedia says 5.70 in its text and 6.28 in its infobox, kept in `others`), the whole 105.3 m, about 29.8 m of it above the blocks not given apart. Titan II GLV (NASA's Gemini IV mission report, figure 3-1, public domain): stage I 21.395 m from the stations (842.31 in), stage II 5.669 m above the separation plane (the 7.78 and 8.23 m on popular pages most likely include the interstage or the engine). Test: `test/future-lengths.test.ts`.
+
+- **The launch log: ISO country codes for sites and agencies** (MODULES-1137). A launch's `site`, `agency` and `country` each carry `iso`, the ISO 3166-1 alpha-2 code of the state GCAT gives (`US`, `FR`, `JP`, `GB`, `DE`), typed one at a time from GCAT's `StateCode` columns in `orgs.tsv` and `sites.tsv` (read 2026-11-18), and `null` where there is none to give: ESA and ELDO, Sea Launch's Cayman flag (`CYM`), the USSR (`SU`) and the Trust Territory of the Pacific Islands (`TTPI`), the Canary Islands (`ESCN`) and the two entries GCAT leaves without a state. New exports `GCAT_STATE_ISO` and `GCAT_SITE_STATE`, the two tables. Kourou is French Guiana, `GF` (its agency Arianespace is `FR`). The code is the operator's state as GCAT has it, not the place on the map (Baikonur's `GIK-5` is `RU`). Two choices wait for John: the USSR as `null`, `RU` or `SU`, and Kourou as `GF` or `FR`. The data file is not regenerated: no launch was added or changed. Tests: `test/launches.test.ts`.
 
 ## [0.33.0] - 2026-11-18
 

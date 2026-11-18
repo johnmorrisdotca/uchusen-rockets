@@ -1,8 +1,10 @@
 // The launch log: every orbital launch attempt since 1957, from GCAT (Jonathan McDowell, CC BY 4.0), with lookups and counts. Pure: no DOM, no clock, no dependency. The data is one packed string in ./data.ts, parsed on first use.
 import { PACKED_LAUNCHES } from "./data.ts";
+import { GCAT_SITE_STATE, GCAT_STATE_ISO } from "./iso.ts";
 import { LAUNCH_VEHICLE_LINKS } from "./links.ts";
 
 export { LAUNCH_LOG_SOURCE } from "./source.ts";
+export { GCAT_SITE_STATE, GCAT_STATE_ISO } from "./iso.ts";
 export { LAUNCH_VEHICLE_LINKS } from "./links.ts";
 export type { VehicleLink, VehicleMatch } from "./links.ts";
 
@@ -113,14 +115,14 @@ export interface Launch {
   readonly rocket: string | null;
   /** The variant of that rocket that this vehicle is, where one is, or null. */
   readonly rocketVariant: string | null;
-  /** The launch site: GCAT's code and its name ("NIIP-5", "Baikonur"). */
-  readonly site: { readonly code: string; readonly name: string };
+  /** The launch site: GCAT's code and its name ("NIIP-5", "Baikonur"), and the ISO 3166-1 alpha-2 code of the state GCAT credits it to ("RU"), or null where there is none (see `GCAT_STATE_ISO`). It is the operator's state, not the place's: Baikonur is "RU". */
+  readonly site: { readonly code: string; readonly name: string; readonly iso: string | null };
   /** The pad, as GCAT writes it ("LC1", "LC39A"), or null. */
   readonly pad: string | null;
-  /** The organization that launched: GCAT's code and short name ("SPX", "SpaceX"). */
-  readonly agency: { readonly code: string; readonly name: string };
-  /** The country of that organization, as GCAT gives it ("SU", "USSR"), or null. */
-  readonly country: { readonly code: string; readonly name: string } | null;
+  /** The organization that launched: GCAT's code and short name ("SPX", "SpaceX"), and the ISO 3166-1 alpha-2 code of its country ("US"), or null for an international body, a state that no longer exists or an organization without a country. */
+  readonly agency: { readonly code: string; readonly name: string; readonly iso: string | null };
+  /** The country of that organization, as GCAT gives it ("SU", "USSR"), with its ISO 3166-1 alpha-2 code ("US"; null where there is none, as for the USSR and ESA), or null. */
+  readonly country: { readonly code: string; readonly name: string; readonly iso: string | null } | null;
   /** GCAT's name for the flight or mission ("Apollo 11", "Tesla Roadster"), or null. */
   readonly flight: string | null;
   /** The names of the payloads, at most the first eight. */
@@ -148,6 +150,11 @@ const LINKS = new Map(LAUNCH_VEHICLE_LINKS.map((link) => [link.vehicle, link]));
 
 let parsed: readonly Launch[] | undefined;
 
+/** The ISO 3166-1 alpha-2 code of a GCAT state code, or null for no state, an international body or a state with no code. */
+function isoOfState(state: string): string | null {
+  return GCAT_STATE_ISO[state] ?? null;
+}
+
 function parse(): readonly Launch[] {
   const packed = JSON.parse(PACKED_LAUNCHES) as Packed;
   const countries = new Map(packed.countries);
@@ -169,10 +176,10 @@ function parse(): readonly Launch[] {
       family: vehicle[1] === "" ? null : vehicle[1],
       rocket: link?.rocket ?? null,
       rocketVariant: link?.variant ?? null,
-      site: { code: (packed.sites[s] as [string, string])[0], name: (packed.sites[s] as [string, string])[1] },
+      site: { code: (packed.sites[s] as [string, string])[0], name: (packed.sites[s] as [string, string])[1], iso: isoOfState(GCAT_SITE_STATE[(packed.sites[s] as [string, string])[0]] ?? "") },
       pad,
-      agency: { code: agency[0], name: agency[1] },
-      country: agency[2] === "" ? null : { code: agency[2], name: countries.get(agency[2]) ?? agency[2] },
+      agency: { code: agency[0], name: agency[1], iso: isoOfState(agency[2]) },
+      country: agency[2] === "" ? null : { code: agency[2], name: countries.get(agency[2]) ?? agency[2], iso: isoOfState(agency[2]) },
       flight,
       payloads,
       payloadCount: count,
