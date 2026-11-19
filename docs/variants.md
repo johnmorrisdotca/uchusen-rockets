@@ -203,9 +203,9 @@ The fairing has no length in a source read here, so it is what the whole leaves.
 
 | Variant | Whole | First stage | Second stage | Fairing | Across | First flew |
 | --- | --- | --- | --- | --- | --- | --- |
-| `electron` | 18 m | 12.1 m | 2.4 m | 2.5 m | 1.2 m | 2017-05-25 |
+| `electron` | 18 m (the guide) | 12.1 m (the article; the guide does not give it) | 2.4 m (the article; the guide does not give it) | 2.5 m (the guide) | 1.2 m (the guide) | 2017-05-25 |
 
-The parts add to 17 m, and no source read here says what the other metre is: it is drawn as an interstage, with no size of its own.
+The parts add to 17 m, and no source read here says what the other metre is: it is drawn as an interstage, with no size of its own. The guide says the first launch was in 2017 and does not give the day.
 
 ## Soyuz
 

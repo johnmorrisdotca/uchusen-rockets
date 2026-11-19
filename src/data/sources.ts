@@ -85,6 +85,7 @@ export const SOURCES = {
   "wikipedia-esm": { title: "European Service Module", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/European_Service_Module", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-new-glenn": { title: "New Glenn (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/New_Glenn", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-electron": { title: "Rocket Lab Electron (the infobox and the fairing's size)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Rocket_Lab_Electron", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
+  "rocketlab-electron-guide": { title: "Electron Payload User's Guide, version 8.0 (September 2025)", publisher: "Rocket Lab", url: "https://rocketlabcorp.com/assets/Rocket-Lab-Electron-Payload-User-Guide-8.0.pdf", date: "2025-09", read: "direct" },
   "wikipedia-soyuz-2": { title: "Soyuz-2 (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Soyuz-2", date: "2026-11-02", read: "direct", licence: "CC BY-SA 4.0" },
   "wikipedia-vulcan": { title: "Vulcan Centaur (the infobox)", publisher: "Wikipedia", url: "https://en.wikipedia.org/wiki/Vulcan_Centaur", date: "2026-11-12", read: "direct", licence: "CC BY-SA 4.0" },
   "ula-vulcan-guide": { title: "Vulcan Centaur User's Guide, October 2023", publisher: "United Launch Alliance", url: "https://www.ulalaunch.com/docs/default-source/rockets/2023_vulcan_user_guide.pdf", date: "2023-10", read: "direct" },

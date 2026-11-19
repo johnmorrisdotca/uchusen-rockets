@@ -52,7 +52,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   "delta-iv-heavy": { maker: "ula", madeBy: { value: "United Launch Alliance", source: "wikipedia-delta-iv-heavy" } },
   h3: { maker: "japan", madeBy: { value: "Mitsubishi Heavy Industries", source: "wikipedia-h3" } },
   "long-march-5": { maker: "china", madeBy: { value: "CALT", source: "wikipedia-long-march-5", note: "The infobox links that short name to the China Academy of Launch Vehicle Technology." } },
-  electron: { maker: "rocket-lab", madeBy: { value: "Rocket Lab", source: "wikipedia-electron" } },
+  electron: { maker: "rocket-lab", madeBy: { value: "Rocket Lab", source: "rocketlab-electron-guide" } },
   soyuz: { maker: "russia", madeBy: { value: "RKTs Progress, Russia", source: "wikipedia-soyuz-2" } },
   "lunar-module": { maker: "nasa", madeBy: { value: "Operated by NASA; built by Grumman", source: "wikipedia-lunar-module" } },
   "apollo-soyuz": { maker: "nasa", madeBy: { value: "Operated by NASA and the Soviet space program; Apollo built by North American Rockwell, Soyuz by NPO Energia", source: "wikipedia-apollo-soyuz" } },
