@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - **Propellant and flight notes no longer quote a Wikipedia sentence** (MODULES-1323). The propellant, the Ariane 5 lengths and the flight moves stay the same numbers. The notes say them in this package's own words.
+- **Unused Wikipedia source rows removed** (MODULES-1323). Poisk, Rassvet, Tranquility, Cupola, Leonardo and Voyager 1 were listed and no figure used them. ABS-2A stays: the ABS/Eutelsat flight's basis names that page for the Full Thrust version.
 
 ## [0.35.0] - 2026-11-19
 
