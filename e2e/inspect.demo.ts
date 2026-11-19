@@ -28,42 +28,60 @@ const spot = async (page: Page) => {
   return { x, y };
 };
 
-// The drone flies, holds, and flies again; the page says which with data-inspect-paused. The page's own clock is the one
-// that counts, so sample until it has gone 0 -> 1 -> 0 (a whole flight seen), however slowly the frames come. The arc's
-// span is the larger side of the box around every sample, not the distance from the first one.
+// The size of the box around a flight's samples: its larger side, in pixels.
+const spanOf = (points: { x: number; y: number }[]) => {
+  if (points.length === 0) return 0;
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+};
+
+// The drone flies, then holds, then flies again; the page says which with data-inspect-paused. The page's own clock is the
+// one that counts, however slowly the frames come. So the first hold is waited for (a first reading may be mid-flight), and
+// the samples of the next whole flight are kept: from the first one after paused goes 1 -> 0 until it goes 0 -> 1 (that
+// hold's own sample is kept too). The arc's span is the larger side of the box around those samples, not the distance from
+// the first one.
 const moved = async (page: Page, pixels: number) => {
   const canvas = page.locator("#hero canvas");
-  const points: { x: number; y: number }[] = [];
+  const flight: { x: number; y: number }[] = [];
   const seen: string[] = [];
-  const state = async () => {
-    const next = await spot(page);
-    if (next) points.push(next);
-    const flag = await canvas.getAttribute("data-inspect-paused");
-    if (flag === "0" || flag === "1") {
-      if (seen[seen.length - 1] !== flag) seen.push(flag);
-    }
-    return seen.join(">");
-  };
-  const span = () => {
-    if (points.length === 0) return 0;
-    const xs = points.map((point) => point.x);
-    const ys = points.map((point) => point.y);
-    return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-  };
+  let started = false;
+  let whole = false;
+  const note = () => `${flight.length} samples of the flight, paused went ${seen.join(">") || "unread"}`;
   await expect
     .poll(
       async () => {
-        const order = await state();
-        const whole = order.includes("0>1>0");
-        return whole ? "a whole flight" : `${points.length} samples, paused went ${order || "unread"}`;
+        const flag = await canvas.getAttribute("data-inspect-paused");
+        const next = await spot(page);
+        if (flag !== "0" && flag !== "1") return note();
+        if (seen[seen.length - 1] !== flag) seen.push(flag);
+        if (flag === "1" && started && !whole) {
+          if (next) flight.push(next);
+          whole = true;
+        } else if (flag === "0" && seen.slice(-2).join(">") === "1>0") started = true;
+        if (flag === "0" && started && !whole && next) flight.push(next);
+        return whole ? "a whole flight" : note();
       },
       { timeout: 90_000, intervals: [400] },
     )
     .toBe("a whole flight");
-  const far = span();
-  expect(far, `${points.length} samples, paused went ${seen.join(">")}`).toBeGreaterThan(pixels);
+  const far = spanOf(flight);
+  expect(far, note()).toBeGreaterThan(pixels);
   return far;
 };
+
+test("the span of a flight is the box around all its samples, so a partial arc reads smaller", () => {
+  const arc = Array.from({ length: 40 }, (_, i) => {
+    const turn = Math.sin((i / 39) * Math.PI * 2) * 0.35;
+    return { x: 600 + Math.sin(turn) * 120, y: 400 - (i / 39) * 30 };
+  });
+  expect(spanOf([])).toBe(0);
+  expect(spanOf([{ x: 3, y: 4 }])).toBe(0);
+  expect(spanOf([{ x: 0, y: 0 }, { x: 30, y: 5 }, { x: 10, y: 50 }])).toBe(50);
+  const whole = spanOf(arc);
+  expect(spanOf(arc.slice(20))).toBeLessThan(whole);
+  expect(spanOf(arc.slice(30))).toBeLessThan(whole / 2);
+});
 
 for (const drones of [1, 10, 100]) {
   test(`${drones} drones move on the screen`, async ({ page }) => {
