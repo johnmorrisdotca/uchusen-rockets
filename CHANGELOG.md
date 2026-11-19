@@ -7,6 +7,8 @@
 - **Hubble's length and width now name NASA's pages** (MODULES-1323). 13.2 m stays, from the about page and the design page. 4.2 m stays, from the design page. The about page's size table says 4.3 m for the same 14 feet, and that figure is kept beside it. The launch day stays on Wikipedia: those NASA pages give 1990 and not the day.
 - **SLS Block 1's whole, core width, booster length and first flight now name NASA's October 2024 fact sheet** (MODULES-1323). The metres stay: 98.15, 8.41 and 53.95, and the day stays 2022-11-16. The fact sheet's 12-foot booster width is kept beside the drawn 3.71 m. The core's 64.6 m stays on the article, because the fact sheet says more than 212 feet.
 - **Orion's width now names NASA's reference guide** (MODULES-1323). 5.03 m stays: 16.5 feet, and the crew-module page says the heat shield is 16.5 feet across. The drawn height stays 3.3 m from the article. The guide's quick facts say 11 feet, 3.35 m, and that figure is kept beside it.
+- **Saturn V's whole, first stage and width now name NASA's Apollo 4 press kit** (MODULES-1323). 110.64 m, 42.06 m and 10.06 m stay. The second stage stays 24.87 m and the third 17.86 m. The press kit's 81.5 feet and 58.4 feet are kept beside them. The August 1967 Saturn V News Reference was not found as a file that could be read.
+- **The Shuttle orbiter and booster lengths now name the 1981 news reference** (MODULES-1323). 37.24 m, 23.79 m and 45.46 m stay. The tank stays 46.88 m by 8.41 m, with the book's 47 m and 8.7 m beside them. The booster width stays 3.71 m, with the book's 3.8 m beside it.
 
 ## [0.35.0] - 2026-11-19
 

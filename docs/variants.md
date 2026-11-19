@@ -84,7 +84,7 @@ No source read here gives a stage's own length, so those are blank and drawn in 
 
 | Variant | Whole | S-IC | S-II | S-IVB | Across | First flew |
 | --- | --- | --- | --- | --- | --- | --- |
-| `saturn-v` | 110.64 m (363 feet), with the Apollo spacecraft | 42.06 m | 24.87 m | 17.86 m | 10.06 m (33 feet); the third stage 6.6 m | 1967-11-09 |
+| `saturn-v` | 110.64 m (363 feet, Apollo 4 press kit), with the Apollo spacecraft | 42.06 m (138 feet, the press kit) | 24.87 m (81 feet 7 inches; the press kit says 81.5 feet) | 17.86 m (58 feet 7 inches; the press kit says 58.4 feet) | 10.06 m (33 feet, the press kit); the third stage 6.6 m | 1967-11-09 |
 
 The figures are the article's feet in metres, and each note keeps the feet. The adapter is added from two articles, the service module's 7.49 m includes its nozzle, and the capsule is 3.48 m. The escape tower has no size in a source read here, so it is what the whole leaves. The lunar module is hidden in the adapter and is not drawn.
 
@@ -92,7 +92,7 @@ The figures are the article's feet in metres, and each note keeps the feet. The 
 
 | Variant | Whole | External tank | Solid rocket booster | Orbiter | First flew |
 | --- | --- | --- | --- | --- | --- |
-| `stack` | 56 m, stacked | 46.88 m (153.8 feet), 8.41 m across (the Space Shuttle article says 8.7 m) | 45.46 m (149.16 feet), 3.71 m across | 37.24 m long, 23.79 m span | 1981-04-12 |
+| `stack` | 56 m, stacked | 46.88 m (153.8 feet; the 1981 news reference's overview says 47 m), 8.41 m across (the news reference's overview says 8.7 m, and its tank sections 8.4 m) | 45.46 m (149.16 feet, the news reference), 3.71 m across (a figure in that book says 3.8 m) | 37.24 m long and 23.79 m span, the news reference's table | 1981-04-12 |
 
 No source read here says where the parts stand against each other, so the gaps and the orbiter's outline are judged from photographs. Its front view is the orbiter's belly side, behind the tank.
 
