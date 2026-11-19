@@ -1,5 +1,5 @@
 // Whose country each rocket, maker and site is, as an ISO 3166-1 alpha-2 code, read 2026-11-11 from each one's own article (its infobox's country of origin, country, location or headquarters).
-// A craft that two or more countries or an international body made or run (Apollo and Soyuz, the ISS, Hubble, Ariane 6) has none, and so does one whose source names two countries of origin (Electron): a blank, not a pick.
+// A craft that two or more countries or an international body made or run (Apollo and Soyuz, the ISS, Hubble, Ariane 5 and 6) has none, and so does one whose source names two countries of origin (Electron): a blank, not a pick.
 import type { MakerId } from "./makers.ts";
 import { blank, type Figure } from "./types.ts";
 
@@ -77,6 +77,8 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   "vanguard-1": us("wikipedia-vanguard-1", "The article names the United States Naval Research Laboratory, of the United States Navy."),
   skylab: us("nasa-nssdca-skylab", "NASA's catalogue page names the Office of Manned Space Flight of NASA as the funding agency, of the United States."),
   "explorer-1": us("nasa-explorer-1-fast-facts", "NASA's page for the first United States satellite."),
+  n1: blank("Its source names the USSR. The Soviet Union is not one of the ISO 3166-1 codes this package lists.", "Soviet Union"),
+  "titan-ii-glv": us("wikipedia-titan-ii-glv"),
   "sputnik-1": blank("NASA's chronology names the USSR. The Soviet Union is not one of the ISO 3166-1 codes this package lists.", "Soviet Union"),
   droneship: us("wikipedia-asds", "Based at Port Canaveral, the Port of Long Beach and the Port of Brownsville."),
   "landing-zone": us("wikipedia-lz", "At Cape Canaveral Space Force Station; Landing Zone 4 is at Vandenberg."),
@@ -85,6 +87,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   "vulcan-centaur": us("wikipedia-vulcan"),
   h3: { value: "JP", source: "wikipedia-h3" },
   "long-march-5": { value: "CN", source: "wikipedia-long-march-5" },
+  "ariane-5": blank("Its source gives its origin as European multi-national.", "international"),
   "ariane-6": blank("Its source gives its origin as European multi-national.", "international"),
   "atlas-v": us("wikipedia-atlas-v"),
   "delta-iv-heavy": us("wikipedia-delta-iv-heavy"),

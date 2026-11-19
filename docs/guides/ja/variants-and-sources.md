@@ -11,7 +11,7 @@ description: ロケットがなぜ型式ごとに分かれているのか、数�
 
 ## 数値は出典を示すか、空欄にする
 
-データのすべての寸法・数・日付は `Figure` です。値、その出典の id、出典に日付があればその日付を持ちます。出典のない数値は空欄（`value` が `null`）で、隙間を埋めるために推定されることはありません。
+データのすべての寸法・数・日付は `Figure` です。値、その出典の id、出典に日付があればその日付を持ちます。出典のない数値は空欄（`value` が `null`）で、隙間を埋めるために推定されることはありません。例外は、出典のある数値から計算できる残りの部分（出典のある全体から、出典のある部品を引いた分など）です。これには `estimate: true` と、計算のしかたを書いた `derivation` が付き、カードでは「約」と表示されます。
 
 ```ts
 import { SOURCES, variantOf } from "@johnmorrisdotca/uchusen-rockets";
@@ -49,7 +49,7 @@ console.log(v4?.status, figureWords(v4?.facts.height, " m"));
 
 ## 国と、必要なら国旗
 
-作られたロケットにも計画中のロケットにも `country` があります。これは数値で、値は ISO 3166-1 alpha-2 のコード（`US`、`RU`、`CN`）です。コードはそれぞれのロケットの記事から取りました。複数の国や国際機関のもの（アポロ・ソユーズ、ISS、ハッブル、Ariane 6）、出典に開発国が2つ書かれているもの（Electron）、それに SPX の船団の船には、コードがありません。値は `null` で、その理由は `note` に書いてあります。`MAKER_COUNTRIES` はメーカーのグループごとのコード、`COUNTRY_CODES` は ISO 3166-1 で決められているすべてのコードの一覧です。
+作られたロケットにも計画中のロケットにも `country` があります。これは数値で、値は ISO 3166-1 alpha-2 のコード（`US`、`RU`、`CN`）です。コードはそれぞれのロケットの記事から取りました。複数の国や国際機関のもの（アポロ・ソユーズ、ISS、ハッブル、Ariane 5 と 6）、出典に開発国が2つ書かれているもの（Electron）、それに SPX の船団の船には、コードがありません。値は `null` で、その理由は `note` に書いてあります。`MAKER_COUNTRIES` はメーカーのグループごとのコード、`COUNTRY_CODES` は ISO 3166-1 で決められているすべてのコードの一覧です。
 
 ```ts
 import { countryOf, ROCKETS } from "@johnmorrisdotca/uchusen-rockets";

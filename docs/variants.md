@@ -116,6 +116,15 @@ No source read here gives the upper stage or the abort tower a length, so they s
 
 The VC2S is the form that flew first: two solid boosters and the standard fairing. The article gives the Centaur V as 10.66 m in its low-orbit form and 12.6 m in its high-energy form, and the 10.66 m is drawn. It gives no length for the adapter between the Centaur and the fairing, so that is what the whole leaves (2.14 m). The boosters stand against the core, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. The no-booster, four-booster and six-booster forms and the long fairing (67.3 m) are not listed.
 
+## Ariane 5
+
+| Variant | Whole | Core | Boosters | Upper stage | Fairing | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `eca` | 46 m, the least of a range, 46 to 52 m | 23.8 m, one Vulcain 2 | two, 31.6 m, 3.06 m across | ESC, 4.711 m, one HM7B | about 17.489 m, worked out: what the 46 m leaves | 5.4 m | 2002-12-11, which failed; the first success was 2005-02-12 |
+| `es` | the same 46 m | the same 23.8 m | the same two | EPS, 3.4 m, one Aestus | about 18.8 m, worked out: what the 46 m leaves | 5.4 m | 2008-03-09 |
+
+The stage infoboxes of the article give the boosters, the core and each upper stage a length. The whole is a range, 46 to 52 m, because it varies with the version and the payload, and the least is drawn; the fairing has no length in the article, so its length is an estimate (`estimate: true`, with its `derivation`: the 46 m less the sourced core and upper stage), drawn as wide as the vehicle with a plain rounded nose. The article's text also says the core's tank is 30.5 m high: the infobox's 23.8 m is the one drawn, and the 30.5 m is kept beside it in `others`. The ECA+ has the ECA's lengths, and the G, G+ and GS have the ES's, so those four are not listed apart. The boosters' place, the engines' size and the paint are not sourced, and no name or mark is drawn.
+
 ## Ariane 6
 
 | Variant | Whole | Liquid stages | Boosters | Fairing | Across | First flew |
@@ -165,6 +174,22 @@ The extended fairing is 63.2 m, and the CZ-5B has no second stage. Neither is li
 | `redstone` | 25.41 m (83.38 feet) | not given: what the 25.41 m leaves after the spacecraft's 7.9 m, 17.51 m | 3.3 m, the existing Mercury capsule | not given: what 7.9 m leaves after 3.3 m, 4.6 m | 1.78 m (5.83 feet) | 1960-11-21 |
 
 The launch-vehicle article gives the whole, the diameter, one Rocketdyne A-7 and the payload as the Mercury spacecraft, read 2026-11-13, and that name is the variant's payload figure. It gives no stage length. The capsule is the part already drawn for Friendship 7. The spacecraft's article gives 3.3 m without the tower and 7.9 m with it. The launch-vehicle article does not say whether 25.41 m includes that spacecraft, and the drawing takes it as included. The black and white bands and the engine's size are judged from photographs. The fins have no size in a source read here, so they are not drawn, and no name or mark is drawn. Jupiter-C's numbers are not used.
+
+## N1
+
+| Variant | Whole | Block A | Block B | Block V | Block G | Block D | Payload, shroud and escape tower | First flew |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `n1` | 105.3 m | 30.09 m, 16.875 m across, thirty NK-15 | 20.461 m, 10.3 m across, eight NK-15V | 11.51 m, 7.6 m across, four NK-19 | 7.91 m, 4.1 m across, one NK-21 | 5.5 m, 3.7 m across, one RD-58 | about 29.829 m, worked out: what the whole leaves | 1969-02-21, the first of four launches, all failed |
+
+The five blocks have the lengths and maximum widths of RussianSpaceWeb's stage pages, and the whole is the Wikipedia infobox's 105.3 m (RussianSpaceWeb's table gives 105 m). Block D's length is RussianSpaceWeb's 5.5 m; Wikipedia's article on Blok D says 5.70 m in its text and 6.28 m in its infobox, and both are kept in `others`. Block D's width is the 3.7 m its page gives as the most it measured. Each block is drawn as a straight tube at its maximum width, stepped in to the next block's width at its top: the real blocks narrow, and no source read here says how, so the shapes are an estimate (the `Block shapes` figure, "taper not shown: no source"). No source gives the payload, its shroud and the escape tower apart, so they are one part whose length is an estimate, what the whole leaves after the five blocks, and whose width, Block D's, is an estimate too. Block A's page says thirty engines in two circles, twenty-four and six. The engines' size and the paint are not sourced, and no name or mark is drawn.
+
+## Titan II GLV
+
+| Variant | Whole | First stage | Second stage | Spacecraft | Across | First flew |
+| --- | --- | --- | --- | --- | --- | --- |
+| `glv` | 109 ft, 33.2 m, with the spacecraft; the three parts drawn add to 32.674 m | 21.395 m, one LR87-AJ-7 | 5.669 m above the separation plane, one LR91-AJ-7 | the Gemini entry's shapes, 5.61 m | 3.048 m (10 ft) | 1964-04-08 |
+
+The two stages' lengths are read from the stations of NASA's figure 3-1 in the Gemini IV mission report: the first stage's takes in the interstage, and the second stage's is what the figure puts above the separation plane. The popular 7.78 m and 8.23 m for the second stage most likely include the interstage or the engine, and no NASA text gives a stage length. The article's 109 ft is the stack with the Gemini spacecraft; the same figure gives 107.6 ft, 32.8 m, from the top of the spacecraft to the engine bells, kept in `others`. The spacecraft is the Gemini entry's plain shapes at its sourced 5.61 m, not a second drawing and without NASA's painted model. The three sourced lengths add to 32.674 m and the article's 109 ft is 33.2 m, 0.549 m more. No source read here says what the difference is, so the gap is left undrawn. Both stages are drawn as wide as the vehicle, the only width given. The first stage has the two nozzles the article's text gives the LR87. The engines' size and the paint are not sourced, and no name or mark is drawn.
 
 ## New Glenn
 

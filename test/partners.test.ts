@@ -56,6 +56,8 @@ test("every rocket that is not the SPX fleet's has partners, and its country of 
 test("the crafts that have no country of their own have the countries their sources name", () => {
   assert.deepEqual(codes("apollo-soyuz"), ["US", "SUHH"]);
   assert.deepEqual(codes("sputnik-1"), ["SUHH"]);
+  assert.deepEqual(codes("n1"), ["SUHH"]);
+  assert.deepEqual(codes("ariane-5"), ["FR", "DE", "IT", "ES", "BE", "CH", "SE"]);
   assert.deepEqual(codes("electron"), ["NZ", "US"]);
   assert.deepEqual(codes("iss").slice(0, 4), ["US", "RU", "JP", "CA"]);
   assert.equal(codes("iss").length, 15);

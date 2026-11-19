@@ -11,7 +11,7 @@ Rockets change. Starship Block 1 is not Block 3, and a Falcon 9 from 2012 is not
 
 ## A figure names its source, or is blank
 
-Every size, count and date in the data is a `Figure`: a value, the id of the source it came from, and a date where the source has one. A figure with no source is blank (`value` is `null`) and is never estimated to fill a gap.
+Every size, count and date in the data is a `Figure`: a value, the id of the source it came from, and a date where the source has one. A figure with no source is blank (`value` is `null`) and is never estimated to fill a gap. The one exception is a remainder worked out from sourced figures, such as what a sourced whole leaves after its sourced parts: it carries `estimate: true` and a `derivation` that says how, and a card shows it as "about".
 
 ```ts
 import { SOURCES, variantOf } from "@johnmorrisdotca/uchusen-rockets";
@@ -49,7 +49,7 @@ Block 4 is announced, not built, so its height reads as an estimate. A reader ca
 
 ## A country, and a flag if you want one
 
-Each rocket, built or planned, has `country`: a figure whose value is its ISO 3166-1 alpha-2 code (`US`, `RU`, `CN`), taken from its own article. A craft of several countries or an international body (Apollo and Soyuz, the ISS, Hubble, Ariane 6), one whose source names two countries of origin (Electron), and a ship of the SPX fleet have none: the value is `null` and its `note` says why. `MAKER_COUNTRIES` gives each maker group's code, and `COUNTRY_CODES` lists every code ISO 3166-1 assigns.
+Each rocket, built or planned, has `country`: a figure whose value is its ISO 3166-1 alpha-2 code (`US`, `RU`, `CN`), taken from its own article. A craft of several countries or an international body (Apollo and Soyuz, the ISS, Hubble, Ariane 5 and 6), one whose source names two countries of origin (Electron), and a ship of the SPX fleet have none: the value is `null` and its `note` says why. `MAKER_COUNTRIES` gives each maker group's code, and `COUNTRY_CODES` lists every code ISO 3166-1 assigns.
 
 ```ts
 import { countryOf, ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
