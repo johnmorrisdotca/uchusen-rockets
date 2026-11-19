@@ -154,10 +154,10 @@ The second stage's diameter, 5.1 m, is the Delta IV article's 5 m DCSS; the Heav
 
 | Variant | Whole | First stage | Second stage | Boosters | Fairing | Across | First flew |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `22s` | 57 m, short fairing | 37 m, two LE-9 | 12 m, one LE-5B-3 | two SRB-3, 15 m, 2.5 m across | not given: what the 57 m leaves, 8 m | 5.27 m | 2023-03-07 |
-| `24l` | 63 m, long fairing | 37 m, two LE-9 | 12 m, one LE-5B-3 | four SRB-3, 15 m, 2.5 m across | not given: what the 63 m leaves, 14 m | 5.27 m | 2025-10-26 |
+| `22s` | 57 m, short fairing (JAXA's specifications page) | 37 m, two LE-9 | 12 m, one LE-5B-3 | two SRB-3, 15 m (the plan table says 14.6 m), 2.5 m across | not given: what the 57 m leaves, 8 m | 5.27 m (the page says the stages are 5.2 m) | 2023-03-07 |
+| `24l` | 63 m, long fairing (the same page) | 37 m, two LE-9 | 12 m, one LE-5B-3 | four SRB-3, 15 m (the plan table says 14.6 m), 2.5 m across | not given: what the 63 m leaves, 14 m. The fairing page says the long fairing is 16.4 m | 5.27 m (the page says the stages are 5.2 m) | 2025-10-26 |
 
-The stage blocks give lengths and no diameters, so the vehicle's 5.27 m is drawn. The fairing has no length of its own. The 30S, the 22L and the wide fairing are not listed. The boosters' place, the engine sizes and the paint are judged from photographs, and no name or mark is drawn.
+The stage blocks give lengths and no diameters, so the vehicle's 5.27 m is drawn. JAXA's specifications page says the stages are 5.2 m across, kept beside the 5.27 m, and does not give the stage lengths. The fairing has no length of its own in the drawing. The fairing page says the long fairing is 16.4 m, about twice the short one, and does not give the short one's length. The SRB-3 table, marked as the plan, says 14.6 m, kept beside the drawn 15 m. The 30S, the 22L and the wide fairing are not listed. The boosters' place, the engine sizes and the paint are judged from photographs, and no name or mark is drawn.
 
 ## Long March 5
 

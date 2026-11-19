@@ -13,6 +13,7 @@
 - **Atlas V 401 and Vulcan's fairing now name ULA's user's guides** (MODULES-1323). The 401's core stays 32.46 m by 3.81 m and its Centaur 12.68 m by 3.05 m, from the March 2010 guide. The drawn fairing stays 9 m; the guide's large fairing is 12.0 m, kept beside it, and the height stays blank beside the guide's 57.3 m. Vulcan's 15.5 m fairing and 5.4 m width name the October 2023 guide. Its 61.6 m, stages and booster stay on the article: that guide does not give them.
 - **Electron's whole, width and fairing now name Rocket Lab's payload user's guide** (MODULES-1323). 18 m, 1.2 m and 2.5 m stay. The stage lengths stay 12.1 m and 2.4 m on the article: the guide does not give them. The first-flight day stays on the article: the guide says 2017.
 - **Ariane 6's fairing and width now name the user's manual, and the booster the maker's page** (MODULES-1323). 14 m and 5.4 m stay. The drawn whole stays 63 m; ArianeGroup's 56 m and 62 m are kept beside it. The drawn booster stays the 13.5 m motor; the equipped booster's 22 m is kept beside it. The liquid stages stay one part: the page's 32 m and 12 m are not drawn.
+- **H3's heights and booster width now name JAXA's specifications page** (MODULES-1323). 57 m, 63 m and 2.5 m stay. The drawn width stays 5.27 m; the page's 5.2 m is kept beside it. The booster stays 15 m; the plan table's 14.6 m is kept beside it. The long fairing stays what the 63 m leaves; the fairing page's 16.4 m is kept beside it. The stage lengths stay on the article.
 
 ## [0.35.0] - 2026-11-19
 
