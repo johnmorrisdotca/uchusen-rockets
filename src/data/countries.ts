@@ -1,4 +1,4 @@
-// Whose country each rocket, maker and site is, as an ISO 3166-1 alpha-2 code, read 2026-11-11 from each one's own article (its infobox's country of origin, country, location or headquarters).
+// Whose country each rocket, maker and site is, as an ISO 3166-1 alpha-2 code. Most are the article's infobox (country of origin, country, location or headquarters), read 2026-11-11. ULA's and NASA's about pages, and Rocket Lab's payload guide, name the same United States headquarters, read 2026-11-19.
 // A craft that two or more countries or an international body made or run (Apollo and Soyuz, the ISS, Hubble, Ariane 5 and 6) has none, and so does one whose source names two countries of origin (Electron): a blank, not a pick.
 import type { MakerId } from "./makers.ts";
 import { blank, type Figure } from "./types.ts";
@@ -105,10 +105,10 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
  */
 export const MAKER_COUNTRIES: Readonly<Record<MakerId, Figure<CountryCode>>> = {
   spacex: us("wikipedia-spacex"),
-  nasa: us("wikipedia-nasa"),
+  nasa: us("nasa-about", "Headquarters in Washington, DC."),
   "blue-origin": us("wikipedia-blue-origin"),
-  "rocket-lab": us("wikipedia-rocket-lab", "Headquartered in Long Beach, California; founded in Auckland, New Zealand."),
-  ula: us("wikipedia-vulcan", "The Vulcan Centaur infobox names United Launch Alliance as its manufacturer and the United States as its country of origin."),
+  "rocket-lab": us("rocketlab-electron-guide", "The payload user's guide says the headquarters are in Long Beach, California, USA. The article says the company was founded in Auckland, New Zealand."),
+  ula: us("ula-about", "Headquartered in Denver, Colorado. Manufacturing is in Decatur, Alabama."),
   europe: blank("An international group of countries, not one maker: the rocket's own country is blank for the same reason.", "international"),
   russia: { value: "RU", source: "wikipedia-soyuz-2" },
   "us-army": us("wikipedia-jupiter-c"),

@@ -14,6 +14,7 @@
 - **Electron's whole, width and fairing now name Rocket Lab's payload user's guide** (MODULES-1323). 18 m, 1.2 m and 2.5 m stay. The stage lengths stay 12.1 m and 2.4 m on the article: the guide does not give them. The first-flight day stays on the article: the guide says 2017.
 - **Ariane 6's fairing and width now name the user's manual, and the booster the maker's page** (MODULES-1323). 14 m and 5.4 m stay. The drawn whole stays 63 m; ArianeGroup's 56 m and 62 m are kept beside it. The drawn booster stays the 13.5 m motor; the equipped booster's 22 m is kept beside it. The liquid stages stay one part: the page's 32 m and 12 m are not drawn.
 - **H3's heights and booster width now name JAXA's specifications page** (MODULES-1323). 57 m, 63 m and 2.5 m stay. The drawn width stays 5.27 m; the page's 5.2 m is kept beside it. The booster stays 15 m; the plan table's 14.6 m is kept beside it. The long fairing stays what the 63 m leaves; the fairing page's 16.4 m is kept beside it. The stage lengths stay on the article.
+- **ULA, NASA and Rocket Lab name their own pages for the United States** (MODULES-1323). The country code stays US. ULA's about page says Denver, Colorado. NASA's about page says headquarters in Washington, DC. Rocket Lab's payload guide says Long Beach, California, USA. The article's note that Rocket Lab was founded in Auckland stays in the note. Blue Origin and SpaceX stay on their articles: Blue Origin's site returned HTTP 429, and SpaceX's homepage had no headquarters in the HTML.
 
 ## [0.35.0] - 2026-11-19
 
