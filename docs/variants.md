@@ -261,11 +261,11 @@ These are mappers' figures, not surveys. The tanks' and houses' numbers are not 
 
 ## Gemini
 
-`gemini`: 5.61 m long and 3 m wide, first flown on 1964-04-08, uncrewed, and with a crew on 1965-03-23. No source read here gives where the adapter ends: that is measured from NASA's model. Painted, it is NASA's model; its line looks are this package's own plain shapes.
+`gemini`: 5.61 m long (the article's 18 feet 5 inches; NASA's early-years summary says 5.5 m, and the 1968 technical summary says 18.82 feet) and 3 m wide (10 feet, the early-years summary), first flown on 1964-04-08, uncrewed, and with a crew on 1965-03-23. No source read here gives where the adapter ends: that is measured from NASA's model. Painted, it is NASA's model; its line looks are this package's own plain shapes.
 
 ## Mercury
 
-`friendship-7`: the Mercury spacecraft, 3.3 m long without its escape tower and 1.8 m wide, as flown on 1962-02-20. Those are two scales, 19% apart, because NASA's file is stouter than its sources. NASA's copy leaves its materials all one grey, so their colours are judged from photographs. Its line looks are this package's own plain shape.
+`friendship-7`: the Mercury spacecraft, 3.3 m long without its escape tower and 1.8 m wide, as flown on 1962-02-20. NASA's early-years prose says about 2.7 m tall and 189.2 cm wide, and its table says 2.9 m by 1.9 m. Those are kept beside the drawn figures. Those are two scales, 19% apart, because NASA's file is stouter than its sources. NASA's copy leaves its materials all one grey, so their colours are judged from photographs. Its line looks are this package's own plain shape.
 
 ## Jupiter-C
 

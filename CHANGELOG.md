@@ -9,6 +9,7 @@
 - **Orion's width now names NASA's reference guide** (MODULES-1323). 5.03 m stays: 16.5 feet, and the crew-module page says the heat shield is 16.5 feet across. The drawn height stays 3.3 m from the article. The guide's quick facts say 11 feet, 3.35 m, and that figure is kept beside it.
 - **Saturn V's whole, first stage and width now name NASA's Apollo 4 press kit** (MODULES-1323). 110.64 m, 42.06 m and 10.06 m stay. The second stage stays 24.87 m and the third 17.86 m. The press kit's 81.5 feet and 58.4 feet are kept beside them. The August 1967 Saturn V News Reference was not found as a file that could be read.
 - **The Shuttle orbiter and booster lengths now name the 1981 news reference** (MODULES-1323). 37.24 m, 23.79 m and 45.46 m stay. The tank stays 46.88 m by 8.41 m, with the book's 47 m and 8.7 m beside them. The booster width stays 3.71 m, with the book's 3.8 m beside it.
+- **Gemini's width and first flight, and Friendship 7's date, now name NASA's early-years summary** (MODULES-1323). Gemini stays 5.61 m long, with 5.5 m and 18.82 feet (5.74 m) beside it. Mercury stays 3.3 m by 1.8 m, with the summary's 2.7 m, 2.9 m, 189.2 cm and 1.9 m beside them.
 
 ## [0.35.0] - 2026-11-19
 
