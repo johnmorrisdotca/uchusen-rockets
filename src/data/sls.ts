@@ -5,12 +5,14 @@ const S = "wikipedia-sls" as const;
 const N = "nasa-sls-fact-2024" as const;
 const B = "wikipedia-shuttle-srb" as const;
 const O = "wikipedia-orion" as const;
+const OG = "nasa-orion-guide" as const;
+const OC = "nasa-orion-crew" as const;
 const E = "wikipedia-esm" as const;
 const m = (value: number, source: Figure["source"], extra: Partial<Figure> = {}): Figure => ({ value, source, ...extra });
 const said = (value: string, source: Figure<string>["source"], extra: Partial<Figure<string>> = {}): Figure<string> => ({ value, source, ...extra });
 
 export const SLS_SRB_DIAMETER = m(3.71, B, { note: "12.17 feet.", others: [{ value: 3.66, source: N, note: "The 2024 fact sheet says 12 feet." }] });
-export const ORION_DIAMETER = m(5.03, O);
+export const ORION_DIAMETER = m(5.03, OC, { note: "16.5 feet, the heat shield. The reference guide's quick facts say 16.5 feet as well." });
 
 export const SLS_VARIANTS: readonly Variant[] = [
   {
@@ -30,7 +32,7 @@ export const SLS_VARIANTS: readonly Variant[] = [
         "srb-right": m(53.95, N, { note: "177 feet. The fact sheet also says five segments." }),
         "upper-stage": blank("No source read here gives its length, with its adapters."),
         "service-module": m(3.96, E, { note: "13 feet: the European Service Module." }),
-        capsule: m(3.3, O, { note: "The crew module." }),
+        capsule: m(3.3, O, { note: "The crew module. The reference guide's quick facts say 11 feet, which is 3.35 m, so both are kept.", others: [{ value: 3.35, source: OG, note: "11 feet on the reference guide's crew-module quick facts." }] }),
         "escape-tower": blank("No source read here gives its size."),
       },
       engines: { "first-stage": said("4 RS-25", N), "srb-left": said("1 solid motor", N, { note: "The fact sheet says twin five-segment solid boosters." }), "srb-right": said("1 solid motor", N, { note: "The fact sheet says twin five-segment solid boosters." }) },

@@ -104,7 +104,7 @@ No source read here says where the parts stand against each other, so the gaps a
 
 | Variant | Whole | Core stage | Booster | Service module | Crew module | First flew |
 | --- | --- | --- | --- | --- | --- | --- |
-| `block-1` | 98.15 m (322 feet, the October 2024 fact sheet) | 64.6 m (the article; the fact sheet says more than 212 feet), 8.41 m across (27.6 feet on the fact sheet; the article says 8.4 m) | 53.95 m (177 feet on the fact sheet), 3.71 m across; the fact sheet says 12 feet | 3.96 m (13 feet) | 3.3 m, 5.03 m across | 2022-11-16 |
+| `block-1` | 98.15 m (322 feet, the October 2024 fact sheet) | 64.6 m (the article; the fact sheet says more than 212 feet), 8.41 m across (27.6 feet on the fact sheet; the article says 8.4 m) | 53.95 m (177 feet on the fact sheet), 3.71 m across; the fact sheet says 12 feet | 3.96 m (13 feet) | 3.3 m (the article; the reference guide says 11 feet, 3.35 m), 5.03 m across (16.5 feet) | 2022-11-16 |
 
 No source read here gives the upper stage or the abort tower a length, so they share what the whole leaves.
 
