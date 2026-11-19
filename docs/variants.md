@@ -283,7 +283,7 @@ It is 27 parts in slots, each cut from NASA's model by where it stands and paint
 
 ## Hubble Space Telescope
 
-`hubble`: 13.2 m by 4.2 m, launched on 1990-04-24, as nine parts in slots: `aft-shroud`, `equipment-section`, `forward-shell`, `light-shield` and `aperture-door` stack up the axis, `array-left` and `array-right` lie out from the forward shell along X, and `antenna-near` and `antenna-far` along Z. Its parts' lengths and its arrays' size have no figure in a source read here: they are the licensed model's, at the sourced length and width, each a blank with the model's figure in its note. Painted, it is Cybertron B-127's model with its wordmark and logos painted out and its door turned shut, one file a part; its line looks are this package's own plain shapes.
+`hubble`: 13.2 m by 4.2 m (NASA's about page and design page agree on 13.2 m; the design page says 4.2 m and the about page's size table says 4.3 m, which is kept beside it), launched on 1990-04-24, as nine parts in slots: `aft-shroud`, `equipment-section`, `forward-shell`, `light-shield` and `aperture-door` stack up the axis, `array-left` and `array-right` lie out from the forward shell along X, and `antenna-near` and `antenna-far` along Z. Its parts' lengths and its arrays' size have no figure in a source read here: they are the licensed model's, at the sourced length and width, each a blank with the model's figure in its note. Painted, it is Cybertron B-127's model with its wordmark and logos painted out and its door turned shut, one file a part; its line looks are this package's own plain shapes.
 
 ## Roadster
 

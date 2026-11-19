@@ -4,6 +4,7 @@
 
 - **Propellant and flight notes no longer quote a Wikipedia sentence** (MODULES-1323). The propellant, the Ariane 5 lengths and the flight moves stay the same numbers. The notes say them in this package's own words.
 - **Unused Wikipedia source rows removed** (MODULES-1323). Poisk, Rassvet, Tranquility, Cupola, Leonardo and Voyager 1 were listed and no figure used them. ABS-2A stays: the ABS/Eutelsat flight's basis names that page for the Full Thrust version.
+- **Hubble's length and width now name NASA's pages** (MODULES-1323). 13.2 m stays, from the about page and the design page. 4.2 m stays, from the design page. The about page's size table says 4.3 m for the same 14 feet, and that figure is kept beside it. The launch day stays on Wikipedia: those NASA pages give 1990 and not the day.
 
 ## [0.35.0] - 2026-11-19
 
