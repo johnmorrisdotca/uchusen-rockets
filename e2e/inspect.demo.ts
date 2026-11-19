@@ -9,8 +9,9 @@ test.beforeEach(({ browserName }) => {
 const hero = (page: Page) => page.locator('[data-testid="hero"]');
 const mark = (page: Page) => page.locator('[data-testid="inspect-mark"]');
 
-const open = async (page: Page, drones: number) => {
-  await page.goto(`/uchusen-rockets/inspect.html?drones=${drones}&play=1&speed=1`);
+// A faster clock (the page clamps it to 0.25-4) shortens a flight in the page's own age, not the arc it draws: on a slow machine a frame adds at most 0.1 s of age, so a whole flight at speed 1 can take longer than any wait is worth.
+const open = async (page: Page, drones: number, speed = 1) => {
+  await page.goto(`/uchusen-rockets/inspect.html?drones=${drones}&play=1&speed=${speed}`);
   await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
   await expect(page.locator("#hero canvas")).toHaveAttribute("data-drones", "ready", { timeout: 60_000 });
   await expect(mark(page)).toBeVisible({ timeout: 30_000 });
@@ -85,7 +86,7 @@ test("the span of a flight is the box around all its samples, so a partial arc r
 
 for (const drones of [1, 10, 100]) {
   test(`${drones} drones move on the screen`, async ({ page }) => {
-    await open(page, drones);
+    await open(page, drones, 4);
     await moved(page, 16);
     if (drones === 100) {
       const canvas = page.locator("#hero canvas");
