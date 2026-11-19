@@ -30,7 +30,7 @@ export const ARIANE_5_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstFlight: said("2002-12-11", { note: "The first launch of the ECA, which failed. Its first successful launch was on 2005-02-12." }),
     slots: ["first-stage", "srb-left", "srb-right", "second-stage", "fairing"],
-    note: "Two boosters, the core and the ESC upper stage at the lengths the stage infoboxes give; the ECA+ has the same lengths and is not listed apart. The article gives the whole as a range, 46 to 52 m, and the least is drawn. It gives the fairing no length, so the fairing is an estimate, about 17.489 m: what the 46 m leaves after the sourced core and upper stage. Its text says the core's tank is 30.5 m high, which the infobox's 23.8 m does not match: the infobox's is drawn, as for every stage. The boosters stand against the core, and the engines' size and the paint are not sourced; no name or mark is drawn. The G, G+ and GS are not listed.",
+    note: "Two boosters, the core and the ESC, at the stage lengths. The ECA+ matches these lengths and is not drawn apart. The whole is drawn at 46 m, the low end of 46 to 52 m. No fairing length is given, so the fairing is an estimate, about 17.489 m: 46 m minus the sourced core and upper stage. The core is drawn at the stage length 23.8 m, not the 30.5 m tank figure. Booster position, engine size and paint are not sourced. No name or mark is drawn. The G, G+ and GS are not listed.",
     facts: {
       ...shared,
       parts: {
@@ -50,7 +50,7 @@ export const ARIANE_5_VARIANTS: readonly Variant[] = [
     status: "flown",
     firstFlight: said("2008-03-09", { note: "The ES's first launch, which carried the first Automated Transfer Vehicle." }),
     slots: ["first-stage", "srb-left", "srb-right", "second-stage", "fairing"],
-    note: "Two boosters, the core and the EPS upper stage at the lengths the stage infoboxes give. The G, G+ and GS have the same lengths and are not listed. The article gives the whole as a range, 46 to 52 m, and the least is drawn. It gives the fairing no length, so the fairing is an estimate, about 18.8 m: what the 46 m leaves after the sourced core and upper stage. Its text says the core's tank is 30.5 m high, which the infobox's 23.8 m does not match: the infobox's is drawn, as for every stage. The boosters stand against the core, and the engines' size and the paint are not sourced; no name or mark is drawn.",
+    note: "Two boosters, the core and the EPS, at the stage lengths. The G, G+ and GS match these lengths and are not listed. The whole is drawn at 46 m, the low end of 46 to 52 m. No fairing length is given, so the fairing is an estimate, about 18.8 m: 46 m minus the sourced core and upper stage. The core is drawn at the stage length 23.8 m, not the 30.5 m tank figure. Booster position, engine size and paint are not sourced. No name or mark is drawn.",
     facts: {
       ...shared,
       parts: {

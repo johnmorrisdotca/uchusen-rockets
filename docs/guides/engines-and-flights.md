@@ -53,7 +53,7 @@ A variant has a flight only where a page gives one: Starship's first, fifth, sev
 
 The flight bar says its own words (Play, Back, Next and the rest) in English. To say them in another language, set `words` on the element: `flight.words = { play: "Start", pause: "Stop" }`. What is left out stays English, and a phase's name, what happens in it and a flight's note are the data's and stay as they are.
 
-Grid fins, legs and flaps turn in a flight where the pages say they do (the Falcon 9's grid fins stowed on ascent and open for the entry, its legs open before the touchdown, Super Heavy's fins steering after the boostback, the Ship's flaps at its entry). How far they turn is a picture, and a painted model that is one shell does not turn: nothing is cut to fake a move.
+Grid fins, legs and flaps turn in a flight where the pages say they do (Falcon 9's grid fins folded on the way up and open for the return, its legs open before touchdown, Super Heavy's fins after the boostback, the Ship's flaps on the way back). How far they turn is a picture, and a painted model that is one shell does not turn: nothing is cut to fake a move.
 
 ## A flight as data
 

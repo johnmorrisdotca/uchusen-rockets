@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Propellant and flight notes no longer quote a Wikipedia sentence** (MODULES-1323). The propellant, the Ariane 5 lengths and the flight moves stay the same numbers. The notes say them in this package's own words.
+
 ## [0.35.0] - 2026-11-19
 
 - **A `sites` entry: 55 spaceports and launch sites as data** (MODULES-1581). `sites()`, `siteById` and `findSites` give each place an id, its name in English and Japanese, a point, its country (the place's, as ISO 3166-1: Baikonur `KZ`, Kourou `GF`), its operators, its codes in GCAT, CelesTrak and Wikidata, and the launches from it in the log (the count, the outcomes, the first and last dates). The 65 launch sites of GCAT's log are joined into 47 spaceports and 8 launch areas (sea zones, a platform, two air bases), and seven suborbital and new spaceports are added (Spaceport America, Esrange, Corn Ranch, Hokkaido Spaceport, Etlaq, Arnhem, Koonibba). Every row has a source: points, names and operators from Wikidata (CC0), GCAT's point where Wikidata has none or is not the place (Starbase), and each part says so in `sources`. 20 Japanese names, 14 English names and 9 operators are typed by hand and marked `typed`, for review (NOTICE.md). No OpenStreetMap, Wikipedia or non-commercial data; CelesTrak's codes only as identifiers. One data file of 28 kB, 27 kB minified and 6 kB gzipped, that only this entry loads, with the credit in `.../sites/source`. `scripts/make-sites.ts` makes it from `scripts/sites-list.ts`, Wikidata and GCAT's `sites.tsv`. Guide in English and Japanese, NOTICE, tests.

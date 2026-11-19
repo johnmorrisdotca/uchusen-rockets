@@ -447,9 +447,9 @@ const BASE_FLIGHTS: readonly Flight[] = [
 type Steps = readonly (readonly [phase: string, angles: Readonly<Record<string, number>>])[];
 
 const MOVE_SOURCES = {
-  falcon: { source: "wikipedia-landing-tests", says: "The grid fins are \"stowed on ascent and deployed on reentry\"; the landing burn comes, then the legs open, then the touchdown." },
-  superHeavy: { source: "wikipedia-super-heavy", says: "After the boostback the booster descends \"using its grid fins for minor course corrections\"." },
-  ship: { source: "wikipedia-ship", says: "The Ship \"controls its reentry with four flaps\", two aft and two forward." },
+  falcon: { source: "wikipedia-landing-tests", says: "Grid fins stay folded on the way up and open for the return. The landing burn starts, the legs open, then it touches down." },
+  superHeavy: { source: "wikipedia-super-heavy", says: "After the boostback the grid fins make small course changes on the way down." },
+  ship: { source: "wikipedia-ship", says: "Four flaps steer the return: two at the back and two at the front." },
 } as const satisfies Record<string, { source: SourceId; says: string }>;
 const MOVES_OF: Readonly<Record<string, readonly (keyof typeof MOVE_SOURCES)[]>> = {
   "falcon-9-starlink-2019": ["falcon"],
@@ -461,8 +461,8 @@ const MOVES_OF: Readonly<Record<string, readonly (keyof typeof MOVE_SOURCES)[]>>
 };
 
 /**
- * What turns in each flight. The pages say the Falcon 9's grid fins are "stowed on ascent and deployed on reentry" and that its legs open in the landing burn, before the touch down (Falcon 9 first-stage landing tests);
- * that Super Heavy steers with its grid fins for minor course corrections after the boostback (Super Heavy); and that the Ship controls its reentry with four flaps, two aft and two forward (Starship). How far a group turns,
+ * What turns in each flight. Falcon 9's grid fins stay folded on the way up and open for the return, and its legs open in the landing burn, before touchdown (Falcon 9 first-stage landing tests).
+ * Super Heavy's grid fins make small course changes after the boostback. The Ship's return is steered by four flaps, two aft and two forward. How far a group turns,
  * and the moment inside a phase, are a picture. A painted model that is one shell has nothing here to turn: nothing is cut to fake a move.
  */
 const ARTICULATIONS: Readonly<Record<string, Readonly<Record<string, Steps>>>> = {

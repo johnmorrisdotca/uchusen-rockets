@@ -48,19 +48,19 @@ export interface EnginePropellant {
  * ```
  */
 export const PROPELLANTS: readonly EnginePropellant[] = [
-  { id: "merlin", name: "Merlin", names: ["Merlin"], propellant: { value: "LOX / RP-1", source: "wikipedia-merlin", date: "2026-11-03", note: "The article's lead: \"Merlin engines use RP-1 and liquid oxygen as rocket propellants in a gas-generator power cycle.\"" }, flame: "kerosene" },
-  { id: "kestrel", name: "Kestrel", names: ["Kestrel"], propellant: { value: "LOX / RP-1", source: "wikipedia-kestrel", date: "2026-11-03", note: "The infobox, and the lead: \"an LOX/RP-1 pressure-fed rocket engine\"." }, flame: "kerosene" },
-  { id: "raptor", name: "Raptor", names: ["Raptor"], propellant: { value: "LOX / CH4", source: "wikipedia-raptor", date: "2026-11-03", note: "The infobox, and the lead: \"cryogenic liquid methane and liquid oxygen, a combination known as methalox\"." }, flame: "methane" },
+  { id: "merlin", name: "Merlin", names: ["Merlin"], propellant: { value: "LOX / RP-1", source: "wikipedia-merlin", date: "2026-11-03", note: "Kerosene (RP-1) and liquid oxygen. The page also names a gas-generator cycle." }, flame: "kerosene" },
+  { id: "kestrel", name: "Kestrel", names: ["Kestrel"], propellant: { value: "LOX / RP-1", source: "wikipedia-kestrel", date: "2026-11-03", note: "Kerosene (RP-1) and liquid oxygen, fed by tank pressure." }, flame: "kerosene" },
+  { id: "raptor", name: "Raptor", names: ["Raptor"], propellant: { value: "LOX / CH4", source: "wikipedia-raptor", date: "2026-11-03", note: "Liquid methane and liquid oxygen." }, flame: "methane" },
   { id: "f-1", name: "F-1", names: ["F-1"], propellant: { value: "LOX / RP-1", source: "wikipedia-f-1", date: "2026-11-03", note: "The infobox." }, flame: "kerosene" },
-  { id: "j-2", name: "J-2", names: ["J-2"], propellant: { value: "Liquid oxygen / Liquid hydrogen", source: "wikipedia-j-2", date: "2026-11-03", note: "The infobox, and the lead: \"burned cryogenic liquid hydrogen (LH2) and liquid oxygen (LOX) propellants\"." }, flame: "hydrogen" },
-  { id: "rs-25", name: "RS-25", names: ["RS-25"], propellant: { value: "LOX / LH2", source: "wikipedia-rs-25", date: "2026-11-03", note: "The infobox, and the lead: \"burns cryogenic (very low temperature) liquid hydrogen and liquid oxygen propellants\"." }, flame: "hydrogen" },
-  { id: "shuttle-srb", name: "Space Shuttle solid rocket booster", names: ["solid motor"], rocket: "space-shuttle", propellant: { value: "Ammonium perchlorate, aluminium powder and PBAN (APCP)", source: "wikipedia-shuttle-srb", date: "2026-11-03", note: "\"The primary propellants were ammonium perchlorate as the oxidizer along with aluminum powder and PBAN as fuel.\"" }, flame: "solid" },
+  { id: "j-2", name: "J-2", names: ["J-2"], propellant: { value: "Liquid oxygen / Liquid hydrogen", source: "wikipedia-j-2", date: "2026-11-03", note: "Liquid hydrogen and liquid oxygen." }, flame: "hydrogen" },
+  { id: "rs-25", name: "RS-25", names: ["RS-25"], propellant: { value: "LOX / LH2", source: "wikipedia-rs-25", date: "2026-11-03", note: "Liquid hydrogen and liquid oxygen." }, flame: "hydrogen" },
+  { id: "shuttle-srb", name: "Space Shuttle solid rocket booster", names: ["solid motor"], rocket: "space-shuttle", propellant: { value: "Ammonium perchlorate, aluminium powder and PBAN (APCP)", source: "wikipedia-shuttle-srb", date: "2026-11-03", note: "Ammonium perchlorate with aluminium powder and PBAN." }, flame: "solid" },
   { id: "sls-srb", name: "SLS solid rocket booster", names: ["solid motor"], rocket: "sls", propellant: { value: "PBAN-APCP", source: "wikipedia-sls-srb", date: "2026-11-03", note: "The infobox." }, flame: "solid" },
-  { id: "be-4", name: "BE-4", names: ["BE-4"], propellant: { value: "LOX / CH4", source: "wikipedia-be-4", date: "2026-11-03", note: "The infobox, and the lead: \"It uses liquefied methane fuel\"." }, flame: "methane" },
+  { id: "be-4", name: "BE-4", names: ["BE-4"], propellant: { value: "LOX / CH4", source: "wikipedia-be-4", date: "2026-11-03", note: "Liquefied methane and liquid oxygen." }, flame: "methane" },
   { id: "be-3", name: "BE-3", names: ["BE-3"], propellant: { value: "LOX / LH2", source: "wikipedia-be-3", date: "2026-11-03", note: "The infobox of the BE-3 and of the BE-3U." }, flame: "hydrogen" },
-  { id: "rutherford", name: "Rutherford", names: ["Rutherford"], propellant: { value: "LOX / RP-1", source: "wikipedia-rutherford", date: "2026-11-03", note: "The infobox, and the lead: \"LOX (liquid oxygen) and RP-1 (refined kerosene)\"." }, flame: "kerosene" },
-  { id: "rd-107", name: "RD-107 and RD-108", names: ["RD-107", "RD-108"], propellant: { value: "LOX / RG-1", source: "wikipedia-rd-107", date: "2026-11-03", note: "The infobox; its design section: \"liquid oxygen and highly refined kerosene (RG-1)\"." }, flame: "kerosene" },
-  { id: "lm-descent", name: "Lunar module descent engine", names: ["LM descent engine"], propellant: { value: "Aerozine 50 fuel / nitrogen tetroxide oxidizer", source: "wikipedia-lunar-module", date: "2026-11-03", note: "The article's specifications: \"DPS propellants: Aerozine 50 fuel / nitrogen tetroxide oxidizer\"." }, flame: "hypergolic" },
+  { id: "rutherford", name: "Rutherford", names: ["Rutherford"], propellant: { value: "LOX / RP-1", source: "wikipedia-rutherford", date: "2026-11-03", note: "Liquid oxygen and refined kerosene (RP-1)." }, flame: "kerosene" },
+  { id: "rd-107", name: "RD-107 and RD-108", names: ["RD-107", "RD-108"], propellant: { value: "LOX / RG-1", source: "wikipedia-rd-107", date: "2026-11-03", note: "Liquid oxygen and refined kerosene (RG-1)." }, flame: "kerosene" },
+  { id: "lm-descent", name: "Lunar module descent engine", names: ["LM descent engine"], propellant: { value: "Aerozine 50 fuel / nitrogen tetroxide oxidizer", source: "wikipedia-lunar-module", date: "2026-11-03", note: "Aerozine 50 and nitrogen tetroxide." }, flame: "hypergolic" },
 ];
 
 /**

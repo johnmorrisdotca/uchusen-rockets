@@ -40,7 +40,7 @@ export interface FutureRocketLengths {
 export const FUTURE_STAGE_LENGTHS = {
   "ariane-5": {
     name: "Ariane 5",
-    height: length(46, "wikipedia-ariane-5", { brief: "a range, 46 to 52 m", note: "The article gives the whole as a range, 46 to 52 m (it varies with the version and the payload), and no one height: the least is kept here and the greatest, 52 m, is in `others`.", others: [{ value: 52, source: "wikipedia-ariane-5", note: "The other end of the article's range, 46 to 52 m." }] }),
+    height: length(46, "wikipedia-ariane-5", { brief: "a range, 46 to 52 m", note: "The whole is given as 46 to 52 m, by version and payload, not as one height. 46 m is kept. 52 m is in `others`.", others: [{ value: 52, source: "wikipedia-ariane-5", note: "52 m, the high end of 46 to 52 m." }] }),
     diameters: {
       epc: length(5.4, "wikipedia-ariane-5"),
       eap: length(3.06, "wikipedia-ariane-5", { note: "The solid booster, P238 and P241 alike." }),
