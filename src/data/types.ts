@@ -38,6 +38,10 @@ export interface Figure<T = number> {
   /** A few words that must stay beside the value wherever it is shown, so it cannot be misread: "announced", "in this form". For a blank, what to say in place of a value. */
   brief?: string;
   others?: readonly Disagreement<T>[];
+  /** True when the value is not read from a source but worked out from sourced figures, such as what a sourced whole leaves after its sourced parts. It is drawn, and a card says "about". `source` names where the figures it is worked from came from. */
+  estimate?: boolean;
+  /** How an estimate was worked out, in a few words: "46 m whole minus the sourced stages". Every estimate has one. */
+  derivation?: string;
 }
 
 /**
@@ -70,7 +74,7 @@ export const blank = <T = number>(note?: string, brief?: string): Figure<T> => (
  */
 export function figureWords(figure: Figure<number | string> | undefined, unit = ""): string {
   if (!figure || figure.value === null) return figure?.brief ?? "No source";
-  const value = typeof figure.value === "number" ? `${figure.value}${unit}` : figure.value;
+  const value = typeof figure.value === "number" ? `${figure.estimate ? "about " : ""}${figure.value}${unit}` : figure.value;
   return figure.brief ? `${value}, ${figure.brief}` : value;
 }
 

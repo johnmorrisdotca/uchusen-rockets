@@ -292,7 +292,8 @@ function figureCell(figure: Figure<number | string> | undefined, unit: (v: numbe
     if (figure?.note) cell.append(el("span", { className: "src", textContent: figure.note }));
     return cell;
   }
-  cell.append(el("span", { className: "value", textContent: typeof figure.value === "number" ? unit(figure.value) : figure.value }));
+  const said = typeof figure.value === "number" ? unit(figure.value) : figure.value;
+  cell.append(el("span", { className: "value", textContent: figure.estimate && typeof figure.value === "number" ? say("about", { value: said }) : said }));
   if (figure.brief) cell.append(el("span", { className: "brief", textContent: `, ${figure.brief}` }));
   // the SPX fleet is this package's own design, not something read from outside: it says SPX, with no date read, and a maker's line says it once
   const own = figure.source?.startsWith("uchusen-") === true;
@@ -301,6 +302,7 @@ function figureCell(figure: Figure<number | string> | undefined, unit: (v: numbe
     const link = el("a", { href: source.url, textContent: own ? "SPX" : `${source.publisher}${figure.date ? `, ${figure.date}` : source.date ? `, ${say("read", { date: source.date })}` : ""}`, rel: "noopener" });
     cell.append(el("span", { className: "src" }, link));
   }
+  if (figure.estimate) cell.append(el("span", { className: "src", textContent: say("derived", { how: figure.derivation ?? "" }) }));
   if (figure.note) cell.append(el("span", { className: "src", textContent: figure.note }));
   for (const other of figure.others ?? []) cell.append(el("span", { className: "other", textContent: `${SOURCES[other.source].publisher}: ${typeof other.value === "number" ? unit(other.value) : other.value}. ${other.note}` }));
   return cell;

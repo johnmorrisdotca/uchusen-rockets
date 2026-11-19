@@ -1,7 +1,6 @@
-// Ariane 5 ECA and ES from a table of numbers. The core, the boosters and the two upper stages have the lengths of the article's stage infoboxes. The fairing is what the least of the whole's range leaves. The boosters' place, the engines' size and the paint are not sourced.
-import { ARIANE_5_BOOSTER_DIAMETER } from "../data/ariane5.ts";
+// Ariane 5 ECA and ES from a table of numbers. The core, the boosters and the two upper stages have the lengths of the article's stage infoboxes. The fairing is an estimate: what the least of the whole's range leaves. The boosters' place, the engines' size and the paint are not sourced.
+import { ARIANE_5_BOOSTER_DIAMETER, ARIANE_5_FAIRING_DIAMETER } from "../data/ariane5.ts";
 import { FUTURE_STAGE_LENGTHS } from "../data/future-lengths.ts";
-import { blank } from "../data/types.ts";
 import { merlin } from "./falcon.ts";
 import { fairingShell, floor, nose, taper, tube } from "./kit.ts";
 import type { Piece } from "./pieces.ts";
@@ -39,20 +38,18 @@ const upper = (height: number, exit: number, length: number) => (): Piece[] => [
   ...merlin([0, 0], -0.05, exit, length).map((piece) => ({ ...piece, only: "mesh" as const })),
 ];
 
-const NONE = blank("No source read here gives the fairing's own width: it is drawn as wide as the vehicle.");
-
 const parts = (second: { slot: string; kind: "second-stage"; name: string; height: number; pieces: () => Piece[] }) => {
-  const fairing = WHOLE - CORE - second.height;
+  const fairing = Math.round((WHOLE - CORE - second.height) * 1000) / 1000;
   return [
     { slot: "first-stage", kind: "first-stage" as const, name: "Core stage (EPC), Ariane 5", height: CORE, diameter: R * 2, top: [CORE, R * 2] as [number, number], pieces: core },
     { slot: "srb-left", kind: "solid-booster" as const, name: "Solid booster (EAP), left, Ariane 5", height: SRB, diameter: SRB_R * 2, place: { x: -SRB_X, z: 0 }, sourcedDiameter: ARIANE_5_BOOSTER_DIAMETER, pieces: booster },
     { slot: "srb-right", kind: "solid-booster" as const, name: "Solid booster (EAP), right, Ariane 5", height: SRB, diameter: SRB_R * 2, place: { x: SRB_X, z: 0 }, sourcedDiameter: ARIANE_5_BOOSTER_DIAMETER, pieces: booster },
     { ...second, diameter: R * 2, bottom: [0, R * 2] as [number, number], top: [second.height, R * 2] as [number, number] },
-    { slot: "fairing", kind: "fairing" as const, name: "Fairing, Ariane 5", height: fairing, diameter: R * 2, bottom: [0, R * 2] as [number, number], sourcedDiameter: NONE, pieces: () => fairingShell("white", R, fairing, fairing * 0.5, 1.3) },
+    { slot: "fairing", kind: "fairing" as const, name: "Fairing, Ariane 5", height: fairing, diameter: R * 2, bottom: [0, R * 2] as [number, number], sourcedDiameter: ARIANE_5_FAIRING_DIAMETER, pieces: () => fairingShell("white", R, fairing, fairing * 0.5, 1.3) },
   ];
 };
 
-const drawnFrom = "This package's code, from the sourced boosters, core and upper stage. The fairing has no length in the source, so it is what the least of the whole's range, 46 m, leaves, and it is drawn as wide as the vehicle. The boosters' place, the engines' size and the paint are not sourced. No licensed model is used, and no name or mark is drawn.";
+const drawnFrom = "This package's code, from the sourced boosters, core and upper stage. The fairing has no length in the source, so it is an estimate: what the least of the whole's range, 46 m, leaves, as wide as the vehicle and with a plain rounded nose. The boosters' place, the engines' size and the paint are not sourced. No licensed model is used, and no name or mark is drawn.";
 
 export const ARIANE_5_BUILDS: readonly StackBuild[] = [
   { rocket: "ariane-5", variant: "eca", drawnFrom, parts: parts({ slot: "second-stage", kind: "second-stage", name: "Upper stage (ESC), Ariane 5", height: ESC, pieces: upper(ESC, 0.5, 1.4) }) },

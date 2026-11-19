@@ -1,7 +1,6 @@
-// The N1 from a table of numbers: the five blocks' lengths and widths and the whole are sourced, and so are the engine counts and the two rings of Block A's thirty. Each block is a straight tube at its maximum width. What the whole leaves above Block D is one part. The engines' size and the paint are not sourced.
+// The N1 from a table of numbers: the five blocks' lengths and widths and the whole are sourced, and so are the engine counts and the two rings of Block A's thirty. Each block is a straight tube at its maximum width. What the whole leaves above Block D is one part, an estimate. The engines' size and the paint are not sourced.
 import { FUTURE_STAGE_LENGTHS } from "../data/future-lengths.ts";
-import { N1_DIAMETERS } from "../data/n1.ts";
-import { blank } from "../data/types.ts";
+import { N1_DIAMETERS, N1_PAYLOAD_DIAMETER } from "../data/n1.ts";
 import { merlin } from "./falcon.ts";
 import { engineRing, floor, nose, taper, tube } from "./kit.ts";
 import type { Piece } from "./pieces.ts";
@@ -14,7 +13,7 @@ const V = N1.parts["block-v"].value ?? 0;
 const G = N1.parts["block-g"].value ?? 0;
 const D = N1.parts["block-d"].value ?? 0;
 const WHOLE = N1.height.value ?? 0;
-const PAYLOAD = WHOLE - A - B - V - G - D;
+const PAYLOAD = Math.round((WHOLE - A - B - V - G - D) * 1000) / 1000;
 const RA = (N1_DIAMETERS["block-a"].value ?? 0) / 2;
 const RB = (N1_DIAMETERS["block-b"].value ?? 0) / 2;
 const RV = (N1_DIAMETERS["block-v"].value ?? 0) / 2;
@@ -45,7 +44,6 @@ function payload(): Piece[] {
   return [tube("white", RD, 0, straight, { rings: [0.02] }), floor(RD, 0), nose("white", RD, straight, PAYLOAD, 1.2)];
 }
 
-const NONE = blank("No source read here gives its width: it is drawn as wide as Block D.");
 const stage = (slot: string, kind: "first-stage" | "second-stage" | "third-stage" | "fourth-stage" | "fifth-stage", name: string, height: number, r: number, next: number, key: keyof typeof N1_DIAMETERS, pieces: () => Piece[]) => ({
   slot,
   kind,
@@ -62,14 +60,14 @@ export const N1_BUILDS: readonly StackBuild[] = [
   {
     rocket: "n1",
     variant: "n1",
-    drawnFrom: "This package's code, from the sourced blocks' lengths and maximum widths and the sourced whole. Each block is a straight tube at its maximum width, stepped in to the next block's width at its top: the real blocks narrow, and no source read here says how. What the whole leaves above Block D, about 29.8 m, is not given piece by piece for the payload, its shroud and the escape tower, so it is one part, drawn as wide as Block D. Block A has thirty engines in two rings, twenty-four and six, as its page says; the engines' size and the paint are not sourced. No licensed model is used, and no name or mark is drawn.",
+    drawnFrom: "This package's code, from the sourced blocks' lengths and maximum widths and the sourced whole. Each block is a straight tube at its maximum width, stepped in to the next block's width at its top: the real blocks narrow, and no source read here says how. What the whole leaves above Block D, about 29.8 m, is not given piece by piece for the payload, its shroud and the escape tower, so it is one part, an estimate, drawn as wide as Block D with a plain rounded nose. Block A has thirty engines in two rings, twenty-four and six, as its page says; the engines' size and the paint are not sourced. No licensed model is used, and no name or mark is drawn.",
     parts: [
       stage("first-stage", "first-stage", "Block A, N1", A, RA, RB, "block-a", blockA),
       stage("second-stage", "second-stage", "Block B, N1", B, RB, RV, "block-b", blockB),
       stage("third-stage", "third-stage", "Block V, N1", V, RV, RG, "block-v", blockV),
       stage("fourth-stage", "fourth-stage", "Block G, N1", G, RG, RD, "block-g", blockG),
       stage("fifth-stage", "fifth-stage", "Block D, N1", D, RD, RD, "block-d", blockD),
-      { slot: "payload", kind: "payload", name: "Payload, shroud and escape tower, not given apart, N1", height: PAYLOAD, diameter: RD * 2, bottom: [0, RD * 2], sourcedDiameter: NONE, pieces: payload },
+      { slot: "payload", kind: "payload", name: "Payload, shroud and escape tower, not given apart, N1", height: PAYLOAD, diameter: RD * 2, bottom: [0, RD * 2], sourcedDiameter: N1_PAYLOAD_DIAMETER, pieces: payload },
     ],
   },
 ];

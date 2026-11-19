@@ -1,7 +1,7 @@
 // The rockets drawn wholly by this package's code: each is drawn to its sourced height, its engines are the sourced count, and each part has the record every part has.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { check, figureWords, FLIGHT_LOG, flightLogOf, MODEL_CREDITS, partEntry, PLANNED_ROCKETS, ROCKETS, SOURCES, variantOf } from "../src/index.ts";
+import { check, figureWords, FLIGHT_LOG, flightLogOf, MODEL_CREDITS, PART_ENTRIES, partEntry, PLANNED_ROCKETS, ROCKETS, SOURCES, variantOf, type Figure } from "../src/index.ts";
 import type { Piece } from "../src/model/pieces.ts";
 import { build, buildPart } from "../src/build/index.ts";
 
@@ -247,9 +247,9 @@ test("Ariane 5 is the stage infoboxes' lengths, the fairing what the least of th
     assert.equal(v?.facts.parts["first-stage"]?.value, 23.8);
     assert.equal(v?.facts.parts["srb-left"]?.value, 31.6);
     assert.equal(v?.facts.parts["srb-right"]?.value, 31.6);
-    assert.equal(v?.facts.parts["fairing"]?.value, null, "no source gives the fairing a length");
+    assert.equal(v?.facts.parts["fairing"]?.estimate, true, "no source gives the fairing a length: it is worked out, and marked");
     assert.equal(partEntry(`ariane-5-${id}-srb-left`)?.record.diameter, 3.06);
-    assert.equal(partEntry(`ariane-5-${id}-fairing`)?.record.sourced.diameter.value, null);
+    assert.equal(partEntry(`ariane-5-${id}-fairing`)?.record.sourced.diameter.estimate, true);
     assert.equal(bells(`ariane-5-${id}-first-stage`), 1);
     assert.equal(variantOf("ariane-5", id)?.status, "flown");
   }
@@ -270,8 +270,12 @@ test("the N1 is its five blocks at the sourced lengths and widths, and what the 
   assert.deepEqual(["first-stage", "second-stage", "third-stage", "fourth-stage", "fifth-stage"].map((slot) => partEntry(`n1-n1-${slot}`)?.record.diameter), [16.875, 10.3, 7.6, 4.1, 3.7]);
   assert.deepEqual(["first-stage", "second-stage", "third-stage", "fourth-stage", "fifth-stage"].map((slot) => partEntry(`n1-n1-${slot}`)?.record.sourced.diameter.source), Array(5).fill("russianspaceweb-n1"));
   assert.ok(Math.abs((partEntry("n1-n1-payload")?.record.height ?? 0) - 29.829) < 1e-9);
-  assert.equal(n1?.facts.parts["payload"]?.value, null);
-  assert.equal(partEntry("n1-n1-payload")?.record.sourced.diameter.value, null);
+  assert.equal(n1?.facts.parts["payload"]?.estimate, true);
+  assert.ok(Math.abs((n1?.facts.parts["payload"]?.value ?? 0) - 29.829) < 1e-9);
+  assert.equal(partEntry("n1-n1-payload")?.record.sourced.diameter.estimate, true);
+  assert.equal(n1?.facts.more["Block shapes"]?.estimate, true);
+  assert.match(n1?.facts.parts["payload"]?.derivation ?? "", /no source/);
+  assert.match(n1?.facts.more["Block shapes"]?.derivation ?? "", /taper not shown: no source/);
   assert.deepEqual(n1?.facts.parts["fifth-stage"]?.others?.map((other) => other.value), [5.7, 6.28]);
   assert.equal(n1?.facts.height.value, 105.3);
   assert.equal(n1?.status, "flown");
@@ -296,8 +300,31 @@ test("the Titan II GLV is NASA's two stage lengths with the Gemini entry's space
   assert.ok(report.ok && !report.custom, report.issues.map((issue) => issue.message).join(" "));
   assert.ok(Math.abs((report.size?.height ?? 0) - (21.395 + 5.669 + 5.61)) < 1e-6, String(report.size?.height));
   assert.equal(report.credits.length, 0, "no licensed model is used");
+  assert.match(glv?.note ?? "", /32\.674 m/);
+  assert.match(glv?.note ?? "", /109 ft/);
+  assert.match(glv?.note ?? "", /undrawn/);
   assert.equal(ROCKETS["titan-ii-glv"].maker, "nasa");
   assert.equal(ROCKETS["titan-ii-glv"].country.value, "US");
+});
+
+test("an estimate is marked and says how it was worked out, and nothing else carries a derivation", () => {
+  const found: string[] = [];
+  for (const rocket of Object.values(ROCKETS))
+    for (const variant of rocket.variants) {
+      const { facts } = variant;
+      const all: [string, Figure<number | string>][] = [["height", facts.height], ["diameter", facts.diameter], ...Object.entries(facts.parts), ...Object.entries(facts.more), ...Object.entries(facts.sizes ?? {})].map(([name, figure]) => [`${rocket.id} ${variant.id} ${name}`, figure as Figure<number | string>]);
+      for (const [name, figure] of all) {
+        if (figure.estimate) {
+          found.push(name);
+          assert.ok(figure.value !== null && figure.source !== null && Object.hasOwn(SOURCES, figure.source), `${name} names where its figures came from`);
+          assert.ok((figure.derivation ?? "").length > 15, `${name} says how it was worked out`);
+        } else assert.equal(figure.derivation, undefined, `${name} has a derivation and is not marked`);
+      }
+    }
+  for (const part of PART_ENTRIES.filter((entry) => ["ariane-5", "n1"].includes(entry.record.rocket)))
+    for (const figure of [part.record.sourced.height, part.record.sourced.diameter]) if (figure.estimate) assert.ok(figure.derivation, part.record.id);
+  assert.deepEqual(found.sort(), ["ariane-5 eca fairing", "ariane-5 es fairing", "n1 n1 Block shapes", "n1 n1 payload"]);
+  assert.equal(figureWords({ value: 17.489, source: "wikipedia-ariane-5", estimate: true, derivation: "x" }, " m"), "about 17.489 m");
 });
 
 test("H3-22S, H3-24L and Long March 5 are the sourced stacks", () => {
