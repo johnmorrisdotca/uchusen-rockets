@@ -1,11 +1,11 @@
-// Sourced stage lengths of three rockets the package does not draw yet (MODULES-1239): Ariane 5, the N1 and the Titan II GLV. They are kept here as data, each figure naming its source, so a later build has them. A figure with no
-// source is blank, never estimated; where sources differ the figure keeps the one chosen and `others` holds the rest. Nothing here is drawn, listed in `ROCKETS` or offered by the builder.
+// Sourced stage lengths of Ariane 5, the N1 and the Titan II GLV, kept as data, each figure naming its source. A figure with no source is blank, never estimated; where sources differ the figure keeps the one chosen and `others` holds the rest.
+// The variants of those three rockets take their lengths from here.
 import { blank, type Figure } from "./types.ts";
 
 const length = (value: number, source: Figure["source"], extra: Partial<Figure> = {}): Figure => ({ value, source, ...extra });
 
 /**
- * The lengths of the parts of a rocket that is not yet drawn, in metres, by part: the figures `ROCKETS` will carry once it is built.
+ * The lengths of the parts of a rocket, in metres, by part: the figures its variants carry.
  *
  * @example
  * ```ts
@@ -47,7 +47,7 @@ export const FUTURE_STAGE_LENGTHS = {
     },
     parts: {
       eap: length(31.6, "wikipedia-ariane-5", { note: "Each of the two solid boosters, P238 and P241 alike." }),
-      epc: length(23.8, "wikipedia-ariane-5", { note: "The core stage, H158 or H173: the same length for both." }),
+      epc: length(23.8, "wikipedia-ariane-5", { note: "The core stage, H158 or H173: the same length for both.", others: [{ value: 30.5, source: "wikipedia-ariane-5", note: "The article's text: a tank 5.4 m across and 30.5 m high. It does not say what that takes in, and the stage infobox's length is the one kept, as for the boosters and the upper stages." }] }),
       eps: length(3.4, "wikipedia-ariane-5", { note: "The upper stage of the G, G+, GS and ES (the L9.7 and the L10): the Aestus." }),
       esc: length(4.711, "wikipedia-ariane-5", { note: "The upper stage of the ECA and the ECA+: the HM7B." }),
       fairing: blank("No source read here gives the fairing a length. The article does not, and Arianespace's user manual could not be read (HTTP 410).", "not given"),
@@ -62,6 +62,7 @@ export const FUTURE_STAGE_LENGTHS = {
       "block-b": length(10.3, "russianspaceweb-n1", { note: "The maximum diameter." }),
       "block-v": length(7.6, "russianspaceweb-n1", { note: "The maximum diameter." }),
       "block-g": length(4.1, "russianspaceweb-n1", { note: "The maximum diameter." }),
+      "block-d": length(3.7, "russianspaceweb-n1", { note: "Its page says the structural diameter did not exceed 3.7 m. Wikipedia's article on Blok D gives 3.70 m in its infobox for the stage in all its rockets." }),
     },
     parts: {
       "block-a": length(30.09, "russianspaceweb-n1", { note: "The first stage; its page gives 30.090 m." }),
@@ -81,7 +82,7 @@ export const FUTURE_STAGE_LENGTHS = {
   },
   "titan-ii-glv": {
     name: "Titan II GLV",
-    height: length(33.2, "wikipedia-titan-ii-glv", { brief: "109 ft with the spacecraft", note: "109 ft, the stack with the Gemini spacecraft (NASA's own report gives the same 109 ft; the stations of its figure 3-1 give 107.6 ft from the top of the spacecraft to the engine bells)." }),
+    height: length(33.2, "wikipedia-titan-ii-glv", { brief: "109 ft with the spacecraft", note: "109 ft, the stack with the Gemini spacecraft (NASA's own report gives the same 109 ft; the stations of its figure 3-1 give 107.6 ft from the top of the spacecraft to the engine bells).", others: [{ value: 32.8, source: "nasa-gemini-iv-report", note: "107.6 ft, from the top of the spacecraft to the engine bells, by the stations of figure 3-1." }] }),
     diameters: {
       glv: length(3.048, "wikipedia-titan-ii-glv", { note: "10 ft." }),
     },

@@ -632,6 +632,22 @@ test("Ariane 6, Atlas V and Delta IV Heavy are in the picker under their makers"
   await expect(page.locator('[data-testid="facts"]')).toContainText("70.7 m");
 });
 
+test("Ariane 5, the N1 and the Titan II GLV are in the picker under their makers", async ({ page }) => {
+  await page.goto(URL);
+  await foldPicker(page);
+  await press(page, "maker-europe");
+  await press(page, "rocket-ariane-5");
+  await expect(page.locator('[data-testid="variant-eca"]')).toBeVisible();
+  await expect(page.locator('[data-testid="variant-es"]')).toBeVisible();
+  await expect(page.locator('[data-testid="facts"]')).toContainText("46 m");
+  await press(page, "maker-ussr");
+  await press(page, "rocket-n1");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("105.3 m");
+  await press(page, "maker-nasa");
+  await press(page, "rocket-titan-ii-glv");
+  await expect(page.locator('[data-testid="facts"]')).toContainText("21.395 m");
+});
+
 test("H3 and Long March 5 are in the picker under their makers", async ({ page }) => {
   await page.goto(URL);
   await foldPicker(page);
@@ -749,7 +765,7 @@ test("the Space Shuttle's painted Discovery is the Smithsonian's scan, credited 
   const credit = page.locator('[data-testid="credit"]');
   await expect(credit).toContainText("Smithsonian Institution");
   await expect(credit).toContainText("CC0 1.0");
-  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-6", "atlas-v", "delta-iv-heavy", "h3", "long-march-5", "mercury-redstone", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
+  for (const id of ["saturn-v", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-5", "ariane-6", "n1", "titan-ii-glv", "atlas-v", "delta-iv-heavy", "h3", "long-march-5", "mercury-redstone", "soyuz", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"]) {
     await press(page, `maker-${ROCKETS[id].maker}`);
     await expect(page.locator(`[data-testid="rocket-${id}"]`)).toBeVisible();
   }

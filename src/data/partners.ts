@@ -136,10 +136,15 @@ const SPECIFIC: Readonly<Record<string, readonly Partner[]>> = {
     one("US", { en: "The Apollo spacecraft, built by North American Rockwell and launched on a Saturn IB from Kennedy", ja: "ノースアメリカン・ロックウェル社製のアポロ宇宙船。ケネディ宇宙センターからサターンIBで打ち上げ" }, "wikipedia-apollo-soyuz"),
     one("SUHH", { en: "The Soyuz spacecraft, built by NPO Energia and launched from Baikonur", ja: "NPO エネルギア社製のソユーズ宇宙船。バイコヌールから打ち上げ" }, "wikipedia-apollo-soyuz", "The Soviet Union is not an ISO 3166-1 code; hata keeps its flag as SUHH."),
   ],
+  n1: [one("SUHH", { en: "Made by OKB-1 and launched from Baikonur", ja: "OKB-1 が製造し、バイコヌールから打ち上げ" }, "wikipedia-n1", "The infobox names the USSR. The Soviet Union is not an ISO 3166-1 code; hata keeps its flag as SUHH.")],
   "sputnik-1": [one("SUHH", { en: "Built and launched by the Soviet Union", ja: "ソ連が製造・打ち上げ" }, "nasa-history-sputnik-chronology", "NASA's chronology names the USSR. The Soviet Union is not an ISO 3166-1 code; hata keeps its flag as SUHH.")],
   electron: [
     one("NZ", { en: "Launches from Launch Complex 1 on the Māhia Peninsula", ja: "マヒア半島の第1発射施設から打ち上げ" }, "wikipedia-electron", "Its source names New Zealand and the United States as its countries of origin."),
     one("US", { en: "A second launch site: Launch Complex 2 at Wallops, Virginia", ja: "第2の発射場：バージニア州ワロップスの第2発射施設" }, "wikipedia-electron", "Its source names New Zealand and the United States as its countries of origin."),
+  ],
+  "ariane-5": [
+    one("FR", { en: "The lead manufacturer is from France", ja: "主な製造会社はフランスの会社" }, "wikipedia-ariane-5", "The footnote to the infobox's country of origin, European multi-national."),
+    ...(["DE", "IT", "ES", "BE", "CH", "SE"] as const).map((country) => one(country, { en: "Companies based here made significant contributions to the rocket", ja: "自国の会社が機体づくりに大きく貢献" }, "wikipedia-ariane-5", "The same footnote.")),
   ],
   "ariane-6": [
     one("FR", { en: "CNES, France's space agency, built and runs the launch site in French Guiana", ja: "フランス国立宇宙研究センター（CNES）が仏領ギアナの発射施設を建設・運用" }, "esa-ariane-6-cooperation", "France is also one of the participating states, and is listed once, here."),

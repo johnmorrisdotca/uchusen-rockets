@@ -1,4 +1,4 @@
-// The sourced stage lengths of the three rockets not yet drawn (MODULES-1239): every figure names a source that is listed, a figure with no source is blank, and the numbers are the ones read.
+// The sourced stage lengths of Ariane 5, the N1 and the Titan II GLV: every figure names a source that is listed, a figure with no source is blank, and the numbers are the ones read.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { FUTURE_STAGE_LENGTHS, ROCKETS, SOURCES, type Figure } from "../src/index.ts";
@@ -19,8 +19,8 @@ test("every figure names a listed source, or is blank with its reason, and the o
       assert.ok(other.note.length > 5 && other.value !== figure.value, name);
     }
   }
-  // none of the three is a rocket of the package yet
-  for (const id of Object.keys(FUTURE_STAGE_LENGTHS)) assert.equal(Object.hasOwn(ROCKETS, id), false, id);
+  // each of the three is a rocket of the package, and its variants carry the figures kept here
+  for (const id of Object.keys(FUTURE_STAGE_LENGTHS)) assert.equal(Object.hasOwn(ROCKETS, id), true, id);
 });
 
 test("the numbers read: Ariane 5's stages, the N1's five blocks, the Titan II GLV's stations", () => {
@@ -39,4 +39,7 @@ test("the numbers read: Ariane 5's stages, the N1's five blocks, the Titan II GL
   assert.ok(Math.abs(glv.parts["stage-1"].value! - (1342.31 - 500) * 0.0254) < 0.001, "stage I from the stations of figure 3-1");
   assert.ok(Math.abs(glv.parts["stage-2"].value! - (500 - 276.825) * 0.0254) < 0.001, "what the figure puts above the separation plane");
   assert.equal(glv.parts["stage-1"].source, "nasa-gemini-iv-report");
+  assert.deepEqual(a5.parts.epc.others?.map((other) => other.value), [30.5], "the text's tank height is kept beside the infobox's stage length");
+  assert.equal(n1.diameters["block-d"].value, 3.7);
+  assert.equal(glv.height.others?.[0]?.value, 32.8);
 });
