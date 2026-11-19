@@ -129,10 +129,10 @@ The stage infoboxes of the article give the boosters, the core and each upper st
 
 | Variant | Whole | Liquid stages | Boosters | Fairing | Across | First flew |
 | --- | --- | --- | --- | --- | --- | --- |
-| `a62` | 63 m | not given apart: what the whole leaves under the fairing, 49 m | two P120C, 13.5 m, 3.4 m across | short, 14 m | 5.4 m | 2024-07-09 |
-| `a64` | 63 m | the same 49 m | four P120C, 13.5 m, 3.4 m across | short, 14 m | 5.4 m | February 2026, the day not given |
+| `a62` | 63 m (the article; ArianeGroup says 56 m with the short fairing and 62 m with the long) | not given apart: what the whole leaves under the fairing, 49 m. ArianeGroup gives 32 m and 12 m, not drawn apart | two P120C motors, 13.5 m (the equipped booster is 22 m), 3.4 m across | short, 14 m (the manual) | 5.4 m (the manual) | 2024-07-09 |
+| `a64` | 63 m | the same 49 m | four P120C motors, 13.5 m (the equipped booster is 22 m), 3.4 m across | short, 14 m | 5.4 m | February 2026, the day not given |
 
-The article gives one height, 63 m. The 62 and the 64 do not differ in it. They differ by booster count, two or four, and by mass, about 530 t and about 860 t. It gives neither the lower stage nor the upper stage a length, so they are drawn as one part and the Vinci is not drawn apart. The short fairing is 14 m; the long one is 20 m, and the same section also says the long fairing is 11 m, or 18 m with the cone. The short one is drawn. The long fairing and the P160C (14.5 m, first launched 17 June 2026) are not listed. The boosters' place, the engine's size and the paint are judged from photographs, and no name or mark is drawn.
+The article gives one height, 63 m. The 62 and the 64 do not differ in it there. ArianeGroup gives 56 m with the short fairing and 62 m with the long one, kept beside the 63 m. They differ by booster count, two or four, and by the article's mass, about 530 t and about 860 t. The article gives neither liquid stage a length, so they are drawn as one part, what the 63 m leaves under the 14 m fairing. ArianeGroup gives them apart, 32 m and 12 m, and those are not drawn as two parts. The short fairing is 14 m in the user's manual and on ArianeGroup's page; the long one is 20 m, and the article also says 11 m, or 18 m with the cone. The short one is drawn. The long fairing and the P160C are not listed. ArianeGroup says the P160C motor is one metre longer and the booster's outside size does not change. The boosters' place, the engine's size and the paint are judged from photographs, and no name or mark is drawn.
 
 ## Atlas V
 

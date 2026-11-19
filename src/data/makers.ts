@@ -44,7 +44,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   sls: { maker: "nasa", madeBy: { value: "Used by NASA; built by Aerojet Rocketdyne, Boeing, Northrop Grumman and United Launch Alliance", source: "wikipedia-sls" } },
   "new-glenn": { maker: "blue-origin", madeBy: { value: "Blue Origin", source: "wikipedia-new-glenn" } },
   "vulcan-centaur": { maker: "ula", madeBy: { value: "United Launch Alliance", source: "ula-vulcan-guide" } },
-  "ariane-6": { maker: "europe", madeBy: { value: "ArianeGroup", source: "wikipedia-ariane-6" } },
+  "ariane-6": { maker: "europe", madeBy: { value: "ArianeGroup", source: "arianegroup-ariane-6" } },
   "ariane-5": { maker: "europe", madeBy: { value: "ArianeGroup", source: "wikipedia-ariane-5" } },
   n1: { maker: "ussr", madeBy: { value: "OKB-1", source: "wikipedia-n1", note: "The infobox's manufacturer." } },
   "titan-ii-glv": { maker: "nasa", madeBy: { value: "Martin", source: "wikipedia-titan-ii-glv", note: "The infobox links the name to the Glenn L. Martin Company. The article's text says Martin-Marietta assembled the rockets in Baltimore, for NASA's Gemini missions." } },
