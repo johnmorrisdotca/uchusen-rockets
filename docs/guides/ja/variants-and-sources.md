@@ -49,7 +49,7 @@ console.log(v4?.status, figureWords(v4?.facts.height, " m"));
 
 ## 国と、必要なら国旗
 
-作られたロケットにも計画中のロケットにも `country` があります。これは数値で、値は ISO 3166-1 alpha-2 のコード（`US`、`RU`、`CN`）です。コードはそれぞれのロケットの記事から取りました。複数の国や国際機関のもの（アポロ・ソユーズ、ISS、ハッブル、Ariane 6）、出典に開発国が2つ書かれているもの（Electron）、それに SPX の船団の船には、コードがありません。値は `null` で、その理由は `note` に書いてあります。`MAKER_COUNTRIES` はメーカーのグループごとのコード、`COUNTRY_CODES` は ISO 3166-1 で決められているすべてのコードの一覧です。
+作られたロケットにも計画中のロケットにも `country` があります。これは数値で、値は ISO 3166-1 alpha-2 のコード（`US`、`RU`、`CN`）です。コードはそれぞれのロケットの記事から取りました。複数の国や国際機関のもの（アポロ・ソユーズ、ISS、ハッブル、Ariane 5 と 6）、出典に開発国が2つ書かれているもの（Electron）、それに SPX の船団の船には、コードがありません。値は `null` で、その理由は `note` に書いてあります。`MAKER_COUNTRIES` はメーカーのグループごとのコード、`COUNTRY_CODES` は ISO 3166-1 で決められているすべてのコードの一覧です。
 
 ```ts
 import { countryOf, ROCKETS } from "@johnmorrisdotca/uchusen-rockets";
