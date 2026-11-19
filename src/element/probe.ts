@@ -1,4 +1,4 @@
-// What the browser's WebGL is, asked once per page. A test context in software drawing takes seconds of the main thread, so the answer is kept for every element and every viewer on the page, and the context is let go the moment it has answered.
+// What the browser's WebGL is. A test context in software drawing takes seconds of the main thread, so a working answer is kept for every element and every viewer on the page, and the context is let go the moment it has answered. A failure is not kept for the whole page: it is asked again when a context is restored or the page is visible again.
 
 /** What one look at the browser's WebGL said. */
 export interface GlProbe {
@@ -10,14 +10,43 @@ export interface GlProbe {
 
 let answer: GlProbe | null = null;
 let asked = 0;
+let retryArmed = false;
+const retryWaiters = new Set<() => void>();
 
-/** How many test contexts this page has made: 1 once the answer is known, 0 before it is asked for. */
+/** How many test contexts this page has made. A working answer stays at 1. A failure asks again after a restore or a shown page. */
 export function probeCount(): number {
   return asked;
 }
 
 /**
- * Says whether WebGL works here and whether it draws in software. The first call makes one test context and releases it at once; every later call, from any element or viewer, gets the same answer without making another.
+ * Runs `fn` after a failed probe is dropped. The page became visible again, or a WebGL context was restored, and the next `glProbe` will look once more.
+ *
+ * @param fn - Called after the failed answer is forgotten, before the next look.
+ * @returns Stops listening.
+ */
+export function afterProbeRetry(fn: () => void): () => void {
+  retryWaiters.add(fn);
+  return () => retryWaiters.delete(fn);
+}
+
+function forgetFailure(): void {
+  if (!answer || answer.works) return;
+  answer = null;
+  for (const fn of [...retryWaiters]) fn();
+}
+
+function armRetry(canvas: HTMLCanvasElement): void {
+  if (retryArmed) return;
+  retryArmed = true;
+  canvas.addEventListener("webglcontextrestored", () => forgetFailure());
+  document.addEventListener("webglcontextrestored", () => forgetFailure());
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") forgetFailure();
+  });
+}
+
+/**
+ * Says whether WebGL works here and whether it draws in software. The first call makes one test context and releases it at once. A working answer is reused. A failure is reused until a context is restored or the page is visible again, and the next call looks once more.
  *
  * @returns The kept answer.
  */
@@ -48,6 +77,7 @@ export function glProbe(): GlProbe {
     // A canvas of no size lets its drawing buffer go with it.
     canvas.width = 0;
     canvas.height = 0;
+    if (!works) armRetry(canvas);
   }
   answer = { works, software };
   return answer;

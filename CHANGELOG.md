@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **A failed WebGL probe is asked again** (MODULES-1128). A working answer is still kept for the page. A failure is kept only until a context is restored or the page is visible again, and the rocket then tries the 3D view once more.
+
 ## [0.36.0] - 2026-11-19
 
 - **Propellant and flight notes no longer quote a Wikipedia sentence** (MODULES-1323). The propellant, the Ariane 5 lengths and the flight moves stay the same numbers. The notes say them in this package's own words.
