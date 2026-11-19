@@ -28,20 +28,40 @@ const spot = async (page: Page) => {
   return { x, y };
 };
 
+// The drone flies, holds, and flies again; the page says which with data-inspect-paused. The page's own clock is the one
+// that counts, so sample until it has gone 0 -> 1 -> 0 (a whole flight seen), however slowly the frames come. The arc's
+// span is the larger side of the box around every sample, not the distance from the first one.
 const moved = async (page: Page, pixels: number) => {
-  const start = Date.now();
-  let first: { x: number; y: number } | null = null;
-  let far = 0;
-  while (Date.now() - start < 12_000) {
+  const canvas = page.locator("#hero canvas");
+  const points: { x: number; y: number }[] = [];
+  const seen: string[] = [];
+  const state = async () => {
     const next = await spot(page);
-    if (next && !first) first = next;
-    else if (next && first) {
-      far = Math.max(far, Math.hypot(next.x - first.x, next.y - first.y));
-      if (far > pixels) return far;
+    if (next) points.push(next);
+    const flag = await canvas.getAttribute("data-inspect-paused");
+    if (flag === "0" || flag === "1") {
+      if (seen[seen.length - 1] !== flag) seen.push(flag);
     }
-    await page.waitForTimeout(400);
-  }
-  expect(far).toBeGreaterThan(pixels);
+    return seen.join(">");
+  };
+  const span = () => {
+    if (points.length === 0) return 0;
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  };
+  await expect
+    .poll(
+      async () => {
+        const order = await state();
+        const whole = order.includes("0>1>0");
+        return whole ? "a whole flight" : `${points.length} samples, paused went ${order || "unread"}`;
+      },
+      { timeout: 90_000, intervals: [400] },
+    )
+    .toBe("a whole flight");
+  const far = span();
+  expect(far, `${points.length} samples, paused went ${seen.join(">")}`).toBeGreaterThan(pixels);
   return far;
 };
 
