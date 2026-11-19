@@ -10,6 +10,7 @@
 - **Saturn V's whole, first stage and width now name NASA's Apollo 4 press kit** (MODULES-1323). 110.64 m, 42.06 m and 10.06 m stay. The second stage stays 24.87 m and the third 17.86 m. The press kit's 81.5 feet and 58.4 feet are kept beside them. The August 1967 Saturn V News Reference was not found as a file that could be read.
 - **The Shuttle orbiter and booster lengths now name the 1981 news reference** (MODULES-1323). 37.24 m, 23.79 m and 45.46 m stay. The tank stays 46.88 m by 8.41 m, with the book's 47 m and 8.7 m beside them. The booster width stays 3.71 m, with the book's 3.8 m beside it.
 - **Gemini's width and first flight, and Friendship 7's date, now name NASA's early-years summary** (MODULES-1323). Gemini stays 5.61 m long, with 5.5 m and 18.82 feet (5.74 m) beside it. Mercury stays 3.3 m by 1.8 m, with the summary's 2.7 m, 2.9 m, 189.2 cm and 1.9 m beside them.
+- **Atlas V 401 and Vulcan's fairing now name ULA's user's guides** (MODULES-1323). The 401's core stays 32.46 m by 3.81 m and its Centaur 12.68 m by 3.05 m, from the March 2010 guide. The drawn fairing stays 9 m; the guide's large fairing is 12.0 m, kept beside it, and the height stays blank beside the guide's 57.3 m. Vulcan's 15.5 m fairing and 5.4 m width name the October 2023 guide. Its 61.6 m, stages and booster stay on the article: that guide does not give them.
 
 ## [0.35.0] - 2026-11-19
 

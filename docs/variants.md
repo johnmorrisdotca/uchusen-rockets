@@ -112,9 +112,9 @@ No source read here gives the upper stage or the abort tower a length, so they s
 
 | Variant | Whole | First stage | Centaur V | Booster | Fairing | Across | First flew |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `vc2s` | 61.6 m | 33.3 m | 10.66 m | 21.98 m, two, 1.62 m across | 15.5 m | 5.4 m | 2024-01-08 |
+| `vc2s` | 61.6 m (the article; the 2023 guide does not give a whole) | 33.3 m | 10.66 m | 21.98 m, two, 1.62 m across | 15.5 m (51 feet, the guide) | 5.4 m (the guide's booster and fairing) | 2024-01-08 |
 
-The VC2S is the form that flew first: two solid boosters and the standard fairing. The article gives the Centaur V as 10.66 m in its low-orbit form and 12.6 m in its high-energy form, and the 10.66 m is drawn. It gives no length for the adapter between the Centaur and the fairing, so that is what the whole leaves (2.14 m). The boosters stand against the core, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. The no-booster, four-booster and six-booster forms and the long fairing (67.3 m) are not listed.
+The VC2S is the form that flew first: two solid boosters and the standard fairing. The article gives the Centaur V as 10.66 m in its low-orbit form and 12.6 m in its high-energy form, and the 10.66 m is drawn. The October 2023 user's guide gives the 5.4 m and the 15.5 m fairing (the long one 21.3 m) and does not give the stage lengths. It gives no length for the adapter between the Centaur and the fairing, so that is what the whole leaves (2.14 m). The boosters stand against the core, the engines' sizes and the paint are judged from photographs, and no name or mark is drawn. The no-booster, four-booster and six-booster forms and the long fairing (67.3 m) are not listed.
 
 ## Ariane 5
 
@@ -138,9 +138,9 @@ The article gives one height, 63 m. The 62 and the 64 do not differ in it. They 
 
 | Variant | Whole | Common core | Centaur III | Fairing | Across | First flew |
 | --- | --- | --- | --- | --- | --- | --- |
-| `401` | not given for this form; the parts add to 54.14 m | 32.46 m, 3.81 m across | 12.68 m, 3.05 m across | original 9 m, 4.2 m across | 3.81 m | 2002-08-21 |
+| `401` | not given for this form; the parts add to 54.14 m. The 2010 guide gives 57.3 m with its 12.0 m fairing | 32.46 m, 3.81 m across (150 inches, the guide) | 12.68 m, 3.05 m across (the guide) | the article's 9 m; the guide's large fairing is 12.0 m, 4.2 m across | 3.81 m | 2002-08-21 |
 
-The infobox says up to 58.3 m, the family's height, not the 401's, so this form's height is blank. The 401 is no solid boosters and one RL10. No interstage length is given, so the narrowing is drawn inside the Centaur's length and the fairing's flare inside its 9 m. The 10 m and 11 m fairings, the 5.4 m fairings (20.7 m, 23.4 m and 26.5 m) and the forms with boosters or two RL10 engines are not listed. The article does not say which fairing length the first flight used; the original 9 m is drawn. Engine sizes and paint are judged from photographs, and no name or mark is drawn.
+The article says up to 58.3 m, the family's height, not the 401's, and the 2010 user's guide gives 57.3 m (188 feet) with the 12.0 m fairing, so this form's height stays blank. The 401 is no solid boosters and one RL10. The guide gives a 400-series interstage, and the narrowing is still drawn inside the Centaur's length and the fairing's flare inside its 9 m. The article's 10 m and 11 m fairings, the guide's 12.9 m and 13.8 m, the 5.4 m fairings (20.7 m, 23.4 m and 26.5 m on the guide's figure) and the forms with boosters or two RL10 engines are not listed. The article does not say which fairing length the first flight used; the 9 m is drawn. Engine sizes and paint are judged from photographs, and no name or mark is drawn.
 
 ## Delta IV Heavy
 
