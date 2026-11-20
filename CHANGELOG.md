@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The demo stage stays on screen on a phone** (MODULES-1335). Choosing a maker or a rocket below the fold used to scroll the picture away, because the stage was `position: static` under 820 px. It stays stuck to the top, short enough that a row of choices remains under it. A desk is unchanged.
+
 ## [0.36.0] - 2026-11-19
 
 - **Propellant and flight notes no longer quote a Wikipedia sentence** (MODULES-1323). The propellant, the Ariane 5 lengths and the flight moves stay the same numbers. The notes say them in this package's own words.
