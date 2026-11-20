@@ -304,6 +304,28 @@ const SKYLAB_SCALE = 6.7 / 8.25;
 const SKYLAB_X1 = 17.196;
 const SKYLAB_YC = (29.452 + 41.234) / 2;
 const SKYLAB_ZC = (-13.445 + 16.407) / 2;
+// The crawler-transporter, after its node's own turn, is 8.772 long in X, 7.195 wide in Z and 1.698 tall in Y, and its tracks sit 0.224 below the file's origin. Scaled so the length is the fact sheet's 131 feet. At that scale the width is about 32.75 m against the sheet's 114 feet, and the height is about 7.73 m, inside the sheet's 20 to 26 feet.
+const CRAWLER_X0 = -4.14489750398144;
+const CRAWLER_X1 = 4.627540399892894;
+const CRAWLER_Y0 = -0.22400565749598206;
+const CRAWLER_ZC = (-3.652694869714934 + 3.5422587824831955) / 2;
+const CRAWLER_SCALE = (131 * 0.3048) / (CRAWLER_X1 - CRAWLER_X0);
+const CRAWLER: NasaPart = {
+  id: "craft",
+  triangles: 40_000,
+  error: 0.25,
+  place: (p, n) => {
+    const [x, y, z] = p;
+    p[0] = (z - CRAWLER_ZC) * CRAWLER_SCALE;
+    p[1] = (y - CRAWLER_Y0) * CRAWLER_SCALE;
+    p[2] = ((x - CRAWLER_X0) - (CRAWLER_X1 - CRAWLER_X0) / 2) * CRAWLER_SCALE;
+    const [nx, ny, nz] = n;
+    n[0] = nz;
+    n[1] = ny;
+    n[2] = nx;
+  },
+};
+
 const SKYLAB: NasaPart = {
   id: "craft",
   triangles: 16_000,
@@ -608,6 +630,20 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     changes: "Reduced from 25,292 triangles; rescaled so the round body is the sourced 6.70 m and stood on the workshop's far end. Looked at from three sides of the source and two sides of the result: the file has no pictures and no lettering. The gold is the solar arrays. It carried no mark to remove.",
     parts: [SKYLAB],
     partOf: () => SKYLAB,
+    looseWeld: true,
+    freeBorders: true,
+    trimBelow: SPECK_FLOOR,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "crawler",
+    files: [`${FOLDER}/crawler.glb`],
+    title: "Crawler",
+    source: "https://science.nasa.gov/3d-resources/crawler/",
+    changes: "Reduced from 279,800 triangles; rescaled so the length is the fact sheet's 131 feet and set so the tracks sit on the ground. Looked at from three sides of the source: the file has no pictures and no lettering. The blue is the windows. It carried no mark to remove.",
+    parts: [CRAWLER],
+    partOf: () => CRAWLER,
     looseWeld: true,
     freeBorders: true,
     trimBelow: SPECK_FLOOR,

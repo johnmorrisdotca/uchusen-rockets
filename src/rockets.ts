@@ -38,6 +38,7 @@ import { CASSINI_VARIANTS } from "./data/cassini.ts";
 import { GALILEO_VARIANTS } from "./data/galileo.ts";
 import { PIONEER_VARIANTS } from "./data/pioneer.ts";
 import { EUROPA_VARIANTS } from "./data/europa.ts";
+import { CRAWLER_VARIANTS } from "./data/crawler.ts";
 import { VIKING_LANDER_VARIANTS } from "./data/vikingLander.ts";
 import { STARLINK_VARIANTS } from "./data/starlink.ts";
 import { LAGEOS_VARIANTS } from "./data/lageos.ts";
@@ -199,6 +200,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   "new-horizons": { id: "new-horizons", name: "New Horizons", status: "built", ...MADE_BY["new-horizons"], variants: NEW_HORIZONS_VARIANTS, defaultVariant: "new-horizons" },
   "europa-clipper": { id: "europa-clipper", name: "Europa Clipper", status: "built", ...MADE_BY["europa-clipper"], variants: EUROPA_VARIANTS, defaultVariant: "europa-clipper" },
   "viking-lander": { id: "viking-lander", name: "Viking Lander", status: "built", ...MADE_BY["viking-lander"], variants: VIKING_LANDER_VARIANTS, defaultVariant: "viking-lander" },
+  crawler: { id: "crawler", name: "Crawler", status: "built", ...MADE_BY.crawler, variants: CRAWLER_VARIANTS, defaultVariant: "crawler" },
   starlink: { id: "starlink", name: "Starlink", status: "built", ...MADE_BY["starlink"], variants: STARLINK_VARIANTS, defaultVariant: "f9-2" },
   lageos: { id: "lageos", name: "LAGEOS-1", status: "built", ...MADE_BY["lageos"], variants: LAGEOS_VARIANTS, defaultVariant: "lageos-1" },
   "explorer-1": { id: "explorer-1", name: "Explorer 1", status: "built", ...MADE_BY["explorer-1"], variants: EXPLORER_VARIANTS, defaultVariant: "explorer-1" },

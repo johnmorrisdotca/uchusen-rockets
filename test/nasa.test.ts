@@ -34,6 +34,7 @@ const ROWS: readonly Row[] = [
   { rocket: "europa-clipper", variant: "europa-clipper", credit: "nasa-europa-clipper", files: ["europa-clipper-craft.glb"] },
   { rocket: "viking-lander", variant: "viking-lander", credit: "nasa-viking-lander", files: ["viking-lander-craft.glb"] },
   { rocket: "skylab", variant: "skylab", credit: "nasa-skylab", files: ["skylab-craft.glb"] },
+  { rocket: "crawler", variant: "crawler", credit: "nasa-crawler", files: ["crawler-craft.glb"] },
   // more models
 ];
 
@@ -84,6 +85,7 @@ for (const { rocket, variant, credit, files } of ROWS)
     if (rocket === "europa-clipper") assert.ok(Math.abs(glbSpan("europa-clipper-craft.glb", 0) - 30) / 30 < 0.05);
     if (rocket === "viking-lander") assert.ok(Math.abs(glbSpan("viking-lander-craft.glb", 1) - 1.82) / 1.82 < 0.05);
     if (rocket === "skylab") assert.ok(Math.abs(glbSpan("skylab-craft.glb", 1) - 31.46) / 31.46 < 0.05);
+    if (rocket === "crawler") assert.ok(Math.abs(glbSpan("crawler-craft.glb", 2) - 39.93) / 39.93 < 0.05);
     const built = build({ rocket, variant });
     assert.ok(built.parts.every((part) => part.record.painted && part.pieces.length > 0));
     assert.ok(built.svg({ look: "line" }).startsWith("<svg"));
