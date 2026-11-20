@@ -6,7 +6,7 @@ import { parts as miyamoto } from "../src/model/fleet/ship-03/index.ts";
 import { rpmFor } from "../src/model/fleet/ship-01/spin.ts";
 import { meshOf } from "../src/model/pieces.ts";
 import { KYOTORI_PARTS } from "../src/model/fleet/ship-kyotori/variants.ts";
-import { SAIL_SLOTS } from "../src/model/fleet/kaminari-concepts/sails.ts";
+import { FOLD_SLOTS, SAIL_DEPLOYED_SLOTS } from "../src/model/fleet/kaminari-concepts/sails.ts";
 
 const near = (a: number, b: number, eps = 0.01) => assert.ok(Math.abs(a - b) < eps, `${a} is not ${b}`);
 
@@ -142,9 +142,19 @@ test("a sweep stays between its angles", () => {
 
 test("every motion names a group that a part of its ship really carries, so none moves nothing", () => {
   const groups = (list: { pieces: (o?: { detail?: number }) => Parameters<typeof meshOf>[0] }[]) => new Set(list.flatMap((p) => meshOf(p.pieces({ detail: 0.3 })).moves.map((g) => g.name)));
-  const sails = new Set(SAIL_SLOTS.flatMap((slot) => meshOf(slot.pieces()).moves.map((g) => g.name)));
+  const sails = new Set(FOLD_SLOTS.flatMap((slot) => meshOf(slot.pieces()).moves.map((g) => g.name)));
   const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings") || p.id.includes("-bay") || p.id === "s-core")), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
   for (const m of MOTIONS) assert.ok(have[m.ship]?.has(m.group), `${m.ship}: ${m.group}`);
+});
+
+test("Emiake's gores are stacked at rest and spread when the arrays are open", () => {
+  const up = (pieces: ReturnType<(typeof FOLD_SLOTS)[number]["pieces"]>) => pieces.flatMap((p) => (p.kind === "plate" && p.thickness === 0.4 ? [p.frame.v[1]] : []));
+  const stowed = FOLD_SLOTS.find((slot) => slot.slot === "fin-port")!.pieces();
+  const open = SAIL_DEPLOYED_SLOTS.find((slot) => slot.slot === "fin-port")!.pieces();
+  assert.ok(up(stowed).every((y) => Math.abs(y) < 1e-6));
+  assert.ok(up(open).some((y) => Math.abs(y) > 0.5));
+  assert.equal(new Set(meshOf(stowed).moves.map((g) => g.name)).has("fan-aft-0"), true);
+  assert.equal(meshOf(open).moves.length, 0);
 });
 
 test("the Motion choice: still unless asked for, ten times on request, never under reduced motion", () => {

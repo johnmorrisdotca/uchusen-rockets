@@ -25,7 +25,7 @@ export function kaminariBuild(): BuildStep[] {
   ], same);
 }
 
-/** The flown ship, sails stowed. Swinging the outer sails down is a later state. */
+/** The flown ship, arrays stowed. Spreading the fans is a later state. */
 export function emiakeBuild(): BuildStep[] {
   const all = ids(SLOTS_B);
   return buildSpan(LONG_SHIP_BUILD_DAYS, ["keel", "frame", "ridge", "thrusters", "bulkhead", "reactors", ...numbered(all, "tanks-"), ...numbered(all, "cargo-"), "plated-hull", "gallery", "nose"], [

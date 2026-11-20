@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Emiake's folding arrays** (MODULES-492). The three rigid radiator sails become three fans of five gores, 160 m out, with hubs at 400 m, 720 m and 1,040 m. The run is 240 m to 1,200 m, aft of the gallery. At rest the gores are stacked; they swing about the ship's cross axis, and the side view shows them open. Four hinged panels on the ridge fold down toward the flanks. `fleet-emiake-deployed` is the open pose.
+
 ## [0.37.1] - 2026-11-20
 
 - **The demo stage stays on screen on a phone** (MODULES-1335). Choosing a maker or a rocket below the fold used to scroll the picture away. The picture stays at the top and is short enough that the view bar, the turn row and one choice all fit on a phone, and a choice that scrolls into view stops below the stage, so the tap lands on the choice. The fleet record's picture is not stuck over its ship and section buttons. A desk is unchanged.

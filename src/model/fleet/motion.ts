@@ -2,6 +2,7 @@
 // spins at its stated rpm, a door leaf that rides up its tracks and comes back, an array or a dish that sweeps. It moves only parts that exist: no geometry is made here, and nothing is rebuilt; the viewer turns or slides each tagged group. A
 // `Move` turns about its axis, and a slide moves along that same axis. A hangar leaf slides up its tracks. An array that unfolds is still two parts. Pure: no three.js and no DOM.
 import type { Move, Piece } from "../pieces.ts";
+import { EMIAKE_FOLDS } from "./kaminari-concepts/folding.ts";
 import { rpmFor } from "./ship-01/spin.ts";
 
 /**
@@ -156,8 +157,7 @@ export const MOTIONS: readonly Motion[] = [
   { ship: "fleet-kyotori", group: "bay-door-0", kind: "swing", from: 0, to: -100, period: 48, note: "A payload-bay door swings shut on its vertical hinge and back. The Space Shuttle's payload bay doors opened on hinges along the sill, and a full open or close took several minutes. Drawn here in 48 s. At rest the door is drawn open." },
   { ship: "fleet-kyotori", group: "bay-door-1", kind: "swing", from: 0, to: 100, period: 48, phase: 0.04, note: "A payload-bay door swings shut on its vertical hinge and back. The Space Shuttle's payload bay doors opened on hinges along the sill, and a full open or close took several minutes. Drawn here in 48 s. At rest the door is drawn open." },
   ...[0, 1, 2, 3].map((k): Motion => ({ ship: "fleet-kyotori", group: `airlock-hatch-${k}`, kind: "swing", from: 0, to: -70, period: 16, phase: k * 0.05, note: "An airlock hatch swings open on its top hinge and shuts again. It opens outward, as a station hatch does. Drawn faster than a real hatch." })),
-  { ship: "fleet-emiake", group: "sail-swing-port", kind: "swing", from: 0, to: -115, period: 40, note: "The outer two radiator sails swing down and out on their hinge along the ship's axis and back, as the ISS radiator wings deploy (the middle sail stays up). Drawn faster than the real deployment." },
-  { ship: "fleet-emiake", group: "sail-swing-starboard", kind: "swing", from: 0, to: 115, period: 40, note: "The outer two radiator sails swing down and out on their hinge along the ship's axis and back, as the ISS radiator wings deploy (the middle sail stays up). Drawn faster than the real deployment." },
+  ...EMIAKE_FOLDS.map((fold) => ({ ship: "fleet-emiake" as const, group: fold.group, kind: "swing" as const, from: 0, to: fold.degrees, period: 40, phase: fold.phase, note: fold.note })),
   { ship: "fleet-ship-03", group: "array-turn", kind: "sweep", from: -50, to: 50, period: 90, note: "The gold solar array turns on its root beam to face the star, as the ISS's solar array rotary joints do (the ISS turns once an orbit, about 92 minutes; the array here sweeps 100 degrees in 45 s)." },
   { ship: "fleet-ship-03", group: "dish-track", kind: "sweep", from: -35, to: 35, period: 60, note: "The command tower's dishes sweep slowly on their mounts, as a Deep Space Network dish tracks a spacecraft across the sky (a degree or so a minute); drawn faster so it can be seen." },
   { ship: "fleet-ship-ariake", group: "dish-track", kind: "sweep", from: -35, to: 35, period: 60, note: "The command tower's dishes sweep slowly on their mounts, as a Deep Space Network dish tracks a spacecraft across the sky." },
