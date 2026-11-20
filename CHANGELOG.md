@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **The demo stage stays on screen on a phone** (MODULES-1335). Choosing a maker or a rocket below the fold used to scroll the picture away. The picture stays at the top, and a choice that scrolls into view stops below it, so the tap lands on the choice. The fleet record's picture is not stuck over its ship and section buttons. A desk is unchanged.
+- **The demo stage stays on screen on a phone** (MODULES-1335). Choosing a maker or a rocket below the fold used to scroll the picture away. The picture stays at the top and is short enough that the view bar, the turn row and one choice all fit on a phone, and a choice that scrolls into view stops below the stage, so the tap lands on the choice. The fleet record's picture is not stuck over its ship and section buttons. A desk is unchanged.
 
 ## [0.36.0] - 2026-11-19
 

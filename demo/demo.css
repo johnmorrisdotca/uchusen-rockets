@@ -186,7 +186,7 @@ uchusen-flight { --uchusen-accent: var(--accent); }
     z-index: 2;
   }
   body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-row > .panel :is(button, a, input, select, label) {
-    scroll-margin-top: min(54vh, calc(100vh - 9rem));
+    scroll-margin-top: calc(100vh - 4.5rem);
   }
   /* The fleet record's picture is not stuck over its ship and section buttons. */
   body.fleet-db .stage-box { position: static; }
@@ -213,7 +213,11 @@ uchusen-flight { --uchusen-accent: var(--accent); }
 @media (max-width: 820px) {
   body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-box uchusen-rocket,
   body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-box uchusen-rocket[data-panel] {
-    max-width: min(100%, max(8rem, calc((min(52vh, 100vh - 10rem) - 8.5rem) * 0.75)));
+    width: auto;
+    max-width: min(100%, 12rem);
+    height: 16rem;
+    min-height: 0;
+    overflow: hidden;
   }
 }
 a.chip { display: inline-flex; align-items: center; text-decoration: none; }
