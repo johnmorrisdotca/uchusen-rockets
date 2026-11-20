@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Tiangong-1**: `rocket="tiangong-1"`, variant `tiangong-1`. The experiment section (5.6 m by 3.35 m), the joining cone (1.6 m) and the service module (3.2 m by 2.8 m) drawn end to end, 10.4 m in all, launch mass 8506 kg, launched 2011-09-29, from the Czech Academy of Sciences library catalogue for 2011-053A, read 2026-11-19. The 5.6 m is this package's remainder after the stated 3.2 m and 1.6 m. ESA's Space Debris Office FAQ of 26 March 2018, read the same day, describes the two cylinders and says the solar panels are approximately 3 by 7 m. The front cone and the panels are not drawn: the cone's height is not given, and the panels have no place along the module. The far picture keeps all three sections: each one is the line drawing, so the 6 m cut does not drop it. Maker CASTC, country China.
+
 ## [0.36.0] - 2026-11-19
 
 - **Propellant and flight notes no longer quote a Wikipedia sentence** (MODULES-1323). The propellant, the Ariane 5 lengths and the flight moves stay the same numbers. The notes say them in this package's own words.
