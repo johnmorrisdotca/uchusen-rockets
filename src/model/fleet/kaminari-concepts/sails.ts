@@ -10,15 +10,15 @@ const tag = (pieces: readonly Piece[], name: string, pivot: Vec3, axis: Vec3): P
 const local = (pieces: Piece[], at: Vec3): Piece[] => place(pieces, { at: [-at[0], -at[1], -at[2]] });
 
 const fanSlot = (hub: (typeof FOLD.hubs)[number], deployed: boolean): ConceptSlot => {
-  const at: Vec3 = [hub.x, FOLD.y, FOLD.z];
+  const at: Vec3 = [hub.x, hub.y, hub.key === "centre" ? 32 : 14];
   return {
     slot: hub.slot,
     name: hub.name,
     kind: "arms",
     at,
-    height: 1,
-    diameter: 31,
-    note: `A fan of five gores, ${deployed ? "swung out from the hull" : "lying along the hull"}. The centre wing stands up off the roof and the outer two swing out to the flanks, so an end-on view shows the three wings. The gores are the ship's radiator white. Descends from the ISS radiator wings.`,
+    height: 4,
+    diameter: 82,
+    note: `Four radiator panels, 160 m out, ${deployed ? "open, a filled grid in a frame" : "lying along the hull"}. Port, centre and starboard, hubs from 400 m to 1,040 m so the run is 240 m to 1,200 m, clear of the gallery. Descends from the ISS radiator wings.`,
     pieces: () => local(fanPieces(hub, deployed, tag), at),
   };
 };

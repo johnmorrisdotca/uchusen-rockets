@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **Emiake's folding arrays** (MODULES-492). The three rigid radiator sails become three wings, port, centre and starboard, each a fan of five gores in the ship's radiator white. At rest the gores lie along the hull. Open, the centre wing stands up off the roof and the outer two swing out to the flanks, aft of the gallery. Four hinged panels on the ridge lean along the hull and stay visible from the side. `fleet-emiake-deployed` is the open pose.
+- **Emiake's folding arrays** (MODULES-492). The three rigid radiator sails become three wings, port, centre and starboard. Each wing is four filled radiator panels, 160 m out, in a frame with a cell grid. The hubs sit at 400 m, 720 m and 1,040 m, so the run is 240 m to 1,200 m, clear of the gallery. At rest the panels lie along the hull. Four hinged panels on the ridge lean along the hull and stay visible from the side. `fleet-emiake-deployed` is the open pose.
 
 ## [0.37.1] - 2026-11-20
 
