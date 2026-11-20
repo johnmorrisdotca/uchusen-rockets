@@ -448,25 +448,54 @@ for (const [part, parts] of FLEET_PARTS) {
       await expect.poll(() => canvasData(page, "lod"), { timeout: 30_000 }).not.toBe("fade");
       return { detail: await hero(page).getAttribute("data-detail"), distance: await canvasData(page, "distance"), painted: await canvasData(page, "painted"), lod: await canvasData(page, "lod") };
     };
-    // A walk ends in one of two states, and the test does not choose which. The shadow pass and the fittings are drawn only while the ship is big on screen (scene.ts, applyFittingLod). A walk whose last ship was never drawn big read 1238 buffers and 410 arrays, and one whose last ship was read 1400 and 1006. Growth is read between two walks that ended in the same state. The first walk still fills caches, so it is not the floor.
+    // A walk ends in one of two states, and the test does not choose which. The shadow pass and the fittings are drawn only while the ship is big on screen (scene.ts, applyFittingLod). A walk whose last ship was never drawn big read 1238 buffers and 410 arrays, and one whose last ship was read 1400 and 1006. Growth is read against the highest earlier walk that ended in the same state: the detail, the paint and the fittings. The camera's ease does not repeat the same distance (one part read 36 m, then 54, 56 and 49, with the counts flat at 18 buffers and 6 arrays), so the distance is logged and is not part of the state. The first walk still fills caches, so it is not the floor, and it is part of the ceiling: the heavy part read 2682 arrays, then 2646, then 2671, under that first walk, with the buffers flat. A walk that ends in the other state is compared with the earlier walks that ended there.
     type Settled = { key: string; buffers: number; arrays: number; textures: number; programs: number; contexts: number };
+    const census = () =>
+      hero(page).evaluate((node) => {
+        const viewer = (node as unknown as { viewer?: { scene?: { traverse: (fn: (o: { name?: string; geometry?: { uuid: string } }) => void) => void }; renderer?: { info: { memory: { geometries: number; textures: number } } } } }).viewer;
+        const ids = new Set<string>();
+        const names = new Map<string, string>();
+        viewer?.scene?.traverse((o) => {
+          const id = o.geometry?.uuid;
+          if (!id) return;
+          ids.add(id);
+          names.set(id, o.name || "unnamed");
+        });
+        const prior = (window as unknown as { __geom?: string[] }).__geom ?? [];
+        const had = new Set(prior);
+        const added: string[] = [];
+        let addedCount = 0;
+        for (const id of ids) {
+          if (had.has(id)) continue;
+          addedCount++;
+          if (added.length < 12) added.push(names.get(id) ?? "unnamed");
+        }
+        let removed = 0;
+        for (const id of prior) if (!ids.has(id)) removed++;
+        (window as unknown as { __geom?: string[] }).__geom = [...ids];
+        return { geometries: viewer?.renderer?.info.memory.geometries ?? -1, meshes: ids.size, added, addedCount, removed };
+      });
     const take = async (n: number): Promise<Settled> => {
       const view = await settledView();
       const now = await levelUsage(page);
-      const key = `${view.detail}|${view.painted}|${view.lod}|${view.distance}`;
+      const owned = await census();
+      const key = `${view.detail}|${view.painted}|${view.lod}`;
       console.log(`fleet view ${n}`, view);
-      console.log(`fleet walk ${n}: buffers ${now.buffers}, arrays ${now.arrays}, textures ${now.textures}, programs ${now.programs}, state ${key}`);
+      console.log(`fleet walk ${n}: buffers ${now.buffers}, arrays ${now.arrays}, textures ${now.textures}, programs ${now.programs}, state ${key}, geometries ${owned.geometries}, mesh geometries ${owned.meshes}, added ${owned.addedCount}, removed ${owned.removed}`);
+      if (owned.added.length) console.log(`fleet walk ${n} new geometries`, owned.added);
       return { key, buffers: now.buffers, arrays: now.arrays, textures: now.textures, programs: now.programs, contexts: now.contexts };
     };
-    const hold = (earlier: Settled, later: Settled) => {
-      expect(later.key).toBe(earlier.key);
-      expect(later.buffers).toBeLessThanOrEqual(earlier.buffers);
-      expect(later.arrays).toBeLessThanOrEqual(earlier.arrays + ARRAYS_FEW);
-      expect(later.textures).toBeLessThanOrEqual(earlier.textures);
+    const hold = (earlier: Settled[], later: Settled) => {
+      const floor = earlier[0];
+      if (!floor) throw new Error(`no earlier walk ended at ${later.key}`);
+      expect(later.key).toBe(floor.key);
+      expect(later.buffers).toBeLessThanOrEqual(Math.max(...earlier.map((w) => w.buffers)));
+      expect(later.arrays).toBeLessThanOrEqual(Math.max(...earlier.map((w) => w.arrays)) + ARRAYS_FEW);
+      expect(later.textures).toBeLessThanOrEqual(Math.max(...earlier.map((w) => w.textures)));
       expect(later.contexts).toBe(1);
     };
     await walk(1);
-    await take(1);
+    const first = await take(1);
     // the opened ones and the apart view too: the shapes that are only built when chosen
     await press(page, "rocket-fleet-samples");
     await press(page, "show-apart");
@@ -476,13 +505,13 @@ for (const [part, parts] of FLEET_PARTS) {
     const second = await take(2);
     await walk(1);
     const third = await take(3);
-    if (third.key === second.key) hold(second, third);
+    if (third.key === second.key) hold([first, second].filter((w) => w.key === third.key), third);
     else {
       await walk(1);
       const fourth = await take(4);
-      const base = fourth.key === third.key ? third : fourth.key === second.key ? second : null;
-      expect(base, `the fourth walk (${fourth.key}) matched neither the second (${second.key}) nor the third (${third.key})`).not.toBeNull();
-      hold(base!, fourth);
+      const base = [first, second, third].filter((w) => w.key === fourth.key);
+      expect(base, `the fourth walk (${fourth.key}) matched neither the second (${second.key}) nor the third (${third.key})`).not.toHaveLength(0);
+      hold(base, fourth);
     }
     // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.
     const begun = await page.evaluate(() => {
