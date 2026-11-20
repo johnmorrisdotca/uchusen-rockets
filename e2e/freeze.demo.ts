@@ -1223,29 +1223,23 @@ test("the Earth costs nothing until it is chosen: not a byte of its code, no pic
     expect(text).not.toContain("Antarctica");
   }
   expect((await usage(page)).contexts).toBe(1);
-  // the page is at rest before the window opens: no frame has been asked for between two readings half a second apart (the hero's last draw after it reached 3D may come a moment after the fixed settle on a busy machine)
-  let askedBefore = -1;
-  await expect
-    .poll(
-      async () => {
-        const now = (await usage(page)).asked;
-        const same = now === askedBefore;
-        askedBefore = now;
-        return same;
-      },
-      { intervals: [500], timeout: 30_000, message: "the page never stopped asking for frames" },
-    )
-    .toBe(true);
-  const before = await usage(page);
-  await settle(page, 1500);
-  // by the page's own count of frames asked for and run, not by the clock: a frame asked for before the window opened may still run in it on a busy machine (MODULES-1181 saw one, with the Earth off, in a
-  // run under load), and passes; a frame asked for after it opened, a real stray draw, fails
-  noFrameAskedSince(before, await usage(page));
+  await expect(hero(page)).toHaveAttribute("data-state", "3d");
+  await expect(earth(page)).toBeHidden();
+  await waitUntilDrawsHeld(page);
 
   // and only the form asked for comes in: the line globe needs no picture
   await earthIn(page, "line", "line");
   expect(addresses.filter((address) => /textures\//.test(address))).toEqual([]);
   expect((await usage(page)).contexts).toBe(1);
+});
+
+test("a draw loop before the Earth is chosen is still a freeze", async ({ page }) => {
+  await page.addInitScript(COUNT);
+  await page.goto(URL);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  await reach3d(page);
+  await expect(earth(page)).toBeHidden();
+  await expectDrawLoopFailsRest(page);
 });
 
 for (const { look, form, contexts } of LOOKS) {

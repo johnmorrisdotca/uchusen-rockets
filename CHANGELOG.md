@@ -4,6 +4,8 @@
 
 - **A played timeline settles by its own state** (MODULES-1127). The freeze test no longer compares draws with page frames. It waits until the flight has ended and the WebGL draws hold still, and a draw loop still fails that wait. Test only.
 
+- **The Earth costs nothing until it is chosen** (MODULES-1181). The freeze test no longer counts frames asked for while the Earth is off. It waits until the rocket is in 3D, the Earth stays hidden, and the WebGL draws hold still, and a draw loop still fails that wait. Test only.
+
 ## [0.37.1] - 2026-11-20
 
 - **The demo stage stays on screen on a phone** (MODULES-1335). Choosing a maker or a rocket below the fold used to scroll the picture away. The picture stays at the top and is short enough that the view bar, the turn row and one choice all fit on a phone, and a choice that scrolls into view stops below the stage, so the tap lands on the choice. The fleet record's picture is not stuck over its ship and section buttons. A desk is unchanged.
