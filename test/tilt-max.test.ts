@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ROCKETS, variantOf } from "../src/index.ts";
 
-const SPACE = ["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "viking-lander", "starlink", "lageos", "sputnik-1", "explorer-1", "vanguard-1", "skylab", "mir", "tiangong-1", "fleet-ship-03", "fleet-ship-ariake", "fleet-02"];
-const GROUND = ["starship", "falcon-9", "falcon-heavy", "saturn-v", "space-shuttle", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-5", "ariane-6", "atlas-v", "delta-iv-heavy", "h3", "long-march-5", "mercury-redstone", "n1", "titan-ii-glv", "soyuz", "jupiter-c", "grasshopper", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase"];
+const SPACE = ["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "viking-lander", "starlink", "lageos", "sputnik-1", "explorer-1", "vanguard-1", "skylab", "mir", "tiangong-1", "agena", "freedom-7", "fleet-ship-03", "fleet-ship-ariake", "fleet-02"];
+const GROUND = ["starship", "falcon-9", "falcon-heavy", "saturn-v", "space-shuttle", "sls", "new-glenn", "electron", "vulcan-centaur", "ariane-5", "ariane-6", "atlas-v", "delta-iv-heavy", "h3", "long-march-5", "mercury-redstone", "n1", "titan-ii-glv", "soyuz", "jupiter-c", "grasshopper", "falcon-1", "droneship", "landing-zone", "launch-tower", "starbase", "crawler"];
 
 test("every variant says how far its view may tip, and it is 45 or 90", () => {
   for (const rocket of Object.values(ROCKETS)) for (const variant of rocket.variants) assert.ok([45, 90].includes(variant.view?.tiltMax ?? 0), `${rocket.id} ${variant.id}`);

@@ -27,7 +27,7 @@ test("the drawing is the three tubes at the sourced size and the code-made mesh 
   const box = built.boundsOf("together");
   assert.ok(Math.abs(box.max[1] - box.min[1] - 25.29) < 0.05);
   assert.ok(Math.abs(box.max[0] - box.min[0] - 6.7) < 0.05);
-  assert.equal(built.parts[0]?.record.painted, null);
+  assert.equal(built.parts[0]?.record.painted?.file, "skylab-craft.glb");
   assert.ok(built.svg({ look: "line" }).startsWith("<svg"));
   assert.ok(built.svg({ look: "painted" }).startsWith("<svg"));
   assert.ok(built.glb().bytes.length < 600 * 1024);

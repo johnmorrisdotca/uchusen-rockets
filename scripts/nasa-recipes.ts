@@ -299,6 +299,86 @@ const VIKING_SIDE = (10.642 + 11.097 + 10.938) / 3;
 const VIKING_SCALE = 2.21 / VIKING_SIDE;
 const VIKING: NasaPart = { id: "craft", triangles: 14_000, error: 0.008, place: placer([0.159, 0.211, 0.113], VIKING_SCALE, VIKING_SCALE, 0) };
 
+// Skylab lies along the file's X, from the telescope mount at x -21.5 to the workshop's far end at x 17.2, and its round body is 8.25 of the file's units across (blinn5, and the round slices). Stood on that end, scaled so the round body is the sourced 6.70 m. The file's Y, 29.45 to 41.23, and Z, -13.45 to 16.41, are centred.
+const SKYLAB_SCALE = 6.7 / 8.25;
+const SKYLAB_X1 = 17.196;
+const SKYLAB_YC = (29.452 + 41.234) / 2;
+const SKYLAB_ZC = (-13.445 + 16.407) / 2;
+// The crawler-transporter, after its node's own turn, is 8.772 long in X, 7.195 wide in Z and 1.698 tall in Y, and its tracks sit 0.224 below the file's origin. Scaled so the length is the fact sheet's 131 feet. At that scale the width is about 32.75 m against the sheet's 114 feet, and the height is about 7.73 m, inside the sheet's 20 to 26 feet.
+const CRAWLER_X0 = -4.14489750398144;
+const CRAWLER_X1 = 4.627540399892894;
+const CRAWLER_Y0 = -0.22400565749598206;
+const CRAWLER_ZC = (-3.652694869714934 + 3.5422587824831955) / 2;
+const CRAWLER_SCALE = (131 * 0.3048) / (CRAWLER_X1 - CRAWLER_X0);
+const CRAWLER: NasaPart = {
+  id: "craft",
+  triangles: 40_000,
+  error: 0.25,
+  place: (p, n) => {
+    const [x, y, z] = p;
+    p[0] = (z - CRAWLER_ZC) * CRAWLER_SCALE;
+    p[1] = (y - CRAWLER_Y0) * CRAWLER_SCALE;
+    p[2] = ((x - CRAWLER_X0) - (CRAWLER_X1 - CRAWLER_X0) / 2) * CRAWLER_SCALE;
+    const [nx, ny, nz] = n;
+    n[0] = nz;
+    n[1] = ny;
+    n[2] = nx;
+  },
+};
+
+// The Agena lies along the file's Z, engine at z -13.175 and the docking end at z 14.075. Its round body is 5.233 of the file's units across, centred at x 0.857, y 2.740, and a boom stands off that body. The file is shorter for its width than the summary, so the length and the width are scaled on their own: the length to 9.75 m, the round body to 1.5 m. Stood on the engine.
+const AGENA_Z0 = -13.175089836120605;
+const AGENA_Z1 = 14.07512378692627;
+const AGENA_CX = 0.857;
+const AGENA_CY = 2.74;
+const AGENA_DIAM = 5.2333;
+const AGENA_ALONG = 9.75 / (AGENA_Z1 - AGENA_Z0);
+const AGENA_ACROSS = 1.5 / AGENA_DIAM;
+const AGENA: NasaPart = {
+  id: "craft",
+  triangles: 18_000,
+  error: 0.01,
+  place: (p, n) => {
+    const [x, y, z] = p;
+    p[0] = (x - AGENA_CX) * AGENA_ACROSS;
+    p[1] = (z - AGENA_Z0) * AGENA_ALONG;
+    p[2] = (y - AGENA_CY) * AGENA_ACROSS;
+    const [nx, ny, nz] = n;
+    n[0] = nx;
+    n[1] = nz;
+    n[2] = ny;
+  },
+};
+
+// Freedom 7 stands on the file's Y, heat shield at y 0.859 and the antenna cap at y 10.094. The round body is 5.934 of the file's units across, centred at x -0.327, z 0.656. The file is a little taller for its width than the early-years table, so the length and the width are scaled on their own: the length to 2.9 m, the width to 1.9 m. Those are the table's figures, not Friendship 7's 3.3 m by 1.8 m, which are the spacecraft article's. Stood on the heat shield.
+const FREEDOM_Y0 = 0.8594599962234497;
+const FREEDOM_CX = -0.32659149169921875;
+const FREEDOM_CZ = 0.6564104557037354;
+const FREEDOM_TALL = 9.234652400016785;
+const FREEDOM_WIDE = 5.933751106262207;
+const FREEDOM: NasaPart = {
+  id: "capsule",
+  triangles: 24_000,
+  error: 0.002,
+  place: placer([FREEDOM_CX, FREEDOM_Y0, FREEDOM_CZ], 2.9 / FREEDOM_TALL, 1.9 / FREEDOM_WIDE, 0),
+};
+
+const SKYLAB: NasaPart = {
+  id: "craft",
+  triangles: 16_000,
+  error: 0.03,
+  place: (p, n) => {
+    const [x, y, z] = p;
+    p[0] = (y - SKYLAB_YC) * SKYLAB_SCALE;
+    p[1] = (SKYLAB_X1 - x) * SKYLAB_SCALE;
+    p[2] = (z - SKYLAB_ZC) * SKYLAB_SCALE;
+    const [nx, ny, nz] = n;
+    n[0] = ny;
+    n[1] = -nx;
+    n[2] = nz;
+  },
+};
+
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
     id: "space-shuttle-stack",
@@ -576,6 +656,63 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     partOf: () => VIKING,
     looseWeld: true,
     freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "skylab",
+    files: [`${FOLDER}/skylab.glb`],
+    title: "Skylab",
+    source: "https://data.nasa.gov/dataset/nasa-3d-models-skylab",
+    changes: "Reduced from 25,292 triangles; rescaled so the round body is the sourced 6.70 m and stood on the workshop's far end. Looked at from three sides of the source and two sides of the result: the file has no pictures and no lettering. The gold is the solar arrays. It carried no mark to remove.",
+    parts: [SKYLAB],
+    partOf: () => SKYLAB,
+    looseWeld: true,
+    freeBorders: true,
+    trimBelow: SPECK_FLOOR,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "crawler",
+    files: [`${FOLDER}/crawler.glb`],
+    title: "Crawler",
+    source: "https://science.nasa.gov/3d-resources/crawler/",
+    changes: "Reduced from 279,800 triangles; rescaled so the length is the fact sheet's 131 feet and set so the tracks sit on the ground. Looked at from three sides of the source: the file has no pictures and no lettering. The blue is the windows. It carried no mark to remove.",
+    parts: [CRAWLER],
+    partOf: () => CRAWLER,
+    looseWeld: true,
+    freeBorders: true,
+    trimBelow: SPECK_FLOOR,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "agena",
+    files: [`${FOLDER}/agena-target-vehicle.glb`],
+    title: "Agena Target Vehicle",
+    source: "https://science.nasa.gov/3d-resources/agena-target-vehicle/",
+    changes: "The flag painted out of its picture; reduced from 31,290 triangles; rescaled so the length is the sourced 9.75 m and the round body is the sourced 1.5 m, and stood on the engine. Looked at from three sides of the source and of the result: no lettering. The flag is gone.",
+    parts: [AGENA],
+    partOf: () => AGENA,
+    patches: { anisotropic1SG: [{ to: [0.45, 0.3, 0.1, 0.25], fill: "#ffffff" }] },
+    looseWeld: true,
+    freeBorders: true,
+    trimBelow: SPECK_FLOOR,
+    atlas: 512,
+    quality: 0.62,
+  },
+  {
+    id: "freedom-7",
+    files: [`${FOLDER}/redstone-3-freedom-7.glb`],
+    title: "Freedom 7",
+    source: "https://science.nasa.gov/3d-resources/redstone-3-freedom-7/",
+    changes: "Reduced from 163,880 triangles; rescaled so the length is the early-years table's 2.9 m and the width is its 1.9 m, and stood on the heat shield. Looked at from NASA's picture and from the result: the file has no pictures and no lettering. It carried no mark to remove. NASA's copy leaves its materials all one grey, and that grey is kept.",
+    parts: [FREEDOM],
+    partOf: () => FREEDOM,
+    looseWeld: true,
+    freeBorders: true,
+    trimBelow: SPECK_FLOOR,
     atlas: 128,
     quality: 0.62,
   },
