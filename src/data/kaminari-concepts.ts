@@ -58,7 +58,7 @@ const inspectorOf = (key: ConceptKey): Inspector => {
 
 const NOTES: Readonly<Record<ConceptKey, string>> = {
   a: "ISV Kaminari, the Quiver: thinner cylinders. One long truss carries rings of slim propellant tanks like the barrels of a revolver, rings of cargo containers, reactor cells and two counter-rotating carousels of slim habitat drums. The drive is a ring array of 19 magnetic-nozzle thrusters behind a stack of fusion coil rings. Visiting craft berth on the open truss, outside the hull. Use the size slider to try 60 to 100 per cent.",
-  b: "ISV Emiake, smiling dawn: a hull that is not a tube. A flattened wedge built like a ship: an armoured keel, six longerons and ribs every 30 m, open aft where the slim tanks and containers lie in rows, plated forward where the crew's town sits under a glazed gallery. Three folding arrays stand on the dorsal ridge. Each is a fan of gores that spreads fore and aft, and hinged panels between them fold down toward the flanks. Open, they stay aft of the glazed gallery. The drive is a grid of 27 magnetic-nozzle thrusters across the stern. Visiting craft berth outside the hull. Use the size slider to try 60 to 100 per cent.",
+  b: "ISV Emiake, smiling dawn: a hull that is not a tube. A flattened wedge built like a ship: an armoured keel, six longerons and ribs every 30 m, open aft where the slim tanks and containers lie in rows, plated forward where the crew's town sits under a glazed gallery. Three folding arrays, port, centre and starboard, lie along the hull at rest. Open, the centre wing stands up off the roof and the outer two swing out to the flanks, and four panels on the ridge lean with them. The drive is a grid of 27 magnetic-nozzle thrusters across the stern. Visiting craft berth outside the hull. Use the size slider to try 60 to 100 per cent.",
   c: "ISV Romaryū, dragon of Rome: a spine with two of ISV Miyamoto, gold array out, and two of ISV Ariake, four boxes and dawn-gold bands, docked round it in two pairs, each the package's own model at its true size, and a Starship ship, two tankers and a Dragon berthed outside the shaft beside them. Two stations of propellant barrels aft, two counter-rotating habitat rings, and a drive of four flank pods of seven magnetic-nozzle thrusters with one large thruster on the axis. Use the size slider to try 60 to 100 per cent.",
 };
 
@@ -103,7 +103,7 @@ const deployedSails = (): Variant => {
     name: `${stowed.name}, folding arrays open`,
     note: `${stowed.note} This variant has the three fans spread and the hinged panels folded out.`,
     partIds: Object.fromEntries(slots.map((slot) => [slot.slot, `${ROCKET_OF.b}-${slot.slot.startsWith("fin-") ? EMIAKE_DEPLOYED : stowed.id}-${slot.slot}`])),
-    inspector: stowed.inspector ? { ...stowed.inspector, spec: [...stowed.inspector.spec, ["Folding arrays", "Three fans open, panels folded out"]] } : undefined,
+    inspector: stowed.inspector ? { ...stowed.inspector, spec: [...stowed.inspector.spec, ["Folding arrays", "Three wings open, panels leaned out"]] } : undefined,
   };
 };
 
@@ -132,9 +132,9 @@ export const CONCEPT_SLOT_NAMES: Readonly<Record<string, string>> = {
   reactors: "Reactor cells",
   "coil-stack": "Coil stack and reactor cells",
   radiators: "Radiator fins",
-  "fin-port": "Aft folding array",
-  "fin-centre": "Mid folding array",
-  "fin-starboard": "Forward folding array",
+  "fin-port": "Port folding array",
+  "fin-centre": "Centre folding array",
+  "fin-starboard": "Starboard folding array",
   "fin-leaf-1": "Hinged panel 1",
   "fin-leaf-2": "Hinged panel 2",
   "fin-leaf-3": "Hinged panel 3",

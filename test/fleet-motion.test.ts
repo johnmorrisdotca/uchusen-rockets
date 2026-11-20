@@ -147,14 +147,22 @@ test("every motion names a group that a part of its ship really carries, so none
   for (const m of MOTIONS) assert.ok(have[m.ship]?.has(m.group), `${m.ship}: ${m.group}`);
 });
 
-test("Emiake's gores are stacked at rest and spread when the arrays are open", () => {
-  const up = (pieces: ReturnType<(typeof FOLD_SLOTS)[number]["pieces"]>) => pieces.flatMap((p) => (p.kind === "plate" && p.thickness === 0.4 ? [p.frame.v[1]] : []));
-  const stowed = FOLD_SLOTS.find((slot) => slot.slot === "fin-port")!.pieces();
-  const open = SAIL_DEPLOYED_SLOTS.find((slot) => slot.slot === "fin-port")!.pieces();
-  assert.ok(up(stowed).every((y) => Math.abs(y) < 1e-6));
-  assert.ok(up(open).some((y) => Math.abs(y) > 0.5));
-  assert.equal(new Set(meshOf(stowed).moves.map((g) => g.name)).has("fan-aft-0"), true);
-  assert.equal(meshOf(open).moves.length, 0);
+test("Emiake's gores lie along the hull at rest and swing out when the arrays are open", () => {
+  const radius = (pieces: ReturnType<(typeof FOLD_SLOTS)[number]["pieces"]>) => pieces.flatMap((p) => (p.kind === "plate" && p.thickness === 0.4 ? [p.frame.v] : []));
+  const centre = FOLD_SLOTS.find((slot) => slot.slot === "fin-centre")!.pieces();
+  const centreOpen = SAIL_DEPLOYED_SLOTS.find((slot) => slot.slot === "fin-centre")!.pieces();
+  const port = FOLD_SLOTS.find((slot) => slot.slot === "fin-port")!.pieces();
+  const portOpen = SAIL_DEPLOYED_SLOTS.find((slot) => slot.slot === "fin-port")!.pieces();
+  assert.ok(radius(centre).every((v) => Math.abs(v[2]) < 1e-6), "the centre wing stands up at rest");
+  assert.ok(radius(centreOpen).some((v) => Math.abs(v[2]) > 0.5));
+  assert.ok(radius(port).every((v) => Math.abs(v[0]) < 1e-6), "the port wing sticks out at rest");
+  assert.ok(radius(portOpen).some((v) => v[0] < -0.5));
+  assert.deepEqual(
+    ["fin-port", "fin-centre", "fin-starboard"].map((id) => FOLD_SLOTS.find((slot) => slot.slot === id)!.at[0]),
+    [-48, 0, 48],
+  );
+  assert.equal(new Set(meshOf(port).moves.map((g) => g.name)).has("fan-port-0"), true);
+  assert.equal(meshOf(portOpen).moves.length, 0);
 });
 
 test("the Motion choice: still unless asked for, ten times on request, never under reduced motion", () => {

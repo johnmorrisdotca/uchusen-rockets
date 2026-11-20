@@ -1,31 +1,32 @@
-// Emiake's folding arrays. Three fans of gores on the dorsal ridge, and four hinged panels between them. A gore is drawn stacked (its rest pose) and swings about the ship's cross axis, so the side view shows it open. A panel swings down toward the flank. Pure: no three.js and no DOM.
+// Emiake's three folding arrays: port, centre and starboard, the old sail places. At rest every gore lies along the hull. Open, the centre wing stands up off the roof and the outer two swing out to the flanks. Four panels on the ridge lean with them and stay face-on from the side. The gores are the ship's radiator white. Pure: no three.js and no DOM.
 import type { Piece, Plate, Vec3 } from "../../pieces.ts";
 import { rod } from "./adapter.ts";
 
-/** Metres. The fans run from y 240 to y 1200, the longest span that stays aft of the gallery at y 1236. A 1,190 m run would cover it. */
+/** Metres. One station, aft of the gallery at y 1236. The outer tips, 110 m out from x ±48, stay inside the 410 m beam. */
 export const FOLD = {
-  z: 30,
-  radius: 160,
+  y: 560,
+  z: 28,
+  radius: 110,
   hubs: [
-    { slot: "fin-port", key: "aft", name: "Aft folding array", y: 400 },
-    { slot: "fin-centre", key: "mid", name: "Mid folding array", y: 720 },
-    { slot: "fin-starboard", key: "fwd", name: "Forward folding array", y: 1040 },
+    { slot: "fin-port", key: "port", name: "Port folding array", x: -48, axis: [0, 0, 1] as Vec3, turn: -90 },
+    { slot: "fin-centre", key: "centre", name: "Centre folding array", x: 0, axis: [1, 0, 0] as Vec3, turn: -90 },
+    { slot: "fin-starboard", key: "starboard", name: "Starboard folding array", x: 48, axis: [0, 0, 1] as Vec3, turn: 90 },
   ] as const,
-  /** Five gores, stacked on the ridge at rest, spread this far to either side when open. */
+  /** Five gores. Added to `turn`, so the open fan is centred on straight out and spreads 72 degrees to either side. */
   open: [-72, -36, 0, 36, 72] as const,
   goreHalf: 8,
   leaves: [
-    { slot: "fin-leaf-1", y: 480, degrees: 70 },
-    { slot: "fin-leaf-2", y: 640, degrees: -70 },
-    { slot: "fin-leaf-3", y: 800, degrees: 70 },
-    { slot: "fin-leaf-4", y: 960, degrees: -70 },
+    { slot: "fin-leaf-1", x: 0, y: 370, degrees: 35 },
+    { slot: "fin-leaf-2", x: 0, y: 420, degrees: -35 },
+    { slot: "fin-leaf-3", x: 0, y: 700, degrees: 35 },
+    { slot: "fin-leaf-4", x: 0, y: 760, degrees: -35 },
   ] as const,
-  leafLen: 90,
-  leafH: 48,
+  leafLen: 40,
+  leafH: 70,
 } as const;
 
-const FAN_NOTE = "A gore of a folding array swings out about the hub on the ship's cross axis and back. At rest the gores are stacked, a thin fin; open, they spread 72 degrees to either side, and the side view shows the fold. Drawn faster than a real deployment.";
-const LEAF_NOTE = "A hinged panel on the ridge swings down toward the flank and back, one after the next: an accordion between the arrays. Drawn faster than a real fold.";
+const FAN_NOTE = "A gore lies along the hull at rest and swings out from it. The centre wing stands up off the roof; the port and starboard wings swing out to the flanks, 72 degrees to either side. Drawn faster than a real deployment.";
+const LEAF_NOTE = "A hinged panel on the ridge leans along the hull and back, and stays face-on from the side. Drawn faster than a real fold.";
 
 export interface FoldSpec {
   group: string;
@@ -34,34 +35,45 @@ export interface FoldSpec {
   note: string;
 }
 
+type Hub = (typeof FOLD.hubs)[number];
+
 /** Every group the stowed ship tags, and the angle it opens to. */
 export const EMIAKE_FOLDS: readonly FoldSpec[] = [
-  ...FOLD.hubs.flatMap((hub) =>
-    FOLD.open.flatMap((degrees, i) => (degrees === 0 ? [] : [{ group: `fan-${hub.key}-${i}`, degrees, phase: i * 0.03, note: FAN_NOTE }])),
-  ),
+  ...FOLD.hubs.flatMap((hub) => FOLD.open.map((spread, i) => ({ group: `fan-${hub.key}-${i}`, degrees: hub.turn + spread, phase: i * 0.03, note: FAN_NOTE }))),
   ...FOLD.leaves.map((leaf, i) => ({ group: `leaf-${i + 1}`, degrees: leaf.degrees, phase: i * 0.06, note: LEAF_NOTE })),
 ];
 
 type Tagger = (pieces: readonly Piece[], name: string, pivot: Vec3, axis: Vec3) => Piece[];
 
-const dirX = (p: Vec3, degrees: number): Vec3 => {
-  const a = (degrees * Math.PI) / 180;
-  const c = Math.cos(a);
-  const s = Math.sin(a);
-  return [p[0], p[1] * c - p[2] * s, p[1] * s + p[2] * c];
-};
+const rad = (degrees: number): number => (degrees * Math.PI) / 180;
 
-const dirY = (p: Vec3, degrees: number): Vec3 => {
-  const a = (degrees * Math.PI) / 180;
-  const c = Math.cos(a);
-  const s = Math.sin(a);
-  return [p[0] * c + p[2] * s, p[1], -p[0] * s + p[2] * c];
-};
+/** Rotate about the hinge: X for the centre wing and the panels, Z for the outer wings. */
+function spin(p: Vec3, axis: Vec3, degrees: number): Vec3 {
+  const c = Math.cos(rad(degrees));
+  const s = Math.sin(rad(degrees));
+  if (axis[0] === 1) return [p[0], p[1] * c - p[2] * s, p[1] * s + p[2] * c];
+  return [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]];
+}
 
-const turnPlate = (plate: Plate, o: Vec3, u: Vec3, v: Vec3, w: Vec3): Plate => ({ ...plate, frame: { o, u, v, w } });
+const turnPlate = (plate: Plate, axis: Vec3, degrees: number): Plate => ({
+  ...plate,
+  frame: {
+    o: plate.frame.o,
+    u: spin(plate.frame.u, axis, degrees),
+    v: spin(plate.frame.v, axis, degrees),
+    w: spin(plate.frame.w, axis, degrees),
+  },
+});
 
-/** One gore, a narrow sector standing up the ridge. `u` is along the ship, `v` is up. */
-function gorePlate(hub: Vec3, index: number): Plate {
+/** The rest pose: the radius points aft, along the hull, and the plate lies on it. */
+function restFrame(hub: Hub): { u: Vec3; v: Vec3; w: Vec3 } {
+  if (hub.key === "centre") return { u: [1, 0, 0], v: [0, -1, 0], w: [0, 0, 1] };
+  if (hub.key === "port") return { u: [0, 0, -1], v: [0, -1, 0], w: [-1, 0, 0] };
+  return { u: [0, 0, 1], v: [0, -1, 0], w: [1, 0, 0] };
+}
+
+/** One gore of the ship's radiator white. The outline's long axis is the radius. */
+function gorePlate(hub: Vec3, frame: { u: Vec3; v: Vec3; w: Vec3 }): Plate {
   const steps = 5;
   const half = (FOLD.goreHalf * Math.PI) / 180;
   const outline: [number, number][] = [[0, 2]];
@@ -75,34 +87,42 @@ function gorePlate(hub: Vec3, index: number): Plate {
   ];
   return {
     kind: "plate",
-    material: index % 2 === 0 ? "radiator" : "radiator-hot",
-    frame: { o: hub, u: [0, 1, 0], v: [0, 0, 1], w: [1, 0, 0] },
+    material: "radiator",
+    frame: { o: hub, u: frame.u, v: frame.v, w: frame.w },
     outline,
     thickness: 0.4,
     ribs: [rib(-half * 0.5), rib(0), rib(half * 0.5)],
   };
 }
 
-/** The five gores of one fan, the hinge pin and the yellow fold line. Stowed gores are tagged; the open pose is baked. */
-export function fanPieces(y: number, key: string, deployed: boolean, tag: Tagger): Piece[] {
-  const hub: Vec3 = [0, y, FOLD.z];
-  const gores = FOLD.open.map((degrees, i) => {
-    const plate = gorePlate(hub, i);
-    if (degrees === 0) return plate;
-    if (!deployed) return tag([plate], `fan-${key}-${i}`, hub, [1, 0, 0])[0]!;
-    return turnPlate(plate, hub, dirX(plate.frame.u, degrees), dirX(plate.frame.v, degrees), plate.frame.w);
+const along = (hub: Vec3, frame: { v: Vec3 }, near: number, far: number): [Vec3, Vec3] => [
+  [hub[0] + frame.v[0] * near, hub[1] + frame.v[1] * near, hub[2] + frame.v[2] * near],
+  [hub[0] + frame.v[0] * far, hub[1] + frame.v[1] * far, hub[2] + frame.v[2] * far],
+];
+
+/** The five gores of one wing, the hinge pin and the yellow fold line. Stowed gores are tagged; the open pose is baked. */
+export function fanPieces(hub: Hub, deployed: boolean, tag: Tagger): Piece[] {
+  const at: Vec3 = [hub.x, FOLD.y, FOLD.z];
+  const frame = restFrame(hub);
+  const gores = FOLD.open.map((spread, i) => {
+    const plate = gorePlate(at, frame);
+    const degrees = hub.turn + spread;
+    if (!deployed) return tag([plate], `fan-${hub.key}-${i}`, at, hub.axis)[0]!;
+    return turnPlate(plate, hub.axis, degrees);
   });
-  const pin = rod("engine-metal", [-4, y, FOLD.z], [4, y, FOLD.z], 1.2, 10);
-  const mark = rod("hull-yellow", [0, y, FOLD.z], [0, y, FOLD.z + FOLD.radius], 0.35, 8);
-  const spine = rod("hull-grey", [0, y, FOLD.z + 6], [0, y, FOLD.z + FOLD.radius - 6], 0.28, 6);
-  return [...gores, pin, mark, spine];
+  const pin = hub.key === "centre" ? rod("engine-metal", [hub.x - 4, FOLD.y, FOLD.z], [hub.x + 4, FOLD.y, FOLD.z], 1.2, 10) : rod("engine-metal", [hub.x, FOLD.y, FOLD.z - 4], [hub.x, FOLD.y, FOLD.z + 4], 1.2, 10);
+  const [a, b] = along(at, frame, 6, FOLD.radius - 4);
+  const mark = rod("hull-yellow", a, b, 0.35, 8);
+  const spine = rod("hull-grey", a, b, 0.28, 6);
+  const dressed = deployed ? [mark, spine].map((piece) => (piece.kind === "plate" ? turnPlate(piece, hub.axis, hub.turn) : piece)) : [mark, spine];
+  return [...gores, pin, ...dressed];
 }
 
-function leafPlate(hinge: Vec3, index: number): Plate {
+function leafPlate(hinge: Vec3): Plate {
   const half = FOLD.leafLen / 2;
   return {
     kind: "plate",
-    material: index % 2 === 0 ? "radiator" : "hull-grey",
+    material: "hull-grey",
     frame: { o: hinge, u: [0, 1, 0], v: [0, 0, 1], w: [1, 0, 0] },
     outline: [
       [-half, 0],
@@ -124,18 +144,18 @@ function leafPlate(hinge: Vec3, index: number): Plate {
   };
 }
 
-/** One accordion panel and its hinge. Stowed, it stands on the ridge and is tagged; open, it is baked down toward the flank. */
-export function leafPieces(y: number, index: number, degrees: number, deployed: boolean, tag: Tagger): Piece[] {
-  const hinge: Vec3 = [0, y, FOLD.z];
-  const plate = leafPlate(hinge, index);
-  const swung = !deployed ? tag([plate], `leaf-${index}`, hinge, [0, 1, 0])[0]! : turnPlate(plate, hinge, dirY(plate.frame.u, degrees), dirY(plate.frame.v, degrees), dirY(plate.frame.w, degrees));
+/** One ridge panel and its hinge. Stowed, it stands up and is tagged; open, it leans along the hull and the side view still sees its face. */
+export function leafPieces(x: number, y: number, index: number, degrees: number, deployed: boolean, tag: Tagger): Piece[] {
+  const hinge: Vec3 = [x, y, FOLD.z];
+  const plate = leafPlate(hinge);
+  const swung = !deployed ? tag([plate], `leaf-${index}`, hinge, [1, 0, 0])[0]! : turnPlate(plate, [1, 0, 0], degrees);
   const half = FOLD.leafLen / 2;
-  const z0 = FOLD.z;
-  const z1 = FOLD.z + FOLD.leafH;
-  const pin = rod("hull-yellow", [0, y - half, z0], [0, y + half, z0], 0.45, 8);
-  const edge = (side: number) => rod("hull-grey", [0, y + side * half, z0], [0, y + side * half, z1], 0.3, 6);
-  const top = rod("hull-grey", [0, y - half, z1], [0, y + half, z1], 0.3, 6);
-  const rib = rod("copper", [0, y, z0 + 2], [0, y, z1 - 2], 0.18, 6);
-  const stay = (x: number, dy: number) => rod("hull-grey-dark", [x, y + dy, z0], [0, y + dy, z0 + 18], 0.4, 6);
-  return [swung, pin, edge(-1), edge(1), top, rib, stay(-6, -12), stay(6, 12)];
+  const pin = rod("hull-yellow", [x, y - half, FOLD.z], [x, y + half, FOLD.z], 0.45, 8);
+  const edge = (side: number) => rod("hull-grey", [x, y + side * half, FOLD.z], [x, y + side * half, FOLD.z + FOLD.leafH], 0.3, 6);
+  const top = rod("hull-grey", [x, y - half, FOLD.z + FOLD.leafH], [x, y + half, FOLD.z + FOLD.leafH], 0.3, 6);
+  const rib = rod("hull-grey", [x, y, FOLD.z + 2], [x, y, FOLD.z + FOLD.leafH - 2], 0.18, 6);
+  const stay = (dy: number) => rod("hull-grey-dark", [x, y + dy, FOLD.z], [x, y + dy, FOLD.z + 12], 0.4, 6);
+  const extras = [pin, edge(-1), edge(1), top, rib, stay(-8), stay(8)];
+  const dressed = deployed ? extras.map((piece) => (piece.kind === "plate" ? turnPlate(piece, [1, 0, 0], degrees) : piece)) : extras;
+  return [swung, ...dressed];
 }
