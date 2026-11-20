@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **A fleet walk counts vertex arrays from one framing pose** (MODULES-705). An instanced mesh or a fat line gets its vertex array the first time it is drawn, and the camera ease was stopping at a different angle each walk, so meshes drawn on the way kept arrays the settled pose never draws. The same ship read 2673, then 2613, then 2683 arrays with the buffers flat. The count is taken after the camera is put on one framing pose, those arrays are dropped, and that pose is drawn in the same turn. A later walk must match that count.
 - **A fleet walk no longer keeps a second program's vertex arrays** (MODULES-705). Fading a fitting used to mark the shared material transparent, and that second program stayed for the life of the material, one vertex array a mesh, which is the few dozen the tanks and the Ariake gained between walks. The fade now uses its own material and disposes it when the fade ends. The packed line's geometry is disposed once its thick line has been copied, so it does not stay after the ship is left. The fleet-walk freeze check compares a walk with the highest earlier walk that ended at the same detail, paint and fittings, and allows a few vertex arrays over that peak, not two percent. The camera distance is not part of that state. Changing rocket with the engines lit waits until the graphics counts and the plume count have both settled before it compares them.
 
 ## [0.36.0] - 2026-11-19

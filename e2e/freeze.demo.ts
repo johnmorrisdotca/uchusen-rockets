@@ -381,7 +381,7 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 });
 
-// Two walks that ended in the same settled state (detail, paint, fittings, distance) may differ by a few vertex arrays. A leak adds some for every variant walked, hundreds in a walk. The old two percent covered a second program the fitting fade left behind (MODULES-705).
+// The engines-lit check allows a few vertex arrays. A leak adds some for every variant walked, hundreds in a walk. The old two percent covered a second program the fitting fade left behind (MODULES-705). The fleet walk below requires the same count.
 const ARRAYS_FEW = 6;
 // Seconds a walk of each fleet ship took on a hosted runner, so CI's parts are the same size: the parts are filled heaviest first. A ship left out counts for ten.
 const FLEET_SECONDS: Record<string, number> = { "fleet-02-original": 88, "fleet-02": 69, "fleet-ship-ariake": 60, "fleet-kyotori": 40, "fleet-ship-01": 39, "fleet-ship-03": 37, "fleet-tanks": 34, "fleet-emiake": 18, "fleet-insets-ship-03": 14, "fleet-insets": 14, "fleet-samples": 12, "fleet-labs": 10, "fleet-markings": 10, "fleet-engines": 10, "fleet-decks": 8, "fleet-romaryu": 7, "fleet-systems": 6, "fleet-habitats": 5, "fleet-cargo": 5, "fleet-structure": 3, "fleet-kaminari": 2, "fleet-drone": 2, "fleet-insets-ship-01": 1 };
@@ -448,7 +448,34 @@ for (const [part, parts] of FLEET_PARTS) {
       await expect.poll(() => canvasData(page, "lod"), { timeout: 30_000 }).not.toBe("fade");
       return { detail: await hero(page).getAttribute("data-detail"), distance: await canvasData(page, "distance"), painted: await canvasData(page, "painted"), lod: await canvasData(page, "lod") };
     };
-    // A walk ends in one of two states, and the test does not choose which. The shadow pass and the fittings are drawn only while the ship is big on screen (scene.ts, applyFittingLod). A walk whose last ship was never drawn big read 1238 buffers and 410 arrays, and one whose last ship was read 1400 and 1006. Growth is read against the highest earlier walk that ended in the same state: the detail, the paint and the fittings. The camera's ease does not repeat the same distance (one part read 36 m, then 54, 56 and 49, with the counts flat at 18 buffers and 6 arrays), so the distance is logged and is not part of the state. The first walk still fills caches, so it is not the floor, and it is part of the ceiling: the heavy part read 2682 arrays, then 2646, then 2671, under that first walk, with the buffers flat. A walk that ends in the other state is compared with the earlier walks that ended there.
+    // A walk ends in one of two states, and the test does not choose which. The shadow pass and the fittings are drawn only while the ship is big on screen (scene.ts, applyFittingLod). A walk whose last ship was never drawn big read 1238 buffers and 410 arrays, and one whose last ship was read 1400 and 1006. Growth is read against the highest earlier walk that ended in the same state: the detail, the paint and the fittings. The camera's ease does not repeat the same distance (one part read 36 m, then 54, 56 and 49), so the distance is logged and is not part of the state. A walk that ends in the other state is compared with the earlier walks that ended there. The count itself is exact: the arrays are dropped and that pose is drawn again before the reading.
+    // A vertex array is created the first time a mesh is drawn, and an instanced mesh or a fat line keeps its own. The ease stops at a different angle each walk, so meshes drawn on the way keep arrays the settled pose never draws: the same ship read 2673, then 2613, then 2683 arrays with the buffers flat. The count is taken after the camera is put on one framing pose, those arrays are dropped, and that pose is drawn again.
+    const snap = async () => {
+      await hero(page).evaluate((node) => {
+        const viewer = (node as unknown as { viewer?: { setAngle: (angle: { az: number; el: number }, animate: boolean) => void; scene?: { traverse: (fn: (o: { frustumCulled: boolean }) => void) => void } } }).viewer;
+        if (!viewer?.scene) throw new Error("the fleet walk has no viewer to frame");
+        viewer.scene.traverse((o) => {
+          o.frustumCulled = false;
+        });
+        // The view starts at this angle (scene.ts). With the controls driving, this puts the camera on that framing at once.
+        viewer.setAngle({ az: 32, el: 9 }, false);
+      });
+    };
+    // Dropping the arrays and drawing in this turn, not on a later frame: a frame that never came back left the third walk at 0 arrays, under the earlier walks, and the check let it pass.
+    const release = async () => {
+      await hero(page).evaluate((node) => {
+        const viewer = (node as unknown as { viewer?: { scene?: { traverse: (fn: (o: { geometry?: { uuid: string; dispose: () => void } }) => void) => void }; renderer?: { render: (scene: unknown, camera: unknown) => void }; camera?: unknown } }).viewer;
+        if (!viewer?.scene || !viewer.renderer || !viewer.camera) throw new Error("the fleet walk has no viewer to draw");
+        const dropped = new Set<string>();
+        viewer.scene.traverse((o) => {
+          const geometry = o.geometry;
+          if (!geometry || dropped.has(geometry.uuid)) return;
+          dropped.add(geometry.uuid);
+          geometry.dispose();
+        });
+        viewer.renderer.render(viewer.scene, viewer.camera);
+      });
+    };
     type Settled = { key: string; buffers: number; arrays: number; textures: number; programs: number; contexts: number };
     const census = () =>
       hero(page).evaluate((node) => {
@@ -476,7 +503,11 @@ for (const [part, parts] of FLEET_PARTS) {
         return { geometries: viewer?.renderer?.info.memory.geometries ?? -1, meshes: ids.size, added, addedCount, removed };
       });
     const take = async (n: number): Promise<Settled> => {
+      await settledView();
+      await snap();
       const view = await settledView();
+      // The pose is settled, so the fittings it hides stay hidden. Dropping the arrays now leaves only the ones this pose draws.
+      await release();
       const now = await levelUsage(page);
       const owned = await census();
       const key = `${view.detail}|${view.painted}|${view.lod}`;
@@ -489,8 +520,8 @@ for (const [part, parts] of FLEET_PARTS) {
       const floor = earlier[0];
       if (!floor) throw new Error(`no earlier walk ended at ${later.key}`);
       expect(later.key).toBe(floor.key);
-      expect(later.buffers).toBeLessThanOrEqual(Math.max(...earlier.map((w) => w.buffers)));
-      expect(later.arrays).toBeLessThanOrEqual(Math.max(...earlier.map((w) => w.arrays)) + ARRAYS_FEW);
+      expect(later.buffers).toBe(Math.max(...earlier.map((w) => w.buffers)));
+      expect(later.arrays).toBe(Math.max(...earlier.map((w) => w.arrays)));
       expect(later.textures).toBeLessThanOrEqual(Math.max(...earlier.map((w) => w.textures)));
       expect(later.contexts).toBe(1);
     };
