@@ -38,6 +38,7 @@ import { CASSINI_VARIANTS } from "./data/cassini.ts";
 import { GALILEO_VARIANTS } from "./data/galileo.ts";
 import { PIONEER_VARIANTS } from "./data/pioneer.ts";
 import { EUROPA_VARIANTS } from "./data/europa.ts";
+import { VIKING_LANDER_VARIANTS } from "./data/vikingLander.ts";
 import { STARLINK_VARIANTS } from "./data/starlink.ts";
 import { LAGEOS_VARIANTS } from "./data/lageos.ts";
 import { EXPLORER_VARIANTS } from "./data/explorer.ts";
@@ -124,7 +125,7 @@ export interface PlannedRocket {
 }
 
 /** Craft that fly in space: seen from any side, from straight above or below. Everything else stands on the ground or the sea, and keeps the ground in view. */
-const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "starlink", "lageos", "explorer-1", "vanguard-1", "skylab", "mir", "sputnik-1", "tiangong-1"]);
+const IN_SPACE = new Set(["dragon", "lunar-module", "apollo-soyuz", "gemini", "mercury", "iss", "hubble", "tiangong", "roadster", "voyager", "juno", "jwst", "parker-solar-probe", "cassini", "galileo", "pioneer", "new-horizons", "europa-clipper", "viking-lander", "starlink", "lageos", "explorer-1", "vanguard-1", "skylab", "mir", "sputnik-1", "tiangong-1"]);
 
 /**
  * Whether a craft flies in space: the same ones that may be seen from straight above or below, including the fleet. A rocket or a place on the ground does not. On the compare page one of these stands on a marked plinth, so it is not read as a rocket on a pad.
@@ -197,6 +198,7 @@ export const ROCKETS: Readonly<Record<string, RocketEntry>> = withTilt({
   pioneer: { id: "pioneer", name: "Pioneer", status: "built", ...MADE_BY["pioneer"], variants: PIONEER_VARIANTS, defaultVariant: "pioneer" },
   "new-horizons": { id: "new-horizons", name: "New Horizons", status: "built", ...MADE_BY["new-horizons"], variants: NEW_HORIZONS_VARIANTS, defaultVariant: "new-horizons" },
   "europa-clipper": { id: "europa-clipper", name: "Europa Clipper", status: "built", ...MADE_BY["europa-clipper"], variants: EUROPA_VARIANTS, defaultVariant: "europa-clipper" },
+  "viking-lander": { id: "viking-lander", name: "Viking Lander", status: "built", ...MADE_BY["viking-lander"], variants: VIKING_LANDER_VARIANTS, defaultVariant: "viking-lander" },
   starlink: { id: "starlink", name: "Starlink", status: "built", ...MADE_BY["starlink"], variants: STARLINK_VARIANTS, defaultVariant: "f9-2" },
   lageos: { id: "lageos", name: "LAGEOS-1", status: "built", ...MADE_BY["lageos"], variants: LAGEOS_VARIANTS, defaultVariant: "lageos-1" },
   "explorer-1": { id: "explorer-1", name: "Explorer 1", status: "built", ...MADE_BY["explorer-1"], variants: EXPLORER_VARIANTS, defaultVariant: "explorer-1" },

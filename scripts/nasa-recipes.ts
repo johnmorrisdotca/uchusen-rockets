@@ -294,6 +294,11 @@ const EUROPA_SPAN = 30.5004;
 const EUROPA_SCALE = 30 / EUROPA_SPAN;
 const EUROPA: NasaPart = { id: "craft", triangles: 8_000, error: 0.2, place: placer([0, -9.0107, 0], EUROPA_SCALE, EUROPA_SCALE, 0) };
 
+// Viking Lander. Its nodes flip Y and Z, so in the file's own space the three footpads sit at y 0.408 and the antenna points up. The pad centres are 10.642, 11.097 and 10.938 of the file's units apart: scaled to the sourced 2.21 m triangle. The axis is that centre in X and Z, and y 0.211, the bottom of the pads, so they sit on y = 0.
+const VIKING_SIDE = (10.642 + 11.097 + 10.938) / 3;
+const VIKING_SCALE = 2.21 / VIKING_SIDE;
+const VIKING: NasaPart = { id: "craft", triangles: 14_000, error: 0.008, place: placer([0.159, 0.211, 0.113], VIKING_SCALE, VIKING_SCALE, 0) };
+
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
     id: "space-shuttle-stack",
@@ -556,6 +561,19 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
       clipper_suda: [0.5, 0.5, 0.52],
     },
     trimBelow: SPECK_FLOOR,
+    looseWeld: true,
+    freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "viking-lander",
+    files: [`${FOLDER}/viking-lander.glb`],
+    title: "Viking Lander",
+    source: "https://science.nasa.gov/3d-resources/viking-lander/",
+    changes: "Reduced from 99,526 triangles; rescaled so the footpad triangle is the sourced 2.21 m and set so the pads sit on the ground; plain colours kept. Looked at from three sides of the source and four sides of the result: the file has no pictures and no lettering. One model for both landers. It carried no mark to remove.",
+    parts: [VIKING],
+    partOf: () => VIKING,
     looseWeld: true,
     freeBorders: true,
     atlas: 128,

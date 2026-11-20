@@ -73,6 +73,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   galileo: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-galileo" } },
   pioneer: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-pioneer-10" } },
   "europa-clipper": { maker: "nasa", madeBy: { value: "NASA", source: "nasa-europa-clipper" } },
+  "viking-lander": { maker: "nasa", madeBy: { value: "NASA", source: "nasa-viking-spacecraft", note: "NASA's Viking mission page. One model for both landers." } },
   starlink: { maker: "spacex", madeBy: { value: "Space Exploration Holdings, LLC", source: "spacex-gen2-dimensions", note: "The filer of the sizes' letter, the operator's company." } },
   lageos: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-lageos", note: "NASA's own mission page for LAGEOS, as for the other NASA craft here: it says the satellites are NASA's and does not say who built them." } },
   "vanguard-1": { maker: "us-navy", madeBy: { value: "Naval Research Laboratory", source: "wikipedia-vanguard-1", note: "The article names the United States Naval Research Laboratory as the satellite's builder under Project Vanguard." } },

@@ -72,6 +72,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   galileo: us("wikipedia-nasa", "Operated by NASA with the Jet Propulsion Laboratory."),
   pioneer: us("wikipedia-nasa", "Operated by NASA."),
   "europa-clipper": us("wikipedia-nasa", "Operated by NASA with the Jet Propulsion Laboratory."),
+  "viking-lander": us("nasa-viking-spacecraft", "NASA's Viking mission, of the United States. One model for both landers."),
   starlink: us("spacex-gen2-dimensions", "The sizes are from a filing with the United States' Federal Communications Commission by the operator, a company of the United States."),
   lageos: us("nasa-lageos", "NASA's mission page for LAGEOS, a United States mission."),
   "vanguard-1": us("wikipedia-vanguard-1", "The article names the United States Naval Research Laboratory, of the United States Navy."),
