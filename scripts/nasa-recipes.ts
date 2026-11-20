@@ -326,6 +326,30 @@ const CRAWLER: NasaPart = {
   },
 };
 
+// The Agena lies along the file's Z, engine at z -13.175 and the docking end at z 14.075. Its round body is 5.233 of the file's units across, centred at x 0.857, y 2.740, and a boom stands off that body. The file is shorter for its width than the summary, so the length and the width are scaled on their own: the length to 9.75 m, the round body to 1.5 m. Stood on the engine.
+const AGENA_Z0 = -13.175089836120605;
+const AGENA_Z1 = 14.07512378692627;
+const AGENA_CX = 0.857;
+const AGENA_CY = 2.74;
+const AGENA_DIAM = 5.2333;
+const AGENA_ALONG = 9.75 / (AGENA_Z1 - AGENA_Z0);
+const AGENA_ACROSS = 1.5 / AGENA_DIAM;
+const AGENA: NasaPart = {
+  id: "craft",
+  triangles: 18_000,
+  error: 0.01,
+  place: (p, n) => {
+    const [x, y, z] = p;
+    p[0] = (x - AGENA_CX) * AGENA_ACROSS;
+    p[1] = (z - AGENA_Z0) * AGENA_ALONG;
+    p[2] = (y - AGENA_CY) * AGENA_ACROSS;
+    const [nx, ny, nz] = n;
+    n[0] = nx;
+    n[1] = nz;
+    n[2] = ny;
+  },
+};
+
 const SKYLAB: NasaPart = {
   id: "craft",
   triangles: 16_000,
@@ -648,6 +672,21 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     freeBorders: true,
     trimBelow: SPECK_FLOOR,
     atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "agena",
+    files: [`${FOLDER}/agena-target-vehicle.glb`],
+    title: "Agena Target Vehicle",
+    source: "https://science.nasa.gov/3d-resources/agena-target-vehicle/",
+    changes: "The flag painted out of its picture; reduced from 31,290 triangles; rescaled so the length is the sourced 9.75 m and the round body is the sourced 1.5 m, and stood on the engine. Looked at from three sides of the source and of the result: no lettering. The flag is gone.",
+    parts: [AGENA],
+    partOf: () => AGENA,
+    patches: { anisotropic1SG: [{ to: [0.45, 0.3, 0.1, 0.25], fill: "#ffffff" }] },
+    looseWeld: true,
+    freeBorders: true,
+    trimBelow: SPECK_FLOOR,
+    atlas: 512,
     quality: 0.62,
   },
 ];
