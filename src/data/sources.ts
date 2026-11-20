@@ -208,6 +208,8 @@ export const SOURCES = {
   "nasa-nssdca-skylab": { title: "Skylab, NSSDCA/COSPAR ID 1973-027A", publisher: "NASA", url: "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1973-027A", date: "2026-11-17", read: "direct" },
   "nasa-sp-400-chapter-2": { title: "Skylab, Our First Space Station (NASA SP-400), chapter 2", publisher: "NASA", url: "https://www.nasa.gov/wp-content/uploads/static/history/SP-400/ch2.htm", date: "2026-11-17", read: "direct" },
   "nasa-sp-4225": { title: "Mir Hardware Heritage (NASA SP-4225)", publisher: "NASA", url: "https://ntrs.nasa.gov/citations/19950016829", date: "2026-11-19", read: "direct" },
+  "space40-2011-053a": { title: "2011-053A, TG-1 (Tiangong-1)", publisher: "Library of the Czech Academy of Sciences", url: "https://www.lib.cas.cz/space.40/2011/053A.HTM", date: "2026-11-19", read: "direct" },
+  "esa-tiangong-1": { title: "Tiangong-1 frequently asked questions", publisher: "European Space Agency, Space Debris Office", url: "https://blogs.esa.int/rocketscience/2018/03/26/tiangong-1-frequently-asked-questions-2/", date: "2026-11-19", read: "direct" },
 } as const satisfies Record<string, Source>;
 
 /**

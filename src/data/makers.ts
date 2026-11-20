@@ -79,6 +79,7 @@ export const MADE_BY: Readonly<Record<string, MadeBy>> = {
   "explorer-1": { maker: "nasa", madeBy: { value: "Jet Propulsion Laboratory", source: "wikipedia-explorer-1", note: "The article's infobox names the Jet Propulsion Laboratory as the manufacturer; NASA's fast-facts page is NASA's own page for the mission." } },
   skylab: { maker: "nasa", madeBy: { value: "NASA", source: "nasa-nssdca-skylab", note: "NASA's catalogue page names NASA's Office of Manned Space Flight as the funding agency. The contractors are not recorded here." } },
   mir: { maker: "ussr", madeBy: { value: "USSR", source: "nasa-sp-4225", note: "NASA SP-4225 records the 1986 launch and, writing in 1995, calls the station the centre of the Russian manned space program. It names no design bureau for the base block." } },
+  "tiangong-1": { maker: "china", madeBy: { value: "CASTC", source: "space40-2011-053a", note: "The catalogue names China Aerospace Science and Technology Corp. and the China Research Institute of Space Technology as the manufacturers, and the China Manned Space Flight Engineering Office as an operator." } },
   "sputnik-1": { maker: "ussr", madeBy: { value: "USSR", source: "nasa-history-sputnik-chronology", note: "NASA's chronology lists Sputnik 1 as a launch of the USSR. It names no design bureau." } },
   "fleet-ship-01": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },
   "fleet-atc": { maker: "fleet", madeBy: { value: "SPX", source: "uchusen-design" } },

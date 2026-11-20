@@ -77,6 +77,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   "vanguard-1": us("wikipedia-vanguard-1", "The article names the United States Naval Research Laboratory, of the United States Navy."),
   skylab: us("nasa-nssdca-skylab", "NASA's catalogue page names the Office of Manned Space Flight of NASA as the funding agency, of the United States."),
   mir: blank("NASA SP-4225 records a 1986 launch and, writing in 1995, the Russian manned space program. The Soviet Union is not one of the ISO 3166-1 codes this package lists.", "Soviet Union"),
+  "tiangong-1": { value: "CN", source: "space40-2011-053a", note: "The catalogue records a Chinese launch from Jiuquan and names Chinese organisations as the manufacturer and the operator." },
   "explorer-1": us("nasa-explorer-1-fast-facts", "NASA's page for the first United States satellite."),
   n1: blank("Its source names the USSR. The Soviet Union is not one of the ISO 3166-1 codes this package lists.", "Soviet Union"),
   "titan-ii-glv": us("wikipedia-titan-ii-glv"),
