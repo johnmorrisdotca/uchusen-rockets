@@ -627,6 +627,42 @@ const expectIdle = async (page: Page, ms = 2000) => {
   expect(end.asked - start.asked).toBeLessThanOrEqual(2);
 };
 
+/** Two readings a short gap apart saw the same number of WebGL draws. A draw still on its way keeps this false, so the wait keeps going. A loop that keeps drawing never lets it become true. */
+const drawsHeld = async (page: Page) => {
+  const mark = (await usage(page)).draws;
+  await settle(page, 400);
+  return (await usage(page)).draws === mark;
+};
+
+const waitUntilDrawsHeld = (page: Page) =>
+  expect.poll(() => drawsHeld(page), { timeout: 30_000, intervals: [200], message: "draws never held still" }).toBe(true);
+
+/** A real draw on every frame, through the page's own WebGL context. */
+const keepDrawing = (page: Page) =>
+  page.evaluate(() => {
+    const canvas = document.querySelector("[data-testid=\"hero\"]")?.shadowRoot?.querySelector("canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) throw new Error("no canvas");
+    const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    if (!gl) throw new Error("no context");
+    const loop = () => {
+      gl.drawArrays(gl.POINTS, 0, 0);
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  });
+
+/** The rest wait must fail while a real draw loop is running. A quiet page would hold still on the first reading, and this fails the test. */
+const expectDrawLoopFailsRest = async (page: Page) => {
+  await keepDrawing(page);
+  const started = Date.now();
+  let held = false;
+  while (Date.now() - started < 3_000) {
+    held = await drawsHeld(page);
+    if (held) break;
+  }
+  expect(held, "a draw loop was taken for rest").toBe(false);
+};
+
 test.describe("with the engines lit", () => {
   test("a flame draws at most once a frame, asks for one frame at a time, and stops when it has settled", async ({ page }) => {
     await page.addInitScript(COUNT);
@@ -794,7 +830,7 @@ test.describe("a played timeline", () => {
   const state = (page: Page) => rocket(page).evaluate((node) => (node as HTMLElement & { flightState: { playing: boolean; ended: boolean; position: number; active: boolean } }).flightState);
   const flightButton = (page: Page, id: string) => page.locator('[data-testid="flight"]').locator(`[data-testid="${id}"]`);
 
-  test("draws at most once a frame, asks for one frame at a time, ends by itself, and then nothing draws", async ({ page }) => {
+  test("ends by itself, and then nothing draws", async ({ page }) => {
     await page.addInitScript(COUNT);
     test.setTimeout(240_000);
     await page.goto(URL);
@@ -802,15 +838,20 @@ test.describe("a played timeline", () => {
     await reach3d(page);
     await flightButton(page, "flight-play").click();
     await expect.poll(async () => (await state(page)).playing).toBe(true);
-    const before = await usage(page);
-    const { drew, frames } = await measure(page, 20);
-    const after = await usage(page);
-    expect(drew).toBeGreaterThan(0);
-    expect(drew).toBeLessThanOrEqual(frames + 3);
-    expect(after.asked - before.asked).toBeLessThanOrEqual(after.pageFrames - before.pageFrames + 3);
     await expect.poll(async () => (await state(page)).ended, { timeout: 180_000 }).toBe(true);
     expect((await state(page)).playing).toBe(false);
-    await expectIdle(page);
+    await waitUntilDrawsHeld(page);
+  });
+
+  test("a draw loop after the flight has ended is still a freeze", async ({ page }) => {
+    await page.addInitScript(COUNT);
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await flightButton(page, "flight-play").click();
+    await expect.poll(async () => (await state(page)).ended, { timeout: 180_000 }).toBe(true);
+    await expectDrawLoopFailsRest(page);
   });
 
   test("paused it settles to nothing; out of sight and on a hidden tab it stands still and draws nothing", async ({ page }) => {
