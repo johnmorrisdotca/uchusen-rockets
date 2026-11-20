@@ -381,8 +381,8 @@ test("every variant of every rocket: drawn line and painted, then contexts and g
   await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 });
 
-// The kept caches settle a few vertex arrays apart from one walk to the next (641, 647, 647 on a hosted runner; 2503, 2503, 2525 for the tanks and the Ariake). Buffers and textures are read exactly. A leak adds some for every variant walked, hundreds in a walk.
-const arraysSlack = (arrays: number) => Math.max(16, Math.ceil(arrays * 0.02));
+// Two walks that ended in the same settled state (detail, paint, fittings, distance) may differ by a few vertex arrays. A leak adds some for every variant walked, hundreds in a walk. The old two percent covered a second program the fitting fade left behind (MODULES-705).
+const ARRAYS_FEW = 6;
 // Seconds a walk of each fleet ship took on a hosted runner, so CI's parts are the same size: the parts are filled heaviest first. A ship left out counts for ten.
 const FLEET_SECONDS: Record<string, number> = { "fleet-02-original": 88, "fleet-02": 69, "fleet-ship-ariake": 60, "fleet-kyotori": 40, "fleet-ship-01": 39, "fleet-ship-03": 37, "fleet-tanks": 34, "fleet-emiake": 18, "fleet-insets-ship-03": 14, "fleet-insets": 14, "fleet-samples": 12, "fleet-labs": 10, "fleet-markings": 10, "fleet-engines": 10, "fleet-decks": 8, "fleet-romaryu": 7, "fleet-systems": 6, "fleet-habitats": 5, "fleet-cargo": 5, "fleet-structure": 3, "fleet-kaminari": 2, "fleet-drone": 2, "fleet-insets-ship-01": 1 };
 
@@ -448,47 +448,42 @@ for (const [part, parts] of FLEET_PARTS) {
       await expect.poll(() => canvasData(page, "lod"), { timeout: 30_000 }).not.toBe("fade");
       return { detail: await hero(page).getAttribute("data-detail"), distance: await canvasData(page, "distance"), painted: await canvasData(page, "painted"), lod: await canvasData(page, "lod") };
     };
+    // A walk ends in one of two states, and the test does not choose which. The shadow pass and the fittings are drawn only while the ship is big on screen (scene.ts, applyFittingLod). A walk whose last ship was never drawn big read 1238 buffers and 410 arrays, and one whose last ship was read 1400 and 1006. Growth is read between two walks that ended in the same state. The first walk still fills caches, so it is not the floor.
+    type Settled = { key: string; buffers: number; arrays: number; textures: number; programs: number; contexts: number };
+    const take = async (n: number): Promise<Settled> => {
+      const view = await settledView();
+      const now = await levelUsage(page);
+      const key = `${view.detail}|${view.painted}|${view.lod}|${view.distance}`;
+      console.log(`fleet view ${n}`, view);
+      console.log(`fleet walk ${n}: buffers ${now.buffers}, arrays ${now.arrays}, textures ${now.textures}, programs ${now.programs}, state ${key}`);
+      return { key, buffers: now.buffers, arrays: now.arrays, textures: now.textures, programs: now.programs, contexts: now.contexts };
+    };
+    const hold = (earlier: Settled, later: Settled) => {
+      expect(later.key).toBe(earlier.key);
+      expect(later.buffers).toBeLessThanOrEqual(earlier.buffers);
+      expect(later.arrays).toBeLessThanOrEqual(earlier.arrays + ARRAYS_FEW);
+      expect(later.textures).toBeLessThanOrEqual(earlier.textures);
+      expect(later.contexts).toBe(1);
+    };
     await walk(1);
-    const firstView = await settledView();
-    const first = await levelUsage(page);
-    console.log("fleet view 1", firstView);
-    console.log(`fleet walk 1: buffers ${first.buffers}, arrays ${first.arrays}, textures ${first.textures}, programs ${first.programs}`);
+    await take(1);
     // the opened ones and the apart view too: the shapes that are only built when chosen
     await press(page, "rocket-fleet-samples");
     await press(page, "show-apart");
     await settle(page, 600);
     await press(page, "show-together");
     await walk(1);
-    const lastView = await settledView();
-    const second = await levelUsage(page);
-    console.log("fleet view 2", lastView);
-    expect(lastView.detail).toBe(firstView.detail);
-    console.log(`fleet walk 2: buffers ${second.buffers}, arrays ${second.arrays}, textures ${second.textures}, programs ${second.programs}`);
-    // the first walk reads the caches still filling (15 more vertex arrays after it on a slow runner), so growth is read from the second walk to a third
+    const second = await take(2);
     await walk(1);
-    let last = await levelUsage(page);
-    console.log(`fleet walk 3: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
-    // The kept caches end a walk in one of two states, and the test does not choose which. The shadow pass and the fittings of a fleet ship are drawn only while it is big on screen, and a small one does not draw them
-    // (scene.ts, applyFittingLod). A walk whose last ship was never drawn big read 1238 buffers and 410 arrays, and one whose last ship was read 1400 and 1006, for the same ships: one CI run read 1238, 1238, 1400, 1383 over
-    // four walks and another 1400, 1400, 1382. So a walk is not held to an earlier one that may be in the other state. A leak keeps rising from walk to walk, hundreds of buffers for each, so when the third walk reads
-    // above the first two one more walk is taken and it must not rise from the third. When the third does not read above them, it is held to the first two as before.
-    // A vertex array is three.js's record of one geometry drawn with one program, made on the first draw and kept while the geometry lives; how many there are follows what the last frames drew. The textures hold memory and stay held to the second walk exactly.
-    const arraysFloor = Math.max(first.arrays, second.arrays);
-    const buffersFloor = Math.max(first.buffers, second.buffers);
-    const third = last;
-    if (last.arrays > arraysFloor + arraysSlack(arraysFloor) || last.buffers > buffersFloor || last.textures > second.textures) {
+    const third = await take(3);
+    if (third.key === second.key) hold(second, third);
+    else {
       await walk(1);
-      last = await levelUsage(page);
-      console.log(`fleet walk 4: buffers ${last.buffers}, arrays ${last.arrays}, textures ${last.textures}, programs ${last.programs}`);
-      expect(last.buffers).toBeLessThanOrEqual(third.buffers);
-      expect(last.arrays).toBeLessThanOrEqual(third.arrays + arraysSlack(third.arrays));
-      expect(Math.min(third.textures, last.textures)).toBeLessThanOrEqual(second.textures);
-    } else {
-      expect(last.buffers).toBeLessThanOrEqual(buffersFloor);
-      expect(last.arrays).toBeLessThanOrEqual(arraysFloor + arraysSlack(arraysFloor));
-      expect(last.textures).toBeLessThanOrEqual(second.textures);
+      const fourth = await take(4);
+      const base = fourth.key === third.key ? third : fourth.key === second.key ? second : null;
+      expect(base, `the fourth walk (${fourth.key}) matched neither the second (${second.key}) nor the third (${third.key})`).not.toBeNull();
+      hold(base!, fourth);
     }
-    expect(last.contexts).toBe(1);
     // The ship left on screen can spend several seconds inside one frame. A count taken after play() waits that frame out, so the frame has already been counted and the next ninety seconds hold eleven where twelve fit.
     const begun = await page.evaluate(() => {
       const seen = (window as unknown as { __seen: { frames: number } }).__seen.frames;
@@ -756,14 +751,16 @@ test.describe("with the engines lit", () => {
       await expect.poll(() => canvasData(page, "plumes")).toBe("33");
     };
     await round();
-    await settle(page, 300);
-    const first = await usage(page);
+    // both readings are the same rocket with the same flames, and only once the counts have stopped moving: a slow runner used to read the body (58 arrays) before the flames were on the card and the later round after they were (203)
+    await expect.poll(() => canvasData(page, "plumes")).toBe("33");
+    const first = await levelUsage(page);
+    expect(await canvasData(page, "plumes")).toBe("33");
     for (let i = 0; i < 4; i++) await round();
-    await settle(page, 300);
-    const last = await usage(page);
+    const last = await levelUsage(page);
+    expect(await canvasData(page, "plumes")).toBe("33");
     expect(last.contexts).toBe(1);
     expect(last.buffers).toBeLessThanOrEqual(first.buffers);
-    expect(last.arrays).toBeLessThanOrEqual(first.arrays);
+    expect(last.arrays).toBeLessThanOrEqual(first.arrays + ARRAYS_FEW);
   });
 
   test("a lit rocket let go while out of sight gives back its context, and comes back lit", async ({ page }) => {

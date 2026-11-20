@@ -62,6 +62,7 @@ import { paintGlow, paintSky, paintSteel, paintTiles } from "./paint.ts";
 import { skyGroupOf, skyQuery, type SkyShown } from "./solarGroups.ts";
 import { assemblyOf, inspectAlong, playFrame } from "../buildPlay.ts";
 import { clearArc, fitoutOf, growPart, spinUp } from "./buildArc.ts";
+import { fadeFitting } from "./fittingFade.ts";
 import { fitTanks } from "./fitOut.ts";
 import { type FlightClock, type FlightFrame, flightBounds, frameAt } from "../flight.ts";
 import { inspectAt } from "../inspect.ts";
@@ -976,6 +977,8 @@ export class RocketViewer {
     }
     const geometry = new LineSegmentsGeometry();
     geometry.setPositions(pairs);
+    // the packed line never joins the scene; its geometry would stay after the ship is left
+    node.geometry.dispose();
     const fat = new LineSegments2(geometry, new LineMaterial({ color: 0x8fa1b8, linewidth: 1, transparent: true }));
     fat.computeLineDistances();
     return fat;
@@ -2701,35 +2704,12 @@ export class RocketViewer {
     this.canvas.dataset.lod = this.lodFade === 0 ? "small" : this.lodFade === 1 ? "full" : "fade";
   }
 
-  /** Draws the fittings at `level`, from gone to solid. The material's own opacity comes back at either end. */
+  /** Draws the fittings at `level`, from gone to solid. A fade uses its own material, disposed at either end, so the shared one never keeps a second program's vertex arrays. */
   private paintFittings(level: number): void {
     const fleet = new Set([...(this.built?.parts ?? []), ...(this.built?.beside ?? [])].filter((part) => part.record.rocket.startsWith("fleet-")).map((part) => part.slot));
     for (const part of this.parts) {
       if (!fleet.has(part.slot) || !part.code.visible) continue;
-      for (const face of part.faces) {
-        if (!FITTING.has(face.name)) continue;
-        const material = face.mesh.material;
-        if (Array.isArray(material) || !("opacity" in material)) {
-          face.mesh.visible = level > 0;
-          continue;
-        }
-        const own = material as MeshStandardMaterial;
-        if (own.userData.fitOpacity === undefined) {
-          own.userData.fitOpacity = own.opacity;
-          own.userData.fitTransparent = own.transparent;
-        }
-        if (level <= 0 || level >= 1) {
-          own.opacity = own.userData.fitOpacity as number;
-          own.transparent = own.userData.fitTransparent as boolean;
-          own.depthWrite = !own.transparent;
-          face.mesh.visible = level >= 1;
-        } else {
-          own.transparent = true;
-          own.depthWrite = false;
-          own.opacity = (own.userData.fitOpacity as number) * level;
-          face.mesh.visible = true;
-        }
-      }
+      for (const face of part.faces) if (FITTING.has(face.name)) fadeFitting(face.mesh, level);
     }
   }
 
