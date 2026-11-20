@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- **The demo stage stays on screen on a phone** (MODULES-1335). Choosing a maker or a rocket below the fold used to scroll the picture away, because the stage was `position: static` under 820 px. It stays stuck to the top, short enough that a row of choices remains under it. A desk is unchanged.
+- **The demo stage stays on screen on a phone** (MODULES-1335). Choosing a maker or a rocket below the fold used to scroll the picture away. The picture stays at the top, and a choice that scrolls into view stops below it, so the tap lands on the choice. The fleet record's picture is not stuck over its ship and section buttons. A desk is unchanged.
 
 ## [0.36.0] - 2026-11-19
 
