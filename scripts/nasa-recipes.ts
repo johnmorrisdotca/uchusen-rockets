@@ -299,6 +299,27 @@ const VIKING_SIDE = (10.642 + 11.097 + 10.938) / 3;
 const VIKING_SCALE = 2.21 / VIKING_SIDE;
 const VIKING: NasaPart = { id: "craft", triangles: 14_000, error: 0.008, place: placer([0.159, 0.211, 0.113], VIKING_SCALE, VIKING_SCALE, 0) };
 
+// Skylab lies along the file's X, from the telescope mount at x -21.5 to the workshop's far end at x 17.2, and its round body is 8.25 of the file's units across (blinn5, and the round slices). Stood on that end, scaled so the round body is the sourced 6.70 m. The file's Y, 29.45 to 41.23, and Z, -13.45 to 16.41, are centred.
+const SKYLAB_SCALE = 6.7 / 8.25;
+const SKYLAB_X1 = 17.196;
+const SKYLAB_YC = (29.452 + 41.234) / 2;
+const SKYLAB_ZC = (-13.445 + 16.407) / 2;
+const SKYLAB: NasaPart = {
+  id: "craft",
+  triangles: 16_000,
+  error: 0.03,
+  place: (p, n) => {
+    const [x, y, z] = p;
+    p[0] = (y - SKYLAB_YC) * SKYLAB_SCALE;
+    p[1] = (SKYLAB_X1 - x) * SKYLAB_SCALE;
+    p[2] = (z - SKYLAB_ZC) * SKYLAB_SCALE;
+    const [nx, ny, nz] = n;
+    n[0] = ny;
+    n[1] = -nx;
+    n[2] = nz;
+  },
+};
+
 export const NASA_RECIPES: readonly NasaRecipe[] = [
   {
     id: "space-shuttle-stack",
@@ -576,6 +597,20 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     partOf: () => VIKING,
     looseWeld: true,
     freeBorders: true,
+    atlas: 128,
+    quality: 0.62,
+  },
+  {
+    id: "skylab",
+    files: [`${FOLDER}/skylab.glb`],
+    title: "Skylab",
+    source: "https://data.nasa.gov/dataset/nasa-3d-models-skylab",
+    changes: "Reduced from 25,292 triangles; rescaled so the round body is the sourced 6.70 m and stood on the workshop's far end. Looked at from three sides of the source and two sides of the result: the file has no pictures and no lettering. The gold is the solar arrays. It carried no mark to remove.",
+    parts: [SKYLAB],
+    partOf: () => SKYLAB,
+    looseWeld: true,
+    freeBorders: true,
+    trimBelow: SPECK_FLOOR,
     atlas: 128,
     quality: 0.62,
   },

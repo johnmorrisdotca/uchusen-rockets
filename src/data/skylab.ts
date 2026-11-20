@@ -35,7 +35,7 @@ export const SKYLAB: Variant = {
     },
     sizes: { Workshop: { value: OWS, source: BOOK, note: "14.66 m." }, Airlock: { value: AM, source: BOOK, note: "5.36 m." }, "Docking adapter": { value: MDA, source: BOOK, note: "5.27 m." } },
   },
-  note: "Skylab, the cluster as it was launched without the docked Apollo spacecraft. The lengths and diameters are NASA SP-400's table; the date, the mass and the funding agency are NASA's catalogue page. The drawing is this package's own three tubes: the workshop, the airlock module's 3.04 m body and the docking adapter, with the airlock shroud's wider and narrower diameters, the telescope mount and the solar wings left out because no source read gives where they sat or how big the wings were. Both looks are the same. No name or mark is drawn. Maker NASA (the funding agency; the contractors are not recorded here), country the United States.",
+  note: "Skylab, the cluster as it was launched without the docked Apollo spacecraft. The lengths and diameters are NASA SP-400's table; the date, the mass and the funding agency are NASA's catalogue page. The line looks are this package's own three tubes: the workshop, the airlock module's 3.04 m body and the docking adapter. The airlock shroud's wider and narrower diameters, the telescope mount and the solar wings are not in that drawing: no source read gives their places or the wings' size. The painted look is NASA's model, scaled so its round body is the sourced 6.70 m; at that scale the file stands 31.46 m and the arrays reach 24.24 m across. No name or mark is drawn. Maker NASA (the funding agency; the contractors are not recorded here), country the United States.",
 };
 
 export const SKYLAB_VARIANTS: readonly Variant[] = [SKYLAB];
