@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.36.1] - 2026-11-20
+
 - **A fleet walk no longer keeps a second program's vertex arrays** (MODULES-705). Fading a fitting used to mark the shared material transparent, and that second program stayed for the life of the material, one vertex array a mesh, which is the few dozen the tanks and the Ariake gained between walks. The fade now uses its own material and disposes it when the fade ends. The packed line's geometry is disposed once its thick line has been copied, so it does not stay after the ship is left. The fleet-walk freeze check compares two walks that ended in the same settled state and allows a few vertex arrays, not two percent. Changing rocket with the engines lit waits until the graphics counts and the plume count have both settled before it compares them.
 
 ## [0.36.0] - 2026-11-19
