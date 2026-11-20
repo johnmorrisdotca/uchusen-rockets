@@ -104,6 +104,7 @@ buildPart("raptor-vacuum").record.kind; // "engine"
 | Explorer 1 | This package's own tube and cone, NASA's 203 cm by 15.9 cm; the cone's 0.3 m is judged from photographs. The whip antennas are not drawn: their length is not given | The same tube and cone. No separate model file |
 | Vanguard 1 | This package's own sphere, the article's 152 mm diameter. The antennas are not drawn: their angles are not given | The same sphere. No separate model file |
 | Skylab | This package's own three tubes at NASA SP-400's lengths and diameters: the workshop 14.66 m by 6.70 m, the airlock module 5.36 m and the docking adapter 5.27 m, both 3.04 m across. The airlock shroud's other diameters, the telescope mount and the solar wings are not drawn: no source read gives their places or sizes | The same tubes. No separate model file |
+| Mir | This package's own two tubes at NASA SP-4225's lengths and diameters: the base block 13.13 m by 4.15 m and Kvant 5.8 m by 4.15 m on the aft port. Kvant 2, Kristall, Spektr, Priroda and the solar arrays are not drawn: the book does not place them | The same tubes. No separate model file |
 | Sputnik 1 | This package's own sphere, the 22-inch diameter in NASA's history account. The antennas are not drawn: their length and angle are not given | The same sphere. No separate model file |
 | Starbase | This package's code: places, outlines and the map's heights from OpenStreetMap | This package's code. No lettering or logo |
 

@@ -138,6 +138,7 @@ const SPECIFIC: Readonly<Record<string, readonly Partner[]>> = {
   ],
   n1: [one("SUHH", { en: "Made by OKB-1 and launched from Baikonur", ja: "OKB-1 が製造し、バイコヌールから打ち上げ" }, "wikipedia-n1", "The infobox names the USSR. The Soviet Union is not an ISO 3166-1 code; hata keeps its flag as SUHH.")],
   "sputnik-1": [one("SUHH", { en: "Built and launched by the Soviet Union", ja: "ソ連が製造・打ち上げ" }, "nasa-history-sputnik-chronology", "NASA's chronology names the USSR. The Soviet Union is not an ISO 3166-1 code; hata keeps its flag as SUHH.")],
+  mir: [one("SUHH", { en: "Launched on 19 February 1986. The 1995 book calls the station the centre of the Russian manned space program.", ja: "1986年2月19日に打ち上げ。1995年の本では、ロシアの有人宇宙計画の中心とされている。" }, "nasa-sp-4225", "The Soviet Union is not an ISO 3166-1 code; hata keeps its flag as SUHH.")],
   electron: [
     one("NZ", { en: "Launches from Launch Complex 1 on the Māhia Peninsula", ja: "マヒア半島の第1発射施設から打ち上げ" }, "wikipedia-electron", "Its source names New Zealand and the United States as its countries of origin."),
     one("US", { en: "A second launch site: Launch Complex 2 at Wallops, Virginia", ja: "第2の発射場：バージニア州ワロップスの第2発射施設" }, "wikipedia-electron", "Its source names New Zealand and the United States as its countries of origin."),

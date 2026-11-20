@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Mir**: `rocket="mir"`, variant `mir`. The base block (13.13 m by 4.15 m) and Kvant (5.8 m by 4.15 m) drawn as two tubes end to end, 18.93 m in all (the sum, this package's own), the base block's launch mass 20,400 kg, launched 1986-02-19, from NASA SP-4225, Mir Hardware Heritage (NTRS 19950016829), read 2026-11-19. Kvant 2 and Kristall (each 13.73 m by 4.35 m) are recorded and not drawn: the book puts them on lateral ports and does not say which. Spektr, Priroda, the solar arrays and the forward node's own length are left out for the same reason. The far picture keeps both tubes: each one is the line drawing, so the 6 m cut does not drop it. Both looks are the same tubes. No name or mark is drawn. Maker the USSR, country blank.
+
 ## [0.36.0] - 2026-11-19
 
 - **Propellant and flight notes no longer quote a Wikipedia sentence** (MODULES-1323). The propellant, the Ariane 5 lengths and the flight moves stay the same numbers. The notes say them in this package's own words.
