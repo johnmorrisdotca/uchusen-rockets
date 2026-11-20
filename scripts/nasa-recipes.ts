@@ -350,6 +350,19 @@ const AGENA: NasaPart = {
   },
 };
 
+// Freedom 7 stands on the file's Y, heat shield at y 0.859 and the antenna cap at y 10.094. The round body is 5.934 of the file's units across, centred at x -0.327, z 0.656. The file is a little taller for its width than the early-years table, so the length and the width are scaled on their own: the length to 2.9 m, the width to 1.9 m. Those are the table's figures, not Friendship 7's 3.3 m by 1.8 m, which are the spacecraft article's. Stood on the heat shield.
+const FREEDOM_Y0 = 0.8594599962234497;
+const FREEDOM_CX = -0.32659149169921875;
+const FREEDOM_CZ = 0.6564104557037354;
+const FREEDOM_TALL = 9.234652400016785;
+const FREEDOM_WIDE = 5.933751106262207;
+const FREEDOM: NasaPart = {
+  id: "capsule",
+  triangles: 24_000,
+  error: 0.002,
+  place: placer([FREEDOM_CX, FREEDOM_Y0, FREEDOM_CZ], 2.9 / FREEDOM_TALL, 1.9 / FREEDOM_WIDE, 0),
+};
+
 const SKYLAB: NasaPart = {
   id: "craft",
   triangles: 16_000,
@@ -687,6 +700,20 @@ export const NASA_RECIPES: readonly NasaRecipe[] = [
     freeBorders: true,
     trimBelow: SPECK_FLOOR,
     atlas: 512,
+    quality: 0.62,
+  },
+  {
+    id: "freedom-7",
+    files: [`${FOLDER}/redstone-3-freedom-7.glb`],
+    title: "Freedom 7",
+    source: "https://science.nasa.gov/3d-resources/redstone-3-freedom-7/",
+    changes: "Reduced from 163,880 triangles; rescaled so the length is the early-years table's 2.9 m and the width is its 1.9 m, and stood on the heat shield. Looked at from NASA's picture and from the result: the file has no pictures and no lettering. It carried no mark to remove. NASA's copy leaves its materials all one grey, and that grey is kept.",
+    parts: [FREEDOM],
+    partOf: () => FREEDOM,
+    looseWeld: true,
+    freeBorders: true,
+    trimBelow: SPECK_FLOOR,
+    atlas: 128,
     quality: 0.62,
   },
 ];

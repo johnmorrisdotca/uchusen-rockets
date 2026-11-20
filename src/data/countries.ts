@@ -75,6 +75,7 @@ export const ROCKET_COUNTRIES: Readonly<Record<string, Figure<CountryCode>>> = {
   "viking-lander": us("nasa-viking-spacecraft", "NASA's Viking mission, of the United States. One model for both landers."),
   crawler: us("nasa-the-crawlers", "NASA's crawler-transporters, at Kennedy Space Center, of the United States."),
   agena: us("nasa-early-years", "NASA's Agena target vehicle for Gemini, of the United States."),
+  "freedom-7": us("nasa-early-years", "NASA's Freedom 7, the first crewed Mercury, of the United States."),
   starlink: us("spacex-gen2-dimensions", "The sizes are from a filing with the United States' Federal Communications Commission by the operator, a company of the United States."),
   lageos: us("nasa-lageos", "NASA's mission page for LAGEOS, a United States mission."),
   "vanguard-1": us("wikipedia-vanguard-1", "The article names the United States Naval Research Laboratory, of the United States Navy."),
