@@ -6,7 +6,7 @@ import { parts as miyamoto } from "../src/model/fleet/ship-03/index.ts";
 import { rpmFor } from "../src/model/fleet/ship-01/spin.ts";
 import { meshOf } from "../src/model/pieces.ts";
 import { KYOTORI_PARTS } from "../src/model/fleet/ship-kyotori/variants.ts";
-import { SAIL_SLOTS } from "../src/model/fleet/kaminari-concepts/sails.ts";
+import { FOLD_SLOTS, SAIL_DEPLOYED_SLOTS } from "../src/model/fleet/kaminari-concepts/sails.ts";
 
 const near = (a: number, b: number, eps = 0.01) => assert.ok(Math.abs(a - b) < eps, `${a} is not ${b}`);
 
@@ -142,9 +142,27 @@ test("a sweep stays between its angles", () => {
 
 test("every motion names a group that a part of its ship really carries, so none moves nothing", () => {
   const groups = (list: { pieces: (o?: { detail?: number }) => Parameters<typeof meshOf>[0] }[]) => new Set(list.flatMap((p) => meshOf(p.pieces({ detail: 0.3 })).moves.map((g) => g.name)));
-  const sails = new Set(SAIL_SLOTS.flatMap((slot) => meshOf(slot.pieces()).moves.map((g) => g.name)));
+  const sails = new Set(FOLD_SLOTS.flatMap((slot) => meshOf(slot.pieces()).moves.map((g) => g.name)));
   const have: Record<string, Set<string>> = { "fleet-kyotori": groups(KYOTORI_PARTS.filter((p) => p.id.startsWith("s-wings") || p.id.includes("-bay") || p.id === "s-core")), "fleet-emiake": sails, "fleet-ship-01": groups(hanabusa()), "fleet-ship-03": groups(miyamoto()), "fleet-ship-ariake": groups(miyamoto()) };
   for (const m of MOTIONS) assert.ok(have[m.ship]?.has(m.group), `${m.ship}: ${m.group}`);
+});
+
+test("Emiake's gores lie along the hull at rest and swing out when the arrays are open", () => {
+  const radius = (pieces: ReturnType<(typeof FOLD_SLOTS)[number]["pieces"]>) => pieces.flatMap((p) => (p.kind === "plate" && p.thickness === 0.4 ? [p.frame.v] : []));
+  const centre = FOLD_SLOTS.find((slot) => slot.slot === "fin-centre")!.pieces();
+  const centreOpen = SAIL_DEPLOYED_SLOTS.find((slot) => slot.slot === "fin-centre")!.pieces();
+  const port = FOLD_SLOTS.find((slot) => slot.slot === "fin-port")!.pieces();
+  const portOpen = SAIL_DEPLOYED_SLOTS.find((slot) => slot.slot === "fin-port")!.pieces();
+  assert.ok(radius(centre).every((v) => Math.abs(v[2]) < 1e-6), "the centre wing stands up at rest");
+  assert.ok(radius(centreOpen).some((v) => Math.abs(v[2]) > 0.5));
+  assert.ok(radius(port).every((v) => Math.abs(v[0]) < 1e-6), "the port wing sticks out at rest");
+  assert.ok(radius(portOpen).some((v) => v[0] < -0.5));
+  assert.deepEqual(
+    ["fin-port", "fin-centre", "fin-starboard"].map((id) => FOLD_SLOTS.find((slot) => slot.slot === id)!.at[0]),
+    [-48, 0, 48],
+  );
+  assert.equal(new Set(meshOf(port).moves.map((g) => g.name)).has("fan-port-0"), true);
+  assert.equal(meshOf(portOpen).moves.length, 0);
 });
 
 test("the Motion choice: still unless asked for, ten times on request, never under reduced motion", () => {

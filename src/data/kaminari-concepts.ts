@@ -58,7 +58,7 @@ const inspectorOf = (key: ConceptKey): Inspector => {
 
 const NOTES: Readonly<Record<ConceptKey, string>> = {
   a: "ISV Kaminari, the Quiver: thinner cylinders. One long truss carries rings of slim propellant tanks like the barrels of a revolver, rings of cargo containers, reactor cells and two counter-rotating carousels of slim habitat drums. The drive is a ring array of 19 magnetic-nozzle thrusters behind a stack of fusion coil rings. Visiting craft berth on the open truss, outside the hull. Use the size slider to try 60 to 100 per cent.",
-  b: "ISV Emiake, smiling dawn: a hull that is not a tube. A flattened wedge built like a ship: an armoured keel, six longerons and ribs every 30 m, open aft where the slim tanks and containers lie in rows, plated forward where the crew's town sits under a glazed gallery. Three radiator sails stand on the dorsal ridge; the outer two swing down and out, and the middle stays up. The drive is a grid of 27 magnetic-nozzle thrusters across the stern. Visiting craft berth outside the hull. Use the size slider to try 60 to 100 per cent.",
+  b: "ISV Emiake, smiling dawn: a hull that is not a tube. A flattened wedge built like a ship: an armoured keel, six longerons and ribs every 30 m, open aft where the slim tanks and containers lie in rows, plated forward where the crew's town sits under a glazed gallery. Three folding arrays, port, centre and starboard, lie along the hull at rest. Open, each wing is four filled radiator panels, 160 m out, running from 240 m to 1,200 m, and four panels on the ridge lean with them. The drive is a grid of 27 magnetic-nozzle thrusters across the stern. Visiting craft berth outside the hull. Use the size slider to try 60 to 100 per cent.",
   c: "ISV Romaryū, dragon of Rome: a spine with two of ISV Miyamoto, gold array out, and two of ISV Ariake, four boxes and dawn-gold bands, docked round it in two pairs, each the package's own model at its true size, and a Starship ship, two tankers and a Dragon berthed outside the shaft beside them. Two stations of propellant barrels aft, two counter-rotating habitat rings, and a drive of four flank pods of seven magnetic-nozzle thrusters with one large thruster on the axis. Use the size slider to try 60 to 100 per cent.",
 };
 
@@ -93,21 +93,21 @@ const variantOf = (key: ConceptKey): Variant => {
   };
 };
 
-/** One variant list for each ship. Emiake has a second variant with the outer sails deployed. */
+/** One variant list for each ship. Emiake has a second variant with the folding arrays open. */
 const deployedSails = (): Variant => {
   const stowed = variantOf("b");
   const slots = CONCEPT_SLOTS.b;
   return {
     ...stowed,
     id: EMIAKE_DEPLOYED,
-    name: `${stowed.name}, radiator sails deployed`,
-    note: `${stowed.note} This variant has the outer two sails swung down and out.`,
-    partIds: Object.fromEntries(slots.map((slot) => [slot.slot, `${ROCKET_OF.b}-${slot.slot === "fin-port" || slot.slot === "fin-starboard" ? EMIAKE_DEPLOYED : stowed.id}-${slot.slot}`])),
-    inspector: stowed.inspector ? { ...stowed.inspector, spec: [...stowed.inspector.spec, ["Radiator sails", "Outer two deployed, middle stowed"]] } : undefined,
+    name: `${stowed.name}, folding arrays open`,
+    note: `${stowed.note} This variant has the three fans spread and the hinged panels folded out.`,
+    partIds: Object.fromEntries(slots.map((slot) => [slot.slot, `${ROCKET_OF.b}-${slot.slot.startsWith("fin-") ? EMIAKE_DEPLOYED : stowed.id}-${slot.slot}`])),
+    inspector: stowed.inspector ? { ...stowed.inspector, spec: [...stowed.inspector.spec, ["Folding arrays", "Three wings open, panels leaned out"]] } : undefined,
   };
 };
 
-/** One variant list for each ship. Emiake has a second variant with the outer sails deployed. */
+/** One variant list for each ship. Emiake has a second variant with the folding arrays open. */
 export const KAMINARI_VARIANTS: Readonly<Record<ConceptKey, readonly Variant[]>> = { a: [variantOf("a")], b: [variantOf("b"), deployedSails()], c: [variantOf("c")] };
 
 /**
@@ -132,9 +132,13 @@ export const CONCEPT_SLOT_NAMES: Readonly<Record<string, string>> = {
   reactors: "Reactor cells",
   "coil-stack": "Coil stack and reactor cells",
   radiators: "Radiator fins",
-  "fin-port": "Port radiator sail",
-  "fin-centre": "Centre radiator sail",
-  "fin-starboard": "Starboard radiator sail",
+  "fin-port": "Port folding array",
+  "fin-centre": "Centre folding array",
+  "fin-starboard": "Starboard folding array",
+  "fin-leaf-1": "Hinged panel 1",
+  "fin-leaf-2": "Hinged panel 2",
+  "fin-leaf-3": "Hinged panel 3",
+  "fin-leaf-4": "Hinged panel 4",
   visiting: "Visiting craft",
   carousel: "Habitat carousel",
   "carousel-a": "Habitat carousel A",

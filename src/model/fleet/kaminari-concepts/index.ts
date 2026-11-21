@@ -41,7 +41,7 @@ export const ROCKET_OF: Readonly<Record<ConceptKey, "fleet-kaminari" | "fleet-em
  */
 export const CONCEPT_ROCKETS = [ROCKET_OF.a, ROCKET_OF.b, ROCKET_OF.c] as const;
 
-/** Emiake with the outer radiator sails swung down. */
+/** Emiake with the folding arrays open and the hinged panels folded out. */
 export const EMIAKE_DEPLOYED = "fleet-emiake-deployed";
 
 export { SAIL_DEPLOYED_SLOTS };

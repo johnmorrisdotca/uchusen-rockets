@@ -2,11 +2,11 @@
 
 **加美鳴（かみなり） · Kaminari.** **笑明（えみあけ） · Emiake · smiling dawn.** **羅馬龍（ローマりゅう） · Romaryū · dragon of Rome.**
 
-Maker and operator SPX. The Quiver is the public ISV 加美鳴 Kaminari, SPX-207 (`fleet-kaminari`). The keel is ISV 笑明 Emiake, SPX-109 (`fleet-emiake`; smiling dawn), with the outer radiator sails deployed on `fleet-emiake-deployed`. The carrier is ISV 羅馬龍 Romaryū, SPX-118 (`fleet-romaryu`; dragon of Rome). The first hull is kept at `docs/fleet/ship-02-original.md` and opened by address as `fleet-02-original`, not listed in the Rocket picker.
+Maker and operator SPX. The Quiver is the public ISV 加美鳴 Kaminari, SPX-207 (`fleet-kaminari`). The keel is ISV 笑明 Emiake, SPX-109 (`fleet-emiake`; smiling dawn), with the folding arrays open on `fleet-emiake-deployed`. The carrier is ISV 羅馬龍 Romaryū, SPX-118 (`fleet-romaryu`; dragon of Rome). The first hull is kept at `docs/fleet/ship-02-original.md` and opened by address as `fleet-02-original`, not listed in the Rocket picker.
 
 John's brief (2026-11-04): the length of about 1.8 km may stay, the size is open; the beam was wrong, because a wide hull cannot just be a bigger round tube. So: (A) thinner cylinders, (B) a hull that is not a tube, (C) a carrier spine with four Miyamoto-size craft. Every concept has the drive LESSONS 29 asks for: many realistic thrusters, no scaled-up bell. Franchise ships are mood only and nothing is copied; real spacecraft and engineering come first.
 
-Code: `src/model/fleet/kaminari-concepts/` (`a.ts`, `b.ts`, `c.ts`, the shared `common.ts`, `drive.ts`, `berth.ts`, `sails.ts`, `scale.ts`, `specs.ts`), the registry rows in `src/model/kaminari-concepts.ts`, the data in `src/data/kaminari-concepts.ts`. Tests: `test/kaminari-concepts.test.ts`, `e2e/kaminari-scale.demo.ts`.
+Code: `src/model/fleet/kaminari-concepts/` (`a.ts`, `b.ts`, `c.ts`, the shared `common.ts`, `drive.ts`, `berth.ts`, `sails.ts`, `folding.ts`, `scale.ts`, `specs.ts`), the registry rows in `src/model/kaminari-concepts.ts`, the data in `src/data/kaminari-concepts.ts`. Tests: `test/kaminari-concepts.test.ts`, `e2e/kaminari-scale.demo.ts`.
 
 ## The drive, shared by the three
 
@@ -26,9 +26,9 @@ One 24 m square truss, 1.5 km long, carries everything, and everything on it is 
 
 ## B. Keel and frame: a hull that is not a tube
 
-A flattened wedge, 48 m thick, tapering in plan from 164 m across at the stern to 40 m at the bow. Built the way a ship is: an armoured keel girder (14 m by 14 m, plated) under the centreline, six longerons along the corners, and 47 ribs every 30 m. Aft the ribs stand open and eight groups of slim tanks and three cells of containers lie in rows between them, in plain sight; forward, plating closes the bays, with rows of lit windows down both flanks and, along the top, a 277 m armoured glass gallery over a garden and a promenade. A bridge tower of the kit's crew modules stands on the dorsal ridge. Three radiator fins stand edge-on on the ridge and the upper ribs: a thin line from above, the ship's sail from the side.
+A flattened wedge, 48 m thick, tapering in plan from 164 m across at the stern to 40 m at the bow. Built the way a ship is: an armoured keel girder (14 m by 14 m, plated) under the centreline, six longerons along the corners, and 47 ribs every 30 m. Aft the ribs stand open and eight groups of slim tanks and three cells of containers lie in rows between them, in plain sight; forward, plating closes the bays, with rows of lit windows down both flanks and, along the top, a 277 m armoured glass gallery over a garden and a promenade. A bridge tower of the kit's crew modules stands on the dorsal ridge. Three folding arrays, port, centre and starboard, in the ship's radiator white. Each wing is four filled panels, 160 m out, a cell grid inside a frame. The hubs are at 400 m, 720 m and 1,040 m, so the panels run from 240 m to 1,200 m, aft of the gallery. At rest they lie along the hull. Open, the centre wing stands up off the roof and the outer two swing out to the flanks. Four hinged panels on the ridge lean along the hull and stay visible from the side.
 
-- Size, the record (`SPECS.b`): 1,662 m long, 164 m across the hull, 168 m overall. The wedge is 48 m thick, and the keel and the ridge make it 125 m from keel to fin tip. The model's `B.length` is 1,700 m; the record subtracts the grid plane and adds 8 m.
+- Size, the record (`SPECS.b`): 1,662 m long, 164 m across the hull, 168 m overall. The wedge is 48 m thick. A folded array lies along the hull. Open, each panel reaches 160 m out from its hub. The model's `B.length` is 1,700 m; the record subtracts the grid plane and adds 8 m.
 - Planned assembly: about 5 years. A planned figure for the ships of about 1.8 km, not a date from a yard.
 - Drive: 27 magnetic-nozzle thrusters in three rows of nine across the stern face: the broad array for a wide ship. 1,201 MN, 44 MN each, behind a thrust bulkhead with a feed main on each row.
 - Mass, the record: dry 210,366 t, propellant 1,156,333 t in 66 tanks, cargo 135,200 t in 26 containers, full 1,507,963 t. 0.081 g, delta-v 0.58 c, 18.5 years to Proxima on board. Crew 640 and 60,000 passengers. Endurance is not given.
@@ -50,4 +50,4 @@ A 36 m square truss round a pressurised transit tube, 1.3 km long. Two stations 
 
 ## Motion
 
-With the Motion choice on, Emiake's two outer radiator sails swing down and out and back on their hinge; see [motion.md](motion.md).
+With the Motion choice on, Emiake's gores spread about the ship's cross axis and the hinged panels fold down toward the flanks; see [motion.md](motion.md).

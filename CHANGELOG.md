@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Emiake's folding arrays** (MODULES-492). The three rigid radiator sails become three wings, port, centre and starboard. Each wing is four filled radiator panels, 160 m out, in a frame with a cell grid. The hubs sit at 400 m, 720 m and 1,040 m, so the run is 240 m to 1,200 m, clear of the gallery. At rest the panels lie along the hull. Four hinged panels on the ridge lean along the hull and stay visible from the side. `fleet-emiake-deployed` is the open pose.
+
 ## [0.37.3] - 2026-11-21
 
 - **A failed WebGL probe is asked again** (MODULES-1128). A working answer is still kept for the page. A failure is kept only until a context is restored or the page is visible again, and the rocket then tries the 3D view once more.
