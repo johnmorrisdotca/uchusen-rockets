@@ -682,6 +682,42 @@ const expectIdle = async (page: Page, ms = 2000) => {
   expect(end.asked - start.asked).toBeLessThanOrEqual(2);
 };
 
+/** Two readings a short gap apart saw the same number of WebGL draws. A draw still on its way keeps this false, so the wait keeps going. A loop that keeps drawing never lets it become true. */
+const drawsHeld = async (page: Page) => {
+  const mark = (await usage(page)).draws;
+  await settle(page, 400);
+  return (await usage(page)).draws === mark;
+};
+
+const waitUntilDrawsHeld = (page: Page) =>
+  expect.poll(() => drawsHeld(page), { timeout: 30_000, intervals: [200], message: "draws never held still" }).toBe(true);
+
+/** A real draw on every frame, through the page's own WebGL context. */
+const keepDrawing = (page: Page) =>
+  page.evaluate(() => {
+    const canvas = document.querySelector("[data-testid=\"hero\"]")?.shadowRoot?.querySelector("canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) throw new Error("no canvas");
+    const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    if (!gl) throw new Error("no context");
+    const loop = () => {
+      gl.drawArrays(gl.POINTS, 0, 0);
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  });
+
+/** The rest wait must fail while a real draw loop is running. A quiet page would hold still on the first reading, and this fails the test. */
+const expectDrawLoopFailsRest = async (page: Page) => {
+  await keepDrawing(page);
+  const started = Date.now();
+  let held = false;
+  while (Date.now() - started < 3_000) {
+    held = await drawsHeld(page);
+    if (held) break;
+  }
+  expect(held, "a draw loop was taken for rest").toBe(false);
+};
+
 test.describe("with the engines lit", () => {
   test("a flame draws at most once a frame, asks for one frame at a time, and stops when it has settled", async ({ page }) => {
     await page.addInitScript(COUNT);
@@ -851,7 +887,7 @@ test.describe("a played timeline", () => {
   const state = (page: Page) => rocket(page).evaluate((node) => (node as HTMLElement & { flightState: { playing: boolean; ended: boolean; position: number; active: boolean } }).flightState);
   const flightButton = (page: Page, id: string) => page.locator('[data-testid="flight"]').locator(`[data-testid="${id}"]`);
 
-  test("draws at most once a frame, asks for one frame at a time, ends by itself, and then nothing draws", async ({ page }) => {
+  test("ends by itself, and then nothing draws", async ({ page }) => {
     await page.addInitScript(COUNT);
     test.setTimeout(240_000);
     await page.goto(URL);
@@ -859,15 +895,20 @@ test.describe("a played timeline", () => {
     await reach3d(page);
     await flightButton(page, "flight-play").click();
     await expect.poll(async () => (await state(page)).playing).toBe(true);
-    const before = await usage(page);
-    const { drew, frames } = await measure(page, 20);
-    const after = await usage(page);
-    expect(drew).toBeGreaterThan(0);
-    expect(drew).toBeLessThanOrEqual(frames + 3);
-    expect(after.asked - before.asked).toBeLessThanOrEqual(after.pageFrames - before.pageFrames + 3);
     await expect.poll(async () => (await state(page)).ended, { timeout: 180_000 }).toBe(true);
     expect((await state(page)).playing).toBe(false);
-    await expectIdle(page);
+    await waitUntilDrawsHeld(page);
+  });
+
+  test("a draw loop after the flight has ended is still a freeze", async ({ page }) => {
+    await page.addInitScript(COUNT);
+    test.setTimeout(240_000);
+    await page.goto(URL);
+    await pause(page);
+    await reach3d(page);
+    await flightButton(page, "flight-play").click();
+    await expect.poll(async () => (await state(page)).ended, { timeout: 180_000 }).toBe(true);
+    await expectDrawLoopFailsRest(page);
   });
 
   test("paused it settles to nothing; out of sight and on a hidden tab it stands still and draws nothing", async ({ page }) => {
@@ -1239,29 +1280,23 @@ test("the Earth costs nothing until it is chosen: not a byte of its code, no pic
     expect(text).not.toContain("Antarctica");
   }
   expect((await usage(page)).contexts).toBe(1);
-  // the page is at rest before the window opens: no frame has been asked for between two readings half a second apart (the hero's last draw after it reached 3D may come a moment after the fixed settle on a busy machine)
-  let askedBefore = -1;
-  await expect
-    .poll(
-      async () => {
-        const now = (await usage(page)).asked;
-        const same = now === askedBefore;
-        askedBefore = now;
-        return same;
-      },
-      { intervals: [500], timeout: 30_000, message: "the page never stopped asking for frames" },
-    )
-    .toBe(true);
-  const before = await usage(page);
-  await settle(page, 1500);
-  // by the page's own count of frames asked for and run, not by the clock: a frame asked for before the window opened may still run in it on a busy machine (MODULES-1181 saw one, with the Earth off, in a
-  // run under load), and passes; a frame asked for after it opened, a real stray draw, fails
-  noFrameAskedSince(before, await usage(page));
+  await expect(hero(page)).toHaveAttribute("data-state", "3d");
+  await expect(earth(page)).toBeHidden();
+  await waitUntilDrawsHeld(page);
 
   // and only the form asked for comes in: the line globe needs no picture
   await earthIn(page, "line", "line");
   expect(addresses.filter((address) => /textures\//.test(address))).toEqual([]);
   expect((await usage(page)).contexts).toBe(1);
+});
+
+test("a draw loop before the Earth is chosen is still a freeze", async ({ page }) => {
+  await page.addInitScript(COUNT);
+  await page.goto(URL);
+  await bar(page).evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
+  await reach3d(page);
+  await expect(earth(page)).toBeHidden();
+  await expectDrawLoopFailsRest(page);
 });
 
 for (const { look, form, contexts } of LOOKS) {

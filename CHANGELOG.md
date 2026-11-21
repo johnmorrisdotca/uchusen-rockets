@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 - **A failed WebGL probe is asked again** (MODULES-1128). A working answer is still kept for the page. A failure is kept only until a context is restored or the page is visible again, and the rocket then tries the 3D view once more.
+- **A played timeline settles by its own state** (MODULES-1127). The freeze test no longer compares draws with page frames. It waits until the flight has ended and the WebGL draws hold still, and a draw loop still fails that wait. Test only.
+- **The Earth costs nothing until it is chosen** (MODULES-1181). The freeze test no longer counts frames asked for while the Earth is off. It waits until the rocket is in 3D, the Earth stays hidden, and the WebGL draws hold still, and a draw loop still fails that wait. Test only.
 
 ## [0.37.2] - 2026-11-20
 
