@@ -16,8 +16,8 @@ const press = async (page: Page, id: string) => {
 };
 const stopTurn = (page: Page) => page.locator('[data-testid="view-bar"]').evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 const reach3d = async (page: Page) => {
-  // a phone has the view below the controls, and nothing is drawn out of sight
-  await hero(page).scrollIntoViewIfNeeded();
+  // The picture stays at the top on a phone. A reload can come back scrolled to a choice, and a view out of sight stays the drawing.
+  await page.evaluate(() => document.querySelector("#main-view")?.scrollIntoView({ block: "start" }));
   await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
 };
 

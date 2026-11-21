@@ -468,13 +468,15 @@ function syncEarth() {
   earthShown = null;
   earthHolder.hidden = form === null;
   if (form)
-    void import("./earth.ts").then(({ showEarth }) => {
-      if (asked === earthAsked)
-        earthShown = showEarth(earthHolder, form, () => {
-          realisticBarred = true;
-          syncEarth();
-        });
-    });
+    void import("./earth.ts")
+      .then(({ showEarth }) => {
+        if (asked === earthAsked)
+          earthShown = showEarth(earthHolder, form, () => {
+            realisticBarred = true;
+            syncEarth();
+          });
+      })
+      .catch(() => undefined);
 }
 
 /** How far the view may be tipped follows the craft: the controls' slider and drag take the limit, and a tip beyond it, or one the address asked for before the craft was known, is brought to it. */

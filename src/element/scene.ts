@@ -687,7 +687,7 @@ export class RocketViewer {
       this.canvas.dataset.globe = this.orbitOn ? "earth" : "off";
       this.showSketch();
       this.wake();
-    });
+    }).catch(() => undefined);
   }
 
   /** Floating leaves the plinth out and stacks the names at the top right. */

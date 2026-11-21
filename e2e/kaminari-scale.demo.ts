@@ -35,8 +35,13 @@ async function inView(page: Page, variant: string, scale: number, beside: boolea
 test("the size slider: offered to the concepts only, 60 to 100 in steps of 5, in the address, kept on a reload, and Fit follows it", async ({ page, browserName }) => {
   test.setTimeout(240_000);
   const problems: string[] = [];
-  page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
-  page.on("pageerror", (error) => problems.push(error.message));
+  const note = (text: string) => {
+    // WebKit logs this when a navigation aborts the 3D module, and the next page has already drawn. The rocket and the slider are checked on their own.
+    if (text === "TypeError: Importing a module script failed." || text === "Importing a module script failed.") return;
+    problems.push(text);
+  };
+  page.on("console", (message) => message.type() === "error" && note(message.text()));
+  page.on("pageerror", (error) => note(error.message));
   // a craft that is not a concept has no slider
   await open(page, "?rocket=saturn-v", "saturn-v");
   await expect(slider(page)).toBeHidden();

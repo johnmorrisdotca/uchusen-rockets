@@ -169,6 +169,8 @@ export class UchusenRocket extends HTMLBase {
   private framed: ViewerFocus | null = null;
   private frameLabel = "";
   private watch: IntersectionObserver | null = null;
+  /** Asks again when the picture gets a size after the first look. */
+  private boxWatch: ResizeObserver | null = null;
   private releaseTimer = 0;
   private revealTimer = 0;
   private generation = 0;
@@ -480,6 +482,8 @@ export class UchusenRocket extends HTMLBase {
     this.stopProbeRetry = null;
     this.watch?.disconnect();
     this.watch = null;
+    this.boxWatch?.disconnect();
+    this.boxWatch = null;
     window.clearTimeout(this.releaseTimer);
     window.clearTimeout(this.revealTimer);
     window.cancelAnimationFrame(this.placeFrame);
@@ -1046,6 +1050,19 @@ export class UchusenRocket extends HTMLBase {
       { rootMargin: "200px 0px" },
     );
     this.watch.observe(this);
+    // The first look can run before a phone stage has a height, and that look is not always repeated when the height arrives. Ask again once the box is there, while the drawing is still all there is.
+    const lookAgain = () => {
+      if (!this.watch || this.viewer || this.starting) return;
+      if (this.stateNow !== "picture") return;
+      const box = this.getBoundingClientRect();
+      if (box.width < 1 || box.height < 1) return;
+      this.watch.unobserve(this);
+      this.watch.observe(this);
+    };
+    this.boxWatch?.disconnect();
+    this.boxWatch = new ResizeObserver(lookAgain);
+    this.boxWatch.observe(this);
+    requestAnimationFrame(lookAgain);
   }
 
   private stopTilt(): void {
@@ -1070,7 +1087,10 @@ export class UchusenRocket extends HTMLBase {
     this.setState("loading");
     const reduced = media("(prefers-reduced-motion: reduce)");
     try {
-      const { RocketViewer } = await import("./element/scene.ts");
+      const loading = import("./element/scene.ts");
+      // A navigation can abort this load. The rejection is handled here so it is not also an unhandled rejection.
+      loading.catch(() => undefined);
+      const { RocketViewer } = await loading;
       if (generation !== this.generation) return;
       const assets = this.getAttribute("assets");
       const made = new RocketViewer(holder, {
