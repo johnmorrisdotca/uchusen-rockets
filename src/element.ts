@@ -26,7 +26,7 @@ import { type Reading, tiltMode, tiltTurn } from "./tilt.ts";
 import type { RocketViewer, ViewerFocus } from "./element/scene.ts";
 import { skyQuery, type SkyShown } from "./element/solarGroups.ts";
 import { Panel } from "./element/panel.ts";
-import { glProbe } from "./element/probe.ts";
+import { afterProbeRetry, glProbe } from "./element/probe.ts";
 import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
 import { flagSvg } from "./element/flag.ts";
@@ -181,6 +181,8 @@ export class UchusenRocket extends HTMLBase {
   private starting = false;
   /** Whether this element has asked the page's WebGL answer since it started watching. */
   private glAsked = false;
+  /** Drops the wait for another look at WebGL after a failure. */
+  private stopProbeRetry: (() => void) | null = null;
   private key = "";
   private driven: ViewChoice | null = null;
   private placeFrame = 0;
@@ -474,6 +476,8 @@ export class UchusenRocket extends HTMLBase {
 
   private teardown(): void {
     this.generation++;
+    this.stopProbeRetry?.();
+    this.stopProbeRetry = null;
     this.watch?.disconnect();
     this.watch = null;
     window.clearTimeout(this.releaseTimer);
@@ -968,6 +972,32 @@ export class UchusenRocket extends HTMLBase {
     this.redraw();
   }
 
+  /** A failed look is not the last one: when a context comes back, or the page is shown again, ask once more. */
+  private watchForWebGl(setReason: (why: string) => void): void {
+    this.stopProbeRetry?.();
+    this.stopProbeRetry = afterProbeRetry(() => {
+      if (this.dataset.why !== "no-webgl") return;
+      setReason("");
+      this.glAsked = false;
+      delete this.dataset.why;
+      this.setState("picture");
+      if (!this.onScreen) return;
+      this.glAsked = true;
+      if (!glProbe().works) {
+        setReason("no-webgl");
+        this.setState("fallback", "no-webgl");
+        this.emit("uchusen-fallback", { reason: "no-webgl" });
+        return;
+      }
+      this.stopProbeRetry?.();
+      this.stopProbeRetry = null;
+      this.shownAt ||= performance.now();
+      window.clearTimeout(this.releaseTimer);
+      if (this.viewer) this.viewer.setVisible(true);
+      else if (!this.starting) void this.start();
+    });
+  }
+
   private startWatching(): void {
     this.watch?.disconnect();
     let reason = whyNot(this.getAttribute("mode") ?? "auto");
@@ -983,12 +1013,13 @@ export class UchusenRocket extends HTMLBase {
         if (seen.isIntersecting) this.kickFlight();
         if (reason) return;
         if (seen.isIntersecting && !this.glAsked) {
-          // The probe makes a context, which software drawing takes seconds over: it waits until a view is about to draw, and is made once for the whole page.
+          // The probe makes a context, which software drawing takes seconds over: it waits until a view is about to draw. A working answer is kept for the page. A failure is asked again when a context is restored or the page is shown.
           this.glAsked = true;
           if (!glProbe().works) {
             reason = "no-webgl";
             this.setState("fallback", reason);
             this.emit("uchusen-fallback", { reason });
+            this.watchForWebGl((why) => { reason = why; });
             return;
           }
         }

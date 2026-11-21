@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **A failed WebGL probe is asked again** (MODULES-1128). A working answer is still kept for the page. A failure is kept only until a context is restored or the page is visible again, and the rocket then tries the 3D view once more.
+
 ## [0.37.2] - 2026-11-20
 
 - **A fleet walk counts vertex arrays from one framing pose** (MODULES-705). An instanced mesh or a fat line gets its vertex array the first time it is drawn, and the camera ease was stopping at a different angle each walk, so meshes drawn on the way kept arrays the settled pose never draws. The same ship read 2673, then 2613, then 2683 arrays with the buffers flat. The count is taken after the camera is put on one framing pose, those arrays are dropped, and that pose is drawn in the same turn. A later walk must match that count.
