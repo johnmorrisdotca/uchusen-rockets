@@ -102,11 +102,13 @@ const TG_HUB: NasaPart = { id: "hub", triangles: 7_000, error: 0.15, place: move
 // Wentian, with its small arm, is the file's -x laboratory and Mengtian its +x one
 const TG_WENTIAN: NasaPart = { id: "wentian", triangles: 9_000, error: 0.15, place: mover([-TG_LAB_FROM, 0, TG_LAB_AXIS_Z], [TG_LAB_ALONG, TG, TG], STAND) };
 const TG_MENGTIAN: NasaPart = { id: "mengtian", triangles: 9_000, error: 0.15, place: mover([TG_LAB_FROM, 0, TG_LAB_AXIS_Z], [TG_LAB_ALONG, TG, TG], STAND) };
+// the wings' blankets are about ten thousand separate cells each, flat in the file's x-z plane (y is across them): each rectangle of cells is drawn into one picture, 128 pixels a unit, and stands as one quad
+const TG_CELLS = { blanket: /^solar_(blue|gold)/, perUnit: 128, across: 1, reach: 0.012 };
 // a laboratory's wings: their frame on the laboratory's axis at the wings' middle, x ±2.72, the wings running up and down
-const TG_WENTIAN_WINGS: NasaPart = { id: "wentian-arrays", triangles: 2_000, error: 0.3, place: mover([-2.72, 0, TG_LAB_AXIS_Z], [TG_WING_WIDE, TG, TG_WING_ALONG], STAND) };
-const TG_MENGTIAN_WINGS: NasaPart = { id: "mengtian-arrays", triangles: 2_000, error: 0.3, place: mover([2.72, 0, TG_LAB_AXIS_Z], [TG_WING_WIDE, TG, TG_WING_ALONG], STAND) };
+const TG_WENTIAN_WINGS: NasaPart = { id: "wentian-arrays", triangles: 2_000, error: 0.3, sloppy: 0.02, sheets: TG_CELLS, place: mover([-2.72, 0, TG_LAB_AXIS_Z], [TG_WING_WIDE, TG, TG_WING_ALONG], STAND) };
+const TG_MENGTIAN_WINGS: NasaPart = { id: "mengtian-arrays", triangles: 2_000, error: 0.3, sloppy: 0.02, sheets: TG_CELLS, place: mover([2.72, 0, TG_LAB_AXIS_Z], [TG_WING_WIDE, TG, TG_WING_ALONG], STAND) };
 // Tianhe's own two wings, on its axis where they stand, z -0.63
-const TG_TIANHE_WINGS: NasaPart = { id: "tianhe-arrays", triangles: 1_500, error: 0.3, place: mover([0, 0, -0.63], [TG, TG, TG], STAND) };
+const TG_TIANHE_WINGS: NasaPart = { id: "tianhe-arrays", triangles: 1_500, error: 0.3, sloppy: 0.02, sheets: TG_CELLS, place: mover([0, 0, -0.63], [TG, TG, TG], STAND) };
 // Shenzhou at the forward port: 1.8 units long from the node's face, 0.58 across; scaled to 9.25 m and 2.8 m
 const TG_SHENZHOU_FORWARD: NasaPart = { id: "shenzhou-forward", triangles: 4_000, error: 0.15, place: mover([0, 0, TG_NODE_TOP], [2.8 / 0.58, 2.8 / 0.58, 9.25 / 1.8], STAND) };
 // Shenzhou under the nadir port: it hangs down the file's -y from the collar at -0.6 to -2.15; its frame begins at the collar and runs out towards the reader
@@ -161,10 +163,10 @@ export const PART_RECIPES: readonly NasaRecipe[] = [
     title: "tianGong",
     source: "https://sketchfab.com/3d-models/tiangong-aca22b1dd6d242c1ae7b88de2f483b77",
     credit: { author: "w29572227 (https://sketchfab.com/w29572227)", license: CC_BY },
-    changes: "the flags and the agency's mark left out with the picture that carried them; reduced from 4,425,408 triangles; stood on end; each module and craft rescaled to its own sourced length and width; separated into Tianhe, its node, Wentian, Mengtian, the three pairs of solar wings, two Shenzhou and a Tianzhou; its materials made into one picture a part",
+    changes: "the flags and the agency's mark left out with the picture that carried them; reduced from 4,425,408 triangles; stood on end; each module and craft rescaled to its own sourced length and width; separated into Tianhe, its node, Wentian, Mengtian, the three pairs of solar wings (each blanket of cells drawn into a picture and set as one flat panel, the masts and hinges kept as simplified shapes), two Shenzhou and a Tianzhou; its materials made into one picture a part",
     parts: [TG_TIANHE, TG_HUB, TG_WENTIAN, TG_MENGTIAN, TG_TIANHE_WINGS, TG_WENTIAN_WINGS, TG_MENGTIAN_WINGS, TG_SHENZHOU_FORWARD, TG_SHENZHOU_NADIR, TG_TIANZHOU],
     partOf: tiangongPartOf,
-    atlas: 256,
+    atlas: 512,
     metal: 0.2,
     rough: 0.55,
     freeBorders: true,

@@ -21,6 +21,19 @@ export interface NasaPart {
   error?: number;
   /** True where the model may not draw this part at all: nothing falling in it is then no file and this package's own paint shows for it. Without it, a part nothing falls in stops the run, so a typo cannot drop a file unseen. */
   optional?: boolean;
+  /** For a part of many separate small pieces, which the simplifier cannot join: when it is still over its size after simplifying, it is brought down by position alone, with this share of the part's size as the most it may move. */
+  sloppy?: number;
+  /** A flat panel the model draws as thousands of separate cells, a simplifier cannot merge them: its cells are drawn into pictures, one flat quad for each rectangle of them (`scripts/sheets.ts`), and what stands outside those rectangles is simplified as usual. */
+  sheets?: {
+    /** The materials whose cells make the panel. */
+    blanket: RegExp;
+    /** Pixels a unit of the file's space, on each picture. */
+    perUnit: number;
+    /** The axis, in the file's space, the cells lie across. */
+    across: number;
+    /** How far a triangle may stand off the cells and still be drawn into the picture, in the file's units. */
+    reach: number;
+  };
 }
 /** A connected piece of a file's mesh: the triangles that touch, welded, with the box they fill in the file's own space. */
 export interface PieceBox {

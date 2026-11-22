@@ -1,5 +1,5 @@
 // Turns NASA's 3D models, and the licensed models that are split into parts the same way (kept outside this repository), into the small parts in models/. Run by hand, never by the build:
-// `UCHUSEN_MODEL_SOURCES=<folder> node scripts/reduce-nasa.ts [id,id…]`. The results are committed.
+// `UCHUSEN_MODEL_SOURCES=<folder> node scripts/reduce-nasa.ts [id,id…] [part,part…]`: a second list makes only those parts of the recipes named. The results are committed.
 //
 // A source's files are data from outside: they are only read. What it does to a model: every triangle is moved to this package's convention (metres, Y up, the part's base on the axis at y = 0, the windward side
 // towards +Z) and scaled to a sourced size, sorted into parts (by where it is, what it is made of and which connected piece it belongs to), and simplified. Its many materials become one picture: each picture with
@@ -20,6 +20,7 @@ import { PART_RECIPES } from "./part-recipes.ts";
 import { piecesOf } from "./pieces.ts";
 import { applyMove, readBinaryStl } from "./read-stl.ts";
 import { skipsEmptyPart } from "./recipe-parts.ts";
+import { bakeSheets } from "./sheets.ts";
 import { trimSpecks } from "./trim-specks.ts";
 import { weld } from "./weld.ts";
 import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
@@ -27,12 +28,21 @@ import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
 const sources = process.env.UCHUSEN_MODEL_SOURCES ?? "";
 if (!sources) throw new Error("UCHUSEN_MODEL_SOURCES must name the folder that holds the source models. They are kept outside this repository.");
 const only = new Set((process.argv[2] ?? "").split(",").filter(Boolean));
+const onlyParts = new Set((process.argv[3] ?? "").split(",").filter(Boolean));
+const wanted = (part: { id: string }) => onlyParts.size === 0 || onlyParts.has(part.id);
 const outDir = join(process.cwd(), "models");
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "draco3d.decoder": await (draco3d as { createDecoderModule(): Promise<unknown> }).createDecoderModule() });
 await MeshoptSimplifier.ready;
 
 /** A triangle, as three corners: positions, normals and picture coordinates. */
 interface Triangles {
+  positions: number[];
+  normals: number[];
+  uvs: number[];
+}
+/** The triangles of a part that has flat panels, in the file's own space, until they are drawn. */
+interface Held {
+  name: string[];
   positions: number[];
   normals: number[];
   uvs: number[];
@@ -286,6 +296,7 @@ function withoutOutsidePictures(bytes: Uint8Array): Uint8Array {
 async function runRecipe(recipe: NasaRecipe): Promise<void> {
   const parts = new Map<string, Map<string, Triangles>>();
   const paints = new Map<string, Paint>();
+  const held = new Map<string, Held>();
   let inTris = 0;
   const dropped = new Map<string, number>();
   for (const file of [...recipe.files, ...(recipe.copies ?? []).map((copy) => copy.file)].filter((one, i, all) => all.indexOf(one) === i)) {
@@ -363,6 +374,17 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
           }
           const moved = recipe.copies?.filter((copy) => copy.file === file).map((copy) => copy.at) ?? [];
           for (const at of moved.length ? moved : [[0, 0, 0]]) {
+          if (part.sheets) {
+            if (!held.has(part.id)) held.set(part.id, { name: [], positions: [], normals: [], uvs: [] });
+            const keep = held.get(part.id) as Held;
+            keep.name.push(name);
+            for (let k = 0; k < 3; k++) {
+              keep.positions.push(p[k][0] + at[0], p[k][1] + at[1], p[k][2] + at[2]);
+              keep.normals.push(n[k][0], n[k][1], n[k][2]);
+              keep.uvs.push(t[k][0], t[k][1]);
+            }
+            continue;
+          }
           if (!parts.has(part.id)) parts.set(part.id, new Map());
           const buckets = parts.get(part.id) as Map<string, Triangles>;
           if (!buckets.has(name)) buckets.set(name, { positions: [], normals: [], uvs: [] });
@@ -381,7 +403,68 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
         });
       }
   }
-  for (const part of recipe.parts) {
+  // a part with flat panels: the cells are drawn into pictures, each rectangle of them becomes a quad, and the rest goes the usual way
+  const sheetBuckets = new Map<string, string[]>();
+  for (const part of recipe.parts.filter(wanted)) {
+    const keep = held.get(part.id);
+    if (!part.sheets || !keep) continue;
+    const names = [...new Set(keep.name)];
+    const count = keep.name.length;
+    const colours = names.map((name) => ((paints.get(name) as Paint).colour as readonly number[]).map(linearToByte));
+    const baked = bakeSheets(keep.positions, keep.normals, keep.name.map((name) => names.indexOf(name)), names, colours, part.sheets);
+    const [a, b] = [0, 1, 2].filter((k) => k !== (part.sheets as { across: number }).across) as [number, number];
+    const across = (part.sheets as { across: number }).across;
+    if (!parts.has(part.id)) parts.set(part.id, new Map());
+    const buckets = parts.get(part.id) as Map<string, Triangles>;
+    const put = (name: string, p: number[][], n: number[][], t: number[][]) => {
+      if (!buckets.has(name)) buckets.set(name, { positions: [], normals: [], uvs: [] });
+      const bucket = buckets.get(name) as Triangles;
+      for (let k = 0; k < 3; k++) {
+        const at = [...(p[k] as number[])];
+        const normal = [...(n[k] as number[])];
+        part.place(at, normal);
+        const l = Math.hypot(normal[0] as number, normal[1] as number, normal[2] as number) || 1;
+        bucket.positions.push(at[0] as number, at[1] as number, at[2] as number);
+        bucket.normals.push((normal[0] as number) / l, (normal[1] as number) / l, (normal[2] as number) / l);
+        bucket.uvs.push((t[k] as number[])[0] as number, (t[k] as number[])[1] as number);
+      }
+    };
+    let left = 0;
+    for (let f = 0; f < count; f++) {
+      if ((baked.sheetOf[f] as number) >= 0) continue;
+      left++;
+      const corners = [0, 1, 2].map((k) => k + f * 3);
+      put(
+        keep.name[f] as string,
+        corners.map((c) => keep.positions.slice(c * 3, c * 3 + 3)),
+        corners.map((c) => keep.normals.slice(c * 3, c * 3 + 3)),
+        corners.map((c) => keep.uvs.slice(c * 2, c * 2 + 2)),
+      );
+    }
+    const made: string[] = [];
+    baked.sheets.forEach((sheet, i) => {
+      for (const [side, face] of [[1, sheet.front], [-1, sheet.back]] as const) {
+        const name = `\u0001${part.id} sheet ${i} ${side}`;
+        made.push(name);
+        paints.set(name, { name, colour: [1, 1, 1], image: { bytes: face.png, mime: "image/png" } });
+        const corner = (x: number, y: number) => {
+          const at = [0, 0, 0];
+          at[a] = x ? sheet.box[2] : sheet.box[0];
+          at[b] = y ? sheet.box[3] : sheet.box[1];
+          at[across] = face.height;
+          return at;
+        };
+        const facing = [0, 0, 0];
+        facing[across] = side;
+        const [c00, c10, c01, c11] = [corner(0, 0), corner(1, 0), corner(0, 1), corner(1, 1)];
+        put(name, [c00, c01, c10], [facing, facing, facing], [[0, 0], [0, 1], [1, 0]]);
+        put(name, [c10, c01, c11], [facing, facing, facing], [[1, 0], [0, 1], [1, 1]]);
+      }
+    });
+    sheetBuckets.set(part.id, made);
+    console.log(`  ${part.id}: ${baked.sheets.length * 2} pictures of ${baked.sheets.map((sheet) => `${sheet.width} by ${sheet.rows}`).join(", ")}, two to a panel, for ${count - left} triangles; ${left} left to simplify`);
+  }
+  for (const part of recipe.parts.filter(wanted)) {
     const buckets = parts.get(part.id);
     if (!buckets) {
       // a part nothing fell in is a mistake in the recipe unless it is marked optional; an optional one is a part the model does not draw: no file, and this package's own paint shows for it
@@ -393,7 +476,9 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
     const picture = await atlas(buckets, paints, recipe, part);
     // all its triangles as one
     const whole: Triangles = { positions: [], normals: [], uvs: [] };
-    for (const t of buckets.values()) {
+    const panels = sheetBuckets.get(part.id) ?? [];
+    for (const [name, t] of buckets) {
+      if (panels.includes(name)) continue;
       for (const v of t.positions) whole.positions.push(v);
       for (const v of t.normals) whole.normals.push(v);
       for (const v of t.uvs) whole.uvs.push(v);
@@ -414,6 +499,8 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
     for (let i = 0; i < vertexCount; i++) ATTR.set([w.normals[i * 3], w.normals[i * 3 + 1], w.normals[i * 3 + 2], w.uvs[i * 2], w.uvs[i * 2 + 1]], i * 5);
     let indices: Uint32Array = w.indices;
     if (target < w.indices.length) [indices] = MeshoptSimplifier.simplifyWithAttributes(w.indices, w.positions, 3, ATTR, 5, [0.3, 0.3, 0.3, 8, 8], null, target, part.error ?? 0.02, recipe.freeBorders ? ["ErrorAbsolute"] : ["ErrorAbsolute", "LockBorder"]);
+    // a part of separate small pieces, which the simplifier cannot join, is brought down to its size by position alone
+    if (part.sloppy && indices.length > target) [indices] = MeshoptSimplifier.simplifySloppy(indices, w.positions, 3, null, target, part.sloppy);
     // only the vertices still used
     const map = new Map<number, number>();
     const out = new Uint32Array(indices.length);
@@ -432,6 +519,19 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
       }
       out[i] = at;
     }
+    // the panels' quads go in after the simplifying, which would otherwise be free to fold their corners in
+    let outAll: Uint32Array<ArrayBuffer> = out;
+    for (const name of panels) {
+      const t = buckets.get(name) as Triangles;
+      const first = positions.length / 3;
+      positions.push(...t.positions);
+      normals.push(...t.normals);
+      uvs.push(...t.uvs);
+      const more = new Uint32Array(outAll.length + t.positions.length / 3);
+      more.set(outAll);
+      for (let i = 0; i < t.positions.length / 3; i++) more[outAll.length + i] = first + i;
+      outAll = more;
+    }
     const doc = new Document();
     const buffer = doc.createBuffer();
     const scene = doc.createScene(part.id);
@@ -448,7 +548,7 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
         .setAttribute("POSITION", doc.createAccessor().setType("VEC3").setArray(new Float32Array(positions)).setBuffer(buffer))
         .setAttribute("NORMAL", doc.createAccessor().setType("VEC3").setArray(new Float32Array(normals)).setBuffer(buffer))
         .setAttribute("TEXCOORD_0", doc.createAccessor().setType("VEC2").setArray(new Float32Array(uvs)).setBuffer(buffer))
-        .setIndices(doc.createAccessor().setType("SCALAR").setArray(out).setBuffer(buffer)),
+        .setIndices(doc.createAccessor().setType("SCALAR").setArray(outAll).setBuffer(buffer)),
     );
     doc.getRoot().getAsset().generator = "uchusen-rockets";
     const credit = recipe.credit ?? { author: "NASA", license: "Public domain, NASA (https://www.nasa.gov/nasa-brand-center/images-and-media/)" };
@@ -461,7 +561,7 @@ async function runRecipe(recipe: NasaRecipe): Promise<void> {
     const file = join(outDir, `${recipe.id}-${part.id}.glb`);
     writeFileSync(file, await io.writeBinary(doc));
     const sizes = hi.map((v, i) => (v - lo[i]).toFixed(2));
-    console.log(`${recipe.id}-${part.id}.glb  ${(statSync(file).size / 1024).toFixed(0)} KB (picture ${(picture.length / 1024).toFixed(0)} KB)  ${startTris} to ${out.length / 3} triangles  x y z ${sizes.join(" ")} m  y ${lo[1].toFixed(2)} to ${hi[1].toFixed(2)}, x ${lo[0].toFixed(2)} to ${hi[0].toFixed(2)}, z ${lo[2].toFixed(2)} to ${hi[2].toFixed(2)}`);
+    console.log(`${recipe.id}-${part.id}.glb  ${(statSync(file).size / 1024).toFixed(0)} KB (picture ${(picture.length / 1024).toFixed(0)} KB)  ${startTris} to ${outAll.length / 3} triangles  x y z ${sizes.join(" ")} m  y ${lo[1].toFixed(2)} to ${hi[1].toFixed(2)}, x ${lo[0].toFixed(2)} to ${hi[0].toFixed(2)}, z ${lo[2].toFixed(2)} to ${hi[2].toFixed(2)}`);
   }
   console.log(`${recipe.id}: ${inTris} triangles in; dropped ${[...dropped].map(([k, v]) => `${k} (${v})`).join(", ") || "nothing"}`);
 }

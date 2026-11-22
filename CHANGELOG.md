@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Tiangong's painted wings are light** (MODULES-1008). The three pairs of solar wings were about ten thousand separate cells each, 1,037,732 bytes and 52,556 triangles in three files, and a simplifier cannot merge separate cells. Each blanket is now drawn from the original file into a small picture of its front and its back and set as one flat panel, and the masts are simplified by position. The three files come to 127 KB and about 4,700 triangles, and the whole station from 2.18 MB to about 1.27 MB. The wings read as the model draws them from the usual sides, and the blue is cleaner than the old simplified cells. `node scripts/reduce-nasa.ts tiangong tianhe-arrays,wentian-arrays,mengtian-arrays` makes them again (`scripts/sheets.ts`).
+
 ## [0.37.4] - 2026-11-21
 
 - **Emiake's folding arrays** (MODULES-492). The three rigid radiator sails become three wings, port, centre and starboard. Each wing is four filled radiator panels, 160 m out, in a frame with a cell grid. The hubs sit at 400 m, 720 m and 1,040 m, so the run is 240 m to 1,200 m, clear of the gallery. At rest the panels lie along the hull. Four hinged panels on the ridge lean along the hull and stay visible from the side. `fleet-emiake-deployed` is the open pose.
