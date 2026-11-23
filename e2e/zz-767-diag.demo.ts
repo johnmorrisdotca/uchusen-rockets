@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 
 for (const key of ["Control", "Space"]) {
   test(`events during ${key} and a drag`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 3400 });
     await page.goto("/uchusen-rockets/fleet-compare.html");
     const view = page.locator("#cmp-view");
     await view.scrollIntoViewIfNeeded();
