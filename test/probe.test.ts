@@ -103,4 +103,41 @@ describe("WebGL probe", { concurrency: 1 }, () => {
     assert.equal(restoredProbe.probeCount(), 2);
     delete (globalThis as { document?: unknown }).document;
   });
+
+  test("a software renderer is named, a WebGL1-only browser works, and a context that throws or is null is a failure", async () => {
+    const software = pageWith({ webgl2: "Google SwiftShader" });
+    // @ts-expect-error the query is a cache key, not a second file
+    const soft = await import("../src/element/probe.ts?kind=software");
+    assert.deepEqual(soft.glProbe(), { works: true, software: true });
+    assert.deepEqual(software.calls, ["webgl2"]);
+
+    const one = pageWith({ webgl: "llvmpipe (LLVM 15.0.7, 256 bits)" });
+    // @ts-expect-error the query is a cache key, not a second file
+    const webgl1 = await import("../src/element/probe.ts?kind=webgl1");
+    assert.deepEqual(webgl1.glProbe(), { works: true, software: true });
+    assert.deepEqual(one.calls, ["webgl2", "webgl"]);
+
+    failingPage();
+    // @ts-expect-error the query is a cache key, not a second file
+    const nothing = await import("../src/element/probe.ts?kind=null");
+    assert.deepEqual(nothing.glProbe(), { works: false, software: false });
+    assert.equal(nothing.probeCount(), 1);
+
+    (globalThis as { document?: unknown }).document = {
+      createElement: () => ({
+        width: 300,
+        height: 150,
+        addEventListener: () => undefined,
+        getContext: () => {
+          throw new Error("the browser refused a context");
+        },
+      }),
+      addEventListener: () => undefined,
+    };
+    // @ts-expect-error the query is a cache key, not a second file
+    const thrown = await import("../src/element/probe.ts?kind=throw");
+    assert.deepEqual(thrown.glProbe(), { works: false, software: false });
+    assert.equal(thrown.probeCount(), 1);
+    delete (globalThis as { document?: unknown }).document;
+  });
 });
