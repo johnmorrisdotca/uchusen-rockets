@@ -20,4 +20,4 @@ jobs:
         with:
           browsers: chromium
       - run: pnpm site
-      - run: pnpm exec playwright test e2e/gestures.demo.ts --grep "fleet comparison" --project=chromium-desk --reporter=list
+      - run: pnpm exec playwright test e2e/zz-767-diag.demo.ts --project=chromium-desk --reporter=list
