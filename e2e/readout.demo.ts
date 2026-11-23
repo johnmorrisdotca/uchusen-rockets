@@ -49,6 +49,9 @@ for (const one of PAGES) {
     const stage = page.locator(one.stage).first();
     const b = await bar(page, one.stage);
     await expect(b).toBeVisible();
+    // the bar's own signal that it is wired: its element is defined and holds the view's state, then it reads the zoom
+    await page.evaluate(() => customElements.whenDefined("kazoku-view-controls"));
+    await expect.poll(() => b.evaluate((node) => (node as Bar).state !== undefined)).toBe(true);
     await expect.poll(() => shown(b)).toBe("1×");
     expect(await b.evaluate((node) => node.shadowRoot?.querySelector("[data-live]")?.getAttribute("aria-live"))).toBe("polite");
     expect(await b.evaluate((node) => node.shadowRoot?.querySelector("[data-live]")?.getAttribute("role"))).toBe("status");

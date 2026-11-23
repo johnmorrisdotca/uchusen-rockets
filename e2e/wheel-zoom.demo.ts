@@ -1,4 +1,6 @@
-// Ctrl or Command and the wheel zooms every stage. The pages come from the page bar, not from a list kept here.
+// Ctrl or Command and the wheel zooms every stage. The pages are the site's own files, one test for each, so a slow machine cuts off one page and not the whole walk.
+import { readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { foldPicker } from "./picker.ts";
 
@@ -19,30 +21,29 @@ const place = async (page: Page): Promise<{ y: number; scale: number }> => page.
   scale: window.visualViewport?.scale ?? 1,
 }));
 
-test("ctrl and the wheel zooms every stage in the page list, and the page does not scroll", async ({ page }) => {
-  test.setTimeout(300_000);
-  await page.goto(`${BASE}index.html`, { waitUntil: "load" });
-  const listed = await page.locator('[data-testid="page-links"] a').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).getAttribute("href") ?? "").filter((href) => href !== ""));
-  expect(listed.length).toBeGreaterThan(3);
-  const pending = [...listed];
-  const seen = new Set<string>();
-  while (pending.length > 0) {
-    const href = pending.shift();
-    if (!href || seen.has(href)) continue;
-    seen.add(href);
+const SITE = fileURLToPath(new URL("../site/", import.meta.url));
+// embed.html is the bare frame of an iframe: no page bar, its one rocket is the whole page, and no page links to it
+const FRAMES = new Set(["embed.html"]);
+const PAGES = readdirSync(SITE).filter((name) => name.endsWith(".html") && !FRAMES.has(name)).sort();
+
+test("the site holds the pages the other checks lean on", () => {
+  expect(PAGES.length).toBeGreaterThan(3);
+  expect(PAGES, "the journey").toContain("journey.html");
+  expect(PAGES, "the compare line-up").toContain("fleet-compare.html");
+});
+
+for (const href of PAGES) {
+  test(`ctrl and the wheel zooms every stage of ${href}, and the page does not scroll`, async ({ page }) => {
+    test.setTimeout(120_000);
     await page.goto(`${BASE}${href}`, { waitUntil: "load" });
     await foldPicker(page);
-    if (!href.includes("docs/")) {
-      const more = await page.locator('a[href$=".html"]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).getAttribute("href") ?? "").filter((one) => one !== "" && !one.includes("/") && !one.startsWith("http")));
-      for (const one of more) if (!seen.has(one)) pending.push(one);
-    }
     const loose = await page.locator(STAGE).evaluateAll((nodes) => nodes.flatMap((node) => (node.closest("[data-view-stage]") ? [] : [node.id || node.tagName])));
     expect(loose, href).toEqual([]);
     const stages = page.locator("[data-view-stage]");
     const count = await stages.count();
     if (count === 0) {
       expect(await page.locator(STAGE).count(), href).toBe(0);
-      continue;
+      return;
     }
     for (let index = 0; index < count; index += 1) {
       const stage = stages.nth(index);
@@ -76,7 +77,5 @@ test("ctrl and the wheel zooms every stage in the page list, and the page does n
       expect(await stage.evaluate((node) => node.scrollTop), href).toBe(top);
       expect(await place(page), href).toEqual(scroll);
     }
-  }
-  expect(seen.has("journey.html"), "the page list").toBe(true);
-  expect(seen.has("fleet-compare.html"), "the compare line-up").toBe(true);
-});
+  });
+}
