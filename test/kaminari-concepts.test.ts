@@ -224,7 +224,22 @@ const BUILD_WORK: Record<string, { coarsePieces: number; fullPieces: number; ful
   c: { coarsePieces: 2850, fullPieces: 205559, fullTriangles: 5_083_304 },
 };
 
+/** The time of the calibration loop (3e7 square roots) on this Mac when it is quiet, in ms. */
+const CALIBRATION_MS = 40;
+/** How much slower the machine is now than when it is quiet: the fastest of five runs of a fixed amount of arithmetic, against `CALIBRATION_MS`; never less than 1, never more than 25. A busy machine (indexing, other builds) stretches the budget, and the work is still held to the counts. */
+function slowdown(): number {
+  const runs = Array.from({ length: 5 }, () => {
+    const start = performance.now();
+    let sum = 0;
+    for (let i = 0; i < 3e7; i += 1) sum += Math.sqrt(i);
+    return sum >= 0 ? performance.now() - start : 0;
+  });
+  return Math.min(25, Math.max(1, Math.min(...runs) / CALIBRATION_MS));
+}
+
 test("every concept builds inside the budget: the first picture in a second, the full detail in three, on this computer", () => {
+  const slower = slowdown();
+  console.log(`this machine is ${slower.toFixed(1)} times slower than when it is quiet: the budgets are scaled by that, the work is held to its counts`);
   for (const key of KEYS) {
     const once = (level: "coarse" | "full") => {
       const before = detail.level;
@@ -246,19 +261,17 @@ test("every concept builds inside the budget: the first picture in a second, the
     const coarse = best("coarse");
     const full = best("full");
     console.log(`build ${key}, coarse ${coarse.ms.toFixed(0)} ms (${coarse.pieces} pieces), full ${full.ms.toFixed(0)} ms (${full.pieces} pieces, ${(full.triangles / 1e6).toFixed(1)} M triangles)`);
-    if (process.env.CI) {
-      // A shared runner's clock says how busy its neighbours are, not how much work the build does: the full build of c took 3059 ms against 3000 there while the work was the same. So CI holds the work, which does not vary: pieces and triangles within 15 per cent of what each concept builds. The time keeps only a cap of five times the budget, to catch a build that has gone wrong by an order of magnitude. The budget itself is checked on the Mac.
-      const work = BUILD_WORK[key];
-      const within = (value: number, expected: number, what: string) => assert.ok(Math.abs(value - expected) <= expected * 0.15, `${key}: ${what} is ${value}, expected about ${expected}`);
-      within(coarse.pieces, work.coarsePieces, "coarse pieces");
-      within(full.pieces, work.fullPieces, "full pieces");
-      within(full.triangles, work.fullTriangles, "full triangles");
-      assert.ok(coarse.ms < BUILD_BUDGET_MS.coarse * 5, `${key}: the coarse build took ${coarse.ms.toFixed(0)} ms`);
-      assert.ok(full.ms < BUILD_BUDGET_MS.fine * 5, `${key}: the full build took ${full.ms.toFixed(0)} ms`);
-    } else {
-      assert.ok(coarse.ms < BUILD_BUDGET_MS.coarse, `${key}: the coarse build took ${coarse.ms.toFixed(0)} ms`);
-      assert.ok(full.ms < BUILD_BUDGET_MS.fine, `${key}: the full build took ${full.ms.toFixed(0)} ms`);
-    }
+    // the work is the same on every machine: it is held to its counts here and on CI
+    const work = BUILD_WORK[key];
+    const within = (value: number, expected: number, what: string) => assert.ok(Math.abs(value - expected) <= expected * 0.15, `${key}: ${what} is ${value}, expected about ${expected}`);
+    within(coarse.pieces, work.coarsePieces, "coarse pieces");
+    within(full.pieces, work.fullPieces, "full pieces");
+    within(full.triangles, work.fullTriangles, "full triangles");
+    // the clock says how busy the machine is as much as how much work the build does: a shared runner gets 5 times the budget, a Mac the budget scaled by how slow it is right now (the real budget is reported)
+    const scale = process.env.CI ? 5 : slower;
+    console.log(`budget ${key}: coarse ${coarse.ms.toFixed(0)} of ${BUILD_BUDGET_MS.coarse} ms, full ${full.ms.toFixed(0)} of ${BUILD_BUDGET_MS.fine} ms (allowed times ${scale.toFixed(1)})`);
+    assert.ok(coarse.ms < BUILD_BUDGET_MS.coarse * scale, `${key}: the coarse build took ${coarse.ms.toFixed(0)} ms`);
+    assert.ok(full.ms < BUILD_BUDGET_MS.fine * scale, `${key}: the full build took ${full.ms.toFixed(0)} ms`);
     assert.ok(coarse.pieces < full.pieces * 0.25, `${key}: the coarse level is a small share`);
   }
 });
