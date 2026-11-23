@@ -1,16 +1,17 @@
 // Throwaway: Control, Meta and Space drags one after the other on one page, as the gesture check does, on Linux.
 import { test } from "@playwright/test";
 
-test("drags one after the other", async ({ page }) => {
+for (const variant of ["plain", "no-select"]) test(`drags one after the other: ${variant}`, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 3400 });
   await page.goto("/uchusen-rockets/fleet-compare.html");
   const view = page.locator("#cmp-view");
+  if (variant === "no-select") await page.addStyleTag({ content: "#cmp-view, #cmp-view * { user-select: none !important; -webkit-user-select: none !important; -webkit-user-drag: none !important; }" });
   await view.scrollIntoViewIfNeeded();
   await page.locator("#cmp-bar").evaluate((el) => (el as unknown as { pause?: () => void }).pause?.());
   await page.evaluate(() => {
     const log: string[] = [];
     (window as unknown as { log: string[] }).log = log;
-    for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel", "keydown", "keyup", "blur", "focusout"]) {
+    for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel", "keydown", "keyup", "blur", "focusout", "dragstart", "selectstart", "contextmenu"]) {
       window.addEventListener(type, (event) => log.push(`${type}${event instanceof KeyboardEvent ? ":" + event.key + " ctrl=" + event.ctrlKey + " meta=" + event.metaKey : ""}${event instanceof PointerEvent ? ` ${Math.round(event.clientX)},${Math.round(event.clientY)} b${event.buttons} ctrl=${event.ctrlKey} meta=${event.metaKey}` : ""}`), true);
     }
   });
@@ -32,8 +33,8 @@ test("drags one after the other", async ({ page }) => {
     }
     await page.mouse.up();
     await page.keyboard.up(key);
-    console.log(`DIAG ${key}: ${pans.join(" | ")}`);
+    console.log(`DIAG ${variant} ${key}: ${pans.join(" | ")}`);
   }
   const log = await page.evaluate(() => (window as unknown as { log: string[] }).log);
-  console.log(`DIAG log (${log.length}):\n${log.filter((line) => /^(keydown|keyup|pointercancel|blur|focusout)/.test(line) || /pointerdown/.test(line)).join("\n")}`);
+  console.log(`DIAG ${variant} log (${log.length}):\n${log.filter((line) => /^(keydown|keyup|pointercancel|blur|focusout|dragstart|selectstart|contextmenu)/.test(line) || /pointerdown/.test(line)).join("\n")}`);
 });
