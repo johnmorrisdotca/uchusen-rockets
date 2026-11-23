@@ -2,14 +2,19 @@
 //
 //   node scripts/shots.ts <folder> <rocket> [variants] [shows] [looks] [views]
 //
-// Each comma list falls back to all of the rocket's. It starts the site's own server on 8277, takes the shots and stops it, by the process it started.
+// Each comma list falls back to all of the rocket's. It builds the site when site/element-check.html is not there yet, starts the site's own server on 8277, takes the shots and stops it, by the process it started.
 import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 import { ROCKETS, showsOf } from "../src/index.ts";
 import { acquireBrowserLock } from "@johnmorrisdotca/kazoku-ui/testing";
+import { ensureShotsSite } from "./shotsSite.ts";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+ensureShotsSite(root);
 
 const out = process.argv[2] ?? "docs/images/check";
 const rocketId = process.argv[3] ?? "starship";
