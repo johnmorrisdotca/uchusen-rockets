@@ -1,6 +1,7 @@
 // The fleet ships' moving parts: with Motion on the rings of Hanabusa turn, drawn at most thirty times a second; with it off, or for a reader who asked for reduced motion, they stand still and nothing draws; out of sight or on a hidden
 // tab nothing draws either. The Motion choice is kept in the address.
-import { expect as plainExpect, type Page, test } from "@playwright/test";
+import { expect as plainExpect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { expectFlatCount } from "./still.ts";
 
 const expect = plainExpect.configure({ timeout: 60_000 });

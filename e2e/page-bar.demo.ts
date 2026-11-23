@@ -1,5 +1,6 @@
 // The page bar under the header: every page in it links every page in it, marks only its own and looks pressed there, and stays one row on a desk, beside the page frame's line.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const BASE = "/uchusen-rockets/";
 

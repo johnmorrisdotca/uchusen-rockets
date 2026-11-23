@@ -1,5 +1,6 @@
 // "Real craft for scale" on the comparison page: Starship with Super Heavy, Saturn V, SLS and the ISS lie in the fleet band, each with its name and length. The toggle is on by default and lives in the address.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 const lineup = (page: Page) => page.locator('[data-testid="lineup"]');

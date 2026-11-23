@@ -1,5 +1,6 @@
 // The yard page: the whole yard, a jump to each bay, day and night, the free spine leaving and coming back, and the build player for the chosen bay.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { expectStillPicture } from "./still.ts";
 
 // A trace is kept when a yard test fails, so a pause that did not hold says what the page did (MODULES-896).

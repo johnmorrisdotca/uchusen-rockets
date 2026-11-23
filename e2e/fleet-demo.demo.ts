@@ -1,5 +1,6 @@
 // What the demo says about the SPX fleet: the Maker row and the Made by line read "SPX" for every fleet ship, the Rocket list holds the ships by their registry names and no placeholder, and the first tab of a ship's panel under the 3D view is drawn, not a blank pill.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { ROCKETS } from "../src/rockets.ts";
 import { foldPicker } from "./picker.ts";
 

@@ -1,5 +1,6 @@
 // The Kaminari size slider: 60 to 100 per cent of a concept hull, in the address, kept on a reload, held by Fit with Starship beside it, and offered to the three concepts only.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { build } from "../src/build/index.ts";
 import { ROCKETS } from "../src/rockets.ts";
 

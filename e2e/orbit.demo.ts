@@ -1,5 +1,6 @@
 // The distance buttons climb away from the body. The camera eases, the address keeps the step, and a moon appears when the distance reaches it.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 

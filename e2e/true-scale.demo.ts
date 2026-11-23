@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const url = "/uchusen-rockets/?rocket=saturn-v&variant=saturn-v&view=front&scale=true";
 const data = (page: import("@playwright/test").Page, key: string) => page.locator("#hero").evaluate((node, name) => node.shadowRoot?.querySelector("canvas")?.dataset[name], key);

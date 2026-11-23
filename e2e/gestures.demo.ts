@@ -1,5 +1,6 @@
 // The family's gesture check (kazoku-ui checkGestures) on every interactive view: turn, roll, keys, wheel, pinch, the moves and fit. A gesture a view does not have is named with its reason.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { checkGestures, type GestureName } from "@johnmorrisdotca/kazoku-ui/testing";
 import { foldPicker } from "./picker.ts";
 

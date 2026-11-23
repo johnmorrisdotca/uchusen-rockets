@@ -1,5 +1,6 @@
 // Painted is the look a page opens on. A line drawing is a choice. The yard is a scene and the docs are prose, so they have no look. The drawing builder on the Rockets page is a thick-line drawing on purpose.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 

@@ -1,5 +1,6 @@
 // In space a launch stack is what is still flying. On the ground, and until asked, it is the whole stack.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/compare.html";
 

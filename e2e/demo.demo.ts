@@ -1,6 +1,7 @@
 // The demo in a real browser: no console or policy error, every control on the main view, looks that keep the angle, the move between together and apart, the parts alone, the painted model only when asked for,
 // the credit, the comparison, the builder, the element's own failures and the React wrapper.
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { flightOf, frameAt } from "../src/flight.ts";
 import { ROCKETS } from "../src/rockets.ts";
 import { isListed } from "../demo/listed.ts";

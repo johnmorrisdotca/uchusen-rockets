@@ -1,5 +1,6 @@
 // The craft built as parts in slots, painted: each station's parts come in as one picture with the one credit, a part shows alone in the same paint, and the line look fetches none of their files.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { ROCKETS } from "../src/rockets.ts";
 import { foldPicker } from "./picker.ts";
 

@@ -1,5 +1,6 @@
 // Real craft for scale lie lengthwise in the fleet band: on unless the address says real=off, and Fit keeps Hanabusa and Kaminari inside the frame.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 

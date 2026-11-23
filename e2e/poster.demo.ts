@@ -1,5 +1,6 @@
 // The poster page: the package's rockets at one scale, a zoom, and a download of the drawing.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/poster.html";
 

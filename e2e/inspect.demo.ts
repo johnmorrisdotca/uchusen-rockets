@@ -1,5 +1,6 @@
 // A finished ship sits still and the drones move on the screen. The mark is the first drone, in the page's own pixels.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 test.use({ reducedMotion: "no-preference" });
 test.beforeEach(({ browserName }) => {

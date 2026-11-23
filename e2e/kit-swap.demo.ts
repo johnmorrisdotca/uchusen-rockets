@@ -1,5 +1,6 @@
 // A kit ship swaps modules by collar, the choice stays in the address, and every fleet ship with an assembly names its flights. Run under CPU_THROTTLE=4 for the slow-machine check.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const hauler = "/uchusen-rockets/?rocket=fleet-samples&variant=hauler&look=line";
 const box = "container-12-5";

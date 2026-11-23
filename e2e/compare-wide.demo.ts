@@ -1,5 +1,6 @@
 // The wide comparison page: two or three craft in one 3D view, each at its true size, floating, with the Earth behind, one set of view controls, the choices in rows and in the address. A phone shows one craft.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 import { build } from "../src/build/index.ts";
 

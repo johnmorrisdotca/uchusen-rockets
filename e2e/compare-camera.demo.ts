@@ -1,5 +1,6 @@
 // The compare page camera: the choice is kept, open space is the default, wrap returns to the free camera, and follow selected waits until a craft is marked.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { expectStillPicture } from "./still.ts";
 
 const URL = "/uchusen-rockets/compare.html?with=none";

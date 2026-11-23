@@ -1,5 +1,6 @@
 // Hanabusa's panel keeps the choices inside the window at 1440 by 900, in the page's own font and in a wide one (a hosted runner's font is wider than a Mac's).
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { ROCKETS } from "../src/rockets.ts";
 import { isListed } from "../demo/listed.ts";
 

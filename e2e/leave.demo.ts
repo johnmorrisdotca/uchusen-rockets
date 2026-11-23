@@ -1,5 +1,6 @@
 // The command citadel slides clear of Miyamoto, and the camera is told to follow it.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 test("separating the citadel stays in the address and the view follows it", async ({ page }) => {
   await page.goto("/uchusen-rockets/?rocket=starship&variant=v3");

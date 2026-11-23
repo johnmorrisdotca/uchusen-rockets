@@ -1,5 +1,6 @@
 // The beam page draws the carry in both looks, and the reduced-motion picture is the dotted one.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { expectStillPicture } from "./still.ts";
 
 const URL = "/uchusen-rockets/beam.html";

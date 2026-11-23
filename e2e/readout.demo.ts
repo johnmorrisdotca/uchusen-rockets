@@ -1,5 +1,6 @@
 // The zoom readout between the buttons: it reads the view's zoom in kazoku-ui's form (1×, 2.4×) after the buttons, the wheel and a pinch, and a polite live region says it once the zoom settles.
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { zoomText } from "@johnmorrisdotca/kazoku-ui/view-controls";
 import { foldPicker } from "./picker.ts";
 

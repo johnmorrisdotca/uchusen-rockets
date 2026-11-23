@@ -1,5 +1,6 @@
 // Spacecraft (probes, telescopes and crewed craft) are their own kind: Real spacecraft in the ship picker, a Spacecraft row beside the Rocket row, no "Launch stack / In space" row for a craft with no stack, and each row named for what it measures.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { ROCKETS } from "../src/rockets.ts";
 import { foldPicker } from "./picker.ts";
 

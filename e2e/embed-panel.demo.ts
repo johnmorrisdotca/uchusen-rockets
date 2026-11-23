@@ -1,7 +1,8 @@
 // "Put this rocket on your site" is the family's <kazoku-embed-panel>, on the index page and the builder. Nothing the old panels had is gone, and a test counts it: the six ways (CDN script,
 // iframe, module, SVG, data address, image link), a note for each, Copy, Save SVG, Save PNG, Open the embed page, and the credit that shows only when the picture needs one; and the panel adds
 // React, Vue, Angular and Svelte, a size, the picture beside the code and Read the docs. The picture is the drawing itself: no WebGL context and no iframe of its own.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";

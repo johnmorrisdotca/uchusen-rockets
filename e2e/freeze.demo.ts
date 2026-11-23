@@ -2,7 +2,8 @@
 // graphics memory (buffers, vertex arrays, textures) that grow with each change, on a canvas past its pixel budget at any zoom on a 5K screen, and on a lost context that is not let go. With the Earth behind the rocket they
 // also fail on more than one frame request for it per page frame, on drawing it faster than its own low rate, on anything drawn out of sight or on a hidden tab, on its context or pictures kept after it is turned off, and on growth over 50 rounds of changes.
 import { execSync } from "node:child_process";
-import { chromium, expect as plainExpect, type Locator, type Page, test } from "@playwright/test";
+import { chromium, expect as plainExpect, type Locator, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { build } from "../src/build/index.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
 import { ROCKETS } from "../src/rockets.ts";

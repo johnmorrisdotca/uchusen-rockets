@@ -3,7 +3,8 @@
 // Space Shuttle's stack in the thick look, which is wide and asymmetric (a rocket's body is a plain tube, and a plain tube has nothing to follow up or down). The camera's own angle is the other: one sign in src/framing.ts (`turnedBy`) serves
 // every rocket, and a camera at azimuth a sees a point on the near side at x = -R sin(a), so the surface goes right as the azimuth falls; at elevation e its height is -R sin(e), so it goes up as the elevation falls.
 // Desk Chromium only: the 3D looks draw in software here.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 import { checkFollowsTheHand, dragBy } from "./ground.mjs";
 

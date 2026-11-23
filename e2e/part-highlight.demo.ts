@@ -1,5 +1,6 @@
 // One part of a station can be picked out. The attribute is `part`, the property is `picked`, and a press sends `uchusen-part`.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/element-check.html";
 

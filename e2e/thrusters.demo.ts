@@ -1,5 +1,6 @@
 // The thruster choice: nozzles on a real craft, none on a rocket that has no jets, and the choice kept in the address.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 

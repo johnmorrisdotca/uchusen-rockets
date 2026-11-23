@@ -1,5 +1,6 @@
 // A phone: a tap or a pinch on a stage turns that view and leaves the Safari page at scale 1. Once a rocket is in 3D, its still picture is gone.
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 
 const BASE = "/uchusen-rockets/";

@@ -1,5 +1,6 @@
 // How far the view may be tipped: 90 degrees for a craft in space (straight above or below), 45 for a rocket on the ground. The slider, the drag and the address take the limit, and Fit still holds the craft at the limit.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { build } from "../src/build/index.ts";
 import { ROCKETS } from "../src/rockets.ts";
 

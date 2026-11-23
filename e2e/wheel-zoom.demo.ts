@@ -1,5 +1,6 @@
 // Ctrl or Command and the wheel zooms every stage. The pages come from the page bar, not from a list kept here.
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 
 const BASE = "/uchusen-rockets/";

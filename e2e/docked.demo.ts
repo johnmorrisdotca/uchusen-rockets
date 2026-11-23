@@ -1,5 +1,6 @@
 // Choosing a docked craft: one row of buttons per port, kept in the address, still there with Fit, Beside it and true scale, and the graphics objects come back when the craft is taken off.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { DOCK } from "../src/model/fleet/ship-01/docking.ts";
 import { foldPicker } from "./picker.ts";
 

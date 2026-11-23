@@ -1,5 +1,6 @@
 // The build row: a ship with an order shows play, the rates and, under reduced motion, numbered stills. A rocket does not.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 import { buildOf, playFrame } from "../src/buildPlay.ts";
 
