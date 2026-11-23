@@ -6,6 +6,7 @@
 
 - **A Ctrl, Command or Space drag on the fleet view keeps turning the view** (MODULES-767). The drag used to select the picture, and the next press started the browser's own drag, which cancelled the pointer after one move. The fleet view no longer selects text or pictures, and the browser's drag never starts.
 - **The demo tests never reach the live tiles site** (MODULES-1779). They fetched the planets package's live tiles manifest, so a failed request failed the run. The tests now serve the package's published tile levels, and a picture for each tile, including on a context the test opens itself. An empty catalogue, and a refused tile, was an access-control error on WebKit.
+- **The picture script builds the page it opens** (MODULES-1771). `node scripts/shots.ts` needs `site/element-check.html`, which only exists after `pnpm site`, so a fresh worktree failed. It builds the site first when that page is missing.
 
 ## [0.37.5] - 2026-11-22
 

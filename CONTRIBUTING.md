@@ -47,4 +47,5 @@ pnpm dev            # the demo on http://127.0.0.1:8275/uchusen-rockets/
 pnpm assets         # make dist/assets again
 pnpm models         # make models/ from the source models, by hand
 pnpm screenshots    # the pictures in docs/images
+node scripts/shots.ts # one rocket's pictures; builds the site first when site/element-check.html is not there yet
 ```
