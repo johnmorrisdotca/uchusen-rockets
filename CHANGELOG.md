@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.37.6] - 2026-11-23
+
 - **The demo's tests never ask the live tiles site** (MODULES-1779). A failed request for the tiles manifest was a page problem that failed CI. Every test, including one that opens its own browser context, gets an empty manifest, and the body pictures are read from the installed package.
 
 ## [0.37.5] - 2026-11-22
