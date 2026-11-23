@@ -6,6 +6,8 @@
   .fleet-cmp .craft-line { flex-wrap: wrap; overflow: visible; }
 }
 .fleet-cmp .craft-line .chip { flex: 0 0 auto; }
+/* a drag with Ctrl, Command or Space selects the picture, and the next press on that selection starts the browser's own drag, which cancels the pointer (Linux Chromium): the view takes no selection and no native drag */
+.fleet-cmp .cmp-view, .fleet-cmp .cmp-view * { user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
 .fleet-cmp .cmp-view { margin-bottom: -12px; position: relative; overflow: hidden; height: auto; min-height: 0; background: #0d1729; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 0.5rem; }
 .fleet-cmp .cmp-view uchusen-lineup { display: block; width: 100%; height: auto; margin: 0; background: transparent; border: 0; border-radius: 0; transform-origin: center top; }
 .fleet-cmp kazoku-view-controls[for="cmp-view"] { border-radius: 0 0 0.5rem 0.5rem; }
