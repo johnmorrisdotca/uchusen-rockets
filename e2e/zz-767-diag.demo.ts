@@ -11,7 +11,7 @@ for (const key of ["Control", "Space"]) {
       const log: string[] = [];
       (window as unknown as { log: string[] }).log = log;
       for (const type of ["pointerdown", "pointermove", "pointerup", "pointercancel", "mousedown", "mousemove", "mouseup", "dragstart", "selectstart", "contextmenu", "scroll", "blur", "keydown", "keyup", "lostpointercapture", "gotpointercapture"]) {
-        window.addEventListener(type, (event) => log.push(`${type}${event instanceof KeyboardEvent ? ":" + event.key : ""}${event instanceof MouseEvent ? ` ${Math.round(event.clientX)},${Math.round(event.clientY)} b${event.buttons}` : ""}${event.defaultPrevented ? " prevented" : ""}`), true);
+        window.addEventListener(type, (event) => log.push(`${type}${event instanceof KeyboardEvent ? ":" + event.key : ""}${event instanceof MouseEvent ? ` ${Math.round(event.clientX)},${Math.round(event.clientY)} b${event.buttons} ctrl=${event.ctrlKey} meta=${event.metaKey} target=${(event.target as HTMLElement).id || (event.target as HTMLElement).tagName}` : ""}${event.defaultPrevented ? " prevented" : ""}`), true);
       }
     });
     const box = (await view.boundingBox())!;
