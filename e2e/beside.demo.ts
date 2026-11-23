@@ -1,5 +1,6 @@
 // "Beside it": Starship with Super Heavy stands beside the craft on screen at true scale. The toggle is in the address and survives a reload, Fit holds both craft, and Starship itself is not offered it.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 import { build } from "../src/build/index.ts";
 import { ROCKETS } from "../src/rockets.ts";

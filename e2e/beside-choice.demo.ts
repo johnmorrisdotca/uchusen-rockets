@@ -1,5 +1,6 @@
 // Beside it can be Saturn V, SLS or the ISS, not only Starship. The choice is in the address, a craft is not offered beside itself, and Fit holds both.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { build } from "../src/build/index.ts";
 
 const URL = "/uchusen-rockets/";

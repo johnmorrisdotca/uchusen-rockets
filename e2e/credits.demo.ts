@@ -1,7 +1,8 @@
 // The credits and the page frame: every page of the demo says what it is, has a way home, and shows where its models and pictures come from with a link to every credit, without opening a menu
 // (kazoku-ui's <kazoku-page-header> and <kazoku-page-credits>). The bare frame made for an iframe has the small credit line in a corner.
 // On a phone the credits must not run off the side of the page or sit on top of anything else.
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
+import { test } from "./base.ts";
 
 const BASE = "/uchusen-rockets/";
 const NOTICE = "https://github.com/johnmorrisdotca/uchusen-rockets/blob/main/NOTICE.md";

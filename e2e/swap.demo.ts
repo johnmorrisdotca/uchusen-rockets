@@ -1,5 +1,6 @@
 // A hardpoint takes another module, and the build names the flight that is underway.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { buildOf, flightNow } from "../src/buildPlay.ts";
 
 const miyamoto = "/uchusen-rockets/?rocket=fleet-ship-03&variant=miyamoto&look=line";

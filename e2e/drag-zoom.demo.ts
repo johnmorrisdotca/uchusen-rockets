@@ -1,5 +1,6 @@
 // A plain drag turns the craft at every zoom. The middle button (or the right button, Ctrl or Command, or Space) and a drag move it: panning is never a side effect of zooming in.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 
 const URL = "/uchusen-rockets/";

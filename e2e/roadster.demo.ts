@@ -1,5 +1,6 @@
 // The Roadster: one kind, three cars chosen in a row. Each car's model is fetched only when it is chosen, and changing car frees the one before. Given the Sun's direction, the lit side faces it.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const CARS = ["first-generation", "second-generation", "second-generation-2"] as const;
 

@@ -1,5 +1,6 @@
 // The shared ship picker floats on the Card window. layout switches Card and Browser. The choice is the page's craft.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 

@@ -1,5 +1,6 @@
 // The 3D stage keeps its height from the first paint. The craft files are held back, the box is measured, then they are let through.
-import { expect, test, type Route } from "@playwright/test";
+import { expect, type Route } from "@playwright/test";
+import { test } from "./base.ts";
 
 const pages = [
   { path: "/uchusen-rockets/", rocket: "#hero" },

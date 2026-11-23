@@ -3,7 +3,8 @@
 import { inflateSync } from "node:zlib";
 import { writeFileSync } from "node:fs";
 
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 test.use({ reducedMotion: "no-preference" });
 

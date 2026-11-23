@@ -1,5 +1,6 @@
 // The small craft (ATC) in the demo: each is a variant of one rocket, made by SPX, with its card, and the cutaway beside the shuttle. Run under CPU_THROTTLE=4 for the slow-machine check.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { ATC_NAMES, BUILT } from "../src/model/fleet/craft/index.ts";
 
 const URL = "/uchusen-rockets/";

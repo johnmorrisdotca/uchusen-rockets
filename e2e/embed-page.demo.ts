@@ -1,6 +1,7 @@
 // The Embed link in the one page bar opens the shell page. That page is the builder's screen with the choice in the address.
 // The bare frame stays embed.html, and opened on its own it offers the shell page.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const BASE = "/uchusen-rockets/";
 

@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 import { BODIES } from "@johnmorrisdotca/wakusei-planets";
 
 const URL = "/uchusen-rockets/compare.html?background=mars&with=none";

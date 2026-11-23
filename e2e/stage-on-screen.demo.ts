@@ -1,5 +1,6 @@
 // On a phone the maker and rocket choices sit under the picture. Choosing one below the fold must leave the picture on screen.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const noWebGL = () => {
   const getContext = HTMLCanvasElement.prototype.getContext;

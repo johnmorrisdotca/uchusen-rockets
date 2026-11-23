@@ -1,6 +1,7 @@
 // The swarm page draws the path, and the ship view hides what is not built yet and puts the drones in the scene.
 import { writeFileSync } from "node:fs";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { expectStillPicture } from "./still.ts";
 
 const COUNT = () => {

@@ -1,5 +1,6 @@
 // The compare page floats the craft: no plinth, names at the top right, and a Ground choice puts the plinth back. Hide takes the names off, and both choices stay in the address.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/compare.html";
 const hero = (page: Page) => page.locator('[data-testid="hero"]');

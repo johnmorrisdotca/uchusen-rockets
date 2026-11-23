@@ -1,5 +1,6 @@
 // The comparison page and the picker, cleaned: the Starship versions band reads (numbers apart, labels in their own cells, the unit inside the picture), a phone's frame scrolls the drawing by itself and the page never scrolls sideways, the kit's sample modules are not offered as craft, a fleet ship's panel says Length, Beam and Height and "SPX" plainly, no part chip shows a raw id, and the viewer's panel is compact enough for a wide font.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { FLEET_KIT_ROCKETS } from "../src/data/fleet.ts";
 import { ROCKETS } from "../src/rockets.ts";
 

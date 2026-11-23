@@ -1,5 +1,6 @@
 // The choices under Maker, Rocket and Variant are one group at a time. The tab is kept in the address.
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 

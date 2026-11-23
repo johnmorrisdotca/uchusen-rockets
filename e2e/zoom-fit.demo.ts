@@ -1,5 +1,6 @@
 // Changing craft, variant or view returns the picture to Fit. A zoom in the address stays until one of those changes. At a desk the fitted craft sits above the ship's panel.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { ROCKETS } from "../src/rockets.ts";
 
 const URL = "/uchusen-rockets/";

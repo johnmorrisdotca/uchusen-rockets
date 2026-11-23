@@ -1,5 +1,6 @@
 // The `flags` attribute: with hata, a national rocket shows its country's flag and an international one none; when hata's import fails the element draws as before, with no flag and no error.
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 

@@ -1,5 +1,6 @@
 // Every planet and moon the demo draws turns on its own axis, unless the reader prefers less motion or has chosen Still: the Earth inside the compare page's 3D view (and its clouds), the backgrounds, and the journey's planets.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const BASE = "/uchusen-rockets/";
 

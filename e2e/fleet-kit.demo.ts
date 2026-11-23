@@ -1,6 +1,7 @@
 // The fleet kit's pictures, from the real 3D model in a real browser (software GL): every group of modules, a cutaway and the sample ship are drawn painted and in the line look, each is far from blank, and their
 // detail is at least Starship Block 3's, measured as the share of the picture's own pixels that are edges. The line look is as dense as the painted one. Pictures only: the freeze test holds the graphics memory.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/embed.html";
 const hero = (page: Page) => page.locator("uchusen-rocket#rocket");

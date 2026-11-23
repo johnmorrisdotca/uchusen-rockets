@@ -1,5 +1,6 @@
 // The shared Wide layout: the toggle is on every demo page with a side panel, the choice stays in the address and on the device, the T key switches it, the panel moves below the view, and a phone stays one column.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 import { foldPicker } from "./picker.ts";
 
 const BASE = "/uchusen-rockets/";

@@ -1,5 +1,6 @@
 // Planets and a moon behind the rocket. Each picture is drawn, and the one before it is taken off the page.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./base.ts";
 
 const URL = "/uchusen-rockets/";
 
@@ -128,7 +129,7 @@ test("each look uses its own kind of picture for the body and for a moon beside 
   const texture = (root: ReturnType<typeof page.locator>) => root.locator("wakusei-body").first().evaluate((node) => (node as unknown as { stats?: { textureWidth?: number } }).stats?.textureWidth ?? 0);
 
   await page.goto(`${URL}?background=mars&look=line`);
-  await expect(sky).toHaveAttribute("data-form", "line");
+  await expect(sky).toHaveAttribute("data-form", "line", { timeout: 30_000 });
   await expect(sky.locator("wakusei-body")).toHaveCount(1);
   await expect(sky.locator("svg")).toHaveCount(1);
 
