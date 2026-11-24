@@ -2562,7 +2562,7 @@ export class RocketViewer {
       if (!el) {
         el = document.createElement("span");
         el.dataset.besideLabel = "";
-        el.style.cssText = "position:absolute;left:0;top:0;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.72);text-align:center;will-change:transform;display:none";
+        el.style.cssText = "position:absolute;left:0;top:0;box-sizing:border-box;width:max-content;padding:1px 5px;color:#e6edf6;background:rgba(11,17,27,0.72);text-align:center;will-change:transform;display:none";
         this.hostOfMarks().appendChild(el);
         this.besideEls.set(craft, el);
       }

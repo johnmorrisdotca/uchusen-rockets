@@ -15,6 +15,10 @@ const GAP = 4;
 
 const clamp = (value: number, lo: number, hi: number): number => Math.min(Math.max(value, lo), hi);
 
+/** Where a name of `span` may start. A name that fits keeps the inset. One that fills the picture stays at the edge instead of being pushed past it. */
+const startAt = (span: number, limit: number): number => Math.min(PAD, Math.max(0, limit - span));
+const endAt = (span: number, limit: number): number => Math.max(0, limit - span - (span + PAD * 2 <= limit ? PAD : 0));
+
 const covers = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }): boolean =>
   a.x < b.x + b.w + GAP && b.x < a.x + a.w + GAP && a.y < b.y + b.h + GAP && b.y < a.y + a.h + GAP;
 
@@ -27,12 +31,10 @@ const covers = (a: { x: number; y: number; w: number; h: number }, b: { x: numbe
  * @returns The top-left of each name, in the same order.
  */
 export function placeNameLabels(labels: readonly LabelSpot[], width: number, height: number): { x: number; y: number }[] {
-  const room = (span: number) => Math.max(PAD, width - span - PAD);
-  const head = (span: number) => Math.max(PAD, height - span - PAD);
   const placed = labels.map((label) => ({
     ...label,
-    x: clamp(label.footX - label.w / 2, PAD, room(label.w)),
-    y: clamp(label.footY + GAP, PAD, head(label.h)),
+    x: clamp(label.footX - label.w / 2, startAt(label.w, width), endAt(label.w, width)),
+    y: clamp(label.footY + GAP, startAt(label.h, height), endAt(label.h, height)),
   }));
   for (let pass = 0; pass < 16; pass++) {
     let hit = false;
@@ -46,14 +48,14 @@ export function placeNameLabels(labels: readonly LabelSpot[], width: number, hei
         const right = left === a ? b : a;
         const need = (left.w + right.w) / 2 + GAP - ((right.x + right.w / 2) - (left.x + left.w / 2));
         if (need > 0) {
-          left.x = clamp(left.x - need / 2, PAD, room(left.w));
-          right.x = clamp(right.x + need / 2, PAD, room(right.w));
+          left.x = clamp(left.x - need / 2, startAt(left.w, width), endAt(left.w, width));
+          right.x = clamp(right.x + need / 2, startAt(right.w, width), endAt(right.w, width));
         }
         if (!covers(left, right)) continue;
         // still covering: the one whose foot is higher on the screen steps up, so they stay in two columns
         const upper = a.footY <= b.footY ? a : b;
         const lower = upper === a ? b : a;
-        upper.y = clamp(lower.y - upper.h - GAP, PAD, head(upper.h));
+        upper.y = clamp(lower.y - upper.h - GAP, startAt(upper.h, height), endAt(upper.h, height));
       }
     }
     if (!hit) break;

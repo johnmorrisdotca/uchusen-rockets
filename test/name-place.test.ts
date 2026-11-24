@@ -43,6 +43,13 @@ test("names that would pile into one column step apart and stay inside", () => {
   assert.ok(centres[2] - centres[0] > 80, "not one column");
 });
 
+test("a name as wide as the picture is not pushed past the edge", () => {
+  const placed = placeNameLabels([{ footX: 96, footY: 200, w: 192, h: 28 }], 192, 256);
+  assert.equal(placed[0].x, 0);
+  assert.ok(placed[0].x + 192 <= 192);
+  assert.ok(placed[0].y + 28 <= 256);
+});
+
 test("a name that would hang off the left is pulled inside", () => {
   const placed = placeNameLabels([{ footX: 20, footY: 100, w: 180, h: 16 }], 390, 400);
   assert.equal(placed[0].x, 4);
