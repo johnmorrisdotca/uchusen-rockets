@@ -84,7 +84,13 @@ export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => vo
     if (detail) onView(detail);
   });
   // A stage with no view stage around it keeps the wheel. One drawn inside another lets the event
-  // go on, so the outer stage zooms too. The bar still calls preventDefault, so the page does not.
+  // go on, so the outer stage zooms too. preventDefault runs on the way down: WebKit had already
+  // scrolled the page by the time the bar's own listener ran.
+  stage.addEventListener("wheel", (event) => {
+    if (!(event.ctrlKey || event.metaKey || event.altKey)) return;
+    if (stage.parentElement?.closest("[data-view-stage]")) return;
+    event.preventDefault();
+  }, { capture: true, passive: false });
   stage.addEventListener("wheel", (event) => {
     if (!(event.ctrlKey || event.metaKey || event.altKey)) return;
     if (stage.parentElement?.closest("[data-view-stage]")) return;

@@ -10,9 +10,9 @@ import { test as base, type Browser, type BrowserContext } from "@playwright/tes
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const TEXTURES = join(ROOT, "node_modules", "@johnmorrisdotca", "wakusei-planets", "dist", "textures");
 const TYPES: Record<string, string> = { ".jpg": "image/jpeg", ".webp": "image/webp", ".png": "image/png", ".avif": "image/avif" };
-const CORS = { "access-control-allow-origin": "*" };
+// WebKit drops a fulfilled tile unless the CORS header is spelled this way. A lower-case name came back as an access-control error.
+const CORS = { "Access-Control-Allow-Origin": "*" };
 
-const TILES = "https://johnmorrisdotca.github.io/wakusei-planets/tiles/";
 const TEXTURE = /^https:\/\/cdn\.jsdelivr\.net\/npm\/@johnmorrisdotca\/wakusei-planets@[^/]+\/dist\/textures\/.+$/;
 
 const stubbed = new WeakSet<BrowserContext>();
@@ -22,13 +22,14 @@ const wrapped = new WeakSet<Browser>();
 async function stubTiles(context: BrowserContext): Promise<void> {
   if (stubbed.has(context)) return;
   stubbed.add(context);
-  const manifest = await readFile(join(ROOT, "e2e", "tiles-manifest.json"));
-  const tile = await readFile(join(TEXTURES, "mars-512.webp"));
-  await context.route(`${TILES}**`, (route) => {
+  const manifestPath = join(ROOT, "e2e", "tiles-manifest.json");
+  const tilePath = join(TEXTURES, "mars-512.webp");
+  await context.route((url) => url.hostname === "johnmorrisdotca.github.io" && url.pathname.startsWith("/wakusei-planets/tiles/"), (route) => {
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: { ...CORS, "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS" } });
     const path = new URL(route.request().url()).pathname;
-    if (path.endsWith("/manifest.json")) return route.fulfill({ status: 200, contentType: "application/json", headers: CORS, body: manifest });
+    if (path.endsWith("/manifest.json")) return route.fulfill({ status: 200, contentType: "application/json", headers: CORS, path: manifestPath });
     const ext = path.slice(path.lastIndexOf("."));
-    if (ext in TYPES) return route.fulfill({ status: 200, contentType: TYPES[ext], headers: CORS, body: tile });
+    if (ext in TYPES) return route.fulfill({ status: 200, contentType: TYPES[ext], headers: CORS, path: tilePath });
     return route.fulfill({ status: 204, headers: CORS, body: "" });
   });
   await context.route(TEXTURE, async (route) => {

@@ -17,9 +17,11 @@ const press = async (page: Page, id: string) => {
 };
 const stopTurn = (page: Page) => page.locator('[data-testid="view-bar"]').evaluate((node) => (node as HTMLElement & { pause(): void }).pause());
 const reach3d = async (page: Page) => {
-  // The picture stays at the top on a phone. A reload can come back scrolled to a choice, and a view out of sight stays the drawing.
-  await page.evaluate(() => document.querySelector("#main-view")?.scrollIntoView({ block: "start" }));
-  await expect(hero(page)).toHaveAttribute("data-state", "3d", { timeout: 90_000 });
+  // The picture stays at the top on a phone. A reload restores the scroll, the stage leaves the screen, and a view out of sight stays the drawing. Bring the stage back to the top until the 3D view is in.
+  await expect.poll(async () => {
+    await page.evaluate(() => document.querySelector("#main-view")?.scrollIntoView({ block: "start" }));
+    return hero(page).getAttribute("data-state");
+  }, { timeout: 90_000 }).toBe("3d");
 };
 
 /** Every corner of the box both craft fill is on the picture after Fit. */
