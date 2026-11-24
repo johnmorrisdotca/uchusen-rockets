@@ -27,6 +27,7 @@ import type { RocketViewer, ViewerFocus } from "./element/scene.ts";
 import { skyQuery, type SkyShown } from "./element/solarGroups.ts";
 import { Panel } from "./element/panel.ts";
 import { afterProbeRetry, glProbe } from "./element/probe.ts";
+import { shownInWindow } from "./element/onScreen.ts";
 import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
 import { flagSvg } from "./element/flag.ts";
@@ -1012,11 +1013,13 @@ export class UchusenRocket extends HTMLBase {
     } else this.setState("picture");
     this.watch = new IntersectionObserver(
       ([seen]) => {
-        this.onScreen = seen.isIntersecting;
-        if (seen.isIntersecting && this.stale) this.place();
-        if (seen.isIntersecting) this.kickFlight();
+        // A stuck stage sits in the window while the observer still says it is outside. The box decides.
+        const shown = shownInWindow(seen.isIntersecting, this.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight });
+        this.onScreen = shown;
+        if (shown && this.stale) this.place();
+        if (shown) this.kickFlight();
         if (reason) return;
-        if (seen.isIntersecting && !this.glAsked) {
+        if (shown && !this.glAsked) {
           // The probe makes a context, which software drawing takes seconds over: it waits until a view is about to draw. A working answer is kept for the page. A failure is asked again when a context is restored or the page is shown.
           this.glAsked = true;
           if (!glProbe().works) {
@@ -1027,7 +1030,7 @@ export class UchusenRocket extends HTMLBase {
             return;
           }
         }
-        if (seen.isIntersecting) {
+        if (shown) {
           this.shownAt ||= performance.now();
           window.clearTimeout(this.releaseTimer);
           if (this.viewer) this.viewer.setVisible(true);
