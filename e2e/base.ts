@@ -18,12 +18,13 @@ const TEXTURE = /^https:\/\/cdn\.jsdelivr\.net\/npm\/@johnmorrisdotca\/wakusei-p
 const stubbed = new WeakSet<BrowserContext>();
 const wrapped = new WeakSet<Browser>();
 
-/** Answer the tiles manifest and each tile from this machine. A fulfilled route still failed WebKit's access check, so the page's own fetch answers before the request leaves. */
+/** Answer the tiles manifest and each tile from this machine. A fulfilled subresource still failed WebKit's access check, so the page's own fetch answers before that request leaves. A navigation is not that fetch: the test opens the manifest as a document, and only that document is fulfilled. */
 async function stubTiles(context: BrowserContext): Promise<void> {
   if (stubbed.has(context)) return;
   stubbed.add(context);
   const manifest = await readFile(join(ROOT, "e2e", "tiles-manifest.json"), "utf8");
-  const webp = (await readFile(join(TEXTURES, "mars-512.webp"))).toString("base64");
+  const tile = await readFile(join(TEXTURES, "mars-512.webp"));
+  const webp = tile.toString("base64");
   await context.addInitScript(({ manifest, webp }) => {
     const prefix = "https://johnmorrisdotca.github.io/wakusei-planets/tiles/";
     const bytes = Uint8Array.from(atob(webp), (c) => c.charCodeAt(0));
@@ -35,6 +36,18 @@ async function stubTiles(context: BrowserContext): Promise<void> {
       return Promise.resolve(new Response(bytes, { status: 200, headers: { "content-type": "image/webp" } }));
     };
   }, { manifest, webp });
+  await context.route(/^https:\/\/johnmorrisdotca\.github\.io\/wakusei-planets\/tiles\//, async (route) => {
+    if (route.request().resourceType() !== "document") {
+      await route.continue();
+      return;
+    }
+    const url = route.request().url();
+    if (url.includes("manifest.json")) {
+      await route.fulfill({ status: 200, contentType: "application/json", headers: CORS, body: manifest });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: "image/webp", headers: CORS, body: tile });
+  });
   await context.route(TEXTURE, async (route) => {
     const file = new URL(route.request().url()).pathname.split("/dist/textures/")[1]!;
     try {
