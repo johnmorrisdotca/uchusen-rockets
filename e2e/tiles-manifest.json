@@ -1,0 +1,275 @@
+{
+  "tileSize": 512,
+  "bodies": {
+    "mercury": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "mars": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        },
+        {
+          "level": 3,
+          "width": 16384,
+          "height": 8192,
+          "columns": 32,
+          "rows": 16
+        }
+      ]
+    },
+    "moon": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        },
+        {
+          "level": 3,
+          "width": 16384,
+          "height": 8192,
+          "columns": 32,
+          "rows": 16
+        }
+      ]
+    },
+    "earth": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        },
+        {
+          "level": 3,
+          "width": 16384,
+          "height": 8192,
+          "columns": 32,
+          "rows": 16
+        }
+      ]
+    },
+    "pluto": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        }
+      ]
+    },
+    "charon": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        }
+      ]
+    },
+    "io": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "callisto": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "rhea": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "enceladus": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "tethys": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "dione": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "iapetus": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "triton": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        },
+        {
+          "level": 2,
+          "width": 8192,
+          "height": 4096,
+          "columns": 16,
+          "rows": 8
+        }
+      ]
+    },
+    "mimas": {
+      "levels": [
+        {
+          "level": 1,
+          "width": 4096,
+          "height": 2048,
+          "columns": 8,
+          "rows": 4
+        }
+      ]
+    }
+  }
+}

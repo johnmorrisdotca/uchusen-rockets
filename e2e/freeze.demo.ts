@@ -700,10 +700,15 @@ const keepDrawing = (page: Page) =>
     if (!(canvas instanceof HTMLCanvasElement)) throw new Error("no canvas");
     const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
     if (!gl) throw new Error("no context");
-    const loop = () => {
+    const draw = () => {
       gl.drawArrays(gl.POINTS, 0, 0);
-      requestAnimationFrame(loop);
     };
+    // A frame on a busy runner can arrive later than the rest gap, and that one quiet gap was read as rest. The loop also draws on a short timer. The gap itself is unchanged.
+    const loop = () => {
+      requestAnimationFrame(loop);
+      draw();
+    };
+    setInterval(draw, 100);
     requestAnimationFrame(loop);
   });
 
