@@ -48,15 +48,18 @@ async function stubTiles(context: BrowserContext): Promise<void> {
     }
     await route.fulfill({ status: 200, contentType: "image/webp", headers: CORS, body: tile });
   });
-  await context.route(TEXTURE, async (route) => {
-    const file = new URL(route.request().url()).pathname.split("/dist/textures/")[1]!;
-    try {
-      const ext = file.slice(file.lastIndexOf("."));
-      await route.fulfill({ status: 200, contentType: TYPES[ext] ?? "application/octet-stream", headers: CORS, body: await readFile(join(TEXTURES, decodeURIComponent(file))) });
-    } catch {
-      await route.fulfill({ status: 404, body: "" });
-    }
-  });
+  // Linux WebKit turns a fulfilled picture into a blob URL and then refuses it ("access control checks"). Chromium can read the file from this machine. WebKit loads the picture from jsDelivr, which sends the CORS header the loader asks for.
+  if (context.browser()?.browserType().name() !== "webkit") {
+    await context.route(TEXTURE, async (route) => {
+      const file = new URL(route.request().url()).pathname.split("/dist/textures/")[1]!;
+      try {
+        const ext = file.slice(file.lastIndexOf("."));
+        await route.fulfill({ status: 200, contentType: TYPES[ext] ?? "application/octet-stream", headers: CORS, body: await readFile(join(TEXTURES, decodeURIComponent(file))) });
+      } catch {
+        await route.fulfill({ status: 404, body: "" });
+      }
+    });
+  }
 }
 
 /** Contexts a test opens itself are not the page fixture's context, so they miss its routes unless the browser installs them. */
