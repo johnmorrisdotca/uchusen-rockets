@@ -39,8 +39,8 @@ importers:
         specifier: 1.8.0
         version: 1.8.0
       '@johnmorrisdotca/kazoku-ui':
-        specifier: ^0.32.0
-        version: 0.32.0(three@0.186.1)
+        specifier: ^0.41.0
+        version: 0.41.1(three@0.186.1)
       '@johnmorrisdotca/wakusei-planets':
         specifier: 0.61.0
         version: 0.61.0(@johnmorrisdotca/chikyu-earth@0.36.0)(three@0.186.1)
@@ -588,16 +588,6 @@ packages:
   '@johnmorrisdotca/hata@1.8.0':
     resolution: {integrity: sha512-aT+aMt2hzH9qGp4WqFLagGbUzzzdJ0GGMYPwcrbhO3pUBtFX1aim0pKfyUrii59Aa22Fb+8M+bjLkFt2SkELqA==}
     engines: {node: '>=24'}
-
-  '@johnmorrisdotca/kazoku-ui@0.32.0':
-    resolution: {integrity: sha512-/clupIHbTRIRRYQygRr8CoJB8YdDqLELXeb7lWjV+XXkCWdvaoM3kvivn62p51rcR+fO0RGu3q3W4nweoar/5Q==}
-    engines: {node: '>=22'}
-    hasBin: true
-    peerDependencies:
-      three: '>=0.160.0'
-    peerDependenciesMeta:
-      three:
-        optional: true
 
   '@johnmorrisdotca/kazoku-ui@0.41.1':
     resolution: {integrity: sha512-PFqO5/G8A6npgOgwrBVe+Ii8yBMUg7bHabwhJRNl0CYYLKBPE7mUglLPm+C8c3S6YWxqepZz5Rf4zhWfI5pJzg==}
@@ -2600,10 +2590,6 @@ snapshots:
   '@johnmorrisdotca/chizu@1.6.1': {}
 
   '@johnmorrisdotca/hata@1.8.0': {}
-
-  '@johnmorrisdotca/kazoku-ui@0.32.0(three@0.186.1)':
-    optionalDependencies:
-      three: 0.186.1
 
   '@johnmorrisdotca/kazoku-ui@0.41.1(three@0.186.1)':
     optionalDependencies:
