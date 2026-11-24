@@ -84,12 +84,14 @@ export function bindStage(stage: HTMLElement, onView: (detail: ViewDetail) => vo
     if (detail) onView(detail);
   });
   // A stage with no view stage around it keeps the wheel. One drawn inside another lets the event
-  // go on, so the outer stage zooms too. preventDefault runs on the way down: WebKit had already
-  // scrolled the page by the time the bar's own listener ran.
+  // go on, so the outer stage zooms too. WebKit on the runner scrolls the page after preventDefault,
+  // by the whole stage, so the page is locked while Control, Command or Alt is held over the stage.
+  holdPageStill(stage);
   stage.addEventListener("wheel", (event) => {
     if (!(event.ctrlKey || event.metaKey || event.altKey)) return;
     if (stage.parentElement?.closest("[data-view-stage]")) return;
     event.preventDefault();
+    holdPage(stage.ownerDocument);
   }, { capture: true, passive: false });
   stage.addEventListener("wheel", (event) => {
     if (!(event.ctrlKey || event.metaKey || event.altKey)) return;
@@ -119,6 +121,44 @@ function stagePaint(stage: HTMLElement): string {
 
 function painted(color: string): boolean {
   return color !== "" && color !== "transparent" && color !== "rgba(0, 0, 0, 0)";
+}
+
+const heldScroll = new WeakMap<Document, { x: number; y: number }>();
+
+/** While a modifier is held and the pointer is over the stage, the page cannot scroll. A plain wheel at Fit still scrolls. Hiding overflow jumps some engines to the top, so the place is put back. */
+function holdPageStill(stage: HTMLElement): void {
+  const doc = stage.ownerDocument;
+  let over = false;
+  stage.addEventListener("pointerenter", () => { over = true; });
+  stage.addEventListener("pointerleave", () => { over = false; });
+  doc.addEventListener("keydown", (event) => {
+    if (!over) return;
+    if (event.key !== "Control" && event.key !== "Meta" && event.key !== "Alt") return;
+    holdPage(doc);
+  });
+  doc.addEventListener("keyup", (event) => {
+    if (event.key !== "Control" && event.key !== "Meta" && event.key !== "Alt") return;
+    releasePage(doc);
+  });
+}
+
+function holdPage(doc: Document): void {
+  const win = doc.defaultView;
+  if (!win) return;
+  if (!heldScroll.has(doc)) heldScroll.set(doc, { x: win.scrollX, y: win.scrollY });
+  doc.documentElement.style.overflow = "hidden";
+  doc.body.style.overflow = "hidden";
+  const place = heldScroll.get(doc)!;
+  win.scrollTo(place.x, place.y);
+}
+
+function releasePage(doc: Document): void {
+  const win = doc.defaultView;
+  const place = heldScroll.get(doc);
+  heldScroll.delete(doc);
+  doc.documentElement.style.overflow = "";
+  doc.body.style.overflow = "";
+  if (win && place) win.scrollTo(place.x, place.y);
 }
 
 /** Safari's own pinch and double-tap. Stopped on the stage and the bar, never on the page. */
