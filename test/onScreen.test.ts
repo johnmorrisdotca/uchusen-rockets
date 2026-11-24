@@ -22,6 +22,16 @@ test("a stage past that margin is not shown", () => {
   assert.equal(shownInWindow(false, box(-220, 10), frame), false);
 });
 
+test("a stage inside a frame that has left the parent window is not shown", () => {
+  const host = { box: box(-5000, 640, 0, 480), frame: { width: 1280, height: 900 } };
+  assert.equal(shownInWindow(false, box(15, 256), frame, 200, host), false);
+});
+
+test("a stuck stage inside a frame that is on the parent window is shown", () => {
+  const host = { box: box(20, 640, 0, 480), frame: { width: 1280, height: 900 } };
+  assert.equal(shownInWindow(false, box(15, 256), frame, 200, host), true);
+});
+
 test("a stage with no size is not shown", () => {
   assert.equal(shownInWindow(false, box(15, 0, 99, 0), frame), false);
 });

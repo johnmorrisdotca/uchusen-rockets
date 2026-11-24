@@ -18,20 +18,23 @@ const TEXTURE = /^https:\/\/cdn\.jsdelivr\.net\/npm\/@johnmorrisdotca\/wakusei-p
 const stubbed = new WeakSet<BrowserContext>();
 const wrapped = new WeakSet<Browser>();
 
-/** Answer the tiles manifest and each tile from this machine. A refused tile was an access-control page error on WebKit. */
+/** Answer the tiles manifest and each tile from this machine. A fulfilled route still failed WebKit's access check, so the page's own fetch answers before the request leaves. */
 async function stubTiles(context: BrowserContext): Promise<void> {
   if (stubbed.has(context)) return;
   stubbed.add(context);
-  const manifestPath = join(ROOT, "e2e", "tiles-manifest.json");
-  const tilePath = join(TEXTURES, "mars-512.webp");
-  await context.route((url) => url.hostname === "johnmorrisdotca.github.io" && url.pathname.startsWith("/wakusei-planets/tiles/"), (route) => {
-    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: { ...CORS, "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS" } });
-    const path = new URL(route.request().url()).pathname;
-    if (path.endsWith("/manifest.json")) return route.fulfill({ status: 200, contentType: "application/json", headers: CORS, path: manifestPath });
-    const ext = path.slice(path.lastIndexOf("."));
-    if (ext in TYPES) return route.fulfill({ status: 200, contentType: TYPES[ext], headers: CORS, path: tilePath });
-    return route.fulfill({ status: 204, headers: CORS, body: "" });
-  });
+  const manifest = await readFile(join(ROOT, "e2e", "tiles-manifest.json"), "utf8");
+  const webp = (await readFile(join(TEXTURES, "mars-512.webp"))).toString("base64");
+  await context.addInitScript(({ manifest, webp }) => {
+    const prefix = "https://johnmorrisdotca.github.io/wakusei-planets/tiles/";
+    const bytes = Uint8Array.from(atob(webp), (c) => c.charCodeAt(0));
+    const native = globalThis.fetch.bind(globalThis);
+    globalThis.fetch = (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (!url.startsWith(prefix)) return native(input, init);
+      if (url.includes("manifest.json")) return Promise.resolve(new Response(manifest, { status: 200, headers: { "content-type": "application/json" } }));
+      return Promise.resolve(new Response(bytes, { status: 200, headers: { "content-type": "image/webp" } }));
+    };
+  }, { manifest, webp });
   await context.route(TEXTURE, async (route) => {
     const file = new URL(route.request().url()).pathname.split("/dist/textures/")[1]!;
     try {

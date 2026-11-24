@@ -27,7 +27,7 @@ import type { RocketViewer, ViewerFocus } from "./element/scene.ts";
 import { skyQuery, type SkyShown } from "./element/solarGroups.ts";
 import { Panel } from "./element/panel.ts";
 import { afterProbeRetry, glProbe } from "./element/probe.ts";
-import { shownInWindow } from "./element/onScreen.ts";
+import { frameHost, shownInWindow } from "./element/onScreen.ts";
 import type { Inspector } from "./data/types.ts";
 import { type Spin, spinOf } from "./spin.ts";
 import { flagSvg } from "./element/flag.ts";
@@ -1014,7 +1014,7 @@ export class UchusenRocket extends HTMLBase {
     this.watch = new IntersectionObserver(
       ([seen]) => {
         // A stuck stage sits in the window while the observer still says it is outside. The box decides.
-        const shown = shownInWindow(seen.isIntersecting, this.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight });
+        const shown = shownInWindow(seen.isIntersecting, this.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight }, 200, frameHost(window));
         this.onScreen = shown;
         if (shown && this.stale) this.place();
         if (shown) this.kickFlight();
