@@ -12,13 +12,13 @@ const FLAT: Lacks = {
   "key-turn": "a flat picture has no turn",
 };
 
-const VIEWS: readonly { name: string; page: string; view: string; controls: string; lacks?: Lacks; height?: number }[] = [
+const VIEWS: readonly { name: string; page: string; view: string; controls: string; lacks?: Lacks; height?: number; hide?: string }[] = [
   { name: "the rocket", page: "index.html?picker=off", view: "#hero", controls: "#view-bar" },
   // The record's own ship is Hanabusa, whose painted build takes seconds a frame in software GL: the check takes a picture for each of its 13 gestures and ran out of its four minutes on a runner
   // (MODULES-905). The hands are the page's, not the ship's, so the check is made on the lightest ship of the record.
   { name: "the fleet record", page: "fleet-db.html?picker=off&ship=fleet-kaminari", view: "#hero", controls: "kazoku-view-controls" },
   { name: "the drones", page: "inspect.html", view: "#hero", controls: "#view-bar" },
-  { name: "the yard", page: "yard.html?picker=off", view: "#yard-view", controls: "#view-bar", lacks: { picture: "the Earth behind the yard is its own still picture, so the moved yard cannot be told apart in a photograph of the middle" } },
+  { name: "the yard", page: "yard.html?picker=off", view: "#yard-view", controls: "#view-bar", hide: "#yard-earth" },
   { name: "the comparison's first view", page: "compare.html?picker=off", view: "#hero", controls: "#view-bar", lacks: { turn: "a drag that starts on a floating craft throws that craft, and the middle of this view holds one", roll: "the scale scene stays level" } },
   { name: "the fleet comparison", page: "fleet-compare.html", view: "#cmp-view", controls: "#cmp-bar", height: 3400, lacks: { ...FLAT, "ctrl-drag-pan": "on the Linux CI machine a Ctrl or Command drag moves this view only by its first step, though it passes on a Mac (a ticket is open)", "space-drag-pan": "on the Linux CI machine a Space drag moves this view only by its first step, though it passes on a Mac (a ticket is open)", picture: "the stage is a 3000 px tall scale chart, so a photograph of its middle cannot be matched to a move (a ticket is open)" } },
   { name: "the journey", page: "journey.html?picker=off", view: ".jr-stage", controls: "kazoku-view-controls", lacks: FLAT },
@@ -36,6 +36,8 @@ for (const one of VIEWS) {
     await page.goto(`${BASE}${one.page}`);
     await foldPicker(page);
     await page.locator(one.controls).first().evaluate((node) => (node as HTMLElement & { pause?: () => void }).pause?.());
+    // The Earth's picture sits still behind the yard. Hidden, the photograph is of the yard that the pan moves.
+    if (one.hide) await page.locator(one.hide).evaluate((node) => ((node as HTMLElement).style.visibility = "hidden"));
     await page.locator(one.view).scrollIntoViewIfNeeded();
     const report = await checkGestures(page, one.view, { controls: one.controls, ...(one.lacks ? { lacks: one.lacks } : {}) });
     expect(report.length).toBeGreaterThan(5);
