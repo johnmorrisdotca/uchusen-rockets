@@ -228,7 +228,8 @@ function drawSwaps(): void {
     const nameKey = `swapSlot_${mount.slot}`;
     const name = known(nameKey) ? say(nameKey) : mount.name;
     group.setAttribute("aria-label", name);
-    group.append(el("span", { className: "swap-name", textContent: name }));
+    // A name that is also one of the buttons says nothing the buttons do not, and its row is then two to a line (the hauler's seven rows fit the window this way): the group's aria-label still names the mount.
+    if (!mount.choices.some((one) => one.name === name)) group.append(el("span", { className: "swap-name", textContent: name }));
     for (const one of mount.choices) {
       const key = `swap_${one.id}`;
       group.append(chip(one.name, `swap-${mount.slot}-${one.id}`, () => {
