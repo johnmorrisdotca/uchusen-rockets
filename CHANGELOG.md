@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.37.8] - 2026-11-26
+
+Tests and the demo's dependency: the package is unchanged by this release.
+
+- **The demo is on kazoku-ui 0.54.5** (MODULES-1852, 1827), from `^0.32.0`. A quick double tap on a button no longer zooms an iPhone's page (the page frame sets `touch-action: manipulation` on the document), and every page-frame and view-controls improvement since 0.32 comes with it. `e2e/credits.demo.ts` reads `touch-action` on every demo page.
+- **The turn-speed buttons say how long a turn takes.** kazoku-ui 0.54's view bar offers, by default, only paces gentler than the page's own speed and labels each by the time of one turn. The demo's bars (the viewer, the comparison and the yard) set `paces="0.5 1 2"`, so they keep 0.5×, 1× and 2×, now read as "2.4 min", "1.2 min" and "36 s"; `e2e/demo.demo.ts` and `e2e/build.demo.ts` read them so.
+
 ## [0.37.7] - 2026-11-25
 
 - **A first failed WebGL look is asked again after a moment** (MODULES-1128). The page asks the browser for a test context once, and a refusal at that moment (another page's contexts were in the way) used to make every rocket on the page fall back to its picture until the page was shown again or a context was restored. A first failure is now looked at once more 400 ms later, and the rockets that fell back are told; a second failure is kept as before. The probe's tests cover a software renderer, a WebGL1-only browser, a null context, a thrown error and the retry.
