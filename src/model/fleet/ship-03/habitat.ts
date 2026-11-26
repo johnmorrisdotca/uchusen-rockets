@@ -3,7 +3,7 @@
 // radiator banks. A cutaway opens the starboard side. Descends from the ISS's Destiny and Node modules and Skylab's wet workshop, with Orion's armoured shell. Pure: no three.js and no DOM.
 import { collar, contextOf, cub, drum, type Piece, place, rng, rod } from "./adapter.ts";
 import { lampHalo, lightPool } from "../lights.ts";
-import { STATION } from "./dims.ts";
+import { ELEVATOR, STATION } from "./dims.ts";
 import { capsule, ringAt, tubeAt } from "./shapes.ts";
 
 const [Y0, Y1] = STATION.habitat;
@@ -85,6 +85,14 @@ export function habitat(cut: boolean, detail = 1, seed = "habitat", theme: Theme
   // the drum is built on the spine's axis from 0 to L and opens towards +Z; turn it a quarter so the cut faces starboard
   const out: Piece[] = [...place(drum(ctx, { R, L, top: "L", bottom: "L", panels: { wide: 2.8, tall: 1.9 }, hatches: 9, roundHatches: true, conduits: 7, trays: 3, vents: 5, ladders: 2, rings: [0.14, 0.3, 0.46, 0.62, 0.78, 0.9], digits: "03", junk: 90 }), { at: [0, Y0, 0], yaw: 90 })];
   if (cut) out.push(...inside(seed, theme));
+  const [ey0, ey1] = ELEVATOR.y;
+  const ez = (ELEVATOR.z[0] + ELEVATOR.z[1]) / 2;
+  const ex = (ELEVATOR.x[0] + ELEVATOR.x[1]) / 2;
+  for (const sign of [-1, 1] as const) {
+    out.push(tubeAt("glass", sign * ex, ez, ELEVATOR.r, ey0, ey1, { segs: 16 }));
+    out.push(rod("hull-grey-dark", [sign * ex, ey0, ez], [sign * ex, ey1, ez], 0.08, 6));
+    for (const y of [ey0 + 3, (ey0 + ey1) / 2, ey1 - 5]) out.push(cub("hull-white", [sign * ex - 0.55, sign * ex + 0.55], [y, y + 1.4], [ez - 0.55, ez + 0.55]));
+  }
   for (const [y, n, s0] of [[Y0 + 10, 12, 0.1], [Y0 + 24, 12, 0.4], [Y0 + 38, 12, 0.2]] as const) if (!cut) out.push(...portholes(y, n, s0));
   else out.push(...portholes(y, n, s0).filter((_, i) => Math.sin(s0 + (Math.PI * 2 * Math.floor(i / 3)) / n) < 0));
   void collar;

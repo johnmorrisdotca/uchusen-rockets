@@ -350,6 +350,7 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   pod: "the ISS's docking ring and the Shuttle's payload pallets; the relay pod carries Hubble-like high-gain dishes and a deep-space network array, the relief pod stacked container racks, the survey pod a Hubble-like telescope in a yoke and a rack of probes",
   collar: "the shadow shields of NASA's nuclear thermal rocket and Mars transfer vehicle studies, a round cone between the reactor and the crew",
   array: "the ISS's solar array wings and iROSA's roll-out blankets: cells on a flexible blanket, a lattice mast, a beta gimbal at each bay and a rotary joint at each end of the beam that turns the wing to face the star",
+  wing: "a bird's wing (shoulder, elbow and wrist, primaries longest at the tip) and the folding wings of the F4F, the F6F and the E-2, with solar cells in frames as on the ISS arrays",
   radiators: "the ISS's radiator panels on booms, large thin plates set away from the hull, and the folding radiators of the Mars transfer vehicle studies",
   "exterior-load": "the Shuttle on its carrier aircraft: two Starship ships clamped side by side on the outside of a hangar box",
   "stack-berth": "the ISS visiting vehicles: a Starship ship and a tanker, tails together at a transfer coupling, with methane and oxygen plates on it",

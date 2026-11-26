@@ -56,6 +56,12 @@ export function doorOf(id: BayId): { wide: number; high: number; y: readonly [nu
   return { wide: y[1] - y[0], high: z[1] - z[0], y, z };
 }
 
+/**
+ * A glass elevator on each side of the habitation drum: the shaft the bird wing sits behind.
+ * `x` and `z` are the starboard box; the port shaft is the same box with x negated. The wing stays dorsal of `z`.
+ */
+export const ELEVATOR = { y: [266, 288] as const, z: [1.2, 6.4] as const, x: [12.4, 15.4] as const, r: 1.05 };
+
 /** Miyamoto's solar array: ten bays along the starboard side (the corner Ariake fills with a hangar box), a root beam at x = 26, z = 14 on stand-offs to the spine, a mast and two gold blankets to each bay. Stowed, each bay folds into a canister; deployed, a mast 56 m long carries a blanket 5.4 m wide and 54 m long to each side of it, the wing turned 35 degrees about the root to face the star. */
 export const ARRAY = { y: [216, 336], bays: 10, pitch: 12, root: { x: 26, z: 14 }, mast: 56, blanket: { wide: 5.4, long: 54 }, tilt: 35 } as const;
 /** The cell area of the array in square metres: ten bays, two blankets each. */

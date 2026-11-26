@@ -7,7 +7,7 @@ const STACKED = ["drive", "engineering", "fuel-aft", "fuel-fore", "habitat", "co
 
 /** For each variant, slot by slot, the id of its part (after `fleet-ship-03-`). */
 export const MIYAMOTO_VARIANT_SLOTS: Readonly<Record<string, Readonly<Record<string, string>>>> = (() => {
-  const make = (o: { cut?: boolean; deployed?: boolean; bare?: boolean; sister?: boolean; array?: boolean; pod: "relay" | "relief" | "survey"; loaded?: boolean; berth?: "keel" | "port" }): Record<string, string> => {
+  const make = (o: { cut?: boolean; deployed?: boolean; bare?: boolean; sister?: boolean; array?: boolean; wing?: "folded" | "half" | "open"; pod: "relay" | "relief" | "survey"; loaded?: boolean; berth?: "keel" | "port" }): Record<string, string> => {
     const sfx = o.cut ? "-cutaway" : "";
     // the sister has her own drum in both forms and her own drive, citadel and bow whole; her cutaway shows Miyamoto's cut for the rest
     const own = (slot: string): boolean => !!o.sister && (o.cut ? slot === "habitat" || slot === "drive" : ["drive", "habitat", "command", "bow"].includes(slot));
@@ -20,6 +20,7 @@ export const MIYAMOTO_VARIANT_SLOTS: Readonly<Record<string, Readonly<Record<str
       ...(o.sister ? { "hangar-starboard-fore": "hangar-starboard-fore-ariake", "hangar-port-aft": o.berth === "port" ? "hangar-port-aft-ariake-moved" : "hangar-port-aft-ariake" } : {}),
       pod: `pod-${o.pod}`,
       ...(o.sister ? {} : { array: `array-${o.array ? "deployed" : "stowed"}` }),
+      ...(o.wing ? { wing: `wing-${o.wing}` } : {}),
       "radiators-dorsal": `radiators-dorsal-${o.deployed ? "deployed" : "stowed"}`,
       "radiators-ventral": `radiators-ventral-${o.deployed ? "deployed" : "stowed"}`,
       ...(o.loaded ? { "exterior-load": "exterior-load" } : {}),
@@ -27,5 +28,5 @@ export const MIYAMOTO_VARIANT_SLOTS: Readonly<Record<string, Readonly<Record<str
       ...(o.berth === "port" ? { "stack-berth": "stack-berth-port" } : {}),
     };
   };
-  return { miyamoto: make({ pod: "relay" }), "miyamoto-deployed": make({ pod: "relay", deployed: true }), "miyamoto-array": make({ pod: "relay", array: true }), "miyamoto-relief": make({ pod: "relief" }), "miyamoto-cutaway": make({ pod: "relay", cut: true }), "miyamoto-no-collar": make({ pod: "relay", bare: true }), ariake: make({ pod: "survey", sister: true, loaded: true }), "ariake-empty": make({ pod: "survey", sister: true }), "ariake-berth-keel": make({ pod: "survey", sister: true, loaded: true, berth: "keel" }), "ariake-berth-port": make({ pod: "survey", sister: true, berth: "port" }), "ariake-cutaway": make({ pod: "survey", sister: true, cut: true }) };
+  return { miyamoto: make({ pod: "relay" }), "miyamoto-deployed": make({ pod: "relay", deployed: true }), "miyamoto-array": make({ pod: "relay", array: true }), "miyamoto-relief": make({ pod: "relief" }), "miyamoto-cutaway": make({ pod: "relay", cut: true }), "miyamoto-no-collar": make({ pod: "relay", bare: true }), "miyamoto-wing": make({ pod: "relay", wing: "folded" }), "miyamoto-wing-half": make({ pod: "relay", wing: "half" }), "miyamoto-wing-open": make({ pod: "relay", wing: "open" }), ariake: make({ pod: "survey", sister: true, loaded: true }), "ariake-empty": make({ pod: "survey", sister: true }), "ariake-berth-keel": make({ pod: "survey", sister: true, loaded: true, berth: "keel" }), "ariake-berth-port": make({ pod: "survey", sister: true, berth: "port" }), "ariake-cutaway": make({ pod: "survey", sister: true, cut: true }) };
 })();

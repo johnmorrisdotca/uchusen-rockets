@@ -4,6 +4,7 @@ import type { PartKind } from "../../../parts.ts";
 import { dockedCraft } from "../docked.ts";
 import { isCoarse, type Piece, place } from "./adapter.ts";
 import { type ArrayState, solarArray } from "./solar.ts";
+import { birdWing, type WingPose } from "./wing.ts";
 import { bowLivery, citadelLivery, driveLivery, habitatLivery, hangarLivery } from "./ariake.ts";
 import { bow } from "./bow.ts";
 import { command } from "./command.ts";
@@ -114,6 +115,19 @@ const solarPart = (state: ArrayState): MiyamotoPart => ({
   pieces: (o) => local(solarArray(state, o?.detail ?? 1), 0, ARRAY.y[0], 0, o?.level),
 });
 
+const WING_ROOT = { folded: 218, half: 228, open: 246 } as const;
+const wingPart = (pose: WingPose): MiyamotoPart => ({
+  id: `wing-${pose}`,
+  name: `Bird-wing solar array, ${pose}`,
+  kind: "module",
+  y0: WING_ROOT[pose],
+  place: { x: 0, z: 0 },
+  height: pose === "folded" ? 62 : pose === "half" ? 52 : 34,
+  diameter: pose === "folded" ? 16 : pose === "half" ? 70 : 120,
+  note: `${pose === "folded" ? "Both wings folded along the hull, feathers stacked in a slim bundle dorsal of the glass elevators." : pose === "half" ? "Both wings half open: the elbow and wrist partly straight, the feathers starting to fan." : "Both wings open: a jointed spar out to each side and overlapping feathers, longest at the tip, with a curved trailing edge."} Lamps at the shoulder, the elbow, the wrist and the tip. Descends from ${ANCESTORS.wing}.`,
+  pieces: (o) => local(birdWing(pose, o?.detail ?? 1), 0, WING_ROOT[pose], 0, o?.level),
+});
+
 const bank = (which: "dorsal" | "ventral", open: boolean): MiyamotoPart => ({
   id: `radiators-${which}-${open ? "deployed" : "stowed"}`,
   name: `Radiator bank, ${which}, ${open ? "deployed" : "stowed"}`,
@@ -169,6 +183,7 @@ export function parts(): MiyamotoPart[] {
   const out: MiyamotoPart[] = [...STACK(false), ...STACK(true)];
   for (const cut of [false, true]) out.push(shoulder("starboard-aft", cut), shoulder("port-fore", cut));
   out.push(...sister(), collarPart("plain"), collarPart("none"), collarPart("ariake"), missionPod("relay"), missionPod("relief"), missionPod("survey"), solarPart("stowed"), solarPart("deployed"));
+  for (const pose of ["folded", "half", "open"] as const) out.push(wingPart(pose));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   const moved = (bay: BayId, dy: number, dz: number): MiyamotoPart => {
     const base = shoulder(bay, false, true);

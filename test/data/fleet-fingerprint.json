@@ -1290,13 +1290,13 @@
    ]
   },
   "habitat": {
-   "pieces": 2908,
-   "triangles": 95720,
+   "pieces": 2918,
+   "triangles": 95896,
    "bounds": [
     -72.52,
     0,
     -14.08,
-    14.06,
+    14.95,
     52,
     22.55
    ],
@@ -1309,6 +1309,7 @@
     "copper",
     "flood",
     "foil",
+    "glass",
     "halo-port",
     "halo-strobe",
     "halo-window",
@@ -1316,6 +1317,7 @@
     "hull-grey",
     "hull-grey-dark",
     "hull-orange",
+    "hull-white",
     "hull-white-worn",
     "hull-yellow",
     "lamp-amber",
@@ -1550,13 +1552,13 @@
    ]
   },
   "habitat-cutaway": {
-   "pieces": 2322,
-   "triangles": 81922,
+   "pieces": 2332,
+   "triangles": 82098,
    "bounds": [
     -72.52,
     0,
     -13.56,
-    14.06,
+    14.95,
     55,
     22.55
    ],
@@ -1913,13 +1915,13 @@
    ]
   },
   "habitat-ariake": {
-   "pieces": 2956,
-   "triangles": 99426,
+   "pieces": 2966,
+   "triangles": 99602,
    "bounds": [
     -72.52,
     0,
     -14.08,
-    14.06,
+    14.95,
     52,
     22.55
    ],
@@ -1932,6 +1934,7 @@
     "copper",
     "flood",
     "foil",
+    "glass",
     "halo-port",
     "halo-strobe",
     "halo-window",
@@ -1940,6 +1943,7 @@
     "hull-grey",
     "hull-grey-dark",
     "hull-orange",
+    "hull-white",
     "hull-white-worn",
     "hull-yellow",
     "lamp-amber",
@@ -1957,13 +1961,13 @@
    ]
   },
   "habitat-ariake-cutaway": {
-   "pieces": 2237,
-   "triangles": 81088,
+   "pieces": 2247,
+   "triangles": 81264,
    "bounds": [
     -72.52,
     0,
     -13.67,
-    14.06,
+    14.95,
     55,
     22.55
    ],
@@ -2459,6 +2463,78 @@
     "hull-grey",
     "hull-grey-dark",
     "hull-white",
+    "hull-yellow",
+    "kapton",
+    "lamp-amber",
+    "lamp-red",
+    "pipe-steel"
+   ]
+  },
+  "wing-folded": {
+   "pieces": 258,
+   "triangles": 152,
+   "bounds": [
+    -28.37,
+    5.8,
+    10.5,
+    28.37,
+    58.9,
+    11.7
+   ],
+   "materials": [
+    "coil",
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-yellow",
+    "kapton",
+    "lamp-amber",
+    "lamp-red",
+    "pipe-steel"
+   ]
+  },
+  "wing-half": {
+   "pieces": 258,
+   "triangles": 3624,
+   "bounds": [
+    -50.76,
+    5.84,
+    10.5,
+    50.76,
+    48.9,
+    11.7
+   ],
+   "materials": [
+    "coil",
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-yellow",
+    "kapton",
+    "lamp-amber",
+    "lamp-red",
+    "pipe-steel"
+   ]
+  },
+  "wing-open": {
+   "pieces": 258,
+   "triangles": 3624,
+   "bounds": [
+    -57.77,
+    5.61,
+    10.5,
+    57.77,
+    30.9,
+    11.7
+   ],
+   "materials": [
+    "coil",
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
     "hull-yellow",
     "kapton",
     "lamp-amber",

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Miyamoto has a bird-wing solar array behind each glass elevator** (MODULES-490). One wing each side of the habitation drum, dorsal of the shaft: a shoulder, an elbow and a wrist, and overlapping feathers, longest at the tip. Folded, half open and open are `miyamoto-wing`, `miyamoto-wing-half` and `miyamoto-wing-open`. `motion=on` on the folded variant swings the wings out about the shoulder. The starboard blanket array is unchanged.
+
 ## [0.37.9] - 2026-11-26
 
 The demo only: the package is unchanged by this release.
