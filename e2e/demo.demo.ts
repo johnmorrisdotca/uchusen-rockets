@@ -1099,14 +1099,15 @@ test.describe("the way it turns", () => {
     expect(problems).toEqual([]);
   });
 
-  test("the speed buttons are the family's 0.5×, 1× and 2×: they set the turn's speed, are kept as pace in the address, and the copied code turns as fast", async ({ page, browserName }) => {
+  test("the speed buttons are the page's 0.5×, 1× and 2× (read as the time of a turn): they set the turn's speed, are kept as pace in the address, and the copied code turns as fast", async ({ page, browserName }) => {
     const problems = watch(page);
     await page.goto(URL);
     await foldPicker(page);
     if (is3d(browserName)) await reach3d(page);
     await stopTurn(page);
     const buttons = bar(page).locator("kazoku-speed-buttons button");
-    await expect(buttons).toHaveText(["0.5×", "1×", "2×"]);
+    // the buttons say how long a turn takes (kazoku-ui 0.54): 144 seconds at 0.5×, 72 at 1×, 36 at 2×; the page gives the three paces (`paces`), the family's own are the gentler ones only
+    await expect(buttons).toHaveText(["2.4 min", "1.2 min", "36 s"]);
     await expect(buttons.nth(1)).toHaveAttribute("aria-pressed", "true");
     // degrees a second the controls turn it at: the base speed (5) times the button, either way
     const speed = () => bar(page).evaluate((node) => (node as HTMLElement & { controller: { speed: number } }).controller.speed);

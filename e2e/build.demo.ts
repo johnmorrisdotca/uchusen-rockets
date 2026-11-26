@@ -133,11 +133,12 @@ test.describe("the build plays", () => {
     await expect.poll(() => new URL(page.url()).searchParams.get("build-speed")).toBe("60");
     expect(new URL(page.url()).searchParams.get("pace")).toBe(null);
     expect(new URL(page.url()).searchParams.has("speed")).toBe(false);
-    await turnSpeeds.getByRole("button", { name: "2×" }).click();
+    // the turn buttons say how long a turn takes (kazoku-ui 0.54): the third is 2×, 36 seconds
+    await turnSpeeds.getByRole("button").nth(2).click();
     await expect.poll(() => new URL(page.url()).searchParams.get("pace")).toBe("2");
     expect(new URL(page.url()).searchParams.get("build-speed")).toBe("60");
     await expect(buildSpeeds.getByRole("button", { name: "60×" })).toHaveAttribute("aria-pressed", "true");
-    await expect(turnSpeeds.getByRole("button", { name: "2×" })).toHaveAttribute("aria-pressed", "true");
+    await expect(turnSpeeds.getByRole("button").nth(2)).toHaveAttribute("aria-pressed", "true");
   });
 
   test("back to the start resets the build to day 0", async ({ page }) => {
