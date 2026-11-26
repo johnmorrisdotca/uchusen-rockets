@@ -137,6 +137,22 @@ export const MODEL_CREDITS = {
   "nasa-jupiter-c": nasa("Jupiter-C", "nasa-3d-models-jupiter-c", "The lettering removed with the two pictures that carried it, which are plain white here; rescaled to the sourced height; its materials made into one picture."),
   "nasa-iss": nasa("ISS", "nasa-3d-models-iss", "Reduced from 174,440 triangles; a ball of stray pieces far above it left out; rescaled to the sourced length; its materials, which NASA's copy leaves all one grey, given plain colours judged from photographs. It carried no mark to remove."),
   "nasa-hubble": nasa("Hubble Space Telescope", "nasa-3d-models-hubble-space-telescope", "A lettered plate painted out of its picture; rescaled to the sourced length; its materials made into one picture."),
+  "nasa-drone-cluster": {
+    ...nasa("Cluster II", "cluster-ii", "Central deck and thermal foil, resized and incorporated into the repair drone atlas."),
+    sourceUrl: "https://science.nasa.gov/3d-resources/cluster-ii/",
+  },
+  "nasa-drone-curiosity": {
+    ...nasa("Curiosity Rover (Detailed)", "curiosity-rover-detailed", "Printable upper and lower arm pieces, resized and assembled as repair drone limbs."),
+    sourceUrl: "https://science.nasa.gov/3d-resources/curiosity-rover-detailed/",
+  },
+  "nasa-drone-insight": {
+    ...nasa("InSight Cruise Lander", "insight-cruise-lander", "Arm joint housing and its texture, resized and incorporated into the repair drone atlas."),
+    sourceUrl: "https://science.nasa.gov/3d-resources/insight-cruise-lander/",
+  },
+  "nasa-drone-grease-gun": {
+    ...nasa("Grease Gun", "grease-gun", "Tool geometry resized and incorporated into the repair drone atlas."),
+    sourceUrl: "https://science.nasa.gov/3d-resources/grease-gun/",
+  },
   // new rows go here
 } as const satisfies Record<string, ModelCredit>;
 

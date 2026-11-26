@@ -126,3 +126,16 @@ The Painted look's pictures, copied beside the demo page from chikyu-earth's `di
 | `day-*.webp`, and `water-*.webp`, made from it | Blue Marble: Next Generation, September 2004 (Visible Earth 73801) | NASA Earth Observatory (Reto Stöckli, Blue Marble Next Generation) |
 | `night-*.webp` | Earth at Night, Black Marble 2016 (Visible Earth 144898) | NASA Earth Observatory, Suomi NPP VIIRS data (Miguel Roman, NASA's Goddard Space Flight Center) |
 | `clouds-*.webp` | Blue Marble clouds (Visible Earth 57747) | NASA Earth Observatory (Reto Stöckli) |
+
+### SPX repair drone
+
+The project owner's design references are private and are not distributed. The repair drone incorporates selected material from these NASA resources, resized and combined with original geometry. The four source URLs and descriptions are also in the package credit data.
+
+| Title | Source | What was changed |
+| --- | --- | --- |
+| Cluster II | https://science.nasa.gov/3d-resources/cluster-ii/ | Central deck and thermal foil, resized and baked into a shared atlas. |
+| Curiosity Rover (Detailed) | https://science.nasa.gov/3d-resources/curiosity-rover-detailed/ | Printable upper and lower arm pieces, resized and assembled as limbs. |
+| InSight Cruise Lander | https://science.nasa.gov/3d-resources/insight-cruise-lander/ | Arm joint housing, resized with its texture. |
+| Grease Gun | https://science.nasa.gov/3d-resources/grease-gun/ | Tool housing, resized and incorporated in the atlas. |
+
+The two drone models have the same materials in a single atlas. Original 83,494 triangles; far-view version 4,488 triangles. NASA marks are absent from the parts used. The originals were downloaded from NASA's 3D Resources and are kept separately.

@@ -1227,7 +1227,7 @@ export class RocketViewer {
     const jobs = swarmJobs(steps, count, at);
     const ys = shown.map((place) => place.at[1]);
     const poses = carries(jobs, at, steps, (slot) => slotAt.get(slot), dock, [Math.min(...ys), Math.max(...ys)]);
-    this.swarm ??= new SwarmRig(this.root);
+    this.swarm ??= new SwarmRig(this.root, this.options.assets, () => this.wake());
     this.swarm.show(
       poses.map((pose) => ({ where: pose.where, part: pose.part, weld: pose.duty === "work" })),
       jobs.length ? [] : berthRing(count, dock),
@@ -1629,6 +1629,9 @@ export class RocketViewer {
     const changed = this.controls.update(dt);
     if (this.needsDraw || changed || this.pose) {
       this.syncSizes();
+      this.swarm?.setView(this.camera.position.distanceTo(this.controls.target) < 200, this.lit !== null);
+      if (this.swarm) this.canvas.dataset.drone = this.swarm.level;
+      else delete this.canvas.dataset.drone;
       this.renderer.render(this.scene, this.camera);
       this.placeMarks();
       this.placeBeside();

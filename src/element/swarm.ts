@@ -1,4 +1,5 @@
 // The construction swarm in the 3D view. Each drone is a box about a metre across, with a ringed emitter, two lamps and a small glow, a stand-in until the drone exists. The beam is a short translucent cone. One set of instanced meshes, disposed with the view.
+import { DRONE_EMITTER, DRONE_TOOL_POINT, disposeDrone, loadDrone, type DroneAsset } from "./repair-drone.ts";
 import { AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, DoubleSide, Group, InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3, type Object3D } from "three";
 
 const CAP = 100;
@@ -36,8 +37,16 @@ export interface SwarmPose {
 export class SwarmRig {
   private readonly group = new Group();
   private readonly drones: InstancedMesh;
-  private readonly emitters: InstancedMesh;
-  private readonly lamps: InstancedMesh;
+  private readonly initialGeometry: BufferGeometry;
+  private readonly initialMaterial: MeshStandardMaterial;
+  private readonly assets: string;
+  private readonly onReady: () => void;
+  private coarse: DroneAsset | null = null;
+  private fine: DroneAsset | null = null;
+  private fineRequested = false;
+  private near = false;
+  private lit = false;
+  private disposed = false;
   private readonly glows: InstancedMesh;
   private readonly beams: InstancedMesh;
   private readonly rings: InstancedMesh;
@@ -60,18 +69,20 @@ export class SwarmRig {
   private readonly to = new Vector3();
   private readonly mid = new Vector3();
 
-  constructor(parent: Object3D) {
+  constructor(parent: Object3D, assets: string, onReady: () => void) {
+    this.assets = assets;
+    this.onReady = onReady;
     this.group.name = "swarm";
     const white = new MeshStandardMaterial({ color: new Color("#f4f7fb"), roughness: 0.45, metalness: 0.05 });
-    const lamp = new MeshBasicMaterial({ color: new Color("#ffe7a3") });
-    const halo = new MeshBasicMaterial({ color: new Color("#ffe1a0"), transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false });
+    const halo = new MeshBasicMaterial({ color: new Color("#36d9ef"), transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false });
     const glow = new MeshBasicMaterial({ color: new Color("#d9e6ff"), transparent: true, opacity: 0.7, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
     const ring = new MeshBasicMaterial({ color: new Color("#efeaff"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     const spark = new MeshBasicMaterial({ color: new Color("#ffffff"), transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false });
-    this.drones = new InstancedMesh(new BoxGeometry(1.4, 0.55, 1.1), white, CAP);
-    this.emitters = new InstancedMesh(new TorusGeometry(0.7, 0.08, 6, 12), ring, CAP);
-    this.lamps = new InstancedMesh(new SphereGeometry(0.16, 8, 8), lamp, CAP * 2);
-    this.glows = new InstancedMesh(new SphereGeometry(3.2, 10, 10), halo, CAP);
+    this.initialGeometry = new BufferGeometry();
+    this.initialMaterial = white;
+    this.drones = new InstancedMesh(this.initialGeometry, this.initialMaterial, CAP);
+    void this.loadLevel("coarse");
+    this.glows = new InstancedMesh(new SphereGeometry(0.28, 10, 10), halo, CAP);
     this.beams = new InstancedMesh(new ConeGeometry(1, 1, 12), glow, CAP);
     this.rings = new InstancedMesh(new TorusGeometry(0.8, 0.06, 6, 12), ring.clone(), CAP * RINGS);
     this.sparks = new InstancedMesh(new SphereGeometry(0.28, 6, 6), spark, CAP * SPARKS);
@@ -79,7 +90,7 @@ export class SwarmRig {
     this.tips = new InstancedMesh(new SphereGeometry(1.1, 10, 10), tip, CAP);
     const fleck = new MeshBasicMaterial({ color: new Color("#fff4d2"), transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
     this.spray = new InstancedMesh(new SphereGeometry(0.22, 6, 6), fleck, CAP * SPRAY);
-    for (const mesh of [this.drones, this.emitters, this.lamps, this.glows, this.beams, this.rings, this.sparks, this.tips, this.spray]) {
+    for (const mesh of [this.drones, this.glows, this.beams, this.rings, this.sparks, this.tips, this.spray]) {
       mesh.count = 0;
       mesh.frustumCulled = false;
       this.group.add(mesh);
@@ -118,6 +129,50 @@ export class SwarmRig {
     parent.add(this.group);
   }
 
+  private async loadLevel(level: "coarse" | "fine"): Promise<void> {
+    const name = level === "coarse" ? "spx-repair-drone-coarse.glb" : "spx-repair-drone.glb";
+    try {
+      const asset = await loadDrone(`${this.assets}models/${name}`);
+      if (this.disposed) {
+        disposeDrone(asset);
+        return;
+      }
+      if (level === "coarse") this.coarse = asset;
+      else this.fine = asset;
+      this.selectLevel();
+      this.onReady();
+    } catch {
+      // A missing optional model leaves the beam and work indicators available.
+    }
+  }
+
+  private selectLevel(): void {
+    const selected = (this.near ? this.fine : null) ?? this.coarse;
+    if (!selected) return;
+    this.drones.geometry = selected.geometry;
+    this.drones.material = selected.material;
+    selected.material.emissiveIntensity = this.lit ? 1 : 0;
+  }
+
+  /** The model currently selected for the construction view. */
+  get level(): "loading" | "coarse" | "fine" {
+    if (this.drones.geometry === this.fine?.geometry) return "fine";
+    if (this.drones.geometry === this.coarse?.geometry) return "coarse";
+    return "loading";
+  }
+
+  /** Keep the high-detail model for close inspection and the coarse one at a distance. */
+  setView(near: boolean, lit: boolean): void {
+    if (near && !this.fineRequested) {
+      this.fineRequested = true;
+      void this.loadLevel("fine");
+    }
+    if (this.near === near && this.lit === lit) return;
+    this.near = near;
+    this.lit = lit;
+    this.selectLevel();
+  }
+
   /** Puts the drones on `poses` with a beam to each part, or on `parked` with no beam, and the stack at `dock`. A weld is a steady dot, and, unless `reduced` is set, a laser, a seam and a spray. */
   show(poses: readonly SwarmPose[], parked: readonly [number, number, number][], dock: readonly [number, number, number], reduced = false): void {
     this.reduced = reduced;
@@ -126,30 +181,17 @@ export class SwarmRig {
       this.scratch.makeTranslation(at[0], at[1], at[2]);
       this.drones.setMatrixAt(i, this.scratch);
     });
-    this.place(this.emitters, points, (at, i) => {
-      this.scratch.makeTranslation(at[0], at[1], at[2] + 0.4);
-      this.emitters.setMatrixAt(i, this.scratch);
-    });
     this.place(this.glows, points, (at, i) => {
-      this.scratch.makeTranslation(at[0], at[1], at[2]);
+      this.scratch.makeTranslation(at[0], at[1] - 0.08, at[2]);
       this.glows.setMatrixAt(i, this.scratch);
     });
-    this.lamps.count = points.length * 2;
-    for (let i = 0; i < points.length; i += 1) {
-      const at = points[i] ?? [0, 0, 0];
-      this.scratch.makeTranslation(at[0] - 0.4, at[1], at[2] + 0.25);
-      this.lamps.setMatrixAt(i * 2, this.scratch);
-      this.scratch.makeTranslation(at[0] + 0.4, at[1], at[2] + 0.25);
-      this.lamps.setMatrixAt(i * 2 + 1, this.scratch);
-    }
-    this.lamps.instanceMatrix.needsUpdate = true;
     this.beams.count = poses.length;
     this.rings.count = poses.length * RINGS;
     this.sparks.count = poses.length * SPARKS;
     for (let i = 0; i < poses.length; i += 1) {
       const pose = poses[i];
       if (!pose) continue;
-      this.from.set(pose.where[0], pose.where[1], pose.where[2]);
+      this.from.set(pose.where[0] + DRONE_EMITTER[0], pose.where[1] + DRONE_EMITTER[1], pose.where[2] + DRONE_EMITTER[2]);
       this.to.set(pose.part[0], pose.part[1], pose.part[2]);
       this.mid.addVectors(this.from, this.to).multiplyScalar(0.5);
       const span = Math.max(0.01, this.to.distanceTo(this.from));
@@ -202,17 +244,17 @@ export class SwarmRig {
       for (let i = 0; i < this.weldCount; i += 1) {
         const pose = poses.filter((one) => one.weld)[i];
         const at = this.weldAt[i] ?? [0, 0, 0];
-        const from = pose?.where ?? at;
+        const drone = pose?.where ?? at;
+        const from = [drone[0] + DRONE_TOOL_POINT[0], drone[1] + DRONE_TOOL_POINT[1], drone[2] + DRONE_TOOL_POINT[2]];
         const dx = at[0] - from[0];
         const dy = at[1] - from[1];
         const dz = at[2] - from[2];
         const span = Math.hypot(dx, dy, dz) || 1;
         const ux = dx / span;
-        const uy = dy / span;
         const uz = dz / span;
-        this.laserPositions[i * 6] = at[0] - ux * Math.min(1.2, span);
-        this.laserPositions[i * 6 + 1] = at[1] - uy * Math.min(1.2, span);
-        this.laserPositions[i * 6 + 2] = at[2] - uz * Math.min(1.2, span);
+        this.laserPositions[i * 6] = from[0];
+        this.laserPositions[i * 6 + 1] = from[1];
+        this.laserPositions[i * 6 + 2] = from[2];
         this.laserPositions[i * 6 + 3] = at[0];
         this.laserPositions[i * 6 + 4] = at[1];
         this.laserPositions[i * 6 + 5] = at[2];
@@ -249,6 +291,12 @@ export class SwarmRig {
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.drones.removeFromParent();
+    this.initialGeometry.dispose();
+    this.initialMaterial.dispose();
+    if (this.coarse) disposeDrone(this.coarse);
+    if (this.fine) disposeDrone(this.fine);
     this.group.removeFromParent();
     this.group.traverse((node) => {
       const mesh = node as Mesh;
