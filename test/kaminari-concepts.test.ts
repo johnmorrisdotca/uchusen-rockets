@@ -224,8 +224,8 @@ const BUILD_WORK: Record<string, { coarsePieces: number; fullPieces: number; ful
   c: { coarsePieces: 2850, fullPieces: 205559, fullTriangles: 5_083_304 },
 };
 
-/** The time of the calibration loop (3e7 square roots) on this Mac when it is quiet, in ms. */
-const CALIBRATION_MS = 40;
+/** The time of the calibration loop (3e7 square roots) on this Mac, in ms: 30 ms, measured 2026-11-26 as the fastest of seven runs, the same at load 9 (one thread of many cores). */
+const CALIBRATION_MS = 30;
 /** How much slower the machine is now than when it is quiet: the fastest of five runs of a fixed amount of arithmetic, against `CALIBRATION_MS`; never less than 1, never more than 25. A busy machine (indexing, other builds) stretches the budget, and the work is still held to the counts. */
 function slowdown(): number {
   const runs = Array.from({ length: 5 }, () => {
