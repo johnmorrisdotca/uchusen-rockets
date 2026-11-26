@@ -16,7 +16,7 @@ const UPPER = 15;
 const FORE = 13;
 const HAND = 11;
 
-const poseOf = (pose: WingPose): number => (pose === "folded" ? 0 : pose === "half" ? 0.5 : 1);
+const poseOf = (pose: WingPose): number => (pose === "folded" ? 0 : pose === "half" ? 0.32 : 1);
 
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
@@ -63,8 +63,10 @@ function feathers(from: Vec3, to: Vec3, count: number, t: number, tip: number, c
     const root: Vec3 = [from[0] + delta[0] * u, from[1] + delta[1] * u, Z];
     const alongTip = tip + (1 - tip) * (i / Math.max(1, count - 1));
     const fan = t * (0.25 + 0.7 * alongTip);
-    const length = lerp(5.5, 15, alongTip);
-    out.push(...feather(root, mix(along, fan), length, 1.5, cells));
+    const length = lerp(14, 36, alongTip);
+    // Folded, the feathers stack into a slim bundle. Open, each one is a broad panel.
+    const width = lerp(3.5, 14, t * t);
+    out.push(...feather(root, mix(along, fan), length, width, cells));
   }
   return out;
 }
