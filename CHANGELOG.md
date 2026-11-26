@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.37.9] - 2026-11-26
+
+The demo only: the package is unchanged by this release.
+
 - **The demo's module rows are two to a line where their name was one of their buttons** (MODULES-1866). The kit hauler's seven rows of modules ran its choices to 931 px at 1440 by 900, past the 900 px the "choices fit" test holds them to; a mount whose name is also one of its buttons now shows no name beside them (its group is still named for a screen reader), and the choices end at 816 px.
 
 ## [0.37.8] - 2026-11-26
