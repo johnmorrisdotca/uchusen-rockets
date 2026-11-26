@@ -3,6 +3,7 @@
 import { blank } from "../data/types.ts";
 import { coarsen, detail } from "./detail.ts";
 import type { Piece } from "./pieces.ts";
+import { kaminariChute } from "./fleet/kaminari-concepts/chutes.ts";
 import { CONCEPT_KEYS, CONCEPT_SLOTS, EMIAKE_DEPLOYED, ROCKET_OF, SAIL_DEPLOYED_SLOTS, SPECS } from "./fleet/kaminari-concepts/index.ts";
 import type { ConceptSlot } from "./fleet/kaminari-concepts/common.ts";
 import type { PartEntry } from "./registry.ts";
@@ -43,7 +44,7 @@ const entry = (rocket: string, variant: string, slot: ConceptSlot, tail: boolean
     kind: slot.kind,
     name: slot.name,
     rocket,
-    trueTo: variant === SPECS.b.id ? [variant, EMIAKE_DEPLOYED] : [variant],
+    trueTo: variant === SPECS.a.id ? [variant, ...KAMINARI_CHUTE_VARIANTS.map(([id]) => id)] : variant === SPECS.b.id ? [variant, EMIAKE_DEPLOYED] : [variant],
     height: slot.height,
     diameter: slot.diameter,
     sourced: { height: NOTE, diameter: NOTE },
@@ -55,8 +56,16 @@ const entry = (rocket: string, variant: string, slot: ConceptSlot, tail: boolean
   pieces: () => forDrawing(detail.level === "coarse" ? coarsen(slot.pieces()) : slot.pieces()),
 });
 
-/** Every part of the three ships, and Emiake's deployed sails, each once. */
+const KAMINARI_CHUTE_VARIANTS = [
+  ["fleet-kaminari-ring", "ring", "stowed"],
+  ["fleet-kaminari-ring-open", "ring", "open"],
+  ["fleet-kaminari-umbrella", "umbrella", "open"],
+  ["fleet-kaminari-fan", "fan", "open"],
+] as const;
+
+/** Every part of the three ships, Emiake's deployed sails, and Kaminari's chute arrays, each once. */
 export const CONCEPT_ENTRIES: readonly PartEntry[] = [
   ...CONCEPT_KEYS.flatMap((key) => CONCEPT_SLOTS[key].map((slot, i) => entry(ROCKET_OF[key], SPECS[key].id, slot, i === 0))),
   ...SAIL_DEPLOYED_SLOTS.map((slot) => entry(ROCKET_OF.b, EMIAKE_DEPLOYED, slot, false)),
+  ...KAMINARI_CHUTE_VARIANTS.map(([variant, form, pose]) => entry(ROCKET_OF.a, variant, kaminariChute(form, pose), false)),
 ];

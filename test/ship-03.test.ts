@@ -90,8 +90,8 @@ test("no module has a bare surface: hundreds of pieces and many kinds of detail,
   for (const part of all) {
     const pieces = part.pieces();
     total += pieces.length;
-    // a carried Starship is that ship's own model, not a Miyamoto interior, and a radiator is a set of leaves
-    if (part.id.startsWith("radiators") || part.id === "collar-none" || part.id === "exterior-load" || part.id.startsWith("stack-berth")) continue;
+    // a carried Starship is that ship's own model, not a Miyamoto interior, a radiator is a set of leaves, and a chute is a set of petals
+    if (part.id.startsWith("radiators") || part.id.startsWith("chute") || part.id === "collar-none" || part.id === "exterior-load" || part.id.startsWith("stack-berth")) continue;
     assert.ok(pieces.length >= 250, `${part.id}: ${pieces.length} pieces`);
     assert.ok(materialsOf(pieces).size >= 9, `${part.id}: ${materialsOf(pieces).size} materials`);
   }
@@ -130,7 +130,7 @@ test("the levels of detail: a quarter of the detail is far fewer pieces, and the
 
 test("Miyamoto is in the registry: four variants, every slot's part exists, the joints fit, and it is in the story, with no visible tag", () => {
   const rocket = ROCKETS["fleet-ship-03"];
-  assert.equal(rocket.variants.length, 9);
+    assert.equal(rocket.variants.length, 14);
   for (const variant of rocket.variants) {
     assert.equal(variant.status, "fictional");
     assert.ok(variant.name?.trim(), `${variant.id} has no name`);
@@ -143,7 +143,7 @@ test("Miyamoto is in the registry: four variants, every slot's part exists, the 
   for (const entry of PART_ENTRIES) if (entry.record.rocket === "fleet-ship-03") assert.ok(entry.record.trueTo.length > 0, entry.record.id);
   // the same part serves more than one variant
   const shared = PART_ENTRIES.find((entry) => entry.record.id === "fleet-ship-03-drive");
-  assert.deepEqual(shared?.record.trueTo, ["miyamoto", "miyamoto-deployed", "miyamoto-array", "miyamoto-relief", "miyamoto-no-collar", "miyamoto-wing", "miyamoto-wing-half", "miyamoto-wing-open"]);
+  assert.deepEqual(shared?.record.trueTo, ["miyamoto", "miyamoto-deployed", "miyamoto-array", "miyamoto-relief", "miyamoto-no-collar", "miyamoto-wing", "miyamoto-wing-half", "miyamoto-wing-open", "miyamoto-umbrella", "miyamoto-umbrella-half", "miyamoto-umbrella-open", "miyamoto-ring", "miyamoto-fan"]);
   // the sister ship is a variant of the same model: its own row in the picker, its own marks and pod, the rest shared
   const sister = ROCKETS["fleet-ship-ariake"];
   assert.equal(sister.variants.length, 5);
@@ -211,7 +211,7 @@ for (const variant of ["miyamoto", "ariake"] as const) test(`the build budget, $
 
 test("every module names the real hardware it descends from, and the pipes and struts are round", () => {
   for (const part of parts()) {
-    const key = part.id.replace(/-moved$/, "").replace(/-inboard$/, "").replace(/-cutaway$/, "").replace(/-ariake$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod").replace(/^array-.*/, "array").replace(/^wing-.*/, "wing").replace(/^(shield-collar|collar-none)$/, "collar").replace(/^stack-berth.*/, "stack-berth");
+    const key = part.id.replace(/-moved$/, "").replace(/-inboard$/, "").replace(/-cutaway$/, "").replace(/-ariake$/, "").replace(/^radiators-.*/, "radiators").replace(/^pod-.*/, "pod").replace(/^array-.*/, "array").replace(/^wing-.*/, "wing").replace(/^chute-.*/, "chute").replace(/^(shield-collar|collar-none)$/, "collar").replace(/^stack-berth.*/, "stack-berth");
     assert.ok(ANCESTORS[key], key);
     assert.ok(part.note.includes("Descends from"), `${part.id}: ${part.note}`);
   }

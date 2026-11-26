@@ -5,6 +5,7 @@ import { dockedCraft } from "../docked.ts";
 import { isCoarse, type Piece, place } from "./adapter.ts";
 import { type ArrayState, solarArray } from "./solar.ts";
 import { birdWing, type WingPose } from "./wing.ts";
+import { chute, type ChuteForm, type ChutePose } from "../chute.ts";
 import { bowLivery, citadelLivery, driveLivery, habitatLivery, hangarLivery } from "./ariake.ts";
 import { bow } from "./bow.ts";
 import { command } from "./command.ts";
@@ -115,6 +116,19 @@ const solarPart = (state: ArrayState): MiyamotoPart => ({
   pieces: (o) => local(solarArray(state, o?.detail ?? 1), 0, ARRAY.y[0], 0, o?.level),
 });
 
+const CHUTE_ROOT = { stowed: 301, half: 263, open: 249 } as const;
+const chutePart = (form: ChuteForm, pose: ChutePose): MiyamotoPart => ({
+  id: `chute-${form}-${pose}`,
+  name: `Chute array, ${form}, ${pose}`,
+  kind: "module",
+  y0: CHUTE_ROOT[pose],
+  place: { x: 0, z: 0 },
+  height: pose === "stowed" ? 16 : pose === "half" ? 92 : 120,
+  diameter: pose === "stowed" ? 16 : pose === "half" ? 92 : 120,
+  note: `${pose === "stowed" ? "Ribs folded along the mast, a slim bundle." : pose === "half" ? "Ribs half open." : "Ribs open."} ${form === "ring" ? "An annular panel on the spokes, open at the hub." : form === "fan" ? "Pleated fins in one plane, like a folding fan." : "Petals in to the hub, like an umbrella."} Dorsal of the habitation drum, 120 m across when open. Lamps at the hub and the rib tips. Descends from ${ANCESTORS.chute}.`,
+  pieces: (o) => local(place(chute(form, pose, 60, o?.detail ?? 1), { at: [0, 310, 22] }), 0, CHUTE_ROOT[pose], 0, o?.level),
+});
+
 const WING_ROOT = { folded: 218, half: 228, open: 246 } as const;
 const wingPart = (pose: WingPose): MiyamotoPart => ({
   id: `wing-${pose}`,
@@ -184,6 +198,8 @@ export function parts(): MiyamotoPart[] {
   for (const cut of [false, true]) out.push(shoulder("starboard-aft", cut), shoulder("port-fore", cut));
   out.push(...sister(), collarPart("plain"), collarPart("none"), collarPart("ariake"), missionPod("relay"), missionPod("relief"), missionPod("survey"), solarPart("stowed"), solarPart("deployed"));
   for (const pose of ["folded", "half", "open"] as const) out.push(wingPart(pose));
+  for (const pose of ["stowed", "half", "open"] as const) out.push(chutePart("umbrella", pose));
+  out.push(chutePart("ring", "open"), chutePart("fan", "open"));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   const moved = (bay: BayId, dy: number, dz: number): MiyamotoPart => {
     const base = shoulder(bay, false, true);

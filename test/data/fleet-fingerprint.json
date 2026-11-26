@@ -2542,6 +2542,121 @@
     "pipe-steel"
    ]
   },
+  "chute-umbrella-stowed": {
+   "pieces": 117,
+   "triangles": 260,
+   "bounds": [
+    -6.61,
+    2.38,
+    22,
+    6.61,
+    15.62,
+    99.71
+   ],
+   "materials": [
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "kapton",
+    "lamp-amber",
+    "lamp-red"
+   ]
+  },
+  "chute-umbrella-half": {
+   "pieces": 117,
+   "triangles": 2884,
+   "bounds": [
+    -44.38,
+    2.61,
+    22,
+    44.38,
+    91.39,
+    80.88
+   ],
+   "materials": [
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "kapton",
+    "lamp-amber",
+    "lamp-red"
+   ]
+  },
+  "chute-umbrella-open": {
+   "pieces": 117,
+   "triangles": 2884,
+   "bounds": [
+    -58.76,
+    2.24,
+    22,
+    58.76,
+    119.76,
+    52.82
+   ],
+   "materials": [
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "kapton",
+    "lamp-amber",
+    "lamp-red"
+   ]
+  },
+  "chute-ring-open": {
+   "pieces": 89,
+   "triangles": 2228,
+   "bounds": [
+    -58.76,
+    2.24,
+    22,
+    58.76,
+    119.76,
+    52.82
+   ],
+   "materials": [
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "kapton",
+    "lamp-amber",
+    "lamp-red"
+   ]
+  },
+  "chute-fan-open": {
+   "pieces": 63,
+   "triangles": 1676,
+   "bounds": [
+    -2.34,
+    2.96,
+    22,
+    2.34,
+    119.04,
+    100
+   ],
+   "materials": [
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "hull-orange",
+    "hull-white",
+    "kapton",
+    "lamp-amber",
+    "lamp-red"
+   ]
+  },
   "radiators-dorsal-stowed": {
    "pieces": 343,
    "triangles": 4140,

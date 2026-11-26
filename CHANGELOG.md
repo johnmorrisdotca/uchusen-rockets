@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **A chute array, shared by Miyamoto and Kaminari** (MODULES-491). One mast and a set of ribs, in three forms: a ring (an annulus on spokes), an umbrella (petals in to the hub) and a fan (pleated fins in one plane). Stowed, the ribs lie along the mast; half and open are drawn already there, and `motion=on` swings the stowed bundle out. Miyamoto's is 120 m across on the dorsal mast (the bird-wing variants carry the umbrella). Kaminari's is 400 m across on the dorsal truss.
 - **Miyamoto has a bird-wing solar array behind each glass elevator** (MODULES-490). One wing each side of the habitation drum, dorsal of the shaft: a shoulder, an elbow and a wrist, and overlapping feathers, longest at the tip. Folded, half open and open are `miyamoto-wing`, `miyamoto-wing-half` and `miyamoto-wing-open`. `motion=on` on the folded variant swings the wings out about the shoulder. The starboard blanket array is unchanged.
 
 ## [0.37.9] - 2026-11-26

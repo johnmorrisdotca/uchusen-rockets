@@ -107,8 +107,31 @@ const deployedSails = (): Variant => {
   };
 };
 
-/** One variant list for each ship. Emiake has a second variant with the folding arrays open. */
-export const KAMINARI_VARIANTS: Readonly<Record<ConceptKey, readonly Variant[]>> = { a: [variantOf("a")], b: [variantOf("b"), deployedSails()], c: [variantOf("c")] };
+/** Kaminari with one chute on the dorsal truss. The other slots are the Quiver's own parts. */
+const chuteVariant = (id: string, label: string, open: boolean): Variant => {
+  const base = variantOf("a");
+  const slots = [...base.slots, "chute"];
+  const note = open ? `A ${label} chute open on the dorsal truss, 400 m across.` : "A ring chute stowed on the dorsal truss, ribs along the mast. motion=on swings them out.";
+  return {
+    ...base,
+    id,
+    name: `${base.name}, ${label}`,
+    note: `${base.note} ${note}`,
+    slots,
+    partIds: { ...Object.fromEntries(base.slots.map((slot) => [slot, `${ROCKET_OF.a}-${base.id}-${slot}`])), chute: `${ROCKET_OF.a}-${id}-chute` },
+    facts: { ...base.facts, parts: { ...base.facts.parts, chute: fig(open ? 400 : 50, "The chute's span along the ship, as designed.") } },
+    inspector: base.inspector
+      ? { ...base.inspector, sections: [...base.inspector.sections, { id: "chute", name: "Chute array", job: note, slot: "chute", at: [0, 900, 40] as const, inside: false }], places: { ...base.inspector.places, chute: [0, 900, 24] as const } }
+      : undefined,
+  };
+};
+
+/** One variant list for each ship. Emiake has a second variant with the folding arrays open. Kaminari has the three chute forms. */
+export const KAMINARI_VARIANTS: Readonly<Record<ConceptKey, readonly Variant[]>> = {
+  a: [variantOf("a"), chuteVariant("fleet-kaminari-ring", "ring array stowed", false), chuteVariant("fleet-kaminari-ring-open", "ring array open", true), chuteVariant("fleet-kaminari-umbrella", "umbrella array open", true), chuteVariant("fleet-kaminari-fan", "fan array open", true)],
+  b: [variantOf("b"), deployedSails()],
+  c: [variantOf("c")],
+};
 
 /**
  * The three ships' variants: Kaminari, Emiake and its deployed sails, then Romaryū.
@@ -152,6 +175,7 @@ export const CONCEPT_SLOT_NAMES: Readonly<Record<string, string>> = {
   bridge: "Bridge tower",
   nose: "Nose and dust shield",
   bow: "Crew bow",
+  chute: "Chute array",
   barrels: "Propellant barrels",
   shaft: "Shaft: truss and transit tube",
   ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`quiver-${i}`, `Tank quiver ${i}`])),
