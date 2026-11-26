@@ -140,4 +140,41 @@ describe("WebGL probe", { concurrency: 1 }, () => {
     assert.equal(thrown.probeCount(), 1);
     delete (globalThis as { document?: unknown }).document;
   });
+
+  test("a null context that was only a moment's is asked again once after a short wait, and a second failure is kept", async (t) => {
+    t.mock.timers.enable({ apis: ["setTimeout"] });
+    const page = failingPage();
+    // @ts-expect-error the query is a cache key, not a second file
+    const probe = await import("../src/element/probe.ts?retry=once");
+    let told = 0;
+    probe.afterProbeRetry(() => { told++; });
+    assert.equal(probe.glProbe().works, false);
+    assert.equal(probe.probeCount(), 1);
+    assert.equal(probe.glProbe().works, false, "inside the wait the failure is reused");
+    assert.equal(probe.probeCount(), 1);
+    // the browser gives a context back after a moment: the elements are told, and the next look works
+    page.state.webgl = true;
+    t.mock.timers.tick(1000);
+    assert.equal(told, 1, "the elements that fell back are told to look again");
+    assert.deepEqual(probe.glProbe(), { works: true, software: false });
+    assert.equal(probe.probeCount(), 2);
+
+    // a failure that stays: asked again once, and then kept (no timer keeps asking)
+    const stays = failingPage();
+    // @ts-expect-error the query is a cache key, not a second file
+    const second = await import("../src/element/probe.ts?retry=twice");
+    let toldTwice = 0;
+    second.afterProbeRetry(() => { toldTwice++; });
+    assert.equal(second.glProbe().works, false);
+    t.mock.timers.tick(1000);
+    assert.equal(toldTwice, 1);
+    assert.equal(second.glProbe().works, false);
+    assert.equal(second.probeCount(), 2);
+    t.mock.timers.tick(10_000);
+    assert.equal(toldTwice, 1, "the second failure is kept: nothing asks a third time");
+    assert.equal(second.glProbe().works, false);
+    assert.equal(second.probeCount(), 2);
+    assert.ok(stays);
+    delete (globalThis as { document?: unknown }).document;
+  });
 });
