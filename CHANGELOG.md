@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.37.7] - 2026-11-25
+
+- **A first failed WebGL look is asked again after a moment** (MODULES-1128). The page asks the browser for a test context once, and a refusal at that moment (another page's contexts were in the way) used to make every rocket on the page fall back to its picture until the page was shown again or a context was restored. A first failure is now looked at once more 400 ms later, and the rockets that fell back are told; a second failure is kept as before. The probe's tests cover a software renderer, a WebGL1-only browser, a null context, a thrown error and the retry.
+- **The concept build-time test does not fail when the machine is busy** (MODULES-894). The work of each build (pieces and triangles) is held to its counts on every machine, and the clock budget is scaled by a calibration loop timed first (30 ms for the fastest of seven runs here, never less than 1 times and never more than 25); CI keeps its 5 times. The real budget and the time taken are printed.
+
 ## [0.37.6] - 2026-11-23
 
 - **A Ctrl, Command or Space drag on the fleet view keeps turning the view** (MODULES-767). The drag used to select the picture, and the next press started the browser's own drag, which cancelled the pointer after one move. The fleet view no longer selects text or pictures, and the browser's drag never starts.
