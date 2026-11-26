@@ -77,7 +77,7 @@ function feathers(from: Vec3, to: Vec3, count: number, t: number, tip: number, c
     const alongTip = tip + (1 - tip) * (i / Math.max(1, count - 1));
     const sweep = lerp(4, 32, t) * (0.35 + 0.65 * alongTip);
     const length = lerp(36, 78, alongTip);
-    const width = lerp(16, 22, t * t);
+    const width = lerp(16, 200, t * t);
     out.push(...feather(root, swept(along, sweep), length, width, cells, t, inboard));
   }
   return out;
