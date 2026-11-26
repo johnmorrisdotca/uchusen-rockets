@@ -78,7 +78,8 @@ test("each part is built where it says, in metres, and stands on its origin", ()
     // the part is as long as it says, give or take what stands past the ends: collars, antennas, the bow's mounts
     assert.ok(max[1] <= part.height + 8, `${part.id}: ${max[1]} against ${part.height}`);
     assert.ok(max[1] >= part.height * 0.85, `${part.id}: only ${max[1]} of ${part.height}`);
-    if (part.place) assert.ok(Math.abs(min[0]) < 130 && Math.abs(max[0]) < 130, `${part.id}: ${min[0]}..${max[0]}`);
+    // The bird wing's open span is the hull's length, so it stands past the beam the other parts keep to.
+    if (part.place && !part.id.startsWith("wing-")) assert.ok(Math.abs(min[0]) < 130 && Math.abs(max[0]) < 130, `${part.id}: ${min[0]}..${max[0]}`);
   }
   // the hangars stand where the layout drawing puts them: starboard aft, port forward
   assert.ok(HANGAR.starboard.y[1] < HANGAR.port.y[1] && HANGAR.starboard.x[0] > 0 && HANGAR.port.x[1] < 0);

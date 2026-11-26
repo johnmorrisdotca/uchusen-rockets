@@ -32,6 +32,8 @@ section > p { color: var(--muted); margin: 0 0 1rem; max-width: 70ch; }
 .stage-box { background: linear-gradient(180deg, #0d1729, #070c17); border: 1px solid var(--line); border-radius: 14px; padding: 0.5rem; position: sticky; top: 0.75rem; }
 /* An un-upgraded rocket is an empty inline box until its picture arrives. The page reserves that box before any script runs. The embed fills its frame by flex, so it is left out. */
 body:not(.embed) uchusen-rocket { display: block; aspect-ratio: var(--uchusen-aspect, 3 / 4); }
+/* The specification is a block under the picture. The picture's aspect box must not be the host, or the panel paints on the stage. */
+body:not(.embed) uchusen-rocket[data-panel] { display: flex; flex-direction: column; aspect-ratio: auto; height: auto; overflow: visible; }
 .stage-box uchusen-rocket { max-width: min(620px, calc((100vh - 18.5rem) * 0.75)); margin: 0 auto; }
 .turn-row { justify-content: center; margin-top: 0.3rem; }
 .view-space { position: relative; isolation: isolate; overflow: hidden; border-radius: 10px; }
@@ -177,6 +179,11 @@ uchusen-flight { --uchusen-accent: var(--accent); }
   #makers .chip { padding-inline: 0.2rem; font-size: 0.78rem; }
   .panel .field h2 { margin-bottom: 0.2rem; }
 }
+/* A ship with its panel grows to fit the picture and the specification under it, so the panel is not painted on the stage. */
+.stage-box uchusen-rocket[data-panel] { max-width: min(620px, calc((100vh - 28rem) * 0.75)); aspect-ratio: auto; height: auto; overflow: visible; }
+@media (min-width: 1100px) {
+  .stage-box uchusen-rocket[data-panel] { max-width: min(620px, max(10rem, calc((100vh - 36rem) * 0.75))); aspect-ratio: auto; height: auto; overflow: visible; }
+}
 @media (max-width: 820px) {
   .stage-row, .builder { grid-template-columns: minmax(0, 1fr); }
   /* The picture stays at the top, short enough that a row of choices remains under it. It does not spill over those choices: what scrolls into view stops below the picture. */
@@ -204,20 +211,19 @@ uchusen-flight { --uchusen-accent: var(--accent); }
   .compare-frame { overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x pan-y; justify-content: flex-start; }
   .compare-frame uchusen-lineup { margin: 0 auto; }
 }
-/* a ship with its panel under the picture gives the picture less of the window, so both fit */
-.stage-box uchusen-rocket[data-panel] { max-width: min(620px, calc((100vh - 28rem) * 0.75)); }
-@media (min-width: 1100px) {
-  .stage-box uchusen-rocket[data-panel] { max-width: min(620px, max(10rem, calc((100vh - 36rem) * 0.75))); }
-}
 /* the phone's stage share includes the view bar and the turn row, so the picture itself is what is left of that share */
 @media (max-width: 820px) {
-  body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-box uchusen-rocket,
-  body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-box uchusen-rocket[data-panel] {
+  body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-box uchusen-rocket {
     width: auto;
     max-width: min(100%, 12rem);
     height: 16rem;
     min-height: 0;
     overflow: hidden;
+  }
+  body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-box uchusen-rocket[data-panel] {
+    max-width: min(100%, 22rem);
+    height: auto;
+    overflow: visible;
   }
 }
 a.chip { display: inline-flex; align-items: center; text-decoration: none; }
@@ -277,6 +283,7 @@ body.demo main > header [data-help-switch] { display: none; }
   html[data-wide="on"] .stage-box { position: static; }
   html[data-wide="on"] .stage-box .view-space { display: grid; place-items: center; aspect-ratio: 16 / 9; max-height: 80vh; }
   html[data-wide="on"] .stage-box .view-space > uchusen-rocket { height: 100%; width: auto; max-width: 100%; margin: 0; }
+  html[data-wide="on"] .stage-box .view-space > uchusen-rocket[data-panel] { height: auto; width: min(100%, 42rem); }
   html[data-wide="on"] .stage-row > .panel, html[data-wide="on"] .yard-side, html[data-wide="on"] .jr-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; align-items: start; }
   html[data-wide="on"] .stage-row > .panel > :is(.flight-field, .note, .credit) { grid-column: 1 / -1; }
   html[data-wide="on"] .yard-stage, html[data-wide="on"] .yard-page:has(#yard-build:not([hidden])) .yard-stage { height: auto; aspect-ratio: 16 / 9; max-height: 80vh; }

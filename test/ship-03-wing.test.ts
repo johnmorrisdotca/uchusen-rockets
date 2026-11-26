@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { motionsOf } from "../src/model/fleet/motion.ts";
-import { ELEVATOR } from "../src/model/fleet/ship-03/dims.ts";
+import { ELEVATOR, ENVELOPE } from "../src/model/fleet/ship-03/dims.ts";
 import { birdWing, type WingPose } from "../src/model/fleet/ship-03/wing.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../src/model/fleet/ship-03/variants.ts";
 import { habitat } from "../src/model/fleet/ship-03/habitat.ts";
@@ -10,22 +10,38 @@ import { boundsOfPieces, type Piece, type Plate } from "../src/model/pieces.ts";
 import { movingGroupsOf } from "../src/model/moves.ts";
 
 const poses: WingPose[] = ["folded", "half", "open"];
+const isPlate = (piece: Piece): piece is Plate => piece.kind === "plate";
 const materialsOf = (pieces: readonly Piece[]) => new Set(pieces.filter((piece) => piece.kind !== "lines").map((piece) => (piece as { material: string }).material));
 
-/** How far one side reaches out from the hull: the bundle is slim, the open wing is not. */
-const reach = (pose: WingPose): number => {
-  const pieces = birdWing(pose).filter((piece) => piece.kind === "plate" && piece.frame.o[0] > 0);
-  const box = boundsOfPieces(pieces);
+const spanOf = (pose: WingPose): number => {
+  const box = boundsOfPieces(birdWing(pose));
   return box.max[0] - box.min[0];
 };
 
-test("the wing opens from a slim bundle to a broad span, and half sits between", () => {
-  const folded = reach("folded");
-  const half = reach("half");
-  const open = reach("open");
-  assert.ok(folded < 18, `folded reach ${folded}`);
-  assert.ok(open > 36, `open reach ${open}`);
-  assert.ok(half > folded + 6 && half < open - 6, `half ${half} between ${folded} and ${open}`);
+/** The widest empty band across the beam. A folded pair with a gap between the two wings fails. */
+const gapAcross = (pieces: readonly Piece[]): number => {
+  const ranges = pieces.filter(isPlate).filter((piece) => piece.material === "kapton").map((piece) => {
+    const box = boundsOfPieces([piece]);
+    return [box.min[0], box.max[0]] as const;
+  }).sort((a, b) => a[0] - b[0]);
+  assert.ok(ranges.length > 1);
+  let end = ranges[0][1];
+  let hole = 0;
+  for (const [start, stop] of ranges.slice(1)) {
+    if (start > end) hole = Math.max(hole, start - end);
+    end = Math.max(end, stop);
+  }
+  return hole;
+};
+
+test("the open wings span the hull, the folded pair is one stack, and half sits between", () => {
+  const folded = spanOf("folded");
+  const half = spanOf("half");
+  const open = spanOf("open");
+  assert.ok(open >= ENVELOPE.length, `open span ${open.toFixed(1)} m, hull ${ENVELOPE.length} m`);
+  assert.ok(gapAcross(birdWing("folded")) < 1, `folded gap ${gapAcross(birdWing("folded")).toFixed(1)} m`);
+  assert.ok(folded < 80, `folded stack ${folded.toFixed(1)} m across`);
+  assert.ok(half > folded + 40 && half < open - 40, `half ${half.toFixed(1)} between ${folded.toFixed(1)} and ${open.toFixed(1)}`);
 });
 
 test("every pose stays dorsal of both glass elevators", () => {
@@ -46,8 +62,6 @@ const shortSide = (outline: readonly (readonly [number, number])[]): number => {
   }
   return min;
 };
-
-const isPlate = (piece: Piece): piece is Plate => piece.kind === "plate";
 
 test("an open feather is a broad panel, and the cells are panels too", () => {
   const open = birdWing("open").filter(isPlate).filter((piece) => piece.frame.o[0] > 0);
