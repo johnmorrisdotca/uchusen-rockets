@@ -79,6 +79,7 @@ import { plinthGroup, type Footprint } from "./plinth.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
 import { ThrusterLayer } from "./thrusterLayer.ts";
 import { glProbe } from "./probe.ts";
+import { idleStopMs } from "./idleStop.ts";
 import { craftJets, endQuads, type Jet, type ThrusterMode } from "../thrusters.ts";
 
 /** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
@@ -117,6 +118,8 @@ export interface ViewerFocus {
 export interface ViewerOptions {
   label: string;
   reducedMotion: boolean;
+  /** Seconds a still view keeps drawing after the last touch. Left out, 90. */
+  idleStopSeconds?: number;
   onLost: () => void;
   /** Said once, when the camera first comes near what is on screen: the page may then build the fine detail. */
   onNear?: () => void;
@@ -136,7 +139,6 @@ export interface ViewerOptions {
   orbit?: boolean;
 }
 
-const IDLE_STOP_MS = 90_000;
 /** The moving parts of a fleet ship are drawn at most thirty times a second. */
 const MOTION_GAP_MS = 1000 / 30;
 /** Wheel steps closer together than this belong to one turn of the wheel, so a zoom that reaches its end part-way through does not hand the rest to the page. */
@@ -629,6 +631,11 @@ export class RocketViewer {
     this.paintSkyGroups?.(groups);
     this.showSketch();
     this.wake();
+  }
+
+  /** How long a still view keeps drawing after the last touch, in seconds. Left out, 90. */
+  setIdleStop(seconds: number | undefined): void {
+    this.options.idleStopSeconds = seconds;
   }
 
   /** How fast the Earth under the craft turns: seconds of its own day for each real second. 0 holds it still, and so does a reader who prefers less motion. */
@@ -2878,7 +2885,7 @@ export class RocketViewer {
     this.stepPaintFade(now);
     this.clock.update(now);
     const dt = Math.min(this.clock.getDelta(), 0.1);
-    const ambient = !this.options.reducedMotion && now - this.lastActive < IDLE_STOP_MS;
+    const ambient = !this.options.reducedMotion && now - this.lastActive < idleStopMs(this.options.idleStopSeconds);
     const t = this.tilt;
     const dA = (t.azimuth - t.applied.azimuth) * 0.12;
     const dP = (t.polar - t.applied.polar) * 0.12;
@@ -2995,7 +3002,7 @@ export class RocketViewer {
       }
     }
     this.coastDrift(dt);
-    const awake = now - this.lastActive < IDLE_STOP_MS;
+    const awake = now - this.lastActive < idleStopMs(this.options.idleStopSeconds);
     const drift = this.thrusters?.step(dt, awake) ?? null;
     if (drift) {
       this.root.position.set(drift.x, drift.y, drift.z);
@@ -3339,7 +3346,7 @@ export class RocketViewer {
     let moving = false;
     for (const toss of this.toss.values()) if (toss.velocity.lengthSq() > 1e-6) moving = true;
     if (!moving) return;
-    if (performance.now() - this.lastActive >= IDLE_STOP_MS) {
+    if (performance.now() - this.lastActive >= idleStopMs(this.options.idleStopSeconds)) {
       if (this.lastThrow) this.thrusters?.brake(this.lastThrow);
       this.lastThrow = null;
       for (const toss of this.toss.values()) toss.velocity.set(0, 0, 0);

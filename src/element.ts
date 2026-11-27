@@ -8,6 +8,7 @@ import { bellsOf, enginesWanted, pickBells } from "./engines.ts";
 import { lightMode } from "./model/fleet/lights.ts";
 import { thrusterMode } from "./thrusters.ts";
 import { parseSun } from "./sun.ts";
+import { idleStopSeconds } from "./element/idleStop.ts";
 import { motionsOf, motionSpeed, motionWanted } from "./model/fleet/motion.ts";
 import { engineChart } from "./draw/plume.ts";
 import { burnsOf, FlightClock, flightOf, frameAt, phaseAt, phasePosition, type Flight } from "./flight.ts";
@@ -157,7 +158,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "names", "leave", "docked", "edges", "world", "world-turn", "form", "sun", "flags", "part"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "idle-stop", "names", "leave", "docked", "edges", "world", "world-turn", "form", "sun", "flags", "part"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -415,6 +416,7 @@ export class UchusenRocket extends HTMLBase {
     } else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "off-screen") this.viewer?.setOffScreen(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
+    else if (name === "idle-stop") this.viewer?.setIdleStop(idleStopSeconds(after));
     else if (name === "edges") this.viewer?.setEdges(after === "open");
     else if (name === "sun") this.viewer?.setSun(parseSun(after));
     else if (name === "world") this.viewer?.setOrbit(after === "earth");
@@ -1099,6 +1101,7 @@ export class UchusenRocket extends HTMLBase {
       const made = new RocketViewer(holder, {
         label: this.getAttribute("label") ?? built.report.label,
         reducedMotion: reduced,
+        idleStopSeconds: idleStopSeconds(this.getAttribute("idle-stop")),
         onLost: () => this.fallBack("context-lost"),
         onNear: () => void this.upgrade(),
         onZoomedIn: () => this.upgradeDocked(),

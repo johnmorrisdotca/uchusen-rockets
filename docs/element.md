@@ -21,6 +21,7 @@
 | `scale` | The size of Kaminari, Emiake or Romaryū, in per cent of its full size | `60` to `100` in steps of 5; `100` (the default). Only those three ships take it (`fleet-kaminari`, `fleet-emiake`, `fleet-romaryu`); any other craft ignores it. Fit holds the ship at its size, and a craft named in `beside` stays at its own true size |
 | `phase` | A phase of the rocket's flight, by its id, such as `hot-staging`: which engines burn there, and how the parts stand. See [flight.md](flight.md) | A phase of `element.flight` |
 | `motion` | The moving parts of a fleet ship: the rings, the doors, the solar array, the dishes. See [fleet/motion.md](fleet/motion.md) | `off` (the default), `on` (real speed), `fast` (ten times). A reader who asked for reduced motion has them still whatever the page says |
+| `idle-stop` | How long a still 3D view keeps drawing after the last touch | Seconds. Left out, 90. `idle-stop="4"` is four seconds. A blank or a value that is not a positive number keeps the 90 seconds |
 | `view` | Where from | `three-quarter`, `front`, `back`, `side`, `below` |
 | `build` | A rocket from parts, as JSON | See [parts.md](parts.md) |
 | `spin` | How it turns by itself | `off`, `slow`, `medium`, `fast` or seconds a turn |
