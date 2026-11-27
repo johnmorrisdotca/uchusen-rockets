@@ -2,6 +2,7 @@ import type { Bell } from "../engines.ts";
 import { directionOf, type Angle, type Framing, type Vec3 } from "../framing.ts";
 import { drone } from "./showcase/drone.ts";
 import { hanabusa } from "./showcase/hanabusa.ts";
+import { kyotori } from "./showcase/kyotori.ts";
 
 export interface ShowcaseShot {
   angle: Angle;
@@ -62,6 +63,7 @@ export interface ShowcasePreset {
 const PRESETS: readonly ShowcasePreset[] = [
   hanabusa,
   drone,
+  kyotori,
 ];
 
 export function showcasePreset(rocket: string | undefined, variant: string | undefined): ShowcasePreset | undefined {

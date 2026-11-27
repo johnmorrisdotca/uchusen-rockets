@@ -1,0 +1,24 @@
+{
+  "rocket": "fleet-kyotori",
+  "variant": "kyotori",
+  "docked": "",
+  "name": "Kyotori",
+  "japanese": "鏡鳥",
+  "registry": "ISV SPX-045",
+  "label": "ISV Kyotori, SPX-045, under thrust in front of the Moon",
+  "title": "ISV Kyotori · SPX-045",
+  "description": "See the ISV Kyotori and its twin field-coil drives under thrust in front of the Moon.",
+  "what": {
+    "en": "Kyotori showcase",
+    "ja": "鏡鳥の展示",
+    "jaDescription": "月を背景に、探査船「鏡鳥」SPX-045の2基の推進器が噴射する姿を見ます。"
+  },
+  "role": { "en": "Explorer", "ja": "探査船" },
+  "mobileExhaustSide": "left",
+  "credits": [
+    {
+      "label": "Moon map from Wakusei Planets, sourced from NASA Scientific Visualization Studio and Lunar Reconnaissance Orbiter Camera",
+      "href": "https://commons.wikimedia.org/wiki/File:CGI_Moon_Kit_-_Lroc_color_poles.tif"
+    }
+  ]
+}
