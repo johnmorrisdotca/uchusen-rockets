@@ -3,6 +3,7 @@ import { directionOf, type Angle, type Framing, type Vec3 } from "../framing.ts"
 import { ariake } from "./showcase/ariake.ts";
 import { drone } from "./showcase/drone.ts";
 import { hanabusa } from "./showcase/hanabusa.ts";
+import { kaminari } from "./showcase/kaminari.ts";
 import { kyotori } from "./showcase/kyotori.ts";
 import { miyamoto } from "./showcase/miyamoto.ts";
 
@@ -66,6 +67,7 @@ const PRESETS: readonly ShowcasePreset[] = [
   ariake,
   drone,
   hanabusa,
+  kaminari,
   kyotori,
   miyamoto,
 ];

@@ -1,0 +1,23 @@
+{
+  "rocket": "fleet-kaminari",
+  "variant": "fleet-kaminari",
+  "docked": "",
+  "name": "Kaminari",
+  "japanese": "加美鳴",
+  "registry": "ISV SPX-207",
+  "label": "ISV Kaminari, SPX-207, under thrust beside Saturn and its rings",
+  "title": "ISV Kaminari · SPX-207",
+  "description": "See the ISV Kaminari under thrust beside Saturn and its rings in the Uchusen Rockets showcase.",
+  "what": {
+    "en": "Kaminari showcase",
+    "ja": "加美鳴の展示",
+    "jaDescription": "恒星間大型輸送船、加美鳴 SPX-207 が土星の環のそばで噴射する姿を見ます。"
+  },
+  "role": { "en": "Interstellar Heavy Transport", "ja": "恒星間大型輸送船" },
+  "credits": [
+    { "label": "Saturn map bands by Solar System Scope, CC BY 4.0", "href": "https://www.solarsystemscope.com/textures/" },
+    { "label": "Saturn pole caps by Nestaeric, reprojected by Wakusei Planets, CC BY 4.0", "href": "https://sketchfab.com/3d-models/saturn-c09a1970148c43ad99db134a9d6d00b5" },
+    { "label": "Creative Commons Attribution 4.0", "href": "https://creativecommons.org/licenses/by/4.0/" },
+    { "label": "Saturn ring image from Cassini, NASA / JPL / Space Science Institute, public domain", "href": "https://commons.wikimedia.org/wiki/File:Saturn%27s_rings_in_visible_light_and_radio.jpg" }
+  ]
+}
