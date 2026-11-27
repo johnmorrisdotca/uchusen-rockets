@@ -1,0 +1,22 @@
+{
+  "rocket": "fleet-ship-ariake",
+  "variant": "ariake-empty",
+  "name": "Ariake",
+  "japanese": "有明",
+  "registry": "ISV SPX-186",
+  "label": "ISV Ariake, SPX-186, under thrust over Mars",
+  "title": "ISV Ariake · SPX-186",
+  "description": "See the ISV Ariake and its twin drives under thrust over Mars.",
+  "what": {
+    "en": "Ariake showcase",
+    "ja": "有明の展示",
+    "jaDescription": "火星上空で、恒星間指揮艦「有明」SPX-186の2基の推進器が噴射する姿を見ます。"
+  },
+  "role": { "en": "Romurusu-class interstellar command vessel", "ja": "ロムルス級恒星間指揮艦" },
+  "credits": [
+    {
+      "label": "Mars map from Wakusei Planets, sourced from NASA, JPL and USGS Viking Orbiter imagery",
+      "href": "https://commons.wikimedia.org/wiki/File:Mars_Viking_MDIM21_ClrMosaic_1km.jpg"
+    }
+  ]
+}
