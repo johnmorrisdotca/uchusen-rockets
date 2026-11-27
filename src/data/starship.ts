@@ -106,7 +106,7 @@ export const STARSHIP_VARIANTS: readonly Variant[] = [
       height: m(124.4, WP, {
         date: "2026",
         others: [
-          { value: 124, source: "spacex-starship", note: "SpaceX's vehicle page, as a search engine quoted it: 124 m (407 ft), rounded. The page itself would not load." },
+          { value: 124, source: "spacex-starship", note: "SpaceX's vehicle page, read 2026-11-26: 124 m (407 ft), rounded." },
           { value: 124, source: "satnews-v3", note: "About 124 m, roughly 1.5 m taller than V2, from SpaceX's briefing." },
         ],
       }),
@@ -116,11 +116,11 @@ export const STARSHIP_VARIANTS: readonly Variant[] = [
           date: "2025-05-30",
           note: "Wikipedia cites NASASpaceflight, 2025-05-30, which could not be read directly.",
           others: [
-            { value: 72, source: "spacex-starship", note: "SpaceX's page as quoted by a search engine: 72 m (236 ft), rounded." },
+            { value: 72, source: "spacex-starship", note: "SpaceX's vehicle page, read 2026-11-26: 72 m (236 ft), rounded." },
             { value: 81, source: WP, note: "81 m is Block 4's cell in Wikipedia's table, where colspans shift the columns. A site that printed it for Block 3 misread it: 81 m plus 52.1 m does not make 124.4 m." },
           ],
         }),
-        ship: m(52.1, WP, { others: [{ value: 52, source: "spacex-starship", note: "SpaceX's page as quoted by a search engine: 52 m (171 ft), rounded." }] }),
+        ship: m(52.1, WP, { others: [{ value: 52, source: "spacex-starship", note: "SpaceX's vehicle page, read 2026-11-26: 52 m (171 ft), rounded." }] }),
       },
       engines: {
         booster: said("33 Raptor 3", SH),

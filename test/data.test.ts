@@ -38,6 +38,16 @@ test("the block sizes are the sources' figures", () => {
   assert.deepEqual(size("v1"), [121.3, 71, 50.3]);
   assert.deepEqual(size("v2"), [123.1, 71, 52.1]);
   assert.deepEqual(size("v3"), [124.4, 72.3, 52.1]);
+  const page = SOURCES["spacex-starship"];
+  assert.equal(page.read, "direct");
+  assert.equal(page.url, "https://www.spacex.com/vehicles/starship");
+  const v3 = variantOf("starship", "v3");
+  const notes = [v3?.facts.height, v3?.facts.parts.booster, v3?.facts.parts.ship].map((figure) => figure?.others?.find((other) => other.source === "spacex-starship")?.note ?? "");
+  assert.deepEqual(notes, [
+    "SpaceX's vehicle page, read 2026-11-26: 124 m (407 ft), rounded.",
+    "SpaceX's vehicle page, read 2026-11-26: 72 m (236 ft), rounded.",
+    "SpaceX's vehicle page, read 2026-11-26: 52 m (171 ft), rounded.",
+  ]);
   assert.deepEqual(size("v4"), [142, 81, 61]);
   assert.equal(variantOf("starship", "v3")?.facts.diameter.value, 9);
 });

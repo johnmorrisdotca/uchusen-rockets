@@ -39,7 +39,7 @@ figureWords(variantOf("starship", "v4").firstFlight); // "Not flown"
 
 Where sources disagree, the data keeps the one chosen and `others` says what else was said:
 
-- **Block 3's booster.** 72.3 m was chosen. Wikipedia's table puts 81 m in the next cell, Block 4's: read without its colspans, it looks like Block 3's, which is how a site came to print 81 m for it. 81 m and 52.1 m do not make 124.4 m. SpaceX's own page, read only as a search engine quoted it, rounds to 72 m, 52 m and 124 m.
+- **Block 3's booster.** 72.3 m was chosen. Wikipedia's table puts 81 m in the next cell, Block 4's: read without its colspans, it looks like Block 3's, which is how a site came to print 81 m for it. 81 m and 52.1 m do not make 124.4 m. SpaceX's own page, read on 2026-11-26, rounds to 72 m, 52 m and 124 m. It does not name a block. Those rounded figures match Block 3.
 - **Block 2's height.** One article says 123.1 m and 123.3 m. 123.1 m is 71 m and 52.1 m.
 - **Block 1 at its first flight.** Its article says 121 m, and its parts' own figures make 119.3 m. It is drawn to the parts.
 - **Block 4.** Wikipedia marks 142 m an estimate in its infobox, and its table gives 81 m and 61 m, which add to it, with no mark. All three are announced plans.
