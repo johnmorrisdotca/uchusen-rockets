@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The demo can run in CI's Playwright image** (MODULES-1164). `pnpm test:e2e:image` builds the site and the docs, then plays the browser tests in that image at 4 CPUs, which runs two tests at a time. The Mac's own `pnpm test:demo` stays one test at a time. Arguments for Playwright go after `--`.
+
 ## [0.37.10] - 2026-11-26
 
 - **A chute array, shared by Miyamoto and Kaminari** (MODULES-491). One mast and a set of ribs, in three forms: a ring (an annulus on spokes), an umbrella (petals in to the hub) and a fan (pleated fins in one plane). Stowed, the ribs lie along the mast; half and open are drawn already there, and `motion=on` swings the stowed bundle out. Miyamoto's is 120 m across on the dorsal mast (the bird-wing variants carry the umbrella). Kaminari's is 400 m across on the dorsal truss.

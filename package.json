@@ -138,6 +138,7 @@
     "site": "pnpm build && node scripts/site.ts",
     "dev": "pnpm site && node scripts/dev.ts",
     "test:demo": "pnpm site && node scripts/docs-site.mjs build && playwright test",
+    "test:e2e:image": "kazoku-ci-image --cpus 4 --setup \"pnpm site && node scripts/docs-site.mjs build\" -- test",
     "test:freeze": "pnpm site && playwright test e2e/freeze.demo.ts --project=chromium-desk",
     "test:usage": "pnpm site && node scripts/check-usage.ts",
     "family:readme": "node scripts/family-readme.mjs",

@@ -37,6 +37,7 @@ pnpm check          # lint, types, tests, the build and the packed package
 pnpm verify         # all of that, the docs' examples and the browser tests
 pnpm test           # the unit tests
 pnpm test:demo      # build the site and play it in a real browser at a phone's width and a desk's
+pnpm test:e2e:image # the same tests in CI's Playwright image, at 4 CPUs. Playwright arguments go after --
 pnpm test:freeze    # only the freeze test: what the page asks of the machine, in software, at a desk's width
 pnpm test:package   # pack it as npm does, install it in an empty project, import every entry
 pnpm test:readme    # run every example of the README, the docs and the guides

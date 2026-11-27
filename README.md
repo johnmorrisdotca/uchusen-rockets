@@ -518,6 +518,7 @@ pnpm test:readme    # run every example of the README, the docs and the guides
 pnpm test:usage     # every way to use it (CDN, Vite, webpack, React, Vue, Svelte, Angular, iframe, TypeScript, Node), built and opened from the package as npm packs it
 pnpm docs:check     # the reference site's checks: every export documented, every example run
 pnpm test:demo      # the demo in a real browser
+pnpm test:e2e:image # the same tests in CI's Playwright image, at 4 CPUs. Playwright arguments go after --
 pnpm dev            # the demo on http://127.0.0.1:8275/uchusen-rockets/
 pnpm screenshots    # the pictures in docs/images
 ```

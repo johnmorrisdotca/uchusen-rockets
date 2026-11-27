@@ -43,6 +43,7 @@ This repo is one of the family of John Morris's npm packages. The rules every pa
 | Title prefix and `--area` | `uchusen-rockets` |
 | Ports | 8275 to 8299: 8275 the demo and dev, 8276 the tests, 8277 the picture scripts, 8278 and up anything else |
 | Checks before a push | `pnpm check`, `pnpm test:readme`, `pnpm test:demo` (`pnpm verify` runs all of them) |
+| CI image | `pnpm test:e2e:image` runs those browser tests in CI's Playwright image at 4 CPUs, two at a time. Playwright arguments go after `--`. Not a push check. |
 | Release | `release.yml` → `reusable-release.yml`; trusted publisher entry: `release.yml` |
 | Hand-off project | `uchusen-rockets` |
 
