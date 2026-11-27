@@ -853,9 +853,16 @@ test.describe("with the engines lit", () => {
       await expect.poll(() => canvasData(page, "plumes")).toBe("33");
     };
     await round();
-    // both readings are the same rocket with the same flames, and only once the counts have stopped moving: a slow runner used to read the body (58 arrays) before the flames were on the card and the later round after they were (203)
+    // A slow runner reads the body (58 buffers) before the flames are on the card, and the next round after they are (203). The baseline is the first reading a further round does not raise.
     await expect.poll(() => canvasData(page, "plumes")).toBe("33");
-    const first = await levelUsage(page);
+    let first = await levelUsage(page);
+    for (let warm = 0; warm < 3; warm++) {
+      await round();
+      const now = await levelUsage(page);
+      const grew = now.buffers > first.buffers || now.arrays > first.arrays;
+      first = now;
+      if (!grew) break;
+    }
     expect(await canvasData(page, "plumes")).toBe("33");
     for (let i = 0; i < 4; i++) await round();
     const last = await levelUsage(page);
