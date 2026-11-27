@@ -19,7 +19,8 @@ const VIEWS: readonly { name: string; page: string; view: string; controls: stri
   // (MODULES-905). The hands are the page's, not the ship's, so the check is made on the lightest ship of the record.
   { name: "the fleet record", page: "fleet-db.html?picker=off&ship=fleet-kaminari", view: "#hero", controls: "kazoku-view-controls" },
   { name: "the drones", page: "inspect.html", view: "#hero", controls: "#view-bar" },
-  { name: "the index line-up", page: "index.html?picker=off", view: "#compare-view", controls: "#compare-bar", lacks: FLAT },
+  // The compare row stays hidden until the address names it, so the check opens that section. Line art keeps the pictures inside the four minutes on the CI image.
+  { name: "the index line-up", page: "index.html?picker=off&look=line#compare", view: "#compare-view", controls: "#compare-bar", lacks: FLAT },
   { name: "the yard", page: "yard.html?picker=off", view: "#yard-view", controls: "#view-bar", picture: "#yard-stage" },
   { name: "the comparison's first view", page: "compare.html?picker=off", view: "#hero", controls: "#view-bar", lacks: { turn: "a drag that starts on a floating craft throws that craft, and the middle of this view holds one", roll: "the scale scene stays level" } },
   // The middle of this drawing is one flat colour. At the check's zoom a photograph of that middle cannot see a pan, though the controls still have to move.

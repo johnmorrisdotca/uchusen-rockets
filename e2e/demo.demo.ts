@@ -525,7 +525,8 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
   await foldPicker(page);
   await press(page, "more-compare");
   const lineup = page.locator('[data-testid="lineup"]');
-  await expect(lineup).toHaveAttribute("data-count", "7");
+  // Five Starship variants, plus the person, the building and the three sourced landmarks.
+  await expect(lineup).toHaveAttribute("data-count", "10");
   const table = page.locator('[data-testid="compare-table"]');
   await expect(table).toContainText("121.3 m");
   await expect(table).toContainText("142 m, announced, an estimate");
@@ -534,14 +535,14 @@ test("the comparison draws the variants at one scale, and lets a reader choose t
   await expect(table).toContainText("2023-11-18, first with the ring");
   await expect(table).toContainText("Not flown");
   await press(page, "compare-starship:v4");
-  await expect(lineup).toHaveAttribute("data-count", "6");
+  await expect(lineup).toHaveAttribute("data-count", "9");
   await expect(table).not.toContainText("142 m");
   await press(page, "compare-falcon-9:block-5");
-  await expect(lineup).toHaveAttribute("data-count", "7");
+  await expect(lineup).toHaveAttribute("data-count", "10");
   await expect(table).toContainText("69.8 m");
   await press(page, "compare-falcon-9:block-5");
   await press(page, "compare-starship:2019");
-  await expect(lineup).toHaveAttribute("data-count", "7");
+  await expect(lineup).toHaveAttribute("data-count", "10");
   await expect(table).toContainText("No source");
   await expect(table).toContainText("Never flew");
   expect(problems).toEqual([]);
