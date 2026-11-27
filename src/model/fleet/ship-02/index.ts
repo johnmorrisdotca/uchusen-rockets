@@ -16,6 +16,7 @@ import { ringDecks } from "../sized.ts";
 import { linesPieces } from "./lines.ts";
 import { podCargo, podSettlement, podSurvey, podTanker, POD } from "./pod.ts";
 import { reactorInside, reactorPieces, shadowShieldPieces } from "./reactor.ts";
+import { outrigger } from "./outrigger.ts";
 import { stowed, wing } from "./radiators.ts";
 import { shieldPieces } from "./shield.ts";
 import { spinePieces } from "./spine.ts";
@@ -111,6 +112,8 @@ export const SHIP_02_ALTERNATES = [
   { id: "fleet-02-tip-port-tug", name: "Wing-tip mount, port: tug", like: "tip-port", pieces: () => tugTip() },
   { id: "fleet-02-tip-starboard-tug", name: "Wing-tip mount, starboard: tug", like: "tip-starboard", pieces: () => tugTip() },
   { id: "fleet-02-drive-engines-arrays", name: "Main drive: 56 magnetic-nozzle thrusters in eight rings of seven", like: "drive-engines", pieces: driveArrays },
+  { id: "fleet-02-radiator-starboard-outrigger", name: "Radiator wing, starboard, outrigger", like: "radiator-starboard", pieces: () => outrigger(1) },
+  { id: "fleet-02-radiator-port-outrigger", name: "Radiator wing, port, outrigger", like: "radiator-port", pieces: () => outrigger(-1) },
 ] as const;
 
 /** The named variants: the same ship with other modules in its hardpoints. Each lists the alternate part for a slot; every other slot is the standard one. */
@@ -119,6 +122,7 @@ export const SHIP_02_VARIANT_PARTS: Readonly<Record<string, Readonly<Record<stri
   "fleet-02-tanker": { pod: "fleet-02-pod-tanker", "tip-port": "fleet-02-tip-port-tug", "tip-starboard": "fleet-02-tip-starboard-tug" },
   "fleet-02-arrays": { "drive-engines": "fleet-02-drive-engines-arrays" },
   "fleet-02-rescue": { "pod-ventral": "fleet-02-pod-ventral-rescue", "tip-port": "fleet-02-tip-port-tug", "tip-starboard": "fleet-02-tip-starboard-tug" },
+  "fleet-02-outriggers": { "radiator-starboard": "fleet-02-radiator-starboard-outrigger", "radiator-port": "fleet-02-radiator-port-outrigger" },
 };
 
 /** The two engines drawn on their own, for the propulsion cards. */

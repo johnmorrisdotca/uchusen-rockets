@@ -182,7 +182,7 @@ test("header tanks and the thirty-two attitude thrusters are modelled", () => {
 
 test("hardpoints and variants: two pod mounts and the wing tips, five named variants from swapped modules", () => {
   const ids = ROCKETS["fleet-02"].variants.map((v) => v.id);
-  assert.deepEqual(ids, ["fleet-02", "fleet-02-survey", "fleet-02-tanker", "fleet-02-arrays", "fleet-02-rescue"]);
+  assert.deepEqual(ids, ["fleet-02", "fleet-02-survey", "fleet-02-tanker", "fleet-02-arrays", "fleet-02-rescue", "fleet-02-outriggers"]);
   for (const id of ids) {
     const r = check({ rocket: "fleet-02", variant: id });
     assert.equal(r.ok, true, id);

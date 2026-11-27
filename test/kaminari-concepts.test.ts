@@ -46,7 +46,7 @@ test("the three ships are three rockets, each a fit that goes together, named as
   }
   assert.equal(ROCKETS["fleet-emiake"].variants.map((v) => v.id).join(","), `fleet-emiake,${EMIAKE_DEPLOYED}`);
   // the first hull is kept, and is not the public ship
-  assert.deepEqual(ROCKETS["fleet-02"].variants.map((v) => v.id), ["fleet-02", "fleet-02-survey", "fleet-02-tanker", "fleet-02-arrays", "fleet-02-rescue"]);
+  assert.deepEqual(ROCKETS["fleet-02"].variants.map((v) => v.id), ["fleet-02", "fleet-02-survey", "fleet-02-tanker", "fleet-02-arrays", "fleet-02-rescue", "fleet-02-outriggers"]);
   assert.ok(PART_ENTRIES.some((entry) => entry.record.id === "fleet-02-fleet-02-spine"));
   assert.match(ROCKETS["fleet-02-original"].name, /first design/);
   assert.equal(check({ rocket: "fleet-02-original", variant: "fleet-02" }).ok, true);

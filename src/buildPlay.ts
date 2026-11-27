@@ -65,7 +65,7 @@ const stepsOf = (variant: string): readonly PlayStep[] | undefined => {
   if (variant === "fleet-kaminari") return kaminariBuild();
   if (variant === "fleet-emiake" || variant === "fleet-emiake-deployed") return emiakeBuild();
   if (variant === "fleet-romaryu") return romaryuBuild();
-  if (variant === "fleet-02" || variant === "fleet-02-survey" || variant === "fleet-02-tanker" || variant === "fleet-02-arrays" || variant === "fleet-02-rescue") return ship02Build();
+  if (variant === "fleet-02" || variant === "fleet-02-survey" || variant === "fleet-02-tanker" || variant === "fleet-02-arrays" || variant === "fleet-02-rescue" || variant === "fleet-02-outriggers") return ship02Build();
   const kyotori = kyotoriBuild(variant);
   if (kyotori) return kyotori;
   if (variant === "hauler") return kitAssembly("fleet-samples-hauler", SAMPLE_SHIPS.hauler);

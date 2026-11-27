@@ -99,6 +99,7 @@ const NAMES: Readonly<Record<string, [string, string]>> = {
   "fleet-02-tanker": ["ISV 加美鳴 Kaminari, first design, tanker configuration", "Tanker pod on the dorsal mount, cargo pod underneath, a tug on each wing tip: the same ship for fuelling a station."],
   "fleet-02-arrays": ["ISV 加美鳴 Kaminari, first design, thruster arrays", "The first hull with its drive mended (MODULES-437, LESSONS 29): the eight scaled-up torch bells give way to eight rings of seven magnetic-nozzle thrusters each, 56 in all. Everything else is the first design's."],
   "fleet-02-rescue": ["ISV 加美鳴 Kaminari, first design, rescue configuration", "Settlement pod as a refuge on the dorsal mount, rescue pod underneath, a tug on each wing tip: the same ship for an evacuation."],
+  "fleet-02-outriggers": ["ISV 加美鳴 Kaminari, first design, outrigger wings", "A boom straight out on each side of the lower hull, with two panels on each boom running along the ship. The wings that go straight out stay on the first design."],
 };
 
 /** The arrays variant's panel: the drive's labels stand where the thrusters are, and its words say thrusters, not bells. */
