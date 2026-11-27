@@ -168,6 +168,12 @@ The SPX fleet ships are original designs.
 
 ISV Hanabusa, SPX-013, is the fleet's wheel ship: a 589 m keel and a 22 m bow shield, 611 m overall, two rotating propellant booms and three glazed rings of 48, 62 and 76 m radius that step up from the bow (garden, research and living, at 3.43 rpm: 0.63, 0.82 and 1.00 g), with a closed industrial wheel of 112 m radius set apart. Its drive is nineteen magnetic-nozzle thrusters and no bell. It is three variants (the rings stepping up from the bow, the other order, and a flat section view of the living ring) and joins the picker under SPX. The bible is `docs/fleet/ship-01.md`.
 
+[Open the Hanabusa showcase](https://johnmorrisdotca.github.io/uchusen-rockets/showcase.html) for a low view of the ship under thrust in deep space. Add `showcase` to the element for this ship's default variant. It starts in Painted with the camera held at the showcase angle. `showcase-paused` freezes the exhaust at its current frame. A reader who prefers reduced motion sees the same composition as a still.
+
+```html
+<uchusen-rocket rocket="fleet-ship-01" showcase></uchusen-rocket>
+```
+
 <!-- kyotori-class -->
 One of them is a class of four, the Kyotori class: ISV 鏡鳥 Kyotori, SPX-045, with ships A, B, C and D (names to be chosen). They share one design and differ like this:
 

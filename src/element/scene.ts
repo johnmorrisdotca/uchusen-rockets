@@ -77,9 +77,13 @@ import { GroundKit } from "./ground.ts";
 import { placeNameLabels } from "./namePlace.ts";
 import { plinthGroup, type Footprint } from "./plinth.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
+import { SHOWCASE_STILL, ShowcaseExhaust } from "./showcase.ts";
+import { SHOWCASE_EXHAUST_LAYER, ShowcaseImage } from "./showcaseImage.ts";
+import { SHOWCASE_ANGLE, SHOWCASE_FOV, SHOWCASE_ROLL, SHOWCASE_SUN, showcaseFrame, supportsShowcase } from "./showcaseView.ts";
 import { ThrusterLayer } from "./thrusterLayer.ts";
 import { glProbe } from "./probe.ts";
 import { idleStopMs } from "./idleStop.ts";
+import { starField } from "./starField.ts";
 import { craftJets, endQuads, type Jet, type ThrusterMode } from "../thrusters.ts";
 
 /** The ships whose lamps turn the sun down in the Lit look. Kit modules stay in daylight. */
@@ -137,6 +141,7 @@ export interface ViewerOptions {
   onSlot?: (slot: string) => void;
   /** The Earth and Moon are in the scene, at their true sizes, so a metre and a planet can share one picture. */
   orbit?: boolean;
+  showcase?: boolean;
 }
 
 /** The moving parts of a fleet ship are drawn at most thirty times a second. */
@@ -294,6 +299,13 @@ export class RocketViewer {
   private fill!: DirectionalLight;
   private sky!: HemisphereLight;
   private plumes: PlumeKit;
+  private showcaseExhaust: ShowcaseExhaust | null = null;
+  private showcaseStars: ReturnType<typeof starField> | null = null;
+  private showcaseImage: ShowcaseImage | null = null;
+  private showcasePaused = false;
+  private showcaseVisible = true;
+  private showcaseAt = 0;
+  private showcaseTime = SHOWCASE_STILL;
   private lit: { readonly [slot: string]: number } | "full" | null = null;
   /** What was lit before a flight took over the engines. */
   private litOutside: { readonly [slot: string]: number } | "full" | null = null;
@@ -576,7 +588,7 @@ export class RocketViewer {
 
   /** The key light comes from the Sun when there is one, else from the showroom's upper front. */
   private keyDirection(): Vector3 {
-    return (this.sunFrom ?? new Vector3(3, 5, 4)).clone().normalize();
+    return (this.showcaseExhaust ? new Vector3(...SHOWCASE_SUN) : this.sunFrom ?? new Vector3(3, 5, 4)).clone().normalize();
   }
 
   private aimKey(): void {
@@ -1120,6 +1132,7 @@ export class RocketViewer {
     if (this.glow) this.glow.visible = !painted;
     this.canvas.dataset.look = look;
     this.plumes.setLook(painted);
+    this.syncShowcase();
     this.relight();
     // "painted" is said when its shaders are built, so a reader who waits for it finds the next frame ready to draw
     if (look === "painted") void this.prepare(false).then(() => this.reportPainted());
@@ -1228,6 +1241,12 @@ export class RocketViewer {
 
   /** The page reads reduced motion again at each change, so a view opened earlier follows the reader now. */
   setReduced(reduced: boolean): void {
+    if (reduced && !this.options.reducedMotion && this.showcaseExhaust) {
+      this.showcaseAt = 0;
+      this.showcaseTime = SHOWCASE_STILL;
+      this.showcaseExhaust.setTime(this.showcaseTime);
+      this.plumes.setTime(this.showcaseTime);
+    }
     this.options.reducedMotion = reduced;
     this.applyLamps(performance.now() / 1000);
     this.mountThrusters();
@@ -1252,8 +1271,82 @@ export class RocketViewer {
     this.wake();
   }
 
+  private syncShowcase(): void {
+    const variant = this.built?.report.variant;
+    const drive = this.options.showcase && supportsShowcase(variant?.rocket, variant?.id) && this.look === "painted" && this.show === "together"
+      ? this.parts.find(({ slot }) => slot === "drive")
+      : undefined;
+    if (Boolean(drive) === Boolean(this.showcaseExhaust)) return;
+    this.mountShowcase(drive?.holder ?? null);
+    this.fitShadow();
+  }
+
+  private mountShowcase(drive: Group | null): void {
+    this.showcaseExhaust?.dispose();
+    this.showcaseImage?.dispose();
+    this.showcaseImage = null;
+    this.showcaseStars?.removeFromParent();
+    this.showcaseStars?.geometry.dispose();
+    this.showcaseStars?.material.dispose();
+    this.showcaseStars = null;
+    this.showcaseAt = 0;
+    this.showcaseTime = SHOWCASE_STILL;
+    this.showcaseExhaust = drive ? new ShowcaseExhaust(this.plumes) : null;
+    if (this.showcaseExhaust && drive) {
+      const { cores, wake } = this.showcaseExhaust;
+      if (!this.options.orbit && this.renderer.extensions.has("EXT_color_buffer_float")) {
+        this.showcaseImage = new ShowcaseImage();
+        wake.layers.set(SHOWCASE_EXHAUST_LAYER);
+        cores.group.traverse((node) => node.layers.set(SHOWCASE_EXHAUST_LAYER));
+      }
+      drive.add(cores.group, wake);
+      this.showcaseStars = starField(2350, { count: 430, size: 1.2, opacity: 0.46 });
+      this.showcaseStars.renderOrder = -1;
+      this.scene.add(this.showcaseStars);
+    }
+    this.plumes.setTime(drive ? this.showcaseTime : null);
+    this.camera.fov = drive ? SHOWCASE_FOV : FOV_DEG;
+    this.camera.up.set(...rolledUp(directionOf(SHOWCASE_ANGLE), drive ? SHOWCASE_ROLL : 0));
+    this.camera.updateProjectionMatrix();
+    this.sun.shadow.autoUpdate = drive === null;
+  }
+
+  setShowcase(on: boolean): void {
+    if (on === Boolean(this.options.showcase)) return;
+    this.options.showcase = on;
+    this.syncShowcase();
+    this.relight();
+    this.wake();
+  }
+
+  setShowcaseVisible(visible: boolean): void {
+    if (visible === this.showcaseVisible) return;
+    this.showcaseVisible = visible;
+    this.showcaseAt = 0;
+    if (visible && this.showcaseExhaust) this.wake();
+  }
+
+  /** Holds the current exhaust frame until playback resumes. */
+  setShowcasePaused(paused: boolean): void {
+    if (paused === this.showcasePaused) return;
+    this.showcasePaused = paused;
+    this.showcaseAt = 0;
+    if (!paused) this.wake();
+  }
+
   /** The Lit look of a named SPX ship is the night side. Daylight stays the default, so lamps glow in the sun, and a kit module stays in daylight. */
   private nightSide(): void {
+    this.sun.color.set(this.showcaseExhaust ? "#c8dfff" : "#fff6e6");
+    if (this.showcaseExhaust) {
+      this.rim.position.set(4, 1, -2);
+      this.sun.intensity = 3.15;
+      this.rim.intensity = 0.07;
+      this.fill.intensity = 0;
+      this.sky.intensity = 0;
+      this.scene.environmentIntensity = 0.037;
+      return;
+    }
+    this.rim.position.set(-4, 1, -5);
     const night = this.shipNight && this.lightsMode !== "off" && this.glowOn;
     if (this.sunFrom && !night) {
       // in space there is one light: the Sun, a little stronger than the showroom's key, and next to nothing from anywhere else
@@ -1419,16 +1512,24 @@ export class RocketViewer {
       if (fired.length > 0 && !lowest) lowest = { view, y: fired[0].y - 1 };
     }
     this.burningNow = burning;
-    this.glowOn = this.lit === "full" || burning > 0;
+    this.glowOn = this.showcaseExhaust !== null || this.lit === "full" || burning > 0;
     this.nightSide();
     this.applyLamps(performance.now() / 1000);
     this.swarm?.setGlow(this.glowOn);
     this.burnSlots = lowest;
-    this.plumes.setBurning(burning);
+    this.plumes.setBurning(this.showcaseExhaust ? this.showcaseExhaust.cores.bells.length : burning);
+    this.plumes.light.color.set(this.showcaseExhaust ? "#ffc68c" : "#ffb56b");
     this.plumes.light.intensity = burning === 0 || this.look !== "painted" ? 0 : Math.min(900, 120 + burning * 40);
     this.placeGlow();
-    this.canvas.dataset.engines = burning > 0 ? "on" : "off";
-    this.canvas.dataset.plumes = String(burning);
+    if (this.showcaseExhaust) {
+      this.plumes.light.position.set(0, -63, 0);
+      this.plumes.light.intensity = 5700;
+    }
+    const plumeCount = this.showcaseExhaust?.cores.bells.length ?? burning;
+    this.canvas.dataset.engines = plumeCount > 0 ? "on" : "off";
+    this.canvas.dataset.plumes = String(plumeCount);
+    if (this.showcaseExhaust) this.canvas.dataset.showcaseTime = this.showcaseTime.toFixed(3);
+    else delete this.canvas.dataset.showcaseTime;
   }
 
   /** The hull's glow stands under the lowest part that burns, wherever that part has got to. */
@@ -1756,6 +1857,7 @@ export class RocketViewer {
     this.sun.position.copy(centre).addScaledVector(direction, radius * 2);
     this.sun.target.position.copy(centre);
     const shadow = this.sun.shadow;
+    shadow.needsUpdate = true;
     shadow.mapSize.set(2048, 2048);
     shadow.camera.left = -radius;
     shadow.camera.right = radius;
@@ -1773,6 +1875,7 @@ export class RocketViewer {
   setShow(show: string): void {
     if (!this.built || show === this.show || this.clockNow) return;
     this.show = show;
+    this.syncShowcase();
     this.fitShadow();
     for (const part of this.parts) if (part.model) this.showCode(part, this.look === "painted");
     const places = this.built.placesOf(show);
@@ -1818,6 +1921,7 @@ export class RocketViewer {
 
   private framingFor(angle: Angle) {
     if (!this.built) throw new Error("nothing is loaded");
+    if (this.showcaseExhaust) return showcaseFrame(angle, this.camera.aspect);
     const whole = this.boundsNow();
     // a craft whose arrays or booms reach far past its body is framed on the body and the first of them, so the body is not drawn small
     const { min, max } = fitBox(whole.min, whole.max, this.clockNow ? null : this.built.fitWidthOf(this.show));
@@ -1827,6 +1931,10 @@ export class RocketViewer {
   private applyFraming(framing: ReturnType<RocketViewer["framingFor"]>): void {
     this.camera.position.set(...framing.position);
     this.controls.target.set(...framing.target);
+    if (this.showcaseExhaust) {
+      const direction = asVec(this.camera.position.clone().sub(this.controls.target).normalize());
+      this.camera.up.set(...rolledUp(direction, SHOWCASE_ROLL));
+    }
     this.limits(framing.distance);
     this.controls.update();
   }
@@ -1930,6 +2038,7 @@ export class RocketViewer {
 
   setVisible(visible: boolean): void {
     this.visible = visible;
+    if (!visible) this.showcaseAt = 0;
     if (visible) this.wake();
   }
 
@@ -2446,6 +2555,7 @@ export class RocketViewer {
   }
 
   private disposeParts(): void {
+    if (this.showcaseExhaust) this.mountShowcase(null);
     this.thrusters?.dispose();
     this.thrusters = null;
     this.swarm?.dispose();
@@ -2491,6 +2601,7 @@ export class RocketViewer {
   }
 
   private onVisibility = () => {
+    this.showcaseAt = 0;
     if (!document.hidden) this.wake();
   };
 
@@ -2980,7 +3091,16 @@ export class RocketViewer {
       this.needsDraw = true;
     }
     this.canvas.dataset.worldTurning = worldTurning ? "true" : "false";
-    const pulsing = this.hasPulse && this.lightsMode !== "off" && !this.options.reducedMotion;
+    const showcasing = this.showcaseExhaust !== null && this.showcaseVisible && !this.showcasePaused && !this.options.reducedMotion;
+    const exhaustFrame = showcasing && now - this.showcaseAt >= MOTION_GAP_MS;
+    if (exhaustFrame && this.showcaseExhaust) {
+      this.showcaseTime += this.showcaseAt ? Math.min(0.067, (now - this.showcaseAt) / 1000) : 0;
+      this.showcaseAt = now;
+      this.showcaseExhaust.setTime(this.showcaseTime);
+      this.plumes.setTime(this.showcaseTime);
+      this.canvas.dataset.showcaseTime = this.showcaseTime.toFixed(3);
+    }
+    const pulsing = this.showcaseExhaust === null && this.hasPulse && this.lightsMode !== "off" && !this.options.reducedMotion;
     if (pulsing && now - this.lampDrawn >= MOTION_GAP_MS) {
       this.lampDrawn = now;
       this.applyLamps(now / 1000);
@@ -2988,7 +3108,7 @@ export class RocketViewer {
       if (!motioning) this.needsDraw = true;
     }
     const flaming = this.burningNow > 0 && !this.options.reducedMotion && (flying || performance.now() < this.flameUntil);
-    if (flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
+    if (!this.showcaseExhaust && flaming && now - this.flameDrawn >= FLAME_GAP_MS) {
       this.flameDrawn = now;
       this.plumes.setTime(now / 1000);
       this.needsDraw = true;
@@ -3010,7 +3130,7 @@ export class RocketViewer {
       this.needsDraw = true;
     }
     const changed = this.controls.update(dt);
-    if (this.needsDraw || changed || this.pose) {
+    if (this.needsDraw || changed || this.pose || exhaustFrame) {
       this.syncSizes();
       if (this.swarm) {
         const began = performance.now();
@@ -3020,7 +3140,9 @@ export class RocketViewer {
       }
       this.applyFittingLod(dt * 1000);
       const drawn = performance.now();
-      this.renderer.render(this.scene, this.camera);
+      if (this.showcaseExhaust && motioning) this.sun.shadow.needsUpdate = true;
+      if (this.showcaseImage) this.showcaseImage.draw(this.renderer, this.scene, this.camera, this.needsDraw || changed || this.pose !== null);
+      else this.renderer.render(this.scene, this.camera);
       const info = this.renderer.info.render;
       this.canvas.dataset.frameMs = (performance.now() - drawn).toFixed(2);
       this.canvas.dataset.drawCalls = String(info.calls);
@@ -3076,7 +3198,7 @@ export class RocketViewer {
     const drifting = this.drifting();
     const jetting = this.thrusterChoice === "station-keeping" && !this.options.reducedMotion && awake || (this.thrusters?.puffCount() ?? 0) > 0;
     const inspectingOn = this.inspectCount > 0 && this.inspectPlaying && this.progressAt === null && !this.options.reducedMotion;
-    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || worldTurning || pulsing || drifting || jetting || inspectingOn || this.ghost || this.paintFades.length > 0)) this.frame = requestAnimationFrame(this.tick);
+    if (!this.frame && ((ambient && this.controls.autoRotate) || changed || this.pose || this.needsDraw || Math.abs(dA) > 1e-5 || flaming || flying || motioning || welding || worldTurning || pulsing || showcasing || drifting || jetting || inspectingOn || this.ghost || this.paintFades.length > 0)) this.frame = requestAnimationFrame(this.tick);
     this.inTick = false;
   };
 

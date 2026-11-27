@@ -3,13 +3,25 @@
 import { hoop, isCoarse, place, rod, type KitModule, type Lathe, type Piece } from "./adapter.ts";
 
 const deg = (a: number): number => (a * Math.PI) / 180;
+const rings = [1.5, 1.95, 2.45, 3.0, 3.6] as const;
+const ringY = (i: number): number => -(0.7 + i * 0.95);
+
+const ringNozzles = [
+  ...Array.from({ length: 12 }, (_, k) => ({ x: 17 * Math.sin(deg(30 * k)), z: 17 * Math.cos(deg(30 * k)), scale: 1.2 })),
+  ...Array.from({ length: 6 }, (_, k) => ({ x: 8.4 * Math.sin(deg(60 * k + 30)), z: 8.4 * Math.cos(deg(60 * k + 30)), scale: 1 })),
+];
+const centreNozzle = { x: 0, z: 0, scale: 1 };
+
+/** Where the exhaust leaves each magnetic nozzle's last coil, in drive-local metres. */
+export const mainDriveNozzles = [...ringNozzles, centreNozzle].map(({ x, z, scale }) => ({
+  x, z, y: ringY(rings.length - 1) * scale, exit: rings[rings.length - 1] * scale,
+}));
 
 /** One magnetic-nozzle thruster, exhaust towards -Y from its mounting plane at y = 0: a plasma chamber ringed with field coils, a nozzle that is not a bell but a flare of separate coil rings held on struts, and its feed line. `s` scales it. */
 export function mnThruster(s: number): Piece[] {
   const out: Piece[] = [{ kind: "lathe", material: "hull-white", segs: 20, only: "mesh", body: true, profile: [[0.01, 6.4 * s], [0.7 * s, 6.2 * s], [1.0 * s, 5.8 * s], [1.0 * s, 0.2 * s], [0.8 * s, 0] ] } as Lathe];
   for (let i = 0; i < 6; i++) out.push(hoop("coil", 1.3 * s, (0.9 + i * 0.85) * s, 0.2 * s, 28, 8));
-  const rings = [1.5, 1.95, 2.45, 3.0, 3.6];
-  rings.forEach((r, i) => out.push(hoop("coil-lit", r * s, -(0.7 + i * 0.95) * s, 0.17 * s, 36, 8)));
+  rings.forEach((r, i) => out.push(hoop("coil-lit", r * s, ringY(i) * s, 0.17 * s, 36, 8)));
   for (const a of [0, 90, 180, 270]) {
     const c = Math.cos(deg(a));
     const n = Math.sin(deg(a));
@@ -22,15 +34,8 @@ export function mnThruster(s: number): Piece[] {
 /** The main drive of the keel: a ring of twelve magnetic-nozzle thrusters round the tail, six inside them and one on the axis, on a thrust ring; above them a stack of fusion field coils. */
 export function drivePieces(): Piece[] {
   const out: Piece[] = [{ kind: "lathe", material: "hull-grey-dark", at: [0, 0], segs: 48, body: true, outline: true, profile: [[0.01, 0], [17.5, 0], [17.5, 1.4], [0.01, 1.4]] } as Lathe];
-  for (let k = 0; k < 12; k++) {
-    const a = deg(30 * k);
-    out.push(...place(mnThruster(1.2), { at: [17 * Math.sin(a), 0, 17 * Math.cos(a)] }));
-  }
-  for (let k = 0; k < 6; k++) {
-    const a = deg(60 * k + 30);
-    out.push(...place(mnThruster(1.0), { at: [8.4 * Math.sin(a), 0, 8.4 * Math.cos(a)] }));
-  }
-  out.push(...mnThruster(1.0));
+  for (const nozzle of ringNozzles) out.push(...place(mnThruster(nozzle.scale), { at: [nozzle.x, 0, nozzle.z] }));
+  out.push(...mnThruster(centreNozzle.scale));
   // the coil stack round the reactor feed, and the radial beams of the thrust ring
   out.push({ kind: "lathe", material: "hull-white", at: [0, 0], segs: 40, body: true, outline: true, profile: [[10, 1.4], [10, 11.6]] } as Lathe);
   for (let i = 0; i < 7; i++) out.push(hoop("coil", 10.6, 2.4 + i * 1.4, 0.55, 48, 10));

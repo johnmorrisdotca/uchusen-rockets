@@ -37,12 +37,21 @@ uniform vec3 uCool;
 uniform float uAir;
 uniform float uLine;
 uniform float uFloor;
+uniform float uShowcase;
 varying float vT;
 varying float vFace;
 varying float vHeight;
 void main() {
   // a flame stops at the ground
   if (vHeight < uFloor) discard;
+  if (uShowcase > 0.5) {
+    float face = pow(vFace, 0.65);
+    float whiteCore = exp(-vT * 8.5);
+    float scatter = pow(1.0 - vT, 2.1);
+    vec3 tone = mix(uCool, uHot, exp(-vT * 4.6));
+    gl_FragColor = vec4(tone, min(1.0, (whiteCore * 0.87 + scatter * 0.42) * face));
+    return;
+  }
   float fade = 1.0 - smoothstep(0.5, 1.0, vT);
   float bands = pow(0.5 + 0.5 * cos(vT * 6.2832 * ${DIAMONDS}), 6.0) * (1.0 - vT) * (1.0 - uAir);
   float core = pow(vFace, 1.6);
@@ -110,13 +119,16 @@ function glowShape(): BufferGeometry {
 }
 
 /** What a flame is drawn in: the kind of flame its engine's propellant gives (`src/data/propellants.ts`), and a neutral grey-white where no page read says. A picture, not a measurement. */
-const FLAME_TONES: Readonly<Record<FlameKind, { hot: string; cool: string }>> = {
+type PlumeKind = FlameKind | "showcase";
+
+const FLAME_TONES: Readonly<Record<PlumeKind, { hot: string; cool: string }>> = {
   kerosene: { hot: "#fff4d2", cool: "#ff7a1a" },
   methane: { hot: "#fff1e6", cool: "#6f7dff" },
   hydrogen: { hot: "#ffffff", cool: "#6fa8ff" },
   solid: { hot: "#fff1c4", cool: "#ff4a12" },
   hypergolic: { hot: "#ffffff", cool: "#b8c4ee" },
   neutral: { hot: "#ffffff", cool: "#9aa3b2" },
+  showcase: { hot: "#fffdf5", cool: "#ffc078" },
 };
 
 const place = new Matrix4();
@@ -131,16 +143,20 @@ export class PartPlumes {
   private flames: InstancedMesh;
   private glows: InstancedMesh;
   private key = "";
+  private readonly coreLength: number;
+  private readonly haloSize: number;
 
-  constructor(kit: PlumeKit, bells: readonly Bell[], kind: FlameKind) {
+  constructor(kit: PlumeKit, bells: readonly Bell[], kind: PlumeKind) {
     this.bells = bells;
+    this.coreLength = kind === "showcase" ? 1.55 : 1;
+    this.haloSize = kind === "showcase" ? 3.1 : 2.2;
     this.group.name = "plumes";
     this.flames = new InstancedMesh(kit.shape, kit.flameFor(kind), bells.length);
     this.glows = new InstancedMesh(kit.quad, kit.glowFor(kind), bells.length);
     for (const mesh of [this.flames, this.glows]) {
       mesh.instanceMatrix.setUsage(DynamicDrawUsage);
       mesh.frustumCulled = false;
-      mesh.renderOrder = 3;
+      mesh.renderOrder = kind === "showcase" ? 5 : 3;
       mesh.count = 0;
     }
     this.group.add(this.flames, this.glows);
@@ -152,8 +168,8 @@ export class PartPlumes {
     if (key === this.key) return;
     this.key = key;
     burning.forEach((bell, i) => {
-      this.flames.setMatrixAt(i, place.compose(at.set(bell.x, bell.y, bell.z), still, size.set(bell.exit, plumeLength(bell.exit), bell.exit)));
-      this.glows.setMatrixAt(i, place.compose(at.set(bell.x, bell.y, bell.z), still, size.setScalar(bell.exit * 2.2)));
+      this.flames.setMatrixAt(i, place.compose(at.set(bell.x, bell.y, bell.z), still, size.set(bell.exit, plumeLength(bell.exit) * this.coreLength, bell.exit)));
+      this.glows.setMatrixAt(i, place.compose(at.set(bell.x, bell.y, bell.z), still, size.setScalar(bell.exit * this.haloSize)));
     });
     this.flames.count = burning.length;
     this.glows.count = burning.length;
@@ -182,13 +198,13 @@ export class PlumeKit {
     uFloor: { value: -1e6 },
     uGlow: { value: 0.75 },
   };
-  private kinds = new Map<FlameKind, { flame: ShaderMaterial; glow: ShaderMaterial }>();
+  private kinds = new Map<PlumeKind, { flame: ShaderMaterial; glow: ShaderMaterial }>();
 
-  private kind(kind: FlameKind): { flame: ShaderMaterial; glow: ShaderMaterial } {
+  private kind(kind: PlumeKind): { flame: ShaderMaterial; glow: ShaderMaterial } {
     const known = this.kinds.get(kind);
     if (known) return known;
     const tone = FLAME_TONES[kind];
-    const uniforms = { ...this.uniforms, uHot: { value: new Color(tone.hot) }, uCool: { value: new Color(tone.cool) } };
+    const uniforms = { ...this.uniforms, uHot: { value: new Color(tone.hot) }, uCool: { value: new Color(tone.cool) }, uShowcase: { value: kind === "showcase" ? 1 : 0 } };
     const common = { transparent: true, depthWrite: false, blending: AdditiveBlending, toneMapped: false, uniforms };
     const made = {
       flame: new ShaderMaterial({ ...common, vertexShader: FLAME_VERTEX, fragmentShader: FLAME_FRAGMENT, side: DoubleSide }),
@@ -198,11 +214,11 @@ export class PlumeKit {
     return made;
   }
 
-  flameFor(kind: FlameKind): ShaderMaterial {
+  flameFor(kind: PlumeKind): ShaderMaterial {
     return this.kind(kind).flame;
   }
 
-  glowFor(kind: FlameKind): ShaderMaterial {
+  glowFor(kind: PlumeKind): ShaderMaterial {
     return this.kind(kind).glow;
   }
 

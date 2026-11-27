@@ -8,7 +8,7 @@ const BASE = "/uchusen-rockets/";
 const NOTICE = "https://github.com/johnmorrisdotca/uchusen-rockets/blob/main/NOTICE.md";
 /** Every page with the family's page frame. */
 // fleet-compare.html only sends the reader on to compare.html?layout=lineup (and drops the language), so the test opens that.
-const PAGES = ["", "journey.html", "compare.html", "compare.html?layout=lineup", "fleet-db.html", "poster.html", "yard.html", "inspect.html", "swarm.html", "beam.html", "embed-page.html", "builder.html"];
+const PAGES = ["", "journey.html", "compare.html", "compare.html?layout=lineup", "fleet-db.html", "showcase.html", "poster.html", "yard.html", "inspect.html", "swarm.html", "beam.html", "embed-page.html", "builder.html"];
 const FRAMES = ["embed.html", "embed.html?rocket=starship&variant=v3&look=painted", "embed.html?rocket=falcon-9&variant=block-5&look=thick&flight=1"];
 
 const overlaps = (a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }): boolean =>

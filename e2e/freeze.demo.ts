@@ -2018,6 +2018,53 @@ const shortened = async (page: Page, file: string, seconds: number) => {
   });
 };
 
+test("Hanabusa's showcase draws only while its exhaust can move", async ({ page }) => {
+  test.setTimeout(240_000);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await counted(page, { cheap: true });
+  await page.goto("/uchusen-rockets/showcase.html");
+  const ship = page.locator("#ship");
+  const canvas = ship.locator("canvas");
+  const time = async () => Number(await canvas.getAttribute("data-showcase-time"));
+  const moves = async () => {
+    const before = await time();
+    await expect.poll(time, { timeout: 60_000 }).toBeGreaterThan(before);
+  };
+
+  await expect(ship).toHaveAttribute("data-detail", "full");
+  await expect(canvas).toHaveAttribute("data-plumes", "19", { timeout: 90_000 });
+  await expectPaced(page, { schedulers: 1, frames: 45 });
+  const floatTarget = await canvas.evaluate((node) => Boolean((node as HTMLCanvasElement).getContext("webgl2")?.getExtension("EXT_color_buffer_float")));
+  if (floatTarget) {
+    const drawCalls = async () => Number(await canvas.getAttribute("data-draw-calls"));
+    await expect.poll(drawCalls).toBeLessThan(8);
+  }
+  await page.getByRole("button", { name: "Pause exhaust" }).click();
+  await expectStill(page);
+  await page.getByRole("button", { name: "Resume exhaust" }).click();
+  await moves();
+
+  // The element stays loaded just beyond the viewport. Its steam must still stop there.
+  await page.evaluate(() => {
+    const spacer = document.createElement("div");
+    spacer.style.height = "100vh";
+    document.body.append(spacer);
+    window.scrollTo(0, innerHeight);
+  });
+  await expectStill(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await moves();
+  await hideTab(page, true);
+  await expectStill(page);
+  await hideTab(page, false);
+  await moves();
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(canvas).toHaveAttribute("data-showcase-time", "1.500");
+  await expect(page.locator("#exhaust")).toBeHidden();
+  await expectStill(page);
+});
+
 test.describe("the six pages that open moving", () => {
   test.use({ reducedMotion: "no-preference" });
 

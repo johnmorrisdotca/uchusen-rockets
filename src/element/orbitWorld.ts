@@ -1,6 +1,7 @@
 // The compare page's Earth, its Moon, the major moons, and a star field. The craft stay at the origin, 400 km above the surface. Loaded only when a page asks for it.
 import { BODIES, DWARF_IDS, heliocentric, PLANET_IDS, type HostId } from "@johnmorrisdotca/wakusei-planets";
-import { BufferAttribute, BufferGeometry, Group, InstancedMesh, LineLoop, LineBasicMaterial, Mesh, MeshBasicMaterial, Object3D, Points, PointsMaterial, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3 } from "three";
+import { BufferAttribute, BufferGeometry, Group, InstancedMesh, LineLoop, LineBasicMaterial, Mesh, MeshBasicMaterial, Object3D, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3 } from "three";
+import { starField } from "./starField.ts";
 import { skyGroupOf, type SkyShown } from "./solarGroups.ts";
 import { beltPlaces, bodyScene, earthCentre, majorMoons, moonScene, sceneOf, type BeltKind } from "./solarPlace.ts";
 
@@ -8,27 +9,6 @@ const STAR_R_M = 2e13;
 const ORBIT_IDS: HostId[] = [...PLANET_IDS, ...DWARF_IDS.filter((id) => id === "ceres" || id === "haumea" || id === "makemake" || id === "eris")];
 
 type Triple = readonly [number, number, number];
-
-/** Stars as points, so a wide view stays a sky and not a stretched picture. */
-function starField(): Points {
-  const count = 420;
-  const positions = new Float32Array(count * 3);
-  let n = 20261106;
-  for (let i = 0; i < count; i += 1) {
-    n = (Math.imul(n, 1664525) + 1013904223) >>> 0;
-    const u = (n % 10000) / 10000;
-    n = (Math.imul(n, 1664525) + 1013904223) >>> 0;
-    const v = (n % 10000) / 10000;
-    const theta = 2 * Math.PI * u;
-    const phi = Math.acos(2 * v - 1);
-    positions[i * 3] = STAR_R_M * Math.sin(phi) * Math.cos(theta);
-    positions[i * 3 + 1] = STAR_R_M * Math.cos(phi);
-    positions[i * 3 + 2] = STAR_R_M * Math.sin(phi) * Math.sin(theta);
-  }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new BufferAttribute(positions, 3));
-  return new Points(geometry, new PointsMaterial({ color: "#d5def2", size: 1.5, sizeAttenuation: false }));
-}
 
 const turn = (a: Triple, b: Triple): number => {
   const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -226,10 +206,9 @@ export function orbitWorld(ready: () => void, when = Date.now()): { group: Group
   const moonR = BODIES.moon.radiusKm * 1000;
   const group = new Group();
   group.name = "orbit-world";
-  const stars = starField();
+  const stars = starField(STAR_R_M);
   stars.name = "stars";
   stars.renderOrder = -1;
-  (stars.material as PointsMaterial).depthWrite = false;
   const earth = new Mesh(new SphereGeometry(earthR, 96, 64), new MeshBasicMaterial({ color: "#1a4f86" }));
   earth.name = "earth";
   const [ex, ey, ez] = earthCentre();

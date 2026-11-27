@@ -8,7 +8,7 @@ export function canvas(w: number, h: number): HTMLCanvasElement {
   return c;
 }
 
-function seeded(seed: number): () => number {
+export function seeded(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
     s = (s + 0x6d2b79f5) >>> 0;

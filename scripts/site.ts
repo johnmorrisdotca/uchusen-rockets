@@ -21,13 +21,14 @@ writeFileSync(join(site, "poster.html"), renderIndex("poster.html").replace("</h
 writeFileSync(join(site, "beam.html"), renderIndex("beam.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "swarm.html"), renderIndex("swarm.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "inspect.html"), renderIndex("inspect.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
+writeFileSync(join(site, "showcase.html"), renderIndex("showcase.html"));
 writeFileSync(join(site, "fleet-db.html"), renderIndex("fleet-db.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "fleet-compare.html"), renderIndex("fleet-compare.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "yard.html"), renderIndex("yard.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "embed-page.html"), renderIndex("embed-page.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "builder.html"), frame(readFileSync(join(root, "demo", "builder.html"), "utf8").replace("<!--page-bar-->", pageBar("builder.html")), "builder.html", "Choose a rocket, how it looks and which parts show, and copy the code that puts exactly that on your own page."));
 publishThumbnails(root, site);
-for (const file of ["demo.css", "compare.css", "journey.css", "poster.css", "beam.css", "swarm.css", "inspect.css", "fleet-db.css", "fleet-compare.css", "yard.css", "family.css", "react-check.html", "element-check.html", "embed.html"]) cpSync(join(root, "demo", file), join(site, file));
+for (const file of ["showcase.css", "demo.css", "compare.css", "journey.css", "poster.css", "beam.css", "swarm.css", "inspect.css", "fleet-db.css", "fleet-compare.css", "yard.css", "family.css", "react-check.html", "element-check.html", "embed.html"]) cpSync(join(root, "demo", file), join(site, file));
 cpSync(join(root, "dist", "assets"), join(site, "assets"), { recursive: true });
 // the realistic Earth's pictures, from the package: no wider than the demo asks for (`max-texture` in demo/earth.ts)
 const earthPictures = join(root, "node_modules", "@johnmorrisdotca", "chikyu-earth", "dist", "textures");
@@ -38,7 +39,7 @@ const planetPictures = join(root, "node_modules", "@johnmorrisdotca", "wakusei-p
 mkdirSync(join(site, "bodies"));
 for (const file of readdirSync(planetPictures)) if (file.endsWith(".webp")) cpSync(join(planetPictures, file), join(site, "bodies", file));
 await build({
-  entryPoints: { demo: join(root, "demo", "demo.ts"), embed: join(root, "demo", "embed.ts"), journey: join(root, "demo", "journey.ts"), compare: join(root, "demo", "compare.ts"), poster: join(root, "demo", "poster-page.ts"), beam: join(root, "demo", "beam-page.ts"), swarm: join(root, "demo", "swarm-page.ts"), inspect: join(root, "demo", "inspect-page.ts"), "fleet-db": join(root, "demo", "fleet-db.ts"), "fleet-compare": join(root, "demo", "fleet-compare.ts"), builder: join(root, "demo", "builder.ts"), "embed-page": join(root, "demo", "embed-page.ts"), yard: join(root, "demo", "yard.ts"), "react-check": join(root, "demo", "react-check.ts"), "element-check": join(root, "demo", "element-check.ts") },
+  entryPoints: { showcase: join(root, "demo", "showcase.ts"), demo: join(root, "demo", "demo.ts"), embed: join(root, "demo", "embed.ts"), journey: join(root, "demo", "journey.ts"), compare: join(root, "demo", "compare.ts"), poster: join(root, "demo", "poster-page.ts"), beam: join(root, "demo", "beam-page.ts"), swarm: join(root, "demo", "swarm-page.ts"), inspect: join(root, "demo", "inspect-page.ts"), "fleet-db": join(root, "demo", "fleet-db.ts"), "fleet-compare": join(root, "demo", "fleet-compare.ts"), builder: join(root, "demo", "builder.ts"), "embed-page": join(root, "demo", "embed-page.ts"), yard: join(root, "demo", "yard.ts"), "react-check": join(root, "demo", "react-check.ts"), "element-check": join(root, "demo", "element-check.ts") },
   outdir: join(site, "js"),
   bundle: true,
   splitting: true,

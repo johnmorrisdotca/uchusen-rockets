@@ -17,6 +17,7 @@ import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
+import { SHOWCASE_ANGLE, supportsShowcase } from "./element/showcaseView.ts";
 import { besideCraft } from "./beside.ts";
 import { canScale, scalePercent } from "./concepts.ts";
 import { cleanShow } from "./layout.ts";
@@ -91,6 +92,11 @@ const CSS = `
 .panel button, .tilt { touch-action: manipulation; }
 :host([look="painted"]) .picture:not([data-state="3d"]) .drawing { opacity: 0; }
 :host([data-driven]) .picture { overflow: hidden; }
+:host([data-showcase]) .picture {
+  height: 100%;
+  background: var(--uchusen-showcase-sky, radial-gradient(ellipse at 65% 41%, #0b1018, #04060a 53%, #020306 90%));
+}
+:host([data-showcase]) .picture:not([data-state="3d"]) .drawing { opacity: 1; }
 .canvas { display: block; width: 100%; height: 100%; opacity: 0; filter: blur(3px); cursor: grab; border-radius: inherit; touch-action: none; }
 .canvas:active { cursor: grabbing; }
 .canvas:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
@@ -158,7 +164,7 @@ type OrientationCtor = typeof DeviceOrientationEvent & { requestPermission?: () 
  * ```
  */
 export class UchusenRocket extends HTMLBase {
-  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "idle-stop", "names", "leave", "docked", "edges", "world", "world-turn", "form", "sun", "flags", "part"];
+  static readonly observedAttributes = ["rocket", "variant", "show", "look", "view", "build", "mode", "assets", "spin", "way", "label", "engines", "lights", "thrusters", "phase", "motion", "labels", "inspector", "beside", "captions", "scale-note", "off-screen", "scale", "progress", "float", "idle-stop", "names", "leave", "docked", "edges", "world", "world-turn", "form", "sun", "flags", "part", "showcase", "showcase-paused"];
 
   private descriptionValue: Description | null = null;
   private picture: HTMLElement | null = null;
@@ -171,6 +177,8 @@ export class UchusenRocket extends HTMLBase {
   private framed: ViewerFocus | null = null;
   private frameLabel = "";
   private watch: IntersectionObserver | null = null;
+  private showcaseWatch: IntersectionObserver | null = null;
+  private showcaseVisible = false;
   /** Asks again when the picture gets a size after the first look. */
   private boxWatch: ResizeObserver | null = null;
   private releaseTimer = 0;
@@ -413,7 +421,8 @@ export class UchusenRocket extends HTMLBase {
       this.dataset.motion = motionWanted(after, media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(after) === 10 ? "fast" : "on") : "off";
     } else if (name === "lights" || name === "thrusters") {
       if (this.viewer) this.lightViewer(this.viewer);
-    } else if (name === "scale-note") this.viewer?.setScaleNote(after);
+    } else if (name === "showcase-paused") this.viewer?.setShowcasePaused(after !== null);
+    else if (name === "scale-note") this.viewer?.setScaleNote(after);
     else if (name === "off-screen") this.viewer?.setOffScreen(after);
     else if (name === "float") this.viewer?.setFloating(after !== null);
     else if (name === "idle-stop") this.viewer?.setIdleStop(idleStopSeconds(after));
@@ -451,7 +460,8 @@ export class UchusenRocket extends HTMLBase {
   }
 
   private spin(): Spin {
-    return spinOf(this.getAttribute("spin"), this.getAttribute("way"));
+    const showcase = this.builtNow && this.settings(this.builtNow).showcase;
+    return spinOf(this.getAttribute("spin") ?? (showcase ? "off" : null), this.getAttribute("way"));
   }
 
   private descriptionNow(): Description {
@@ -485,6 +495,7 @@ export class UchusenRocket extends HTMLBase {
     this.stopProbeRetry = null;
     this.watch?.disconnect();
     this.watch = null;
+    this.stopShowcaseWatch();
     this.boxWatch?.disconnect();
     this.boxWatch = null;
     window.clearTimeout(this.releaseTimer);
@@ -516,10 +527,15 @@ export class UchusenRocket extends HTMLBase {
 
   /** What to draw from the attributes, every value checked. */
   private settings(built: Built) {
-    const look: LookName = cleanLook(this.getAttribute("look"));
+    const variant = built.report.variant;
+    const allowed = this.hasAttribute("showcase") && !built.report.custom && supportsShowcase(variant?.rocket, variant?.id);
+    const look: LookName = cleanLook(this.getAttribute("look") ?? (allowed ? "painted" : null));
     const show = cleanShow(this.getAttribute("show"), built.parts.map((part) => part.slot));
-    const viewName = cleanView(this.getAttribute("view"));
-    return { look, show, viewName, angle: VIEWS[viewName] };
+    const view = this.getAttribute("view");
+    const viewName = cleanView(view);
+    const showcase = allowed && look === "painted" && show === "together";
+    const viewKey = showcase ? `showcase/${view ?? ""}` : viewName;
+    return { look, show, viewName, viewKey, showcase, angle: showcase && view === null ? SHOWCASE_ANGLE : VIEWS[viewName] };
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------
@@ -679,7 +695,8 @@ export class UchusenRocket extends HTMLBase {
     const description = this.descriptionNow();
     const size = this.sizeNow(description);
     const docked = this.dockedOption();
-    const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}|${size}|${docked.docked ?? "-"}`;
+    const showcase = this.hasAttribute("showcase") && supportsShowcase(description.rocket, description.variant);
+    const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}|${size}|${docked.docked ?? "-"}|${showcase}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
@@ -789,7 +806,10 @@ export class UchusenRocket extends HTMLBase {
 
   private mark(): void {
     if (!this.builtNow) return;
-    const { look, show, viewName } = this.settings(this.builtNow);
+    const { look, show, viewName, showcase } = this.settings(this.builtNow);
+    if (showcase) this.dataset.showcase = "on";
+    else delete this.dataset.showcase;
+    this.watchShowcase(showcase);
     this.dataset.look = look;
     this.dataset.engines = this.engineLights() ? "on" : "off";
     this.dataset.motion = motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(this.getAttribute("motion")) === 10 ? "fast" : "on") : "off";
@@ -842,19 +862,24 @@ export class UchusenRocket extends HTMLBase {
     this.redraw();
     if (!this.builtNow) return;
     if (this.viewer) {
-      const { look, show, viewName, angle } = this.settings(this.builtNow);
+      const { look, show, viewKey, showcase, angle } = this.settings(this.builtNow);
       this.viewer.setLabel(this.getAttribute("label") ?? this.builtNow.report.label);
       // a new rocket keeps the angle, unless the same change named another view
-      const from = viewName !== this.lastView || this.driven ? angle : this.viewer.currentAngle();
-      this.lastView = viewName;
+      const from = viewKey !== this.lastView || this.driven ? angle : this.viewer.currentAngle();
+      const wasShowcase = this.lastView.startsWith("showcase/");
+      this.lastView = viewKey;
       const viewer = this.viewer;
       const built = this.builtNow;
+      viewer.setShowcase(showcase);
+      if (showcase !== wasShowcase) viewer.setSpin(this.spin());
       await viewer.load(built, show, look, from);
       if (this.viewer !== viewer || this.builtNow !== built) return;
       // a look or part chosen while the rocket loaded
       const now = this.settings(built);
       if (now.look !== look) viewer.setLook(now.look);
       if (now.show !== show) viewer.setShow(now.show);
+      viewer.setShowcase(now.showcase);
+      if ((showcase || now.showcase) && now.viewKey !== viewKey) viewer.setAngle(now.angle, true);
       viewer.setProgress(this.progress(), buildOf(built.report.variant?.id ?? "") ?? null);
       if (this.inspectNow) viewer.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
       viewer.setLeave(...this.leaveNow());
@@ -869,6 +894,7 @@ export class UchusenRocket extends HTMLBase {
   /** A fleet ship is built coarse first (the first picture and the far view) and fine when the camera comes near, an inset opens or one part is shown alone: once per visit, never on a turn or a look change. */
   private fine = false;
   private detailFor(description: Description): DetailLevel {
+    if (this.hasAttribute("showcase") && supportsShowcase(description.rocket, description.variant)) return "full";
     const fictional = ROCKETS[description.rocket]?.variants.some((v) => v.status === "fictional");
     return fictional && !this.fine ? "coarse" : "full";
   }
@@ -966,17 +992,45 @@ export class UchusenRocket extends HTMLBase {
   private applySettings(): void {
     if (!this.builtNow) return;
     this.mark();
-    const { look, show, viewName, angle } = this.settings(this.builtNow);
+    const { look, show, viewKey, showcase, angle } = this.settings(this.builtNow);
     if (show !== "together" && show !== "apart") void this.upgrade();
     if (this.viewer) {
       this.viewer.setLook(look);
       this.viewer.setShow(show);
+      this.viewer.setShowcase(showcase);
+      if (showcase !== this.lastView.startsWith("showcase/")) this.viewer.setSpin(this.spin());
       this.lightViewer(this.viewer);
-      if (viewName !== this.lastView) this.viewer.setAngle(angle, true);
+      if (viewKey !== this.lastView) this.viewer.setAngle(angle, true);
       this.viewer.setHome(angle);
     }
-    this.lastView = viewName;
+    this.lastView = viewKey;
     this.redraw();
+  }
+
+  // The viewer is kept warm within its normal margin. The showcase effect runs only while pixels are actually in view.
+  private watchShowcase(on: boolean): void {
+    if (!on) {
+      const wasShowcase = this.showcaseWatch !== null;
+      this.stopShowcaseWatch();
+      if (wasShowcase && this.stateNow === "3d") this.startTilt();
+      return;
+    }
+    if (this.showcaseWatch) return;
+    this.stopTilt();
+    const observer = new IntersectionObserver(([entry]) => {
+      if (this.showcaseWatch !== observer) return;
+      this.showcaseVisible = entry.intersectionRatio > 0;
+      this.viewer?.setShowcaseVisible(this.showcaseVisible);
+    }, { threshold: [0, 0.001] });
+    this.showcaseWatch = observer;
+    observer.observe(this);
+  }
+
+  private stopShowcaseWatch(): void {
+    this.showcaseWatch?.disconnect();
+    this.showcaseWatch = null;
+    this.showcaseVisible = false;
+    this.viewer?.setShowcaseVisible(false);
   }
 
   /** A failed look is not the last one: when a context comes back, or the page is shown again, ask once more. */
@@ -1098,6 +1152,7 @@ export class UchusenRocket extends HTMLBase {
       const { RocketViewer } = await loading;
       if (generation !== this.generation) return;
       const assets = this.getAttribute("assets");
+      const { look, show, viewKey, showcase, angle } = this.settings(this.builtNow ?? built);
       const made = new RocketViewer(holder, {
         label: this.getAttribute("label") ?? built.report.label,
         reducedMotion: reduced,
@@ -1116,6 +1171,7 @@ export class UchusenRocket extends HTMLBase {
           this.picked = slot;
         },
         orbit: this.hasAttribute("world"),
+        showcase,
       });
       this.viewer = made;
       made.setOrbit(this.getAttribute("world") === "earth");
@@ -1132,14 +1188,17 @@ export class UchusenRocket extends HTMLBase {
       made.setEdges(this.getAttribute("edges") === "open");
       made.setSun(parseSun(this.getAttribute("sun")));
       made.setNameLabels(this.getAttribute("names") !== "off");
+      made.setShowcaseVisible(this.showcaseVisible);
+      made.setShowcasePaused(this.hasAttribute("showcase-paused"));
       made.setVisible(true);
-      const { look, show, viewName, angle } = this.settings(this.builtNow ?? built);
-      this.lastView = viewName;
+      this.lastView = viewKey;
       await made.load(this.builtNow ?? built, show, look, angle);
       if (generation !== this.generation || this.viewer !== made) return;
       const now = this.settings(this.builtNow ?? built);
       if (now.look !== look) made.setLook(now.look);
       if (now.show !== show) made.setShow(now.show);
+      made.setShowcase(now.showcase);
+      if ((showcase || now.showcase) && now.viewKey !== viewKey) made.setAngle(now.angle, true);
       made.setProgress(this.progress(), buildOf((this.builtNow ?? built).report.variant?.id ?? "") ?? null);
       if (this.inspectNow) made.setInspect(this.inspectNow.count, this.inspectNow.playing, this.inspectNow.speed);
       made.setLeave(...this.leaveNow());
@@ -1176,6 +1235,7 @@ export class UchusenRocket extends HTMLBase {
 
   private startTilt(): void {
     this.stopTilt();
+    if (this.dataset.showcase === "on") return;
     const Orientation = (typeof DeviceOrientationEvent === "undefined" ? undefined : DeviceOrientationEvent) as OrientationCtor | undefined;
     const mode = tiltMode({
       reducedMotion: media("(prefers-reduced-motion: reduce)"),
