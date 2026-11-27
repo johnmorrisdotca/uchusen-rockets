@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-11-27
+
 - **The demo can run in CI's Playwright image** (MODULES-1164). `pnpm test:e2e:image` builds the site and the docs, then plays the browser tests in that image at 4 CPUs, which runs two tests at a time. The Mac's own `pnpm test:demo` stays one test at a time. Arguments for Playwright go after `--`.
 - **Hanabusa showcase** (MODULES-1879). The default Hanabusa can open in Painted from a low, wide angle with a cold rim light, nineteen bright exhaust cores and a spreading wake against a starfield. The demo holds the same view in reduced motion, and the exhaust stops when paused or out of sight.
 
