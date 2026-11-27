@@ -24,14 +24,15 @@ const TITLES = {
   "beam.html": ["Uchusen Rockets 宇宙船: tractor beam", "A soft cone from a drone to the part it carries, in the painted look, the line look, and as a dotted line when motion is reduced."],
   "swarm.html": ["Uchusen Rockets 宇宙船: drone swarm", "Boxes stand in for the drones. They fly outside the hull and move in on the last leg, at the busiest moment of the build."],
   "inspect.html": ["Uchusen Rockets 宇宙船: inspect", "A finished ship sits still. From one drone to a hundred fly around it, pause to look, and move on. Nothing is built."],
-  "showcase.html": ["ISV Hanabusa · SPX-013", "See the ISV Hanabusa on a deep-space burn in the Uchusen Rockets showcase."],
   "fleet-db.html": ["Uchusen Rockets 宇宙船: fleet record", "The SPX ships, then one ship's sections, chosen in one row and kept in the address."],
   "fleet-compare.html": ["Uchusen Rockets 宇宙船: three ships at one scale", "The explorer, the command ship and the heavy transport stand side by side at one scale, from their own models, and the view stays in the address."],
   "yard.html": ["Uchusen Rockets 宇宙船: yard", "Three bays side by side. The name is a placeholder. Choose a bay, the lounge, the visitor port or the free spine, and play that bay's ship being built."],
   "embed-page.html": ["Uchusen Rockets 宇宙船: embed", "Choose a rocket and copy the code that puts exactly that on a page of your own. The same choices open the bare frame."],
 } as const;
 /** What each page is, in both languages, for the page frame's header line (and its title and description in the reader's language). The English is the page's title and description above. */
-const WHAT: Record<string, { en: string; ja: string; jaDescription: string }> = {
+interface PageName { en: string; ja: string; jaDescription: string }
+
+const WHAT: Record<string, PageName> = {
   "index.html": { en: "rockets drawn from sourced sizes", ja: "出典のある寸法から描いたロケット", jaDescription: "出典のある寸法から描いたロケットです。線の絵、太い線、彩色の 3D で、組み立てた姿、ばらした姿、部品ひとつずつを見られ、自分のページにも置けます。" },
   "compare.html": { en: "compare craft", ja: "機体をくらべる", jaDescription: "ロケット、宇宙船、SPX 艦隊の船を3つまで、同じ地面に本当の大きさで並べて、地球を背にした 3D で見くらべます。" },
   "journey.html": { en: "journey mode", ja: "旅のモード", jaDescription: "本物のロケットや SPX 艦隊の船で、地球から月や惑星へ飛びます。実際の位置から出発の時期を決め、噴射、向きの反転、飛行中の数値を見られます。" },
@@ -39,7 +40,6 @@ const WHAT: Record<string, { en: string; ja: string; jaDescription: string }> = 
   "beam.html": { en: "tractor beam", ja: "トラクタービーム", jaDescription: "ドローンから運ぶ部品へのびるやわらかい光の円すいを、彩色、線の絵、動きを減らす設定の点線で見せます。" },
   "swarm.html": { en: "drone swarm", ja: "ドローンの群れ", jaDescription: "箱がドローンの代わりです。船体の外を飛び、組み立てがいちばん忙しいときに最後の区間で近づきます。" },
   "inspect.html": { en: "inspect", ja: "点検", jaDescription: "完成した船が止まっています。1機から100機のドローンが周りを飛び、止まって見て、次へ移ります。何も組み立てません。" },
-  "showcase.html": { en: "Hanabusa showcase", ja: "花房の展示", jaDescription: "恒星間探査船、花房 SPX-013 の宇宙での噴射を見ます。" },
   "fleet-db.html": { en: "fleet record", ja: "艦隊の記録", jaDescription: "SPX の船と、1隻の区画を、1列のボタンで選びます。選んだものはアドレスに残ります。" },
   "fleet-compare.html": { en: "three ships at one scale", ja: "3隻を同じ縮尺で", jaDescription: "探査船、指揮船、大型輸送船を、それぞれのモデルから同じ縮尺で並べます。表示はアドレスに残ります。" },
   "yard.html": { en: "yard", ja: "造船所", jaDescription: "3つのベイが並んでいます。名前は仮のものです。ベイ、ラウンジ、見学用の港、空いている背骨を選び、そのベイの船ができていく様子を再生します。" },
@@ -48,8 +48,7 @@ const WHAT: Record<string, { en: string; ja: string; jaDescription: string }> = 
 };
 
 /** The family's page frame for a page: what it is, a way home, and its credits, in the place of the source's <!--frame:header--> and <!--frame:credits--> (kazoku-ui's page-frame). */
-export function frame(html: string, file: string, description: string): string {
-  const what = WHAT[file];
+export function frame(html: string, file: string, description: string, what = WHAT[file]): string {
   if (!what) throw new Error(`no page frame words for ${file}`);
   const texts: PageTexts = {
     en: { name: "Uchusen Rockets 宇宙船", what: what.en, description },
@@ -92,9 +91,55 @@ const WIDE_TOGGLE = `<kazoku-wide-toggle address storage="johnmorrisdotca.wide" 
 export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
   const html = readFileSync(new URL(`../demo/${file}`, import.meta.url), "utf8");
   const [title, description] = TITLES[file];
+  return renderPage(html, file, title, description);
+}
+
+export interface ShowcasePage {
+  rocket: string;
+  variant?: string;
+  docked?: string;
+  mobileExhaustSide?: "left";
+  name: string;
+  japanese: string;
+  registry: string;
+  label: string;
+  title: string;
+  description: string;
+  what: PageName;
+  role: { en: string; ja: string };
+  credits: { label: string; href: string }[];
+}
+
+function escapeMarkup(value: string): string {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+
+export function renderShowcase(file: string, page: ShowcasePage): string {
+  const template = readFileSync(new URL("../demo/showcase.html", import.meta.url), "utf8");
+  const model = { rocket: page.rocket, variant: page.variant, docked: page.docked, label: page.label };
+  const attributes = Object.entries(model).flatMap(([key, value]) => value === undefined ? [] : [`${key}="${escapeMarkup(value)}"`]).join(" ");
+  const ship = `<uchusen-rocket id="ship" showcase inspector="off" assets="./assets/" ${attributes}></uchusen-rocket>`;
+  const credits = page.credits.map(({ label, href }) => `<p><a href="${escapeMarkup(href)}">${escapeMarkup(label)}</a></p>`).join("\n      ");
+  const shell = page.mobileExhaustSide === "left"
+    ? template.replace('<main class="showcase">', '<main class="showcase" data-mobile-exhaust-side="left">')
+    : template;
+  const html = shell.replace("<!--showcase:ship-->", () => ship)
+    .replace("<!--showcase:registry-->", () => escapeMarkup(page.registry))
+    .replace("<!--showcase:japanese-->", () => escapeMarkup(page.japanese))
+    .replace("<!--showcase:name-->", () => escapeMarkup(page.name))
+    .replace("<!--showcase:role-->", () => escapeMarkup(page.role.en))
+    .replace("<!--showcase:map-credits-->", () => credits);
+  const words = {
+    en: { ...WORDS.en, showcaseRole: page.role.en },
+    ja: { ...WORDS.ja, showcaseRole: page.role.ja },
+  };
+  return renderPage(html, file, page.title, page.description, page.what, words);
+}
+
+function renderPage(html: string, file: string, title: string, description: string, what = WHAT[file], words = WORDS): string {
   // The page links and the frame's header line share one row, so on a desk the line takes no height of its own and the choices stay on the first screen; a narrower screen wraps it under them.
   const rowed = html.replace("<!--family:header--><!--frame:header-->", '<!--family:header-->\n      <div class="page-row"><!--page-bar--><!--frame:header--></div>');
-  return frame(rowed, file, description)
+  return frame(rowed, file, description, what)
     .replace("<!--family:head-->", `${familyHead({ id, title, description })}\n    <link rel="icon" href="icon.png" />`)
     .replace("<!--family:header-->", familyHeader({ id }))
     .replace("<!--page-bar-->", pageBar(file))
@@ -103,6 +148,6 @@ export function renderIndex(file: keyof typeof TITLES = "index.html"): string {
     .replace(
       /<!--family:scripts ([\w./-]+)-->/,
       (_, script: string) =>
-        `<script>${FAMILY_SCRIPT}</script>\n<script>window.uchusenLanguage = familyLanguage({ id: ${JSON.stringify(id)}, words: ${JSON.stringify(WORDS)} });</script>\n<script type="module" src="kazoku-parts.js"></script>\n<script type="module" src="${script}"></script>`,
+        `<script>${FAMILY_SCRIPT}</script>\n<script>window.uchusenLanguage = familyLanguage({ id: ${JSON.stringify(id)}, words: ${JSON.stringify(words)} });</script>\n<script type="module" src="kazoku-parts.js"></script>\n<script type="module" src="${script}"></script>`,
     );
 }

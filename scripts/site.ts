@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { publishThumbnails, thumbnailHead } from "./family-thumbnail.mjs";
-import { frame, pageBar, renderIndex } from "./page.ts";
+import { frame, pageBar, renderIndex, renderShowcase, type ShowcasePage } from "./page.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const site = join(root, "site");
@@ -21,7 +21,13 @@ writeFileSync(join(site, "poster.html"), renderIndex("poster.html").replace("</h
 writeFileSync(join(site, "beam.html"), renderIndex("beam.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "swarm.html"), renderIndex("swarm.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "inspect.html"), renderIndex("inspect.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
-writeFileSync(join(site, "showcase.html"), renderIndex("showcase.html"));
+const showcases = join(root, "demo", "showcase");
+for (const source of readdirSync(showcases)) {
+  if (!/^[a-z][a-z0-9-]*\.json$/.test(source)) continue;
+  const file = source === "hanabusa.json" ? "showcase.html" : `showcase-${source.slice(0, -5)}.html`;
+  const page = JSON.parse(readFileSync(join(showcases, source), "utf8")) as ShowcasePage;
+  writeFileSync(join(site, file), renderShowcase(file, page));
+}
 writeFileSync(join(site, "fleet-db.html"), renderIndex("fleet-db.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "fleet-compare.html"), renderIndex("fleet-compare.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));
 writeFileSync(join(site, "yard.html"), renderIndex("yard.html").replace("</head>", `  ${thumbnailHead(pkg, { alt: ALT })}\n  </head>`));

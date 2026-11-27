@@ -17,7 +17,7 @@ import { lineupSvg } from "./build/lineup.ts";
 import { CROSSFADE_MS, REDUCED_FADE_MS, revealDelay } from "./crossfade.ts";
 import type { Description, FitReport } from "./fit.ts";
 import { type Angle, cleanView, turnedBy, type ViewChoice, VIEWS } from "./framing.ts";
-import { SHOWCASE_ANGLE, supportsShowcase } from "./element/showcaseView.ts";
+import { showcasePreset, wholeShowcase } from "./element/showcaseView.ts";
 import { besideCraft } from "./beside.ts";
 import { canScale, scalePercent } from "./concepts.ts";
 import { cleanShow } from "./layout.ts";
@@ -525,17 +525,22 @@ export class UchusenRocket extends HTMLBase {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
   }
 
+  private showcaseFor(rocket: string | undefined, variant: string | undefined) {
+    return this.hasAttribute("showcase") ? showcasePreset(rocket, variant) : undefined;
+  }
+
   /** What to draw from the attributes, every value checked. */
   private settings(built: Built) {
     const variant = built.report.variant;
-    const allowed = this.hasAttribute("showcase") && !built.report.custom && supportsShowcase(variant?.rocket, variant?.id);
+    const preset = built.report.custom ? undefined : this.showcaseFor(variant?.rocket, variant?.id);
+    const allowed = Boolean(preset);
     const look: LookName = cleanLook(this.getAttribute("look") ?? (allowed ? "painted" : null));
     const show = cleanShow(this.getAttribute("show"), built.parts.map((part) => part.slot));
     const view = this.getAttribute("view");
     const viewName = cleanView(view);
-    const showcase = allowed && look === "painted" && show === "together";
-    const viewKey = showcase ? `showcase/${view ?? ""}` : viewName;
-    return { look, show, viewName, viewKey, showcase, angle: showcase && view === null ? SHOWCASE_ANGLE : VIEWS[viewName] };
+    const showcase = allowed && look === "painted" && wholeShowcase(show, built.parts);
+    const viewKey = showcase && preset ? `showcase/${preset.rocket}/${variant?.id ?? ""}/${view ?? ""}` : viewName;
+    return { look, show, viewName, viewKey, showcase, preset, angle: showcase && view === null ? null : VIEWS[viewName] };
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------
@@ -695,12 +700,12 @@ export class UchusenRocket extends HTMLBase {
     const description = this.descriptionNow();
     const size = this.sizeNow(description);
     const docked = this.dockedOption();
-    const showcase = this.hasAttribute("showcase") && supportsShowcase(description.rocket, description.variant);
+    const showcase = Boolean(this.showcaseFor(description.rocket, description.variant));
     const key = `${JSON.stringify(description)}|${JSON.stringify(this.besideOptions(description))}|${size}|${docked.docked ?? "-"}|${showcase}`;
     if (key !== this.key || !this.builtNow) {
       this.key = key;
       try {
-        this.builtNow = build(description, { detail: this.detailFor(description), dockedDetail: this.dockedFine ? "full" : "coarse", ...this.besideOptions(description), scale: size, ...docked });
+        this.builtNow = build(description, { detail: this.detailFor(description), dockedDetail: this.dockedFine || showcase ? "full" : "coarse", ...this.besideOptions(description), scale: size, ...docked });
       } catch (error) {
         this.builtNow = null;
         this.renderShell();
@@ -771,11 +776,13 @@ export class UchusenRocket extends HTMLBase {
       this.drawn = { key: "", box: [0, 0, 1, 1] };
       return;
     }
-    const { look, show: chosen, angle } = this.settings(this.builtNow);
+    const { look, show: chosen, angle, preset, viewName } = this.settings(this.builtNow);
+    const aspect = Math.max(1, this.drawing.clientWidth) / Math.max(1, this.drawing.clientHeight);
+    const home = angle ?? (preset ? preset.shot(aspect).angle : VIEWS[viewName]);
     const flying = this.clock ? frameAt(this.clock.flight, this.clock.position, this.builtNow.parts.map((part) => ({ slot: part.slot, baseY: 0 })), 1) : null;
     const show = flying ? (flying.separated ? "apart" : "together") : chosen;
     // The still picture is only drawn while the 3D view is not in. A turn must not put it back behind the canvas.
-    const from = this.driven ? turnedBy(angle, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? angle);
+    const from = this.driven ? turnedBy(home, this.driven.yaw, this.driven.tilt) : (this.viewer?.currentAngle() ?? home);
     const label = this.getAttribute("label") ?? this.builtNow.report.label;
     const lit = flying ? (media("(prefers-reduced-motion: reduce)") ? false : flying.burns) : this.engineLights();
     // the angles the 3D view has now, to 5 degrees: the drawing changes a few times a phase, not once a frame
@@ -806,6 +813,7 @@ export class UchusenRocket extends HTMLBase {
 
   private mark(): void {
     if (!this.builtNow) return;
+    const description = this.descriptionNow();
     const { look, show, viewName, showcase } = this.settings(this.builtNow);
     if (showcase) this.dataset.showcase = "on";
     else delete this.dataset.showcase;
@@ -814,15 +822,15 @@ export class UchusenRocket extends HTMLBase {
     this.dataset.engines = this.engineLights() ? "on" : "off";
     this.dataset.motion = motionWanted(this.getAttribute("motion"), media("(prefers-reduced-motion: reduce)")) ? (motionSpeed(this.getAttribute("motion")) === 10 ? "fast" : "on") : "off";
     this.dataset.beside = this.builtNow.beside.length ? "on" : "off";
-    this.dataset.size = String(this.sizeNow(this.descriptionNow()));
+    this.dataset.size = String(this.sizeNow(description));
     this.dataset.flight = this.flight?.id ?? "";
     this.dataset.show = show;
     this.dataset.viewAngle = viewName;
     this.dataset.variant = this.builtNow.report.variant?.id ?? "";
     this.dataset.slots = this.builtNow.parts.map((part) => part.slot).join(",");
-    this.dataset.form = this.descriptionNow().form ?? "stack";
-    this.dataset.detail = this.detailFor(this.descriptionNow());
-    if (CARRIERS.has(this.descriptionNow().rocket)) this.dataset.docked = this.dockedFine ? "full" : "coarse";
+    this.dataset.form = description.form ?? "stack";
+    this.dataset.detail = this.detailFor(description);
+    if (CARRIERS.has(description.rocket)) this.dataset.docked = this.dockedFine || this.showcaseFor(description.rocket, description.variant) ? "full" : "coarse";
     else delete this.dataset.docked;
     this.dataset.custom = String(this.builtNow.report.custom);
     this.syncFlag();
@@ -894,7 +902,7 @@ export class UchusenRocket extends HTMLBase {
   /** A fleet ship is built coarse first (the first picture and the far view) and fine when the camera comes near, an inset opens or one part is shown alone: once per visit, never on a turn or a look change. */
   private fine = false;
   private detailFor(description: Description): DetailLevel {
-    if (this.hasAttribute("showcase") && supportsShowcase(description.rocket, description.variant)) return "full";
+    if (this.showcaseFor(description.rocket, description.variant)) return "full";
     const fictional = ROCKETS[description.rocket]?.variants.some((v) => v.status === "fictional");
     return fictional && !this.fine ? "coarse" : "full";
   }
@@ -918,8 +926,9 @@ export class UchusenRocket extends HTMLBase {
   /** True once there is nothing left to do; false while the fine build or a carrier is still to come, so the viewer asks again. */
   private upgradeDocked(): boolean {
     if (this.dockedFine) return true;
-    if (!this.builtNow || !CARRIERS.has(this.descriptionNow().rocket)) return false;
     const description = this.descriptionNow();
+    if (!this.builtNow || !CARRIERS.has(description.rocket)) return false;
+    if (this.showcaseFor(description.rocket, description.variant)) return true;
     // A page that zooms the picture and leaves the camera where it is never brings the fine build in by distance, so the carrier is brought to its full build here too.
     this.dockedFine = true;
     this.fine = true;

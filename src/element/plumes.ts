@@ -146,9 +146,9 @@ export class PartPlumes {
   private readonly coreLength: number;
   private readonly haloSize: number;
 
-  constructor(kit: PlumeKit, bells: readonly Bell[], kind: PlumeKind) {
+  constructor(kit: PlumeKit, bells: readonly Bell[], kind: PlumeKind, lengthScale = 1) {
     this.bells = bells;
-    this.coreLength = kind === "showcase" ? 1.55 : 1;
+    this.coreLength = (kind === "showcase" ? 1.55 : 1) * lengthScale;
     this.haloSize = kind === "showcase" ? 3.1 : 2.2;
     this.group.name = "plumes";
     this.flames = new InstancedMesh(kit.shape, kit.flameFor(kind), bells.length);

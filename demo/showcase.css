@@ -77,6 +77,12 @@
 
 .exhaust-toggle[hidden] { display: none; }
 
+@media (aspect-ratio < 5 / 4) {
+  .showcase[data-mobile-exhaust-side="left"] .exhaust-toggle {
+    inset-inline: max(1.25rem, env(safe-area-inset-left)) auto;
+  }
+}
+
 @media (min-aspect-ratio: 5 / 4) {
   .ship-title {
     align-self: center;

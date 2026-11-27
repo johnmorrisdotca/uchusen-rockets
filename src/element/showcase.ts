@@ -1,8 +1,10 @@
-// A bounded volume of illuminated exhaust in Hanabusa's drive frame.
-import { AdditiveBlending, BoxGeometry, Data3DTexture, LinearFilter, Mesh, RedFormat, RepeatWrapping, ShaderMaterial } from "three";
-import { mainDriveNozzles } from "../model/fleet/ship-01/drive.ts";
+// Bounded volumes of illuminated exhaust in the drive parts' own frames.
+import { AdditiveBlending, BoxGeometry, Data3DTexture, Group, LinearFilter, Mesh, RedFormat, RepeatWrapping, ShaderMaterial } from "three";
+import type { Bell } from "../engines.ts";
 import { seeded } from "./paint.ts";
 import { PartPlumes, type PlumeKit } from "./plumes.ts";
+import { SHOWCASE_EXHAUST_LAYER } from "./showcaseImage.ts";
+import type { ShowcaseDrive } from "./showcaseView.ts";
 
 export const SHOWCASE_STILL = 1.5;
 const NOISE_SIZE = 32;
@@ -24,6 +26,7 @@ void main() {
 const FRAGMENT = /* glsl */ `
 #include <logdepthbuf_pars_fragment>
 uniform float uTime;
+uniform float uIntensity;
 uniform highp sampler3D uNoise;
 varying vec3 vAt;
 varying vec3 vEye;
@@ -59,7 +62,7 @@ vec4 exhaust(vec3 p) {
   float heat = exp(-down * 0.016) * (1.0 - smoothstep(0.04, 0.84, crossSection));
   vec3 cold = vec3(0.07, 0.19, 0.42) * (0.72 + eddy);
   vec3 hot = vec3(2.5, 1.13, 0.55) * heat * heat;
-  return vec4((cold + hot) * jet, jet * 0.022);
+  return vec4((cold + hot) * jet * uIntensity, jet * 0.022);
 }
 
 void main() {
@@ -105,38 +108,68 @@ function exhaustTexture(): Data3DTexture {
   return texture;
 }
 
-export class ShowcaseExhaust {
-  readonly cores: PartPlumes;
-  readonly wake: Mesh<BoxGeometry, ShaderMaterial>;
-  private noise: Data3DTexture;
+export interface ShowcaseMount extends Pick<ShowcaseDrive, "frame" | "coreLength" | "wakes"> {
+  part: Group;
+  bells: readonly Bell[];
+}
 
-  constructor(plumes: PlumeKit) {
-    this.cores = new PartPlumes(plumes, mainDriveNozzles, "showcase");
-    this.cores.light(mainDriveNozzles);
-    const geometry = new BoxGeometry(VOLUME_MAX[0] - VOLUME_MIN[0], VOLUME_MAX[1] - VOLUME_MIN[1], VOLUME_MAX[2] - VOLUME_MIN[2]);
-    geometry.translate((VOLUME_MIN[0] + VOLUME_MAX[0]) / 2, (VOLUME_MIN[1] + VOLUME_MAX[1]) / 2, (VOLUME_MIN[2] + VOLUME_MAX[2]) / 2);
-    this.noise = exhaustTexture();
-    const material = new ShaderMaterial({
-      vertexShader: VERTEX,
-      fragmentShader: FRAGMENT,
-      uniforms: { uTime: { value: SHOWCASE_STILL }, uNoise: { value: this.noise } },
-      transparent: true,
-      depthWrite: false,
-      blending: AdditiveBlending,
-    });
-    this.wake = new Mesh(geometry, material);
-    this.wake.renderOrder = 4;
+export class ShowcaseExhaust {
+  readonly count: number;
+  private readonly cores: PartPlumes[] = [];
+  private readonly wakes: Mesh<BoxGeometry, ShaderMaterial>[] = [];
+  private readonly frames: Group[] = [];
+  private readonly noise = exhaustTexture();
+  private readonly geometry = new BoxGeometry(VOLUME_MAX[0] - VOLUME_MIN[0], VOLUME_MAX[1] - VOLUME_MIN[1], VOLUME_MAX[2] - VOLUME_MIN[2]);
+  private readonly time = { value: SHOWCASE_STILL };
+
+  constructor(plumes: PlumeKit, mounts: readonly ShowcaseMount[], layered: boolean) {
+    this.geometry.translate((VOLUME_MIN[0] + VOLUME_MAX[0]) / 2, (VOLUME_MIN[1] + VOLUME_MAX[1]) / 2, (VOLUME_MIN[2] + VOLUME_MAX[2]) / 2);
+    this.count = mounts.reduce((total, mount) => total + mount.bells.length, 0);
+    for (const { part, bells, wakes, frame, coreLength } of mounts) {
+      const parent = frame ? new Group() : part;
+      if (frame) {
+        parent.position.set(...frame.at);
+        parent.rotation.set(...frame.rotation);
+        part.add(parent);
+        this.frames.push(parent);
+      }
+      const cores = new PartPlumes(plumes, bells, "showcase", coreLength);
+      cores.light(bells);
+      if (layered) cores.group.traverse((node) => node.layers.set(SHOWCASE_EXHAUST_LAYER));
+      parent.add(cores.group);
+      this.cores.push(cores);
+      for (const wake of wakes) {
+        const material = new ShaderMaterial({
+          vertexShader: VERTEX,
+          fragmentShader: FRAGMENT,
+          uniforms: { uTime: this.time, uNoise: { value: this.noise }, uIntensity: { value: wake.intensity ?? 1 } },
+          transparent: true,
+          depthWrite: false,
+          blending: AdditiveBlending,
+        });
+        const mesh = new Mesh(this.geometry, material);
+        mesh.position.set(...wake.at);
+        mesh.scale.set(...wake.scale);
+        mesh.renderOrder = 4;
+        if (layered) mesh.layers.set(SHOWCASE_EXHAUST_LAYER);
+        parent.add(mesh);
+        this.wakes.push(mesh);
+      }
+    }
   }
 
   setTime(seconds: number): void {
-    this.wake.material.uniforms.uTime.value = seconds;
+    this.time.value = seconds;
   }
 
   dispose(): void {
-    this.cores.dispose();
-    this.wake.removeFromParent();
-    this.wake.geometry.dispose();
-    this.wake.material.dispose();
+    for (const cores of this.cores) cores.dispose();
+    for (const wake of this.wakes) {
+      wake.removeFromParent();
+      wake.material.dispose();
+    }
+    for (const frame of this.frames) frame.removeFromParent();
+    this.geometry.dispose();
     this.noise.dispose();
   }
 }

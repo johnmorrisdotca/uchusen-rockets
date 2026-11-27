@@ -1,0 +1,16 @@
+{
+  "rocket": "fleet-ship-01",
+  "name": "Hanabusa",
+  "japanese": "花房",
+  "registry": "ISV SPX-013",
+  "label": "ISV Hanabusa, SPX-013, seen under thrust in deep space",
+  "title": "ISV Hanabusa · SPX-013",
+  "description": "See the ISV Hanabusa on a deep-space burn in the Uchusen Rockets showcase.",
+  "what": {
+    "en": "Hanabusa showcase",
+    "ja": "花房の展示",
+    "jaDescription": "恒星間探査船、花房 SPX-013 の宇宙での噴射を見ます。"
+  },
+  "role": { "en": "Interstellar explorer", "ja": "恒星間探査船" },
+  "credits": []
+}

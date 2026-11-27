@@ -77,9 +77,10 @@ import { GroundKit } from "./ground.ts";
 import { placeNameLabels } from "./namePlace.ts";
 import { plinthGroup, type Footprint } from "./plinth.ts";
 import { PartPlumes, PlumeKit } from "./plumes.ts";
-import { SHOWCASE_STILL, ShowcaseExhaust } from "./showcase.ts";
-import { SHOWCASE_EXHAUST_LAYER, ShowcaseImage } from "./showcaseImage.ts";
-import { SHOWCASE_ANGLE, SHOWCASE_FOV, SHOWCASE_ROLL, SHOWCASE_SUN, showcaseFrame, supportsShowcase } from "./showcaseView.ts";
+import { SHOWCASE_STILL, ShowcaseExhaust, type ShowcaseMount } from "./showcase.ts";
+import { ShowcaseBackdrop } from "./showcaseBackdrop.ts";
+import { ShowcaseImage } from "./showcaseImage.ts";
+import { showcaseFrame, showcasePreset, type ShowcasePreset, wholeShowcase } from "./showcaseView.ts";
 import { ThrusterLayer } from "./thrusterLayer.ts";
 import { glProbe } from "./probe.ts";
 import { idleStopMs } from "./idleStop.ts";
@@ -300,6 +301,8 @@ export class RocketViewer {
   private sky!: HemisphereLight;
   private plumes: PlumeKit;
   private showcaseExhaust: ShowcaseExhaust | null = null;
+  private showcaseLook: ShowcasePreset | null = null;
+  private showcaseBackdrop: ShowcaseBackdrop | null = null;
   private showcaseStars: ReturnType<typeof starField> | null = null;
   private showcaseImage: ShowcaseImage | null = null;
   private showcasePaused = false;
@@ -547,7 +550,11 @@ export class RocketViewer {
     this.fit();
   }
 
-  private homeAngle: Angle = { az: 32, el: 9 };
+  private homeAngle: Angle | null = { az: 32, el: 9 };
+
+  private get homeDirection(): Angle {
+    return this.homeAngle ?? this.showcaseLook?.shot(this.camera.aspect).angle ?? { az: 32, el: 9 };
+  }
 
   setLabel(label: string): void {
     this.canvas.setAttribute("aria-label", `3D view of ${label}. Drag or use the arrow keys to turn it and the wheel to zoom; double-click or Home puts it back.`);
@@ -588,7 +595,7 @@ export class RocketViewer {
 
   /** The key light comes from the Sun when there is one, else from the showroom's upper front. */
   private keyDirection(): Vector3 {
-    return (this.showcaseExhaust ? new Vector3(...SHOWCASE_SUN) : this.sunFrom ?? new Vector3(3, 5, 4)).clone().normalize();
+    return (this.showcaseLook ? new Vector3(...this.showcaseLook.sun) : this.sunFrom ?? new Vector3(3, 5, 4)).clone().normalize();
   }
 
   private aimKey(): void {
@@ -849,7 +856,7 @@ export class RocketViewer {
     this.fitShadow();
     this.setLook(look);
     if (craftChanged && !this.options.reducedMotion) {
-      this.homeAngle = angle ?? this.currentAngle();
+      this.homeAngle = this.showcaseLook ? angle : angle ?? this.currentAngle();
       const framing = this.framingFor(this.homeAngle);
       // true scale steps back and zooms in, so the new craft is the old size on screen and still in front of the near plane. Every other page keeps the camera where it is.
       if (this.scaleMode) {
@@ -867,7 +874,7 @@ export class RocketViewer {
       // The painted picture waits until the model is the thing on the canvas, then fades in once. Fading the coarse picture in first, and again when the model arrives, is the dip.
       if (look === "painted") this.paintedShown = false;
       else this.fadeCraft();
-    } else if (!this.pose) this.frameTo(angle ?? this.currentAngle(), false);
+    } else if (!this.pose) this.frameTo(this.showcaseLook ? angle : angle ?? this.currentAngle(), false);
     if (this.clockNow) {
       this.flightKey = "";
       this.flightOn = false;
@@ -1273,42 +1280,58 @@ export class RocketViewer {
 
   private syncShowcase(): void {
     const variant = this.built?.report.variant;
-    const drive = this.options.showcase && supportsShowcase(variant?.rocket, variant?.id) && this.look === "painted" && this.show === "together"
-      ? this.parts.find(({ slot }) => slot === "drive")
-      : undefined;
-    if (Boolean(drive) === Boolean(this.showcaseExhaust)) return;
-    this.mountShowcase(drive?.holder ?? null);
+    const preset = this.options.showcase && this.look === "painted" && wholeShowcase(this.show, this.built?.parts ?? [])
+      ? showcasePreset(variant?.rocket, variant?.id) ?? null
+      : null;
+    if (preset === this.showcaseLook) return;
+    const mounts: ShowcaseMount[] = [];
+    for (const drive of preset?.drives ?? []) {
+      const part = this.parts.find(({ slot }) => slot === drive.slot);
+      if (!part) continue;
+      const bells = drive.bells ?? bellsOf(this.built?.parts.find(({ slot }) => slot === drive.slot)?.pieces ?? []);
+      if (bells.length > 0) mounts.push({ part: part.holder, bells, wakes: drive.wakes, frame: drive.frame, coreLength: drive.coreLength });
+    }
+    this.mountShowcase(mounts.length > 0 ? preset : null, mounts);
     this.fitShadow();
   }
 
-  private mountShowcase(drive: Group | null): void {
+  private mountShowcase(preset: ShowcasePreset | null, mounts: readonly ShowcaseMount[] = []): void {
     this.showcaseExhaust?.dispose();
     this.showcaseImage?.dispose();
     this.showcaseImage = null;
+    this.showcaseBackdrop?.dispose();
+    this.showcaseBackdrop = null;
     this.showcaseStars?.removeFromParent();
     this.showcaseStars?.geometry.dispose();
     this.showcaseStars?.material.dispose();
     this.showcaseStars = null;
     this.showcaseAt = 0;
     this.showcaseTime = SHOWCASE_STILL;
-    this.showcaseExhaust = drive ? new ShowcaseExhaust(this.plumes) : null;
-    if (this.showcaseExhaust && drive) {
-      const { cores, wake } = this.showcaseExhaust;
-      if (!this.options.orbit && this.renderer.extensions.has("EXT_color_buffer_float")) {
-        this.showcaseImage = new ShowcaseImage();
-        wake.layers.set(SHOWCASE_EXHAUST_LAYER);
-        cores.group.traverse((node) => node.layers.set(SHOWCASE_EXHAUST_LAYER));
-      }
-      drive.add(cores.group, wake);
+    this.showcaseLook = preset;
+    const layered = Boolean(preset && !this.options.orbit && this.renderer.extensions.has("EXT_color_buffer_float"));
+    this.showcaseImage = layered ? new ShowcaseImage() : null;
+    this.showcaseExhaust = preset ? new ShowcaseExhaust(this.plumes, mounts, layered) : null;
+    if (preset) {
       this.showcaseStars = starField(2350, { count: 430, size: 1.2, opacity: 0.46 });
+      if (preset.body) this.showcaseStars.scale.setScalar(preset.shot(this.camera.aspect).distance * 5 / 2350);
       this.showcaseStars.renderOrder = -1;
       this.scene.add(this.showcaseStars);
+      if (preset.body) {
+        this.showcaseBackdrop = new ShowcaseBackdrop(preset.body, preset.sun, this.options.assets, () => {
+          this.needsDraw = true;
+          this.wake();
+        });
+        this.showcaseBackdrop.place(preset, this.camera.aspect);
+        this.scene.add(this.showcaseBackdrop.group);
+      }
     }
-    this.plumes.setTime(drive ? this.showcaseTime : null);
-    this.camera.fov = drive ? SHOWCASE_FOV : FOV_DEG;
-    this.camera.up.set(...rolledUp(directionOf(SHOWCASE_ANGLE), drive ? SHOWCASE_ROLL : 0));
+    this.plumes.setTime(preset ? this.showcaseTime : null);
+    this.camera.fov = preset?.fov ?? FOV_DEG;
+    const shot = preset?.shot(this.camera.aspect);
+    if (shot) this.camera.up.set(...rolledUp(directionOf(shot.angle), shot.roll));
+    else this.camera.up.set(0, 1, 0);
     this.camera.updateProjectionMatrix();
-    this.sun.shadow.autoUpdate = drive === null;
+    this.sun.shadow.autoUpdate = preset === null;
   }
 
   setShowcase(on: boolean): void {
@@ -1523,15 +1546,15 @@ export class RocketViewer {
     this.applyLamps(performance.now() / 1000);
     this.swarm?.setGlow(this.glowOn);
     this.burnSlots = lowest;
-    this.plumes.setBurning(this.showcaseExhaust ? this.showcaseExhaust.cores.bells.length : burning);
+    this.plumes.setBurning(this.showcaseExhaust?.count ?? burning);
     this.plumes.light.color.set(this.showcaseExhaust ? "#ffc68c" : "#ffb56b");
     this.plumes.light.intensity = burning === 0 || this.look !== "painted" ? 0 : Math.min(900, 120 + burning * 40);
     this.placeGlow();
-    if (this.showcaseExhaust) {
-      this.plumes.light.position.set(0, -63, 0);
-      this.plumes.light.intensity = 5700;
+    if (this.showcaseLook) {
+      this.plumes.light.position.set(...this.showcaseLook.exhaustLight.at);
+      this.plumes.light.intensity = this.showcaseLook.exhaustLight.intensity;
     }
-    const plumeCount = this.showcaseExhaust?.cores.bells.length ?? burning;
+    const plumeCount = this.showcaseExhaust?.count ?? burning;
     this.canvas.dataset.engines = plumeCount > 0 ? "on" : "off";
     this.canvas.dataset.plumes = String(plumeCount);
     if (this.showcaseExhaust) this.canvas.dataset.showcaseTime = this.showcaseTime.toFixed(3);
@@ -1925,21 +1948,21 @@ export class RocketViewer {
     this.relight();
   }
 
-  private framingFor(angle: Angle) {
+  private framingFor(angle: Angle | null) {
     if (!this.built) throw new Error("nothing is loaded");
-    if (this.showcaseExhaust) return showcaseFrame(angle, this.camera.aspect);
+    if (this.showcaseLook) return showcaseFrame(this.showcaseLook, angle, this.camera.aspect);
     const whole = this.boundsNow();
     // a craft whose arrays or booms reach far past its body is framed on the body and the first of them, so the body is not drawn small
     const { min, max } = fitBox(whole.min, whole.max, this.clockNow ? null : this.built.fitWidthOf(this.show));
-    return frameFor(min, max, angle, this.camera.aspect);
+    return frameFor(min, max, angle ?? this.homeDirection, this.camera.aspect);
   }
 
   private applyFraming(framing: ReturnType<RocketViewer["framingFor"]>): void {
     this.camera.position.set(...framing.position);
     this.controls.target.set(...framing.target);
-    if (this.showcaseExhaust) {
+    if (this.showcaseLook) {
       const direction = asVec(this.camera.position.clone().sub(this.controls.target).normalize());
-      this.camera.up.set(...rolledUp(direction, SHOWCASE_ROLL));
+      this.camera.up.set(...rolledUp(direction, this.showcaseLook.shot(this.camera.aspect).roll));
     }
     this.limits(framing.distance);
     this.controls.update();
@@ -2006,13 +2029,13 @@ export class RocketViewer {
 
   currentAngle(): Angle {
     const offset = this.camera.position.clone().sub(this.controls.target);
-    if (offset.lengthSq() === 0) return this.homeAngle;
+    if (offset.lengthSq() === 0) return this.homeDirection;
     const s = new Spherical().setFromVector3(offset);
     return { az: MathUtils.radToDeg(s.theta), el: 90 - MathUtils.radToDeg(s.phi) };
   }
 
   /** Turns to look from an angle. */
-  setAngle(angle: Angle, animate: boolean): void {
+  setAngle(angle: Angle | null, animate: boolean): void {
     if (!this.built) return;
     if (this.driven) {
       this.homeAngle = angle;
@@ -2026,19 +2049,19 @@ export class RocketViewer {
     this.wake();
   }
 
-  private frameTo(angle: Angle, animate: boolean): void {
+  private frameTo(angle: Angle | null, animate: boolean): void {
     this.homeAngle = angle;
     this.setAngleKeepingSpin(angle, animate);
   }
 
-  private setAngleKeepingSpin(angle: Angle, animate: boolean): void {
+  private setAngleKeepingSpin(angle: Angle | null, animate: boolean): void {
     if (!this.built) return;
     const framing = this.framingFor(angle);
     if (animate && !this.options.reducedMotion) this.startPose(framing, SIZE_EASE_MS, false, true);
     else this.applyFraming(framing);
   }
 
-  setHome(angle: Angle): void {
+  setHome(angle: Angle | null): void {
     this.homeAngle = angle;
   }
 
@@ -2083,7 +2106,7 @@ export class RocketViewer {
 
   private drivenAngle(): Angle | null {
     if (!this.driven) return null;
-    const turned = turnedBy(this.homeAngle, this.driven.yaw, this.driven.tilt);
+    const turned = turnedBy(this.homeDirection, this.driven.yaw, this.driven.tilt);
     const lean = this.tilt.applied;
     return { az: turned.az + MathUtils.radToDeg(lean.azimuth), el: MathUtils.clamp(turned.el - MathUtils.radToDeg(lean.polar), -87, 87) };
   }
@@ -2093,8 +2116,8 @@ export class RocketViewer {
     const focus = this.focusing ? this.focusNow : null;
     if (!focus) return directionOf(angle);
     const base = new Spherical().setFromVector3(new Vector3(...focus.direction).normalize());
-    base.theta += MathUtils.degToRad(angle.az - this.homeAngle.az);
-    base.phi = MathUtils.clamp(base.phi - MathUtils.degToRad(angle.el - this.homeAngle.el), 0.08, Math.PI - 0.08);
+    base.theta += MathUtils.degToRad(angle.az - this.homeDirection.az);
+    base.phi = MathUtils.clamp(base.phi - MathUtils.degToRad(angle.el - this.homeDirection.el), 0.08, Math.PI - 0.08);
     const out = new Vector3().setFromSpherical(base);
     return [out.x, out.y, out.z];
   }
@@ -2447,7 +2470,7 @@ export class RocketViewer {
     this.stepMotion(performance.now(), true);
     if (!this.progressFramed) {
       this.progressFramed = true;
-      this.setAngle({ az: this.homeAngle.az, el: -4 }, false);
+      this.setAngle({ az: this.homeDirection.az, el: -4 }, false);
     }
     this.wake();
   }
@@ -3219,10 +3242,18 @@ export class RocketViewer {
     this.renderer.setPixelRatio(pixelRatioFor(w, h, window.devicePixelRatio));
     this.renderer.setSize(w, h, false);
     this.outlineMaterial.uniforms.width.value = LOOKS[this.look].outlinePx * this.renderer.getPixelRatio();
+    const oldAspect = this.camera.aspect;
+    const oldShot = this.showcaseLook?.shot(oldAspect);
+    const current = this.currentAngle();
     this.camera.aspect = w / h;
+    if (this.showcaseLook) {
+      this.showcaseBackdrop?.place(this.showcaseLook, this.camera.aspect);
+      if (this.showcaseLook.body) this.showcaseStars?.scale.setScalar(this.showcaseLook.shot(this.camera.aspect).distance * 5 / 2350);
+    }
     this.lens();
     this.syncSizes();
-    if (this.built && !this.pose) this.applyFraming(this.framingFor(this.currentAngle()));
+    const onHome = this.homeAngle === null && oldShot && Math.abs(current.az - oldShot.angle.az) < 0.001 && Math.abs(current.el - oldShot.angle.el) < 0.001;
+    if (this.built && !this.pose) this.applyFraming(this.framingFor(onHome ? null : current));
     this.wake();
   }
 

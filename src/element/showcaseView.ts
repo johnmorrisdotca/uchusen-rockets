@@ -1,18 +1,80 @@
+import type { Bell } from "../engines.ts";
 import { directionOf, type Angle, type Framing, type Vec3 } from "../framing.ts";
+import { hanabusa } from "./showcase/hanabusa.ts";
 
-export function supportsShowcase(rocket: string | undefined, variant: string | undefined): boolean {
-  return rocket === "fleet-ship-01" && (variant === undefined || variant === "hanabusa");
+export interface ShowcaseShot {
+  angle: Angle;
+  target: Vec3;
+  distance: number;
+  roll: number;
 }
 
-export const SHOWCASE_ANGLE: Angle = { az: 34, el: -44 };
-export const SHOWCASE_ROLL = 14;
-export const SHOWCASE_FOV = 47;
-export const SHOWCASE_SUN: Vec3 = [-5, 2, 2];
+export interface ShowcaseWake {
+  /** Wake origin and scale in the drive part's model coordinates. */
+  at: Vec3;
+  scale: Vec3;
+  intensity?: number;
+}
 
-export function showcaseFrame(angle: Angle, aspect: number): Framing {
-  const portrait = Math.min(1, Math.max(0, (1.4 - aspect) / 0.9));
-  const direction = directionOf(angle);
-  const distance = Math.max(550 + 20 * portrait, 220 / aspect);
-  const target: Vec3 = [-118 + 108 * portrait, 116 + 76 * portrait, 68 - 62 * portrait];
-  return { target, position: [target[0] + direction[0] * distance, target[1] + direction[1] * distance, target[2] + direction[2] * distance], distance };
+export interface ShowcaseDrive {
+  slot: string;
+  /** Use the part's modelled bells when no nozzle list is supplied. */
+  bells?: readonly Bell[];
+  /** The local frame for a jet whose direction differs from the part's -Y. Rotation is in radians. */
+  frame?: { at: Vec3; rotation: Vec3 };
+  coreLength?: number;
+  wakes: readonly ShowcaseWake[];
+}
+
+export interface ShowcaseRings {
+  map: string;
+  /** Ring radii in units of the globe's radius. */
+  inner: number;
+  outer: number;
+  /** Ring axis in ship coordinates. */
+  axis: Vec3;
+}
+
+export interface ShowcaseBody {
+  map: string;
+  /** Metres from the home camera along right, up, and forward. */
+  place(aspect: number): { center: Vec3; radius: number };
+  /** Globe rotation around its pole, in degrees. */
+  longitude?: number;
+  /** Colour a greyscale relief map from its darker terrain to its bright surface. */
+  surfaceTones?: readonly [dark: string, light: string];
+  atmosphere?: string;
+  rings?: ShowcaseRings;
+}
+
+export interface ShowcasePreset {
+  rocket: string;
+  variant?: string;
+  fov: number;
+  shot(aspect: number): ShowcaseShot;
+  sun: Vec3;
+  drives: readonly ShowcaseDrive[];
+  exhaustLight: { at: Vec3; intensity: number };
+  body?: ShowcaseBody;
+}
+
+const PRESETS: readonly ShowcasePreset[] = [
+  hanabusa,
+];
+
+export function showcasePreset(rocket: string | undefined, variant: string | undefined): ShowcasePreset | undefined {
+  return PRESETS.find((preset) => preset.rocket === rocket && (variant === undefined || preset.variant === undefined || preset.variant === variant));
+}
+
+/** The viewer names the single slot when a whole craft has only one part. */
+export function wholeShowcase(show: string, parts: readonly { slot: string }[]): boolean {
+  return show === "together" || (parts.length === 1 && parts[0]?.slot === show);
+}
+
+export function showcaseFrame(preset: ShowcasePreset, angle: Angle | null, aspect: number): Framing {
+  const shot = preset.shot(aspect);
+  const { target, distance } = shot;
+  const direction = directionOf(angle ?? shot.angle);
+  const position: Vec3 = [target[0] + direction[0] * distance, target[1] + direction[1] * distance, target[2] + direction[2] * distance];
+  return { target, position, distance };
 }

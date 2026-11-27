@@ -7,11 +7,11 @@
   </head>
   <body>
     <main class="showcase">
-      <uchusen-rocket id="ship" rocket="fleet-ship-01" showcase inspector="off" label="ISV Hanabusa, SPX-013, seen under thrust in deep space"></uchusen-rocket>
+      <!--showcase:ship-->
       <div class="ship-title">
-        <p class="registry">ISV SPX-013 <span lang="ja">花房</span></p>
-        <h1>Hanabusa</h1>
-        <p class="ship-summary" data-say="showcaseRole">Interstellar explorer</p>
+        <p class="registry"><!--showcase:registry--> <span lang="ja"><!--showcase:japanese--></span></p>
+        <h1><!--showcase:name--></h1>
+        <p class="ship-summary" data-say="showcaseRole"><!--showcase:role--></p>
       </div>
       <button type="button" id="exhaust" class="fam-button exhaust-toggle" data-say="showcasePause" hidden>Pause exhaust</button>
     </main>
@@ -19,6 +19,7 @@
       <!--family:header-->
       <!--frame:header-->
       <!--frame:credits-->
+      <!--showcase:map-credits-->
       <!--family:footer-->
     </div>
     <!--family:scripts js/showcase.js-->
