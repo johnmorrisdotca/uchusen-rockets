@@ -179,10 +179,10 @@ uchusen-flight { --uchusen-accent: var(--accent); }
   #makers .chip { padding-inline: 0.2rem; font-size: 0.78rem; }
   .panel .field h2 { margin-bottom: 0.2rem; }
 }
-/* A ship with its panel grows to fit the picture and the specification under it, so the panel is not painted on the stage. */
-.stage-box uchusen-rocket[data-panel] { max-width: min(620px, 62vh); aspect-ratio: auto; height: auto; overflow: visible; }
+/* A ship with its panel grows to fit the picture and the specification under it, so the panel is not painted on the stage. The width is what is left of the window once the choices, the view bar and the specification have their share, so the stage still ends on the first screen. */
+.stage-box uchusen-rocket[data-panel] { max-width: min(620px, calc((100vh - 28rem) * 0.75)); aspect-ratio: auto; height: auto; overflow: visible; }
 @media (min-width: 1100px) {
-  .stage-box uchusen-rocket[data-panel] { max-width: min(620px, 62vh); aspect-ratio: auto; height: auto; overflow: visible; }
+  .stage-box uchusen-rocket[data-panel] { max-width: min(620px, max(10rem, calc((100vh - 36rem) * 0.75))); aspect-ratio: auto; height: auto; overflow: visible; }
 }
 @media (max-width: 820px) {
   .stage-row, .builder { grid-template-columns: minmax(0, 1fr); }
@@ -191,6 +191,10 @@ uchusen-flight { --uchusen-accent: var(--accent); }
     position: sticky;
     top: 0.35rem;
     z-index: 2;
+  }
+  /* The specification sits under the picture, so this stage is taller than the window. Stuck, its view bar covers the choices. It scrolls away, as the fleet record's picture does. */
+  body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-box:has(uchusen-rocket[data-panel]) {
+    position: static;
   }
   body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-row > .panel :is(button, a, input, select, label) {
     scroll-margin-top: calc(100vh - 4.5rem);
@@ -221,7 +225,7 @@ uchusen-flight { --uchusen-accent: var(--accent); }
     overflow: hidden;
   }
   body.demo:not(.fleet-db):not(.compare):not(.fleet-cmp) .stage-box uchusen-rocket[data-panel] {
-    max-width: min(100%, 22rem);
+    max-width: min(100%, 12rem);
     height: auto;
     overflow: visible;
   }

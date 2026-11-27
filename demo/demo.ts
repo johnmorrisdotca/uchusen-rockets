@@ -489,12 +489,22 @@ function limitTilt(max: number) {
   if (Math.abs(tilt) > max || tilt !== bar.state.tilt) bar.set({ tilt: Math.max(-max, Math.min(max, tilt)) });
 }
 
+/** The chip shows the part that differs. The ship's own name is already on the rocket row, and repeating it on every variant pushes the facts off the first screen. */
+function choiceLabel(rocketName: string, variantName: string): string {
+  const prefix = `${rocketName}, `;
+  return variantName.startsWith(prefix) ? variantName.slice(prefix.length) : variantName;
+}
+
 function renderMain() {
   const rocket = ROCKETS[state.rocket];
   if (!rocket.variants.some((one) => one.id === state.variant)) state.variant = rocket.defaultVariant;
   const variant = variantOf(state.rocket, state.variant) as Variant;
   const variantBox = byId("variants");
-  variantBox.replaceChildren(...rocket.variants.map((one) => chip(one.name, `variant-${one.id}`, () => pick({ variant: one.id }))));
+  variantBox.replaceChildren(...rocket.variants.map((one) => {
+    const button = chip(choiceLabel(rocket.name, one.name), `variant-${one.id}`, () => pick({ variant: one.id }));
+    if (button.textContent !== one.name) button.title = one.name;
+    return button;
+  }));
   drawMakers();
   const shows = showsOf(variant.slots);
   if (!shows.includes(state.show)) state.show = shows[0];

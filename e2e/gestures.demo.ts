@@ -22,7 +22,8 @@ const VIEWS: readonly { name: string; page: string; view: string; controls: stri
   { name: "the index line-up", page: "index.html?picker=off", view: "#compare-view", controls: "#compare-bar", lacks: FLAT },
   { name: "the yard", page: "yard.html?picker=off", view: "#yard-view", controls: "#view-bar", picture: "#yard-stage" },
   { name: "the comparison's first view", page: "compare.html?picker=off", view: "#hero", controls: "#view-bar", lacks: { turn: "a drag that starts on a floating craft throws that craft, and the middle of this view holds one", roll: "the scale scene stays level" } },
-  { name: "the compare line-up", page: "compare.html?layout=lineup&picker=off&turn=0", view: "#cmp-view", controls: "#cmp-bar", lacks: FLAT },
+  // The middle of this drawing is one flat colour. At the check's zoom a photograph of that middle cannot see a pan, though the controls still have to move.
+  { name: "the compare line-up", page: "compare.html?layout=lineup&picker=off&turn=0", view: "#cmp-view", controls: "#cmp-bar", lacks: { ...FLAT, picture: "the middle of this drawing is one flat colour, so a photograph cannot see a pan" } },
   { name: "the journey", page: "journey.html?picker=off", view: ".jr-stage", controls: "kazoku-view-controls", lacks: FLAT },
   { name: "the poster", page: "poster.html", view: "#poster-stage", controls: "kazoku-view-controls", lacks: FLAT },
   { name: "the drone swarm map", page: "swarm.html", view: "#swarm-stage", controls: "kazoku-view-controls", lacks: FLAT },

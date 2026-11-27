@@ -11,4 +11,6 @@ test("a ship with its panel does not lock the stage to the picture's box", () =>
   const frees = blocks.some((block) => /aspect-ratio:\s*auto/.test(block) && /height:\s*auto/.test(block) && /overflow:\s*visible/.test(block));
   assert.ok(frees, blocks.join("\n"));
   for (const block of blocks) assert.equal(/height:\s*16rem/.test(block) && /overflow:\s*hidden/.test(block), false, block);
+  assert.match(css, /uchusen-rocket\[data-panel\] \{ max-width: min\(620px, max\(10rem, calc\(\(100vh - 36rem\) \* 0\.75\)\)\)/);
+  assert.equal(css.includes("62vh"), false);
 });
