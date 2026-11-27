@@ -98,6 +98,7 @@ export interface ShowcasePage {
   rocket: string;
   variant?: string;
   docked?: string;
+  lights?: "running";
   mobileExhaustSide?: "left";
   name: string;
   japanese: string;
@@ -116,7 +117,7 @@ function escapeMarkup(value: string): string {
 
 export function renderShowcase(file: string, page: ShowcasePage): string {
   const template = readFileSync(new URL("../demo/showcase.html", import.meta.url), "utf8");
-  const model = { rocket: page.rocket, variant: page.variant, docked: page.docked, label: page.label };
+  const model = { rocket: page.rocket, variant: page.variant, docked: page.docked, lights: page.lights, label: page.label };
   const attributes = Object.entries(model).flatMap(([key, value]) => value === undefined ? [] : [`${key}="${escapeMarkup(value)}"`]).join(" ");
   const ship = `<uchusen-rocket id="ship" showcase inspector="off" assets="./assets/" ${attributes}></uchusen-rocket>`;
   const credits = page.credits.map(({ label, href }) => `<p><a href="${escapeMarkup(href)}">${escapeMarkup(label)}</a></p>`).join("\n      ");

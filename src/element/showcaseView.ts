@@ -6,6 +6,7 @@ import { hanabusa } from "./showcase/hanabusa.ts";
 import { kaminari } from "./showcase/kaminari.ts";
 import { kyotori } from "./showcase/kyotori.ts";
 import { miyamoto } from "./showcase/miyamoto.ts";
+import { romaryu } from "./showcase/romaryu.ts";
 
 export interface ShowcaseShot {
   angle: Angle;
@@ -70,6 +71,7 @@ const PRESETS: readonly ShowcasePreset[] = [
   kaminari,
   kyotori,
   miyamoto,
+  romaryu,
 ];
 
 export function showcasePreset(rocket: string | undefined, variant: string | undefined): ShowcasePreset | undefined {

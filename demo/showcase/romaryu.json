@@ -1,0 +1,23 @@
+{
+  "rocket": "fleet-romaryu",
+  "variant": "fleet-romaryu",
+  "docked": "",
+  "lights": "running",
+  "name": "Romaryū",
+  "japanese": "羅馬龍",
+  "registry": "ISV SPX-118",
+  "label": "ISV Romaryū, SPX-118, under thrust in front of Neptune",
+  "title": "ISV Romaryū · SPX-118",
+  "description": "See the interstellar carrier ISV Romaryū under thrust in front of Neptune in the Uchusen Rockets showcase.",
+  "what": {
+    "en": "Romaryū showcase",
+    "ja": "羅馬龍の展示",
+    "jaDescription": "恒星間母船、羅馬龍 SPX-118 が海王星を背に噴射する姿を見ます。"
+  },
+  "role": { "en": "Interstellar carrier", "ja": "恒星間母船" },
+  "mobileExhaustSide": "left",
+  "credits": [
+    { "label": "Neptune map from Solar System Scope (CC BY 4.0), via wakusei-planets", "href": "https://www.solarsystemscope.com/textures/" },
+    { "label": "Creative Commons Attribution 4.0", "href": "https://creativecommons.org/licenses/by/4.0/" }
+  ]
+}

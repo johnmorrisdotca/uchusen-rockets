@@ -19,6 +19,23 @@ test("a second copy of the same docked ship is the first build", () => {
   assert.notEqual(docked("miyamoto", 1), docked("ariake", 1));
 });
 
+test("opening Romaryū's berths leaves the docked fleet craft and omits their visiting craft", () => {
+  const carrier = { rocket: "fleet-romaryu" };
+  const loaded = build(carrier, { detail: "coarse" });
+  const empty = build(carrier, { detail: "coarse", docked: "" });
+  const loadedAgain = build(carrier, { detail: "coarse" });
+  for (const [i, part] of loaded.parts.entries()) {
+    const other = empty.parts[i];
+    assert.equal(other?.slot, part.slot);
+    assert.equal(loadedAgain.parts[i]?.pieces.length, part.pieces.length, part.slot);
+    if (["miyamoto-2", "miyamoto-4", "visiting"].includes(part.slot)) {
+      assert.ok(other.pieces.length < part.pieces.length, part.slot);
+    } else {
+      assert.equal(other.pieces.length, part.pieces.length, part.slot);
+    }
+  }
+});
+
 test("Romaryu's docked ships can be built coarse inside its full build, and nothing else changes", () => {
   const triangles = (part: ReturnType<typeof build>["parts"][number]): number => {
     let count = 0;

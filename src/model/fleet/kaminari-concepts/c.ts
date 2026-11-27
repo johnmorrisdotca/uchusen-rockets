@@ -3,6 +3,7 @@
 // The drive is the flank-pod kind LESSONS 29 allows: four outrigger pods of seven magnetic-nozzle thrusters each, and one large thruster on the axis in a stack of fusion coil rings. Real ancestors: the Space Shuttle on
 // its carrier aircraft and the ISS's docking ports, Gateway's visiting vehicles, the Saturn V's four outboard engines on their outriggers, Soyuz's strap-on boosters and Nautilus-X's docked modules. Pure: no three.js and no DOM.
 import { detail as sceneDetail } from "../../detail.ts";
+import { dockedNow } from "../dockedState.ts";
 import { lampHalo } from "../lights.ts";
 import { parts as miyamotoParts } from "../ship-03/index.ts";
 import { MIYAMOTO_VARIANT_SLOTS } from "../ship-03/variants.ts";
@@ -97,10 +98,11 @@ const dockedOnce = new Map<string, Piece[]>();
 
 /** One of the package's own ships, in its own frame: Miyamoto with the gold array out, or Ariake with her four boxes and dawn-gold bands. A second copy of the same ship is that build again. */
 export function docked(which: keyof typeof DOCKED_VARIANT, detail: number, level?: "coarse" | "fine"): Piece[] {
-  const key = `${which}:${detail}:${level ?? ""}`;
+  const variant = which === "ariake" && dockedNow.spec === "" ? "ariake-empty" : DOCKED_VARIANT[which];
+  const key = `${variant}:${detail}:${level ?? ""}`;
   const kept = dockedOnce.get(key);
   if (kept) return kept;
-  const slots = new Set(Object.values(MIYAMOTO_VARIANT_SLOTS[DOCKED_VARIANT[which]]));
+  const slots = new Set(Object.values(MIYAMOTO_VARIANT_SLOTS[variant]));
   const pieces = miyamotoParts().filter((p) => slots.has(p.id)).flatMap((p) => place(p.pieces({ detail, ...(level ? { level } : {}) }), { at: [p.place?.x ?? 0, p.y0, p.place?.z ?? 0] }));
   dockedOnce.set(key, pieces);
   return pieces;
