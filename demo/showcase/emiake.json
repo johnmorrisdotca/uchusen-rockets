@@ -1,0 +1,24 @@
+{
+  "rocket": "fleet-emiake",
+  "variant": "fleet-emiake-deployed",
+  "docked": "",
+  "name": "Emiake",
+  "japanese": "笑明",
+  "registry": "ISV SPX-109",
+  "label": "ISV Emiake, SPX-109, under thrust above Europa's ice",
+  "title": "ISV Emiake · SPX-109",
+  "description": "See the ISV Emiake under thrust above Europa's ice in the Uchusen Rockets showcase.",
+  "what": {
+    "en": "Emiake showcase",
+    "ja": "笑明の展示",
+    "jaDescription": "恒星間大型輸送船、笑明 SPX-109 がエウロパの氷の上空で噴射する姿を見ます。"
+  },
+  "role": { "en": "Interstellar Heavy Transport", "ja": "恒星間大型輸送船" },
+  "credits": [
+    {
+      "label": "Europa Voyager–Galileo mosaic · U.S. Geological Survey / Planetary Data System / Tammy Becker · public domain",
+      "href": "https://commons.wikimedia.org/wiki/File:Europa_Voyager_GalileoSSI_global_mosaic.jpg"
+    }
+  ],
+  "mobileExhaustSide": "left"
+}

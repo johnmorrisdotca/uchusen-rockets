@@ -2,6 +2,7 @@ import type { Bell } from "../engines.ts";
 import { directionOf, type Angle, type Framing, type Vec3 } from "../framing.ts";
 import { ariake } from "./showcase/ariake.ts";
 import { drone } from "./showcase/drone.ts";
+import { emiake } from "./showcase/emiake.ts";
 import { hanabusa } from "./showcase/hanabusa.ts";
 import { kaminari } from "./showcase/kaminari.ts";
 import { kyotori } from "./showcase/kyotori.ts";
@@ -67,6 +68,7 @@ export interface ShowcasePreset {
 const PRESETS: readonly ShowcasePreset[] = [
   ariake,
   drone,
+  emiake,
   hanabusa,
   kaminari,
   kyotori,
