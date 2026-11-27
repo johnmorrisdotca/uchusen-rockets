@@ -14,6 +14,7 @@ import { MATERIALS, type MaterialName, type MaterialSpec } from "../src/model/ma
 import { meshOf, type PartMesh } from "../src/model/pieces.ts";
 import { BAYS, yardFixed, yardLoose } from "../src/model/fleet/shipyard-concepts/multibay.ts";
 import { MAX_PIXELS, MAX_SIDE } from "../src/pixels.ts";
+import { earthWithPan } from "./earth-model.ts";
 import { mountStillEarth } from "./earth.ts";
 import { bayWord, buildBarWords, mountYardChoice } from "./yardChoose.ts";
 import { mountBays, type BayId } from "./yardShips.ts";
@@ -220,6 +221,7 @@ function aim(): void {
   const h = canvas.clientHeight || 1;
   if (choice.panX || choice.panY) camera.setViewOffset(w, h, -choice.panX, -choice.panY, w, h);
   else camera.clearViewOffset();
+  earthHolder.style.transform = earthWithPan(choice.panX, choice.panY);
   camera.fov = here.fov;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();

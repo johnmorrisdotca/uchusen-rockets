@@ -28,6 +28,14 @@ export interface Placement {
   panY: number;
 }
 
+/**
+ * The shift that carries the still Earth with a view pan. `panX` and `panY` are CSS pixels, the same numbers the camera's view offset uses, so a photograph of the middle moves with the yard. No pan leaves the Earth where it was placed.
+ */
+export function earthWithPan(panX: number, panY: number): string {
+  if (!panX && !panY) return "";
+  return `translate(${panX}px, ${panY}px)`;
+}
+
 /** The Earth as a photograph from orbit shows it: much wider than the view, its edge an arc across the middle of the picture and the planet filling everything under it. */
 export function placementIn(width: number, height: number): Placement {
   const w = Math.max(1, width);

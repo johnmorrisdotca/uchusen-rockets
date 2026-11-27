@@ -1,7 +1,7 @@
 // The sums behind the demo's Earth: a slow turn, the Sun keeping its place in the picture, and a planet much wider than the view.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DISC_TURN_SECONDS, placementIn, START_TIME, stepSeconds, TURN_SECONDS, turnAt } from "../demo/earth-model.ts";
+import { DISC_TURN_SECONDS, earthWithPan, placementIn, START_TIME, stepSeconds, TURN_SECONDS, turnAt } from "../demo/earth-model.ts";
 import { subsolarPoint } from "@johnmorrisdotca/chikyu-earth/realistic";
 
 test("one turn takes TURN_SECONDS, and a day of the Sun goes with it", () => {
@@ -26,6 +26,11 @@ test("a late timer is not a jump", () => {
   assert.equal(stepSeconds(250), 0.25);
   assert.equal(stepSeconds(60_000), 1);
   assert.equal(stepSeconds(-5), 0);
+});
+
+test("a view pan carries the Earth by the same CSS pixels, and no pan leaves it", () => {
+  assert.equal(earthWithPan(0, 0), "");
+  assert.equal(earthWithPan(40, -12), "translate(40px, -12px)");
 });
 
 test("the Earth is much wider than the view, and its edge crosses the picture", () => {
