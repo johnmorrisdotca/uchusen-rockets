@@ -26,6 +26,8 @@ test("the pieces a flight can turn are named: grid fins, legs and flaps, and not
   assert.deepEqual(movingGroupsOf(part("falcon-9", "v1.1", "first-stage").pieces), ["legs"]);
   assert.deepEqual(movingGroupsOf(part("falcon-9", "v1.0", "first-stage").pieces), []);
   assert.deepEqual(movingGroupsOf(part("falcon-heavy", "falcon-heavy", "side-left").pieces), ["legs"]);
+  assert.deepEqual(movingGroupsOf(part("falcon-heavy", "falcon-heavy", "centre").pieces).sort(), ["grid-fins", "legs"]);
+  assert.equal(moveGroups(part("falcon-heavy", "falcon-heavy", "centre").pieces).length, 8);
   // one group for each fin, leg or flap, each with its own pivot
   assert.equal(moveGroups(part("starship", "v3", "booster").pieces).length, 3);
   assert.equal(moveGroups(part("starship", "v1", "booster").pieces).length, 4);

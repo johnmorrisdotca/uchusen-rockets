@@ -200,7 +200,8 @@ export function sideBooster(height: number, r: number, side: 1 | -1): Piece[] {
 
 export function centreCore(height: number, r: number): Piece[] {
   const first = 47.7;
-  const pieces = firstStage({ height: first, interstage: 6.5, radius: r, engines: "octaweb", legs: true, fins: false }, true);
+  // The legs were already a moving group. The grid fins turn the same way as Falcon 9's. The upper stage and the fairing stay on this one part.
+  const pieces = firstStage({ height: first, interstage: 6.5, radius: r, engines: "octaweb", legs: true, fins: true }, true);
   const secondTop = height - 13.1;
   pieces.push({ kind: "lathe", material: "white", segs: 40, body: true, outline: true, profile: [[r, first], [r, secondTop]], rings: [secondTop - 0.02] });
   const fair = fairing({ height: 13.1, radius: 2.6 }, r);
