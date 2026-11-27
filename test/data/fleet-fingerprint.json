@@ -2567,7 +2567,7 @@
   },
   "chute-umbrella-half": {
    "pieces": 117,
-   "triangles": 2884,
+   "triangles": 260,
    "bounds": [
     -44.38,
     2.61,
@@ -2590,7 +2590,7 @@
   },
   "chute-umbrella-open": {
    "pieces": 117,
-   "triangles": 2884,
+   "triangles": 260,
    "bounds": [
     -58.76,
     2.24,
@@ -2613,7 +2613,7 @@
   },
   "chute-ring-open": {
    "pieces": 89,
-   "triangles": 2228,
+   "triangles": 260,
    "bounds": [
     -58.76,
     2.24,
@@ -2636,7 +2636,7 @@
   },
   "chute-fan-open": {
    "pieces": 63,
-   "triangles": 1676,
+   "triangles": 260,
    "bounds": [
     -2.34,
     2.96,
@@ -2652,6 +2652,66 @@
     "hull-grey-dark",
     "hull-orange",
     "hull-white",
+    "kapton",
+    "lamp-amber",
+    "lamp-red"
+   ]
+  },
+  "kit-blanket": {
+   "pieces": 17,
+   "triangles": 104,
+   "bounds": [
+    -0.34,
+    -0.4,
+    20.8,
+    60.8,
+    32.4,
+    23
+   ],
+   "materials": [
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "kapton",
+    "lamp-amber",
+    "lamp-red"
+   ]
+  },
+  "kit-rollout": {
+   "pieces": 10,
+   "triangles": 104,
+   "bounds": [
+    -0.34,
+    -0.68,
+    20.8,
+    60.6,
+    18.68,
+    23.07
+   ],
+   "materials": [
+    "copper",
+    "gold",
+    "hull-grey",
+    "hull-grey-dark",
+    "kapton",
+    "lamp-amber"
+   ]
+  },
+  "kit-sail": {
+   "pieces": 12,
+   "triangles": 104,
+   "bounds": [
+    -30.5,
+    -2.08,
+    20.8,
+    30.5,
+    58.12,
+    23
+   ],
+   "materials": [
+    "gold",
+    "hull-grey",
     "kapton",
     "lamp-amber",
     "lamp-red"

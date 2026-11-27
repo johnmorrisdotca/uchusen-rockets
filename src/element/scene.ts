@@ -53,6 +53,7 @@ import type { Built } from "../build/index.ts";
 import { bellsOf, FLAME_GAP_MS, FLAME_SETTLE_MS, pickBells } from "../engines.ts";
 import { dutyOf, lampFactor } from "../model/fleet/lights.ts";
 import { angleAt, slideAt, type Motion, type MotionSpeed } from "../model/fleet/motion.ts";
+import { trackAngle } from "../model/fleet/sunTrack.ts";
 import { type Angle, directionOf, easedDistance, easeInOut, FOV_DEG, frameFor, PICTURE_H, rolledUp, scaleBarMetres, transitionReferenceDistance, turnedBy, type Vec3, type ViewChoice } from "../framing.ts";
 import { fitBox } from "../fitBox.ts";
 import { LOOKS, type LookName } from "../looks.ts";
@@ -246,7 +247,7 @@ interface PartView {
   /** Its flames, made the first time an engine of it is lit. */
   plumes: PartPlumes | null;
   /** What a flight turns: each moving group is a node of its own, at its pivot, with the axis it turns about (they come from the file, so the viewer holds no table of them). */
-  moves: { name: string; group: Group; axis: Vector3; angle: number; home: Vector3 | null }[];
+  moves: { name: string; group: Group; axis: Vector3; face: Vector3 | null; angle: number; home: Vector3 | null }[];
 }
 
 /** The materials of an engine's bell, in this package's own meshes. */
@@ -567,6 +568,7 @@ export class RocketViewer {
     if (before === this.sunFrom || (before && this.sunFrom && before.equals(this.sunFrom))) return;
     this.nightSide();
     this.aimKey();
+    this.stepMotion(performance.now(), true);
     this.wake();
   }
 
@@ -813,7 +815,8 @@ export class RocketViewer {
         group.position.copy(node.position);
         code.add(group);
         this.takeMeshes(node, group, view);
-        view.moves.push({ name: String(node.userData.group), group, axis: new Vector3(axis[0], axis[1], axis[2]).normalize(), angle: 0, home: null });
+        const face = node.userData.face as number[] | undefined;
+        view.moves.push({ name: String(node.userData.group), group, axis: new Vector3(axis[0], axis[1], axis[2]).normalize(), face: face ? new Vector3(face[0], face[1], face[2]) : null, angle: 0, home: null });
       }
       const place = places.find((p) => p.slot === part.slot);
       holder.position.set(...(place?.at ?? [0, 0, 0]));
@@ -1169,7 +1172,8 @@ export class RocketViewer {
         const own = this.progressAt !== null && typeof part.holder.userData.arcSpin === "number" ? part.holder.userData.arcSpin : null;
         const turned = this.progressAt === null ? null : spinUp(own);
         // a ring still being built stays at its own angle, so an open arc does not swing with a sibling that has already spun up
-        const angle = turned !== null ? turned : this.progressAt !== null ? 0 : (motion ? angleAt(motion, seconds, this.motionSpeed) : 0);
+        const tracked = move.face && this.sunFrom ? trackAngle([this.sunFrom.x, this.sunFrom.y, this.sunFrom.z], [move.axis.x, move.axis.y, move.axis.z], [move.face.x, move.face.y, move.face.z]) : null;
+        const angle = turned !== null ? turned : this.progressAt !== null ? 0 : tracked !== null ? tracked : (motion ? angleAt(motion, seconds, this.motionSpeed) : 0);
         const along = motion?.kind === "slide" ? slideAt(motion, seconds, this.motionSpeed) : 0;
         if (typeof own === "number" && own > 0 && (shown === undefined || own > shown)) shown = own;
         else if (motion && shown === undefined) shown = motion.kind === "slide" ? along : angle;

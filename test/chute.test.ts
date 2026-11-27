@@ -62,10 +62,15 @@ test("cells shine and the hub and the rib tips carry lamps", () => {
   }
 });
 
-test("the stowed chute is what motion deploys, and the open chute is already there", () => {
+test("the stowed chute is what motion deploys, and a posed chute turns to the sun", () => {
   for (const form of ["umbrella", "ring", "fan"] as const satisfies readonly ChuteForm[]) {
     assert.ok(movingGroupsOf(chute(form, "stowed", 60)).includes("chute-deploy"), form);
-    assert.deepEqual(movingGroupsOf(chute(form, "open", 60)), []);
+    assert.deepEqual(movingGroupsOf(chute(form, "stowed", 60)).includes("chute-track"), false, form);
+    for (const pose of ["half", "open"] as const) {
+      assert.deepEqual(movingGroupsOf(chute(form, pose, 60)), ["chute-track"], `${form} ${pose}`);
+      const face = chute(form, pose, 60).find((piece) => piece.move)?.move?.face;
+      assert.deepEqual(face, form === "fan" ? [1, 0, 0] : [0, 0, 1], `${form} ${pose}`);
+    }
   }
   for (const ship of ["fleet-ship-03", "fleet-kaminari"]) {
     const motions = motionsOf(ship).filter((motion) => motion.group === "chute-deploy");
@@ -85,5 +90,5 @@ test("both ships offer the three forms", () => {
   assert.equal("chute" in MIYAMOTO_VARIANT_SLOTS.miyamoto, false);
   const kaminari = KAMINARI_VARIANTS.a.map((variant) => variant.id);
   for (const id of ["fleet-kaminari-ring", "fleet-kaminari-ring-open", "fleet-kaminari-umbrella", "fleet-kaminari-fan"]) assert.ok(kaminari.includes(id), id);
-  for (const variant of KAMINARI_VARIANTS.a) if (variant.id !== "fleet-kaminari") assert.ok(variant.slots.includes("chute"), variant.id);
+  for (const variant of KAMINARI_VARIANTS.a) if (variant.id !== "fleet-kaminari" && !variant.id.endsWith("-blanket") && !variant.id.endsWith("-rollout") && !variant.id.endsWith("-sail")) assert.ok(variant.slots.includes("chute"), variant.id);
 });

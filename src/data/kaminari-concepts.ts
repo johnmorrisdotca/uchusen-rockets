@@ -126,9 +126,27 @@ const chuteVariant = (id: string, label: string, open: boolean): Variant => {
   };
 };
 
-/** One variant list for each ship. Emiake has a second variant with the folding arrays open. Kaminari has the three chute forms. */
+/** Kaminari with one solar kit on the dorsal truss. The other slots are the Quiver's own parts. */
+const kitVariant = (id: string, label: string): Variant => {
+  const base = variantOf("a");
+  const note = `A ${label} on the dorsal truss, turned to face the scene's Sun.`;
+  return {
+    ...base,
+    id,
+    name: `${base.name}, ${label}`,
+    note: `${base.note} ${note}`,
+    slots: [...base.slots, "kit"],
+    partIds: { ...Object.fromEntries(base.slots.map((slot) => [slot, `${ROCKET_OF.a}-${base.id}-${slot}`])), kit: `${ROCKET_OF.a}-${id}-kit` },
+    facts: { ...base.facts, parts: { ...base.facts.parts, kit: fig(id.endsWith("sail") ? 220 : 200, "The kit's reach, as designed.") } },
+    inspector: base.inspector
+      ? { ...base.inspector, sections: [...base.inspector.sections, { id: "kit", name: "Solar kit", job: note, slot: "kit", at: [0, 900, 40] as const, inside: false }], places: { ...base.inspector.places, kit: [0, 900, 24] as const } }
+      : undefined,
+  };
+};
+
+/** One variant list for each ship. Emiake has a second variant with the folding arrays open. Kaminari has the three chute forms and the three solar kits. */
 export const KAMINARI_VARIANTS: Readonly<Record<ConceptKey, readonly Variant[]>> = {
-  a: [variantOf("a"), chuteVariant("fleet-kaminari-ring", "ring array stowed", false), chuteVariant("fleet-kaminari-ring-open", "ring array open", true), chuteVariant("fleet-kaminari-umbrella", "umbrella array open", true), chuteVariant("fleet-kaminari-fan", "fan array open", true)],
+  a: [variantOf("a"), chuteVariant("fleet-kaminari-ring", "ring array stowed", false), chuteVariant("fleet-kaminari-ring-open", "ring array open", true), chuteVariant("fleet-kaminari-umbrella", "umbrella array open", true), chuteVariant("fleet-kaminari-fan", "fan array open", true), kitVariant("fleet-kaminari-blanket", "blanket mast"), kitVariant("fleet-kaminari-rollout", "roll-out array"), kitVariant("fleet-kaminari-sail", "square sail")],
   b: [variantOf("b"), deployedSails()],
   c: [variantOf("c")],
 };
@@ -176,6 +194,7 @@ export const CONCEPT_SLOT_NAMES: Readonly<Record<string, string>> = {
   nose: "Nose and dust shield",
   bow: "Crew bow",
   chute: "Chute array",
+  kit: "Solar kit",
   barrels: "Propellant barrels",
   shaft: "Shaft: truss and transit tube",
   ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`quiver-${i}`, `Tank quiver ${i}`])),

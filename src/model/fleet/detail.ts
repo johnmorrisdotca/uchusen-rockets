@@ -140,7 +140,7 @@ export function place(pieces: readonly Piece[], pose: Pose): Piece[] {
   const turn = (p: Vec3): Vec3 => [p[0] * c + p[2] * s, p[1], -p[0] * s + p[2] * c];
   const at = (p: Vec3): Vec3 => add(turn(p), pose.at);
   return pieces.map((piece): Piece => {
-    const move = piece.move ? { ...piece.move, pivot: at(piece.move.pivot), axis: turn(piece.move.axis) } : undefined;
+    const move = piece.move ? { ...piece.move, pivot: at(piece.move.pivot), axis: turn(piece.move.axis), ...(piece.move.face ? { face: turn(piece.move.face) } : {}) } : undefined;
     const common = move ? { move } : {};
     if (piece.kind === "plate") return { ...piece, ...common, frame: { o: at(piece.frame.o), u: turn(piece.frame.u), v: turn(piece.frame.v), w: turn(piece.frame.w) } };
     if (piece.kind === "lines") return { ...piece, ...common, paths: piece.paths.map((path) => path.map(at)) };

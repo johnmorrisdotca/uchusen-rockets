@@ -4,6 +4,7 @@ import { blank } from "../data/types.ts";
 import { coarsen, detail } from "./detail.ts";
 import type { Piece } from "./pieces.ts";
 import { kaminariChute } from "./fleet/kaminari-concepts/chutes.ts";
+import { kaminariKit } from "./fleet/kaminari-concepts/kits.ts";
 import { CONCEPT_KEYS, CONCEPT_SLOTS, EMIAKE_DEPLOYED, ROCKET_OF, SAIL_DEPLOYED_SLOTS, SPECS } from "./fleet/kaminari-concepts/index.ts";
 import type { ConceptSlot } from "./fleet/kaminari-concepts/common.ts";
 import type { PartEntry } from "./registry.ts";
@@ -44,7 +45,7 @@ const entry = (rocket: string, variant: string, slot: ConceptSlot, tail: boolean
     kind: slot.kind,
     name: slot.name,
     rocket,
-    trueTo: variant === SPECS.a.id ? [variant, ...KAMINARI_CHUTE_VARIANTS.map(([id]) => id)] : variant === SPECS.b.id ? [variant, EMIAKE_DEPLOYED] : [variant],
+    trueTo: variant === SPECS.a.id ? [variant, ...KAMINARI_CHUTE_VARIANTS.map(([id]) => id), ...KAMINARI_KIT_VARIANTS.map(([id]) => id)] : variant === SPECS.b.id ? [variant, EMIAKE_DEPLOYED] : [variant],
     height: slot.height,
     diameter: slot.diameter,
     sourced: { height: NOTE, diameter: NOTE },
@@ -63,9 +64,16 @@ const KAMINARI_CHUTE_VARIANTS = [
   ["fleet-kaminari-fan", "fan", "open"],
 ] as const;
 
-/** Every part of the three ships, Emiake's deployed sails, and Kaminari's chute arrays, each once. */
+const KAMINARI_KIT_VARIANTS = [
+  ["fleet-kaminari-blanket", "blanket"],
+  ["fleet-kaminari-rollout", "rollout"],
+  ["fleet-kaminari-sail", "sail"],
+] as const;
+
+/** Every part of the three ships, Emiake's deployed sails, and Kaminari's chute arrays and solar kits, each once. */
 export const CONCEPT_ENTRIES: readonly PartEntry[] = [
   ...CONCEPT_KEYS.flatMap((key) => CONCEPT_SLOTS[key].map((slot, i) => entry(ROCKET_OF[key], SPECS[key].id, slot, i === 0))),
   ...SAIL_DEPLOYED_SLOTS.map((slot) => entry(ROCKET_OF.b, EMIAKE_DEPLOYED, slot, false)),
   ...KAMINARI_CHUTE_VARIANTS.map(([variant, form, pose]) => entry(ROCKET_OF.a, variant, kaminariChute(form, pose), false)),
+  ...KAMINARI_KIT_VARIANTS.map(([variant, kind]) => entry(ROCKET_OF.a, variant, kaminariKit(kind), false)),
 ];

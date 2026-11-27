@@ -22,6 +22,9 @@ const NOTES: Readonly<Record<string, string>> = {
   "miyamoto-umbrella-open": "Miyamoto with the umbrella chute open: petals in to the hub, 120 m across.",
   "miyamoto-ring": "Miyamoto with a ring chute open: an annular panel on spokes, open at the hub, 120 m across.",
   "miyamoto-fan": "Miyamoto with a fan chute open: pleated fins in one plane, 120 m across.",
+  "miyamoto-blanket": "Miyamoto with a blanket mast on the dorsal truss: a lattice mast and a gold cell blanket each side, turned to face the scene's Sun.",
+  "miyamoto-rollout": "Miyamoto with a roll-out array on the dorsal truss: one gold blanket unrolled from a canister, turned to face the scene's Sun.",
+  "miyamoto-sail": "Miyamoto with a square sail on the dorsal truss: a gold sheet on four booms, turned to face the scene's Sun.",
   "miyamoto-relief": "Miyamoto with the relief pod on its collar: six relief and equipment containers under a gantry, in place of the relay pod.",
   "miyamoto-no-collar": "ISV Miyamoto with the drive's neck bare: the shadow-shield collar swapped for none, to compare the two ways the engines meet the hull.",
   ariake: "ISV 有明 Ariake, SPX-186, \"daybreak\": the sister of ISV Miyamoto in the Romurusu class (ロムルス級), the service ship, with a Super Heavy and a Starship ship on one box's exterior saddles. Status: planned, first flight 2456.",
@@ -32,7 +35,7 @@ const NOTES: Readonly<Record<string, string>> = {
   "miyamoto-cutaway": "Miyamoto opened to starboard: the layers of its armour at the cut edge, the reactor and power rooms, the barrels, both bays, the decks of the habitat and the operations ring of the citadel.",
 };
 
-const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-array": "ISV 宮本 Miyamoto, SPX-452, solar array out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", "miyamoto-wing": "ISV 宮本 Miyamoto, SPX-452, bird wing folded", "miyamoto-wing-half": "ISV 宮本 Miyamoto, SPX-452, bird wing half open", "miyamoto-wing-open": "ISV 宮本 Miyamoto, SPX-452, bird wing open", "miyamoto-umbrella": "ISV 宮本 Miyamoto, SPX-452, umbrella stowed", "miyamoto-umbrella-half": "ISV 宮本 Miyamoto, SPX-452, umbrella half open", "miyamoto-umbrella-open": "ISV 宮本 Miyamoto, SPX-452, umbrella open", "miyamoto-ring": "ISV 宮本 Miyamoto, SPX-452, ring array", "miyamoto-fan": "ISV 宮本 Miyamoto, SPX-452, fan array", ariake: "ISV 有明 Ariake, SPX-186", "ariake-empty": "ISV 有明 Ariake, SPX-186, empty mounts", "ariake-berth-keel": "ISV 有明 Ariake, SPX-186, ventral berth", "ariake-berth-port": "ISV 有明 Ariake, SPX-186, port berth", "ariake-cutaway": "ISV 有明 Ariake, SPX-186, cutaway" };
+const NAMES: Readonly<Record<string, string>> = { miyamoto: "ISV 宮本 Miyamoto, SPX-452", "miyamoto-deployed": "ISV 宮本 Miyamoto, SPX-452, radiators out", "miyamoto-array": "ISV 宮本 Miyamoto, SPX-452, solar array out", "miyamoto-relief": "ISV 宮本 Miyamoto, SPX-452, relief pod", "miyamoto-cutaway": "ISV 宮本 Miyamoto, SPX-452, cutaway", "miyamoto-no-collar": "ISV 宮本 Miyamoto, SPX-452, no collar", "miyamoto-wing": "ISV 宮本 Miyamoto, SPX-452, bird wing folded", "miyamoto-wing-half": "ISV 宮本 Miyamoto, SPX-452, bird wing half open", "miyamoto-wing-open": "ISV 宮本 Miyamoto, SPX-452, bird wing open", "miyamoto-umbrella": "ISV 宮本 Miyamoto, SPX-452, umbrella stowed", "miyamoto-umbrella-half": "ISV 宮本 Miyamoto, SPX-452, umbrella half open", "miyamoto-umbrella-open": "ISV 宮本 Miyamoto, SPX-452, umbrella open", "miyamoto-ring": "ISV 宮本 Miyamoto, SPX-452, ring array", "miyamoto-fan": "ISV 宮本 Miyamoto, SPX-452, fan array", "miyamoto-blanket": "ISV 宮本 Miyamoto, SPX-452, blanket mast", "miyamoto-rollout": "ISV 宮本 Miyamoto, SPX-452, roll-out array", "miyamoto-sail": "ISV 宮本 Miyamoto, SPX-452, square sail", ariake: "ISV 有明 Ariake, SPX-186", "ariake-empty": "ISV 有明 Ariake, SPX-186, empty mounts", "ariake-berth-keel": "ISV 有明 Ariake, SPX-186, ventral berth", "ariake-berth-port": "ISV 有明 Ariake, SPX-186, port berth", "ariake-cutaway": "ISV 有明 Ariake, SPX-186, cutaway" };
 
 /** What the viewer's panel shows for a variant: the labels of every named section, the specification (with the sister ship's row as a link), and the notes. The other ship is one click away. */
 const inspectorOf = (id: string, slots: Readonly<Record<string, string>>): Inspector => {
@@ -124,6 +127,7 @@ export const SHIP_03_SLOT_NAMES: Readonly<Record<string, string>> = {
   ...Object.fromEntries(Object.values(SHIP_INSETS).flatMap((inset) => inset.parts.map((one) => [`${inset.id}-${one.n}`, `${one.n}. ${one.name}`]))),
   wing: "Bird wing",
   chute: "Chute array",
+  kit: "Solar kit",
   engine: "Engine",
   "drive-collar": "Shadow-shield collar",
   "hangar-starboard-fore": "Starboard fore hangar",

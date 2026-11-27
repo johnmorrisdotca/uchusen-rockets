@@ -93,7 +93,7 @@ export function exteriorLoad(): Piece[] {
 function aboutTail(pieces: readonly Piece[]): Piece[] {
   const flip = (p: Vec3): Vec3 => [p[0], -p[1], -p[2]];
   return pieces.map((piece) => {
-    const move = piece.move ? { ...piece.move, pivot: flip(piece.move.pivot), axis: flip(piece.move.axis) } : undefined;
+    const move = piece.move ? { ...piece.move, pivot: flip(piece.move.pivot), axis: flip(piece.move.axis), ...(piece.move.face ? { face: flip(piece.move.face) } : {}) } : undefined;
     const common = move ? { move } : {};
     if (piece.kind === "plate") {
       const f = piece.frame;

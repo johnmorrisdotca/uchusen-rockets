@@ -6,6 +6,7 @@ import { isCoarse, type Piece, place } from "./adapter.ts";
 import { type ArrayState, solarArray } from "./solar.ts";
 import { birdWing, type WingPose } from "./wing.ts";
 import { chute, type ChuteForm, type ChutePose } from "../chute.ts";
+import { solarKit, type SolarKit } from "../solarKit.ts";
 import { bowLivery, citadelLivery, driveLivery, habitatLivery, hangarLivery } from "./ariake.ts";
 import { bow } from "./bow.ts";
 import { command } from "./command.ts";
@@ -129,6 +130,19 @@ const chutePart = (form: ChuteForm, pose: ChutePose): MiyamotoPart => ({
   pieces: (o) => local(place(chute(form, pose, 60, o?.detail ?? 1), { at: [0, 310, 22] }), 0, CHUTE_ROOT[pose], 0, o?.level),
 });
 
+const KIT_ROOT = { blanket: 294, rollout: 301, sail: 282 } as const;
+const kitPart = (kind: SolarKit): MiyamotoPart => ({
+  id: `kit-${kind}`,
+  name: kind === "blanket" ? "Blanket mast" : kind === "rollout" ? "Roll-out array" : "Square sail",
+  kind: "module",
+  y0: KIT_ROOT[kind],
+  place: { x: 0, z: 0 },
+  height: kind === "blanket" ? 34 : kind === "rollout" ? 20 : 60,
+  diameter: 70,
+  note: `${kind === "blanket" ? "A lattice mast with a gold cell blanket each side, dorsal of the habitation drum." : kind === "rollout" ? "One gold blanket unrolled from a canister on the dorsal mast." : "A square gold sail on four booms, dorsal of the habitation drum."} It turns to face the scene's Sun. Descends from ${ANCESTORS.kit}.`,
+  pieces: (o) => local(place(solarKit(kind, 60), { at: [0, 310, 22] }), 0, KIT_ROOT[kind], 0, o?.level),
+});
+
 const WING_ROOT = { folded: 200, half: 108, open: 124 } as const;
 const wingPart = (pose: WingPose): MiyamotoPart => ({
   id: `wing-${pose}`,
@@ -200,6 +214,7 @@ export function parts(): MiyamotoPart[] {
   for (const pose of ["folded", "half", "open"] as const) out.push(wingPart(pose));
   for (const pose of ["stowed", "half", "open"] as const) out.push(chutePart("umbrella", pose));
   out.push(chutePart("ring", "open"), chutePart("fan", "open"));
+  for (const kind of ["blanket", "rollout", "sail"] as const) out.push(kitPart(kind));
   for (const which of ["dorsal", "ventral"] as const) out.push(bank(which, false), bank(which, true));
   const moved = (bay: BayId, dy: number, dz: number): MiyamotoPart => {
     const base = shoulder(bay, false, true);

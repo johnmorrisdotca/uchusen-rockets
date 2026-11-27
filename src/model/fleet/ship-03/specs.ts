@@ -352,6 +352,7 @@ export const ANCESTORS: Readonly<Record<string, string>> = {
   array: "the ISS's solar array wings and iROSA's roll-out blankets: cells on a flexible blanket, a lattice mast, a beta gimbal at each bay and a rotary joint at each end of the beam that turns the wing to face the star",
   wing: "a bird's wing (shoulder, elbow and wrist, primaries longest at the tip) and the folding wings of the F4F, the F6F and the E-2, with solar cells in frames as on the ISS arrays",
   chute: "a radial-rib reflector (the Galileo high-gain antenna and AstroMesh) and an origami flasher array: ribs of one length, panels that stack when the ribs close, as an umbrella does",
+  kit: "the ISS's solar array wings and iROSA's roll-out blankets, and a square solar sail: a face that turns to the star",
   radiators: "the ISS's radiator panels on booms, large thin plates set away from the hull, and the folding radiators of the Mars transfer vehicle studies",
   "exterior-load": "the Shuttle on its carrier aircraft: two Starship ships clamped side by side on the outside of a hangar box",
   "stack-berth": "the ISS visiting vehicles: a Starship ship and a tanker, tails together at a transfer coupling, with methane and oxygen plates on it",

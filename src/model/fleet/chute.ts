@@ -1,5 +1,5 @@
 // A chute array: a mast, a hub and ribs that open like an umbrella. Ring is an annulus on spokes, umbrella is petals in to the hub, fan is pleated fins in one plane.
-// Stowed, the ribs lie along the mast in a slim bundle and are tagged so the viewer can swing them out. Half and open are drawn already there. The same part is sized for Miyamoto and for Kaminari.
+// Stowed, the ribs lie along the mast in a slim bundle and are tagged so the viewer can swing them out. Half and open are drawn already there, and tagged so they turn to face the Sun. The same part is sized for Miyamoto and for Kaminari.
 // It follows a radial-rib reflector (the Galileo high-gain antenna, AstroMesh) and an origami flasher: ribs of one length, panels that lie over one another when shut. Pure: no three.js and no DOM.
 import type { Piece, Vec3 } from "../pieces.ts";
 import { quad } from "./detail.ts";
@@ -86,6 +86,7 @@ export function chute(form: ChuteForm, pose: ChutePose, radius: number, detail =
     const b0 = add(hub, next, inner);
     disc.push(...gore(a0, a1, b1, b0, cells));
   }
-  const posed = t === 0 ? moving(disc, { name: "chute-deploy", pivot: hub, axis: [1, 0, 0] }) : disc;
+  const face: Vec3 = form === "fan" ? [1, 0, 0] : [0, 0, 1];
+  const posed = t === 0 ? moving(disc, { name: "chute-deploy", pivot: hub, axis: [1, 0, 0] }) : moving(disc, { name: "chute-track", pivot: hub, axis: [0, 1, 0], face });
   return [...mount, ...posed];
 }
