@@ -1424,8 +1424,14 @@ export class RocketViewer {
           opacity: 0.95,
           blending: AdditiveBlending,
           depthWrite: false,
-          depthTest: false,
+          depthTest: true,
         });
+        // Lift the sprite 10 cm along its sightline so a surface-mounted bead clears its panel without shifting on screen.
+        material.onBeforeCompile = (shader) => {
+          shader.vertexShader = shader.vertexShader.replace("#include <project_vertex>", `#include <project_vertex>
+            mvPosition.xyz *= 1.0 - 0.10 / max(-mvPosition.z, 0.20);
+            gl_Position = projectionMatrix * mvPosition;`);
+        };
         this.lampPoints.push({ material, geometry, duty: bucket.duty });
         const points = new Points(geometry, material);
         points.renderOrder = 2;
