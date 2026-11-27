@@ -1,5 +1,6 @@
 import type { Bell } from "../engines.ts";
 import { directionOf, type Angle, type Framing, type Vec3 } from "../framing.ts";
+import { drone } from "./showcase/drone.ts";
 import { hanabusa } from "./showcase/hanabusa.ts";
 
 export interface ShowcaseShot {
@@ -60,6 +61,7 @@ export interface ShowcasePreset {
 
 const PRESETS: readonly ShowcasePreset[] = [
   hanabusa,
+  drone,
 ];
 
 export function showcasePreset(rocket: string | undefined, variant: string | undefined): ShowcasePreset | undefined {

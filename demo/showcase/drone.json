@@ -1,0 +1,28 @@
+{
+  "rocket": "fleet-drone",
+  "variant": "repair-drone",
+  "name": "Repair drone",
+  "japanese": "修理ドローン",
+  "registry": "SPX",
+  "label": "SPX repair drone using its two thruster pods beside Ceres",
+  "title": "Repair drone · SPX",
+  "description": "See the SPX repair drone fire its twin manoeuvring thrusters beside Ceres in the Uchusen Rockets showcase.",
+  "what": {
+    "en": "Repair drone showcase",
+    "ja": "修理ドローンの展示",
+    "jaDescription": "ケレスのそばで姿勢制御用スラスターを噴射するSPX修理ドローンを見ます。"
+  },
+  "role": { "en": "Construction swarm", "ja": "建造用ドローン群" },
+  "credits": [
+    {
+      "label": "Ceres surface map from Dawn, NASA/JPL-Caltech/UCLA/MPS/DLR/IDA (public domain)",
+      "href": "https://photojournal.jpl.nasa.gov/catalog/PIA20354"
+    },
+    { "label": "NASA Cluster II model", "href": "https://science.nasa.gov/3d-resources/cluster-ii/" },
+    { "label": "NASA InSight model", "href": "https://science.nasa.gov/3d-resources/insight-cruise-lander/" },
+    { "label": "NASA Curiosity model", "href": "https://science.nasa.gov/3d-resources/curiosity-rover-detailed/" },
+    { "label": "NASA High Energy Transient Explorer model", "href": "https://science.nasa.gov/3d-resources/high-energy-transient-explorer/" },
+    { "label": "NASA Grease Gun model", "href": "https://science.nasa.gov/3d-resources/grease-gun/" }
+  ],
+  "mobileExhaustSide": "left"
+}
