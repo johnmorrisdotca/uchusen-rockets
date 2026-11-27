@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-11-27
+
+- **Lamp glows stay behind the hull** (MODULES-1884). A ship's red, green, white and amber lamps no longer shine through the hull, rings or discs in front of them. The glow shows only where the lamp is in view.
+
+- **A showcase for every SPX ship** (MODULES-1879, MODULES-1885 to MODULES-1891). The showcase now has one preset per ship, framing that fits the screen, several engine slots and an optional planet or moon behind the ship, lit by the same sun. New pages, all in space: Kyotori before the Moon, Ariake before Mars, Miyamoto before Jupiter, Kaminari before Saturn and its rings, Emiake before Europa, Romaryū before Neptune, and the repair drone before Ceres. Backdrops use the wakusei-planets maps, credited.
+
 ## [0.38.0] - 2026-11-27
 
 - **The demo can run in CI's Playwright image** (MODULES-1164). `pnpm test:e2e:image` builds the site and the docs, then plays the browser tests in that image at 4 CPUs, which runs two tests at a time. The Mac's own `pnpm test:demo` stays one test at a time. Arguments for Playwright go after `--`.
