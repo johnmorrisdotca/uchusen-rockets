@@ -22,9 +22,15 @@ import { variantOf } from "../rockets.ts";
 export const COMPARES = {
   person: { name: "A person, 1.8 m", height: 1.8, width: 0.5 },
   building: { name: "A ten-storey building, 30 m", height: 30, width: 18 },
+  // National Park Service, Statue statistics, read 2026-11-26: ground to the tip of the torch is 92.99 m. Drawn as 93 m. The width is the drawing.
+  liberty: { name: "Statue of Liberty, 93 m", height: 93, width: 16 },
+  // Boeing 747-200B with the gear down: 19.6 m tall and 68.6 m long. Wikipedia's specifications, citing Boeing's 747-100/-200/-300/-SP document, read 2026-11-26. The length is the drawn width.
+  jet: { name: "A 747, 19.6 m", height: 19.6, width: 68.6 },
+  // Wikipedia, Eiffel Tower, read 2026-11-26: 330 m to the tip. The width is the drawing.
+  tower: { name: "The Eiffel Tower, 330 m", height: 330, width: 80 },
 } as const;
 /**
- * The name of a comparison shape that can stand in a lineup: `person` or `building`.
+ * The name of a comparison shape that can stand in a lineup: `person`, `building`, `liberty`, `jet` or `tower`.
  *
  * @example
  * ```ts
@@ -136,6 +142,22 @@ function comparison(id: CompareId, x: number, base: number, unit: number, line: 
   if (id === "person") {
     const head = Math.max(0.6, h * 0.11);
     return `<circle cx="${n(x + w / 2)}" cy="${n(base - h + head)}" r="${n(head)}" fill="${fill}" stroke="${line}" stroke-width=".6"/><path d="M${n(x + w * 0.12)} ${n(base)}L${n(x + w * 0.2)} ${n(base - h * 0.76)}H${n(x + w * 0.8)}L${n(x + w * 0.88)} ${n(base)}Z" fill="${fill}" stroke="${line}" stroke-width=".6"/>`;
+  }
+  if (id === "liberty") {
+    const ped = h * 0.5;
+    const bw = w * 0.34;
+    const bx = x + (w - bw) / 2;
+    const top = base - h;
+    return `<rect x="${n(x)}" y="${n(base - ped)}" width="${n(w)}" height="${n(ped)}" fill="${fill}" stroke="${line}" stroke-width=".6"/><rect x="${n(bx)}" y="${n(top + h * 0.1)}" width="${n(bw)}" height="${n(h * 0.4)}" fill="${fill}" stroke="${line}" stroke-width=".6"/><path d="M${n(bx + bw)} ${n(top + h * 0.28)}L${n(x + w)} ${n(top + h * 0.05)}L${n(x + w * 0.92)} ${n(top)}L${n(bx + bw * 0.55)} ${n(top + h * 0.1)}Z" fill="${fill}" stroke="${line}" stroke-width=".6"/>`;
+  }
+  if (id === "jet") {
+    const thick = h * 0.28;
+    const belly = base - h * 0.18;
+    return `<rect x="${n(x + w * 0.08)}" y="${n(belly - thick)}" width="${n(w * 0.8)}" height="${n(thick)}" rx="${n(thick / 2)}" fill="${fill}" stroke="${line}" stroke-width=".6"/><path d="M${n(x + w * 0.84)} ${n(belly)}L${n(x + w)} ${n(base - h)}L${n(x + w * 0.94)} ${n(belly)}Z" fill="${fill}" stroke="${line}" stroke-width=".6"/><path d="M${n(x + w * 0.4)} ${n(belly)}L${n(x + w * 0.68)} ${n(base)}L${n(x + w * 0.52)} ${n(belly)}Z" fill="${fill}" stroke="${line}" stroke-width=".6"/>`;
+  }
+  if (id === "tower") {
+    const mid = x + w / 2;
+    return `<path d="M${n(x)} ${n(base)}L${n(mid)} ${n(base - h)}L${n(x + w)} ${n(base)}Z" fill="${fill}" stroke="${line}" stroke-width=".6"/><path d="M${n(x + w * 0.22)} ${n(base - h * 0.28)}H${n(x + w * 0.78)}M${n(x + w * 0.36)} ${n(base - h * 0.55)}H${n(x + w * 0.64)}" stroke="${line}" stroke-width=".45"/>`;
   }
   let floors = "";
   for (let i = 1; i < 10; i++) floors += `M${n(x)} ${n(base - (h * i) / 10)}h${n(w)}`;

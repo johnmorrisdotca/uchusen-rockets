@@ -1028,7 +1028,7 @@ function renderCompare() {
   press(byId("compare-real"), compareReal ? "compare-real" : "");
   lineup.setAttribute("real", compareReal ? "on" : "off");
   const chosen = every.filter((variant) => compared.has(keyOf(variant)) && (compareFilter === "all" || (compareFilter === "fleet") === isFleetVariant(variant)));
-  lineup.setAttribute("items", [...chosen.map(keyOf), ...(compareFilter === "fleet" ? [] : ["building", "person"])].join(","));
+  lineup.setAttribute("items", [...chosen.map(keyOf), ...(compareFilter === "fleet" ? [] : ["tower", "liberty", "jet", "building", "person"])].join(","));
   lineup.setAttribute("filter", compareFilter);
   // rockets alone keep today's scale; with the fleet in, the scale fits whatever is shown into the frame
   if (compareFilter === "rockets") lineup.removeAttribute("fit");

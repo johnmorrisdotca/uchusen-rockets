@@ -89,7 +89,7 @@ The same attributes are the query of [the embed page](embed.md), for a site that
 
 The front is what it shows unless `view` says otherwise, except that the stacked Space Shuttle is turned so its orbiter shows, and a rocket black all over takes a thin light outline in the painted look, so it does not vanish on a dark ground.
 
-`unit` is pixels a metre. The person (1.8 m) and the ten-storey building (30 m) are round numbers, there for scale.
+`unit` is pixels a metre. The person (1.8 m) and the ten-storey building (30 m) are round numbers, there for scale. The Statue of Liberty is 93 m from the ground to the torch, a 747 is 19.6 m to the tail, and the Eiffel Tower is 330 m to the tip.
 
 ## React
 
