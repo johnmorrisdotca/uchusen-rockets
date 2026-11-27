@@ -17,3 +17,13 @@ test("the check is kazoku-ui's, byte for byte", () => {
 test("this package has every item of the family's must-have list", () => {
   assert.deepEqual(standard.standardProblems("."), []);
 });
+
+test("the guides table and the development commands are listed once", () => {
+  const readme = readFileSync("README.md", "utf8");
+  const guides = readme.split("## Guides")[1]?.split("## ")[0] ?? "";
+  const links = [...guides.matchAll(/\(docs\/guides\/[^)]+\)/g)].map((match) => match[0]);
+  assert.equal(new Set(links).size, links.length);
+  const development = readme.split("## Development")[1]?.split("## ")[0] ?? "";
+  const commands = [...development.matchAll(/^pnpm [\w:-]+/gm)].map((match) => match[0]);
+  assert.equal(new Set(commands).size, commands.length);
+});
