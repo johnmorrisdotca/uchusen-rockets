@@ -3,6 +3,7 @@ import { directionOf, type Angle, type Framing, type Vec3 } from "../framing.ts"
 import { drone } from "./showcase/drone.ts";
 import { hanabusa } from "./showcase/hanabusa.ts";
 import { kyotori } from "./showcase/kyotori.ts";
+import { miyamoto } from "./showcase/miyamoto.ts";
 
 export interface ShowcaseShot {
   angle: Angle;
@@ -64,6 +65,7 @@ const PRESETS: readonly ShowcasePreset[] = [
   hanabusa,
   drone,
   kyotori,
+  miyamoto,
 ];
 
 export function showcasePreset(rocket: string | undefined, variant: string | undefined): ShowcasePreset | undefined {

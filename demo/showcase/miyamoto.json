@@ -1,0 +1,21 @@
+{
+  "rocket": "fleet-ship-03",
+  "variant": "miyamoto",
+  "docked": "",
+  "name": "Miyamoto",
+  "japanese": "宮本",
+  "registry": "ISV SPX-452",
+  "label": "ISV Miyamoto, SPX-452, under thrust in front of Jupiter",
+  "title": "ISV Miyamoto · SPX-452",
+  "description": "See the fleet flagship ISV Miyamoto fire its twin drives in front of Jupiter.",
+  "what": {
+    "en": "Miyamoto showcase",
+    "ja": "宮本の展示",
+    "jaDescription": "艦隊旗艦、宮本 SPX-452 が木星を背に主機2基を噴射する姿を見ます。"
+  },
+  "role": { "en": "Fleet flagship", "ja": "艦隊旗艦" },
+  "credits": [
+    { "label": "Jupiter map by Nestaeric, via wakusei-planets", "href": "https://sketchfab.com/3d-models/jupiter-6380860bdb4247b98b30643615c3afab" },
+    { "label": "Jupiter map license · CC BY 4.0", "href": "https://creativecommons.org/licenses/by/4.0/" }
+  ]
+}
