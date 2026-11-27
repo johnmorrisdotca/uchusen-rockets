@@ -44,6 +44,16 @@ test("the open wings span the hull, the folded pair is one stack, and half sits 
   assert.ok(half > folded + 40 && half < open - 40, `half ${half.toFixed(1)} between ${folded.toFixed(1)} and ${open.toFixed(1)}`);
 });
 
+test("the open primaries fan, so their tips are not one strip", () => {
+  const plates = birdWing("open").filter(isPlate).filter((piece) => piece.material === "kapton" && piece.frame.o[0] > 40);
+  const tipY = plates.map((piece) => boundsOfPieces([piece]).min[1]);
+  const spread = Math.max(...tipY) - Math.min(...tipY);
+  assert.ok(spread >= 70, `open tips spread ${spread.toFixed(1)} m`);
+  const box = boundsOfPieces(birdWing("open"));
+  const rise = box.max[2] - box.min[2];
+  assert.ok(rise >= 60 && rise < box.max[0] - box.min[0], `open rise ${rise.toFixed(1)} m`);
+});
+
 test("every pose stays dorsal of both glass elevators", () => {
   for (const pose of poses) {
     const box = boundsOfPieces(birdWing(pose));

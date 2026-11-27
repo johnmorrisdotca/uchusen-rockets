@@ -129,15 +129,15 @@ const chutePart = (form: ChuteForm, pose: ChutePose): MiyamotoPart => ({
   pieces: (o) => local(place(chute(form, pose, 60, o?.detail ?? 1), { at: [0, 310, 22] }), 0, CHUTE_ROOT[pose], 0, o?.level),
 });
 
-const WING_ROOT = { folded: 78, half: 104, open: 205 } as const;
+const WING_ROOT = { folded: 200, half: 108, open: 124 } as const;
 const wingPart = (pose: WingPose): MiyamotoPart => ({
   id: `wing-${pose}`,
   name: `Bird-wing solar array, ${pose}`,
   kind: "module",
   y0: WING_ROOT[pose],
   place: { x: 0, z: 0 },
-  height: pose === "folded" ? 220 : pose === "half" ? 196 : 100,
-  diameter: pose === "folded" ? 40 : pose === "half" ? 250 : 430,
+  height: pose === "folded" ? 94 : pose === "half" ? 186 : 176,
+  diameter: pose === "folded" ? 40 : pose === "half" ? 200 : 450,
   note: `${pose === "folded" ? "Both wings folded aft onto the hull as one stack, feathers lying over one another dorsal of the glass elevators." : pose === "half" ? "Both wings half open: the bones part way out, the primaries starting to fan." : "Both wings open: a fan of long primaries each side, the span the length of the hull, overlapping, with a curved trailing edge."} Lamps at the shoulder, the elbow, the wrist and the tip. Descends from ${ANCESTORS.wing}.`,
   pieces: (o) => local(birdWing(pose, o?.detail ?? 1), 0, WING_ROOT[pose], 0, o?.level),
 });
