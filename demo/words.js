@@ -652,7 +652,7 @@ export const WORDS = {
     nameLink: "名前について",
     foot: "出典つきの寸法でつくる、ウェブ用のロケット。",
     creditLine: "彩色モデルは、各制作者（CC BY 4.0）、NASA、スミソニアン協会のものです。地球と惑星の画像は NASA、Solar System Scope ほかのもの、スターベースの地図は © OpenStreetMap contributors のものです。",
-    pageMap: "地図",
+    pageMap: "ロケット",
     pageRockets: "ロケット",
     pageCompare: "比べる",
     pageBuilder: "組み立て",
