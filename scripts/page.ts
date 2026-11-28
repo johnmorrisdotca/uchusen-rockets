@@ -142,7 +142,7 @@ function renderPage(html: string, file: string, title: string, description: stri
   const rowed = html.replace("<!--family:header--><!--frame:header-->", '<!--family:header-->\n      <div class="page-row"><!--page-bar--><!--frame:header--></div>');
   return frame(rowed, file, description, what)
     .replace("<!--family:head-->", `${familyHead({ id, title, description })}\n    <link rel="icon" href="icon.png" />`)
-    .replace("<!--family:header-->", familyHeader({ id }))
+    .replace("<!--family:header-->", familyHeader({ id, links: [{ href: "index.html", say: "pageMap" }], current: file }))
     .replace("<!--page-bar-->", pageBar(file))
     .replace("<!--family:unreviewed-->", familyUnreviewed({ id }))
     .replace("<!--family:footer-->", footer())
